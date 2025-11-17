@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<ICsvImportService, CsvImportService>();
         services.AddScoped<IBankCsvParser, BankOfAmericaCsvParser>();
         services.AddScoped<IBankCsvParser, CapitalOneCsvParser>();
+        services.AddScoped<IBankCsvParser, UnitedHeritageCreditUnionCsvParser>();
 
         return services;
     }
