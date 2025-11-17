@@ -63,4 +63,20 @@ public interface IAdhocTransactionReadRepository
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Total count.</returns>
     Task<int> CountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Finds potential duplicate transactions based on date, description, amount, and type.
+    /// </summary>
+    /// <param name="date">The transaction date to match.</param>
+    /// <param name="description">The description to match (case-insensitive).</param>
+    /// <param name="amount">The absolute amount to match.</param>
+    /// <param name="transactionType">The transaction type to match.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A collection of matching transactions (potential duplicates).</returns>
+    Task<IReadOnlyList<AdhocTransaction>> FindDuplicatesAsync(
+        DateOnly date,
+        string description,
+        decimal amount,
+        TransactionType transactionType,
+        CancellationToken cancellationToken = default);
 }

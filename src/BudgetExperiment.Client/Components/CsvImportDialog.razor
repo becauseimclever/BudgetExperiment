@@ -1,0 +1,257 @@
+@* <copyright file="CsvImportDialog.razor" company="Fortinbra">
+ Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
+</copyright> *@
+
+@using Microsoft.FluentUI.AspNetCore.Components
+@using BudgetExperiment.Client.Models
+
+@if (IsOpen)
+{
+<FluentDialog @bind-Open="@IsOpen" Modal="true" TrapFocus="true" @ref="dialog">
+    <FluentDialogHeader>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+            <FluentIcon Value="@(new Icons.Regular.Size24.ArrowUpload())" />
+            <FluentLabel Typo="Typography.PaneHeader">Import Bank Transactions</FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+    <FluentDialogBody>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            @if (!isImporting && importResult is null)
+            {
+                <!-- Bank Selection -->
+                <FluentSelect Label="Select Your Bank" @bind-Value="selectedBankType" Style="width: 100%;" TOption="string">
+                    <FluentOption Value="BankOfAmerica" TOption="string">Bank of America</FluentOption>
+                    <FluentOption Value="CapitalOne" TOption="string">Capital One</FluentOption>
+                    <FluentOption Value="UnitedHeritageCreditUnion" TOption="string">United Heritage Credit Union</FluentOption>
+                </FluentSelect>
+
+                <!-- File Upload -->
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                    <FluentLabel Weight="FontWeight.Bold">CSV File</FluentLabel>
+                    <InputFile OnChange="HandleFileSelected" accept=".csv" />
+                    @if (!string.IsNullOrEmpty(selectedFileName))
+                    {
+                        <FluentLabel Typo="Typography.Body">Selected: @selectedFileName</FluentLabel>
+                    }
+                </FluentStack>
+            }
+
+            <!-- Import Progress -->
+            @if (isImporting)
+            {
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" HorizontalAlignment="HorizontalAlignment.Center">
+                    <FluentProgressRing />
+                    <FluentLabel Typo="Typography.Body">Importing transactions...</FluentLabel>
+                </FluentStack>
+            }
+
+            <!-- Import Results -->
+            @if (importResult is not null)
+            {
+                <FluentMessageBar Intent="@GetMessageIntent()" Style="margin-top: 16px;">
+                    <strong>Import Complete:</strong> @importResult.SuccessfulImports of @importResult.TotalRows transactions imported
+                    @if (importResult.FailedImports > 0)
+                    {
+                        <span> (@importResult.FailedImports errors)</span>
+                    }
+                </FluentMessageBar>
+
+                @if (importResult.DuplicatesSkipped > 0)
+                {
+                    <FluentMessageBar Intent="MessageIntent.Warning" Style="margin-top: 12px;">
+                        <strong>Note:</strong> Skipped @importResult.DuplicatesSkipped duplicate transaction(s).
+                    </FluentMessageBar>
+                }
+
+                @if (importResult.Errors != null && importResult.Errors.Any())
+                {
+                    <FluentAccordion Style="margin-top: 16px;">
+                        <FluentAccordionItem Heading="View Errors">
+                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                                @foreach (var error in importResult.Errors)
+                                {
+                                    <FluentLabel Typo="Typography.Body">
+                                        <strong>Row @error.RowNumber:</strong> @error.ErrorMessage
+                                    </FluentLabel>
+                                }
+                            </FluentStack>
+                        </FluentAccordionItem>
+                    </FluentAccordion>
+                }
+
+                @if (importResult.Duplicates != null && importResult.Duplicates.Any())
+                {
+                    <FluentAccordion Style="margin-top: 12px;">
+                        <FluentAccordionItem Heading="View Duplicates">
+                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                                @foreach (var dup in importResult.Duplicates)
+                                {
+                                    <FluentLabel Typo="Typography.Body">
+                                        <strong>Row @dup.RowNumber:</strong>
+                                        @dup.Date.ToString("yyyy-MM-dd") · @dup.Description · @dup.Amount.ToString("C")
+                                    </FluentLabel>
+                                }
+                            </FluentStack>
+                        </FluentAccordionItem>
+                    </FluentAccordion>
+                }
+            }
+        </FluentStack>
+    </FluentDialogBody>
+    <FluentDialogFooter>
+        @if (!isImporting && importResult is null)
+        {
+            <FluentButton Appearance="Appearance.Accent"
+                          OnClick="ImportCsv"
+                          Disabled="@(!CanImport())">
+                Import
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" OnClick="Cancel">
+                Cancel
+            </FluentButton>
+        }
+        else if (importResult is not null)
+        {
+            <FluentButton Appearance="Appearance.Accent" OnClick="CloseAfterImport">
+                Close
+            </FluentButton>
+        }
+    </FluentDialogFooter>
+</FluentDialog>
+}
+
+@code {
+    private FluentDialog? dialog;
+    private IBrowserFile? selectedFile;
+    private string? selectedFileName;
+    private string selectedBankType = "BankOfAmerica";
+    private bool isImporting;
+    private CsvImportResult? importResult;
+
+    [Parameter]
+    public bool IsOpen { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnImportSuccess { get; set; }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+        selectedFileName = e.File.Name;
+        importResult = null; // Clear previous results
+    }
+
+    private bool CanImport()
+    {
+        return selectedFile != null && !string.IsNullOrWhiteSpace(selectedBankType);
+    }
+
+    private async Task ImportCsv()
+    {
+        if (selectedFile == null)
+        {
+            return;
+        }
+
+        isImporting = true;
+        importResult = null;
+
+        try
+        {
+            // Create multipart form content
+            using var content = new MultipartFormDataContent();
+            using var fileStream = selectedFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024); // 5MB max
+            using var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+            
+            content.Add(streamContent, "file", selectedFile.Name);
+            content.Add(new StringContent(selectedBankType), "bankType");
+
+            // Call API
+            var httpClient = new HttpClient { BaseAddress = new Uri(NavigationManager.BaseUri) };
+            var response = await httpClient.PostAsync("/api/v1/csv-import", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                importResult = await response.Content.ReadFromJsonAsync<CsvImportResult>();
+                
+                // Notify parent if successful
+                if (importResult is not null && importResult.SuccessfulImports > 0)
+                {
+                    await OnImportSuccess.InvokeAsync();
+                }
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                importResult = new CsvImportResult
+                {
+                    TotalRows = 0,
+                    SuccessfulImports = 0,
+                    FailedImports = 0,
+                    DuplicatesSkipped = 0,
+                    Errors = new List<CsvImportError> { new CsvImportError { RowNumber = 0, Field = "API", ErrorMessage = $"Import failed: {error}" } }
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            importResult = new CsvImportResult
+            {
+                TotalRows = 0,
+                SuccessfulImports = 0,
+                FailedImports = 0,
+                DuplicatesSkipped = 0,
+                Errors = new List<CsvImportError> { new CsvImportError { RowNumber = 0, Field = "Client", ErrorMessage = ex.Message } }
+            };
+        }
+        finally
+        {
+            isImporting = false;
+        }
+    }
+
+    private MessageIntent GetMessageIntent()
+    {
+        if (importResult is null)
+        {
+            return MessageIntent.Info;
+        }
+
+        if (importResult.FailedImports > 0)
+        {
+            return MessageIntent.Warning;
+        }
+
+        return MessageIntent.Success;
+    }
+
+    private async Task Cancel()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+        ResetDialog();
+    }
+
+    private async Task CloseAfterImport()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+        ResetDialog();
+    }
+
+    private void ResetDialog()
+    {
+        selectedFile = null;
+        selectedFileName = null;
+        importResult = null;
+        isImporting = false;
+        selectedBankType = "BankOfAmerica";
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+}

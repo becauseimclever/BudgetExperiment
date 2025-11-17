@@ -110,4 +110,29 @@ public sealed class AdhocTransactionReadRepository : IAdhocTransactionReadReposi
             .CountAsync(cancellationToken)
             .ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AdhocTransaction>> FindDuplicatesAsync(
+        DateOnly date,
+        string description,
+        decimal amount,
+        TransactionType transactionType,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return Array.Empty<AdhocTransaction>();
+        }
+
+        var trimmedDescription = description.Trim();
+
+        // Query for potential duplicates: exact date, case-insensitive description, exact amount, same type
+        return await this._context.AdhocTransactions
+            .Where(t => t.Date == date
+                && EF.Functions.Like(t.Description.ToLower(), trimmedDescription.ToLower())
+                && Math.Abs(t.Money.Amount) == amount
+                && t.TransactionType == transactionType)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 }
