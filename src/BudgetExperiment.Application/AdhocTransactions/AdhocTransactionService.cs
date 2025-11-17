@@ -32,7 +32,20 @@ public sealed class AdhocTransactionService : IAdhocTransactionService
 
     /// <inheritdoc />
     public async Task<AdhocTransactionResponse> CreateIncomeAsync(CreateIncomeTransactionRequest request, CancellationToken cancellationToken = default)
-    {
+                {
+            // Check for duplicates
+            var duplicates = await this._readRepository.FindDuplicatesAsync(
+                request.Date,
+                request.Description,
+                request.Amount,
+                TransactionType.Income,
+                cancellationToken).ConfigureAwait(false);
+
+            if (duplicates.Count > 0)
+            {
+                throw new DomainException($"A duplicate income transaction already exists on {request.Date:MM/dd/yyyy} for '{request.Description}' with amount ${request.Amount:F2}.");
+            }
+
         var money = MoneyValue.Create(request.Currency, request.Amount);
         var transaction = AdhocTransaction.CreateIncome(request.Description, money, request.Date, request.Category);
 
@@ -46,7 +59,20 @@ public sealed class AdhocTransactionService : IAdhocTransactionService
 
     /// <inheritdoc />
     public async Task<AdhocTransactionResponse> CreateExpenseAsync(CreateExpenseTransactionRequest request, CancellationToken cancellationToken = default)
-    {
+                {
+            // Check for duplicates
+            var duplicates = await this._readRepository.FindDuplicatesAsync(
+                request.Date,
+                request.Description,
+                request.Amount,
+                TransactionType.Expense,
+                cancellationToken).ConfigureAwait(false);
+
+            if (duplicates.Count > 0)
+            {
+                throw new DomainException($"A duplicate expense transaction already exists on {request.Date:MM/dd/yyyy} for '{request.Description}' with amount ${request.Amount:F2}.");
+            }
+
         var money = MoneyValue.Create(request.Currency, request.Amount);
         var transaction = AdhocTransaction.CreateExpense(request.Description, money, request.Date, request.Category);
 

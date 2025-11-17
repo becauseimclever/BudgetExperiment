@@ -37,9 +37,10 @@ public sealed class CsvImportControllerTests : IClassFixture<WebApplicationFacto
     {
         // Arrange
         var client = this._factory.CreateClient();
-        var csv = @"Date,Description,Amount,Running Bal.
-10/01/2025,""Income Transaction"",""100.00"",""100.00""
-10/02/2025,""Expense Transaction"",""-50.00"",""50.00""";
+        var unique = Guid.NewGuid().ToString("N");
+        var csv = $@"Date,Description,Amount,Running Bal.
+    10/01/2025,""Income Transaction {unique}"",""100.00"",""100.00""
+    10/02/2025,""Expense Transaction {unique}"",""-50.00"",""50.00""";
 
         var content = new MultipartFormDataContent();
         var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
@@ -152,5 +153,51 @@ public sealed class CsvImportControllerTests : IClassFixture<WebApplicationFacto
 
         // Assert - Accept either 400 or 422 for malformed data
         Assert.True(response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == (HttpStatusCode)422);
+    }
+
+    /// <summary>
+    /// Importing the same CSV twice should skip duplicates on the second import.
+    /// </summary>
+    [Fact]
+    public async Task ImportCsv_DuplicateSecondImport_SkipsDuplicates()
+    {
+        // Arrange
+        var client = this._factory.CreateClient();
+        var unique = Guid.NewGuid().ToString("N");
+        var csv = $@"Date,Description,Amount,Running Bal.
+10/01/2025,""Income Transaction {unique}"",""100.00"",""100.00""
+10/02/2025,""Expense Transaction {unique}"",""-50.00"",""50.00""";
+
+        MultipartFormDataContent CreateContent()
+        {
+            var content = new MultipartFormDataContent();
+            var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("text/csv");
+            content.Add(fileContent, "file", "transactions.csv");
+            content.Add(new StringContent("BankOfAmerica"), "bankType");
+            return content;
+        }
+
+        // Act 1: first import
+        var response1 = await client.PostAsync("/api/v1/csv-import", CreateContent());
+        var result1 = await response1.Content.ReadFromJsonAsync<CsvImportResult>();
+
+        // Act 2: second import with same file
+        var response2 = await client.PostAsync("/api/v1/csv-import", CreateContent());
+        var result2 = await response2.Content.ReadFromJsonAsync<CsvImportResult>();
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
+        Assert.NotNull(result1);
+        Assert.Equal(2, result1.TotalRows);
+        Assert.Equal(2, result1.SuccessfulImports);
+        Assert.Equal(0, result1.DuplicatesSkipped);
+
+        Assert.Equal(HttpStatusCode.OK, response2.StatusCode);
+        Assert.NotNull(result2);
+        Assert.Equal(2, result2.TotalRows);
+        Assert.Equal(0, result2.SuccessfulImports);
+        Assert.Equal(2, result2.DuplicatesSkipped);
+        Assert.Equal(2, result2.Duplicates.Count);
     }
 }

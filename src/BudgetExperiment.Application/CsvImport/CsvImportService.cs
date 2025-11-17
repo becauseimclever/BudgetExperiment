@@ -48,8 +48,10 @@ public sealed class CsvImportService : ICsvImportService
         }
 
         var errors = new List<CsvImportError>();
+            var duplicates = new List<DuplicateTransaction>();
         var successCount = 0;
         var failedCount = 0;
+    var duplicatesSkipped = 0;
 
         try
         {
@@ -61,6 +63,27 @@ public sealed class CsvImportService : ICsvImportService
             {
                 var rowNumber = i + 2; // +1 for 1-based indexing, +1 for header row
                 var parsed = parsedTransactions[i];
+                    // Check for duplicates
+                    var potentialDuplicates = await this._readRepository.FindDuplicatesAsync(
+                        parsed.Date,
+                        parsed.Description,
+                        Math.Abs(parsed.Amount),
+                        parsed.TransactionType,
+                        cancellationToken).ConfigureAwait(false);
+
+                    if (potentialDuplicates.Count > 0)
+                    {
+                        // Skip this transaction as it's a duplicate
+                        duplicatesSkipped++;
+                        duplicates.Add(new DuplicateTransaction(
+                            rowNumber,
+                            parsed.Date,
+                            parsed.Description,
+                            Math.Abs(parsed.Amount),
+                            potentialDuplicates[0].Id));
+                        continue;
+                    }
+
 
                 try
                 {
@@ -102,8 +125,9 @@ public sealed class CsvImportService : ICsvImportService
                 TotalRows: parsedTransactions.Count,
                 SuccessfulImports: successCount,
                 FailedImports: failedCount,
-                DuplicatesSkipped: 0, // Phase 1: No duplicate detection
-                Errors: errors);
+                DuplicatesSkipped: duplicatesSkipped,
+                Errors: errors,
+                Duplicates: duplicates);
         }
         catch (DomainException ex)
         {

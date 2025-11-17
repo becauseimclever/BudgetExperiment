@@ -1,3 +1,5 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G11OJJBY)
+[![Build and Publish Docker Images](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/docker-build-publish.yml/badge.svg)](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/docker-build-publish.yml)
 # Budget Experiment
 
 A clean architecture .NET 10 budgeting application that intelligently allocates portions of each paycheck to future bills, ensuring on-time payments and surfacing potential shortfalls early.

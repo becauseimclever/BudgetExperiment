@@ -59,6 +59,8 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
             a.Property(x => x.UpdatedUtc);
             a.HasIndex(x => x.Date); // Index for date-based queries
             a.HasIndex(x => x.TransactionType); // Index for filtering by income/expense
+                    a.HasIndex(x => new { x.Date, x.TransactionType })
+                        .HasDatabaseName("IX_AdhocTransactions_Date_TransactionType"); // Composite index for duplicate detection
         });
 
         // RecurringSchedule mapping (unified PaySchedule and BillSchedule replacement)

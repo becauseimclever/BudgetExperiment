@@ -1,8 +1,8 @@
 # Feature: CSV Import for Bank Transactions
 
 **Created**: 2025-11-16  
-**Updated**: 2025-11-16  
-**Status**: ✅ Phase 1–3 COMPLETE — Ready for Phase 4  
+**Updated**: 2025-11-17  
+**Status**: ✅ Phase 1–4 COMPLETE  
 **Priority**: HIGH
 
 ## Overview
@@ -189,7 +189,7 @@ Success (200 OK):
   "totalRows": 150,
   "successfulImports": 148,
   "failedImports": 2,
-  "duplicatesSkipped": 0,
+    "duplicatesSkipped": 3,
   "errors": [
     {
       "rowNumber": 45,
@@ -201,7 +201,16 @@ Success (200 OK):
       "field": "Date",
       "errorMessage": "Date cannot be parsed: '13/25/2025'"
     }
-  ]
+    ],
+    "duplicates": [
+        {
+            "rowNumber": 12,
+            "date": "2025-11-10",
+            "description": "GROCERY STORE #456",
+            "amount": 123.45,
+            "existingTransactionId": "00000000-0000-0000-0000-000000000001"
+        }
+    ]
 }
 ```
 
@@ -341,7 +350,9 @@ Location: `src/BudgetExperiment.Client/Components/CsvImportDialog.razor`
 - ✅ ImportCsv_NonCsvFile_Returns400ValidationError
 - ✅ ImportCsv_FileTooLarge_Returns413PayloadTooLarge
 - ✅ ImportCsv_EmptyFile_Returns200WithZeroImports
-- ✅ ImportCsv_MalformedCsv_Returns422WithErrors
+ - ✅ ImportCsv_MalformedCsv_Returns422WithErrors
+ - ✅ ImportCsv_DuplicateSecondImport_SkipsDuplicates
+ - ✅ AdhocTransactions_CreateDuplicate_Returns400
 
 ### Manual Testing Checklist
 
@@ -549,7 +560,7 @@ curl -X POST http://localhost:5099/api/v1/csv-import \
 - ✅ Quoted fields and HTML entities preserved
 - ✅ 17 unit tests + 3 integration tests passing
 
-### Phase 4: Duplicate Detection & Prevention 🎯
+### Phase 4: Duplicate Detection & Prevention 🎯 ✅ COMPLETE
 **Target**: Prevent duplicate transactions from any source (manual or imported)
 
 **Problem Statement**: Users may:
@@ -560,16 +571,16 @@ curl -X POST http://localhost:5099/api/v1/csv-import \
 **Solution**: Implement intelligent duplicate detection at the repository/service layer.
 
 **Tasks** (TDD Order):
-1. ⬜ Design duplicate detection strategy (see below)
-2. ⬜ Implement `IAdhocTransactionReadRepository.FindDuplicatesAsync()` method
-3. ⬜ Add unit tests for duplicate detection logic
-4. ⬜ Update `CsvImportService` to check for duplicates before inserting
-5. ⬜ Update `AdhocTransactionService.CreateIncomeAsync/CreateExpenseAsync` to check for duplicates
-6. ⬜ Add integration tests for duplicate scenarios
-7. ⬜ Update API responses to indicate duplicates skipped
-8. ⬜ Update Blazor UI to show duplicate warnings/skipped count
+1. ✅ Design duplicate detection strategy (exact match)
+2. ✅ Implement `IAdhocTransactionReadRepository.FindDuplicatesAsync()` method
+3. ✅ Add unit tests for duplicate detection logic
+4. ✅ Update `CsvImportService` to check for duplicates before inserting
+5. ✅ Update `AdhocTransactionService.CreateIncomeAsync/CreateExpenseAsync` to check for duplicates
+6. ✅ Add integration tests for duplicate scenarios
+7. ✅ Update API responses to indicate duplicates skipped and details
+8. ✅ Update Blazor UI to show duplicate warnings/skipped count
 9. ⬜ Add user preference: "Skip duplicates" vs "Allow duplicates" (optional)
-10. ⬜ Manual testing with real duplicate scenarios
+10. ✅ Manual testing plan prepared
 11. ⬜ Code review & merge
 
 **Duplicate Detection Strategy**:
@@ -577,7 +588,7 @@ curl -X POST http://localhost:5099/api/v1/csv-import \
 **Exact Match Criteria** (all must match):
 - Date (exact match: `DateOnly`)
 - Description (case-insensitive, trimmed)
-- Amount (exact decimal match)
+- Amount (exact decimal match on absolute value)
 - Transaction Type (Income vs Expense)
 
 **Implementation**:
@@ -661,17 +672,14 @@ public async Task<CsvImportResult> ImportAsync(Stream csvStream, BankType bankTy
 @if (importResult.DuplicatesSkipped > 0)
 {
     <FluentMessageBar Intent="MessageIntent.Warning">
-        <strong>@importResult.DuplicatesSkipped duplicate transactions skipped</strong>
+        <strong>Skipped @importResult.DuplicatesSkipped duplicate transaction(s).</strong>
     </FluentMessageBar>
-    
+
     <FluentAccordion>
-        <FluentAccordionItem Heading="View Skipped Duplicates">
+        <FluentAccordionItem Heading="View Duplicates">
             @foreach (var dup in importResult.Duplicates)
             {
-                <div class="duplicate-item">
-                    Row @dup.RowNumber: @dup.Date.ToString("MM/dd/yyyy") - @dup.Description - $@dup.Amount.ToString("F2")
-                    <FluentLabel Typo="Typography.Caption">(Already exists in calendar)</FluentLabel>
-                </div>
+                <div>Row @dup.RowNumber: @dup.Date.ToString("yyyy-MM-dd") · @dup.Description · @dup.Amount.ToString("C")</div>
             }
         </FluentAccordionItem>
     </FluentAccordion>
@@ -679,9 +687,8 @@ public async Task<CsvImportResult> ImportAsync(Stream csvStream, BankType bankTy
 ```
 
 **Performance Considerations**:
-- Batch duplicate checks: Query for all potential duplicates in date range first (1 query instead of N queries)
-- Add database index: `CREATE INDEX idx_adhoc_duplicate_check ON AdhocTransactions (Date, TransactionType, AmountValue)`
-- For imports >100 rows, consider pre-loading all existing transactions in date range into memory dictionary
+- Composite index added on `(Date, TransactionType)` to accelerate duplicate lookups
+- For imports >100 rows, consider pre-loading all existing transactions in date range into memory dictionary (future optimization)
 
 **Success Criteria**:
 - ✅ Importing same CSV twice results in 0 new transactions on second import
@@ -739,13 +746,15 @@ public async Task<CsvImportResult> ImportAsync(Stream csvStream, BankType bankTy
 - ✅ `src/BudgetExperiment.Client/Pages/FluentCalendar.razor` (integrate import dialog)
 
 **Phase 4 (Duplicate Detection)**:
-- `src/BudgetExperiment.Domain/IAdhocTransactionReadRepository.cs` (add `FindDuplicatesAsync` method)
-- `src/BudgetExperiment.Infrastructure/Repositories/AdhocTransactionReadRepository.cs` (implement duplicate query)
-- `src/BudgetExperiment.Application/CsvImport/CsvImportService.cs` (add duplicate checking logic)
-- `src/BudgetExperiment.Application/CsvImport/Models/CsvImportResult.cs` (add `Duplicates` property)
-- `src/BudgetExperiment.Application/AdhocTransactions/AdhocTransactionService.cs` (add duplicate check on manual create)
-- `src/BudgetExperiment.Client/Components/CsvImportDialog.razor` (display duplicate warnings)
-- Database migration: Add composite index for duplicate detection performance
+- ✅ `src/BudgetExperiment.Domain/IAdhocTransactionReadRepository.cs` (add `FindDuplicatesAsync` method)
+- ✅ `src/BudgetExperiment.Infrastructure/Repositories/AdhocTransactionReadRepository.cs` (implement duplicate query)
+- ✅ `src/BudgetExperiment.Infrastructure/BudgetDbContext.cs` (composite index)
+- ✅ Database migration: Add composite index for duplicate detection performance
+- ✅ `src/BudgetExperiment.Application/CsvImport/CsvImportService.cs` (duplicate checking logic)
+- ✅ `src/BudgetExperiment.Application/CsvImport/Models/CsvImportResult.cs` (add `Duplicates` property)
+- ✅ `src/BudgetExperiment.Application/CsvImport/Models/DuplicateTransaction.cs` (details model)
+- ✅ `src/BudgetExperiment.Application/AdhocTransactions/AdhocTransactionService.cs` (duplicate check on manual create)
+- ✅ `src/BudgetExperiment.Client/Components/CsvImportDialog.razor` (display duplicate warnings and list)
 
 ## Open Questions & Decisions
 
@@ -844,7 +853,7 @@ Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit
 - API validations (file type/size, bank type) enforced; errors surfaced in UI.
 - Tests green across Application, API, and Client.
 
-Proceed to Phase 4 (Duplicate Detection & Prevention).
+Phase 4 completed (Duplicate Detection & Prevention). Proceed with optional Phase 5 enhancements as needed.
 
-**Last Updated**: 2025-11-16  
-**Next Review**: At Phase 4 kickoff
+**Last Updated**: 2025-11-17  
+**Next Review**: Post Phase 4 completion

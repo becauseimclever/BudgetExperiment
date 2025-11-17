@@ -33,6 +33,11 @@ public sealed class CsvImportResult
     /// Gets or sets collection of errors encountered during import.
     /// </summary>
     public List<CsvImportError> Errors { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets collection of duplicate transactions that were skipped.
+    /// </summary>
+    public List<DuplicateTransaction> Duplicates { get; set; } = new();
 }
 
 /// <summary>
@@ -54,4 +59,35 @@ public sealed class CsvImportError
     /// Gets or sets description of the error.
     /// </summary>
     public string ErrorMessage { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Represents a duplicate transaction that was skipped during import.
+/// </summary>
+public sealed class DuplicateTransaction
+{
+    /// <summary>
+    /// Gets or sets the row number in the CSV file (1-based, excluding header).
+    /// </summary>
+    public int RowNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets the transaction date.
+    /// </summary>
+    public DateOnly Date { get; set; }
+
+    /// <summary>
+    /// Gets or sets the transaction description.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the transaction amount (absolute value).
+    /// </summary>
+    public decimal Amount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the ID of the existing matching transaction in the database.
+    /// </summary>
+    public Guid ExistingTransactionId { get; set; }
 }

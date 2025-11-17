@@ -56,6 +56,13 @@
                     }
                 </FluentMessageBar>
 
+                @if (importResult.DuplicatesSkipped > 0)
+                {
+                    <FluentMessageBar Intent="MessageIntent.Warning" Style="margin-top: 12px;">
+                        <strong>Note:</strong> Skipped @importResult.DuplicatesSkipped duplicate transaction(s).
+                    </FluentMessageBar>
+                }
+
                 @if (importResult.Errors != null && importResult.Errors.Any())
                 {
                     <FluentAccordion Style="margin-top: 16px;">
@@ -65,6 +72,23 @@
                                 {
                                     <FluentLabel Typo="Typography.Body">
                                         <strong>Row @error.RowNumber:</strong> @error.ErrorMessage
+                                    </FluentLabel>
+                                }
+                            </FluentStack>
+                        </FluentAccordionItem>
+                    </FluentAccordion>
+                }
+
+                @if (importResult.Duplicates != null && importResult.Duplicates.Any())
+                {
+                    <FluentAccordion Style="margin-top: 12px;">
+                        <FluentAccordionItem Heading="View Duplicates">
+                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                                @foreach (var dup in importResult.Duplicates)
+                                {
+                                    <FluentLabel Typo="Typography.Body">
+                                        <strong>Row @dup.RowNumber:</strong>
+                                        @dup.Date.ToString("yyyy-MM-dd") · @dup.Description · @dup.Amount.ToString("C")
                                     </FluentLabel>
                                 }
                             </FluentStack>
