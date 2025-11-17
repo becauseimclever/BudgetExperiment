@@ -2,7 +2,7 @@
 
 **Created**: 2025-11-16  
 **Updated**: 2025-11-17  
-**Status**: ✅ Phase 1–4 COMPLETE  
+**Status**: ✅ Phase 1–5 COMPLETE  
 **Priority**: HIGH
 
 ## Overview
@@ -696,6 +696,23 @@ public async Task<CsvImportResult> ImportAsync(Stream csvStream, BankType bankTy
 - ✅ Similar transactions with different amounts are NOT treated as duplicates
 - ✅ Duplicate check adds <100ms per transaction (performance acceptable)
 - ✅ User sees clear report of which rows were skipped and why
+
+### Phase 5: Advanced Deduplication ✅ COMPLETE
+Target: Reduce near-duplicate imports via fuzzy matching.
+
+Implementation:
+- Fuzzy duplicate detection in `CsvImportService` using:
+  - Date proximity: ±1 day window
+  - Amount/type: exact match on absolute amount and transaction type
+  - Description similarity: Levenshtein distance ≤ 3 on normalized descriptions
+- Exact-match check remains first; fuzzy check runs only when no exact duplicate found.
+
+Testing:
+- Added unit test `ImportAsync_FuzzyDuplicateWithinOneDay_SkipsDuplicate` verifying skip behavior.
+
+Behavior:
+- Duplicates (exact or fuzzy) increment `DuplicatesSkipped` and appear in `CsvImportResult.Duplicates`.
+- No API or UI contract changes required.
 
 ### Phase 5: Additional Enhancements (Future)
 **Optional features based on user feedback**:

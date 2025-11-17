@@ -203,6 +203,43 @@ public sealed class CsvImportServiceTests
             Assert.Equal(1, unitOfWork.SaveChangesCallCount);
     }
 
+    /// <summary>
+    /// Skips fuzzy duplicate within one day using Levenshtein on description.
+    /// </summary>
+    [Fact]
+    public async Task ImportAsync_FuzzyDuplicateWithinOneDay_SkipsDuplicate()
+    {
+        // Arrange: existing expense on 10/01 with similar description
+        var existing = AdhocTransaction.CreateExpense(
+            "GROCERY STORE #456",
+            MoneyValue.Create("USD", 123.45m),
+            new DateOnly(2025, 10, 1));
+
+        // Incoming CSV: 10/02, similar description with minor punctuation change
+        var csv = @"Date,Description,Amount,Running Bal.
+10/02/2025,""GROCERY STORE #456."",""-123.45"",""100.00""";
+
+        var readRepo = new FakeAdhocTransactionReadRepositoryWithDuplicates(new[] { existing });
+        var writeRepo = new FakeAdhocTransactionWriteRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var parser = new BankOfAmericaCsvParser();
+        var service = new CsvImportService(readRepo, writeRepo, unitOfWork, new[] { parser });
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        // Act
+        var result = await service.ImportAsync(stream, BankType.BankOfAmerica, CancellationToken.None);
+
+        // Assert: no new inserts, counted as duplicate
+        Assert.Equal(1, result.TotalRows);
+        Assert.Equal(0, result.SuccessfulImports);
+        Assert.Equal(0, result.FailedImports);
+        Assert.Equal(1, result.DuplicatesSkipped);
+        Assert.Single(result.Duplicates);
+        Assert.Empty(writeRepo.AddedTransactions);
+        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
+    }
+
     // Fake implementations for testing
     private sealed class FakeAdhocTransactionReadRepository : IAdhocTransactionReadRepository
     {

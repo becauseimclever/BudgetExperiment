@@ -17,6 +17,7 @@ public sealed class CsvImportService : ICsvImportService
     private readonly IAdhocTransactionWriteRepository _writeRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly Dictionary<BankType, IBankCsvParser> _parsers;
+    private const int MaxDescriptionDistance = 3;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CsvImportService"/> class.
@@ -84,6 +85,45 @@ public sealed class CsvImportService : ICsvImportService
                         continue;
                     }
 
+                    // Phase 5: Advanced deduplication (fuzzy matching)
+                    // Search within date proximity (±1 day) and same amount/type, then fuzzy match description
+                    var startDate = parsed.Date.AddDays(-1);
+                    var endDate = parsed.Date.AddDays(1);
+                    var nearby = await this._readRepository.GetByDateRangeAsync(startDate, endDate, cancellationToken).ConfigureAwait(false);
+
+                    if (nearby.Count > 0)
+                    {
+                        var targetDesc = NormalizeDescription(parsed.Description);
+                        var amountAbs = Math.Abs(parsed.Amount);
+                        var candidates = nearby.Where(t =>
+                            t.TransactionType == parsed.TransactionType &&
+                            Math.Abs(t.Money.Amount) == amountAbs).ToList();
+
+                        Guid? fuzzyMatchId = null;
+                        foreach (var candidate in candidates)
+                        {
+                            var candDesc = NormalizeDescription(candidate.Description);
+                            var dist = LevenshteinDistance(targetDesc, candDesc);
+                            if (dist <= MaxDescriptionDistance)
+                            {
+                                fuzzyMatchId = candidate.Id;
+                                break;
+                            }
+                        }
+
+                        if (fuzzyMatchId.HasValue)
+                        {
+                            duplicatesSkipped++;
+                            duplicates.Add(new DuplicateTransaction(
+                                rowNumber,
+                                parsed.Date,
+                                parsed.Description,
+                                amountAbs,
+                                fuzzyMatchId.Value));
+                            continue;
+                        }
+                    }
+
 
                 try
                 {
@@ -134,5 +174,65 @@ public sealed class CsvImportService : ICsvImportService
             // Parser-level error (e.g., invalid CSV format)
             throw new DomainException($"Failed to parse CSV: {ex.Message}");
         }
+    }
+
+    private static string NormalizeDescription(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return string.Empty;
+        }
+
+        // Uppercase, trim, remove most punctuation, collapse whitespace
+        var chars = description.Trim().ToUpperInvariant()
+            .Select(ch => char.IsLetterOrDigit(ch) ? ch : (char.IsWhiteSpace(ch) ? ' ' : '\0'))
+            .Where(ch => ch != '\0')
+            .ToArray();
+
+        var normalized = new string(chars);
+        while (normalized.Contains("  ", StringComparison.Ordinal))
+        {
+            normalized = normalized.Replace("  ", " ", StringComparison.Ordinal);
+        }
+
+        return normalized;
+    }
+
+    private static int LevenshteinDistance(string s, string t)
+    {
+        if (s == t)
+        {
+            return 0;
+        }
+
+        if (s.Length == 0)
+        {
+            return t.Length;
+        }
+
+        if (t.Length == 0)
+        {
+            return s.Length;
+        }
+
+        var rows = s.Length + 1;
+        var cols = t.Length + 1;
+        var d = new int[rows, cols];
+
+        for (int i = 0; i < rows; i++) d[i, 0] = i;
+        for (int j = 0; j < cols; j++) d[0, j] = j;
+
+        for (int i = 1; i < rows; i++)
+        {
+            for (int j = 1; j < cols; j++)
+            {
+                var cost = s[i - 1] == t[j - 1] ? 0 : 1;
+                d[i, j] = Math.Min(
+                    Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                    d[i - 1, j - 1] + cost);
+            }
+        }
+
+        return d[rows - 1, cols - 1];
     }
 }
