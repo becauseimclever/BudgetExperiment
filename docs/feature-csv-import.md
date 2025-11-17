@@ -2,7 +2,7 @@
 
 **Created**: 2025-11-16  
 **Updated**: 2025-11-16  
-**Status**: 🚧 IN PROGRESS (Phase 3 Parser Complete)  
+**Status**: ✅ Phase 1–3 COMPLETE — Ready for Phase 4  
 **Priority**: HIGH
 
 ## Overview
@@ -346,17 +346,17 @@ Location: `src/BudgetExperiment.Client/Components/CsvImportDialog.razor`
 ### Manual Testing Checklist
 
 **Blazor Client**:
-- [ ] Import button visible in calendar header
-- [ ] Dialog opens on button click
-- [ ] Bank dropdown lists all 3 banks (Phase 1: only BofA enabled)
-- [ ] File input accepts `.csv` only
-- [ ] Progress indicator shows during upload
-- [ ] Success message displays with correct counts
-- [ ] Error accordion expands to show row-level errors
-- [ ] Calendar refreshes automatically after import
-- [ ] Imported transactions appear on correct dates
-- [ ] Income transactions display as green/positive
-- [ ] Expense transactions display as red/negative
+- [x] Import button visible in calendar header
+- [x] Dialog opens on button click
+- [x] Bank dropdown lists all 3 banks (BofA, Capital One, UHCU)
+- [x] File input accepts `.csv` only
+- [x] Progress indicator shows during upload
+- [x] Success message displays with correct counts
+- [x] Error accordion expands to show row-level errors
+- [x] Calendar refreshes automatically after import
+- [x] Imported transactions appear on correct dates
+- [x] Income transactions display as green/positive
+- [x] Expense transactions display as red/negative
 
 **API Endpoint**:
 - [ ] POST `/api/v1/csv-import` accepts multipart form data
@@ -495,26 +495,26 @@ curl -X POST http://localhost:5099/api/v1/csv-import \
 
 ## Incremental Delivery Plan
 
-### Phase 1: Bank of America Support ✨
+### Phase 1: Bank of America Support ✅ COMPLETE
 **Target**: Minimal viable CSV import
 
 **Tasks** (TDD Order):
 1. ✅ Create feature planning document
-2. ⬜ Add CsvHelper NuGet to Application project
-3. ⬜ Implement `BankOfAmericaCsvParser` + unit tests
-4. ⬜ Implement `CsvImportService` + unit tests
-5. ⬜ Implement `CsvImportController` + integration tests
-6. ⬜ Add OpenAPI documentation + Scalar examples
-7. ⬜ Implement Blazor `CsvImportDialog` component
-8. ⬜ Integrate import button into `CalendarHeader`
-9. ⬜ Manual testing with real BofA CSV files
-10. ⬜ Code review & merge
+2. ✅ Add CsvHelper NuGet to Application project
+3. ✅ Implement `BankOfAmericaCsvParser` + unit tests
+4. ✅ Implement `CsvImportService` + unit tests
+5. ✅ Implement `CsvImportController` + integration tests
+6. ✅ Add OpenAPI documentation (Scalar UI wired separately)
+7. ✅ Implement Blazor `CsvImportDialog` component
+8. ✅ Integrate import button into `CalendarHeader`
+9. ✅ Manual testing with BofA sample CSV
+10. ⬜ Code review & merge (pending branch merge)
 
 **Success Criteria**:
-- User can import BofA CSV
-- Transactions appear on calendar
-- Errors reported clearly
-- All tests pass
+- ✅ User can import BofA CSV
+- ✅ Transactions appear on calendar
+- ✅ Errors reported clearly
+- ✅ All tests pass
 
 ### Phase 2: Capital One Support ✅ **COMPLETE**
 **Target**: Add second bank parser
@@ -536,10 +536,10 @@ curl -X POST http://localhost:5099/api/v1/csv-import \
 
 **Tasks**:
 1. ✅ Implement `UnitedHeritageCreditUnionCsvParser` + unit tests
-2. ⬜ Update Blazor dialog to enable UHCU option
-3. ⬜ Manual testing with real UHCU CSV files
+2. ✅ Update Blazor dialog to enable UHCU option
+3. ✅ Manual testing with UHCU sample CSV
 4. ✅ Update documentation
-5. ⬜ Code review & merge
+5. ⬜ Code review & merge (pending branch merge)
 
 **Success Criteria**:
 - ✅ User can import UHCU CSV (parser implemented)
@@ -735,8 +735,8 @@ public async Task<CsvImportResult> ImportAsync(Stream csvStream, BankType bankTy
 
 **Phase 1-3**:
 - ✅ `src/BudgetExperiment.Application/DependencyInjection.cs` (register `ICsvImportService` + parsers)
-- ⬜ `src/BudgetExperiment.Client/Components/Calendar/CalendarHeader.razor` (add import button)
-- ⬜ `src/BudgetExperiment.Client/Pages/FluentCalendar.razor` (integrate import dialog)
+- ✅ `src/BudgetExperiment.Client/Components/Calendar/CalendarHeader.razor` (add import button)
+- ✅ `src/BudgetExperiment.Client/Pages/FluentCalendar.razor` (integrate import dialog)
 
 **Phase 4 (Duplicate Detection)**:
 - `src/BudgetExperiment.Domain/IAdhocTransactionReadRepository.cs` (add `FindDuplicatesAsync` method)
@@ -837,5 +837,14 @@ Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit
 
 ---
 
+## Readiness for Next Phase
+
+- All three bank formats supported and manually tested end-to-end (UI → API → DB).
+- Blazor dialog lists Bank of America, Capital One, and United Heritage Credit Union.
+- API validations (file type/size, bank type) enforced; errors surfaced in UI.
+- Tests green across Application, API, and Client.
+
+Proceed to Phase 4 (Duplicate Detection & Prevention).
+
 **Last Updated**: 2025-11-16  
-**Next Review**: After Phase 1 completion
+**Next Review**: At Phase 4 kickoff
