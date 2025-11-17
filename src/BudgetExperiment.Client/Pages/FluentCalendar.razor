@@ -19,7 +19,8 @@
         <!-- Calendar Header -->
         <CalendarHeader MonthName="@currentMonth.MonthName" 
                         Year="@currentMonth.Year"
-                        OnNavigateMonth="NavigateMonth" />
+                        OnNavigateMonth="NavigateMonth"
+                        OnImportClick="OpenImportDialog" />
 
         <!-- Calendar Grid -->
         <CalendarGrid CurrentMonth="@currentMonth"
@@ -68,6 +69,10 @@
                          OnEditRecurringSchedule="EventCallback.Factory.Create<RecurringScheduleItem>(this, HandleEditRecurringScheduleFromDay)"
                          OnEditAdhocTransaction="EventCallback.Factory.Create<AdhocTransactionItem>(this, HandleEditAdhocTransactionFromDay)" />
 
+<!-- CSV Import Dialog -->
+<CsvImportDialog @bind-IsOpen="showImportDialog"
+                 OnImportSuccess="HandleImportSuccess" />
+
 @code {
     private CalendarMonth currentMonth = new();
     private string currentMonthKey = string.Empty;
@@ -82,6 +87,9 @@
     // Day details dialog state
     private bool showDayDetailsDialog = false;
     private DateOnly selectedDayForDetails = DateOnly.MinValue;
+
+    // Import dialog state
+    private bool showImportDialog = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -568,5 +576,20 @@
     {
         CloseDayDetailsDialog();
         OpenAdhocTransactionDialog(transaction);
+    }
+
+    // CSV Import methods
+    private void OpenImportDialog()
+    {
+        showImportDialog = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleImportSuccess()
+    {
+        // Reload the current month data after successful import
+        DataService.ClearCache();
+        await LoadCurrentMonth();
+        StateHasChanged();
     }
 }

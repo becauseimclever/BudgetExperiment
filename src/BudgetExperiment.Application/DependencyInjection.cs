@@ -1,4 +1,6 @@
 using BudgetExperiment.Application.AdhocTransactions;
+using BudgetExperiment.Application.CsvImport;
+using BudgetExperiment.Application.CsvImport.Parsers;
 using BudgetExperiment.Application.RecurringSchedules;
 using BudgetExperiment.Application.RunningTotals;
 
@@ -19,6 +21,11 @@ public static class DependencyInjection
         services.AddScoped<IRecurringScheduleService, RecurringScheduleService>();
         services.AddScoped<IAdhocTransactionService, AdhocTransactionService>();
         services.AddScoped<IRunningTotalService, RunningTotalService>();
+
+        // CSV import services
+        services.AddScoped<ICsvImportService, CsvImportService>();
+        services.AddScoped<IBankCsvParser, BankOfAmericaCsvParser>();
+        services.AddScoped<IBankCsvParser, CapitalOneCsvParser>();
 
         return services;
     }
