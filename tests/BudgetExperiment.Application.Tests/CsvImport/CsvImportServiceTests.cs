@@ -240,6 +240,152 @@ public sealed class CsvImportServiceTests
         Assert.Equal(0, unitOfWork.SaveChangesCallCount);
     }
 
+    /// <summary>
+    /// Skips bank CSV with metadata when matching manually entered simple description.
+    /// </summary>
+    [Fact]
+    public async Task ImportAsync_BankMetadataVsManualEntry_SkipsDuplicate()
+    {
+        // Arrange: manually entered simple expense
+        var existing = AdhocTransaction.CreateExpense(
+            "GROCERY STORE #659",
+            MoneyValue.Create("USD", 83.72m),
+            new DateOnly(2025, 11, 7));
+
+        // Incoming CSV: bank format with date, location, metadata
+        var csv = @"Date,Description,Amount,Running Bal.
+11/07/2025,""GROCERY STORE #659 11/07 MOBILE PURCHASE ANYTOWN TX"",""-83.72"",""884.62""";
+
+        var readRepo = new FakeAdhocTransactionReadRepositoryWithDuplicates(new[] { existing });
+        var writeRepo = new FakeAdhocTransactionWriteRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var parser = new BankOfAmericaCsvParser();
+        var service = new CsvImportService(readRepo, writeRepo, unitOfWork, new[] { parser });
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        // Act
+        var result = await service.ImportAsync(stream, BankType.BankOfAmerica, CancellationToken.None);
+
+        // Assert: no new inserts, metadata stripped and matched via keywords
+        Assert.Equal(1, result.TotalRows);
+        Assert.Equal(0, result.SuccessfulImports);
+        Assert.Equal(0, result.FailedImports);
+        Assert.Equal(1, result.DuplicatesSkipped);
+        Assert.Single(result.Duplicates);
+        Assert.Empty(writeRepo.AddedTransactions);
+        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
+    }
+
+    /// <summary>
+    /// Does not skip different merchants with similar names.
+    /// </summary>
+    [Fact]
+    public async Task ImportAsync_DifferentMerchantsSimilarNames_AllowsBoth()
+    {
+        // Arrange: existing restaurant A
+        var existing = AdhocTransaction.CreateExpense(
+            "RESTAURANT A",
+            MoneyValue.Create("USD", 25.00m),
+            new DateOnly(2025, 11, 7));
+
+        // Incoming CSV: different restaurant (RESTAURANT B)
+        var csv = @"Date,Description,Amount,Running Bal.
+11/07/2025,""RESTAURANT B"",""-30.00"",""100.00""";
+
+        var readRepo = new FakeAdhocTransactionReadRepositoryWithDuplicates(new[] { existing });
+        var writeRepo = new FakeAdhocTransactionWriteRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var parser = new BankOfAmericaCsvParser();
+        var service = new CsvImportService(readRepo, writeRepo, unitOfWork, new[] { parser });
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        // Act
+        var result = await service.ImportAsync(stream, BankType.BankOfAmerica, CancellationToken.None);
+
+        // Assert: different amount, so not caught by amount filter; both allowed
+        Assert.Equal(1, result.TotalRows);
+        Assert.Equal(1, result.SuccessfulImports);
+        Assert.Equal(0, result.FailedImports);
+        Assert.Equal(0, result.DuplicatesSkipped);
+        Assert.Empty(result.Duplicates);
+        Assert.Single(writeRepo.AddedTransactions);
+    }
+
+    /// <summary>
+    /// Skips Zelle transaction with confirmation code vs manual entry.
+    /// </summary>
+    [Fact]
+    public async Task ImportAsync_ZelleWithConfCodeVsManual_SkipsDuplicate()
+    {
+        // Arrange: manually entered Zelle income
+        var existing = AdhocTransaction.CreateIncome(
+            "Zelle payment from John Smith",
+            MoneyValue.Create("USD", 100.00m),
+            new DateOnly(2025, 10, 1));
+
+        // Incoming CSV: bank format with confirmation code
+        var csv = @"Date,Description,Amount,Running Bal.
+10/01/2025,""Zelle payment from John Smith Conf# AB8KL2MXC"",""100.00"",""457.05""";
+
+        var readRepo = new FakeAdhocTransactionReadRepositoryWithDuplicates(new[] { existing });
+        var writeRepo = new FakeAdhocTransactionWriteRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var parser = new BankOfAmericaCsvParser();
+        var service = new CsvImportService(readRepo, writeRepo, unitOfWork, new[] { parser });
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        // Act
+        var result = await service.ImportAsync(stream, BankType.BankOfAmerica, CancellationToken.None);
+
+        // Assert: confirmation code stripped, keywords match
+        Assert.Equal(1, result.TotalRows);
+        Assert.Equal(0, result.SuccessfulImports);
+        Assert.Equal(0, result.FailedImports);
+        Assert.Equal(1, result.DuplicatesSkipped);
+        Assert.Single(result.Duplicates);
+        Assert.Empty(writeRepo.AddedTransactions);
+    }
+
+    /// <summary>
+    /// Skips duplicates when posted date is two days after the manual 'initiated' date embedded in description.
+    /// </summary>
+    [Fact]
+    public async Task ImportAsync_InitiatedVsPostedDate_TwoDaysApart_SkipsDuplicate()
+    {
+        // Arrange: manual expense on 11/02 with simple description
+        var existing = AdhocTransaction.CreateExpense(
+            "CITY WATER",
+            MoneyValue.Create("USD", 19.90m),
+            new DateOnly(2025, 11, 2));
+
+        // Incoming CSV: posted on 11/04, description contains initiated date 11/02 and bank metadata
+        var csv = @"Date,Description,Amount,Running Bal.
+11/04/2025,""CITY WATER UTILITIES 11/02 PURCHASE XXX-XX46891 TX"",""-19.90"",""16.34""";
+
+        var readRepo = new FakeAdhocTransactionReadRepositoryWithDuplicates(new[] { existing });
+        var writeRepo = new FakeAdhocTransactionWriteRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var parser = new BankOfAmericaCsvParser();
+        var service = new CsvImportService(readRepo, writeRepo, unitOfWork, new[] { parser });
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+
+        // Act
+        var result = await service.ImportAsync(stream, BankType.BankOfAmerica, CancellationToken.None);
+
+        // Assert: recognized as duplicate across a 2-day gap
+        Assert.Equal(1, result.TotalRows);
+        Assert.Equal(0, result.SuccessfulImports);
+        Assert.Equal(0, result.FailedImports);
+        Assert.Equal(1, result.DuplicatesSkipped);
+        Assert.Single(result.Duplicates);
+        Assert.Empty(writeRepo.AddedTransactions);
+        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
+    }
+
     // Fake implementations for testing
     private sealed class FakeAdhocTransactionReadRepository : IAdhocTransactionReadRepository
     {

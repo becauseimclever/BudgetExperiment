@@ -5,6 +5,7 @@
 using BudgetExperiment.Application.CsvImport.Models;
 using BudgetExperiment.Application.CsvImport.Parsers;
 using BudgetExperiment.Domain;
+using Microsoft.Extensions.Options;
 
 namespace BudgetExperiment.Application.CsvImport;
 
@@ -17,7 +18,7 @@ public sealed class CsvImportService : ICsvImportService
     private readonly IAdhocTransactionWriteRepository _writeRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly Dictionary<BankType, IBankCsvParser> _parsers;
-    private const int MaxDescriptionDistance = 3;
+    private readonly CsvImportDeduplicationOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CsvImportService"/> class.
@@ -26,16 +27,19 @@ public sealed class CsvImportService : ICsvImportService
     /// <param name="writeRepository">Write repository.</param>
     /// <param name="unitOfWork">Unit of work.</param>
     /// <param name="parsers">Collection of bank CSV parsers.</param>
+    /// <param name="options">Optional deduplication configuration (uses defaults if not provided).</param>
     public CsvImportService(
         IAdhocTransactionReadRepository readRepository,
         IAdhocTransactionWriteRepository writeRepository,
         IUnitOfWork unitOfWork,
-        IEnumerable<IBankCsvParser> parsers)
+        IEnumerable<IBankCsvParser> parsers,
+        IOptions<CsvImportDeduplicationOptions>? options = null)
     {
         this._readRepository = readRepository ?? throw new ArgumentNullException(nameof(readRepository));
         this._writeRepository = writeRepository ?? throw new ArgumentNullException(nameof(writeRepository));
         this._unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         this._parsers = parsers?.ToDictionary(p => p.BankType, p => p) ?? throw new ArgumentNullException(nameof(parsers));
+        this._options = options?.Value ?? new CsvImportDeduplicationOptions();
     }
 
     /// <inheritdoc />
@@ -86,14 +90,16 @@ public sealed class CsvImportService : ICsvImportService
                     }
 
                     // Phase 5: Advanced deduplication (fuzzy matching)
-                    // Search within date proximity (±1 day) and same amount/type, then fuzzy match description
-                    var startDate = parsed.Date.AddDays(-1);
-                    var endDate = parsed.Date.AddDays(1);
+                    // Search within date proximity (±N days) and same amount/type, then fuzzy match description
+                    var window = this._options.EffectiveDateWindowDays;
+                    var startDate = parsed.Date.AddDays(-window);
+                    var endDate = parsed.Date.AddDays(window);
                     var nearby = await this._readRepository.GetByDateRangeAsync(startDate, endDate, cancellationToken).ConfigureAwait(false);
 
                     if (nearby.Count > 0)
                     {
-                        var targetDesc = NormalizeDescription(parsed.Description);
+                        var targetNormalized = NormalizeDescription(parsed.Description);
+                        var targetTokens = ExtractKeywords(parsed.Description);
                         var amountAbs = Math.Abs(parsed.Amount);
                         var candidates = nearby.Where(t =>
                             t.TransactionType == parsed.TransactionType &&
@@ -102,9 +108,20 @@ public sealed class CsvImportService : ICsvImportService
                         Guid? fuzzyMatchId = null;
                         foreach (var candidate in candidates)
                         {
-                            var candDesc = NormalizeDescription(candidate.Description);
-                            var dist = LevenshteinDistance(targetDesc, candDesc);
-                            if (dist <= MaxDescriptionDistance)
+                            var candNormalized = NormalizeDescription(candidate.Description);
+                            var candTokens = ExtractKeywords(candidate.Description);
+
+                            // Try Levenshtein on normalized strings
+                            var dist = LevenshteinDistance(targetNormalized, candNormalized);
+                            if (dist <= this._options.EffectiveMaxLevenshtein)
+                            {
+                                fuzzyMatchId = candidate.Id;
+                                break;
+                            }
+
+                            // Try keyword-based matching (Jaccard similarity)
+                            var jaccardScore = JaccardSimilarity(targetTokens, candTokens);
+                            if (jaccardScore >= this._options.EffectiveMinJaccard)
                             {
                                 fuzzyMatchId = candidate.Id;
                                 break;
@@ -183,8 +200,11 @@ public sealed class CsvImportService : ICsvImportService
             return string.Empty;
         }
 
+        // Remove common bank metadata patterns before normalization
+        var cleaned = RemoveBankMetadata(description);
+
         // Uppercase, trim, remove most punctuation, collapse whitespace
-        var chars = description.Trim().ToUpperInvariant()
+        var chars = cleaned.Trim().ToUpperInvariant()
             .Select(ch => char.IsLetterOrDigit(ch) ? ch : (char.IsWhiteSpace(ch) ? ' ' : '\0'))
             .Where(ch => ch != '\0')
             .ToArray();
@@ -195,7 +215,81 @@ public sealed class CsvImportService : ICsvImportService
             normalized = normalized.Replace("  ", " ", StringComparison.Ordinal);
         }
 
-        return normalized;
+        return normalized.Trim();
+    }
+
+    private static string RemoveBankMetadata(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return string.Empty;
+        }
+
+        var cleaned = description;
+
+        // Remove dates in various formats (MM/DD, MM/DD/YY, MM/DD/YYYY, Date MM/DD/YY)
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\b\d{1,2}/\d{1,2}(?:/\d{2,4})?\b", " ");
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\bDate\s+\d{1,2}/\d{1,2}(?:/\d{2,4})?\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Remove confirmation numbers, IDs, transaction codes (Conf#, ID:, #followed by long digits)
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\bConf#\s*[A-Z0-9]+\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\bID:\s*[A-Z0-9]+\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\b(?:Tracer|Card|Check)\s+\d+\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"#\d{10,}", " "); // Long transaction IDs
+
+        // Remove common bank keywords/phrases
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\b(?:PURCHASE|DEBIT CARD|DIGITAL CARD|MOBILE|DEPOSIT|WITHDRAWAL|ACH|PMNT SENT|PMNT|Visa Direct|Merchant Category Code|DES|INDN|CO ID|PPD|WEB|POS|Recurring)\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Remove phone numbers
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\b\d{3}-\d{3}-\d{4}\b", " ");
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\b\d{10}\b", " ");
+
+        // Remove account/card masks (XXXXX, XXX-XX)
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\bX{3,}\d*\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\bXXX-XX\d+\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Remove website domains
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\b[a-zA-Z0-9-]+\.(?:com|net|org|bill)\b", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Remove state codes (two uppercase letters at word boundaries)
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\b[A-Z]{2}\b", " ");
+
+        return cleaned;
+    }
+
+    private static HashSet<string> ExtractKeywords(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        // Clean and tokenize
+        var cleaned = RemoveBankMetadata(description);
+        var tokens = cleaned.Split(new[] { ' ', ',', '.', '-', '*', '/', '\\', '(', ')', '[', ']', '{', '}' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => t.Trim().ToUpperInvariant())
+            .Where(t => t.Length >= 3) // Ignore very short tokens
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return tokens;
+    }
+
+    private static double JaccardSimilarity(HashSet<string> set1, HashSet<string> set2)
+    {
+        if (set1.Count == 0 && set2.Count == 0)
+        {
+            return 1.0;
+        }
+
+        if (set1.Count == 0 || set2.Count == 0)
+        {
+            return 0.0;
+        }
+
+        var intersection = set1.Intersect(set2, StringComparer.OrdinalIgnoreCase).Count();
+        var union = set1.Union(set2, StringComparer.OrdinalIgnoreCase).Count();
+
+        return union > 0 ? (double)intersection / union : 0.0;
     }
 
     private static int LevenshteinDistance(string s, string t)
