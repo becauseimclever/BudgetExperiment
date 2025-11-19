@@ -18,9 +18,10 @@
     <FluentCard Style="margin: 16px; flex: 1; overflow: hidden;">
         <!-- Calendar Header -->
         <CalendarHeader MonthName="@currentMonth.MonthName" 
-                        Year="@currentMonth.Year"
-                        OnNavigateMonth="NavigateMonth"
-                        OnImportClick="OpenImportDialog" />
+                Year="@currentMonth.Year"
+                OnNavigateMonth="NavigateMonth"
+                OnImportClick="OpenImportDialog"
+                OnQuickEntryClick="OpenQuickEntryDialog" />
 
         <!-- Calendar Grid -->
         <CalendarGrid CurrentMonth="@currentMonth"
@@ -73,6 +74,10 @@
 <CsvImportDialog @bind-IsOpen="showImportDialog"
                  OnImportSuccess="HandleImportSuccess" />
 
+<!-- Quick Entry Dialog -->
+<QuickEntryDialog @bind-IsOpen="showQuickEntryDialog"
+                  OnSubmitSuccess="HandleQuickEntrySuccess" />
+
 @code {
     private CalendarMonth currentMonth = new();
     private string currentMonthKey = string.Empty;
@@ -90,6 +95,8 @@
 
     // Import dialog state
     private bool showImportDialog = false;
+    // Quick Entry dialog state
+    private bool showQuickEntryDialog = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -588,6 +595,21 @@
     private async Task HandleImportSuccess()
     {
         // Reload the current month data after successful import
+        DataService.ClearCache();
+        await LoadCurrentMonth();
+        StateHasChanged();
+    }
+
+    // Quick Entry methods
+    private void OpenQuickEntryDialog()
+    {
+        showQuickEntryDialog = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleQuickEntrySuccess()
+    {
+        // After quick entry submit, refresh calendar
         DataService.ClearCache();
         await LoadCurrentMonth();
         StateHasChanged();

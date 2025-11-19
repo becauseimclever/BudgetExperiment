@@ -1,0 +1,48 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@if (IsOpen)
+{
+<FluentDialog @bind-Open="IsOpen" Modal="true" TrapFocus="true" Style="--dialog-width: 90vw; --dialog-max-width: 1200px; --dialog-max-height: 90vh;">
+    <FluentDialogHeader>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+            <FluentLabel Typo="Typography.PaneHeader">Quick Entry</FluentLabel>
+        </FluentStack>
+    </FluentDialogHeader>
+    <FluentDialogBody Style="overflow-y:auto; max-height: calc(90vh - 150px);">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+            <FluentMessageBar Intent="MessageIntent.Info">
+                Keyboard-first, spreadsheet-like entry coming online here. This is a placeholder modal for VS1 navigation.
+            </FluentMessageBar>
+            <!-- VS1: Replace placeholder with editable grid component in subsequent steps. -->
+        </FluentStack>
+    </FluentDialogBody>
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" OnClick="SubmitPlaceholder">Done</FluentButton>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="Close">Close</FluentButton>
+    </FluentDialogFooter>
+</FluentDialog>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnSubmitSuccess { get; set; }
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task SubmitPlaceholder()
+    {
+        // Placeholder submit flow; in VS1 grid, this will submit rows
+        await OnSubmitSuccess.InvokeAsync();
+        await Close();
+    }
+}

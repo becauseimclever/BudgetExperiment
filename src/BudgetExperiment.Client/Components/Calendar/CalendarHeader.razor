@@ -24,8 +24,13 @@
     <FluentButton Appearance="Appearance.Accent"
                   OnClick="() => OnImportClick.InvokeAsync()"
                   Style="margin-left: 48px;">
-        <FluentIcon Value="@(new Icons.Regular.Size20.DocumentArrowUp())" Slot="start" />
         Import Transactions
+    </FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent"
+                  OnClick="() => OnQuickEntryClick.InvokeAsync()"
+                  Style="margin-left: 12px;">
+        Quick Entry
     </FluentButton>
 </FluentStack>
 
@@ -34,4 +39,5 @@
     [Parameter] public int Year { get; set; }
     [Parameter] public EventCallback<int> OnNavigateMonth { get; set; }
     [Parameter] public EventCallback OnImportClick { get; set; }
+    [Parameter] public EventCallback OnQuickEntryClick { get; set; }
 }
