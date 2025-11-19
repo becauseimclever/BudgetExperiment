@@ -18,6 +18,7 @@ builder.Services.AddFluentUIComponents();
 
 // Add API client services
 builder.Services.AddScoped<IBudgetApiClient, BudgetApiClient>();
+builder.Services.AddScoped<ICsvImportApi, CsvImportApi>();
 
 // Add calendar data service
 builder.Services.AddScoped<CalendarDataService>();

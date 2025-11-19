@@ -193,6 +193,159 @@ public sealed class CsvImportService : ICsvImportService
         }
     }
 
+    /// <summary>
+    /// Parses a CSV file and returns a preview of transactions with duplicate detection,
+    /// without persisting any data.
+    /// </summary>
+    /// <param name="csvStream">The CSV file stream to parse.</param>
+    /// <param name="bankType">The originating bank type for selecting the correct parser.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
+    /// <returns>A list of preview rows including duplicate flags and any existing transaction id.</returns>
+    public async Task<IReadOnlyList<CsvImportPreviewRow>> PreviewAsync(Stream csvStream, BankType bankType, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(csvStream);
+
+        if (!this._parsers.TryGetValue(bankType, out var parser))
+        {
+            throw new ArgumentException($"No parser registered for bank type: {bankType}", nameof(bankType));
+        }
+
+        var rows = new List<CsvImportPreviewRow>();
+        var parsed = await parser.ParseAsync(csvStream, cancellationToken).ConfigureAwait(false);
+        for (int i = 0; i < parsed.Count; i++)
+        {
+            var t = parsed[i];
+            var (isDup, existingId) = await this.IsDuplicateAsync(t, cancellationToken).ConfigureAwait(false);
+            rows.Add(new CsvImportPreviewRow(
+                i + 2,
+                t.Date,
+                t.Description,
+                t.Amount,
+                t.TransactionType,
+                t.Category,
+                isDup,
+                existingId));
+        }
+
+        return rows;
+    }
+
+    /// <summary>
+    /// Commits the provided transactions to the database, honoring the <c>ForceImport</c> flag to
+    /// optionally import duplicates. Performs validation and aggregates errors.
+    /// </summary>
+    /// <param name="transactions">The transactions to commit (possibly edited during preview).</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
+    /// <returns>An import result summarizing successes, failures, and duplicates skipped.</returns>
+    public async Task<CsvImportResult> CommitAsync(IEnumerable<CommitTransaction> transactions, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(transactions);
+
+        var errors = new List<CsvImportError>();
+        var duplicates = new List<DuplicateTransaction>();
+        var successCount = 0;
+        var failedCount = 0;
+        var duplicatesSkipped = 0;
+
+        foreach (var item in transactions)
+        {
+            try
+            {
+                if (!item.ForceImport)
+                {
+                    var pt = new ParsedTransaction(item.Date, item.Description, item.Amount, item.TransactionType, item.Category);
+                    var (isDup, existingId) = await this.IsDuplicateAsync(pt, cancellationToken).ConfigureAwait(false);
+                    if (isDup)
+                    {
+                        duplicatesSkipped++;
+                        duplicates.Add(new DuplicateTransaction(item.RowNumber, item.Date, item.Description, Math.Abs(item.Amount), existingId ?? Guid.Empty));
+                        continue;
+                    }
+                }
+
+                var money = MoneyValue.Create("USD", Math.Abs(item.Amount));
+                AdhocTransaction tx = item.TransactionType == TransactionType.Income
+                    ? AdhocTransaction.CreateIncome(item.Description, money, item.Date, item.Category)
+                    : AdhocTransaction.CreateExpense(item.Description, money, item.Date, item.Category);
+
+                await this._writeRepository.AddAsync(tx, cancellationToken).ConfigureAwait(false);
+                successCount++;
+            }
+            catch (DomainException ex)
+            {
+                failedCount++;
+                errors.Add(new CsvImportError(item.RowNumber, "Transaction", ex.Message));
+            }
+            catch (Exception ex)
+            {
+                failedCount++;
+                errors.Add(new CsvImportError(item.RowNumber, "Unknown", $"Unexpected error: {ex.Message}"));
+            }
+        }
+
+        if (successCount > 0)
+        {
+            await this._unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return new CsvImportResult(
+            TotalRows: transactions.Count(),
+            SuccessfulImports: successCount,
+            FailedImports: failedCount,
+            DuplicatesSkipped: duplicatesSkipped,
+            Errors: errors,
+            Duplicates: duplicates);
+    }
+
+    private async Task<(bool IsDuplicate, Guid? ExistingId)> IsDuplicateAsync(ParsedTransaction parsed, CancellationToken cancellationToken)
+    {
+        var potentialDuplicates = await this._readRepository.FindDuplicatesAsync(
+            parsed.Date,
+            parsed.Description,
+            Math.Abs(parsed.Amount),
+            parsed.TransactionType,
+            cancellationToken).ConfigureAwait(false);
+
+        if (potentialDuplicates.Count > 0)
+        {
+            return (true, potentialDuplicates[0].Id);
+        }
+
+        var window = this._options.EffectiveDateWindowDays;
+        var startDate = parsed.Date.AddDays(-window);
+        var endDate = parsed.Date.AddDays(window);
+        var nearby = await this._readRepository.GetByDateRangeAsync(startDate, endDate, cancellationToken).ConfigureAwait(false);
+        if (nearby.Count == 0)
+        {
+            return (false, null);
+        }
+
+        var targetNormalized = NormalizeDescription(parsed.Description);
+        var targetTokens = ExtractKeywords(parsed.Description);
+        var amountAbs = Math.Abs(parsed.Amount);
+        var candidates = nearby.Where(t => t.TransactionType == parsed.TransactionType && Math.Abs(t.Money.Amount) == amountAbs).ToList();
+
+        foreach (var candidate in candidates)
+        {
+            var candNormalized = NormalizeDescription(candidate.Description);
+            var candTokens = ExtractKeywords(candidate.Description);
+
+            var dist = LevenshteinDistance(targetNormalized, candNormalized);
+            if (dist <= this._options.EffectiveMaxLevenshtein)
+            {
+                return (true, candidate.Id);
+            }
+
+            var jaccard = JaccardSimilarity(targetTokens, candTokens);
+            if (jaccard >= this._options.EffectiveMinJaccard)
+            {
+                return (true, candidate.Id);
+            }
+        }
+
+        return (false, null);
+    }
+
     private static string NormalizeDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))

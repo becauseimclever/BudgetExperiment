@@ -1,7 +1,7 @@
 # Feature: CSV Import for Bank Transactions
 
 **Created**: 2025-11-16  
-**Updated**: 2025-11-17  
+**Updated**: 2025-11-18  
 **Status**: ✅ Phase 1–5 COMPLETE  
 **Priority**: HIGH
 
@@ -709,9 +709,10 @@ Target: Reduce near-duplicate imports via fuzzy matching, handling bank-generate
   - **Dual similarity scoring**:
     1. **Levenshtein distance** ≤ 5 on normalized strings (increased tolerance for bank variations)
     2. **Jaccard similarity** ≥ 0.6 on keyword sets (handles word-order differences)
-- Date proximity: ±1 day window (unchanged)
+- Date proximity: ±3 day window (configurable via options)
 - Amount/type: exact match on absolute amount and transaction type (unchanged)
 - Exact-match check remains first; fuzzy check runs only when no exact duplicate found
+- Thresholds are configurable via `CsvImportDeduplication` options (see Configuration)
 
 **Testing**:
 - `ImportAsync_FuzzyDuplicateWithinOneDay_SkipsDuplicate`: Basic fuzzy matching with punctuation differences
@@ -721,7 +722,7 @@ Target: Reduce near-duplicate imports via fuzzy matching, handling bank-generate
 
 **Behavior**:
 - Duplicates (exact or fuzzy) increment `DuplicatesSkipped` and appear in `CsvImportResult.Duplicates`
-- No API or UI contract changes required
+- Introduces optional preview/commit flow: `POST /api/v1/csv-import/preview` and `POST /api/v1/csv-import/commit`
 - Handles real-world scenarios from BofA, Capital One, and UHCU sample CSVs
 
 **Examples**:
@@ -877,6 +878,42 @@ Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit
 ```
 
 ---
+
+## Preview + Commit Endpoints (Phase 5)
+
+New endpoints provide a safer, user-guided import:
+
+- POST `/api/v1/csv-import/preview` (multipart/form-data)
+  - Form fields: `file` (.csv), `bankType` (BankOfAmerica|CapitalOne|UnitedHeritageCreditUnion)
+  - Returns: array of preview rows `{ rowNumber, date, description, amount, transactionType, category, isDuplicate, existingTransactionId }`
+
+- POST `/api/v1/csv-import/commit` (application/json)
+  - Body shape: `{ "items": [ { rowNumber, date, description, amount, transactionType, category, forceImport } ] }`
+  - Returns: `CsvImportResult` with counts, errors, and duplicates skipped
+
+Example (cURL):
+```bash
+curl -X POST http://localhost:5099/api/v1/csv-import/preview \
+  -F "file=@transactions.csv" \
+  -F "bankType=BankOfAmerica"
+
+curl -X POST http://localhost:5099/api/v1/csv-import/commit \
+  -H "Content-Type: application/json" \
+  -d '{"items":[{"rowNumber":2,"date":"2025-11-10","description":"GROCERY STORE #456","amount":123.45,"transactionType":1,"category":"Groceries","forceImport":false}]}'
+```
+
+### Configuration (Phase 5)
+
+Dedup thresholds are configurable in API `appsettings.*` under `CsvImportDeduplication`:
+```json
+"CsvImportDeduplication": {
+  "FuzzyDateWindowDays": 3,
+  "MaxLevenshteinDistance": 5,
+  "MinJaccardSimilarity": 0.6
+}
+```
+
+These map to `CsvImportDeduplicationOptions` and are injected via Options pattern.
 
 ## Readiness for Next Phase
 

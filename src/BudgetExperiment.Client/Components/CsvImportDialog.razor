@@ -4,6 +4,8 @@
 
 @using Microsoft.FluentUI.AspNetCore.Components
 @using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Api
+@using BudgetExperiment.Domain
 
 @if (IsOpen)
 {
@@ -16,7 +18,7 @@
     </FluentDialogHeader>
     <FluentDialogBody>
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-            @if (!isImporting && importResult is null)
+            @if (!isBusy && importResult is null && previewRows is null)
             {
                 <!-- Bank Selection -->
                 <FluentSelect Label="Select Your Bank" @bind-Value="selectedBankType" Style="width: 100%;" TOption="string">
@@ -37,11 +39,11 @@
             }
 
             <!-- Import Progress -->
-            @if (isImporting)
+            @if (isBusy)
             {
                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" HorizontalAlignment="HorizontalAlignment.Center">
                     <FluentProgressRing />
-                    <FluentLabel Typo="Typography.Body">Importing transactions...</FluentLabel>
+                    <FluentLabel Typo="Typography.Body">Working...</FluentLabel>
                 </FluentStack>
             }
 
@@ -96,18 +98,85 @@
                     </FluentAccordion>
                 }
             }
+
+            <!-- Preview Grid -->
+            @if (previewRows is not null && importResult is null)
+            {
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+                    <FluentLabel Typo="Typography.H6">Preview Transactions</FluentLabel>
+                    <div style="overflow:auto; max-height: 50vh; border: 1px solid var(--neutral-stroke-layer-rest);">
+                        <table style="width:100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="position: sticky; top:0; background: var(--neutral-layer-1);">
+                                    <th style="text-align:left; padding:8px;">Row</th>
+                                    <th style="text-align:left; padding:8px;">Date</th>
+                                    <th style="text-align:left; padding:8px;">Description</th>
+                                    <th style="text-align:right; padding:8px;">Amount</th>
+                                    <th style="text-align:left; padding:8px;">Type</th>
+                                    <th style="text-align:left; padding:8px;">Category</th>
+                                    <th style="text-align:center; padding:8px;">Duplicate</th>
+                                    <th style="text-align:center; padding:8px;">Import Anyway</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < previewRows.Count; i++)
+                                {
+                                    var row = previewRows[i];
+                                    var isDup = row.IsDuplicate;
+                                    var edited = editedRows[i];
+                                    <tr style="@(isDup ? "background: var(--palette-yellow-background-2);" : string.Empty)">
+                                        <td style="padding:8px;">@row.RowNumber</td>
+                                        <td style="padding:8px; min-width: 140px;">
+                                            <input type="date" value="@edited.DateString"
+                                                   @onchange="(e)=>editedRows[i] = edited with { DateString = e.Value?.ToString() ?? edited.DateString }"
+                                                   style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
+                                        </td>
+                                        <td style="padding:8px; min-width: 260px;">
+                                            <input type="text" value="@edited.Description" 
+                                                   @oninput="(e)=>editedRows[i] = edited with { Description = e.Value?.ToString() ?? edited.Description }"
+                                                   style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
+                                        </td>
+                                        <td style="padding:8px; text-align:right;">@row.Amount.ToString("C")</td>
+                                        <td style="padding:8px;">@row.TransactionType</td>
+                                        <td style="padding:8px; min-width: 160px;">
+                                            <input type="text" value="@edited.Category"
+                                                   @oninput="(e)=>editedRows[i] = edited with { Category = e.Value?.ToString() }"
+                                                   style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
+                                        </td>
+                                        <td style="padding:8px; text-align:center;">@(isDup ? "Yes" : "No")</td>
+                                        <td style="padding:8px; text-align:center;">
+                                            <input type="checkbox" checked="@edited.ForceImport"
+                                                   @onchange="(e)=>editedRows[i] = edited with { ForceImport = (bool)(e.Value ?? false) }" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <FluentLabel Typo="Typography.Body">Note: Duplicates are highlighted. Edit date/description to deduplicate or check "Import Anyway" to force import.</FluentLabel>
+                </FluentStack>
+            }
         </FluentStack>
     </FluentDialogBody>
     <FluentDialogFooter>
-        @if (!isImporting && importResult is null)
+        @if (!isBusy && importResult is null && previewRows is null)
         {
             <FluentButton Appearance="Appearance.Accent"
-                          OnClick="ImportCsv"
+                          OnClick="PreviewCsv"
                           Disabled="@(!CanImport())">
-                Import
+                Preview
             </FluentButton>
             <FluentButton Appearance="Appearance.Neutral" OnClick="Cancel">
                 Cancel
+            </FluentButton>
+        }
+        else if (!isBusy && importResult is null && previewRows is not null)
+        {
+            <FluentButton Appearance="Appearance.Accent" OnClick="CommitImport">
+                Import
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" OnClick="BackToSelection">
+                Back
             </FluentButton>
         }
         else if (importResult is not null)
@@ -125,8 +194,11 @@
     private IBrowserFile? selectedFile;
     private string? selectedFileName;
     private string selectedBankType = "BankOfAmerica";
-    private bool isImporting;
+    private bool isBusy;
     private CsvImportResult? importResult;
+    private List<CsvImportPreviewRowDto>? previewRows;
+
+    private List<EditableRow> editedRows = new();
 
     [Parameter]
     public bool IsOpen { get; set; } = false;
@@ -142,6 +214,8 @@
         selectedFile = e.File;
         selectedFileName = e.File.Name;
         importResult = null; // Clear previous results
+        previewRows = null;
+        editedRows.Clear();
     }
 
     private bool CanImport()
@@ -149,53 +223,38 @@
         return selectedFile != null && !string.IsNullOrWhiteSpace(selectedBankType);
     }
 
-    private async Task ImportCsv()
+    private async Task PreviewCsv()
     {
         if (selectedFile == null)
         {
             return;
         }
 
-        isImporting = true;
+        isBusy = true;
         importResult = null;
+        previewRows = null;
 
         try
         {
-            // Create multipart form content
-            using var content = new MultipartFormDataContent();
-            using var fileStream = selectedFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024); // 5MB max
-            using var streamContent = new StreamContent(fileStream);
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
-            
-            content.Add(streamContent, "file", selectedFile.Name);
-            content.Add(new StringContent(selectedBankType), "bankType");
-
-            // Call API
-            var httpClient = new HttpClient { BaseAddress = new Uri(NavigationManager.BaseUri) };
-            var response = await httpClient.PostAsync("/api/v1/csv-import", content);
-
-            if (response.IsSuccessStatusCode)
+            var rows = await CsvImportApi.PreviewAsync(selectedFile, selectedBankType);
+            if (rows is null)
             {
-                importResult = await response.Content.ReadFromJsonAsync<CsvImportResult>();
-                
-                // Notify parent if successful
-                if (importResult is not null && importResult.SuccessfulImports > 0)
-                {
-                    await OnImportSuccess.InvokeAsync();
-                }
+                previewRows = new();
+                return;
             }
-            else
+
+            previewRows = rows;
+            editedRows = rows.Select(r => new EditableRow
             {
-                var error = await response.Content.ReadAsStringAsync();
-                importResult = new CsvImportResult
-                {
-                    TotalRows = 0,
-                    SuccessfulImports = 0,
-                    FailedImports = 0,
-                    DuplicatesSkipped = 0,
-                    Errors = new List<CsvImportError> { new CsvImportError { RowNumber = 0, Field = "API", ErrorMessage = $"Import failed: {error}" } }
-                };
-            }
+                RowNumber = r.RowNumber,
+                DateString = new DateTime(r.Date.Year, r.Date.Month, r.Date.Day).ToString("yyyy-MM-dd"),
+                Description = r.Description,
+                Amount = r.Amount,
+                TransactionType = r.TransactionType,
+                Category = r.Category,
+                ForceImport = false,
+                IsDuplicate = r.IsDuplicate
+            }).ToList();
         }
         catch (Exception ex)
         {
@@ -208,10 +267,7 @@
                 Errors = new List<CsvImportError> { new CsvImportError { RowNumber = 0, Field = "Client", ErrorMessage = ex.Message } }
             };
         }
-        finally
-        {
-            isImporting = false;
-        }
+        finally { isBusy = false; }
     }
 
     private MessageIntent GetMessageIntent()
@@ -248,10 +304,72 @@
         selectedFile = null;
         selectedFileName = null;
         importResult = null;
-        isImporting = false;
+        isBusy = false;
         selectedBankType = "BankOfAmerica";
+        previewRows = null;
+        editedRows.Clear();
     }
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private ICsvImportApi CsvImportApi { get; set; } = default!;
+
+    private async Task CommitImport()
+    {
+        if (previewRows is null)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var items = editedRows.Select(er => new CommitTransactionDto
+            {
+                RowNumber = er.RowNumber,
+                Date = DateOnly.FromDateTime(DateTime.Parse(er.DateString)),
+                Description = er.Description,
+                Amount = er.Amount,
+                TransactionType = er.TransactionType,
+                Category = er.Category,
+                ForceImport = er.ForceImport && er.IsDuplicate,
+            }).ToList();
+
+            var result = await CsvImportApi.CommitAsync(items);
+            importResult = result ?? new CsvImportResult
+            {
+                TotalRows = items.Count,
+                Errors = new List<CsvImportError> { new CsvImportError { Field = "API", ErrorMessage = "Commit failed." } }
+            };
+
+            if (importResult.SuccessfulImports > 0)
+            {
+                await OnImportSuccess.InvokeAsync();
+            }
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void BackToSelection()
+    {
+        previewRows = null;
+        editedRows.Clear();
+    }
+
+    private record EditableRow
+    {
+        public int RowNumber { get; init; }
+        public string DateString { get; init; } = string.Empty;
+        public string Description { get; init; } = string.Empty;
+        public decimal Amount { get; init; }
+        public TransactionType TransactionType { get; init; }
+        public string? Category { get; init; }
+        public bool ForceImport { get; init; }
+        public bool IsDuplicate { get; init; }
+    }
 }

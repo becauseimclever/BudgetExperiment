@@ -150,6 +150,39 @@ See [`.github/copilot-instructions.md`](.github/copilot-instructions.md) for com
 - **ShortfallDetectionService** - Identifies potential cash flow gaps
 - **ProjectionService** - Orchestrates complete budget projection
 
+## 📥 CSV Import
+
+- UI Flow:
+  - Open the calendar import dialog, select bank, choose a `.csv` file, click `Preview`.
+  - Review the preview table: duplicate rows are highlighted.
+  - Edit Date/Description (and Category) inline or check "Import Anyway" to force duplicates.
+  - Click `Import` to commit. Success counts and any errors are shown.
+
+- Supported banks: `BankOfAmerica`, `CapitalOne`, `UnitedHeritageCreditUnion`.
+
+- API Endpoints:
+  - `POST /api/v1/csv-import` (legacy one-shot import)
+  - `POST /api/v1/csv-import/preview` (multipart/form-data: `file`, `bankType`)
+  - `POST /api/v1/csv-import/commit` (application/json of edited items)
+
+- Examples:
+```powershell
+# Preview
+curl -X POST http://localhost:5099/api/v1/csv-import/preview \`n  -F "file=@transactions.csv" \`n  -F "bankType=BankOfAmerica"
+
+# Commit (JSON body contains Items array)
+curl -X POST http://localhost:5099/api/v1/csv-import/commit \`n  -H "Content-Type: application/json" \`n  -d '{"items":[{"rowNumber":2,"date":"2025-11-10","description":"GROCERY STORE #456","amount":123.45,"transactionType":1,"category":"Groceries","forceImport":false}]}'
+```
+
+- Dedup configuration (appsettings):
+```json
+"CsvImportDeduplication": {
+  "FuzzyDateWindowDays": 3,
+  "MaxLevenshteinDistance": 5,
+  "MinJaccardSimilarity": 0.6
+}
+```
+
 ## 🔍 API Overview
 
 The API follows RESTful conventions with versioned endpoints:
