@@ -9,14 +9,14 @@
 
 @if (IsOpen)
 {
-<FluentDialog @bind-Open="@IsOpen" Modal="true" TrapFocus="true" @ref="dialog">
+<FluentDialog @bind-Open="@IsOpen" Modal="true" TrapFocus="true" @ref="dialog" Style="@DialogStyle">
     <FluentDialogHeader>
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
             <FluentIcon Value="@(new Icons.Regular.Size24.ArrowUpload())" />
             <FluentLabel Typo="Typography.PaneHeader">Import Bank Transactions</FluentLabel>
         </FluentStack>
     </FluentDialogHeader>
-    <FluentDialogBody>
+    <FluentDialogBody Style="overflow-y: auto; max-height: calc(90vh - 150px);">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
             @if (!isBusy && importResult is null && previewRows is null)
             {
@@ -104,49 +104,48 @@
             {
                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
                     <FluentLabel Typo="Typography.H6">Preview Transactions</FluentLabel>
-                    <div style="overflow:auto; max-height: 50vh; border: 1px solid var(--neutral-stroke-layer-rest);">
-                        <table style="width:100%; border-collapse: collapse;">
+                    <div style="overflow-x: auto; overflow-y: auto; max-height: 55vh; border: 1px solid var(--neutral-stroke-layer-rest); border-radius: 4px;">
+                        <table style="width:100%; border-collapse: collapse; min-width: 1100px;">
                             <thead>
-                                <tr style="position: sticky; top:0; background: var(--neutral-layer-1);">
-                                    <th style="text-align:left; padding:8px;">Row</th>
-                                    <th style="text-align:left; padding:8px;">Date</th>
-                                    <th style="text-align:left; padding:8px;">Description</th>
-                                    <th style="text-align:right; padding:8px;">Amount</th>
-                                    <th style="text-align:left; padding:8px;">Type</th>
-                                    <th style="text-align:left; padding:8px;">Category</th>
-                                    <th style="text-align:center; padding:8px;">Duplicate</th>
-                                    <th style="text-align:center; padding:8px;">Import Anyway</th>
+                                <tr style="position: sticky; top:0; background: var(--neutral-layer-1); z-index: 10; box-shadow: 0 1px 0 var(--neutral-stroke-layer-rest);">
+                                    <th style="text-align:left; padding:8px; white-space: nowrap;">Row</th>
+                                    <th style="text-align:left; padding:8px; white-space: nowrap;">Date</th>
+                                    <th style="text-align:left; padding:8px; white-space: nowrap;">Description</th>
+                                    <th style="text-align:right; padding:8px; white-space: nowrap;">Amount</th>
+                                    <th style="text-align:left; padding:8px; white-space: nowrap;">Type</th>
+                                    <th style="text-align:left; padding:8px; white-space: nowrap;">Category</th>
+                                    <th style="text-align:center; padding:8px; white-space: nowrap;">Duplicate</th>
+                                    <th style="text-align:center; padding:8px; white-space: nowrap;">Import Anyway</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (int i = 0; i < previewRows.Count; i++)
+                                @foreach (var (row, edited, index) in previewRows.Select((r, idx) => (r, editedRows[idx], idx)))
                                 {
-                                    var row = previewRows[i];
                                     var isDup = row.IsDuplicate;
-                                    var edited = editedRows[i];
+                                    var currentIndex = index;
                                     <tr style="@(isDup ? "background: var(--palette-yellow-background-2);" : string.Empty)">
                                         <td style="padding:8px;">@row.RowNumber</td>
                                         <td style="padding:8px; min-width: 140px;">
                                             <input type="date" value="@edited.DateString"
-                                                   @onchange="(e)=>editedRows[i] = edited with { DateString = e.Value?.ToString() ?? edited.DateString }"
+                                                   @onchange="@(e => UpdateRow(currentIndex, edited with { DateString = e.Value?.ToString() ?? edited.DateString }))"
                                                    style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
                                         </td>
                                         <td style="padding:8px; min-width: 260px;">
                                             <input type="text" value="@edited.Description" 
-                                                   @oninput="(e)=>editedRows[i] = edited with { Description = e.Value?.ToString() ?? edited.Description }"
+                                                   @oninput="@(e => UpdateRow(currentIndex, edited with { Description = e.Value?.ToString() ?? edited.Description }))"
                                                    style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
                                         </td>
                                         <td style="padding:8px; text-align:right;">@row.Amount.ToString("C")</td>
                                         <td style="padding:8px;">@row.TransactionType</td>
                                         <td style="padding:8px; min-width: 160px;">
                                             <input type="text" value="@edited.Category"
-                                                   @oninput="(e)=>editedRows[i] = edited with { Category = e.Value?.ToString() }"
+                                                   @oninput="@(e => UpdateRow(currentIndex, edited with { Category = e.Value?.ToString() }))"
                                                    style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
                                         </td>
                                         <td style="padding:8px; text-align:center;">@(isDup ? "Yes" : "No")</td>
                                         <td style="padding:8px; text-align:center;">
                                             <input type="checkbox" checked="@edited.ForceImport"
-                                                   @onchange="(e)=>editedRows[i] = edited with { ForceImport = (bool)(e.Value ?? false) }" />
+                                                   @onchange="@(e => UpdateRow(currentIndex, edited with { ForceImport = e.Value is bool b && b }))" />
                                         </td>
                                     </tr>
                                 }
@@ -360,6 +359,18 @@
         previewRows = null;
         editedRows.Clear();
     }
+
+    private void UpdateRow(int index, EditableRow updatedRow)
+    {
+        if (index >= 0 && index < editedRows.Count)
+        {
+            editedRows[index] = updatedRow;
+        }
+    }
+
+    private string DialogStyle => previewRows is not null 
+        ? "--dialog-width: 90vw; --dialog-max-width: 1400px; --dialog-height: auto; --dialog-max-height: 90vh;" 
+        : "--dialog-width: 500px; --dialog-max-width: 600px; --dialog-height: auto;";
 
     private record EditableRow
     {
