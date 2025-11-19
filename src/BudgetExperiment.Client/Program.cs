@@ -23,5 +23,8 @@ builder.Services.AddScoped<ICsvImportApi, CsvImportApi>();
 // Add calendar data service
 builder.Services.AddScoped<CalendarDataService>();
 
+// Add feature flag service
+builder.Services.AddScoped<FeatureFlagService>();
+
 await builder.Build().RunAsync();
 #pragma warning restore SA1633

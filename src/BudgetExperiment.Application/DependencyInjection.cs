@@ -1,6 +1,7 @@
 using BudgetExperiment.Application.AdhocTransactions;
 using BudgetExperiment.Application.CsvImport;
 using BudgetExperiment.Application.CsvImport.Parsers;
+using BudgetExperiment.Application.FeatureFlags;
 using BudgetExperiment.Application.RecurringSchedules;
 using BudgetExperiment.Application.RunningTotals;
 
@@ -27,6 +28,9 @@ public static class DependencyInjection
         services.AddScoped<IBankCsvParser, BankOfAmericaCsvParser>();
         services.AddScoped<IBankCsvParser, CapitalOneCsvParser>();
         services.AddScoped<IBankCsvParser, UnitedHeritageCreditUnionCsvParser>();
+
+        // Feature flags
+        services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
 
         return services;
     }

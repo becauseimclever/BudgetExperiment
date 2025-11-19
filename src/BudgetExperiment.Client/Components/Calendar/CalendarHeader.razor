@@ -27,11 +27,14 @@
         Import Transactions
     </FluentButton>
 
-    <FluentButton Appearance="Appearance.Accent"
-                  OnClick="() => OnQuickEntryClick.InvokeAsync()"
-                  Style="margin-left: 12px;">
-        Quick Entry
-    </FluentButton>
+    @if (ShowQuickEntry)
+    {
+        <FluentButton Appearance="Appearance.Accent"
+                      OnClick="HandleQuickEntryClick"
+                      Style="margin-left: 12px;">
+            Quick Entry
+        </FluentButton>
+    }
 </FluentStack>
 
 @code {
@@ -40,4 +43,13 @@
     [Parameter] public EventCallback<int> OnNavigateMonth { get; set; }
     [Parameter] public EventCallback OnImportClick { get; set; }
     [Parameter] public EventCallback OnQuickEntryClick { get; set; }
+    [Parameter] public bool ShowQuickEntry { get; set; }
+
+    private async Task HandleQuickEntryClick()
+    {
+        if (ShowQuickEntry && OnQuickEntryClick.HasDelegate)
+        {
+            await OnQuickEntryClick.InvokeAsync();
+        }
+    }
 }

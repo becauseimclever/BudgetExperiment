@@ -38,6 +38,10 @@ public partial class Program
         builder.Services.Configure<CsvImportDeduplicationOptions>(
             builder.Configuration.GetSection("CsvImportDeduplication"));
 
+        // Configure feature flags
+        builder.Services.Configure<BudgetExperiment.Application.FeatureFlags.FeatureFlags>(
+            builder.Configuration.GetSection(BudgetExperiment.Application.FeatureFlags.FeatureFlags.SectionName));
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("dev", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());

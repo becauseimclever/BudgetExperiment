@@ -1,23 +1,136 @@
 @using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using BudgetExperiment.Domain
+@inject BudgetExperiment.Client.Services.CalendarDataService DataService
 
 @if (IsOpen)
 {
 <FluentDialog @bind-Open="IsOpen" Modal="true" TrapFocus="true" Style="--dialog-width: 90vw; --dialog-max-width: 1200px; --dialog-max-height: 90vh;">
     <FluentDialogHeader>
-        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
             <FluentLabel Typo="Typography.PaneHeader">Quick Entry</FluentLabel>
+            <FluentLabel Typo="Typography.Body">VS1</FluentLabel>
         </FluentStack>
     </FluentDialogHeader>
     <FluentDialogBody Style="overflow-y:auto; max-height: calc(90vh - 150px);">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
-            <FluentMessageBar Intent="MessageIntent.Info">
-                Keyboard-first, spreadsheet-like entry coming online here. This is a placeholder modal for VS1 navigation.
-            </FluentMessageBar>
-            <!-- VS1: Replace placeholder with editable grid component in subsequent steps. -->
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12" Wrap="true">
+                <FluentButton Appearance="Appearance.Accent" OnClick="AddRow">Add Row</FluentButton>
+                <FluentButton Appearance="Appearance.Outline" OnClick="AddTenRows">Add 10 Rows</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="SubmitAll" Disabled="@isSubmitting">Submit All</FluentButton>
+                @if (submitSummary is not null)
+                {
+                    <FluentMessageBar Intent="@submitSummary.Intent">
+                        @submitSummary.Text
+                    </FluentMessageBar>
+                }
+            </FluentStack>
+
+            <div style="overflow:auto; max-height: 60vh; border: 1px solid var(--neutral-stroke-layer-rest); border-radius: 4px;">
+                <table style="width:100%; border-collapse: collapse; min-width: 1100px;">
+                    <thead>
+                        <tr style="position: sticky; top:0; background: var(--neutral-layer-1); z-index: 10; box-shadow: 0 1px 0 var(--neutral-stroke-layer-rest);">
+                            <th style="text-align:left; padding:8px;">#</th>
+                            <th style="text-align:left; padding:8px;">Date</th>
+                            <th style="text-align:left; padding:8px;">Description</th>
+                            <th style="text-align:right; padding:8px;">Amount</th>
+                            <th style="text-align:left; padding:8px;">Type</th>
+                            <th style="text-align:left; padding:8px;">Category</th>
+                            <th style="text-align:left; padding:8px;">Status</th>
+                            <th style="text-align:center; padding:8px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < rows.Count; i++)
+                        {
+                            var rowIndex = i; // Capture index for closure
+                            var r = rows[rowIndex];
+                            <tr>
+                                <td style="padding:6px;">@(rowIndex+1)</td>
+                                <td style="padding:6px; min-width: 140px;">
+                                    <input type="date" value="@r.DateString"
+                                           data-cell="@($"{rowIndex}-0")" data-focus="@(IsFocus(rowIndex,0) ? "true" : null)"
+                                           @onkeydown="(e => HandleCellKeyDown(rowIndex, 0, e))"
+                                           @onchange="(e => UpdateRow(rowIndex, rows[rowIndex] with { DateString = e.Value?.ToString() ?? rows[rowIndex].DateString }))"
+                                           style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
+                                    @if (r.Errors.TryGetValue(nameof(r.DateString), out var dateErr))
+                                    {
+                                        <div style="color: var(--palette-red-foreground-2); font-size: 12px;">@dateErr</div>
+                                    }
+                                </td>
+                                <td style="padding:6px; min-width: 260px;">
+                                    <input type="text" value="@r.Description"
+                                           data-cell="@($"{rowIndex}-1")" data-focus="@(IsFocus(rowIndex,1) ? "true" : null)"
+                                           @onkeydown="(e => HandleCellKeyDown(rowIndex, 1, e))"
+                                           @oninput="(e => UpdateRow(rowIndex, rows[rowIndex] with { Description = e.Value?.ToString() ?? string.Empty }))"
+                                           style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
+                                    @if (r.Errors.TryGetValue(nameof(r.Description), out var descErr))
+                                    {
+                                        <div style="color: var(--palette-red-foreground-2); font-size: 12px;">@descErr</div>
+                                    }
+                                </td>
+                                <td style="padding:6px; min-width: 140px; text-align:right;">
+                                    <input type="number" step="0.01" value="@r.AmountString"
+                                           data-cell="@($"{rowIndex}-2")" data-focus="@(IsFocus(rowIndex,2) ? "true" : null)"
+                                           @onkeydown="(e => HandleCellKeyDown(rowIndex, 2, e))"
+                                           @oninput="(e => UpdateRow(rowIndex, rows[rowIndex] with { AmountString = e.Value?.ToString() ?? rows[rowIndex].AmountString }))"
+                                           style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px; text-align:right;" />
+                                    @if (r.Errors.TryGetValue(nameof(r.AmountString), out var amtErr))
+                                    {
+                                        <div style="color: var(--palette-red-foreground-2); font-size: 12px; text-align:left;">@amtErr</div>
+                                    }
+                                </td>
+                                <td style="padding:6px; min-width: 140px;">
+                                    <select value="@r.Type"
+                                            data-cell="@($"{rowIndex}-3")" data-focus="@(IsFocus(rowIndex,3) ? "true" : null)"
+                                            @onkeydown="(e => HandleCellKeyDown(rowIndex, 3, e))"
+                                            @onchange="(e => OnTypeChanged(rowIndex, e.Value?.ToString()))"
+                                            style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;">
+                                        <option value="Income">Income</option>
+                                        <option value="Expense">Expense</option>
+                                    </select>
+                                </td>
+                                <td style="padding:6px; min-width: 160px;">
+                                    <input type="text" value="@r.Category"
+                                           data-cell="@($"{rowIndex}-4")" data-focus="@(IsFocus(rowIndex,4) ? "true" : null)"
+                                           @onkeydown="(e => HandleCellKeyDown(rowIndex, 4, e))"
+                                           @oninput="(e => UpdateRow(rowIndex, rows[rowIndex] with { Category = e.Value?.ToString() }))"
+                                           style="width:100%; padding:6px; border: 1px solid var(--neutral-stroke-control-default); border-radius: 4px;" />
+                                </td>
+                                <td style="padding:6px; min-width: 160px;">
+                                    @if (r.Status == RowStatus.None)
+                                    {
+                                        <FluentLabel Typo="Typography.Body">Pending</FluentLabel>
+                                    }
+                                    else if (r.Status == RowStatus.Created)
+                                    {
+                                        <FluentLabel Typo="Typography.Body">Created</FluentLabel>
+                                    }
+                                    else if (r.Status == RowStatus.Duplicate)
+                                    {
+                                        <FluentLabel Typo="Typography.Body">Duplicate</FluentLabel>
+                                    }
+                                    else if (r.Status == RowStatus.ValidationError || r.Status == RowStatus.Failed)
+                                    {
+                                        <FluentLabel Typo="Typography.Body">Error</FluentLabel>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(r.Error))
+                                    {
+                                        <div style="color: var(--palette-red-foreground-2); font-size: 12px;">@r.Error</div>
+                                    }
+                                </td>
+                                <td style="padding:6px; text-align:center;">
+                                    <FluentButton Appearance="Appearance.Neutral" OnClick="(() => RemoveRow(i))">Remove</FluentButton>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </FluentStack>
     </FluentDialogBody>
     <FluentDialogFooter>
-        <FluentButton Appearance="Appearance.Accent" OnClick="SubmitPlaceholder">Done</FluentButton>
+        <FluentButton Appearance="Appearance.Accent" OnClick="SubmitAll" Disabled="@isSubmitting">Submit All</FluentButton>
         <FluentButton Appearance="Appearance.Neutral" OnClick="Close">Close</FluentButton>
     </FluentDialogFooter>
 </FluentDialog>
@@ -33,16 +146,253 @@
     [Parameter]
     public EventCallback OnSubmitSuccess { get; set; }
 
+    private bool isSubmitting;
+
+    private List<RowVm> rows = new();
+
+    private SubmitSummary? submitSummary;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && rows.Count == 0)
+        {
+            AddTenRows();
+        }
+    }
+
     private async Task Close()
     {
         IsOpen = false;
         await IsOpenChanged.InvokeAsync(false);
+        submitSummary = null;
+        rows.Clear();
     }
 
-    private async Task SubmitPlaceholder()
+    private void AddRow()
     {
-        // Placeholder submit flow; in VS1 grid, this will submit rows
-        await OnSubmitSuccess.InvokeAsync();
-        await Close();
+        rows.Add(RowVm.CreateDefault());
+        StateHasChanged();
+    }
+
+    private void AddTenRows()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            rows.Add(RowVm.CreateDefault());
+        }
+        StateHasChanged();
+    }
+
+    private void RemoveRow(int index)
+    {
+        if (index >= 0 && index < rows.Count)
+        {
+            rows.RemoveAt(index);
+        }
+    }
+
+    private void UpdateRow(int index, RowVm updated)
+    {
+        if (index >= 0 && index < rows.Count)
+        {
+            rows[index] = updated with { Errors = Validate(updated) };
+        }
+    }
+
+    private void OnTypeChanged(int index, string? value)
+    {
+        if (index < 0 || index >= rows.Count)
+        {
+            return;
+        }
+
+        var type = value?.Equals("Income", StringComparison.OrdinalIgnoreCase) == true ? TransactionType.Income : TransactionType.Expense;
+        UpdateRow(index, rows[index] with { Type = type });
+    }
+
+    private Dictionary<string, string> Validate(RowVm r)
+    {
+        var errors = new Dictionary<string, string>();
+        if (string.IsNullOrWhiteSpace(r.Description))
+        {
+            errors[nameof(r.Description)] = "Description is required";
+        }
+        if (string.IsNullOrWhiteSpace(r.DateString) || !DateTime.TryParse(r.DateString, out _))
+        {
+            errors[nameof(r.DateString)] = "Valid date is required";
+        }
+        if (string.IsNullOrWhiteSpace(r.AmountString) || !decimal.TryParse(r.AmountString, out var amt) || amt <= 0)
+        {
+            errors[nameof(r.AmountString)] = "Amount must be a positive number";
+        }
+        return errors;
+    }
+
+    private async Task SubmitAll()
+    {
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        submitSummary = null;
+        StateHasChanged();
+
+        var created = 0;
+        var duplicates = 0;
+        var errors = 0;
+
+        Console.WriteLine($"SubmitAll: Starting with {rows.Count} rows");
+
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var r = rows[i];
+            
+            // Skip completely empty rows (no description and no amount)
+            if (string.IsNullOrWhiteSpace(r.Description) && string.IsNullOrWhiteSpace(r.AmountString))
+            {
+                Console.WriteLine($"Row {i}: Skipping empty row");
+                continue;
+            }
+
+            Console.WriteLine($"Row {i}: Desc='{r.Description}' Amt='{r.AmountString}' Date='{r.DateString}' Type={r.Type}");
+
+            var errs = Validate(r);
+            if (errs.Count > 0)
+            {
+                Console.WriteLine($"Row {i}: Validation failed - {string.Join(", ", errs.Select(kv => $"{kv.Key}: {kv.Value}"))}");
+                rows[i] = r with { Errors = errs, Status = RowStatus.ValidationError, Error = "Validation failed" };
+                errors++;
+                continue;
+            }
+
+            Console.WriteLine($"Row {i}: Validation passed, submitting...");
+
+            try
+            {
+                var request = new
+                {
+                    Description = r.Description.Trim(),
+                    Currency = "USD",
+                    Amount = decimal.Parse(r.AmountString),
+                    Date = DateOnly.FromDateTime(DateTime.Parse(r.DateString)),
+                    Category = string.IsNullOrWhiteSpace(r.Category) ? null : r.Category.Trim()
+                };
+
+                var endpoint = r.Type == TransactionType.Income ? "api/v1/adhoc-transactions/income" : "api/v1/adhoc-transactions/expenses";
+                Console.WriteLine($"Row {i}: POSTing to {endpoint}");
+                var response = await DataService.HttpClient.PostAsJsonAsync(endpoint, request);
+                Console.WriteLine($"Row {i}: Response status {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    rows[i] = r with { Status = RowStatus.Created, Error = null };
+                    created++;
+                }
+                else
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    if ((int)response.StatusCode == 400 && body.Contains("duplicate", StringComparison.OrdinalIgnoreCase))
+                    {
+                        rows[i] = r with { Status = RowStatus.Duplicate, Error = "Duplicate transaction" };
+                        duplicates++;
+                    }
+                    else
+                    {
+                        rows[i] = r with { Status = RowStatus.Failed, Error = $"{response.StatusCode}: {TrimProblem(body)}" };
+                        errors++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                rows[i] = r with { Status = RowStatus.Failed, Error = ex.Message };
+                errors++;
+            }
+        }
+
+        submitSummary = new SubmitSummary(created, duplicates, errors);
+        isSubmitting = false;
+    }
+
+    private int? focusRow;
+    private int? focusCol;
+
+    private bool IsFocus(int row, int col) => focusRow == row && focusCol == col;
+
+    private void HandleCellKeyDown(int row, int col, KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            if (e.ShiftKey == true)
+            {
+                // Move up same column
+                var prevRow = row - 1;
+                if (prevRow >= 0)
+                {
+                    focusRow = prevRow; focusCol = col;
+                }
+            }
+            else
+            {
+                // Move down same column, add row if at last
+                if (row == rows.Count - 1)
+                {
+                    AddRow();
+                    focusRow = rows.Count - 1; // newly added row index
+                    focusCol = col;
+                }
+                else
+                {
+                    focusRow = row + 1; focusCol = col;
+                }
+            }
+        }
+        else if (e.Key == "Escape")
+        {
+            // Clear current cell value (simple cancel)
+            var current = rows[row];
+            switch (col)
+            {
+                case 0: UpdateRow(row, current with { DateString = string.Empty }); break;
+                case 1: UpdateRow(row, current with { Description = string.Empty }); break;
+                case 2: UpdateRow(row, current with { AmountString = string.Empty }); break;
+                case 3: UpdateRow(row, current with { Type = TransactionType.Expense }); break;
+                case 4: UpdateRow(row, current with { Category = null }); break;
+            }
+        }
+    }
+
+    private static string TrimProblem(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return string.Empty;
+        if (body.Length > 300) return body.Substring(0, 300) + "...";
+        return body;
+    }
+
+    private enum RowStatus { None, Created, Duplicate, ValidationError, Failed }
+
+    private record RowVm(
+        string DateString,
+        string Description,
+        string AmountString,
+        TransactionType Type,
+        string? Category,
+        RowStatus Status,
+        string? Error,
+        Dictionary<string, string> Errors)
+    {
+        public static RowVm CreateDefault()
+        {
+            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            return new RowVm(today, string.Empty, string.Empty, TransactionType.Expense, null, RowStatus.None, null, new());
+        }
+    }
+
+    private sealed record SubmitSummary(int Created, int Duplicates, int Errors)
+    {
+        public MessageIntent Intent => Errors > 0 ? MessageIntent.Warning : MessageIntent.Success;
+        public string Text => $"Created: {Created} • Duplicates: {Duplicates} • Errors: {Errors}";
     }
 }

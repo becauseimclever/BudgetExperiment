@@ -2,6 +2,7 @@
 @page "/fluentcalendar"
 @inject IJSRuntime JS
 @inject CalendarDataService DataService
+@inject FeatureFlagService FeatureFlagService
 @using Microsoft.AspNetCore.Components
 @using Microsoft.FluentUI.AspNetCore.Components
 @using BudgetExperiment.Client.Components
@@ -21,7 +22,8 @@
                 Year="@currentMonth.Year"
                 OnNavigateMonth="NavigateMonth"
                 OnImportClick="OpenImportDialog"
-                OnQuickEntryClick="OpenQuickEntryDialog" />
+                OnQuickEntryClick="OpenQuickEntryDialog" 
+                ShowQuickEntry="@isQuickEntryEnabled" />
 
         <!-- Calendar Grid -->
         <CalendarGrid CurrentMonth="@currentMonth"
@@ -97,9 +99,14 @@
     private bool showImportDialog = false;
     // Quick Entry dialog state
     private bool showQuickEntryDialog = false;
+    private bool isQuickEntryEnabled = false;
 
     protected override async Task OnInitializedAsync()
     {
+        // Load feature flags
+        var flags = await FeatureFlagService.GetFeatureFlagsAsync();
+        isQuickEntryEnabled = flags.QuickEntry;
+
         await LoadCurrentMonth();
     }
 

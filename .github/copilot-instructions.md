@@ -210,11 +210,14 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 
 ## 32. NuGet Package Management
 - Always add or update NuGet dependencies using the `dotnet` CLI, not by manually editing `.csproj` files.
-- Preferred pattern (explicit paths + version pin):
-    - `dotnet add c:\ws\BudgetExperiment\tests\BudgetExperiment.Api.Tests\BudgetExperiment.Api.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 10.0.0`
+- **Default to latest version**: Unless there is a specific reason (e.g., compatibility constraints, known issues), always install the latest stable version of a package without specifying `--version`.
+- Preferred pattern (latest version):
+    - `dotnet add c:\ws\BudgetExperiment\tests\BudgetExperiment.Api.Tests\BudgetExperiment.Api.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing`
+- When a specific version is required, document the reason:
+    - `dotnet add <csprojPath> package <PackageName> --version <version>  # Reason: compatibility with X`
 - Do NOT hand-edit `<ItemGroup><PackageReference .../></ItemGroup>` blocks unless performing a mechanical conflict resolution that cannot be expressed via CLI (rare—document justification if needed).
 - When removing a package: `dotnet remove <csprojPath> package <PackageName>`.
-- Keep versions explicit (no floating ranges) to preserve reproducibility; update via intentional CLI commands.
+- Keep versions explicit in `.csproj` (no floating ranges) to preserve reproducibility; update via intentional CLI commands.
 
 ## 33. Client-Server Development Workflow
 - **CRITICAL**: The Blazor WebAssembly client (`BudgetExperiment.Client`) is hosted by the API (`BudgetExperiment.Api`) and should NEVER be run standalone.
