@@ -3,6 +3,7 @@
 
 using BudgetExperiment.Application;
 using BudgetExperiment.Infrastructure;
+using BudgetExperiment.Application.CsvImport;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,10 @@ public partial class Program
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
         builder.Services.AddHealthChecks();
+
+        // Configure CSV import deduplication options (optional overrides via configuration)
+        builder.Services.Configure<CsvImportDeduplicationOptions>(
+            builder.Configuration.GetSection("CsvImportDeduplication"));
 
         builder.Services.AddCors(options =>
         {

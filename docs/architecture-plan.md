@@ -136,3 +136,11 @@ Phase 7: Basic UI component tests (bUnit) for projection grid.
 
 ---
 Document updated as architecture evolves. Keep lean and actionable.
+
+## CSV Import Endpoints (Implemented)
+
+- POST `/api/v1/csv-import` — legacy immediate import
+- POST `/api/v1/csv-import/preview` — multipart (file, bankType) returns preview rows with duplicate flags
+- POST `/api/v1/csv-import/commit` — JSON body of edited rows; respects `forceImport` for duplicates
+
+Client performs Preview → Edit → Commit in a dialog hosted by the API. Dedup thresholds configurable via `CsvImportDeduplication` in API appsettings.

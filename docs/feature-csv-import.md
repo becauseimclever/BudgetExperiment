@@ -1,7 +1,7 @@
 # Feature: CSV Import for Bank Transactions
 
 **Created**: 2025-11-16  
-**Updated**: 2025-11-17  
+**Updated**: 2025-11-18  
 **Status**: ✅ Phase 1–5 COMPLETE  
 **Priority**: HIGH
 
@@ -698,21 +698,37 @@ public async Task<CsvImportResult> ImportAsync(Stream csvStream, BankType bankTy
 - ✅ User sees clear report of which rows were skipped and why
 
 ### Phase 5: Advanced Deduplication ✅ COMPLETE
-Target: Reduce near-duplicate imports via fuzzy matching.
+Target: Reduce near-duplicate imports via fuzzy matching, handling bank-generated metadata vs manual entries.
 
-Implementation:
-- Fuzzy duplicate detection in `CsvImportService` using:
-  - Date proximity: ±1 day window
-  - Amount/type: exact match on absolute amount and transaction type
-  - Description similarity: Levenshtein distance ≤ 3 on normalized descriptions
-- Exact-match check remains first; fuzzy check runs only when no exact duplicate found.
+**Problem Solved**: Bank CSVs contain transaction dates, confirmation codes, merchant category codes, phone numbers, and locations embedded in descriptions (e.g., `"GROCERY STORE #659 11/07 MOBILE PURCHASE ANYTOWN TX"`) while manual entries might be simpler (e.g., `"GROCERY STORE #659"`). These should be recognized as duplicates.
 
-Testing:
-- Added unit test `ImportAsync_FuzzyDuplicateWithinOneDay_SkipsDuplicate` verifying skip behavior.
+**Implementation**:
+- Enhanced description normalization in `CsvImportService`:
+  - **Metadata removal**: Strips dates (MM/DD/YYYY formats), confirmation numbers (Conf#, ID:), transaction codes, phone numbers, account masks (XXXXX), website domains, state codes, and common bank keywords (PURCHASE, DEBIT CARD, MOBILE, ACH, etc.)
+  - **Keyword extraction**: Tokenizes cleaned descriptions into significant words (≥3 chars)
+  - **Dual similarity scoring**:
+    1. **Levenshtein distance** ≤ 5 on normalized strings (increased tolerance for bank variations)
+    2. **Jaccard similarity** ≥ 0.6 on keyword sets (handles word-order differences)
+- Date proximity: ±3 day window (configurable via options)
+- Amount/type: exact match on absolute amount and transaction type (unchanged)
+- Exact-match check remains first; fuzzy check runs only when no exact duplicate found
+- Thresholds are configurable via `CsvImportDeduplication` options (see Configuration)
 
-Behavior:
-- Duplicates (exact or fuzzy) increment `DuplicatesSkipped` and appear in `CsvImportResult.Duplicates`.
-- No API or UI contract changes required.
+**Testing**:
+- `ImportAsync_FuzzyDuplicateWithinOneDay_SkipsDuplicate`: Basic fuzzy matching with punctuation differences
+- `ImportAsync_BankMetadataVsManualEntry_SkipsDuplicate`: Bank description with date/location vs simple manual entry
+- `ImportAsync_ZelleWithConfCodeVsManual_SkipsDuplicate`: Zelle transaction with confirmation code vs clean description
+- `ImportAsync_DifferentMerchantsSimilarNames_AllowsBoth`: Ensures different merchants aren't falsely matched (amount filter protects)
+
+**Behavior**:
+- Duplicates (exact or fuzzy) increment `DuplicatesSkipped` and appear in `CsvImportResult.Duplicates`
+- Introduces optional preview/commit flow: `POST /api/v1/csv-import/preview` and `POST /api/v1/csv-import/commit`
+- Handles real-world scenarios from BofA, Capital One, and UHCU sample CSVs
+
+**Examples**:
+- Manual: `"GROCERY STORE #659"` (83.72, 11/7) matches Bank CSV: `"GROCERY STORE #659 11/07 MOBILE PURCHASE ANYTOWN TX"` (-83.72, 11/7)
+- Manual: `"Zelle payment from John Smith"` (100.00, 10/1) matches Bank CSV: `"Zelle payment from John Smith Conf# AB8KL2MXC"` (100.00, 10/1)
+- Different transactions with same merchant/similar amounts still differentiated by date/amount checks
 
 ### Phase 5: Additional Enhancements (Future)
 **Optional features based on user feedback**:
@@ -862,6 +878,42 @@ Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit
 ```
 
 ---
+
+## Preview + Commit Endpoints (Phase 5)
+
+New endpoints provide a safer, user-guided import:
+
+- POST `/api/v1/csv-import/preview` (multipart/form-data)
+  - Form fields: `file` (.csv), `bankType` (BankOfAmerica|CapitalOne|UnitedHeritageCreditUnion)
+  - Returns: array of preview rows `{ rowNumber, date, description, amount, transactionType, category, isDuplicate, existingTransactionId }`
+
+- POST `/api/v1/csv-import/commit` (application/json)
+  - Body shape: `{ "items": [ { rowNumber, date, description, amount, transactionType, category, forceImport } ] }`
+  - Returns: `CsvImportResult` with counts, errors, and duplicates skipped
+
+Example (cURL):
+```bash
+curl -X POST http://localhost:5099/api/v1/csv-import/preview \
+  -F "file=@transactions.csv" \
+  -F "bankType=BankOfAmerica"
+
+curl -X POST http://localhost:5099/api/v1/csv-import/commit \
+  -H "Content-Type: application/json" \
+  -d '{"items":[{"rowNumber":2,"date":"2025-11-10","description":"GROCERY STORE #456","amount":123.45,"transactionType":1,"category":"Groceries","forceImport":false}]}'
+```
+
+### Configuration (Phase 5)
+
+Dedup thresholds are configurable in API `appsettings.*` under `CsvImportDeduplication`:
+```json
+"CsvImportDeduplication": {
+  "FuzzyDateWindowDays": 3,
+  "MaxLevenshteinDistance": 5,
+  "MinJaccardSimilarity": 0.6
+}
+```
+
+These map to `CsvImportDeduplicationOptions` and are injected via Options pattern.
 
 ## Readiness for Next Phase
 
