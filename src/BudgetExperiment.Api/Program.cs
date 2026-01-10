@@ -77,10 +77,20 @@ public partial class Program
         try
         {
             logger.LogInformation("Applying database migrations...");
-            await context.Database.MigrateAsync();
-            logger.LogInformation("Database migrations applied successfully.");
 
-            await DatabaseSeeder.SeedAsync(context, logger);
+            // Check if running with in-memory database (testing) - use try/catch since IsRelational() may throw
+            try
+            {
+                await context.Database.MigrateAsync();
+                logger.LogInformation("Database migrations applied successfully.");
+                await DatabaseSeeder.SeedAsync(context, logger);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("relational"))
+            {
+                // In-memory database for testing - just ensure the schema is created
+                logger.LogInformation("Skipping migrations for non-relational database provider.");
+                await context.Database.EnsureCreatedAsync();
+            }
         }
         catch (Exception ex)
         {

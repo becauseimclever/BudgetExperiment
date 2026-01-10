@@ -2,7 +2,6 @@
 
 @using BudgetExperiment.Client.Models
 @using BudgetExperiment.Client.Services
-@using BudgetExperiment.Domain
 
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
@@ -55,10 +54,11 @@
                     <div class="form-group">
                         <label for="accountType">Account Type:</label>
                         <select id="accountType" @bind="newAccount.Type" required>
-                            @foreach (var type in Enum.GetValues<AccountType>())
-                            {
-                                <option value="@type">@type</option>
-                            }
+                            <option value="Checking">Checking</option>
+                            <option value="Savings">Savings</option>
+                            <option value="CreditCard">Credit Card</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
                     <div class="form-actions">
@@ -245,7 +245,7 @@
 
     private void ShowAddAccount()
     {
-        newAccount = new AccountCreateModel { Type = AccountType.Checking };
+        newAccount = new AccountCreateModel { Type = "Checking" };
         showAddAccount = true;
     }
 

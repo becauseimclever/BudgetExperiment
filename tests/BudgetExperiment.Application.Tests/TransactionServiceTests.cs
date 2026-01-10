@@ -28,7 +28,7 @@ public class TransactionServiceTests
         var dto = new TransactionCreateDto
         {
             AccountId = account.Id,
-            Amount = MoneyValue.Create("USD", 10m),
+            Amount = new MoneyDto { Currency = "USD", Amount = 10m },
             Date = new DateOnly(2026, 1, 9),
             Description = "Test Transaction"
         };
@@ -55,7 +55,7 @@ public class TransactionServiceTests
         var dto = new TransactionCreateDto
         {
             AccountId = Guid.NewGuid(),
-            Amount = MoneyValue.Create("USD", 10m),
+            Amount = new MoneyDto { Currency = "USD", Amount = 10m },
             Date = new DateOnly(2026, 1, 9),
             Description = "Test Transaction"
         };

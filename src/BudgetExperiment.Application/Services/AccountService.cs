@@ -56,9 +56,15 @@ public sealed class AccountService
     /// <param name="dto">The account creation data.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created account DTO.</returns>
+    /// <exception cref="DomainException">Thrown when the account type is invalid.</exception>
     public async Task<AccountDto> CreateAsync(AccountCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var account = Account.Create(dto.Name, dto.Type);
+        if (!Enum.TryParse<AccountType>(dto.Type, ignoreCase: true, out var accountType))
+        {
+            throw new DomainException($"Invalid account type: {dto.Type}");
+        }
+
+        var account = Account.Create(dto.Name, accountType);
         await this._repository.AddAsync(account, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(account);

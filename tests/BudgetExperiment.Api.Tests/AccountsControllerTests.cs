@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Application.Dtos;
-using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Api.Tests;
 
@@ -49,7 +48,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     public async Task Create_Returns_201_WithCreatedAccount()
     {
         // Arrange
-        var createDto = new AccountCreateDto { Name = "Test Checking", Type = AccountType.Checking };
+        var createDto = new AccountCreateDto { Name = "Test Checking", Type = "Checking" };
 
         // Act
         var response = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
@@ -59,7 +58,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         var created = await response.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(created);
         Assert.Equal("Test Checking", created.Name);
-        Assert.Equal(AccountType.Checking, created.Type);
+        Assert.Equal("Checking", created.Type);
         Assert.NotEqual(Guid.Empty, created.Id);
     }
 

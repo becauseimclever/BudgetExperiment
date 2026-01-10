@@ -71,7 +71,8 @@ public sealed class TransactionService
             throw new DomainException("Account not found.");
         }
 
-        var transaction = account.AddTransaction(dto.Amount, dto.Date, dto.Description, dto.Category);
+        var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
+        var transaction = account.AddTransaction(amount, dto.Date, dto.Description, dto.Category);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(transaction);
     }

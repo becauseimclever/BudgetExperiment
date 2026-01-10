@@ -23,14 +23,14 @@ public class AccountServiceTests
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
         var service = new AccountService(repo.Object, uow.Object);
-        var dto = new AccountCreateDto { Name = "Test", Type = AccountType.Checking };
+        var dto = new AccountCreateDto { Name = "Test", Type = "Checking" };
 
         // Act
         var result = await service.CreateAsync(dto);
 
         // Assert
         Assert.Equal("Test", result.Name);
-        Assert.Equal(AccountType.Checking, result.Type);
+        Assert.Equal("Checking", result.Type);
         Assert.NotEqual(Guid.Empty, result.Id);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }

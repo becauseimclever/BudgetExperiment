@@ -2,8 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Domain;
-
 namespace BudgetExperiment.Client.Models;
 
 /// <summary>
@@ -17,8 +15,8 @@ public sealed class AccountModel
     /// <summary>Gets or sets the account name.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the account type.</summary>
-    public AccountType Type { get; set; }
+    /// <summary>Gets or sets the account type as string.</summary>
+    public string Type { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the creation timestamp (UTC).</summary>
     public DateTime CreatedAt { get; set; }
@@ -38,6 +36,6 @@ public sealed class AccountCreateModel
     /// <summary>Gets or sets the account name.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the account type.</summary>
-    public AccountType Type { get; set; }
+    /// <summary>Gets or sets the account type as string (Checking, Savings, CreditCard, Cash, Other).</summary>
+    public string Type { get; set; } = "Checking";
 }
