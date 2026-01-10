@@ -1,9 +1,3 @@
-using BudgetExperiment.Application.AdhocTransactions;
-using BudgetExperiment.Application.CsvImport;
-using BudgetExperiment.Application.CsvImport.Parsers;
-using BudgetExperiment.Application.RecurringSchedules;
-using BudgetExperiment.Application.RunningTotals;
-
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Application;
@@ -18,16 +12,7 @@ public static class DependencyInjection
     /// <returns>Same collection for chaining.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScoped<IRecurringScheduleService, RecurringScheduleService>();
-        services.AddScoped<IAdhocTransactionService, AdhocTransactionService>();
-        services.AddScoped<IRunningTotalService, RunningTotalService>();
-
-        // CSV import services
-        services.AddScoped<ICsvImportService, CsvImportService>();
-        services.AddScoped<IBankCsvParser, BankOfAmericaCsvParser>();
-        services.AddScoped<IBankCsvParser, CapitalOneCsvParser>();
-        services.AddScoped<IBankCsvParser, UnitedHeritageCreditUnionCsvParser>();
-
+        // Services will be registered as new features are implemented
         return services;
     }
 }

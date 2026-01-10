@@ -3,11 +3,6 @@
 
 using BudgetExperiment.Application;
 using BudgetExperiment.Infrastructure;
-using BudgetExperiment.Application.CsvImport;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 using Scalar.AspNetCore;
 
@@ -33,10 +28,6 @@ public partial class Program
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
         builder.Services.AddHealthChecks();
-
-        // Configure CSV import deduplication options (optional overrides via configuration)
-        builder.Services.Configure<CsvImportDeduplicationOptions>(
-            builder.Configuration.GetSection("CsvImportDeduplication"));
 
         builder.Services.AddCors(options =>
         {
@@ -65,24 +56,6 @@ public partial class Program
 
         // Custom exception handling
         app.UseMiddleware<BudgetExperiment.Api.Middleware.ExceptionHandlingMiddleware>();
-
-        // Apply pending migrations.
-        using (var scope = app.Services.CreateScope())
-        {
-            try
-            {
-                var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
-
-                // Apply any pending migrations
-                await db.Database.MigrateAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                // Log minimal info (logging pipeline configured later) and rethrow.
-                Console.Error.WriteLine($"Database migration failed: {ex.Message}");
-                throw;
-            }
-        }
 
         await app.RunAsync().ConfigureAwait(false);
     }

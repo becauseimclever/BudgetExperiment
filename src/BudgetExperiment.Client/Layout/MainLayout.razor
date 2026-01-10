@@ -1,16 +1,11 @@
 ﻿@inherits LayoutComponentBase
-@using Microsoft.FluentUI.AspNetCore.Components
 
-<FluentLayout>
-    <FluentHeader>
-        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Center">
-            <FluentLabel Typo="Typography.PageTitle">Budget Experiment</FluentLabel>
-        </FluentStack>
-    </FluentHeader>
-    
-    <FluentBodyContent>
-        <div style="padding: 16px; background-color: #faf9f8; min-height: 100vh;">
-            @Body
-        </div>
-    </FluentBodyContent>
-</FluentLayout>
+<div class="page">
+    <header>
+        <h1>Budget Experiment</h1>
+    </header>
+
+    <main>
+        @Body
+    </main>
+</div>
