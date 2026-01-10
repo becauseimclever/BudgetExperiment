@@ -87,6 +87,6 @@ public sealed class TransactionsController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] TransactionCreateDto dto, CancellationToken cancellationToken)
     {
         var transaction = await this._service.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction(nameof(this.GetByIdAsync), new { id = transaction.Id }, transaction);
+        return this.CreatedAtAction("GetById", new { id = transaction.Id }, transaction);
     }
 }
