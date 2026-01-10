@@ -1,0 +1,551 @@
+@* Calendar.razor - Month view calendar with daily transaction totals *@
+
+@page "/calendar"
+@page "/calendar/{Year:int}/{Month:int}"
+
+@using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Services
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Calendar - Budget Experiment</PageTitle>
+
+<div class="calendar-container">
+    <div class="calendar-header">
+        <button class="nav-button" @onclick="PreviousMonth">&lt; Previous</button>
+        <h2>@currentDate.ToString("MMMM yyyy")</h2>
+        <button class="nav-button" @onclick="NextMonth">Next &gt;</button>
+    </div>
+
+    <div class="account-filter">
+        <label for="accountSelect">Filter by Account:</label>
+        <select id="accountSelect" @bind="selectedAccountId" @bind:after="LoadCalendarData">
+            <option value="">All Accounts</option>
+            @foreach (var account in accounts)
+            {
+                <option value="@account.Id">@account.Name</option>
+            }
+        </select>
+    </div>
+
+    @if (isLoading)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <div class="calendar-grid">
+            <div class="calendar-day-header">Sun</div>
+            <div class="calendar-day-header">Mon</div>
+            <div class="calendar-day-header">Tue</div>
+            <div class="calendar-day-header">Wed</div>
+            <div class="calendar-day-header">Thu</div>
+            <div class="calendar-day-header">Fri</div>
+            <div class="calendar-day-header">Sat</div>
+
+            @foreach (var day in calendarDays)
+            {
+                <div class="calendar-day @(day.IsCurrentMonth ? "" : "other-month") @(day.IsToday ? "today" : "") @(day.Date == selectedDate ? "selected" : "")"
+                     @onclick="() => SelectDate(day.Date)">
+                    <span class="day-number">@day.Date.Day</span>
+                    @if (day.DailyTotal != null)
+                    {
+                        <div class="day-total @(day.DailyTotal.Total.Amount >= 0 ? "positive" : "negative")">
+                            @FormatMoney(day.DailyTotal.Total.Amount)
+                        </div>
+                        <div class="transaction-count">
+                            @day.DailyTotal.TransactionCount txn@(day.DailyTotal.TransactionCount != 1 ? "s" : "")
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (selectedDate.HasValue)
+    {
+        <div class="day-detail">
+            <h3>Transactions for @selectedDate.Value.ToString("MMMM d, yyyy")</h3>
+            <button class="add-button" @onclick="ShowAddTransaction">+ Add Transaction</button>
+
+            @if (selectedDayTransactions.Count == 0)
+            {
+                <p>No transactions for this day.</p>
+            }
+            else
+            {
+                <table class="transaction-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var txn in selectedDayTransactions)
+                        {
+                            <tr>
+                                <td>@txn.Description</td>
+                                <td>@(txn.Category ?? "-")</td>
+                                <td class="@(txn.Amount.Amount >= 0 ? "positive" : "negative")">
+                                    @FormatMoney(txn.Amount.Amount)
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+    @if (showAddTransaction)
+    {
+        <div class="modal-overlay" @onclick="HideAddTransaction">
+            <div class="modal" @onclick:stopPropagation="true">
+                <h3>Add Transaction</h3>
+                <form @onsubmit="CreateTransaction">
+                    <div class="form-group">
+                        <label for="txnAccount">Account:</label>
+                        <select id="txnAccount" @bind="newTransaction.AccountId" required>
+                            <option value="">Select Account</option>
+                            @foreach (var account in accounts)
+                            {
+                                <option value="@account.Id">@account.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="txnDescription">Description:</label>
+                        <input id="txnDescription" type="text" @bind="newTransaction.Description" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="txnAmount">Amount:</label>
+                        <input id="txnAmount" type="number" step="0.01" @bind="newTransaction.Amount" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="txnCategory">Category (optional):</label>
+                        <input id="txnCategory" type="text" @bind="newTransaction.Category" />
+                    </div>
+                    <div class="form-group">
+                        <label for="txnDate">Date:</label>
+                        <input id="txnDate" type="date" @bind="transactionDateInput" required />
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save</button>
+                        <button type="button" class="btn-secondary" @onclick="HideAddTransaction">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .calendar-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .nav-button {
+        padding: 8px 16px;
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+    }
+
+    .nav-button:hover {
+        background: #0056b3;
+    }
+
+    .account-filter {
+        margin-bottom: 20px;
+    }
+
+    .account-filter select {
+        padding: 8px;
+        margin-left: 10px;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        background: #ddd;
+        border: 1px solid #ddd;
+    }
+
+    .calendar-day-header {
+        background: #f0f0f0;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .calendar-day {
+        background: white;
+        min-height: 80px;
+        padding: 5px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .calendar-day:hover {
+        background: #f5f5f5;
+    }
+
+    .calendar-day.other-month {
+        background: #fafafa;
+        color: #999;
+    }
+
+    .calendar-day.today {
+        background: #fff3cd;
+    }
+
+    .calendar-day.selected {
+        background: #cce5ff;
+        border: 2px solid #007bff;
+    }
+
+    .day-number {
+        font-weight: bold;
+        display: block;
+    }
+
+    .day-total {
+        font-size: 0.85em;
+        margin-top: 4px;
+    }
+
+    .day-total.positive {
+        color: #28a745;
+    }
+
+    .day-total.negative {
+        color: #dc3545;
+    }
+
+    .transaction-count {
+        font-size: 0.75em;
+        color: #666;
+    }
+
+    .day-detail {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .add-button {
+        margin-bottom: 15px;
+        padding: 8px 16px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .add-button:hover {
+        background: #218838;
+    }
+
+    .transaction-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .transaction-table th,
+    .transaction-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .transaction-table th {
+        background: #f0f0f0;
+    }
+
+    .positive {
+        color: #28a745;
+    }
+
+    .negative {
+        color: #dc3545;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        min-width: 400px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+
+    .btn-secondary {
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+        background: #545b62;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int Year { get; set; }
+
+    [Parameter]
+    public int Month { get; set; }
+
+    private DateOnly currentDate;
+    private DateOnly? selectedDate;
+    private string selectedAccountId = "";
+    private Guid? filterAccountId => string.IsNullOrEmpty(selectedAccountId) ? null : Guid.Parse(selectedAccountId);
+
+    private bool isLoading = true;
+    private List<AccountModel> accounts = new();
+    private List<CalendarDay> calendarDays = new();
+    private Dictionary<DateOnly, DailyTotalModel> dailyTotals = new();
+    private List<TransactionModel> selectedDayTransactions = new();
+
+    private bool showAddTransaction = false;
+    private TransactionCreateModel newTransaction = new();
+    private DateTime transactionDateInput = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Year == 0 || Month == 0)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            Year = today.Year;
+            Month = today.Month;
+        }
+
+        currentDate = new DateOnly(Year, Month, 1);
+        await LoadAccounts();
+        await LoadCalendarData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Year > 0 && Month > 0)
+        {
+            var newDate = new DateOnly(Year, Month, 1);
+            if (newDate != currentDate)
+            {
+                currentDate = newDate;
+                selectedDate = null;
+                selectedDayTransactions.Clear();
+                await LoadCalendarData();
+            }
+        }
+    }
+
+    private async Task LoadAccounts()
+    {
+        accounts = (await ApiService.GetAccountsAsync()).ToList();
+    }
+
+    private async Task LoadCalendarData()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        var totals = await ApiService.GetCalendarSummaryAsync(currentDate.Year, currentDate.Month, filterAccountId);
+        dailyTotals = totals.ToDictionary(t => t.Date, t => t);
+
+        BuildCalendarDays();
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private void BuildCalendarDays()
+    {
+        calendarDays.Clear();
+
+        var firstOfMonth = new DateOnly(currentDate.Year, currentDate.Month, 1);
+        var daysInMonth = DateTime.DaysInMonth(currentDate.Year, currentDate.Month);
+        var startDayOfWeek = (int)firstOfMonth.DayOfWeek;
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        // Add days from previous month
+        var prevMonth = firstOfMonth.AddMonths(-1);
+        var daysInPrevMonth = DateTime.DaysInMonth(prevMonth.Year, prevMonth.Month);
+        for (int i = startDayOfWeek - 1; i >= 0; i--)
+        {
+            var date = new DateOnly(prevMonth.Year, prevMonth.Month, daysInPrevMonth - i);
+            calendarDays.Add(new CalendarDay
+            {
+                Date = date,
+                IsCurrentMonth = false,
+                IsToday = date == today,
+                DailyTotal = dailyTotals.GetValueOrDefault(date)
+            });
+        }
+
+        // Add days from current month
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            var date = new DateOnly(currentDate.Year, currentDate.Month, day);
+            calendarDays.Add(new CalendarDay
+            {
+                Date = date,
+                IsCurrentMonth = true,
+                IsToday = date == today,
+                DailyTotal = dailyTotals.GetValueOrDefault(date)
+            });
+        }
+
+        // Add days from next month to complete the grid
+        var nextMonth = firstOfMonth.AddMonths(1);
+        var remainingDays = 42 - calendarDays.Count; // 6 rows x 7 days
+        for (int day = 1; day <= remainingDays; day++)
+        {
+            var date = new DateOnly(nextMonth.Year, nextMonth.Month, day);
+            calendarDays.Add(new CalendarDay
+            {
+                Date = date,
+                IsCurrentMonth = false,
+                IsToday = date == today,
+                DailyTotal = dailyTotals.GetValueOrDefault(date)
+            });
+        }
+    }
+
+    private async Task SelectDate(DateOnly date)
+    {
+        selectedDate = date;
+        selectedDayTransactions = (await ApiService.GetTransactionsAsync(date, date, filterAccountId)).ToList();
+    }
+
+    private void PreviousMonth()
+    {
+        var prev = currentDate.AddMonths(-1);
+        Navigation.NavigateTo($"/calendar/{prev.Year}/{prev.Month}");
+    }
+
+    private void NextMonth()
+    {
+        var next = currentDate.AddMonths(1);
+        Navigation.NavigateTo($"/calendar/{next.Year}/{next.Month}");
+    }
+
+    private void ShowAddTransaction()
+    {
+        newTransaction = new TransactionCreateModel
+        {
+            Date = selectedDate ?? DateOnly.FromDateTime(DateTime.Today)
+        };
+        transactionDateInput = newTransaction.Date.ToDateTime(TimeOnly.MinValue);
+        showAddTransaction = true;
+    }
+
+    private void HideAddTransaction()
+    {
+        showAddTransaction = false;
+    }
+
+    private async Task CreateTransaction()
+    {
+        if (newTransaction.AccountId == Guid.Empty || string.IsNullOrWhiteSpace(newTransaction.Description))
+        {
+            return;
+        }
+
+        newTransaction.Date = DateOnly.FromDateTime(transactionDateInput);
+
+        var result = await ApiService.CreateTransactionAsync(newTransaction);
+        if (result != null)
+        {
+            showAddTransaction = false;
+            await LoadCalendarData();
+            if (selectedDate.HasValue)
+            {
+                await SelectDate(selectedDate.Value);
+            }
+        }
+    }
+
+    private static string FormatMoney(decimal amount)
+    {
+        return amount.ToString("C2");
+    }
+
+    private class CalendarDay
+    {
+        public DateOnly Date { get; set; }
+        public bool IsCurrentMonth { get; set; }
+        public bool IsToday { get; set; }
+        public DailyTotalModel? DailyTotal { get; set; }
+    }
+}

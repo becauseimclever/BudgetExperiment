@@ -4,6 +4,8 @@
 using BudgetExperiment.Application;
 using BudgetExperiment.Infrastructure;
 
+using Microsoft.EntityFrameworkCore;
+
 using Scalar.AspNetCore;
 
 /// <summary>
@@ -36,6 +38,12 @@ public partial class Program
 
         var app = builder.Build();
 
+        // Apply migrations and seed data in development
+        if (app.Environment.IsDevelopment())
+        {
+            await InitializeDatabaseAsync(app);
+        }
+
         app.UseHttpsRedirection();
         app.UseCors("dev");
 
@@ -58,5 +66,26 @@ public partial class Program
         app.UseMiddleware<BudgetExperiment.Api.Middleware.ExceptionHandlingMiddleware>();
 
         await app.RunAsync().ConfigureAwait(false);
+    }
+
+    private static async Task InitializeDatabaseAsync(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<BudgetDbContext>>();
+
+        try
+        {
+            logger.LogInformation("Applying database migrations...");
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully.");
+
+            await DatabaseSeeder.SeedAsync(context, logger);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while initializing the database.");
+            throw;
+        }
     }
 }

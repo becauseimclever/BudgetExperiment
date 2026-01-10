@@ -25,6 +25,9 @@ public static class DependencyInjection
 
         services.AddDbContext<BudgetDbContext>(options => options.UseNpgsql(cs));
 
+        // Register IUnitOfWork
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
+
         // Repositories
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();

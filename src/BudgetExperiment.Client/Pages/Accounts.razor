@@ -1,0 +1,285 @@
+@page "/accounts"
+
+@using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Domain
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Accounts - Budget Experiment</PageTitle>
+
+<div class="accounts-container">
+    <div class="accounts-header">
+        <h2>Accounts</h2>
+        <button class="add-button" @onclick="ShowAddAccount">+ Add Account</button>
+    </div>
+
+    @if (isLoading)
+    {
+        <p>Loading...</p>
+    }
+    else if (accounts.Count == 0)
+    {
+        <p>No accounts yet. Create one to get started!</p>
+    }
+    else
+    {
+        <div class="accounts-grid">
+            @foreach (var account in accounts)
+            {
+                <div class="account-card">
+                    <div class="account-info">
+                        <h3>@account.Name</h3>
+                        <span class="account-type">@account.Type</span>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn-view" @onclick="() => ViewAccount(account.Id)">View</button>
+                        <button class="btn-delete" @onclick="() => DeleteAccount(account.Id)">Delete</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (showAddAccount)
+    {
+        <div class="modal-overlay" @onclick="HideAddAccount">
+            <div class="modal" @onclick:stopPropagation="true">
+                <h3>Add Account</h3>
+                <form @onsubmit="CreateAccount">
+                    <div class="form-group">
+                        <label for="accountName">Account Name:</label>
+                        <input id="accountName" type="text" @bind="newAccount.Name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="accountType">Account Type:</label>
+                        <select id="accountType" @bind="newAccount.Type" required>
+                            @foreach (var type in Enum.GetValues<AccountType>())
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save</button>
+                        <button type="button" class="btn-secondary" @onclick="HideAddAccount">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .accounts-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .accounts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .add-button {
+        padding: 10px 20px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .add-button:hover {
+        background: #218838;
+    }
+
+    .accounts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .account-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .account-info h3 {
+        margin: 0 0 8px 0;
+    }
+
+    .account-type {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .account-actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-view {
+        padding: 6px 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-view:hover {
+        background: #0056b3;
+    }
+
+    .btn-delete {
+        padding: 6px 12px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-delete:hover {
+        background: #c82333;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        min-width: 400px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+
+    .btn-secondary {
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+        background: #545b62;
+    }
+</style>
+
+@code {
+    private bool isLoading = true;
+    private List<AccountModel> accounts = new();
+    private bool showAddAccount = false;
+    private AccountCreateModel newAccount = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccounts();
+    }
+
+    private async Task LoadAccounts()
+    {
+        isLoading = true;
+        accounts = (await ApiService.GetAccountsAsync()).ToList();
+        isLoading = false;
+    }
+
+    private void ShowAddAccount()
+    {
+        newAccount = new AccountCreateModel { Type = AccountType.Checking };
+        showAddAccount = true;
+    }
+
+    private void HideAddAccount()
+    {
+        showAddAccount = false;
+    }
+
+    private async Task CreateAccount()
+    {
+        if (string.IsNullOrWhiteSpace(newAccount.Name))
+        {
+            return;
+        }
+
+        var result = await ApiService.CreateAccountAsync(newAccount);
+        if (result != null)
+        {
+            showAddAccount = false;
+            await LoadAccounts();
+        }
+    }
+
+    private void ViewAccount(Guid id)
+    {
+        Navigation.NavigateTo($"/accounts/{id}");
+    }
+
+    private async Task DeleteAccount(Guid id)
+    {
+        var deleted = await ApiService.DeleteAccountAsync(id);
+        if (deleted)
+        {
+            await LoadAccounts();
+        }
+    }
+}

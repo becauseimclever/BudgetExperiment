@@ -1,4 +1,5 @@
 using BudgetExperiment.Client;
+using BudgetExperiment.Client.Services;
 
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -8,7 +9,6 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
-// Services will be registered as new features are implemented
+builder.Services.AddScoped<IBudgetApiService, BudgetApiService>();
 
 await builder.Build().RunAsync();

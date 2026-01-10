@@ -6,7 +6,7 @@ namespace BudgetExperiment.Infrastructure;
 /// <summary>
 /// EF Core DbContext for budgeting aggregates.
 /// </summary>
-public sealed class BudgetDbContext : DbContext
+public sealed class BudgetDbContext : DbContext, IUnitOfWork
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetDbContext"/> class.

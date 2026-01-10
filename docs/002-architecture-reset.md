@@ -1,8 +1,9 @@
 # Feature 002: Architecture Reset
 
 ## Status
-**Status:** In Progress (Phase 3 Complete)  
+**Status:** Complete  
 **Created:** 2026-01-09  
+**Completed:** 2026-01-09  
 **Priority:** High  
 **Depends On:** [001-database-reset.md](001-database-reset.md)
 
@@ -23,8 +24,8 @@ Rethink and redesign the application architecture, domain models, and project st
 - [x] Implement Account aggregate with basic properties
 - [x] Implement Transaction entity
 - [x] Retain MoneyValue value object
-- [ ] Calendar-centric API endpoints (query by date range)
-- [ ] Calendar-centric Blazor UI
+- [x] Calendar-centric API endpoints (query by date range)
+- [x] Calendar-centric Blazor UI
 
 ## UI Design
 
@@ -210,13 +211,13 @@ Calendar (convenience endpoints)
 
 ## Acceptance Criteria
 
-- [ ] Account entity with CRUD operations
-- [ ] Transaction entity with CRUD operations
-- [ ] Date-range query support for transactions
-- [ ] Calendar summary endpoint for month view
-- [ ] Blazor calendar UI displays transactions by date
-- [ ] Full test coverage (TDD approach)
-- [ ] Scalar UI shows clean API structure
+- [x] Account entity with CRUD operations
+- [x] Transaction entity with CRUD operations
+- [x] Date-range query support for transactions
+- [x] Calendar summary endpoint for month view
+- [x] Blazor calendar UI displays transactions by date
+- [x] Full test coverage (TDD approach) - 73 tests
+- [x] Scalar UI shows clean API structure
 
 ## Open Questions
 
@@ -229,7 +230,47 @@ Calendar (convenience endpoints)
 
 This is a significant reset. Take time to design the domain properly before coding. Use the TDD workflow - write failing tests for domain behavior first, then implement.
 
+## Implementation Summary
+
+### Phase 2: Domain Layer (Complete)
+- `Account` aggregate root with `Name`, `Type`, transactions collection
+- `Transaction` entity with `Amount`, `Date`, `Description`, `Category`
+- `MoneyValue` value object (retained, currency + amount)
+- `AccountType` enum (Checking, Savings, CreditCard, Cash, Other)
+- `DailyTotal` record for calendar summaries
+- Repository interfaces: `IAccountRepository`, `ITransactionRepository`
+- `IUnitOfWork` interface for transaction management
+
+### Phase 3: Infrastructure Layer (Complete)
+- `BudgetDbContext` with EF Core configurations
+- `AccountRepository` and `TransactionRepository` implementations
+- EF Core migrations for PostgreSQL
+- `IUnitOfWork` implemented by `BudgetDbContext`
+
+### Phase 4: Application Layer (Complete)
+- DTOs: `AccountDto`, `AccountCreateDto`, `TransactionDto`, `TransactionCreateDto`, `DailyTotalDto`
+- Services: `AccountService`, `TransactionService`, `CalendarService`
+- `DomainToDtoMapper` for entity-to-DTO mapping
+
+### Phase 5: API Layer (Complete)
+- `AccountsController`: GET all, GET by ID, POST, DELETE
+- `TransactionsController`: GET by date range, GET by ID, POST
+- `CalendarController`: GET monthly summary
+- OpenAPI/Scalar documentation at `/scalar`
+
+### Phase 6: Client Layer (Complete)
+- `BudgetApiService` for API communication
+- Calendar page (`/calendar`) with month view, daily totals, day selection
+- Accounts page (`/accounts`) with CRUD operations
+- Transaction creation modal from calendar view
+- Navigation layout with header links
+
+### Test Coverage: 73 Tests
+- Domain: 51 tests (Account, Transaction, MoneyValue)
+- Application: 12 tests (AccountService, TransactionService, CalendarService)
+- API: 10 tests (integration tests with in-memory database)
+
 ## Related Features
 
 - **Prerequisite:** [001-database-reset.md](001-database-reset.md)
-- **Next:** TBD (first domain aggregate implementation)
+- **Next:** CSV import, Plaid integration, budgeting features

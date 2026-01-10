@@ -1,3 +1,5 @@
+using BudgetExperiment.Application.Services;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Application;
@@ -12,7 +14,9 @@ public static class DependencyInjection
     /// <returns>Same collection for chaining.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Services will be registered as new features are implemented
+        services.AddScoped<AccountService>();
+        services.AddScoped<TransactionService>();
+        services.AddScoped<CalendarService>();
         return services;
     }
 }
