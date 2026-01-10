@@ -1,7 +1,7 @@
 # Feature: Collapsible Navigation & Component-Based UI
 
 **Created**: 2026-01-09  
-**Status**: 🔄 IN PROGRESS
+**Status**: ✅ COMPLETED
 
 ## Overview
 Restructure the Blazor WebAssembly client to:
@@ -29,11 +29,11 @@ Restructure the Blazor WebAssembly client to:
 - Duplicate code patterns (modals, forms, tables, etc.)
 
 ## Goals
-- [ ] Calendar page becomes the root (`/`) route - first thing users see
-- [ ] Collapsible left-side navigation menu
-- [ ] Navigation items: Calendar, Accounts, and dynamic per-account transaction links
-- [ ] Transactions management page filtered by account
-- [ ] Extract reusable UI components
+- [x] Calendar page becomes the root (`/`) route - first thing users see
+- [x] Collapsible left-side navigation menu
+- [x] Navigation items: Calendar, Accounts, and dynamic per-account transaction links
+- [x] Transactions management page filtered by account
+- [x] Extract reusable UI components
 
 ## Target Architecture
 
@@ -90,41 +90,74 @@ Components/
 
 ## Implementation Plan
 
-### Phase 1: Refactor Layout with Collapsible Navigation
-1. Create `Components/Navigation/NavMenu.razor` - collapsible side menu
-2. Update `MainLayout.razor` with sidebar layout structure
-3. Add collapse/expand state management
-4. Move calendar to `/` route (remove Index.razor or redirect)
+### Phase 1: Refactor Layout with Collapsible Navigation ✅ COMPLETED
+1. ✅ Create `Components/Navigation/NavMenu.razor` - collapsible side menu with account sub-items
+2. ✅ Update `MainLayout.razor` with sidebar layout structure
+3. ✅ Add collapse/expand state management with hamburger menu toggle
+4. ✅ Move calendar to `/` route (deleted Index.razor)
+5. ✅ Create `Pages/AccountTransactions.razor` at `/accounts/{id}/transactions`
+6. ✅ Update Accounts.razor to navigate to new transactions page
 
-### Phase 2: Extract Reusable Components
-1. Create `Components/Common/Modal.razor` - extract modal pattern from existing pages
-2. Create `Components/Common/PageHeader.razor` - consistent header with title + action buttons
-3. Create `Components/Common/LoadingSpinner.razor` - loading state indicator
-4. Create `Components/Display/MoneyDisplay.razor` - formatted money with color coding
+**Commit**: Phase 1 complete - 2026-01-09
 
-### Phase 3: Extract Form Components
-1. Create `Components/Forms/AccountForm.razor` - account create/edit
-2. Create `Components/Forms/TransactionForm.razor` - transaction create/edit
-3. Refactor Accounts.razor to use AccountForm component
-4. Refactor Calendar.razor to use TransactionForm component
+### Phase 2: Extract Reusable Components ✅ COMPLETED
+1. ✅ Create `Components/Common/Modal.razor` - generic modal with size options
+2. ✅ Create `Components/Common/PageHeader.razor` - consistent header with title, subtitle, back button, and actions
+3. ✅ Create `Components/Common/LoadingSpinner.razor` - loading indicator with size/message options
+4. ✅ Create `Components/Display/MoneyDisplay.razor` - formatted currency with positive/negative coloring
+5. ✅ Create `Components/Common/ComponentEnums.cs` - shared enums (ModalSize, SpinnerSize)
+6. ✅ Refactor `Accounts.razor` to use Modal, LoadingSpinner, PageHeader
+7. ✅ Refactor `Calendar.razor` to use Modal, LoadingSpinner, MoneyDisplay
+8. ✅ Refactor `AccountTransactions.razor` to use Modal, LoadingSpinner, PageHeader, MoneyDisplay
 
-### Phase 4: Account Transactions Page
-1. Create `Pages/AccountTransactions.razor` at `/accounts/{id}/transactions`
-2. Create `Components/Display/TransactionTable.razor` - reusable transaction table
-3. Add edit/delete functionality for transactions
-4. Update navigation to include per-account transaction links
+**Commit**: Phase 2 complete - 2026-01-09
 
-### Phase 5: Calendar Component Extraction
-1. Create `Components/Calendar/CalendarGrid.razor` - month grid
-2. Create `Components/Calendar/CalendarDay.razor` - day cell with totals
-3. Create `Components/Calendar/DayTransactionList.razor` - selected day details
-4. Refactor Calendar.razor to compose these components
+### Phase 3: Extract Form Components ✅ COMPLETED
+1. ✅ Create `Components/Forms/AccountForm.razor` - account create/edit with validation
+2. ✅ Create `Components/Forms/TransactionForm.razor` - transaction create/edit with account selector
+3. ✅ Refactor Accounts.razor to use AccountForm component
+4. ✅ Refactor Calendar.razor to use TransactionForm component
+5. ✅ Refactor AccountTransactions.razor to use TransactionForm component
+6. ✅ Clean up unused form styles from all pages
 
-### Phase 6: Polish & Testing
-1. Add responsive design for mobile (collapse nav fully)
-2. Add keyboard navigation support
-3. Component tests with bUnit (if needed)
-4. Manual testing of all workflows
+**Commit**: Phase 3 complete - 2026-01-09
+
+### Phase 4: Polish & Optimization ✅ COMPLETED
+1. ✅ Create `Components/Display/TransactionTable.razor` - reusable transaction table with optional date/actions columns
+2. ✅ Create `Components/Common/ConfirmDialog.razor` - confirmation dialog for destructive actions
+3. ✅ Refactor Calendar.razor to use TransactionTable component
+4. ✅ Refactor AccountTransactions.razor to use TransactionTable with edit/delete actions
+5. ✅ Add delete confirmation dialogs to Accounts.razor and AccountTransactions.razor
+6. ✅ Clean up unused table styles from pages
+
+**Commit**: Phase 4 complete - 2026-01-09
+
+### Phase 5: Calendar Component Extraction ✅ COMPLETED
+1. ✅ Create `Models/CalendarDayModel.cs` - shared model for calendar day data
+2. ✅ Create `Components/Calendar/CalendarDay.razor` - individual day cell with totals and selection
+3. ✅ Create `Components/Calendar/CalendarGrid.razor` - month grid with day headers
+4. ✅ Create `Components/Calendar/DayDetail.razor` - selected day transaction panel with add button
+5. ✅ Update `_Imports.razor` with Calendar namespace
+6. ✅ Refactor `Calendar.razor` to use CalendarGrid, CalendarDay, and DayDetail components
+7. ✅ Remove inline CalendarDay class in favor of CalendarDayModel
+
+**Commit**: Phase 5 complete - 2026-01-09
+
+### Phase 6: Polish & Testing ✅ COMPLETED
+1. ✅ Add responsive CSS for mobile (collapse nav fully on small screens)
+2. ✅ Add responsive styles for CalendarGrid, CalendarDay, Modal
+3. ✅ Fix TransactionForm InitialDate parameter (not applying selected date)
+4. ✅ Chrome browser testing:
+   - ✅ Calendar landing page with daily totals
+   - ✅ Day selection and detail panel
+   - ✅ Add Transaction modal with correct date prefilled
+   - ✅ Navigation collapse/expand (icons only when collapsed)
+   - ✅ Accounts page with account cards
+   - ✅ Delete confirmation dialog
+   - ✅ Account Transactions page with date filters
+5. ✅ All non-Docker tests passing (73 tests)
+
+**Commit**: Phase 6 complete - 2026-01-10
 
 ## Component Specifications
 

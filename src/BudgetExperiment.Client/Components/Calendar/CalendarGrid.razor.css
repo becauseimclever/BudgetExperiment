@@ -1,0 +1,31 @@
+/* CalendarGrid.razor.css - Scoped styles for CalendarGrid component */
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    background: #ddd;
+    border: 1px solid #ddd;
+}
+
+.calendar-day-header {
+    background: #f0f0f0;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .calendar-day-header {
+        padding: 6px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day-header {
+        padding: 4px;
+        font-size: 0.75rem;
+    }
+}

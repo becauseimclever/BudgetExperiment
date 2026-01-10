@@ -1,0 +1,69 @@
+/* TransactionTable.razor.css - Scoped styles for TransactionTable component */
+
+.empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+}
+
+.transaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-table th,
+.transaction-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.transaction-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.transaction-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.amount-col {
+    text-align: right;
+}
+
+.actions-col {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-edit,
+.btn-delete {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin: 0 2px;
+}
+
+.btn-edit {
+    background: #007bff;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #0056b3;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+}

@@ -1,0 +1,36 @@
+@* LoadingSpinner.razor - Loading indicator component *@
+
+<div class="loading-container @(FullPage ? "full-page" : "")">
+    <div class="spinner @SizeClass"></div>
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <p class="loading-message">@Message</p>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the loading message to display.
+    /// </summary>
+    [Parameter]
+    public string? Message { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this is a full-page loader.
+    /// </summary>
+    [Parameter]
+    public bool FullPage { get; set; }
+
+    /// <summary>
+    /// Gets or sets the spinner size.
+    /// </summary>
+    [Parameter]
+    public SpinnerSize Size { get; set; } = SpinnerSize.Medium;
+
+    private string SizeClass => Size switch
+    {
+        SpinnerSize.Small => "spinner-sm",
+        SpinnerSize.Large => "spinner-lg",
+        _ => "spinner-md"
+    };
+}

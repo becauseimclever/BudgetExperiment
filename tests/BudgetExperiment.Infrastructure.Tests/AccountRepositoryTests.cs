@@ -10,16 +10,16 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="AccountRepository"/>.
 /// </summary>
-[Collection("Postgres")]
+[Collection("InMemoryDb")]
 public class AccountRepositoryTests
 {
-    private readonly PostgresFixture _fixture;
+    private readonly InMemoryDbFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared PostgreSQL fixture.</param>
-    public AccountRepositoryTests(PostgresFixture fixture)
+    /// <param name="fixture">The shared in-memory database fixture.</param>
+    public AccountRepositoryTests(InMemoryDbFixture fixture)
     {
         this._fixture = fixture;
     }
@@ -36,8 +36,8 @@ public class AccountRepositoryTests
         await repository.AddAsync(account);
         await context.SaveChangesAsync();
 
-        // Assert - use fresh context to verify persistence
-        await using var verifyContext = this._fixture.CreateContext();
+        // Assert - use shared context to verify persistence
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var verifyRepo = new AccountRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(account.Id);
 
@@ -76,15 +76,14 @@ public class AccountRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var verifyRepo = new AccountRepository(verifyContext);
         var accounts = await verifyRepo.GetAllAsync();
 
         // Assert - should be ordered by name
-        Assert.True(accounts.Count >= 2);
-        var alphaIndex = accounts.ToList().FindIndex(a => a.Name == "Alpha Account");
-        var zebraIndex = accounts.ToList().FindIndex(a => a.Name == "Zebra Account");
-        Assert.True(alphaIndex < zebraIndex);
+        Assert.Equal(2, accounts.Count);
+        Assert.Equal("Alpha Account", accounts[0].Name);
+        Assert.Equal("Zebra Account", accounts[1].Name);
     }
 
     [Fact]
@@ -101,7 +100,7 @@ public class AccountRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var verifyRepo = new AccountRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdWithTransactionsAsync(account.Id);
 
@@ -127,7 +126,7 @@ public class AccountRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var verifyRepo = new AccountRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(account.Id);
         Assert.Null(retrieved);
@@ -141,6 +140,7 @@ public class AccountRepositoryTests
         var repository = new AccountRepository(context);
 
         var initialCount = await repository.CountAsync();
+        Assert.Equal(0, initialCount);
 
         var account = Account.Create("Count Test Account", AccountType.Other);
         await repository.AddAsync(account);
@@ -150,7 +150,7 @@ public class AccountRepositoryTests
         var newCount = await repository.CountAsync();
 
         // Assert
-        Assert.Equal(initialCount + 1, newCount);
+        Assert.Equal(1, newCount);
     }
 
     [Fact]
@@ -160,18 +160,16 @@ public class AccountRepositoryTests
         await using var context = this._fixture.CreateContext();
         var repository = new AccountRepository(context);
 
-        // Add accounts with unique prefix
-        var prefix = Guid.NewGuid().ToString()[..8];
         for (int i = 0; i < 5; i++)
         {
-            var account = Account.Create($"{prefix}_Account_{i:D2}", AccountType.Checking);
+            var account = Account.Create($"Account_{i:D2}", AccountType.Checking);
             await repository.AddAsync(account);
         }
 
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var verifyRepo = new AccountRepository(verifyContext);
         var page1 = await verifyRepo.ListAsync(0, 2);
         var page2 = await verifyRepo.ListAsync(2, 2);

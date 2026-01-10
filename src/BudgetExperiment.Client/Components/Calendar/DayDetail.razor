@@ -1,0 +1,36 @@
+@* DayDetail.razor - Selected day transaction detail panel *@
+
+@using BudgetExperiment.Client.Models
+
+<div class="day-detail">
+    <h3>Transactions for @SelectedDate.ToString("MMMM d, yyyy")</h3>
+    <button class="add-button" @onclick="HandleAddClick">+ Add Transaction</button>
+
+    <TransactionTable Transactions="@Transactions"
+                      EmptyMessage="No transactions for this day." />
+</div>
+
+@code {
+    /// <summary>
+    /// The selected date to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public DateOnly SelectedDate { get; set; }
+
+    /// <summary>
+    /// The transactions for the selected day.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<TransactionModel> Transactions { get; set; } = Array.Empty<TransactionModel>();
+
+    /// <summary>
+    /// Callback when the Add Transaction button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnAddTransaction { get; set; }
+
+    private async Task HandleAddClick()
+    {
+        await OnAddTransaction.InvokeAsync();
+    }
+}

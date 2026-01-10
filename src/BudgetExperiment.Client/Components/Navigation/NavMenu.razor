@@ -1,0 +1,78 @@
+@* NavMenu.razor - Collapsible side navigation menu *@
+
+@using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Services
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager NavigationManager
+
+<nav class="nav-menu @(IsCollapsed ? "collapsed" : "expanded")">
+    <div class="nav-items">
+        <NavLink class="nav-item" href="" Match="NavLinkMatch.All" title="Calendar">
+            <span class="nav-icon">📅</span>
+            @if (!IsCollapsed)
+            {
+                <span class="nav-text">Calendar</span>
+            }
+        </NavLink>
+
+        <div class="nav-section">
+            <NavLink class="nav-item" href="accounts" title="Accounts">
+                <span class="nav-icon">🏦</span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Accounts</span>
+                }
+            </NavLink>
+
+            @if (!IsCollapsed && accounts.Count > 0)
+            {
+                <div class="nav-subitems">
+                    @foreach (var account in accounts)
+                    {
+                        <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name">
+                            <span class="nav-icon">💳</span>
+                            <span class="nav-text">@TruncateName(account.Name)</span>
+                        </NavLink>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</nav>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the menu is collapsed.
+    /// </summary>
+    [Parameter]
+    public bool IsCollapsed { get; set; }
+
+    private List<AccountModel> accounts = new();
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccountsAsync();
+    }
+
+    private async Task LoadAccountsAsync()
+    {
+        try
+        {
+            var result = await ApiService.GetAccountsAsync();
+            accounts = result.ToList();
+        }
+        catch
+        {
+            // Silently fail - nav will just show without account links
+            accounts = new List<AccountModel>();
+        }
+    }
+
+    private static string TruncateName(string name)
+    {
+        const int maxLength = 15;
+        return name.Length <= maxLength ? name : name[..(maxLength - 2)] + "..";
+    }
+}

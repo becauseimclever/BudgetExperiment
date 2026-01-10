@@ -1,0 +1,53 @@
+@* CalendarDay.razor - Individual calendar day cell component *@
+
+@using BudgetExperiment.Client.Models
+
+<div class="calendar-day @CssClasses" @onclick="HandleClick">
+    <span class="day-number">@Day.Date.Day</span>
+    @if (Day.DailyTotal != null)
+    {
+        <div class="day-total">
+            <MoneyDisplay Amount="@Day.DailyTotal.Total.Amount" />
+        </div>
+        <div class="transaction-count">
+            @Day.DailyTotal.TransactionCount txn@(Day.DailyTotal.TransactionCount != 1 ? "s" : "")
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The calendar day data to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public CalendarDayModel Day { get; set; } = default!;
+
+    /// <summary>
+    /// Whether this day is currently selected.
+    /// </summary>
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    /// <summary>
+    /// Callback when the day is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DateOnly> OnClick { get; set; }
+
+    private string CssClasses
+    {
+        get
+        {
+            var classes = new List<string>();
+            if (!Day.IsCurrentMonth) classes.Add("other-month");
+            if (Day.IsToday) classes.Add("today");
+            if (IsSelected) classes.Add("selected");
+            return string.Join(" ", classes);
+        }
+    }
+
+    private async Task HandleClick()
+    {
+        await OnClick.InvokeAsync(Day.Date);
+    }
+}

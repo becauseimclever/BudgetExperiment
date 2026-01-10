@@ -1,7 +1,7 @@
 @* Calendar.razor - Month view calendar with daily transaction totals *@
 
-@page "/calendar"
-@page "/calendar/{Year:int}/{Month:int}"
+@page "/"
+@page "/{Year:int}/{Month:int}"
 
 @using BudgetExperiment.Client.Models
 @using BudgetExperiment.Client.Services
@@ -9,7 +9,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 
-<PageTitle>Calendar - Budget Experiment</PageTitle>
+<PageTitle>Budget Experiment</PageTitle>
 
 <div class="calendar-container">
     <div class="calendar-header">
@@ -31,115 +31,31 @@
 
     @if (isLoading)
     {
-        <p>Loading...</p>
+        <LoadingSpinner Message="Loading calendar..." />
     }
     else
     {
-        <div class="calendar-grid">
-            <div class="calendar-day-header">Sun</div>
-            <div class="calendar-day-header">Mon</div>
-            <div class="calendar-day-header">Tue</div>
-            <div class="calendar-day-header">Wed</div>
-            <div class="calendar-day-header">Thu</div>
-            <div class="calendar-day-header">Fri</div>
-            <div class="calendar-day-header">Sat</div>
-
-            @foreach (var day in calendarDays)
-            {
-                <div class="calendar-day @(day.IsCurrentMonth ? "" : "other-month") @(day.IsToday ? "today" : "") @(day.Date == selectedDate ? "selected" : "")"
-                     @onclick="() => SelectDate(day.Date)">
-                    <span class="day-number">@day.Date.Day</span>
-                    @if (day.DailyTotal != null)
-                    {
-                        <div class="day-total @(day.DailyTotal.Total.Amount >= 0 ? "positive" : "negative")">
-                            @FormatMoney(day.DailyTotal.Total.Amount)
-                        </div>
-                        <div class="transaction-count">
-                            @day.DailyTotal.TransactionCount txn@(day.DailyTotal.TransactionCount != 1 ? "s" : "")
-                        </div>
-                    }
-                </div>
-            }
-        </div>
+        <CalendarGrid Days="@calendarDays"
+                      SelectedDate="@selectedDate"
+                      OnDaySelected="SelectDate" />
     }
 
     @if (selectedDate.HasValue)
     {
-        <div class="day-detail">
-            <h3>Transactions for @selectedDate.Value.ToString("MMMM d, yyyy")</h3>
-            <button class="add-button" @onclick="ShowAddTransaction">+ Add Transaction</button>
-
-            @if (selectedDayTransactions.Count == 0)
-            {
-                <p>No transactions for this day.</p>
-            }
-            else
-            {
-                <table class="transaction-table">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var txn in selectedDayTransactions)
-                        {
-                            <tr>
-                                <td>@txn.Description</td>
-                                <td>@(txn.Category ?? "-")</td>
-                                <td class="@(txn.Amount.Amount >= 0 ? "positive" : "negative")">
-                                    @FormatMoney(txn.Amount.Amount)
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
+        <DayDetail SelectedDate="@selectedDate.Value"
+                   Transactions="@selectedDayTransactions"
+                   OnAddTransaction="ShowAddTransaction" />
     }
 
-    @if (showAddTransaction)
-    {
-        <div class="modal-overlay" @onclick="HideAddTransaction">
-            <div class="modal" @onclick:stopPropagation="true">
-                <h3>Add Transaction</h3>
-                <form @onsubmit="CreateTransaction">
-                    <div class="form-group">
-                        <label for="txnAccount">Account:</label>
-                        <select id="txnAccount" @bind="newTransaction.AccountId" required>
-                            <option value="">Select Account</option>
-                            @foreach (var account in accounts)
-                            {
-                                <option value="@account.Id">@account.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="txnDescription">Description:</label>
-                        <input id="txnDescription" type="text" @bind="newTransaction.Description" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="txnAmount">Amount:</label>
-                        <input id="txnAmount" type="number" step="0.01" @bind="newTransaction.Amount" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="txnCategory">Category (optional):</label>
-                        <input id="txnCategory" type="text" @bind="newTransaction.Category" />
-                    </div>
-                    <div class="form-group">
-                        <label for="txnDate">Date:</label>
-                        <input id="txnDate" type="date" @bind="transactionDateInput" required />
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary">Save</button>
-                        <button type="button" class="btn-secondary" @onclick="HideAddTransaction">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
+    <Modal IsVisible="@showAddTransaction" Title="Add Transaction" OnClose="HideAddTransaction">
+        <TransactionForm
+            Accounts="@accounts"
+            ShowAccountSelector="true"
+            InitialDate="@(selectedDate ?? DateOnly.FromDateTime(DateTime.Today))"
+            IsSubmitting="@isSubmitting"
+            OnSubmit="@CreateTransaction"
+            OnCancel="@HideAddTransaction" />
+    </Modal>
 </div>
 
 <style>
@@ -177,186 +93,6 @@
         padding: 8px;
         margin-left: 10px;
     }
-
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 2px;
-        background: #ddd;
-        border: 1px solid #ddd;
-    }
-
-    .calendar-day-header {
-        background: #f0f0f0;
-        padding: 10px;
-        text-align: center;
-        font-weight: bold;
-    }
-
-    .calendar-day {
-        background: white;
-        min-height: 80px;
-        padding: 5px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .calendar-day:hover {
-        background: #f5f5f5;
-    }
-
-    .calendar-day.other-month {
-        background: #fafafa;
-        color: #999;
-    }
-
-    .calendar-day.today {
-        background: #fff3cd;
-    }
-
-    .calendar-day.selected {
-        background: #cce5ff;
-        border: 2px solid #007bff;
-    }
-
-    .day-number {
-        font-weight: bold;
-        display: block;
-    }
-
-    .day-total {
-        font-size: 0.85em;
-        margin-top: 4px;
-    }
-
-    .day-total.positive {
-        color: #28a745;
-    }
-
-    .day-total.negative {
-        color: #dc3545;
-    }
-
-    .transaction-count {
-        font-size: 0.75em;
-        color: #666;
-    }
-
-    .day-detail {
-        margin-top: 30px;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-    }
-
-    .add-button {
-        margin-bottom: 15px;
-        padding: 8px 16px;
-        background: #28a745;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .add-button:hover {
-        background: #218838;
-    }
-
-    .transaction-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .transaction-table th,
-    .transaction-table td {
-        padding: 10px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
-
-    .transaction-table th {
-        background: #f0f0f0;
-    }
-
-    .positive {
-        color: #28a745;
-    }
-
-    .negative {
-        color: #dc3545;
-    }
-
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-
-    .modal {
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        min-width: 400px;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-        margin-top: 20px;
-    }
-
-    .btn-primary {
-        padding: 10px 20px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .btn-primary:hover {
-        background: #0056b3;
-    }
-
-    .btn-secondary {
-        padding: 10px 20px;
-        background: #6c757d;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .btn-secondary:hover {
-        background: #545b62;
-    }
 </style>
 
 @code {
@@ -373,13 +109,12 @@
 
     private bool isLoading = true;
     private List<AccountModel> accounts = new();
-    private List<CalendarDay> calendarDays = new();
+    private List<CalendarDayModel> calendarDays = new();
     private Dictionary<DateOnly, DailyTotalModel> dailyTotals = new();
     private List<TransactionModel> selectedDayTransactions = new();
 
     private bool showAddTransaction = false;
-    private TransactionCreateModel newTransaction = new();
-    private DateTime transactionDateInput = DateTime.Today;
+    private bool isSubmitting = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -444,7 +179,7 @@
         for (int i = startDayOfWeek - 1; i >= 0; i--)
         {
             var date = new DateOnly(prevMonth.Year, prevMonth.Month, daysInPrevMonth - i);
-            calendarDays.Add(new CalendarDay
+            calendarDays.Add(new CalendarDayModel
             {
                 Date = date,
                 IsCurrentMonth = false,
@@ -457,7 +192,7 @@
         for (int day = 1; day <= daysInMonth; day++)
         {
             var date = new DateOnly(currentDate.Year, currentDate.Month, day);
-            calendarDays.Add(new CalendarDay
+            calendarDays.Add(new CalendarDayModel
             {
                 Date = date,
                 IsCurrentMonth = true,
@@ -472,7 +207,7 @@
         for (int day = 1; day <= remainingDays; day++)
         {
             var date = new DateOnly(nextMonth.Year, nextMonth.Month, day);
-            calendarDays.Add(new CalendarDay
+            calendarDays.Add(new CalendarDayModel
             {
                 Date = date,
                 IsCurrentMonth = false,
@@ -491,22 +226,17 @@
     private void PreviousMonth()
     {
         var prev = currentDate.AddMonths(-1);
-        Navigation.NavigateTo($"/calendar/{prev.Year}/{prev.Month}");
+        Navigation.NavigateTo($"/{prev.Year}/{prev.Month}");
     }
 
     private void NextMonth()
     {
         var next = currentDate.AddMonths(1);
-        Navigation.NavigateTo($"/calendar/{next.Year}/{next.Month}");
+        Navigation.NavigateTo($"/{next.Year}/{next.Month}");
     }
 
     private void ShowAddTransaction()
     {
-        newTransaction = new TransactionCreateModel
-        {
-            Date = selectedDate ?? DateOnly.FromDateTime(DateTime.Today)
-        };
-        transactionDateInput = newTransaction.Date.ToDateTime(TimeOnly.MinValue);
         showAddTransaction = true;
     }
 
@@ -515,37 +245,27 @@
         showAddTransaction = false;
     }
 
-    private async Task CreateTransaction()
+    private async Task CreateTransaction(TransactionCreateModel transaction)
     {
-        if (newTransaction.AccountId == Guid.Empty || string.IsNullOrWhiteSpace(newTransaction.Description))
-        {
-            return;
-        }
+        isSubmitting = true;
+        StateHasChanged();
 
-        newTransaction.Date = DateOnly.FromDateTime(transactionDateInput);
-
-        var result = await ApiService.CreateTransactionAsync(newTransaction);
-        if (result != null)
+        try
         {
-            showAddTransaction = false;
-            await LoadCalendarData();
-            if (selectedDate.HasValue)
+            var result = await ApiService.CreateTransactionAsync(transaction);
+            if (result != null)
             {
-                await SelectDate(selectedDate.Value);
+                showAddTransaction = false;
+                await LoadCalendarData();
+                if (selectedDate.HasValue)
+                {
+                    await SelectDate(selectedDate.Value);
+                }
             }
         }
-    }
-
-    private static string FormatMoney(decimal amount)
-    {
-        return amount.ToString("C2");
-    }
-
-    private class CalendarDay
-    {
-        public DateOnly Date { get; set; }
-        public bool IsCurrentMonth { get; set; }
-        public bool IsToday { get; set; }
-        public DailyTotalModel? DailyTotal { get; set; }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 }

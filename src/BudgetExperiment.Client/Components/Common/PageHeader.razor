@@ -1,0 +1,62 @@
+@* PageHeader.razor - Consistent page header with title and action buttons *@
+
+<header class="page-header">
+    <div class="header-content">
+        @if (ShowBackButton)
+        {
+            <button class="btn-back" @onclick="OnBackClick" title="Go back">
+                ← Back
+            </button>
+        }
+        <div class="title-section">
+            <h2 class="page-title">@Title</h2>
+            @if (!string.IsNullOrEmpty(Subtitle))
+            {
+                <span class="page-subtitle">@Subtitle</span>
+            }
+        </div>
+    </div>
+    @if (Actions != null)
+    {
+        <div class="header-actions">
+            @Actions
+        </div>
+    }
+</header>
+
+@code {
+    /// <summary>
+    /// Gets or sets the page title.
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the optional subtitle or badge.
+    /// </summary>
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the back button.
+    /// </summary>
+    [Parameter]
+    public bool ShowBackButton { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when back button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    /// <summary>
+    /// Gets or sets the action buttons content.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    private async Task OnBackClick()
+    {
+        await OnBack.InvokeAsync();
+    }
+}

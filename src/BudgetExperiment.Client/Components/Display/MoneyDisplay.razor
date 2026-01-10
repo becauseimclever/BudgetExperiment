@@ -1,0 +1,47 @@
+@* MoneyDisplay.razor - Formatted currency display with positive/negative coloring *@
+
+<span class="money-display @ColorClass">@FormattedAmount</span>
+
+@code {
+    /// <summary>
+    /// Gets or sets the monetary amount to display.
+    /// </summary>
+    [Parameter]
+    public decimal Amount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the currency code (default USD).
+    /// </summary>
+    [Parameter]
+    public string CurrencyCode { get; set; } = "USD";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show color coding.
+    /// </summary>
+    [Parameter]
+    public bool ShowColor { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the sign for positive numbers.
+    /// </summary>
+    [Parameter]
+    public bool ShowPositiveSign { get; set; }
+
+    private string ColorClass => ShowColor
+        ? Amount >= 0 ? "positive" : "negative"
+        : string.Empty;
+
+    private string FormattedAmount
+    {
+        get
+        {
+            var formatted = Amount.ToString("C");
+            if (ShowPositiveSign && Amount > 0)
+            {
+                formatted = "+" + formatted;
+            }
+
+            return formatted;
+        }
+    }
+}

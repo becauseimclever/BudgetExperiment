@@ -1,0 +1,45 @@
+@* CalendarGrid.razor - Month calendar grid component *@
+
+@using BudgetExperiment.Client.Models
+
+<div class="calendar-grid">
+    <div class="calendar-day-header">Sun</div>
+    <div class="calendar-day-header">Mon</div>
+    <div class="calendar-day-header">Tue</div>
+    <div class="calendar-day-header">Wed</div>
+    <div class="calendar-day-header">Thu</div>
+    <div class="calendar-day-header">Fri</div>
+    <div class="calendar-day-header">Sat</div>
+
+    @foreach (var day in Days)
+    {
+        <CalendarDay Day="@day"
+                     IsSelected="@(day.Date == SelectedDate)"
+                     OnClick="HandleDayClick" />
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The list of days to display in the grid.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CalendarDayModel> Days { get; set; } = Array.Empty<CalendarDayModel>();
+
+    /// <summary>
+    /// The currently selected date, if any.
+    /// </summary>
+    [Parameter]
+    public DateOnly? SelectedDate { get; set; }
+
+    /// <summary>
+    /// Callback when a day is selected.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DateOnly> OnDaySelected { get; set; }
+
+    private async Task HandleDayClick(DateOnly date)
+    {
+        await OnDaySelected.InvokeAsync(date);
+    }
+}

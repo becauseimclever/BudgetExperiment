@@ -1,0 +1,12 @@
+.money-display {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+.money-display.positive {
+    color: #059669;
+}
+
+.money-display.negative {
+    color: #dc2626;
+}

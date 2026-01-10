@@ -1,0 +1,87 @@
+@* AccountForm.razor - Reusable account create/edit form *@
+
+@using BudgetExperiment.Client.Models
+
+<form @onsubmit="HandleSubmit">
+    <div class="form-group">
+        <label for="accountName">Account Name:</label>
+        <input id="accountName" 
+               type="text" 
+               @bind="Model.Name" 
+               @bind:event="oninput"
+               placeholder="Enter account name"
+               required />
+    </div>
+    <div class="form-group">
+        <label for="accountType">Account Type:</label>
+        <select id="accountType" @bind="Model.Type" required>
+            <option value="Checking">Checking</option>
+            <option value="Savings">Savings</option>
+            <option value="CreditCard">Credit Card</option>
+            <option value="Cash">Cash</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>@SubmitButtonText</span>
+            }
+        </button>
+        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+    </div>
+</form>
+
+@code {
+    /// <summary>
+    /// Gets or sets the account model to edit.
+    /// </summary>
+    [Parameter]
+    public AccountCreateModel Model { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the callback when the form is submitted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<AccountCreateModel> OnSubmit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when cancel is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the submit button text.
+    /// </summary>
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Save";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the form is submitting.
+    /// </summary>
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(Model.Name))
+        {
+            return;
+        }
+
+        await OnSubmit.InvokeAsync(Model);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

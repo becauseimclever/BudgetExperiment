@@ -1,0 +1,22 @@
+/* DayDetail.razor.css - Scoped styles for DayDetail component */
+
+.day-detail {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.add-button {
+    margin-bottom: 15px;
+    padding: 8px 16px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-button:hover {
+    background: #218838;
+}

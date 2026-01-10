@@ -1,0 +1,81 @@
+/* CalendarDay.razor.css - Scoped styles for CalendarDay component */
+
+.calendar-day {
+    background: white;
+    min-height: 80px;
+    padding: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.calendar-day:hover {
+    background: #f5f5f5;
+}
+
+.calendar-day.other-month {
+    background: #fafafa;
+    color: #999;
+}
+
+.calendar-day.today {
+    background: #fff3cd;
+}
+
+.calendar-day.selected {
+    background: #cce5ff;
+    border: 2px solid #007bff;
+}
+
+.day-number {
+    font-weight: bold;
+    display: block;
+}
+
+.day-total {
+    font-size: 0.85em;
+    margin-top: 4px;
+}
+
+.transaction-count {
+    font-size: 0.75em;
+    color: #666;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 60px;
+        padding: 3px;
+    }
+
+    .day-number {
+        font-size: 0.9rem;
+    }
+
+    .day-total {
+        font-size: 0.75em;
+    }
+
+    .transaction-count {
+        font-size: 0.65em;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        min-height: 50px;
+        padding: 2px;
+    }
+
+    .day-number {
+        font-size: 0.8rem;
+    }
+
+    .day-total {
+        font-size: 0.7em;
+    }
+
+    .transaction-count {
+        display: none;
+    }
+}

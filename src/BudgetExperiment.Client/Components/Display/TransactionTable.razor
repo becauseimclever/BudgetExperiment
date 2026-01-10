@@ -1,0 +1,94 @@
+@* TransactionTable.razor - Reusable transaction table component *@
+
+@using BudgetExperiment.Client.Models
+
+@if (Transactions == null || Transactions.Count == 0)
+{
+    <p class="empty-message">@EmptyMessage</p>
+}
+else
+{
+    <table class="transaction-table">
+        <thead>
+            <tr>
+                @if (ShowDate)
+                {
+                    <th>Date</th>
+                }
+                <th>Description</th>
+                <th>Category</th>
+                <th class="amount-col">Amount</th>
+                @if (ShowActions)
+                {
+                    <th class="actions-col">Actions</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var txn in OrderedTransactions)
+            {
+                <tr>
+                    @if (ShowDate)
+                    {
+                        <td>@txn.Date.ToString("MMM d, yyyy")</td>
+                    }
+                    <td>@txn.Description</td>
+                    <td>@(txn.Category ?? "-")</td>
+                    <td class="amount-col">
+                        <MoneyDisplay Amount="@txn.Amount.Amount" />
+                    </td>
+                    @if (ShowActions)
+                    {
+                        <td class="actions-col">
+                            <button class="btn-edit" @onclick="() => OnEdit.InvokeAsync(txn)">Edit</button>
+                            <button class="btn-delete" @onclick="() => OnDelete.InvokeAsync(txn.Id)">Delete</button>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    /// <summary>
+    /// The list of transactions to display.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<TransactionModel> Transactions { get; set; } = new List<TransactionModel>();
+
+    /// <summary>
+    /// Whether to show the date column. Default is false (useful when all transactions are for the same day).
+    /// </summary>
+    [Parameter]
+    public bool ShowDate { get; set; } = false;
+
+    /// <summary>
+    /// Whether to show the actions column (Edit/Delete buttons). Default is false.
+    /// </summary>
+    [Parameter]
+    public bool ShowActions { get; set; } = false;
+
+    /// <summary>
+    /// Message to display when there are no transactions.
+    /// </summary>
+    [Parameter]
+    public string EmptyMessage { get; set; } = "No transactions found.";
+
+    /// <summary>
+    /// Callback when Edit button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransactionModel> OnEdit { get; set; }
+
+    /// <summary>
+    /// Callback when Delete button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDelete { get; set; }
+
+    private IEnumerable<TransactionModel> OrderedTransactions =>
+        ShowDate
+            ? Transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
+            : Transactions;
+}

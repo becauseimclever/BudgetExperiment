@@ -1,0 +1,95 @@
+@* Modal.razor - Reusable modal dialog wrapper *@
+
+@if (IsVisible)
+{
+    <div class="modal-overlay" @onclick="HandleOverlayClick">
+        <div class="modal-container @SizeClass" @onclick:stopPropagation="true">
+            <header class="modal-header">
+                <h3 class="modal-title">@Title</h3>
+                @if (ShowCloseButton)
+                {
+                    <button class="modal-close" @onclick="Close" aria-label="Close">×</button>
+                }
+            </header>
+            <div class="modal-body">
+                @ChildContent
+            </div>
+            @if (FooterContent != null)
+            {
+                <footer class="modal-footer">
+                    @FooterContent
+                </footer>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the modal is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the modal title.
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the main content of the modal.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional footer content (typically buttons).
+    /// </summary>
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the modal is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether clicking the overlay closes the modal.
+    /// </summary>
+    [Parameter]
+    public bool CloseOnOverlayClick { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the close button.
+    /// </summary>
+    [Parameter]
+    public bool ShowCloseButton { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the modal size (small, medium, large).
+    /// </summary>
+    [Parameter]
+    public ModalSize Size { get; set; } = ModalSize.Medium;
+
+    private string SizeClass => Size switch
+    {
+        ModalSize.Small => "modal-sm",
+        ModalSize.Large => "modal-lg",
+        _ => "modal-md"
+    };
+
+    private async Task HandleOverlayClick()
+    {
+        if (CloseOnOverlayClick)
+        {
+            await Close();
+        }
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

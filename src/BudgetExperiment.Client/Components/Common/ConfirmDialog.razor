@@ -1,0 +1,80 @@
+@* ConfirmDialog.razor - Reusable confirmation dialog component *@
+
+<Modal IsVisible="@IsVisible" Title="@Title" OnClose="HandleCancel" Size="ModalSize.Small">
+    <div class="confirm-content">
+        <p class="confirm-message">@Message</p>
+        <div class="confirm-actions">
+            <button class="btn-danger" @onclick="HandleConfirm" disabled="@IsProcessing">
+                @if (IsProcessing)
+                {
+                    <span>Processing...</span>
+                }
+                else
+                {
+                    @ConfirmText
+                }
+            </button>
+            <button class="btn-secondary" @onclick="HandleCancel" disabled="@IsProcessing">@CancelText</button>
+        </div>
+    </div>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Whether the dialog is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// The dialog title.
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = "Confirm";
+
+    /// <summary>
+    /// The confirmation message to display.
+    /// </summary>
+    [Parameter]
+    public string Message { get; set; } = "Are you sure you want to proceed?";
+
+    /// <summary>
+    /// Text for the confirm button. Default is "Delete".
+    /// </summary>
+    [Parameter]
+    public string ConfirmText { get; set; } = "Delete";
+
+    /// <summary>
+    /// Text for the cancel button. Default is "Cancel".
+    /// </summary>
+    [Parameter]
+    public string CancelText { get; set; } = "Cancel";
+
+    /// <summary>
+    /// Whether a processing operation is in progress.
+    /// </summary>
+    [Parameter]
+    public bool IsProcessing { get; set; }
+
+    /// <summary>
+    /// Callback when the user confirms.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    /// <summary>
+    /// Callback when the user cancels.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleConfirm()
+    {
+        await OnConfirm.InvokeAsync();
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

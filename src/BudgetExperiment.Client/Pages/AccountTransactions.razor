@@ -1,0 +1,254 @@
+@* AccountTransactions.razor - Transaction management for a specific account *@
+
+@page "/accounts/{AccountId:guid}/transactions"
+
+@using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Services
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>@(account?.Name ?? "Account") Transactions - Budget Experiment</PageTitle>
+
+<div class="transactions-container">
+    <PageHeader Title="@($"{account?.Name ?? "Loading..."} Transactions")"
+                Subtitle="@account?.Type"
+                ShowBackButton="true"
+                OnBack="GoBack">
+        <Actions>
+            <button class="add-button" @onclick="ShowAddTransaction">+ Add Transaction</button>
+        </Actions>
+    </PageHeader>
+
+    <div class="filter-section">
+        <div class="date-filter">
+            <label>From:</label>
+            <input type="date" @bind="startDate" @bind:after="LoadTransactions" />
+            <label>To:</label>
+            <input type="date" @bind="endDate" @bind:after="LoadTransactions" />
+        </div>
+        <div class="summary">
+            <span class="summary-item">
+                Total: <MoneyDisplay Amount="@totalAmount" />
+            </span>
+            <span class="summary-item">Count: @transactions.Count</span>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading transactions..." />
+    }
+    else
+    {
+        <TransactionTable Transactions="@transactions"
+                          ShowDate="true"
+                          ShowActions="true"
+                          EmptyMessage="No transactions found for this period."
+                          OnEdit="EditTransaction"
+                          OnDelete="DeleteTransaction" />
+    }
+
+    <Modal IsVisible="@showAddTransaction"
+           Title="@(editingTransaction == null ? "Add Transaction" : "Edit Transaction")"
+           OnClose="HideAddTransaction">
+        <TransactionForm
+            ShowAccountSelector="false"
+            FixedAccountId="@AccountId"
+            InitialDate="@(editingTransaction?.Date ?? DateOnly.FromDateTime(DateTime.Today))"
+            InitialDescription="@(editingTransaction?.Description ?? "")"
+            InitialAmount="@(editingTransaction?.Amount.Amount ?? 0)"
+            InitialCategory="@editingTransaction?.Category"
+            IsSubmitting="@isSubmitting"
+            OnSubmit="@SaveTransaction"
+            OnCancel="@HideAddTransaction" />
+    </Modal>
+
+    <ConfirmDialog IsVisible="@showDeleteConfirm"
+                   Title="Delete Transaction"
+                   Message="@($"Are you sure you want to delete the transaction '{deletingTransaction?.Description}'?")"
+                   ConfirmText="Delete"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="ConfirmDelete"
+                   OnCancel="CancelDelete" />
+</div>
+
+<style>
+    .transactions-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .add-button {
+        padding: 10px 20px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .add-button:hover {
+        background: #218838;
+    }
+
+    .filter-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .date-filter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .date-filter input {
+        padding: 6px 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    .summary {
+        display: flex;
+        gap: 20px;
+    }
+
+    .summary-item {
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Guid AccountId { get; set; }
+
+    private AccountModel? account;
+    private List<TransactionModel> transactions = new();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private bool showAddTransaction = false;
+    private TransactionModel? editingTransaction = null;
+    private DateTime startDate = DateTime.Today.AddMonths(-1);
+    private DateTime endDate = DateTime.Today;
+
+    // Delete confirmation state
+    private bool showDeleteConfirm = false;
+    private bool isDeleting = false;
+    private TransactionModel? deletingTransaction = null;
+
+    private decimal totalAmount => transactions.Sum(t => t.Amount.Amount);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccount();
+        await LoadTransactions();
+    }
+
+    private async Task LoadAccount()
+    {
+        account = await ApiService.GetAccountAsync(AccountId);
+    }
+
+    private async Task LoadTransactions()
+    {
+        isLoading = true;
+        var start = DateOnly.FromDateTime(startDate);
+        var end = DateOnly.FromDateTime(endDate);
+        transactions = (await ApiService.GetTransactionsAsync(start, end, AccountId)).ToList();
+        isLoading = false;
+    }
+
+    private void ShowAddTransaction()
+    {
+        editingTransaction = null;
+        showAddTransaction = true;
+    }
+
+    private void EditTransaction(TransactionModel txn)
+    {
+        editingTransaction = txn;
+        showAddTransaction = true;
+    }
+
+    private void HideAddTransaction()
+    {
+        showAddTransaction = false;
+        editingTransaction = null;
+    }
+
+    private async Task SaveTransaction(TransactionCreateModel transaction)
+    {
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            // TODO: Support updating transactions when API supports it
+            var result = await ApiService.CreateTransactionAsync(transaction);
+            if (result != null)
+            {
+                showAddTransaction = false;
+                editingTransaction = null;
+                await LoadTransactions();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task DeleteTransaction(Guid id)
+    {
+        deletingTransaction = transactions.FirstOrDefault(t => t.Id == id);
+        if (deletingTransaction != null)
+        {
+            showDeleteConfirm = true;
+        }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (deletingTransaction == null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        StateHasChanged();
+
+        try
+        {
+            // TODO: Implement delete when API supports it
+            // await ApiService.DeleteTransactionAsync(deletingTransaction.Id);
+            showDeleteConfirm = false;
+            deletingTransaction = null;
+            await LoadTransactions();
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+        deletingTransaction = null;
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/accounts");
+    }
+}
