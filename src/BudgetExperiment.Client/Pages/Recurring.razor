@@ -1,0 +1,531 @@
+@page "/recurring"
+
+@using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Client.Components.Forms
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Recurring Transactions - Budget Experiment</PageTitle>
+
+<div class="recurring-container">
+    <PageHeader Title="Recurring Transactions">
+        <Actions>
+            <button class="add-button" @onclick="ShowAddForm">+ Add Recurring</button>
+        </Actions>
+    </PageHeader>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading recurring transactions..." />
+    }
+    else if (recurringTransactions.Count == 0)
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🔄</div>
+            <h3>No Recurring Transactions</h3>
+            <p>Set up recurring transactions for bills, income, or regular expenses.</p>
+            <button class="btn-primary" @onclick="ShowAddForm">Create Your First Recurring Transaction</button>
+        </div>
+    }
+    else
+    {
+        <div class="recurring-list">
+            @foreach (var recurring in recurringTransactions)
+            {
+                <div class="recurring-card @(recurring.IsActive ? "" : "inactive")">
+                    <div class="recurring-main">
+                        <div class="recurring-info">
+                            <h3 class="recurring-description">@recurring.Description</h3>
+                            <div class="recurring-meta">
+                                <span class="account-badge">@recurring.AccountName</span>
+                                <span class="frequency-badge">@FormatFrequency(recurring)</span>
+                                @if (!string.IsNullOrEmpty(recurring.Category))
+                                {
+                                    <span class="category-badge">@recurring.Category</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="recurring-amount @(recurring.Amount.Amount >= 0 ? "positive" : "negative")">
+                            @FormatMoney(recurring.Amount)
+                        </div>
+                    </div>
+                    <div class="recurring-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Next:</span>
+                            <span class="detail-value">@recurring.NextOccurrence.ToString("MMM d, yyyy")</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Started:</span>
+                            <span class="detail-value">@recurring.StartDate.ToString("MMM d, yyyy")</span>
+                        </div>
+                        @if (recurring.EndDate.HasValue)
+                        {
+                            <div class="detail-item">
+                                <span class="detail-label">Ends:</span>
+                                <span class="detail-value">@recurring.EndDate.Value.ToString("MMM d, yyyy")</span>
+                            </div>
+                        }
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="status-badge @(recurring.IsActive ? "active" : "paused")">
+                                @(recurring.IsActive ? "Active" : "Paused")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="recurring-actions">
+                        @if (recurring.IsActive)
+                        {
+                            <button class="btn-action" @onclick="() => SkipNext(recurring)" title="Skip next occurrence">
+                                ⏭️ Skip
+                            </button>
+                            <button class="btn-action" @onclick="() => Pause(recurring)" title="Pause">
+                                ⏸️ Pause
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn-action btn-resume" @onclick="() => Resume(recurring)" title="Resume">
+                                ▶️ Resume
+                            </button>
+                        }
+                        <button class="btn-action btn-edit" @onclick="() => ShowEditForm(recurring)" title="Edit">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn-action btn-delete" @onclick="() => ShowDeleteConfirm(recurring)" title="Delete">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <Modal IsVisible="@showAddForm" Title="Add Recurring Transaction" OnClose="HideForm">
+        <RecurringTransactionForm Model="@newRecurring"
+                                   OnSubmit="CreateRecurring"
+                                   OnCancel="HideForm"
+                                   IsSubmitting="@isSubmitting" />
+    </Modal>
+
+    <Modal IsVisible="@showEditForm" Title="Edit Recurring Transaction" OnClose="HideForm">
+        <EditRecurringForm Model="@editModel"
+                           OnSubmit="UpdateRecurring"
+                           OnCancel="HideForm"
+                           IsSubmitting="@isSubmitting" />
+    </Modal>
+
+    <ConfirmDialog IsVisible="@showDeleteConfirm"
+                   Title="Delete Recurring Transaction"
+                   Message="@($"Are you sure you want to delete '{deletingRecurring?.Description}'? Future occurrences will no longer be scheduled.")"
+                   ConfirmText="Delete"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="ConfirmDelete"
+                   OnCancel="CancelDelete" />
+</div>
+
+<style>
+    .recurring-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .add-button {
+        padding: 10px 20px;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .add-button:hover {
+        background: #059669;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #f9fafb;
+        border-radius: 12px;
+        border: 2px dashed #e5e7eb;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 8px;
+        color: #374151;
+    }
+
+    .empty-state p {
+        color: #6b7280;
+        margin: 0 0 24px;
+    }
+
+    .recurring-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .recurring-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.2s;
+    }
+
+    .recurring-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .recurring-card.inactive {
+        opacity: 0.7;
+        background: #f9fafb;
+    }
+
+    .recurring-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .recurring-description {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+        color: #111827;
+    }
+
+    .recurring-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .account-badge,
+    .frequency-badge,
+    .category-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .account-badge {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .frequency-badge {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .category-badge {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .recurring-amount {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .recurring-amount.positive {
+        color: #059669;
+    }
+
+    .recurring-amount.negative {
+        color: #dc2626;
+    }
+
+    .recurring-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 12px 0;
+        border-top: 1px solid #f3f4f6;
+        border-bottom: 1px solid #f3f4f6;
+        margin-bottom: 12px;
+    }
+
+    .detail-item {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .detail-label {
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+
+    .detail-value {
+        color: #374151;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.paused {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .recurring-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 6px 12px;
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-action.btn-resume {
+        background: #d1fae5;
+        border-color: #a7f3d0;
+        color: #065f46;
+    }
+
+    .btn-action.btn-resume:hover {
+        background: #a7f3d0;
+    }
+
+    .btn-action.btn-delete {
+        background: #fee2e2;
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+
+    .btn-action.btn-delete:hover {
+        background: #fecaca;
+    }
+
+    .btn-primary {
+        padding: 12px 24px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+</style>
+
+@code {
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private bool isDeleting = false;
+    private List<RecurringTransactionModel> recurringTransactions = new();
+
+    private bool showAddForm = false;
+    private bool showEditForm = false;
+    private bool showDeleteConfirm = false;
+
+    private RecurringTransactionCreateModel newRecurring = new();
+    private RecurringTransactionUpdateModel editModel = new();
+    private Guid editingId;
+    private RecurringTransactionModel? deletingRecurring;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecurringTransactions();
+    }
+
+    private async Task LoadRecurringTransactions()
+    {
+        isLoading = true;
+        recurringTransactions = (await ApiService.GetRecurringTransactionsAsync()).ToList();
+        isLoading = false;
+    }
+
+    private void ShowAddForm()
+    {
+        newRecurring = new RecurringTransactionCreateModel
+        {
+            Frequency = "Monthly",
+            StartDate = DateOnly.FromDateTime(DateTime.Today),
+        };
+        showAddForm = true;
+    }
+
+    private void ShowEditForm(RecurringTransactionModel recurring)
+    {
+        editingId = recurring.Id;
+        editModel = new RecurringTransactionUpdateModel
+        {
+            Description = recurring.Description,
+            Amount = recurring.Amount.Amount,
+            Currency = recurring.Amount.Currency,
+            EndDate = recurring.EndDate,
+            Category = recurring.Category,
+        };
+        showEditForm = true;
+    }
+
+    private void HideForm()
+    {
+        showAddForm = false;
+        showEditForm = false;
+    }
+
+    private async Task CreateRecurring(RecurringTransactionCreateModel model)
+    {
+        isSubmitting = true;
+        try
+        {
+            var result = await ApiService.CreateRecurringTransactionAsync(model);
+            if (result != null)
+            {
+                showAddForm = false;
+                await LoadRecurringTransactions();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task UpdateRecurring(RecurringTransactionUpdateModel model)
+    {
+        isSubmitting = true;
+        try
+        {
+            var result = await ApiService.UpdateRecurringTransactionAsync(editingId, model);
+            if (result != null)
+            {
+                showEditForm = false;
+                await LoadRecurringTransactions();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task SkipNext(RecurringTransactionModel recurring)
+    {
+        var result = await ApiService.SkipNextRecurringAsync(recurring.Id);
+        if (result != null)
+        {
+            await LoadRecurringTransactions();
+        }
+    }
+
+    private async Task Pause(RecurringTransactionModel recurring)
+    {
+        var result = await ApiService.PauseRecurringTransactionAsync(recurring.Id);
+        if (result != null)
+        {
+            await LoadRecurringTransactions();
+        }
+    }
+
+    private async Task Resume(RecurringTransactionModel recurring)
+    {
+        var result = await ApiService.ResumeRecurringTransactionAsync(recurring.Id);
+        if (result != null)
+        {
+            await LoadRecurringTransactions();
+        }
+    }
+
+    private void ShowDeleteConfirm(RecurringTransactionModel recurring)
+    {
+        deletingRecurring = recurring;
+        showDeleteConfirm = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (deletingRecurring == null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        StateHasChanged();
+
+        try
+        {
+            var deleted = await ApiService.DeleteRecurringTransactionAsync(deletingRecurring.Id);
+            if (deleted)
+            {
+                showDeleteConfirm = false;
+                deletingRecurring = null;
+                await LoadRecurringTransactions();
+            }
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+        deletingRecurring = null;
+    }
+
+    private static string FormatFrequency(RecurringTransactionModel recurring)
+    {
+        return recurring.Frequency switch
+        {
+            "Daily" => "Daily",
+            "Weekly" => $"Weekly on {recurring.DayOfWeek}",
+            "BiWeekly" => $"Bi-Weekly on {recurring.DayOfWeek}",
+            "Monthly" => recurring.DayOfMonth.HasValue ? $"Monthly on day {recurring.DayOfMonth}" : "Monthly",
+            "Quarterly" => recurring.DayOfMonth.HasValue ? $"Quarterly on day {recurring.DayOfMonth}" : "Quarterly",
+            "Yearly" => recurring.DayOfMonth.HasValue ? $"Yearly on day {recurring.DayOfMonth}" : "Yearly",
+            _ => recurring.Frequency,
+        };
+    }
+
+    private static string FormatMoney(MoneyModel money)
+    {
+        var sign = money.Amount >= 0 ? "+" : "";
+        return $"{sign}{money.Currency} {money.Amount:N2}";
+    }
+}

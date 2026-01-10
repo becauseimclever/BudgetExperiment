@@ -294,4 +294,92 @@ public class TransactionTests
         // Assert
         Assert.Equal("Groceries", transaction.Category);
     }
+
+    [Fact]
+    public void Create_Without_RecurringTransaction_Has_Null_RecurringTransactionId()
+    {
+        // Arrange & Act
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test");
+
+        // Assert
+        Assert.Null(transaction.RecurringTransactionId);
+        Assert.Null(transaction.RecurringInstanceDate);
+    }
+
+    [Fact]
+    public void CreateFromRecurring_Sets_RecurringTransaction_Properties()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var recurringTransactionId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 1, 15);
+        var amount = MoneyValue.Create("USD", -100m);
+
+        // Act
+        var transaction = Transaction.CreateFromRecurring(
+            accountId,
+            amount,
+            instanceDate,
+            "Monthly Rent",
+            recurringTransactionId,
+            instanceDate);
+
+        // Assert
+        Assert.Equal(recurringTransactionId, transaction.RecurringTransactionId);
+        Assert.Equal(instanceDate, transaction.RecurringInstanceDate);
+    }
+
+    [Fact]
+    public void CreateFromRecurring_With_Empty_RecurringTransactionId_Throws()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", -100m);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            Transaction.CreateFromRecurring(
+                accountId,
+                amount,
+                new DateOnly(2026, 1, 15),
+                "Test",
+                Guid.Empty,
+                new DateOnly(2026, 1, 15)));
+
+        Assert.Contains("Recurring transaction ID is required", ex.Message);
+    }
+
+    [Fact]
+    public void IsFromRecurringTransaction_Returns_True_When_Linked()
+    {
+        // Arrange
+        var transaction = Transaction.CreateFromRecurring(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", -100m),
+            new DateOnly(2026, 1, 15),
+            "Monthly Rent",
+            Guid.NewGuid(),
+            new DateOnly(2026, 1, 15));
+
+        // Act & Assert
+        Assert.True(transaction.IsFromRecurringTransaction);
+    }
+
+    [Fact]
+    public void IsFromRecurringTransaction_Returns_False_When_Not_Linked()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test");
+
+        // Act & Assert
+        Assert.False(transaction.IsFromRecurringTransaction);
+    }
 }

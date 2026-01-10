@@ -1,0 +1,116 @@
+@* EditRecurringForm.razor - Form for editing existing recurring transactions *@
+
+@using BudgetExperiment.Client.Models
+
+<form @onsubmit="HandleSubmit">
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <input id="description"
+               type="text"
+               @bind="Model.Description"
+               @bind:event="oninput"
+               placeholder="Enter description" />
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="amount">Amount:</label>
+            <input id="amount"
+                   type="number"
+                   step="0.01"
+                   @bind="Model.Amount"
+                   placeholder="0.00" />
+        </div>
+        <div class="form-group form-group-small">
+            <label for="currency">Currency:</label>
+            <select id="currency" @bind="Model.Currency">
+                <option value="USD">USD</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="endDate">End Date (optional):</label>
+        <input id="endDate"
+               type="date"
+               @bind="endDateInput" />
+        <small class="form-hint">Leave empty for no end date</small>
+    </div>
+
+    <div class="form-group">
+        <label for="category">Category (optional):</label>
+        <input id="category"
+               type="text"
+               @bind="Model.Category"
+               placeholder="e.g., Bills, Income, Subscription" />
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save Changes</span>
+            }
+        </button>
+        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+    </div>
+</form>
+
+@code {
+    /// <summary>
+    /// Gets or sets the update model.
+    /// </summary>
+    [Parameter]
+    public RecurringTransactionUpdateModel Model { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the callback when the form is submitted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<RecurringTransactionUpdateModel> OnSubmit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when cancel is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the form is submitting.
+    /// </summary>
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    private DateTime? endDateInput;
+
+    protected override void OnParametersSet()
+    {
+        if (Model.EndDate.HasValue)
+        {
+            endDateInput = Model.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+        }
+        else
+        {
+            endDateInput = null;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        // Convert DateTime input to DateOnly
+        Model.EndDate = endDateInput.HasValue ? DateOnly.FromDateTime(endDateInput.Value) : null;
+
+        await OnSubmit.InvokeAsync(Model);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

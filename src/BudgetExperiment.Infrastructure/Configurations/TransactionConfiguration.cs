@@ -56,9 +56,20 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.Property(t => t.UpdatedAt)
             .IsRequired();
 
+        // Recurring transaction link (nullable FK)
+        builder.Property(t => t.RecurringTransactionId);
+
+        builder.Property(t => t.RecurringInstanceDate);
+
+        builder.HasOne<RecurringTransaction>()
+            .WithMany()
+            .HasForeignKey(t => t.RecurringTransactionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes for calendar queries
         builder.HasIndex(t => t.Date);
         builder.HasIndex(t => t.AccountId);
         builder.HasIndex(t => new { t.AccountId, t.Date });
+        builder.HasIndex(t => t.RecurringTransactionId);
     }
 }

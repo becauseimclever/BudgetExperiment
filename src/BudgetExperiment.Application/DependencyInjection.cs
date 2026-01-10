@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<AccountService>();
         services.AddScoped<TransactionService>();
         services.AddScoped<CalendarService>();
+        services.AddScoped<RecurringTransactionService>();
         return services;
     }
 }

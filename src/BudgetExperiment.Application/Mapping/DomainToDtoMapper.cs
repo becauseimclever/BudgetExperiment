@@ -78,4 +78,68 @@ public static class DomainToDtoMapper
             Amount = money.Amount,
         };
     }
+
+    /// <summary>
+    /// Maps a <see cref="RecurringTransaction"/> to a <see cref="RecurringTransactionDto"/>.
+    /// </summary>
+    /// <param name="recurring">The recurring transaction entity.</param>
+    /// <param name="accountName">The account name.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static RecurringTransactionDto ToDto(RecurringTransaction recurring, string accountName = "")
+    {
+        return new RecurringTransactionDto
+        {
+            Id = recurring.Id,
+            AccountId = recurring.AccountId,
+            AccountName = accountName,
+            Description = recurring.Description,
+            Amount = ToDto(recurring.Amount),
+            Frequency = recurring.RecurrencePattern.Frequency.ToString(),
+            Interval = recurring.RecurrencePattern.Interval,
+            DayOfMonth = recurring.RecurrencePattern.DayOfMonth,
+            DayOfWeek = recurring.RecurrencePattern.DayOfWeek?.ToString(),
+            MonthOfYear = recurring.RecurrencePattern.MonthOfYear,
+            StartDate = recurring.StartDate,
+            EndDate = recurring.EndDate,
+            NextOccurrence = recurring.NextOccurrence,
+            IsActive = recurring.IsActive,
+            CreatedAtUtc = recurring.CreatedAtUtc,
+            UpdatedAtUtc = recurring.UpdatedAtUtc,
+        };
+    }
+
+    /// <summary>
+    /// Maps a recurring instance to a <see cref="RecurringInstanceDto"/>.
+    /// </summary>
+    /// <param name="recurring">The recurring transaction entity.</param>
+    /// <param name="scheduledDate">The scheduled date of the instance.</param>
+    /// <param name="exception">Optional exception for this instance.</param>
+    /// <param name="generatedTransactionId">Optional ID of generated transaction.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static RecurringInstanceDto ToInstanceDto(
+        RecurringTransaction recurring,
+        DateOnly scheduledDate,
+        RecurringTransactionException? exception = null,
+        Guid? generatedTransactionId = null)
+    {
+        var isSkipped = exception?.ExceptionType == ExceptionType.Skipped;
+        var isModified = exception?.ExceptionType == ExceptionType.Modified;
+
+        return new RecurringInstanceDto
+        {
+            RecurringTransactionId = recurring.Id,
+            ScheduledDate = scheduledDate,
+            EffectiveDate = exception?.GetEffectiveDate() ?? scheduledDate,
+            Amount = isModified && exception?.ModifiedAmount != null
+                ? ToDto(exception.ModifiedAmount)
+                : ToDto(recurring.Amount),
+            Description = isModified && exception?.ModifiedDescription != null
+                ? exception.ModifiedDescription
+                : recurring.Description,
+            IsModified = isModified,
+            IsSkipped = isSkipped,
+            IsGenerated = generatedTransactionId.HasValue,
+            GeneratedTransactionId = generatedTransactionId,
+        };
+    }
 }

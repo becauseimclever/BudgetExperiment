@@ -129,4 +129,163 @@ public sealed class BudgetApiService : IBudgetApiService
         var result = await this._httpClient.GetFromJsonAsync<List<DailyTotalModel>>(url, JsonOptions);
         return result ?? new List<DailyTotalModel>();
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<RecurringTransactionModel>> GetRecurringTransactionsAsync()
+    {
+        var result = await this._httpClient.GetFromJsonAsync<List<RecurringTransactionModel>>("api/v1/recurring-transactions", JsonOptions);
+        return result ?? new List<RecurringTransactionModel>();
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransactionModel?> GetRecurringTransactionAsync(Guid id)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<RecurringTransactionModel>($"api/v1/recurring-transactions/{id}", JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransactionModel?> CreateRecurringTransactionAsync(RecurringTransactionCreateModel model)
+    {
+        var apiModel = new
+        {
+            model.AccountId,
+            model.Description,
+            Amount = new { Currency = model.Currency, Amount = model.Amount },
+            model.Frequency,
+            model.DayOfMonth,
+            model.DayOfWeek,
+            model.StartDate,
+            model.EndDate,
+            model.Category,
+        };
+
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/recurring-transactions", apiModel, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransactionModel?> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateModel model)
+    {
+        object? amountObj = null;
+        if (model.Amount.HasValue)
+        {
+            amountObj = new { Currency = model.Currency ?? "USD", Amount = model.Amount.Value };
+        }
+
+        var apiModel = new
+        {
+            model.Description,
+            Amount = amountObj,
+            model.EndDate,
+            model.Category,
+        };
+
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}", apiModel, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteRecurringTransactionAsync(Guid id)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/recurring-transactions/{id}");
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransactionModel?> PauseRecurringTransactionAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/recurring-transactions/{id}/pause", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransactionModel?> ResumeRecurringTransactionAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/recurring-transactions/{id}/resume", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransactionModel?> SkipNextRecurringAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/recurring-transactions/{id}/skip", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<RecurringInstanceModel>> GetProjectedRecurringAsync(DateOnly from, DateOnly to, Guid? accountId = null)
+    {
+        var url = $"api/v1/recurring-transactions/projected?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        if (accountId.HasValue)
+        {
+            url += $"&accountId={accountId.Value}";
+        }
+
+        var result = await this._httpClient.GetFromJsonAsync<List<RecurringInstanceModel>>(url, JsonOptions);
+        return result ?? new List<RecurringInstanceModel>();
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SkipRecurringInstanceAsync(Guid id, DateOnly date)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/recurring-transactions/{id}/instances/{date:yyyy-MM-dd}");
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringInstanceModel?> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyModel model)
+    {
+        object? amountObj = null;
+        if (model.Amount.HasValue)
+        {
+            amountObj = new { Currency = model.Currency ?? "USD", Amount = model.Amount.Value };
+        }
+
+        var apiModel = new
+        {
+            model.NewDate,
+            Amount = amountObj,
+            model.Description,
+        };
+
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}/instances/{date:yyyy-MM-dd}", apiModel, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringInstanceModel>(JsonOptions);
+        }
+
+        return null;
+    }
 }

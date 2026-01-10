@@ -62,6 +62,21 @@ public sealed class Transaction
     public DateTime UpdatedAt { get; private set; }
 
     /// <summary>
+    /// Gets the identifier of the recurring transaction this was generated from (null for manual transactions).
+    /// </summary>
+    public Guid? RecurringTransactionId { get; private set; }
+
+    /// <summary>
+    /// Gets the scheduled date this transaction was generated for from the recurring transaction.
+    /// </summary>
+    public DateOnly? RecurringInstanceDate { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether this transaction was generated from a recurring transaction.
+    /// </summary>
+    public bool IsFromRecurringTransaction => this.RecurringTransactionId.HasValue;
+
+    /// <summary>
     /// Creates a new transaction.
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
@@ -104,7 +119,41 @@ public sealed class Transaction
             Category = string.IsNullOrWhiteSpace(category) ? null : category.Trim(),
             CreatedAt = now,
             UpdatedAt = now,
+            RecurringTransactionId = null,
+            RecurringInstanceDate = null,
         };
+    }
+
+    /// <summary>
+    /// Creates a new transaction generated from a recurring transaction.
+    /// </summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="amount">The monetary amount.</param>
+    /// <param name="date">The transaction date.</param>
+    /// <param name="description">The transaction description.</param>
+    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+    /// <param name="recurringInstanceDate">The scheduled date this was generated for.</param>
+    /// <param name="category">Optional category.</param>
+    /// <returns>A new <see cref="Transaction"/> instance.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public static Transaction CreateFromRecurring(
+        Guid accountId,
+        MoneyValue amount,
+        DateOnly date,
+        string description,
+        Guid recurringTransactionId,
+        DateOnly recurringInstanceDate,
+        string? category = null)
+    {
+        if (recurringTransactionId == Guid.Empty)
+        {
+            throw new DomainException("Recurring transaction ID is required.");
+        }
+
+        var transaction = Create(accountId, amount, date, description, category);
+        transaction.RecurringTransactionId = recurringTransactionId;
+        transaction.RecurringInstanceDate = recurringInstanceDate;
+        return transaction;
     }
 
     /// <summary>
