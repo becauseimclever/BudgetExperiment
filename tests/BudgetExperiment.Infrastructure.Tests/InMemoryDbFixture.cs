@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Tests;
@@ -12,19 +13,23 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// </summary>
 public sealed class InMemoryDbFixture : IDisposable
 {
-    private int _contextCounter;
+    private readonly List<SqliteConnection> _connections = [];
 
     /// <summary>
     /// Creates a new DbContext for testing with a unique in-memory database.
     /// Call this at the start of each test to get a fresh database.
+    /// The connection is kept open to preserve the in-memory database.
     /// </summary>
     /// <returns>A new <see cref="BudgetDbContext"/> with a unique database.</returns>
     public BudgetDbContext CreateContext()
     {
-        var uniqueDbName = $"TestDb_{Interlocked.Increment(ref this._contextCounter)}_{Guid.NewGuid():N}";
+        // Create a new connection for each test to ensure isolation
+        var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+        this._connections.Add(connection);
 
         var options = new DbContextOptionsBuilder<BudgetDbContext>()
-            .UseSqlite($"Data Source={uniqueDbName};Mode=Memory;Cache=Shared")
+            .UseSqlite(connection)
             .Options;
 
         var context = new BudgetDbContext(options);
@@ -36,17 +41,17 @@ public sealed class InMemoryDbFixture : IDisposable
     }
 
     /// <summary>
-    /// Creates a new DbContext that shares the same database as the provided context.
+    /// Creates a new DbContext that shares the same database connection as the provided context.
     /// Use this to verify persistence within the same test.
     /// </summary>
     /// <param name="existingContext">The existing context to share database with.</param>
     /// <returns>A new <see cref="BudgetDbContext"/> connected to the same database.</returns>
     public BudgetDbContext CreateSharedContext(BudgetDbContext existingContext)
     {
-        var connectionString = existingContext.Database.GetConnectionString();
+        var connection = existingContext.Database.GetDbConnection();
 
         var options = new DbContextOptionsBuilder<BudgetDbContext>()
-            .UseSqlite(connectionString!)
+            .UseSqlite(connection)
             .Options;
 
         return new BudgetDbContext(options);
@@ -55,7 +60,12 @@ public sealed class InMemoryDbFixture : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        // SQLite in-memory databases are automatically cleaned up
-        // when all connections are closed
+        foreach (var connection in this._connections)
+        {
+            connection.Close();
+            connection.Dispose();
+        }
+
+        this._connections.Clear();
     }
 }

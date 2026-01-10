@@ -148,10 +148,17 @@
 
     private decimal totalAmount => transactions.Sum(t => t.Amount.Amount);
 
-    protected override async Task OnInitializedAsync()
+    private Guid previousAccountId;
+
+    protected override async Task OnParametersSetAsync()
     {
-        await LoadAccount();
-        await LoadTransactions();
+        // Reload data when AccountId parameter changes (navigation between accounts)
+        if (AccountId != previousAccountId)
+        {
+            previousAccountId = AccountId;
+            await LoadAccount();
+            await LoadTransactions();
+        }
     }
 
     private async Task LoadAccount()

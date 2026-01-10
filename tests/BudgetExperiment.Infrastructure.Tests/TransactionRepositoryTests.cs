@@ -10,16 +10,16 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="TransactionRepository"/>.
 /// </summary>
-[Collection("Postgres")]
+[Collection("InMemoryDb")]
 public class TransactionRepositoryTests
 {
-    private readonly PostgresFixture _fixture;
+    private readonly InMemoryDbFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared PostgreSQL fixture.</param>
-    public TransactionRepositoryTests(PostgresFixture fixture)
+    /// <param name="fixture">The shared in-memory database fixture.</param>
+    public TransactionRepositoryTests(InMemoryDbFixture fixture)
     {
         this._fixture = fixture;
     }
@@ -42,7 +42,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var verifyRepo = new TransactionRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(transaction.Id);
 
@@ -71,7 +71,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext);
         var results = await transactionRepo.GetByDateRangeAsync(
             new DateOnly(2026, 1, 10),
@@ -102,7 +102,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext);
         var results = await transactionRepo.GetByDateRangeAsync(
             new DateOnly(2026, 2, 1),
@@ -130,7 +130,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext);
         var dailyTotals = await transactionRepo.GetDailyTotalsAsync(2026, 3, account.Id);
 
@@ -162,7 +162,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext);
         var aprilTotals = await transactionRepo.GetDailyTotalsAsync(2026, 4, account.Id);
 
@@ -187,21 +187,15 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateContext();
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext);
         var transactions = await transactionRepo.ListAsync(0, 100);
 
         // Assert - most recent first
-        var listOrderTransactions = transactions
-            .Where(t => t.Description is "First" or "Middle" or "Last")
-            .ToList();
-
-        if (listOrderTransactions.Count == 3)
-        {
-            Assert.Equal("Last", listOrderTransactions[0].Description);
-            Assert.Equal("Middle", listOrderTransactions[1].Description);
-            Assert.Equal("First", listOrderTransactions[2].Description);
-        }
+        Assert.Equal(3, transactions.Count);
+        Assert.Equal("Last", transactions[0].Description);
+        Assert.Equal("Middle", transactions[1].Description);
+        Assert.Equal("First", transactions[2].Description);
     }
 
     [Fact]
@@ -213,6 +207,7 @@ public class TransactionRepositoryTests
         var transactionRepo = new TransactionRepository(context);
 
         var initialCount = await transactionRepo.CountAsync();
+        Assert.Equal(0, initialCount);
 
         var account = Account.Create("Count Test", AccountType.Checking);
         account.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 7, 1), "Count Test Trans");
@@ -224,6 +219,6 @@ public class TransactionRepositoryTests
         var newCount = await transactionRepo.CountAsync();
 
         // Assert
-        Assert.Equal(initialCount + 1, newCount);
+        Assert.Equal(1, newCount);
     }
 }
