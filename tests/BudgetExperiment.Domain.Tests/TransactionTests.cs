@@ -1,0 +1,297 @@
+// <copyright file="TransactionTests.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+using BudgetExperiment.Domain;
+
+namespace BudgetExperiment.Domain.Tests;
+
+/// <summary>
+/// Unit tests for the Transaction entity.
+/// </summary>
+public class TransactionTests
+{
+    [Fact]
+    public void Create_With_Valid_Data_Creates_Transaction()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", 100.50m);
+        var date = new DateOnly(2026, 1, 9);
+        var description = "Test Transaction";
+
+        // Act
+        var transaction = Transaction.Create(accountId, amount, date, description);
+
+        // Assert
+        Assert.NotEqual(Guid.Empty, transaction.Id);
+        Assert.Equal(accountId, transaction.AccountId);
+        Assert.Equal(amount, transaction.Amount);
+        Assert.Equal(date, transaction.Date);
+        Assert.Equal(description, transaction.Description);
+        Assert.Null(transaction.Category);
+        Assert.NotEqual(default, transaction.CreatedAt);
+        Assert.NotEqual(default, transaction.UpdatedAt);
+    }
+
+    [Fact]
+    public void Create_With_Category_Sets_Category()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", 50.00m);
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act
+        var transaction = Transaction.Create(accountId, amount, date, "Groceries", category: "Food");
+
+        // Assert
+        Assert.Equal("Food", transaction.Category);
+    }
+
+    [Fact]
+    public void Create_Trims_Description()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", 50.00m);
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act
+        var transaction = Transaction.Create(accountId, amount, date, "  Groceries  ");
+
+        // Assert
+        Assert.Equal("Groceries", transaction.Description);
+    }
+
+    [Fact]
+    public void Create_Trims_Category()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", 50.00m);
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act
+        var transaction = Transaction.Create(accountId, amount, date, "Groceries", "  Food  ");
+
+        // Assert
+        Assert.Equal("Food", transaction.Category);
+    }
+
+    [Fact]
+    public void Create_With_Empty_AccountId_Throws()
+    {
+        // Arrange
+        var amount = MoneyValue.Create("USD", 100.00m);
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => Transaction.Create(Guid.Empty, amount, date, "Test"));
+        Assert.Contains("account", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Create_With_Null_Amount_Throws()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => Transaction.Create(accountId, null!, date, "Test"));
+        Assert.Contains("amount", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_With_Empty_Description_Throws(string? description)
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", 100.00m);
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => Transaction.Create(accountId, amount, date, description!));
+        Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Create_Allows_Negative_Amount()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", -100.00m);
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act
+        var transaction = Transaction.Create(accountId, amount, date, "Expense");
+
+        // Assert
+        Assert.Equal(-100.00m, transaction.Amount.Amount);
+    }
+
+    [Fact]
+    public void Create_Allows_Zero_Amount()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", 0m);
+        var date = new DateOnly(2026, 1, 9);
+
+        // Act
+        var transaction = Transaction.Create(accountId, amount, date, "Zero balance");
+
+        // Assert
+        Assert.Equal(0m, transaction.Amount.Amount);
+    }
+
+    [Fact]
+    public void UpdateDescription_Changes_Description_And_UpdatedAt()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Original");
+        var originalUpdatedAt = transaction.UpdatedAt;
+
+        // Act
+        transaction.UpdateDescription("New Description");
+
+        // Assert
+        Assert.Equal("New Description", transaction.Description);
+        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void UpdateDescription_With_Empty_Value_Throws(string? description)
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Original");
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => transaction.UpdateDescription(description!));
+        Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void UpdateAmount_Changes_Amount_And_UpdatedAt()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test");
+        var originalUpdatedAt = transaction.UpdatedAt;
+        var newAmount = MoneyValue.Create("USD", 200m);
+
+        // Act
+        transaction.UpdateAmount(newAmount);
+
+        // Assert
+        Assert.Equal(newAmount, transaction.Amount);
+        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void UpdateAmount_With_Null_Throws()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test");
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => transaction.UpdateAmount(null!));
+        Assert.Contains("amount", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void UpdateDate_Changes_Date_And_UpdatedAt()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test");
+        var originalUpdatedAt = transaction.UpdatedAt;
+        var newDate = new DateOnly(2026, 2, 15);
+
+        // Act
+        transaction.UpdateDate(newDate);
+
+        // Assert
+        Assert.Equal(newDate, transaction.Date);
+        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void UpdateCategory_Changes_Category_And_UpdatedAt()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test");
+        var originalUpdatedAt = transaction.UpdatedAt;
+
+        // Act
+        transaction.UpdateCategory("Groceries");
+
+        // Assert
+        Assert.Equal("Groceries", transaction.Category);
+        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void UpdateCategory_With_Null_Clears_Category()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test",
+            "OldCategory");
+
+        // Act
+        transaction.UpdateCategory(null);
+
+        // Assert
+        Assert.Null(transaction.Category);
+    }
+
+    [Fact]
+    public void UpdateCategory_Trims_Value()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 9),
+            "Test");
+
+        // Act
+        transaction.UpdateCategory("  Groceries  ");
+
+        // Assert
+        Assert.Equal("Groceries", transaction.Category);
+    }
+}

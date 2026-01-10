@@ -197,18 +197,25 @@ Central middleware converting exceptions → ProblemDetails. Domain validation �
 ## 29. Concurrency & IDs
 - Prefer GUIDs (comb/ulid acceptable) for aggregate keys; ensure DB indexing strategy documented.
 
-## 30. Continuous Improvement
+## 30. Date/Time Handling
+- **Backend & Database:** All `DateTime` values must be stored and transmitted in **UTC**. Use `DateTime.UtcNow` (not `DateTime.Now`). Domain entities use `DateTime` with UTC assumption; document with `CreatedAtUtc` naming if clarity needed.
+- **DateOnly:** For date-only fields (e.g., transaction date), use `DateOnly` which has no time zone implications.
+- **API:** Return UTC timestamps in ISO 8601 format (`2026-01-09T14:30:00Z`). Accept UTC or convert incoming local times to UTC immediately.
+- **Client (Blazor):** Detect user's local time zone via JavaScript interop (`Intl.DateTimeFormat().resolvedOptions().timeZone`) and convert UTC to local for display. Store the detected time zone in a service for consistent formatting throughout the UI.
+- **Never** store local times in the database or pass non-UTC `DateTime` values across the API boundary.
+
+## 31. Continuous Improvement
 Refactor safely behind tests. Each new concept: add a unit test first.
 
 ---
 Keep this file lean—prune when obsolete. Update when architectural decisions shift.
 
-## 31. Shell / Scripting Guidelines
+## 32. Shell / Scripting Guidelines
 - PowerShell commands must use fully qualified paths (no reliance on `~`, `$HOME`, or implicit working directory). Example: `dotnet sln c:\ws\BudgetExperiment\BudgetExperiment.sln add c:\ws\BudgetExperiment\src\BudgetExperiment.Domain\BudgetExperiment.Domain.csproj`.
 - Avoid stateful assumptions about current directory; each command should be executable in isolation.
 - Prefer explicit paths when creating, editing, or referencing solution/project files to ensure reproducibility across developer environments.
 
-## 32. NuGet Package Management
+## 33. NuGet Package Management
 - Always add or update NuGet dependencies using the `dotnet` CLI, not by manually editing `.csproj` files.
 - Preferred pattern (explicit paths + version pin):
     - `dotnet add c:\ws\BudgetExperiment\tests\BudgetExperiment.Api.Tests\BudgetExperiment.Api.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 10.0.0`
@@ -216,7 +223,7 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 - When removing a package: `dotnet remove <csprojPath> package <PackageName>`.
 - Keep versions explicit (no floating ranges) to preserve reproducibility; update via intentional CLI commands.
 
-## 33. Client-Server Development Workflow
+## 34. Client-Server Development Workflow
 - **CRITICAL**: The Blazor WebAssembly client (`BudgetExperiment.Client`) is hosted by the API (`BudgetExperiment.Api`) and should NEVER be run standalone.
 - **Only run the API**: `dotnet run --project c:\ws\BudgetExperiment\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj`
 - The API serves both the REST endpoints AND hosts the Blazor WebAssembly client.
@@ -225,7 +232,7 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
   - Terminal: API server (usually http://localhost:5099) - this serves both API and client
 - When testing or debugging client features, ensure only the API is running - the client will be automatically served by the API.
 
-## 34. Docker & Deployment (CI/CD Only)
+## 35. Docker & Deployment (CI/CD Only)
 - **Local Development**: NEVER use Docker locally. Use standard `dotnet run` workflow (see section 33).
 - **Docker is for deployment only**: Raspberry Pi and production servers pull pre-built images.
 - **CI/CD Pipeline**: GitHub Actions (`.github/workflows/docker-build-publish.yml`) automatically builds multi-architecture (amd64, arm64) Docker images on push to `main` or version tags.

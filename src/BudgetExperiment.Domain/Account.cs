@@ -1,0 +1,153 @@
+// <copyright file="Account.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+namespace BudgetExperiment.Domain;
+
+/// <summary>
+/// Represents a financial account (aggregate root).
+/// </summary>
+public sealed class Account
+{
+    private readonly List<Transaction> _transactions = new();
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Account"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Private constructor for EF Core and factory method.
+    /// </remarks>
+    private Account()
+    {
+    }
+
+    /// <summary>
+    /// Gets the unique identifier.
+    /// </summary>
+    public Guid Id { get; private set; }
+
+    /// <summary>
+    /// Gets the account name.
+    /// </summary>
+    public string Name { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the account type.
+    /// </summary>
+    public AccountType Type { get; private set; }
+
+    /// <summary>
+    /// Gets the UTC timestamp when the account was created.
+    /// </summary>
+    public DateTime CreatedAt { get; private set; }
+
+    /// <summary>
+    /// Gets the UTC timestamp when the account was last updated.
+    /// </summary>
+    public DateTime UpdatedAt { get; private set; }
+
+    /// <summary>
+    /// Gets the transactions in this account.
+    /// </summary>
+    public IReadOnlyCollection<Transaction> Transactions => this._transactions.AsReadOnly();
+
+    /// <summary>
+    /// Creates a new account.
+    /// </summary>
+    /// <param name="name">The account name.</param>
+    /// <param name="type">The account type.</param>
+    /// <returns>A new <see cref="Account"/> instance.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public static Account Create(string name, AccountType type)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new DomainException("Account name is required.");
+        }
+
+        var now = DateTime.UtcNow;
+        return new Account
+        {
+            Id = Guid.NewGuid(),
+            Name = name.Trim(),
+            Type = type,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+    }
+
+    /// <summary>
+    /// Updates the account name.
+    /// </summary>
+    /// <param name="name">New name.</param>
+    /// <exception cref="DomainException">Thrown when name is empty.</exception>
+    public void UpdateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new DomainException("Account name is required.");
+        }
+
+        this.Name = name.Trim();
+        this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the account type.
+    /// </summary>
+    /// <param name="type">New type.</param>
+    public void UpdateType(AccountType type)
+    {
+        this.Type = type;
+        this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Adds a new transaction to this account.
+    /// </summary>
+    /// <param name="amount">The monetary amount.</param>
+    /// <param name="date">The transaction date.</param>
+    /// <param name="description">The transaction description.</param>
+    /// <param name="category">Optional category.</param>
+    /// <returns>The created transaction.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public Transaction AddTransaction(
+        MoneyValue amount,
+        DateOnly date,
+        string description,
+        string? category = null)
+    {
+        if (amount is null)
+        {
+            throw new DomainException("Amount is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new DomainException("Description is required.");
+        }
+
+        var transaction = Transaction.Create(this.Id, amount, date, description, category);
+        this._transactions.Add(transaction);
+        this.UpdatedAt = DateTime.UtcNow;
+        return transaction;
+    }
+
+    /// <summary>
+    /// Removes a transaction from this account.
+    /// </summary>
+    /// <param name="transactionId">The transaction ID to remove.</param>
+    /// <returns>True if removed; false if not found.</returns>
+    public bool RemoveTransaction(Guid transactionId)
+    {
+        var transaction = this._transactions.FirstOrDefault(t => t.Id == transactionId);
+        if (transaction is null)
+        {
+            return false;
+        }
+
+        this._transactions.Remove(transaction);
+        this.UpdatedAt = DateTime.UtcNow;
+        return true;
+    }
+}

@@ -1,3 +1,4 @@
+using BudgetExperiment.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure;
@@ -16,9 +17,19 @@ public sealed class BudgetDbContext : DbContext
     {
     }
 
+    /// <summary>
+    /// Gets the accounts.
+    /// </summary>
+    public DbSet<Account> Accounts => this.Set<Account>();
+
+    /// <summary>
+    /// Gets the transactions.
+    /// </summary>
+    public DbSet<Transaction> Transactions => this.Set<Transaction>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Entity configurations will be added as new domain models are implemented
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(BudgetDbContext).Assembly);
     }
 }

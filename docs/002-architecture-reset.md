@@ -1,7 +1,7 @@
 # Feature 002: Architecture Reset
 
 ## Status
-**Status:** Not Started  
+**Status:** In Progress (Phase 3 Complete)  
 **Created:** 2026-01-09  
 **Priority:** High  
 **Depends On:** [001-database-reset.md](001-database-reset.md)
@@ -20,9 +20,9 @@ Rethink and redesign the application architecture, domain models, and project st
 
 ## Goals
 
-- [ ] Implement Account aggregate with basic properties
-- [ ] Implement Transaction entity
-- [ ] Retain MoneyValue value object
+- [x] Implement Account aggregate with basic properties
+- [x] Implement Transaction entity
+- [x] Retain MoneyValue value object
 - [ ] Calendar-centric API endpoints (query by date range)
 - [ ] Calendar-centric Blazor UI
 

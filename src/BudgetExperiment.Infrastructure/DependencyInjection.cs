@@ -1,3 +1,5 @@
+using BudgetExperiment.Domain;
+using BudgetExperiment.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +25,10 @@ public static class DependencyInjection
 
         services.AddDbContext<BudgetDbContext>(options => options.UseNpgsql(cs));
 
-        // Repositories will be registered as new features are implemented
+        // Repositories
+        services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+
         return services;
     }
 }
