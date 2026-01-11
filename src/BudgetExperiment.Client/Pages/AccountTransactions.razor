@@ -4,6 +4,8 @@
 
 @using BudgetExperiment.Client.Models
 @using BudgetExperiment.Client.Services
+@using BudgetExperiment.Client.Components.Forms
+@using BudgetExperiment.Client.Components.Common
 
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
@@ -20,18 +22,27 @@
         </Actions>
     </PageHeader>
 
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
     <div class="filter-section">
         <div class="date-filter">
             <label>From:</label>
-            <input type="date" @bind="startDate" @bind:after="LoadTransactions" />
+            <input type="date" @bind="startDate" @bind:after="LoadData" />
             <label>To:</label>
-            <input type="date" @bind="endDate" @bind:after="LoadTransactions" />
+            <input type="date" @bind="endDate" @bind:after="LoadData" />
         </div>
         <div class="summary">
             <span class="summary-item">
                 Total: <MoneyDisplay Amount="@totalAmount" />
             </span>
-            <span class="summary-item">Count: @transactions.Count</span>
+            <span class="summary-item">Count: @allItems.Count</span>
+            @if (recurringCount > 0)
+            {
+                <span class="summary-item recurring-count">🔄 @recurringCount recurring</span>
+            }
         </div>
     </div>
 
@@ -41,12 +52,14 @@
     }
     else
     {
-        <TransactionTable Transactions="@transactions"
+        <TransactionTable Items="@allItems"
                           ShowDate="true"
                           ShowActions="true"
                           EmptyMessage="No transactions found for this period."
-                          OnEdit="EditTransaction"
-                          OnDelete="DeleteTransaction" />
+                          OnEditItem="EditTransaction"
+                          OnDeleteItem="DeleteTransaction"
+                          OnEditRecurring="ShowEditRecurringInstance"
+                          OnSkipRecurring="ShowSkipRecurringInstance" />
     }
 
     <Modal IsVisible="@showAddTransaction"
@@ -60,6 +73,7 @@
             InitialAmount="@(editingTransaction?.Amount.Amount ?? 0)"
             InitialCategory="@editingTransaction?.Category"
             IsSubmitting="@isSubmitting"
+            ErrorMessage="@saveErrorMessage"
             OnSubmit="@SaveTransaction"
             OnCancel="@HideAddTransaction" />
     </Modal>
@@ -71,6 +85,32 @@
                    IsProcessing="@isDeleting"
                    OnConfirm="ConfirmDelete"
                    OnCancel="CancelDelete" />
+
+    @* Edit recurring instance dialog *@
+    <Modal IsVisible="@showEditRecurring"
+           Title="Edit Recurring Instance"
+           OnClose="HideEditRecurring">
+        @if (editingRecurringItem != null)
+        {
+            <EditInstanceDialog
+                ScheduledDate="@editingRecurringItem.Date"
+                OriginalDescription="@editingRecurringItem.Description"
+                OriginalAmount="@editingRecurringItem.Amount.Amount"
+                OriginalCurrency="@editingRecurringItem.Amount.Currency"
+                IsSubmitting="@isSubmittingRecurring"
+                OnSave="SaveRecurringInstance"
+                OnCancel="HideEditRecurring" />
+        }
+    </Modal>
+
+    @* Skip recurring instance confirmation *@
+    <ConfirmDialog IsVisible="@showSkipRecurring"
+                   Title="Skip Recurring Transaction"
+                   Message="@($"Are you sure you want to skip this occurrence of '{skippingRecurringItem?.Description}' on {skippingRecurringItem?.Date.ToString("MMM d, yyyy")}?")"
+                   ConfirmText="Skip"
+                   IsProcessing="@isSkippingRecurring"
+                   OnConfirm="ConfirmSkipRecurring"
+                   OnCancel="CancelSkipRecurring" />
 </div>
 
 <style>
@@ -126,6 +166,10 @@
     .summary-item {
         font-weight: 500;
     }
+
+    .recurring-count {
+        color: #007bff;
+    }
 </style>
 
 @code {
@@ -134,19 +178,35 @@
 
     private AccountModel? account;
     private List<TransactionModel> transactions = new();
+    private List<RecurringInstanceModel> recurringInstances = new();
+    private List<TransactionListItem> allItems = new();
     private bool isLoading = true;
     private bool isSubmitting = false;
     private bool showAddTransaction = false;
     private TransactionModel? editingTransaction = null;
     private DateTime startDate = DateTime.Today.AddMonths(-1);
-    private DateTime endDate = DateTime.Today;
+    private DateTime endDate = DateTime.Today.AddMonths(1); // Include future for recurring
 
     // Delete confirmation state
     private bool showDeleteConfirm = false;
     private bool isDeleting = false;
     private TransactionModel? deletingTransaction = null;
 
-    private decimal totalAmount => transactions.Sum(t => t.Amount.Amount);
+    // Recurring instance state
+    private bool showEditRecurring = false;
+    private bool isSubmittingRecurring = false;
+    private TransactionListItem? editingRecurringItem = null;
+    private bool showSkipRecurring = false;
+    private bool isSkippingRecurring = false;
+    private TransactionListItem? skippingRecurringItem = null;
+
+    // Error handling state
+    private string? errorMessage;
+    private bool isRetrying;
+    private string? saveErrorMessage;
+
+    private decimal totalAmount => allItems.Sum(i => i.Amount.Amount);
+    private int recurringCount => allItems.Count(i => i.IsRecurring);
 
     private Guid previousAccountId;
 
@@ -157,22 +217,100 @@
         {
             previousAccountId = AccountId;
             await LoadAccount();
-            await LoadTransactions();
+            await LoadData();
         }
     }
 
     private async Task LoadAccount()
     {
-        account = await ApiService.GetAccountAsync(AccountId);
+        try
+        {
+            account = await ApiService.GetAccountAsync(AccountId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load account: {ex.Message}";
+        }
     }
 
-    private async Task LoadTransactions()
+    private async Task LoadData()
     {
         isLoading = true;
-        var start = DateOnly.FromDateTime(startDate);
-        var end = DateOnly.FromDateTime(endDate);
-        transactions = (await ApiService.GetTransactionsAsync(start, end, AccountId)).ToList();
-        isLoading = false;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var start = DateOnly.FromDateTime(startDate);
+            var end = DateOnly.FromDateTime(endDate);
+
+            // Load transactions and recurring instances in parallel
+            var transactionsTask = ApiService.GetTransactionsAsync(start, end, AccountId);
+            var recurringTask = ApiService.GetProjectedRecurringAsync(start, end, AccountId);
+
+            await Task.WhenAll(transactionsTask, recurringTask);
+
+            transactions = transactionsTask.Result.ToList();
+            recurringInstances = recurringTask.Result.Where(r => !r.IsSkipped).ToList();
+
+            // Merge into unified list
+            MergeTransactionsAndRecurring();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load transactions: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadAccount();
+            await LoadData();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private void MergeTransactionsAndRecurring()
+    {
+        allItems.Clear();
+
+        // Add actual transactions
+        foreach (var txn in transactions)
+        {
+            allItems.Add(TransactionListItem.FromTransaction(txn));
+        }
+
+        // Add recurring instances (only those that don't already have a realized transaction)
+        foreach (var instance in recurringInstances)
+        {
+            // Check if there's already a transaction on this date with same description
+            // This is a simple heuristic - could be enhanced with linking logic
+            var hasRealized = transactions.Any(t =>
+                t.Date == instance.ScheduledDate &&
+                t.Description == instance.Description);
+
+            if (!hasRealized)
+            {
+                allItems.Add(TransactionListItem.FromRecurringInstance(instance));
+            }
+        }
     }
 
     private void ShowAddTransaction()
@@ -181,21 +319,27 @@
         showAddTransaction = true;
     }
 
-    private void EditTransaction(TransactionModel txn)
+    private void EditTransaction(TransactionListItem item)
     {
-        editingTransaction = txn;
-        showAddTransaction = true;
+        // Find the original transaction
+        editingTransaction = transactions.FirstOrDefault(t => t.Id == item.Id);
+        if (editingTransaction != null)
+        {
+            showAddTransaction = true;
+        }
     }
 
     private void HideAddTransaction()
     {
         showAddTransaction = false;
         editingTransaction = null;
+        saveErrorMessage = null;
     }
 
     private async Task SaveTransaction(TransactionCreateModel transaction)
     {
         isSubmitting = true;
+        saveErrorMessage = null;
         StateHasChanged();
 
         try
@@ -206,8 +350,12 @@
             {
                 showAddTransaction = false;
                 editingTransaction = null;
-                await LoadTransactions();
+                await LoadData();
             }
+        }
+        catch (Exception ex)
+        {
+            saveErrorMessage = $"Failed to save transaction: {ex.Message}";
         }
         finally
         {
@@ -240,7 +388,7 @@
             // await ApiService.DeleteTransactionAsync(deletingTransaction.Id);
             showDeleteConfirm = false;
             deletingTransaction = null;
-            await LoadTransactions();
+            await LoadData();
         }
         finally
         {
@@ -252,6 +400,90 @@
     {
         showDeleteConfirm = false;
         deletingTransaction = null;
+    }
+
+    // Recurring instance methods
+    private void ShowEditRecurringInstance(TransactionListItem item)
+    {
+        editingRecurringItem = item;
+        showEditRecurring = true;
+    }
+
+    private void HideEditRecurring()
+    {
+        showEditRecurring = false;
+        editingRecurringItem = null;
+    }
+
+    private async Task SaveRecurringInstance(RecurringInstanceModifyModel model)
+    {
+        if (editingRecurringItem == null)
+        {
+            return;
+        }
+
+        isSubmittingRecurring = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ApiService.ModifyRecurringInstanceAsync(
+                editingRecurringItem.Id,
+                editingRecurringItem.Date,
+                model);
+
+            if (result != null)
+            {
+                showEditRecurring = false;
+                editingRecurringItem = null;
+                await LoadData();
+            }
+        }
+        finally
+        {
+            isSubmittingRecurring = false;
+        }
+    }
+
+    private void ShowSkipRecurringInstance(TransactionListItem item)
+    {
+        skippingRecurringItem = item;
+        showSkipRecurring = true;
+    }
+
+    private async Task ConfirmSkipRecurring()
+    {
+        if (skippingRecurringItem == null)
+        {
+            return;
+        }
+
+        isSkippingRecurring = true;
+        StateHasChanged();
+
+        try
+        {
+            var skipped = await ApiService.SkipRecurringInstanceAsync(
+                skippingRecurringItem.Id,
+                skippingRecurringItem.Date);
+
+            if (skipped)
+            {
+                showSkipRecurring = false;
+                skippingRecurringItem = null;
+                await LoadData();
+            }
+        }
+        finally
+        {
+            isSkippingRecurring = false;
+        }
+    }
+
+    private void CancelSkipRecurring()
+    {
+        showSkipRecurring = false;
+        skippingRecurringItem = null;
     }
 
     private void GoBack()

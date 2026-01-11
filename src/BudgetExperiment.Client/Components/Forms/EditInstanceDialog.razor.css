@@ -1,3 +1,34 @@
+.edit-instance-form {
+    padding: 0;
+}
+
+.instance-info {
+    background: #f0f9ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.instance-label {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.instance-date {
+    margin: 4px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.instance-series {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
 .form-group {
     margin-bottom: 15px;
 }
@@ -17,6 +48,7 @@
     border-radius: 6px;
     font-size: 0.95rem;
     transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -30,16 +62,24 @@
     color: #9ca3af;
 }
 
-.form-group input[type="number"] {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    font-variant-numeric: tabular-nums;
+.form-group-small {
+    max-width: 120px;
 }
 
-.help-text {
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-hint {
     display: block;
     margin-top: 4px;
-    color: #6b7280;
     font-size: 0.85rem;
+    color: #6b7280;
 }
 
 .form-actions {
@@ -87,26 +127,6 @@
 }
 
 .btn-secondary:disabled {
-    opacity: 0.5;
+    color: #9ca3af;
     cursor: not-allowed;
-}
-
-.form-error {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 10px 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 6px;
-    margin-bottom: 15px;
-}
-
-.form-error .error-icon {
-    flex-shrink: 0;
-}
-
-.form-error .error-text {
-    color: #dc2626;
-    font-size: 0.9rem;
 }

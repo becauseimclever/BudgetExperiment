@@ -1,5 +1,65 @@
 # Feature: Recurring Transactions
 
+## Implementation Status
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 1: Domain | ✅ Complete | Entities, value objects, repository interface |
+| Phase 2: Infrastructure | ✅ Complete | EF configs, migration, repository impl |
+| Phase 3: Application | ✅ Complete | DTOs, service, mapping |
+| Phase 4: API | ✅ Complete | Controller with all endpoints |
+| Phase 5: Client | ✅ Complete | Page, forms, nav, calendar integration |
+
+**Completed:** 2026-01-10
+
+### Files Created/Modified
+
+**Domain Layer:**
+- `RecurrenceFrequency.cs` - Enum (Daily, Weekly, BiWeekly, Monthly, Quarterly, Yearly)
+- `RecurrencePattern.cs` - Value object with factory methods and date calculation
+- `RecurringTransaction.cs` - Entity with CRUD and projection methods
+- `RecurringTransactionException.cs` - Entity for instance modifications
+- `ExceptionType.cs` - Enum (Modified, Skipped)
+- `IRecurringTransactionRepository.cs` - Repository interface
+- `Transaction.cs` - Extended with RecurringTransactionId link
+
+**Infrastructure Layer:**
+- `RecurringTransactionConfiguration.cs` - EF Core config
+- `RecurringTransactionExceptionConfiguration.cs` - EF Core config
+- `TransactionConfiguration.cs` - Updated with FK
+- `RecurringTransactionRepository.cs` - Repository implementation
+- `20260110070008_AddRecurringTransactions.cs` - Database migration
+
+**Application Layer:**
+- `RecurringTransactionDto.cs` - DTOs for create, update, response, instances
+- `DomainToDtoMapper.cs` - Extended with recurring transaction mapping
+- `RecurringTransactionService.cs` - Full service implementation
+
+**API Layer:**
+- `RecurringTransactionsController.cs` - REST controller with all endpoints
+- `RecurringTransactionsControllerTests.cs` - Integration tests
+
+**Client Layer:**
+- `RecurringTransactionModel.cs` - Client-side models
+- `RecurringInstanceModel.cs` - Model for recurring instances on calendar
+- `RecurringInstanceModifyModel.cs` - Model for modifying single instances
+- `TransactionListItem.cs` - Unified model for transactions and recurring instances
+- `IBudgetApiService.cs` - Extended with recurring transaction methods
+- `BudgetApiService.cs` - API client implementation
+- `RecurringTransactionForm.razor` - Create form component
+- `EditRecurringForm.razor` - Edit form component
+- `EditInstanceDialog.razor` - Dialog for editing single instance (parameter-based)
+- `Recurring.razor` - Main recurring transactions page
+- `CalendarDayModel.cs` - Extended with RecurringInstances
+- `Calendar.razor` - Extended with recurring instance display and edit/skip actions
+- `CalendarDay.razor` - Extended with recurring indicator
+- `DayDetail.razor` - Extended with recurring instance display and action buttons
+- `AccountTransactions.razor` - Extended to show recurring alongside regular transactions
+- `TransactionTable.razor` - Extended with recurring row support, indicators, edit/skip actions
+- `NavMenu.razor` - Added navigation link
+
+---
+
 ## Overview
 Enable users to define recurring transactions (e.g., payday deposits, monthly bills, subscriptions) that automatically generate transaction entries on a schedule.
 
@@ -279,6 +339,19 @@ Updates the series definition and clears future exceptions.
 - Show recurring transactions as projected entries in calendar view
 - Distinguish visually from actual transactions (e.g., dashed border, different color)
 
+#### AccountTransactionsIntegration
+- Recurring transactions appear in account transaction lists alongside regular transactions
+- Unified `TransactionListItem` model merges both types for display
+- Visual indicators:
+  - 🔄 emoji before recurring transaction descriptions
+  - Blue left border on recurring rows
+  - Subtle blue gradient background on recurring rows
+  - "modified" badge on instances with custom values
+- Summary shows: "Total: $X.XX | Count: N | 🔄 M recurring"
+- Recurring instances have Edit/Skip buttons instead of Edit/Delete
+- Date range defaults to 1 month past → 1 month future to show upcoming recurring
+- Avoids duplicates by checking if a realized transaction exists on the same date with same description
+
 ---
 
 ## Transaction Generation Strategy
@@ -299,52 +372,54 @@ Start with **Option A** for simplicity. Add background job later if needed.
 
 ## Implementation Plan (TDD Order)
 
-### Phase 1: Domain Layer
-1. [ ] Create `RecurrenceFrequency` enum
-2. [ ] Create `RecurrencePattern` value object with validation
-3. [ ] Create `RecurringTransaction` entity with domain logic
-4. [ ] Create `ExceptionType` enum
-5. [ ] Create `RecurringTransactionException` entity
-6. [ ] Add `IRecurringTransactionRepository` interface
-7. [ ] Add `IRecurringTransactionExceptionRepository` interface
-8. [ ] Unit tests for recurrence date calculation logic
-9. [ ] Unit tests for exception application logic (merging exceptions with series)
+### Phase 1: Domain Layer ✅
+1. [x] Create `RecurrenceFrequency` enum
+2. [x] Create `RecurrencePattern` value object with validation
+3. [x] Create `RecurringTransaction` entity with domain logic
+4. [x] Create `ExceptionType` enum
+5. [x] Create `RecurringTransactionException` entity
+6. [x] Add `IRecurringTransactionRepository` interface
+7. [x] ~~Add `IRecurringTransactionExceptionRepository` interface~~ (merged into IRecurringTransactionRepository)
+8. [x] Unit tests for recurrence date calculation logic
+9. [x] Unit tests for exception application logic (merging exceptions with series)
 
-### Phase 2: Infrastructure Layer
-1. [ ] Add `RecurringTransactionConfiguration` for EF Core
-2. [ ] Add `RecurringTransactionExceptionConfiguration` for EF Core
-3. [ ] Create migration for `RecurringTransactions` table
-4. [ ] Create migration for `RecurringTransactionExceptions` table
-5. [ ] Add `RecurringTransactionId` column to `Transactions` table
-6. [ ] Implement `RecurringTransactionRepository`
-7. [ ] Implement `RecurringTransactionExceptionRepository`
-8. [ ] Integration tests for repositories
+### Phase 2: Infrastructure Layer ✅
+1. [x] Add `RecurringTransactionConfiguration` for EF Core
+2. [x] Add `RecurringTransactionExceptionConfiguration` for EF Core
+3. [x] Create migration for `RecurringTransactions` table
+4. [x] Create migration for `RecurringTransactionExceptions` table
+5. [x] Add `RecurringTransactionId` column to `Transactions` table
+6. [x] Implement `RecurringTransactionRepository`
+7. [x] ~~Implement `RecurringTransactionExceptionRepository`~~ (merged into RecurringTransactionRepository)
+8. [x] Integration tests for repositories
 
-### Phase 3: Application Layer
-1. [ ] Create DTOs (request/response including instance DTOs)
-2. [ ] Create `IRecurringTransactionService` interface
-3. [ ] Implement `RecurringTransactionService`
-4. [ ] Implement instance projection logic (merge series + exceptions)
-5. [ ] Implement "edit this and future" logic (series update + exception cleanup)
-6. [ ] Add mapping extensions
-7. [ ] Unit tests with mocked repository
-8. [ ] Unit tests for exception merging scenarios
+### Phase 3: Application Layer ✅
+1. [x] Create DTOs (request/response including instance DTOs)
+2. [x] ~~Create `IRecurringTransactionService` interface~~ (using concrete class)
+3. [x] Implement `RecurringTransactionService`
+4. [x] Implement instance projection logic (merge series + exceptions)
+5. [x] Implement "edit this and future" logic (series update + exception cleanup)
+6. [x] Add mapping extensions
+7. [x] Unit tests with mocked repository
+8. [x] Unit tests for exception merging scenarios
 
-### Phase 4: API Layer
-1. [ ] Create `RecurringTransactionsController`
-2. [ ] Add validation
-3. [ ] Integration tests for endpoints
+### Phase 4: API Layer ✅
+1. [x] Create `RecurringTransactionsController`
+2. [x] Add validation
+3. [x] Integration tests for endpoints
 
-### Phase 5: Client Layer
-1. [ ] Create `IRecurringTransactionApi` interface
-2. [ ] Implement API client
-3. [ ] Create `RecurringTransactionsPage`
-4. [ ] Create `RecurringTransactionDialog` component
-5. [ ] Create `EditInstanceDialog` component with "this/future/all" prompt
-6. [ ] Add navigation menu item
-7. [ ] Integrate with calendar view (projected transactions)
-8. [ ] Add visual indicators for modified/skipped instances
-9. [ ] Wire up instance editing from calendar interactions
+### Phase 5: Client Layer ✅
+1. [x] ~~Create `IRecurringTransactionApi` interface~~ (extended IBudgetApiService)
+2. [x] Implement API client methods in BudgetApiService
+3. [x] Create `RecurringTransactionsPage` (Recurring.razor)
+4. [x] Create `RecurringTransactionForm` component
+5. [x] Create `EditRecurringForm` component
+6. [x] Add navigation menu item
+7. [x] Integrate with calendar view (projected transactions)
+8. [x] Add visual indicators for recurring instances on calendar
+9. [x] Wire up instance editing from calendar interactions (EditInstanceDialog, skip confirmation)
+10. [x] Integrate with account transaction lists (TransactionListItem, TransactionTable updates)
+11. [x] Show recurring transactions in AccountTransactions page with edit/skip support
 
 ---
 

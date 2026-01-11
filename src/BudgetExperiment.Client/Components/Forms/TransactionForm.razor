@@ -50,6 +50,15 @@
                @bind="DateValue" 
                required />
     </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="form-error">
+            <span class="error-icon">⚠️</span>
+            <span class="error-text">@ErrorMessage</span>
+        </div>
+    }
+
     <div class="form-actions">
         <button type="submit" class="btn-primary" disabled="@IsSubmitting">
             @if (IsSubmitting)
@@ -111,11 +120,41 @@
     public bool IsSubmitting { get; set; }
 
     /// <summary>
+    /// Gets or sets the error message to display.
+    /// </summary>
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    /// <summary>
     /// Gets or sets the initial date to use when creating a new transaction.
     /// This will be applied to the model when the component initializes.
     /// </summary>
     [Parameter]
     public DateOnly? InitialDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the fixed account ID (used when ShowAccountSelector is false).
+    /// </summary>
+    [Parameter]
+    public Guid? FixedAccountId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the initial description.
+    /// </summary>
+    [Parameter]
+    public string? InitialDescription { get; set; }
+
+    /// <summary>
+    /// Gets or sets the initial amount.
+    /// </summary>
+    [Parameter]
+    public decimal InitialAmount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the initial category.
+    /// </summary>
+    [Parameter]
+    public string? InitialCategory { get; set; }
 
     private DateTime DateValue
     {
@@ -124,10 +163,37 @@
     }
 
     private DateOnly? _lastAppliedInitialDate;
+    private bool _initialValuesApplied;
 
     /// <inheritdoc/>
     protected override void OnParametersSet()
     {
+        // Apply initial values if provided and not yet applied
+        if (!_initialValuesApplied)
+        {
+            if (FixedAccountId.HasValue)
+            {
+                Model.AccountId = FixedAccountId.Value;
+            }
+
+            if (!string.IsNullOrEmpty(InitialDescription))
+            {
+                Model.Description = InitialDescription;
+            }
+
+            if (InitialAmount != 0)
+            {
+                Model.Amount = InitialAmount;
+            }
+
+            if (!string.IsNullOrEmpty(InitialCategory))
+            {
+                Model.Category = InitialCategory;
+            }
+
+            _initialValuesApplied = true;
+        }
+
         // Apply initial date if provided and different from last applied
         if (InitialDate.HasValue && InitialDate != _lastAppliedInitialDate)
         {

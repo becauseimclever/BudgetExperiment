@@ -209,38 +209,38 @@ public async Task<TransferResponse> CreateTransferAsync(CreateTransferRequest re
 ## Implementation Plan (TDD Order)
 
 ### Phase 1: Domain Layer
-1. [ ] Add `TransferDirection` enum
-2. [ ] Extend `Transaction` entity with `TransferId` and `TransferDirection` properties
-3. [ ] Add domain validation (source ≠ destination, amount > 0)
-4. [ ] Add `GetByTransferIdAsync` to `ITransactionRepository`
-5. [ ] Unit tests for transfer validation logic
+1. [x] Add `TransferDirection` enum
+2. [x] Extend `Transaction` entity with `TransferId` and `TransferDirection` properties
+3. [x] Add domain validation (source ≠ destination, amount > 0)
+4. [x] Add `GetByTransferIdAsync` to `ITransactionRepository`
+5. [x] Unit tests for transfer validation logic
 
 ### Phase 2: Infrastructure Layer
-1. [ ] Update `TransactionConfiguration` for new columns
-2. [ ] Create migration adding `TransferId` and `TransferDirection` columns
-3. [ ] Add index on `TransferId` for efficient paired lookups
-4. [ ] Implement repository query for transfers
-5. [ ] Integration tests for transfer queries
+1. [x] Update `TransactionConfiguration` for new columns
+2. [x] Create migration adding `TransferId` and `TransferDirection` columns
+3. [x] Add index on `TransferId` for efficient paired lookups
+4. [x] Implement repository query for transfers
+5. [x] Integration tests for transfer queries
 
 ### Phase 3: Application Layer
-1. [ ] Create transfer DTOs (CreateTransferRequest, TransferResponse, etc.)
-2. [ ] Create `ITransferService` interface
-3. [ ] Implement `TransferService` with create/read/update/delete logic
-4. [ ] Ensure atomic operations (both transactions succeed or fail together)
-5. [ ] Unit tests with mocked repository
+1. [x] Create transfer DTOs (CreateTransferRequest, TransferResponse, etc.)
+2. [x] Create `ITransferService` interface
+3. [x] Implement `TransferService` with create/read/update/delete logic
+4. [x] Ensure atomic operations (both transactions succeed or fail together)
+5. [x] Unit tests with mocked repository
 
 ### Phase 4: API Layer
-1. [ ] Create `TransfersController`
-2. [ ] Add request validation (FluentValidation or data annotations)
-3. [ ] Integration tests for all endpoints
+1. [x] Create `TransfersController`
+2. [x] Add request validation (FluentValidation or data annotations)
+3. [x] Integration tests for all endpoints
 
 ### Phase 5: Client Layer
-1. [ ] Create `ITransferApi` interface
-2. [ ] Implement API client
-3. [ ] Create `TransferDialog` component
-4. [ ] Add transfer button to account UI
-5. [ ] Update transaction list to show transfer indicators
-6. [ ] Optional: Create transfers history page
+1. [x] Create `ITransferApi` interface
+2. [x] Implement API client
+3. [x] Create `TransferDialog` component
+4. [x] Add transfer button to account UI
+5. [x] Update transaction list to show transfer indicators
+6. [x] Optional: Create transfers history page
 
 ---
 

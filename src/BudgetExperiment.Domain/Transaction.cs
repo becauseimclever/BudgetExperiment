@@ -77,6 +77,21 @@ public sealed class Transaction
     public bool IsFromRecurringTransaction => this.RecurringTransactionId.HasValue;
 
     /// <summary>
+    /// Gets the identifier linking paired transfer transactions (null for non-transfer transactions).
+    /// </summary>
+    public Guid? TransferId { get; private set; }
+
+    /// <summary>
+    /// Gets the direction of this transaction in a transfer (null for non-transfer transactions).
+    /// </summary>
+    public TransferDirection? TransferDirection { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether this transaction is part of a transfer between accounts.
+    /// </summary>
+    public bool IsTransfer => this.TransferId.HasValue;
+
+    /// <summary>
     /// Creates a new transaction.
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
@@ -153,6 +168,38 @@ public sealed class Transaction
         var transaction = Create(accountId, amount, date, description, category);
         transaction.RecurringTransactionId = recurringTransactionId;
         transaction.RecurringInstanceDate = recurringInstanceDate;
+        return transaction;
+    }
+
+    /// <summary>
+    /// Creates a new transaction as part of an account transfer.
+    /// </summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="amount">The monetary amount (negative for source, positive for destination).</param>
+    /// <param name="date">The transaction date.</param>
+    /// <param name="description">The transaction description.</param>
+    /// <param name="transferId">The identifier linking paired transfer transactions.</param>
+    /// <param name="direction">The direction of this transaction in the transfer.</param>
+    /// <param name="category">Optional category.</param>
+    /// <returns>A new <see cref="Transaction"/> instance linked to a transfer.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public static Transaction CreateTransfer(
+        Guid accountId,
+        MoneyValue amount,
+        DateOnly date,
+        string description,
+        Guid transferId,
+        TransferDirection direction,
+        string? category = null)
+    {
+        if (transferId == Guid.Empty)
+        {
+            throw new DomainException("Transfer ID is required.");
+        }
+
+        var transaction = Create(accountId, amount, date, description, category);
+        transaction.TransferId = transferId;
+        transaction.TransferDirection = direction;
         return transaction;
     }
 

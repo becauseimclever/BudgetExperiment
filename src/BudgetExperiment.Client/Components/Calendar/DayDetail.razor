@@ -6,8 +6,41 @@
     <h3>Transactions for @SelectedDate.ToString("MMMM d, yyyy")</h3>
     <button class="add-button" @onclick="HandleAddClick">+ Add Transaction</button>
 
-    <TransactionTable Transactions="@Transactions"
-                      EmptyMessage="No transactions for this day." />
+    @if (RecurringInstances.Count > 0)
+    {
+        <div class="recurring-section">
+            <h4 class="section-title">🔄 Scheduled Recurring</h4>
+            <div class="recurring-list">
+                @foreach (var instance in RecurringInstances.Where(r => !r.IsSkipped))
+                {
+                    <div class="recurring-item @(instance.IsModified ? "modified" : "")" @onclick="() => SelectInstance(instance)">
+                        <div class="recurring-info">
+                            <span class="recurring-description">@instance.Description</span>
+                            <span class="recurring-account">@instance.AccountName</span>
+                        </div>
+                        <div class="recurring-right">
+                            <span class="recurring-amount @(instance.Amount.Amount >= 0 ? "positive" : "negative")">
+                                @FormatAmount(instance.Amount.Amount)
+                            </span>
+                            <div class="recurring-actions">
+                                <button class="btn-icon" @onclick="() => HandleEditInstance(instance)" @onclick:stopPropagation="true" title="Edit this occurrence">✏️</button>
+                                <button class="btn-icon btn-skip" @onclick="() => HandleSkipInstance(instance)" @onclick:stopPropagation="true" title="Skip this occurrence">⏭️</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="transactions-section">
+        @if (RecurringInstances.Count > 0)
+        {
+            <h4 class="section-title">💰 Actual Transactions</h4>
+        }
+        <TransactionTable Transactions="@Transactions"
+                          EmptyMessage="No transactions for this day." />
+    </div>
 </div>
 
 @code {
@@ -24,13 +57,52 @@
     public IReadOnlyList<TransactionModel> Transactions { get; set; } = Array.Empty<TransactionModel>();
 
     /// <summary>
+    /// The recurring transaction instances for the selected day.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<RecurringInstanceModel> RecurringInstances { get; set; } = Array.Empty<RecurringInstanceModel>();
+
+    /// <summary>
     /// Callback when the Add Transaction button is clicked.
     /// </summary>
     [Parameter]
     public EventCallback OnAddTransaction { get; set; }
 
+    /// <summary>
+    /// Callback when a recurring instance edit is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback<RecurringInstanceModel> OnEditInstance { get; set; }
+
+    /// <summary>
+    /// Callback when a recurring instance skip is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback<RecurringInstanceModel> OnSkipInstance { get; set; }
+
     private async Task HandleAddClick()
     {
         await OnAddTransaction.InvokeAsync();
+    }
+
+    private void SelectInstance(RecurringInstanceModel instance)
+    {
+        // Could expand for future detailed view
+    }
+
+    private async Task HandleEditInstance(RecurringInstanceModel instance)
+    {
+        await OnEditInstance.InvokeAsync(instance);
+    }
+
+    private async Task HandleSkipInstance(RecurringInstanceModel instance)
+    {
+        await OnSkipInstance.InvokeAsync(instance);
+    }
+
+    private static string FormatAmount(decimal amount)
+    {
+        var sign = amount >= 0 ? "+" : "";
+        return $"{sign}${Math.Abs(amount):N2}";
     }
 }

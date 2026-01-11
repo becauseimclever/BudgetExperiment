@@ -47,6 +47,9 @@ public static class DomainToDtoMapper
             Category = transaction.Category,
             CreatedAt = transaction.CreatedAt,
             UpdatedAt = transaction.UpdatedAt,
+            IsTransfer = transaction.IsTransfer,
+            TransferId = transaction.TransferId,
+            TransferDirection = transaction.TransferDirection?.ToString(),
         };
     }
 

@@ -5,10 +5,11 @@
 namespace BudgetExperiment.Domain;
 
 /// <summary>
-/// Repository interface for Transaction entity queries.
-/// Transactions are owned by Account aggregate, but we need direct queries for calendar views.
+/// Repository interface for Transaction entity.
+/// Transactions are owned by Account aggregate, but we need direct queries for calendar views
+/// and write operations for transfers.
 /// </summary>
-public interface ITransactionRepository : IReadRepository<Transaction>
+public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRepository<Transaction>
 {
     /// <summary>
     /// Gets transactions within a date range, optionally filtered by account.
@@ -36,5 +37,15 @@ public interface ITransactionRepository : IReadRepository<Transaction>
         int year,
         int month,
         Guid? accountId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the paired transactions for a transfer by the transfer identifier.
+    /// </summary>
+    /// <param name="transferId">The transfer identifier linking the paired transactions.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The source and destination transactions for the transfer, or empty if not found.</returns>
+    Task<IReadOnlyList<Transaction>> GetByTransferIdAsync(
+        Guid transferId,
         CancellationToken cancellationToken = default);
 }

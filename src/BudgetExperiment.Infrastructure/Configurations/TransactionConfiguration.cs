@@ -66,10 +66,17 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
             .HasForeignKey(t => t.RecurringTransactionId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Transfer link (nullable, logical grouping only - no FK)
+        builder.Property(t => t.TransferId);
+
+        builder.Property(t => t.TransferDirection)
+            .HasConversion<int?>();
+
         // Indexes for calendar queries
         builder.HasIndex(t => t.Date);
         builder.HasIndex(t => t.AccountId);
         builder.HasIndex(t => new { t.AccountId, t.Date });
         builder.HasIndex(t => t.RecurringTransactionId);
+        builder.HasIndex(t => t.TransferId);
     }
 }

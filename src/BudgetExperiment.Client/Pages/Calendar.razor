@@ -5,6 +5,7 @@
 
 @using BudgetExperiment.Client.Models
 @using BudgetExperiment.Client.Services
+@using BudgetExperiment.Client.Components.Common
 
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
@@ -29,11 +30,17 @@
         </select>
     </div>
 
+    <ErrorAlert Message="@errorMessage"
+                IsDismissible="true"
+                IsRetrying="@isRetrying"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError" />
+
     @if (isLoading)
     {
         <LoadingSpinner Message="Loading calendar..." />
     }
-    else
+    else if (errorMessage == null)
     {
         <CalendarGrid Days="@calendarDays"
                       SelectedDate="@selectedDate"
@@ -44,7 +51,10 @@
     {
         <DayDetail SelectedDate="@selectedDate.Value"
                    Transactions="@selectedDayTransactions"
-                   OnAddTransaction="ShowAddTransaction" />
+                   RecurringInstances="@selectedDayRecurring"
+                   OnAddTransaction="ShowAddTransaction"
+                   OnEditInstance="ShowEditInstance"
+                   OnSkipInstance="SkipInstance" />
     }
 
     <Modal IsVisible="@showAddTransaction" Title="Add Transaction" OnClose="HideAddTransaction">
@@ -56,6 +66,29 @@
             OnSubmit="@CreateTransaction"
             OnCancel="@HideAddTransaction" />
     </Modal>
+
+    <Modal IsVisible="@showEditInstance" Title="Edit This Occurrence" OnClose="HideEditInstance">
+        @if (editingInstance != null)
+        {
+            <EditInstanceDialog
+                ScheduledDate="@editingInstance.ScheduledDate"
+                OriginalDescription="@editingInstance.Description"
+                OriginalAmount="@editingInstance.Amount.Amount"
+                OriginalCurrency="@editingInstance.Amount.Currency"
+                AccountName="@editingInstance.AccountName"
+                IsSubmitting="@isSubmitting"
+                OnSave="@ModifyInstance"
+                OnCancel="@HideEditInstance" />
+        }
+    </Modal>
+
+    <ConfirmDialog IsVisible="@showSkipConfirm"
+                   Title="Skip This Occurrence"
+                   Message="@($"Skip '{skippingInstance?.Description}' on {skippingInstance?.ScheduledDate.ToString("MMMM d, yyyy")}? This won't affect other occurrences.")"
+                   ConfirmText="Skip"
+                   IsProcessing="@isSkipping"
+                   OnConfirm="ConfirmSkipInstance"
+                   OnCancel="CancelSkipInstance" />
 </div>
 
 <style>
@@ -108,13 +141,26 @@
     private Guid? filterAccountId => string.IsNullOrEmpty(selectedAccountId) ? null : Guid.Parse(selectedAccountId);
 
     private bool isLoading = true;
+    private bool isRetrying;
+    private string? errorMessage;
     private List<AccountModel> accounts = new();
     private List<CalendarDayModel> calendarDays = new();
     private Dictionary<DateOnly, DailyTotalModel> dailyTotals = new();
+    private Dictionary<DateOnly, List<RecurringInstanceModel>> recurringByDate = new();
     private List<TransactionModel> selectedDayTransactions = new();
+    private List<RecurringInstanceModel> selectedDayRecurring = new();
 
     private bool showAddTransaction = false;
     private bool isSubmitting = false;
+
+    // Instance editing state
+    private bool showEditInstance = false;
+    private RecurringInstanceModel? editingInstance;
+
+    // Instance skipping state
+    private bool showSkipConfirm = false;
+    private bool isSkipping = false;
+    private RecurringInstanceModel? skippingInstance;
 
     protected override async Task OnInitializedAsync()
     {
@@ -147,21 +193,72 @@
 
     private async Task LoadAccounts()
     {
-        accounts = (await ApiService.GetAccountsAsync()).ToList();
+        try
+        {
+            accounts = (await ApiService.GetAccountsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load accounts: {ex.Message}";
+        }
     }
 
     private async Task LoadCalendarData()
     {
         isLoading = true;
+        errorMessage = null;
         StateHasChanged();
 
-        var totals = await ApiService.GetCalendarSummaryAsync(currentDate.Year, currentDate.Month, filterAccountId);
-        dailyTotals = totals.ToDictionary(t => t.Date, t => t);
+        try
+        {
+            // Get the date range for the calendar grid (includes prev/next month days)
+            var firstOfMonth = new DateOnly(currentDate.Year, currentDate.Month, 1);
+            var startDayOfWeek = (int)firstOfMonth.DayOfWeek;
+            var gridStartDate = firstOfMonth.AddDays(-startDayOfWeek);
+            var gridEndDate = gridStartDate.AddDays(41); // 6 weeks
 
-        BuildCalendarDays();
+        // Fetch actual transaction totals
+            var totals = await ApiService.GetCalendarSummaryAsync(currentDate.Year, currentDate.Month, filterAccountId);
+            dailyTotals = totals.ToDictionary(t => t.Date, t => t);
 
-        isLoading = false;
+            // Fetch projected recurring transactions for the visible range
+            var projected = await ApiService.GetProjectedRecurringAsync(gridStartDate, gridEndDate, filterAccountId);
+            recurringByDate = projected
+                .GroupBy(p => p.ScheduledDate)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            BuildCalendarDays();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load calendar data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
         StateHasChanged();
+
+        try
+        {
+            await LoadAccounts();
+            await LoadCalendarData();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
     }
 
     private void BuildCalendarDays()
@@ -184,7 +281,8 @@
                 Date = date,
                 IsCurrentMonth = false,
                 IsToday = date == today,
-                DailyTotal = dailyTotals.GetValueOrDefault(date)
+                DailyTotal = dailyTotals.GetValueOrDefault(date),
+                RecurringInstances = recurringByDate.GetValueOrDefault(date) ?? new()
             });
         }
 
@@ -197,7 +295,8 @@
                 Date = date,
                 IsCurrentMonth = true,
                 IsToday = date == today,
-                DailyTotal = dailyTotals.GetValueOrDefault(date)
+                DailyTotal = dailyTotals.GetValueOrDefault(date),
+                RecurringInstances = recurringByDate.GetValueOrDefault(date) ?? new()
             });
         }
 
@@ -212,7 +311,8 @@
                 Date = date,
                 IsCurrentMonth = false,
                 IsToday = date == today,
-                DailyTotal = dailyTotals.GetValueOrDefault(date)
+                DailyTotal = dailyTotals.GetValueOrDefault(date),
+                RecurringInstances = recurringByDate.GetValueOrDefault(date) ?? new()
             });
         }
     }
@@ -221,6 +321,7 @@
     {
         selectedDate = date;
         selectedDayTransactions = (await ApiService.GetTransactionsAsync(date, date, filterAccountId)).ToList();
+        selectedDayRecurring = recurringByDate.GetValueOrDefault(date) ?? new();
     }
 
     private void PreviousMonth()
@@ -267,5 +368,98 @@
         {
             isSubmitting = false;
         }
+    }
+
+    // Instance editing methods
+    private void ShowEditInstance(RecurringInstanceModel instance)
+    {
+        editingInstance = instance;
+        showEditInstance = true;
+    }
+
+    private void HideEditInstance()
+    {
+        showEditInstance = false;
+        editingInstance = null;
+    }
+
+    private async Task ModifyInstance(RecurringInstanceModifyModel model)
+    {
+        if (editingInstance == null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ApiService.ModifyRecurringInstanceAsync(
+                editingInstance.RecurringTransactionId,
+                editingInstance.ScheduledDate,
+                model);
+
+            if (result != null)
+            {
+                showEditInstance = false;
+                editingInstance = null;
+                await LoadCalendarData();
+                if (selectedDate.HasValue)
+                {
+                    await SelectDate(selectedDate.Value);
+                }
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    // Instance skipping methods
+    private void SkipInstance(RecurringInstanceModel instance)
+    {
+        skippingInstance = instance;
+        showSkipConfirm = true;
+    }
+
+    private async Task ConfirmSkipInstance()
+    {
+        if (skippingInstance == null)
+        {
+            return;
+        }
+
+        isSkipping = true;
+        StateHasChanged();
+
+        try
+        {
+            var skipped = await ApiService.SkipRecurringInstanceAsync(
+                skippingInstance.RecurringTransactionId,
+                skippingInstance.ScheduledDate);
+
+            if (skipped)
+            {
+                showSkipConfirm = false;
+                skippingInstance = null;
+                await LoadCalendarData();
+                if (selectedDate.HasValue)
+                {
+                    await SelectDate(selectedDate.Value);
+                }
+            }
+        }
+        finally
+        {
+            isSkipping = false;
+        }
+    }
+
+    private void CancelSkipInstance()
+    {
+        showSkipConfirm = false;
+        skippingInstance = null;
     }
 }

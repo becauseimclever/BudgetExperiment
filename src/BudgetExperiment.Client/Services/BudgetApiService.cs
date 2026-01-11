@@ -288,4 +288,76 @@ public sealed class BudgetApiService : IBudgetApiService
 
         return null;
     }
+
+    /// <inheritdoc />
+    public async Task<TransferModel?> CreateTransferAsync(TransferCreateModel model)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/transfers", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<TransferModel>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<TransferModel?> GetTransferAsync(Guid transferId)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<TransferModel>($"api/v1/transfers/{transferId}", JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TransferListItemModel>> GetTransfersAsync(
+        Guid? accountId = null,
+        DateOnly? from = null,
+        DateOnly? to = null,
+        int page = 1,
+        int pageSize = 20)
+    {
+        var url = $"api/v1/transfers?page={page}&pageSize={pageSize}";
+        if (accountId.HasValue)
+        {
+            url += $"&accountId={accountId.Value}";
+        }
+
+        if (from.HasValue)
+        {
+            url += $"&from={from.Value:yyyy-MM-dd}";
+        }
+
+        if (to.HasValue)
+        {
+            url += $"&to={to.Value:yyyy-MM-dd}";
+        }
+
+        var result = await this._httpClient.GetFromJsonAsync<List<TransferListItemModel>>(url, JsonOptions);
+        return result ?? new List<TransferListItemModel>();
+    }
+
+    /// <inheritdoc />
+    public async Task<TransferModel?> UpdateTransferAsync(Guid transferId, TransferUpdateModel model)
+    {
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/transfers/{transferId}", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<TransferModel>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteTransferAsync(Guid transferId)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/transfers/{transferId}");
+        return response.IsSuccessStatusCode;
+    }
 }

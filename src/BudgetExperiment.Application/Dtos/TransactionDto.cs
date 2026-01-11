@@ -32,6 +32,15 @@ public sealed class TransactionDto
 
     /// <summary>Gets or sets the last update timestamp (UTC).</summary>
     public DateTime UpdatedAt { get; set; }
+
+    /// <summary>Gets or sets whether this transaction is part of a transfer.</summary>
+    public bool IsTransfer { get; set; }
+
+    /// <summary>Gets or sets the transfer identifier (null if not a transfer).</summary>
+    public Guid? TransferId { get; set; }
+
+    /// <summary>Gets or sets the transfer direction (null if not a transfer).</summary>
+    public string? TransferDirection { get; set; }
 }
 
 /// <summary>

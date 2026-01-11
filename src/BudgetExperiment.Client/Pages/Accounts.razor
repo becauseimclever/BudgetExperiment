@@ -2,6 +2,7 @@
 
 @using BudgetExperiment.Client.Models
 @using BudgetExperiment.Client.Services
+@using BudgetExperiment.Client.Components.Common
 
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
@@ -11,19 +12,25 @@
 <div class="accounts-container">
     <PageHeader Title="Accounts">
         <Actions>
+            <button class="transfer-button" @onclick="ShowTransfer">↔ Transfer</button>
             <button class="add-button" @onclick="ShowAddAccount">+ Add Account</button>
         </Actions>
     </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
 
     @if (isLoading)
     {
         <LoadingSpinner Message="Loading accounts..." />
     }
-    else if (accounts.Count == 0)
+    else if (accounts.Count == 0 && errorMessage == null)
     {
         <p class="empty-message">No accounts yet. Create one to get started!</p>
     }
-    else
+    else if (errorMessage == null)
     {
         <div class="accounts-grid">
             @foreach (var account in accounts)
@@ -34,6 +41,7 @@
                         <span class="account-type">@account.Type</span>
                     </div>
                     <div class="account-actions">
+                        <button class="btn-transfer" @onclick="() => ShowTransferFrom(account.Id)" title="Transfer from this account">↔</button>
                         <button class="btn-view" @onclick="() => ViewAccount(account.Id)">Transactions</button>
                         <button class="btn-delete" @onclick="() => DeleteAccount(account.Id)">Delete</button>
                     </div>
@@ -47,6 +55,14 @@
                      OnSubmit="CreateAccount"
                      OnCancel="HideAddAccount"
                      IsSubmitting="@isSubmitting" />
+    </Modal>
+
+    <Modal IsVisible="@showTransfer" Title="Transfer Between Accounts" OnClose="HideTransfer">
+        <TransferDialog Accounts="@accounts"
+                        Model="@newTransfer"
+                        PreSelectedSourceAccountId="@preSelectedSourceAccountId"
+                        OnCreate="CreateTransfer"
+                        OnCancel="HideTransfer" />
     </Modal>
 
     <ConfirmDialog IsVisible="@showDeleteConfirm"
@@ -82,6 +98,20 @@
 
     .add-button:hover {
         background: #218838;
+    }
+
+    .transfer-button {
+        padding: 10px 20px;
+        background: #6366f1;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+
+    .transfer-button:hover {
+        background: #4f46e5;
     }
 
     .accounts-grid {
@@ -126,6 +156,20 @@
         background: #0056b3;
     }
 
+    .btn-transfer {
+        padding: 6px 10px;
+        background: #6366f1;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-transfer:hover {
+        background: #4f46e5;
+    }
+
     .btn-delete {
         padding: 6px 12px;
         background: #dc3545;
@@ -142,10 +186,17 @@
 
 @code {
     private bool isLoading = true;
+    private bool isRetrying;
     private bool isSubmitting = false;
+    private string? errorMessage;
     private List<AccountModel> accounts = new();
     private bool showAddAccount = false;
     private AccountCreateModel newAccount = new();
+
+    // Transfer state
+    private bool showTransfer = false;
+    private TransferCreateModel newTransfer = new();
+    private Guid? preSelectedSourceAccountId = null;
 
     // Delete confirmation state
     private bool showDeleteConfirm = false;
@@ -160,8 +211,40 @@
     private async Task LoadAccounts()
     {
         isLoading = true;
-        accounts = (await ApiService.GetAccountsAsync()).ToList();
-        isLoading = false;
+        errorMessage = null;
+
+        try
+        {
+            accounts = (await ApiService.GetAccountsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load accounts: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadAccounts();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
     }
 
     private void ShowAddAccount()
@@ -173,6 +256,36 @@
     private void HideAddAccount()
     {
         showAddAccount = false;
+    }
+
+    private void ShowTransfer()
+    {
+        preSelectedSourceAccountId = null;
+        newTransfer = new TransferCreateModel();
+        showTransfer = true;
+    }
+
+    private void ShowTransferFrom(Guid accountId)
+    {
+        preSelectedSourceAccountId = accountId;
+        newTransfer = new TransferCreateModel { SourceAccountId = accountId };
+        showTransfer = true;
+    }
+
+    private void HideTransfer()
+    {
+        showTransfer = false;
+        preSelectedSourceAccountId = null;
+    }
+
+    private async Task CreateTransfer(TransferCreateModel model)
+    {
+        var result = await ApiService.CreateTransferAsync(model);
+        if (result != null)
+        {
+            showTransfer = false;
+            // Optionally navigate to the transaction view or show a success message
+        }
     }
 
     private async Task CreateAccount(AccountCreateModel model)

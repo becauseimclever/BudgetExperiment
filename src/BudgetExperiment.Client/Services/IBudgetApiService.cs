@@ -151,4 +151,49 @@ public interface IBudgetApiService
     /// <param name="model">The modification data.</param>
     /// <returns>The modified instance.</returns>
     Task<RecurringInstanceModel?> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyModel model);
+
+    /// <summary>
+    /// Creates a new transfer between accounts.
+    /// </summary>
+    /// <param name="model">The transfer creation data.</param>
+    /// <returns>The created transfer.</returns>
+    Task<TransferModel?> CreateTransferAsync(TransferCreateModel model);
+
+    /// <summary>
+    /// Gets a transfer by its identifier.
+    /// </summary>
+    /// <param name="transferId">The transfer identifier.</param>
+    /// <returns>The transfer or null if not found.</returns>
+    Task<TransferModel?> GetTransferAsync(Guid transferId);
+
+    /// <summary>
+    /// Gets a list of transfers with optional filtering.
+    /// </summary>
+    /// <param name="accountId">Optional filter by account.</param>
+    /// <param name="from">Optional start date filter.</param>
+    /// <param name="to">Optional end date filter.</param>
+    /// <param name="page">Page number (1-based).</param>
+    /// <param name="pageSize">Page size.</param>
+    /// <returns>List of transfer items.</returns>
+    Task<IReadOnlyList<TransferListItemModel>> GetTransfersAsync(
+        Guid? accountId = null,
+        DateOnly? from = null,
+        DateOnly? to = null,
+        int page = 1,
+        int pageSize = 20);
+
+    /// <summary>
+    /// Updates an existing transfer.
+    /// </summary>
+    /// <param name="transferId">The transfer identifier.</param>
+    /// <param name="model">The update data.</param>
+    /// <returns>The updated transfer or null if not found.</returns>
+    Task<TransferModel?> UpdateTransferAsync(Guid transferId, TransferUpdateModel model);
+
+    /// <summary>
+    /// Deletes a transfer.
+    /// </summary>
+    /// <param name="transferId">The transfer identifier.</param>
+    /// <returns>True if deleted successfully.</returns>
+    Task<bool> DeleteTransferAsync(Guid transferId);
 }

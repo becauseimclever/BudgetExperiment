@@ -1,0 +1,265 @@
+@* TransferDialog.razor - Dialog for creating or editing account transfers *@
+
+@using BudgetExperiment.Client.Models
+
+<div class="transfer-dialog">
+    <div class="dialog-header">
+        <h2>@(IsEdit ? "Edit Transfer" : "Transfer Between Accounts")</h2>
+    </div>
+
+    <form @onsubmit="HandleSubmit">
+        @if (!IsEdit)
+        {
+            <div class="form-group">
+                <label for="fromAccount">From Account:</label>
+                <select id="fromAccount" @bind="Model.SourceAccountId" required>
+                    <option value="">Select source account</option>
+                    @foreach (var account in Accounts.Where(a => a.Id != Model.DestinationAccountId || Model.DestinationAccountId == Guid.Empty))
+                    {
+                        <option value="@account.Id">@account.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="toAccount">To Account:</label>
+                <select id="toAccount" @bind="Model.DestinationAccountId" required>
+                    <option value="">Select destination account</option>
+                    @foreach (var account in Accounts.Where(a => a.Id != Model.SourceAccountId || Model.SourceAccountId == Guid.Empty))
+                    {
+                        <option value="@account.Id">@account.Name</option>
+                    }
+                </select>
+            </div>
+        }
+        else
+        {
+            <div class="transfer-info">
+                <p><strong>From:</strong> @SourceAccountName</p>
+                <p><strong>To:</strong> @DestinationAccountName</p>
+            </div>
+        }
+
+        <div class="form-row">
+            <div class="form-group form-group-amount">
+                <label for="amount">Amount:</label>
+                <input id="amount"
+                       type="number"
+                       step="0.01"
+                       min="0.01"
+                       @bind="Amount"
+                       placeholder="0.00"
+                       required />
+            </div>
+            <div class="form-group form-group-currency">
+                <label for="currency">Currency:</label>
+                <select id="currency" @bind="Currency">
+                    <option value="USD">USD</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="date">Date:</label>
+            <input id="date"
+                   type="date"
+                   @bind="DateValue"
+                   required />
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description (optional):</label>
+            <input id="description"
+                   type="text"
+                   @bind="Description"
+                   placeholder="e.g., Move to savings" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="error-message">
+                @ErrorMessage
+            </div>
+        }
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+                @if (IsSubmitting)
+                {
+                    <span>Processing...</span>
+                }
+                else
+                {
+                    <span>@(IsEdit ? "Update Transfer" : "Transfer")</span>
+                }
+            </button>
+            <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the list of accounts for selection.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<AccountModel> Accounts { get; set; } = Array.Empty<AccountModel>();
+
+    /// <summary>
+    /// Gets or sets whether this is an edit operation.
+    /// </summary>
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the source account name (for edit mode display).
+    /// </summary>
+    [Parameter]
+    public string? SourceAccountName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the destination account name (for edit mode display).
+    /// </summary>
+    [Parameter]
+    public string? DestinationAccountName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the create model (for new transfers).
+    /// </summary>
+    [Parameter]
+    public TransferCreateModel Model { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the update model (for editing).
+    /// </summary>
+    [Parameter]
+    public TransferUpdateModel? UpdateModel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a transfer is created.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransferCreateModel> OnCreate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a transfer is updated.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransferUpdateModel> OnUpdate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when cancel is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the pre-selected source account ID.
+    /// </summary>
+    [Parameter]
+    public Guid? PreSelectedSourceAccountId { get; set; }
+
+    private decimal Amount { get; set; }
+    private string Currency { get; set; } = "USD";
+    private DateTime DateValue { get; set; } = DateTime.Today;
+    private string? Description { get; set; }
+    private bool IsSubmitting { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        if (IsEdit && UpdateModel != null)
+        {
+            Amount = UpdateModel.Amount;
+            Currency = UpdateModel.Currency;
+            DateValue = UpdateModel.Date.ToDateTime(TimeOnly.MinValue);
+            Description = UpdateModel.Description;
+        }
+        else
+        {
+            if (PreSelectedSourceAccountId.HasValue)
+            {
+                Model.SourceAccountId = PreSelectedSourceAccountId.Value;
+            }
+
+            Amount = Model.Amount > 0 ? Model.Amount : 0;
+            Currency = Model.Currency;
+            DateValue = Model.Date.ToDateTime(TimeOnly.MinValue);
+            Description = Model.Description;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        ErrorMessage = null;
+
+        // Validate
+        if (!IsEdit)
+        {
+            if (Model.SourceAccountId == Guid.Empty)
+            {
+                ErrorMessage = "Please select a source account.";
+                return;
+            }
+
+            if (Model.DestinationAccountId == Guid.Empty)
+            {
+                ErrorMessage = "Please select a destination account.";
+                return;
+            }
+
+            if (Model.SourceAccountId == Model.DestinationAccountId)
+            {
+                ErrorMessage = "Source and destination accounts must be different.";
+                return;
+            }
+        }
+
+        if (Amount <= 0)
+        {
+            ErrorMessage = "Amount must be greater than zero.";
+            return;
+        }
+
+        IsSubmitting = true;
+
+        try
+        {
+            if (IsEdit)
+            {
+                var updateModel = new TransferUpdateModel
+                {
+                    Amount = Amount,
+                    Currency = Currency,
+                    Date = DateOnly.FromDateTime(DateValue),
+                    Description = Description,
+                };
+                await OnUpdate.InvokeAsync(updateModel);
+            }
+            else
+            {
+                Model.Amount = Amount;
+                Model.Currency = Currency;
+                Model.Date = DateOnly.FromDateTime(DateValue);
+                Model.Description = Description;
+                await OnCreate.InvokeAsync(Model);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

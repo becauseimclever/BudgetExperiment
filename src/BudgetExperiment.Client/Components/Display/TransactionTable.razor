@@ -2,7 +2,7 @@
 
 @using BudgetExperiment.Client.Models
 
-@if (Transactions == null || Transactions.Count == 0)
+@if ((Transactions == null || Transactions.Count == 0) && (Items == null || Items.Count == 0))
 {
     <p class="empty-message">@EmptyMessage</p>
 }
@@ -25,26 +25,97 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var txn in OrderedTransactions)
+            @if (Items != null && Items.Count > 0)
             {
-                <tr>
-                    @if (ShowDate)
-                    {
-                        <td>@txn.Date.ToString("MMM d, yyyy")</td>
-                    }
-                    <td>@txn.Description</td>
-                    <td>@(txn.Category ?? "-")</td>
-                    <td class="amount-col">
-                        <MoneyDisplay Amount="@txn.Amount.Amount" />
-                    </td>
-                    @if (ShowActions)
-                    {
-                        <td class="actions-col">
-                            <button class="btn-edit" @onclick="() => OnEdit.InvokeAsync(txn)">Edit</button>
-                            <button class="btn-delete" @onclick="() => OnDelete.InvokeAsync(txn.Id)">Delete</button>
+                @foreach (var item in OrderedItems)
+                {
+                    <tr class="@GetRowClass(item)">>
+                        @if (ShowDate)
+                        {
+                            <td>
+                                @item.Date.ToString("MMM d, yyyy")
+                                @if (item.IsRecurring)
+                                {
+                                    <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")">🔄</span>
+                                }
+                                @if (item.IsTransfer)
+                                {
+                                    <span class="transfer-indicator" title="@GetTransferTooltip(item)">↔️</span>
+                                }
+                            </td>
+                        }
+                        <td>
+                            @if (!ShowDate && item.IsRecurring)
+                            {
+                                <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")">🔄</span>
+                            }
+                            @if (item.IsTransfer)
+                            {
+                                <span class="transfer-indicator" title="@GetTransferTooltip(item)">↔️</span>
+                            }
+                            @item.Description
+                            @if (item.IsModified)
+                            {
+                                <span class="modified-badge">modified</span>
+                            }
                         </td>
-                    }
-                </tr>
+                        <td>@(item.Category ?? "-")</td>
+                        <td class="amount-col">
+                            <MoneyDisplay Amount="@item.Amount.Amount" />
+                        </td>
+                        @if (ShowActions)
+                        {
+                            <td class="actions-col">
+                                @if (item.IsRecurring)
+                                {
+                                    <button class="btn-edit" @onclick="() => OnEditRecurring.InvokeAsync(item)">Edit</button>
+                                    <button class="btn-skip" @onclick="() => OnSkipRecurring.InvokeAsync(item)">Skip</button>
+                                }
+                                else
+                                {
+                                    <button class="btn-edit" @onclick="() => OnEditItem.InvokeAsync(item)">Edit</button>
+                                    <button class="btn-delete" @onclick="() => OnDeleteItem.InvokeAsync(item.Id)">Delete</button>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+            else
+            {
+                @foreach (var txn in OrderedTransactions)
+                {
+                    <tr class="@(txn.IsTransfer ? "transfer-row" : "")">
+                        @if (ShowDate)
+                        {
+                            <td>
+                                @txn.Date.ToString("MMM d, yyyy")
+                                @if (txn.IsTransfer)
+                                {
+                                    <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)">↔️</span>
+                                }
+                            </td>
+                        }
+                        <td>
+                            @if (!ShowDate && txn.IsTransfer)
+                            {
+                                <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)">↔️</span>
+                            }
+                            @txn.Description
+                        </td>
+                        <td>@(txn.Category ?? "-")</td>
+                        <td class="amount-col">
+                            <MoneyDisplay Amount="@txn.Amount.Amount" />
+                        </td>
+                        @if (ShowActions)
+                        {
+                            <td class="actions-col">
+                                <button class="btn-edit" @onclick="() => OnEdit.InvokeAsync(txn)">Edit</button>
+                                <button class="btn-delete" @onclick="() => OnDelete.InvokeAsync(txn.Id)">Delete</button>
+                            </td>
+                        }
+                    </tr>
+                }
             }
         </tbody>
     </table>
@@ -52,10 +123,17 @@ else
 
 @code {
     /// <summary>
-    /// The list of transactions to display.
+    /// The list of transactions to display (legacy mode).
     /// </summary>
     [Parameter]
     public IReadOnlyList<TransactionModel> Transactions { get; set; } = new List<TransactionModel>();
+
+    /// <summary>
+    /// The list of unified transaction items to display (new mode - includes recurring).
+    /// When provided, this takes precedence over Transactions.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<TransactionListItem>? Items { get; set; }
 
     /// <summary>
     /// Whether to show the date column. Default is false (useful when all transactions are for the same day).
@@ -76,19 +154,81 @@ else
     public string EmptyMessage { get; set; } = "No transactions found.";
 
     /// <summary>
-    /// Callback when Edit button is clicked.
+    /// Callback when Edit button is clicked (legacy mode).
     /// </summary>
     [Parameter]
     public EventCallback<TransactionModel> OnEdit { get; set; }
 
     /// <summary>
-    /// Callback when Delete button is clicked.
+    /// Callback when Delete button is clicked (legacy mode).
     /// </summary>
     [Parameter]
     public EventCallback<Guid> OnDelete { get; set; }
+
+    /// <summary>
+    /// Callback when Edit button is clicked for an item (new mode).
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransactionListItem> OnEditItem { get; set; }
+
+    /// <summary>
+    /// Callback when Delete button is clicked for an item (new mode).
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDeleteItem { get; set; }
+
+    /// <summary>
+    /// Callback when Edit button is clicked for a recurring instance.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransactionListItem> OnEditRecurring { get; set; }
+
+    /// <summary>
+    /// Callback when Skip button is clicked for a recurring instance.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransactionListItem> OnSkipRecurring { get; set; }
 
     private IEnumerable<TransactionModel> OrderedTransactions =>
         ShowDate
             ? Transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
             : Transactions;
+
+    private IEnumerable<TransactionListItem> OrderedItems =>
+        Items == null
+            ? Enumerable.Empty<TransactionListItem>()
+            : ShowDate
+                ? Items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue)
+                : Items;
+
+    private static string GetTransferTooltip(TransactionListItem item)
+    {
+        var direction = item.TransferDirection?.ToLowerInvariant() ?? "unknown";
+        return direction == "source"
+            ? "Transfer: Money sent to another account"
+            : "Transfer: Money received from another account";
+    }
+
+    private static string GetTransactionTransferTooltip(TransactionModel txn)
+    {
+        var direction = txn.TransferDirection?.ToLowerInvariant() ?? "unknown";
+        return direction == "source"
+            ? "Transfer: Money sent to another account"
+            : "Transfer: Money received from another account";
+    }
+
+    private static string GetRowClass(TransactionListItem item)
+    {
+        if (item.IsRecurring)
+        {
+            return "recurring-row";
+        }
+
+        if (item.IsTransfer)
+        {
+            return "transfer-row";
+        }
+
+        return string.Empty;
+    }
 }

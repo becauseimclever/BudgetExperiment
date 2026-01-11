@@ -108,4 +108,29 @@ internal sealed class TransactionRepository : ITransactionRepository
                 d.Count))
             .ToList();
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetByTransferIdAsync(
+        Guid transferId,
+        CancellationToken cancellationToken = default)
+    {
+        return await this._context.Transactions
+            .Where(t => t.TransferId == transferId)
+            .OrderBy(t => t.TransferDirection)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task AddAsync(Transaction entity, CancellationToken cancellationToken = default)
+    {
+        this._context.Transactions.Add(entity);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task RemoveAsync(Transaction entity, CancellationToken cancellationToken = default)
+    {
+        this._context.Transactions.Remove(entity);
+        return Task.CompletedTask;
+    }
 }

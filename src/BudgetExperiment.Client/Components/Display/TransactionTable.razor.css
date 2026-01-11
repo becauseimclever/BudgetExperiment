@@ -67,3 +67,56 @@
 .btn-delete:hover {
     background: #c82333;
 }
+
+.btn-skip {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-skip:hover {
+    background: #5a6268;
+}
+
+/* Recurring transaction styles */
+.recurring-row {
+    background: linear-gradient(90deg, rgba(0, 123, 255, 0.05) 0%, transparent 100%);
+    border-left: 3px solid #007bff;
+}
+
+.recurring-row:hover {
+    background: linear-gradient(90deg, rgba(0, 123, 255, 0.1) 0%, #f8f9fa 100%);
+}
+
+.recurring-indicator {
+    font-size: 0.85rem;
+    margin-right: 4px;
+    cursor: help;
+}
+
+.modified-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    margin-left: 6px;
+    background: #ffc107;
+    color: #212529;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+/* Transfer transaction styles */
+.transfer-row {
+    background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, transparent 100%);
+    border-left: 3px solid #28a745;
+}
+
+.transfer-row:hover {
+    background: linear-gradient(90deg, rgba(40, 167, 69, 0.1) 0%, #f8f9fa 100%);
+}
+
+.transfer-indicator {
+    font-size: 0.85rem;
+    margin-right: 4px;
+    cursor: help;
+    color: #28a745;
+}

@@ -382,4 +382,126 @@ public class TransactionTests
         // Act & Assert
         Assert.False(transaction.IsFromRecurringTransaction);
     }
+
+    [Fact]
+    public void Create_Regular_Transaction_Has_Null_TransferId()
+    {
+        // Arrange & Act
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Regular transaction");
+
+        // Assert
+        Assert.Null(transaction.TransferId);
+        Assert.Null(transaction.TransferDirection);
+        Assert.False(transaction.IsTransfer);
+    }
+
+    [Fact]
+    public void CreateTransfer_With_Valid_Data_Creates_Source_Transaction()
+    {
+        // Arrange
+        var transferId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", -500m);
+        var date = new DateOnly(2026, 1, 10);
+        var description = "Transfer to Savings";
+
+        // Act
+        var transaction = Transaction.CreateTransfer(
+            accountId,
+            amount,
+            date,
+            description,
+            transferId,
+            TransferDirection.Source);
+
+        // Assert
+        Assert.NotEqual(Guid.Empty, transaction.Id);
+        Assert.Equal(accountId, transaction.AccountId);
+        Assert.Equal(amount, transaction.Amount);
+        Assert.Equal(date, transaction.Date);
+        Assert.Equal(description, transaction.Description);
+        Assert.Equal(transferId, transaction.TransferId);
+        Assert.Equal(TransferDirection.Source, transaction.TransferDirection);
+        Assert.True(transaction.IsTransfer);
+    }
+
+    [Fact]
+    public void CreateTransfer_With_Valid_Data_Creates_Destination_Transaction()
+    {
+        // Arrange
+        var transferId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var amount = MoneyValue.Create("USD", 500m);
+        var date = new DateOnly(2026, 1, 10);
+        var description = "Transfer from Checking";
+
+        // Act
+        var transaction = Transaction.CreateTransfer(
+            accountId,
+            amount,
+            date,
+            description,
+            transferId,
+            TransferDirection.Destination);
+
+        // Assert
+        Assert.NotEqual(Guid.Empty, transaction.Id);
+        Assert.Equal(accountId, transaction.AccountId);
+        Assert.Equal(amount, transaction.Amount);
+        Assert.Equal(date, transaction.Date);
+        Assert.Equal(description, transaction.Description);
+        Assert.Equal(transferId, transaction.TransferId);
+        Assert.Equal(TransferDirection.Destination, transaction.TransferDirection);
+        Assert.True(transaction.IsTransfer);
+    }
+
+    [Fact]
+    public void CreateTransfer_With_Empty_TransferId_Throws()
+    {
+        // Arrange & Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            Transaction.CreateTransfer(
+                Guid.NewGuid(),
+                MoneyValue.Create("USD", 500m),
+                new DateOnly(2026, 1, 10),
+                "Transfer",
+                Guid.Empty,
+                TransferDirection.Source));
+
+        Assert.Contains("Transfer ID is required", ex.Message);
+    }
+
+    [Fact]
+    public void IsTransfer_Returns_True_When_TransferId_Set()
+    {
+        // Arrange
+        var transaction = Transaction.CreateTransfer(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 500m),
+            new DateOnly(2026, 1, 10),
+            "Transfer",
+            Guid.NewGuid(),
+            TransferDirection.Destination);
+
+        // Act & Assert
+        Assert.True(transaction.IsTransfer);
+    }
+
+    [Fact]
+    public void IsTransfer_Returns_False_When_TransferId_Null()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Regular");
+
+        // Act & Assert
+        Assert.False(transaction.IsTransfer);
+    }
 }

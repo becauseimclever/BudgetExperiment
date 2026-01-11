@@ -1,0 +1,84 @@
+@* ErrorAlert.razor - Reusable error display component with retry support *@
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="error-alert @(IsDismissible ? "dismissible" : "")">
+        <div class="error-content">
+            <span class="error-icon">⚠️</span>
+            <div class="error-text">
+                <span class="error-message">@Message</span>
+                @if (!string.IsNullOrEmpty(Details))
+                {
+                    <span class="error-details">@Details</span>
+                }
+            </div>
+        </div>
+        <div class="error-actions">
+            @if (OnRetry.HasDelegate)
+            {
+                <button class="btn-retry" @onclick="HandleRetry" disabled="@IsRetrying">
+                    @if (IsRetrying)
+                    {
+                        <span>Retrying...</span>
+                    }
+                    else
+                    {
+                        <span>🔄 Retry</span>
+                    }
+                </button>
+            }
+            @if (IsDismissible && OnDismiss.HasDelegate)
+            {
+                <button class="btn-dismiss" @onclick="HandleDismiss" title="Dismiss">✕</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the error message to display.
+    /// </summary>
+    [Parameter]
+    public string? Message { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional error details (optional).
+    /// </summary>
+    [Parameter]
+    public string? Details { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the alert can be dismissed.
+    /// </summary>
+    [Parameter]
+    public bool IsDismissible { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets whether a retry operation is in progress.
+    /// </summary>
+    [Parameter]
+    public bool IsRetrying { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when retry is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when dismiss is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    private async Task HandleRetry()
+    {
+        await OnRetry.InvokeAsync();
+    }
+
+    private async Task HandleDismiss()
+    {
+        await OnDismiss.InvokeAsync();
+    }
+}

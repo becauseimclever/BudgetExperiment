@@ -26,6 +26,10 @@
     border: 2px solid #007bff;
 }
 
+.calendar-day.has-recurring {
+    border-left: 3px solid #3b82f6;
+}
+
 .day-number {
     font-weight: bold;
     display: block;
@@ -39,6 +43,33 @@
 .transaction-count {
     font-size: 0.75em;
     color: #666;
+}
+
+.recurring-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 2px 4px;
+    background: #eff6ff;
+    border-radius: 4px;
+    font-size: 0.75em;
+}
+
+.recurring-icon {
+    font-size: 0.9em;
+}
+
+.recurring-total {
+    font-weight: 500;
+}
+
+.recurring-total.positive {
+    color: #059669;
+}
+
+.recurring-total.negative {
+    color: #dc2626;
 }
 
 /* Mobile responsive */
@@ -59,6 +90,10 @@
     .transaction-count {
         font-size: 0.65em;
     }
+
+    .recurring-indicator {
+        font-size: 0.65em;
+    }
 }
 
 @media (max-width: 480px) {
@@ -77,5 +112,10 @@
 
     .transaction-count {
         display: none;
+    }
+
+    .recurring-indicator {
+        font-size: 0.6em;
+        padding: 1px 2px;
     }
 }

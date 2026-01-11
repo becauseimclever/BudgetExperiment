@@ -1,0 +1,302 @@
+@page "/transfers"
+
+@using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Client.Components.Display
+@using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Client.Components.Forms
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Transfers - Budget Experiment</PageTitle>
+
+<div class="transfers-container">
+    <PageHeader Title="Transfers">
+        <Actions>
+            <button class="add-button" @onclick="ShowCreateTransfer">+ New Transfer</button>
+        </Actions>
+    </PageHeader>
+
+    <div class="filters-row">
+        <div class="filter-group">
+            <label for="accountFilter">Account:</label>
+            <select id="accountFilter" @bind="selectedAccountId" @bind:after="ApplyFilters">
+                <option value="">All Accounts</option>
+                @foreach (var account in accounts)
+                {
+                    <option value="@account.Id">@account.Name</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="fromDate">From:</label>
+            <input type="date" id="fromDate" @bind="fromDate" @bind:after="ApplyFilters" />
+        </div>
+        <div class="filter-group">
+            <label for="toDate">To:</label>
+            <input type="date" id="toDate" @bind="toDate" @bind:after="ApplyFilters" />
+        </div>
+        <button class="btn-clear" @onclick="ClearFilters">Clear Filters</button>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading transfers..." />
+    }
+    else if (errorMessage != null)
+    {
+        <ErrorAlert Message="@errorMessage"
+                    OnRetry="RetryLoad"
+                    OnDismiss="DismissError"
+                    IsRetrying="@isRetrying" />
+    }
+    
+    @if (!isLoading && filteredTransfers.Count == 0 && errorMessage == null)
+    {
+        <p class="empty-message">
+            @if (transfers.Count == 0)
+            {
+                <span>No transfers yet. Create one to move money between accounts!</span>
+            }
+            else
+            {
+                <span>No transfers match the current filters.</span>
+            }
+        </p>
+    }
+    else if (!isLoading && errorMessage == null)
+    {
+        <table class="transfers-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th class="amount-col">Amount</th>
+                    <th>Description</th>
+                    <th class="actions-col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transfer in filteredTransfers.OrderByDescending(t => t.Date))
+                {
+                    <tr>
+                        <td>@transfer.Date.ToString("MMM d, yyyy")</td>
+                        <td>@transfer.SourceAccountName</td>
+                        <td>@transfer.DestinationAccountName</td>
+                        <td class="amount-col">
+                            <MoneyDisplay Amount="@transfer.Amount" />
+                        </td>
+                        <td>@(string.IsNullOrWhiteSpace(transfer.Description) ? "-" : transfer.Description)</td>
+                        <td class="actions-col">
+                            <button class="btn-edit" @onclick="() => ShowEditTransfer(transfer)">Edit</button>
+                            <button class="btn-delete" @onclick="() => DeleteTransfer(transfer.TransferId)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <Modal IsVisible="@showTransferDialog" Title="@(editingTransfer == null ? "New Transfer" : "Edit Transfer")" OnClose="HideTransferDialog">
+        @if (editingTransfer == null)
+        {
+            <TransferDialog Accounts="@accounts"
+                            Model="@newTransfer"
+                            OnCreate="CreateTransfer"
+                            OnCancel="HideTransferDialog" />
+        }
+        else
+        {
+            <TransferDialog Accounts="@accounts"
+                            Model="@newTransfer"
+                            UpdateModel="@editTransfer"
+                            IsEdit="true"
+                            SourceAccountName="@editingTransfer.SourceAccountName"
+                            DestinationAccountName="@editingTransfer.DestinationAccountName"
+                            OnUpdate="UpdateTransfer"
+                            OnCancel="HideTransferDialog" />
+        }
+    </Modal>
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool isRetrying;
+    private string? errorMessage;
+    private List<AccountModel> accounts = new();
+    private List<TransferListItemModel> transfers = new();
+    private List<TransferListItemModel> filteredTransfers = new();
+
+    // Filters
+    private string selectedAccountId = string.Empty;
+    private DateOnly? fromDate;
+    private DateOnly? toDate;
+
+    // Transfer dialog state
+    private bool showTransferDialog;
+    private TransferCreateModel newTransfer = new();
+    private TransferUpdateModel editTransfer = new();
+    private TransferListItemModel? editingTransfer;
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            var accountsTask = ApiService.GetAccountsAsync();
+            var transfersTask = ApiService.GetTransfersAsync();
+
+            await Task.WhenAll(accountsTask, transfersTask);
+
+            accounts = accountsTask.Result.ToList();
+            transfers = transfersTask.Result.ToList();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load transfers: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadDataAsync();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private void ApplyFilters()
+    {
+        filteredTransfers = transfers;
+
+        if (!string.IsNullOrEmpty(selectedAccountId) && Guid.TryParse(selectedAccountId, out var accountId))
+        {
+            filteredTransfers = filteredTransfers
+                .Where(t => t.SourceAccountId == accountId || t.DestinationAccountId == accountId)
+                .ToList();
+        }
+
+        if (fromDate.HasValue)
+        {
+            filteredTransfers = filteredTransfers
+                .Where(t => t.Date >= fromDate.Value)
+                .ToList();
+        }
+
+        if (toDate.HasValue)
+        {
+            filteredTransfers = filteredTransfers
+                .Where(t => t.Date <= toDate.Value)
+                .ToList();
+        }
+    }
+
+    private void ClearFilters()
+    {
+        selectedAccountId = string.Empty;
+        fromDate = null;
+        toDate = null;
+        ApplyFilters();
+    }
+
+    private void ShowCreateTransfer()
+    {
+        newTransfer = new TransferCreateModel
+        {
+            Date = DateOnly.FromDateTime(DateTime.Today),
+        };
+        editingTransfer = null;
+        showTransferDialog = true;
+    }
+
+    private void ShowEditTransfer(TransferListItemModel transfer)
+    {
+        editingTransfer = transfer;
+        editTransfer = new TransferUpdateModel
+        {
+            Amount = transfer.Amount,
+            Date = transfer.Date,
+            Description = transfer.Description,
+        };
+        showTransferDialog = true;
+    }
+
+    private void HideTransferDialog()
+    {
+        showTransferDialog = false;
+        editingTransfer = null;
+    }
+
+    private async Task CreateTransfer(TransferCreateModel model)
+    {
+        try
+        {
+            await ApiService.CreateTransferAsync(model);
+            HideTransferDialog();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create transfer: {ex.Message}";
+        }
+    }
+
+    private async Task UpdateTransfer(TransferUpdateModel model)
+    {
+        if (editingTransfer == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await ApiService.UpdateTransferAsync(editingTransfer.TransferId, model);
+            HideTransferDialog();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to update transfer: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteTransfer(Guid transferId)
+    {
+        try
+        {
+            await ApiService.DeleteTransferAsync(transferId);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete transfer: {ex.Message}";
+        }
+    }
+}

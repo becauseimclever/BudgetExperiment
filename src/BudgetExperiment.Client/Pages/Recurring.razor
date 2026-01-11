@@ -3,6 +3,7 @@
 @using BudgetExperiment.Client.Models
 @using BudgetExperiment.Client.Services
 @using BudgetExperiment.Client.Components.Forms
+@using BudgetExperiment.Client.Components.Common
 
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
@@ -16,9 +17,19 @@
         </Actions>
     </PageHeader>
 
+    <ErrorAlert Message="@errorMessage"
+                IsDismissible="true"
+                IsRetrying="@isRetrying"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError" />
+
     @if (isLoading)
     {
         <LoadingSpinner Message="Loading recurring transactions..." />
+    }
+    else if (errorMessage != null)
+    {
+        @* Error is displayed by ErrorAlert above *@
     }
     else if (recurringTransactions.Count == 0)
     {
@@ -353,8 +364,10 @@
 
 @code {
     private bool isLoading = true;
+    private bool isRetrying;
     private bool isSubmitting = false;
     private bool isDeleting = false;
+    private string? errorMessage;
     private List<RecurringTransactionModel> recurringTransactions = new();
 
     private bool showAddForm = false;
@@ -374,8 +387,40 @@
     private async Task LoadRecurringTransactions()
     {
         isLoading = true;
-        recurringTransactions = (await ApiService.GetRecurringTransactionsAsync()).ToList();
-        isLoading = false;
+        errorMessage = null;
+
+        try
+        {
+            recurringTransactions = (await ApiService.GetRecurringTransactionsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load recurring transactions: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadRecurringTransactions();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
     }
 
     private void ShowAddForm()
