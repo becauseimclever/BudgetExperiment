@@ -210,26 +210,35 @@ Review [Transfers.razor](../src/BudgetExperiment.Client/Pages/Transfers.razor) -
 ---
 
 ### Phase 8: Calendar Components Migration
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 
-Migrate Calendar component scoped CSS files:
-- [CalendarDay.razor.css](../src/BudgetExperiment.Client/Components/Calendar/CalendarDay.razor.css)
-- [CalendarGrid.razor.css](../src/BudgetExperiment.Client/Components/Calendar/CalendarGrid.razor.css)
-- [DayDetail.razor.css](../src/BudgetExperiment.Client/Components/Calendar/DayDetail.razor.css)
-
-**Note:** These were updated in 011 to use CSS variables but still have scoped CSS. Evaluate if styles can be consolidated.
+Migrated Calendar component scoped CSS files to design system.
 
 **Tasks:**
-- [ ] Audit each component's scoped CSS
-- [ ] Identify patterns that belong in design system
-- [ ] Move reusable patterns to design system
-- [ ] Keep minimal component-specific styles
-- [ ] Verify themes
+- [x] Audit each component's scoped CSS (CalendarDay: 124 lines, CalendarGrid: 35 lines, DayDetail: 221 lines)
+- [x] Create `calendar.css` design system component (330 lines)
+- [x] Move all calendar styles to design system
+- [x] Delete all scoped CSS files
+- [x] Update DayDetail.razor to use `.btn btn-success` for add button
+- [x] Verify themes
+
+**Changes Made:**
+- Created `design-system/components/calendar.css` with all calendar-specific styles
+- Added import to `app.css`
+- Consolidated `.calendar-grid`, `.calendar-day-header` styles
+- Consolidated `.calendar-day` variants (today, selected, other-month, has-recurring)
+- Consolidated `.day-detail`, `.recurring-section`, `.transaction-section` styles
+- Consolidated `.day-summary`, `.summary-row` styles
+- All colors now use CSS variables for theme support
+- Deleted `CalendarDay.razor.css` (124 lines)
+- Deleted `CalendarGrid.razor.css` (35 lines)
+- Deleted `DayDetail.razor.css` (221 lines)
+- **Total: 380 lines of scoped CSS removed**
 
 **Acceptance Criteria:**
-- Scoped CSS minimized
-- Reusable patterns in design system
-- Visual appearance unchanged
+- ✅ Scoped CSS eliminated (all 3 files deleted)
+- ✅ Reusable patterns in design system (`calendar.css`)
+- ✅ Visual appearance unchanged
 
 ---
 
