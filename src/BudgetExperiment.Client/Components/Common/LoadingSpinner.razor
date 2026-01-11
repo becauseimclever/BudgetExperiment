@@ -1,6 +1,6 @@
 @* LoadingSpinner.razor - Loading indicator component *@
 
-<div class="loading-container @(FullPage ? "full-page" : "")">
+<div class="loading-container @(FullPage ? "loading-container-fullpage" : "")">
     <div class="spinner @SizeClass"></div>
     @if (!string.IsNullOrEmpty(Message))
     {

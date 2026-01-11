@@ -1,24 +1,24 @@
 @* PageHeader.razor - Consistent page header with title and action buttons *@
 
 <header class="page-header">
-    <div class="header-content">
+    <div class="page-header-content">
         @if (ShowBackButton)
         {
-            <button class="btn-back" @onclick="OnBackClick" title="Go back">
+            <button class="btn btn-secondary" @onclick="OnBackClick" title="Go back">
                 ← Back
             </button>
         }
-        <div class="title-section">
-            <h2 class="page-title">@Title</h2>
+        <div class="page-header-title-section">
+            <h2 class="page-header-title">@Title</h2>
             @if (!string.IsNullOrEmpty(Subtitle))
             {
-                <span class="page-subtitle">@Subtitle</span>
+                <span class="page-header-subtitle">@Subtitle</span>
             }
         </div>
     </div>
     @if (Actions != null)
     {
-        <div class="header-actions">
+        <div class="page-header-actions">
             @Actions
         </div>
     }

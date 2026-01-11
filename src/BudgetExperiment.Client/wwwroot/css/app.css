@@ -32,6 +32,7 @@
 @import "design-system/components/filters.css";
 @import "design-system/components/recurring-card.css";
 @import "design-system/components/calendar.css";
+@import "design-system/components/common.css";
 
 /* Utility Classes */
 @import "design-system/utilities.css";

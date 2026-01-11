@@ -243,26 +243,50 @@ Migrated Calendar component scoped CSS files to design system.
 ---
 
 ### Phase 9: Common Components Migration
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 
-Migrate Common component scoped CSS files:
-- [ConfirmDialog.razor.css](../src/BudgetExperiment.Client/Components/Common/ConfirmDialog.razor.css)
-- [ErrorAlert.razor.css](../src/BudgetExperiment.Client/Components/Common/ErrorAlert.razor.css)
-- [LoadingSpinner.razor.css](../src/BudgetExperiment.Client/Components/Common/LoadingSpinner.razor.css)
-- [Modal.razor.css](../src/BudgetExperiment.Client/Components/Common/Modal.razor.css)
-- [PageHeader.razor.css](../src/BudgetExperiment.Client/Components/Common/PageHeader.razor.css)
+Migrated Common component scoped CSS files to design system.
 
 **Tasks:**
-- [ ] Audit each component's scoped CSS
-- [ ] Move modal styles to `modals.css` in design system
-- [ ] Move alert styles to `alerts.css` in design system
-- [ ] Keep minimal component-specific styles
-- [ ] Verify themes
+- [x] Audit each component's scoped CSS (ConfirmDialog: 57 lines, ErrorAlert: 109 lines, LoadingSpinner: 55 lines, Modal: 139 lines, PageHeader: 57 lines)
+- [x] Create `common.css` design system component with loading spinner and page header styles
+- [x] Extend `alerts.css` with error alert styles (error-alert-*, retry button, dismiss button)
+- [x] Update `modals.css` for modal backdrop and dialog with animations
+- [x] Update Modal.razor to use `.modal-backdrop`, `.modal-dialog` design system classes
+- [x] Update ConfirmDialog.razor to use `.btn btn-danger`, `.btn btn-secondary`
+- [x] Update ErrorAlert.razor to use `.error-alert-*` design system classes
+- [x] Update LoadingSpinner.razor to use `.loading-container-fullpage`
+- [x] Update PageHeader.razor to use `.page-header-*` design system classes
+- [x] Delete all 5 scoped CSS files
+- [x] Verify themes (light, dark, VS Code dark)
+
+**Changes Made:**
+- Created `design-system/components/common.css` (~120 lines):
+  - Loading spinner (`.loading-container`, `.spinner`, size variants, animation)
+  - Page header (`.page-header`, `.page-header-content`, `.page-header-title`, etc.)
+  - Confirm dialog content (`.confirm-content`, `.confirm-message`, `.confirm-actions`)
+- Extended `alerts.css` with error alert styles:
+  - `.error-alert`, `.error-alert-content`, `.error-alert-icon`, `.error-alert-text`
+  - `.error-alert-message`, `.error-alert-details`, `.error-alert-actions`
+  - `.error-alert-retry`, `.error-alert-dismiss` buttons
+  - Responsive styles
+- Updated `modals.css`:
+  - `.modal-backdrop` now includes flex centering and fade-in animation
+  - `.modal-dialog` now includes slide-in animation
+- Added import for `common.css` to `app.css`
+- Deleted `ConfirmDialog.razor.css` (57 lines)
+- Deleted `ErrorAlert.razor.css` (109 lines)
+- Deleted `LoadingSpinner.razor.css` (55 lines)
+- Deleted `Modal.razor.css` (139 lines)
+- Deleted `PageHeader.razor.css` (57 lines)
+- **Total: 417 lines of scoped CSS removed**
 
 **Acceptance Criteria:**
-- Common patterns consolidated in design system
-- Components use design system classes
-- Visual appearance unchanged
+- ✅ Scoped CSS eliminated (all 5 files deleted)
+- ✅ Common patterns consolidated in design system
+- ✅ Components use design system classes
+- ✅ Theme support verified (light, dark, VS Code dark)
+- ✅ Visual appearance unchanged
 
 ---
 

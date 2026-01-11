@@ -2,8 +2,8 @@
 
 @if (IsVisible)
 {
-    <div class="modal-overlay" @onclick="HandleOverlayClick">
-        <div class="modal-container @SizeClass" @onclick:stopPropagation="true">
+    <div class="modal-backdrop show" @onclick="HandleOverlayClick">
+        <div class="modal-dialog @SizeClass" @onclick:stopPropagation="true">
             <header class="modal-header">
                 <h3 class="modal-title">@Title</h3>
                 @if (ShowCloseButton)
@@ -75,9 +75,9 @@
 
     private string SizeClass => Size switch
     {
-        ModalSize.Small => "modal-sm",
-        ModalSize.Large => "modal-lg",
-        _ => "modal-md"
+        ModalSize.Small => "modal-dialog-sm",
+        ModalSize.Large => "modal-dialog-lg",
+        _ => string.Empty
     };
 
     private async Task HandleOverlayClick()

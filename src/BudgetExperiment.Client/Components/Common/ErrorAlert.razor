@@ -2,21 +2,21 @@
 
 @if (!string.IsNullOrEmpty(Message))
 {
-    <div class="error-alert @(IsDismissible ? "dismissible" : "")">
-        <div class="error-content">
-            <span class="error-icon"><Icon Name="alert-triangle" Size="20" Class="icon-warning" /></span>
-            <div class="error-text">
-                <span class="error-message">@Message</span>
+    <div class="error-alert">
+        <div class="error-alert-content">
+            <span class="error-alert-icon"><Icon Name="alert-triangle" Size="20" Class="icon-warning" /></span>
+            <div class="error-alert-text">
+                <span class="error-alert-message">@Message</span>
                 @if (!string.IsNullOrEmpty(Details))
                 {
-                    <span class="error-details">@Details</span>
+                    <span class="error-alert-details">@Details</span>
                 }
             </div>
         </div>
-        <div class="error-actions">
+        <div class="error-alert-actions">
             @if (OnRetry.HasDelegate)
             {
-                <button class="btn-retry" @onclick="HandleRetry" disabled="@IsRetrying">
+                <button class="error-alert-retry" @onclick="HandleRetry" disabled="@IsRetrying">
                     @if (IsRetrying)
                     {
                         <span>Retrying...</span>
@@ -29,7 +29,7 @@
             }
             @if (IsDismissible && OnDismiss.HasDelegate)
             {
-                <button class="btn-dismiss" @onclick="HandleDismiss" title="Dismiss"><Icon Name="x" Size="16" /></button>
+                <button class="error-alert-dismiss" @onclick="HandleDismiss" title="Dismiss"><Icon Name="x" Size="16" /></button>
             }
         </div>
     </div>

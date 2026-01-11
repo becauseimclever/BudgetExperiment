@@ -4,7 +4,7 @@
     <div class="confirm-content">
         <p class="confirm-message">@Message</p>
         <div class="confirm-actions">
-            <button class="btn-danger" @onclick="HandleConfirm" disabled="@IsProcessing">
+            <button class="btn btn-danger" @onclick="HandleConfirm" disabled="@IsProcessing">
                 @if (IsProcessing)
                 {
                     <span>Processing...</span>
@@ -14,7 +14,7 @@
                     @ConfirmText
                 }
             </button>
-            <button class="btn-secondary" @onclick="HandleCancel" disabled="@IsProcessing">@CancelText</button>
+            <button class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsProcessing">@CancelText</button>
         </div>
     </div>
 </Modal>
