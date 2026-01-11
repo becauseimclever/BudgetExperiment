@@ -42,6 +42,9 @@ public sealed class DayDetailItemDto
     /// <summary>Gets or sets the recurring transaction ID (for recurring items).</summary>
     public Guid? RecurringTransactionId { get; set; }
 
+    /// <summary>Gets or sets the recurring transfer ID (for recurring transfer items).</summary>
+    public Guid? RecurringTransferId { get; set; }
+
     /// <summary>Gets or sets whether this transaction is part of a transfer.</summary>
     public bool IsTransfer { get; set; }
 

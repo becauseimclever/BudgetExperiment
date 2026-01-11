@@ -438,6 +438,30 @@ public TransferPair GenerateTransferPair(
 
 **All 319 tests passing.**
 
+### Phase 6: Calendar Integration ✅ COMPLETED (2026-01-11)
+1. [x] Update `CalendarGridService` to include recurring transfer instances
+2. [x] Add `IRecurringTransferRepository` dependency to `CalendarGridService`
+3. [x] Implement `GetRecurringTransferInstancesByDateAsync` helper method
+4. [x] Implement `GetRecurringTransferInstancesForDateAsync` helper method
+5. [x] Add `RecurringTransferInstanceInfo` helper class
+6. [x] Update `GetCalendarGridAsync` to aggregate recurring transfer instances
+7. [x] Update `GetDayDetailAsync` to include recurring transfer items
+8. [x] Add `RecurringTransferId` property to `DayDetailItemDto`
+9. [x] Update `CalendarGridServiceTests` with new repository mock
+
+**Files Modified:**
+- `src/BudgetExperiment.Application/Services/CalendarGridService.cs` (extended with recurring transfer support)
+- `src/BudgetExperiment.Contracts/Dtos/DayDetailItemDto.cs` (added RecurringTransferId property)
+- `tests/BudgetExperiment.Application.Tests/CalendarGridServiceTests.cs` (updated mocks)
+
+**Calendar now shows:**
+- Recurring transfer instances as projected entries
+- Source account entries (outgoing - negative amounts)
+- Destination account entries (incoming - positive amounts)
+- Exception handling for modified/skipped instances
+
+**All 319 tests passing.**
+
 ---
 
 ## Feature Complete ✅
@@ -448,6 +472,7 @@ The Recurring Transfers feature is now fully implemented across all layers:
 - **Application Layer**: RecurringTransferService with all CRUD and instance management operations
 - **API Layer**: RecurringTransfersController with all REST endpoints
 - **Client Layer**: Full UI for managing recurring transfers with forms and navigation
+- **Calendar Integration**: Recurring transfers appear on calendar view with proper account entries
 
 ---
 

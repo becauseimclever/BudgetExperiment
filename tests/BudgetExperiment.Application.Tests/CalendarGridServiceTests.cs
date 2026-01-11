@@ -15,12 +15,14 @@ public class CalendarGridServiceTests
 {
     private readonly Mock<ITransactionRepository> _transactionRepo;
     private readonly Mock<IRecurringTransactionRepository> _recurringRepo;
+    private readonly Mock<IRecurringTransferRepository> _recurringTransferRepo;
     private readonly Mock<IAccountRepository> _accountRepo;
 
     public CalendarGridServiceTests()
     {
         _transactionRepo = new Mock<ITransactionRepository>();
         _recurringRepo = new Mock<IRecurringTransactionRepository>();
+        _recurringTransferRepo = new Mock<IRecurringTransferRepository>();
         _accountRepo = new Mock<IAccountRepository>();
 
         // Default setup for exceptions - return empty list
@@ -31,6 +33,25 @@ public class CalendarGridServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransactionException>());
+
+        // Default setup for recurring transfer exceptions - return empty list
+        _recurringTransferRepo
+            .Setup(r => r.GetExceptionsByDateRangeAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransferException>());
+
+        // Default setup for active recurring transfers - return empty list
+        _recurringTransferRepo
+            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        // Default setup for recurring transfers by account id - return empty list
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
 
         // Default setup for accounts - return empty list
         _accountRepo
@@ -287,6 +308,7 @@ public class CalendarGridServiceTests
         return new CalendarGridService(
             _transactionRepo.Object,
             _recurringRepo.Object,
+            _recurringTransferRepo.Object,
             _accountRepo.Object);
     }
 

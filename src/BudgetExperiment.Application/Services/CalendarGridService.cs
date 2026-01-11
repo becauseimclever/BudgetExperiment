@@ -18,6 +18,7 @@ public sealed class CalendarGridService : ICalendarGridService
 
     private readonly ITransactionRepository _transactionRepository;
     private readonly IRecurringTransactionRepository _recurringRepository;
+    private readonly IRecurringTransferRepository _recurringTransferRepository;
     private readonly IAccountRepository _accountRepository;
 
     /// <summary>
@@ -25,14 +26,17 @@ public sealed class CalendarGridService : ICalendarGridService
     /// </summary>
     /// <param name="transactionRepository">The transaction repository.</param>
     /// <param name="recurringRepository">The recurring transaction repository.</param>
+    /// <param name="recurringTransferRepository">The recurring transfer repository.</param>
     /// <param name="accountRepository">The account repository.</param>
     public CalendarGridService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
+        IRecurringTransferRepository recurringTransferRepository,
         IAccountRepository accountRepository)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
+        _recurringTransferRepository = recurringTransferRepository;
         _accountRepository = accountRepository;
     }
 
@@ -54,12 +58,21 @@ public sealed class CalendarGridService : ICalendarGridService
         var dailyTotalsList = await _transactionRepository.GetDailyTotalsAsync(year, month, accountId, cancellationToken);
         var dailyTotals = dailyTotalsList.ToDictionary(d => d.Date);
         var recurringTransactions = await GetRecurringTransactionsAsync(accountId, cancellationToken);
+        var recurringTransfers = await GetRecurringTransfersAsync(accountId, cancellationToken);
 
         // Project recurring instances for the grid date range
         var recurringByDate = await GetRecurringInstancesByDateAsync(
             recurringTransactions,
             gridStartDate,
             gridEndDate,
+            cancellationToken);
+
+        // Project recurring transfer instances for the grid date range
+        var recurringTransfersByDate = await GetRecurringTransferInstancesByDateAsync(
+            recurringTransfers,
+            gridStartDate,
+            gridEndDate,
+            accountId,
             cancellationToken);
 
         // Build grid days
@@ -72,9 +85,12 @@ public sealed class CalendarGridService : ICalendarGridService
 
             dailyTotals.TryGetValue(date, out var dailyTotal);
             recurringByDate.TryGetValue(date, out var recurringInstances);
+            recurringTransfersByDate.TryGetValue(date, out var recurringTransferInstances);
 
             var actualAmount = dailyTotal?.Total.Amount ?? 0m;
-            var projectedAmount = recurringInstances?.Sum(r => r.Amount.Amount) ?? 0m;
+            var projectedAmount = (recurringInstances?.Sum(r => r.Amount.Amount) ?? 0m)
+                + (recurringTransferInstances?.Sum(r => r.Amount.Amount) ?? 0m);
+            var recurringCount = (recurringInstances?.Count ?? 0) + (recurringTransferInstances?.Count ?? 0);
 
             days.Add(new CalendarDaySummaryDto
             {
@@ -85,8 +101,8 @@ public sealed class CalendarGridService : ICalendarGridService
                 ProjectedTotal = new MoneyDto { Currency = "USD", Amount = projectedAmount },
                 CombinedTotal = new MoneyDto { Currency = "USD", Amount = actualAmount + projectedAmount },
                 TransactionCount = dailyTotal?.TransactionCount ?? 0,
-                RecurringCount = recurringInstances?.Count ?? 0,
-                HasRecurring = recurringInstances?.Count > 0,
+                RecurringCount = recurringCount,
+                HasRecurring = recurringCount > 0,
             });
         }
 
@@ -113,11 +129,19 @@ public sealed class CalendarGridService : ICalendarGridService
         var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
         var recurringTransactions = await GetRecurringTransactionsAsync(accountId, cancellationToken);
+        var recurringTransfers = await GetRecurringTransfersAsync(accountId, cancellationToken);
 
         // Get recurring instances for this specific date
         var recurringInstances = await GetRecurringInstancesForDateAsync(
             recurringTransactions,
             date,
+            cancellationToken);
+
+        // Get recurring transfer instances for this specific date
+        var recurringTransferInstances = await GetRecurringTransferInstancesForDateAsync(
+            recurringTransfers,
+            date,
+            accountId,
             cancellationToken);
 
         // Build items list
@@ -175,9 +199,40 @@ public sealed class CalendarGridService : ICalendarGridService
             }
         }
 
+        // Add recurring transfer instances (excluding those that might already be realized)
+        foreach (var instance in recurringTransferInstances)
+        {
+            // Check if there's already a transaction for this recurring transfer instance
+            var hasRealized = transactions.Any(t =>
+                t.RecurringTransferId == instance.RecurringTransferId &&
+                t.RecurringTransferInstanceDate == date);
+
+            if (!hasRealized && !instance.IsSkipped)
+            {
+                items.Add(new DayDetailItemDto
+                {
+                    Id = Guid.NewGuid(), // Temporary ID for display
+                    Type = "recurring-transfer",
+                    Description = instance.Description,
+                    Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
+                    Category = null,
+                    AccountName = instance.AccountName,
+                    AccountId = instance.AccountId,
+                    CreatedAt = null,
+                    IsModified = instance.IsModified,
+                    IsSkipped = instance.IsSkipped,
+                    RecurringTransactionId = null,
+                    RecurringTransferId = instance.RecurringTransferId,
+                    IsTransfer = true,
+                    TransferId = null,
+                    TransferDirection = instance.TransferDirection,
+                });
+            }
+        }
+
         // Calculate summary
         var actualTotal = items.Where(i => i.Type == "transaction").Sum(i => i.Amount.Amount);
-        var projectedTotal = items.Where(i => i.Type == "recurring").Sum(i => i.Amount.Amount);
+        var projectedTotal = items.Where(i => i.Type == "recurring" || i.Type == "recurring-transfer").Sum(i => i.Amount.Amount);
 
         return new DayDetailDto
         {
@@ -345,5 +400,183 @@ public sealed class CalendarGridService : ICalendarGridService
         public bool IsModified { get; set; }
 
         public bool IsSkipped { get; set; }
+    }
+
+    /// <summary>
+    /// Internal class to hold recurring transfer instance information during processing.
+    /// </summary>
+    private sealed class RecurringTransferInstanceInfo
+    {
+        public Guid RecurringTransferId { get; set; }
+
+        public Guid AccountId { get; set; }
+
+        public string AccountName { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        public MoneyValue Amount { get; set; } = null!;
+
+        public bool IsModified { get; set; }
+
+        public bool IsSkipped { get; set; }
+
+        public string TransferDirection { get; set; } = string.Empty;
+    }
+
+    private async Task<IReadOnlyList<RecurringTransfer>> GetRecurringTransfersAsync(
+        Guid? accountId,
+        CancellationToken cancellationToken)
+    {
+        return accountId.HasValue
+            ? await _recurringTransferRepository.GetByAccountIdAsync(accountId.Value, cancellationToken)
+            : await _recurringTransferRepository.GetActiveAsync(cancellationToken);
+    }
+
+    private async Task<Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>> GetRecurringTransferInstancesByDateAsync(
+        IReadOnlyList<RecurringTransfer> recurringTransfers,
+        DateOnly fromDate,
+        DateOnly toDate,
+        Guid? accountId,
+        CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>();
+        var accounts = await _accountRepository.GetAllAsync(cancellationToken);
+        var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
+
+        foreach (var transfer in recurringTransfers.Where(r => r.IsActive))
+        {
+            var occurrences = transfer.GetOccurrencesBetween(fromDate, toDate);
+            var exceptions = await _recurringTransferRepository.GetExceptionsByDateRangeAsync(
+                transfer.Id,
+                fromDate,
+                toDate,
+                cancellationToken);
+            var exceptionMap = exceptions.ToDictionary(e => e.OriginalDate);
+
+            foreach (var date in occurrences)
+            {
+                exceptionMap.TryGetValue(date, out var exception);
+
+                if (exception?.ExceptionType == ExceptionType.Skipped)
+                {
+                    continue;
+                }
+
+                var effectiveAmount = exception?.ModifiedAmount ?? transfer.Amount;
+                var effectiveDescription = exception?.ModifiedDescription ?? transfer.Description;
+                var isModified = exception?.ExceptionType == ExceptionType.Modified;
+
+                // Add source account entry (outgoing - negative amount)
+                if (!accountId.HasValue || accountId.Value == transfer.SourceAccountId)
+                {
+                    var sourceInstance = new RecurringTransferInstanceInfo
+                    {
+                        RecurringTransferId = transfer.Id,
+                        AccountId = transfer.SourceAccountId,
+                        AccountName = accountMap.GetValueOrDefault(transfer.SourceAccountId, string.Empty),
+                        Description = $"Transfer to {accountMap.GetValueOrDefault(transfer.DestinationAccountId, string.Empty)}: {effectiveDescription}",
+                        Amount = MoneyValue.Create(effectiveAmount.Currency, -effectiveAmount.Amount),
+                        IsModified = isModified,
+                        IsSkipped = false,
+                        TransferDirection = "Source",
+                    };
+
+                    if (!result.TryGetValue(date, out var sourceList))
+                    {
+                        sourceList = new List<RecurringTransferInstanceInfo>();
+                        result[date] = sourceList;
+                    }
+
+                    sourceList.Add(sourceInstance);
+                }
+
+                // Add destination account entry (incoming - positive amount)
+                if (!accountId.HasValue || accountId.Value == transfer.DestinationAccountId)
+                {
+                    var destInstance = new RecurringTransferInstanceInfo
+                    {
+                        RecurringTransferId = transfer.Id,
+                        AccountId = transfer.DestinationAccountId,
+                        AccountName = accountMap.GetValueOrDefault(transfer.DestinationAccountId, string.Empty),
+                        Description = $"Transfer from {accountMap.GetValueOrDefault(transfer.SourceAccountId, string.Empty)}: {effectiveDescription}",
+                        Amount = effectiveAmount,
+                        IsModified = isModified,
+                        IsSkipped = false,
+                        TransferDirection = "Destination",
+                    };
+
+                    if (!result.TryGetValue(date, out var destList))
+                    {
+                        destList = new List<RecurringTransferInstanceInfo>();
+                        result[date] = destList;
+                    }
+
+                    destList.Add(destInstance);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<List<RecurringTransferInstanceInfo>> GetRecurringTransferInstancesForDateAsync(
+        IReadOnlyList<RecurringTransfer> recurringTransfers,
+        DateOnly date,
+        Guid? accountId,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<RecurringTransferInstanceInfo>();
+        var accounts = await _accountRepository.GetAllAsync(cancellationToken);
+        var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
+
+        foreach (var transfer in recurringTransfers.Where(r => r.IsActive))
+        {
+            var occurrences = transfer.GetOccurrencesBetween(date, date);
+            if (!occurrences.Contains(date))
+            {
+                continue;
+            }
+
+            var exception = await _recurringTransferRepository.GetExceptionAsync(transfer.Id, date, cancellationToken);
+            var effectiveAmount = exception?.ModifiedAmount ?? transfer.Amount;
+            var effectiveDescription = exception?.ModifiedDescription ?? transfer.Description;
+            var isModified = exception?.ExceptionType == ExceptionType.Modified;
+            var isSkipped = exception?.ExceptionType == ExceptionType.Skipped;
+
+            // Add source account entry (outgoing - negative amount)
+            if (!accountId.HasValue || accountId.Value == transfer.SourceAccountId)
+            {
+                result.Add(new RecurringTransferInstanceInfo
+                {
+                    RecurringTransferId = transfer.Id,
+                    AccountId = transfer.SourceAccountId,
+                    AccountName = accountMap.GetValueOrDefault(transfer.SourceAccountId, string.Empty),
+                    Description = $"Transfer to {accountMap.GetValueOrDefault(transfer.DestinationAccountId, string.Empty)}: {effectiveDescription}",
+                    Amount = MoneyValue.Create(effectiveAmount.Currency, -effectiveAmount.Amount),
+                    IsModified = isModified,
+                    IsSkipped = isSkipped,
+                    TransferDirection = "Source",
+                });
+            }
+
+            // Add destination account entry (incoming - positive amount)
+            if (!accountId.HasValue || accountId.Value == transfer.DestinationAccountId)
+            {
+                result.Add(new RecurringTransferInstanceInfo
+                {
+                    RecurringTransferId = transfer.Id,
+                    AccountId = transfer.DestinationAccountId,
+                    AccountName = accountMap.GetValueOrDefault(transfer.DestinationAccountId, string.Empty),
+                    Description = $"Transfer from {accountMap.GetValueOrDefault(transfer.SourceAccountId, string.Empty)}: {effectiveDescription}",
+                    Amount = effectiveAmount,
+                    IsModified = isModified,
+                    IsSkipped = isSkipped,
+                    TransferDirection = "Destination",
+                });
+            }
+        }
+
+        return result;
     }
 }
