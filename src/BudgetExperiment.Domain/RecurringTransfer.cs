@@ -285,4 +285,69 @@ public sealed class RecurringTransfer
 
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Advances the next occurrence to the following scheduled date.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when the recurring transfer is inactive.</exception>
+    public void AdvanceNextOccurrence()
+    {
+        if (!this.IsActive)
+        {
+            throw new DomainException("Cannot advance inactive recurring transfer.");
+        }
+
+        this.LastGeneratedDate = this.NextOccurrence;
+        var nextDate = this.RecurrencePattern.CalculateNextOccurrence(this.NextOccurrence);
+
+        if (this.EndDate.HasValue && nextDate > this.EndDate.Value)
+        {
+            this.IsActive = false;
+        }
+        else
+        {
+            this.NextOccurrence = nextDate;
+        }
+
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets all occurrences between the specified date range.
+    /// </summary>
+    /// <param name="from">The start of the date range (inclusive).</param>
+    /// <param name="to">The end of the date range (inclusive).</param>
+    /// <returns>An enumerable of occurrence dates.</returns>
+    public IEnumerable<DateOnly> GetOccurrencesBetween(DateOnly from, DateOnly to)
+    {
+        if (!this.IsActive)
+        {
+            yield break;
+        }
+
+        var current = this.StartDate;
+
+        // Find the first occurrence that's >= from
+        while (current < from && (!this.EndDate.HasValue || current <= this.EndDate.Value))
+        {
+            current = this.RecurrencePattern.CalculateNextOccurrence(current);
+        }
+
+        // If starting point is before StartDate, use StartDate
+        if (this.StartDate >= from && this.StartDate <= to)
+        {
+            current = this.StartDate;
+        }
+
+        // Yield all occurrences in range
+        while (current <= to && (!this.EndDate.HasValue || current <= this.EndDate.Value))
+        {
+            if (current >= from)
+            {
+                yield return current;
+            }
+
+            current = this.RecurrencePattern.CalculateNextOccurrence(current);
+        }
+    }
 }

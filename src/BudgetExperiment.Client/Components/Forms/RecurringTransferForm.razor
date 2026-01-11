@@ -1,0 +1,229 @@
+@* RecurringTransferForm.razor - Form for creating a new recurring transfer *@
+
+@inject IBudgetApiService ApiService
+
+<form @onsubmit="HandleSubmit">
+    <div class="form-group">
+        <label for="fromAccount">From Account:</label>
+        <select id="fromAccount" @bind="Model.SourceAccountId" required>
+            <option value="">Select source account...</option>
+            @foreach (var account in accounts.Where(a => a.Id != Model.DestinationAccountId || Model.DestinationAccountId == Guid.Empty))
+            {
+                <option value="@account.Id">@account.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="toAccount">To Account:</label>
+        <select id="toAccount" @bind="Model.DestinationAccountId" required>
+            <option value="">Select destination account...</option>
+            @foreach (var account in accounts.Where(a => a.Id != Model.SourceAccountId || Model.SourceAccountId == Guid.Empty))
+            {
+                <option value="@account.Id">@account.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <input id="description"
+               type="text"
+               @bind="Model.Description"
+               @bind:event="oninput"
+               placeholder="Enter description (e.g., Monthly Savings)"
+               required />
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="amount">Amount:</label>
+            <input id="amount"
+                   type="number"
+                   step="0.01"
+                   min="0.01"
+                   @bind="AmountValue"
+                   placeholder="0.00"
+                   required />
+        </div>
+        <div class="form-group form-group-small">
+            <label for="currency">Currency:</label>
+            <select id="currency" @bind="CurrencyValue">
+                <option value="USD">USD</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="frequency">Frequency:</label>
+        <select id="frequency" @bind="Model.Frequency" @bind:after="OnFrequencyChanged">
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="BiWeekly">Bi-Weekly</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+            <option value="Yearly">Yearly</option>
+        </select>
+    </div>
+
+    @if (Model.Frequency == "Weekly" || Model.Frequency == "BiWeekly")
+    {
+        <div class="form-group">
+            <label for="dayOfWeek">Day of Week:</label>
+            <select id="dayOfWeek" @bind="Model.DayOfWeek">
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+        </div>
+    }
+
+    @if (Model.Frequency == "Monthly" || Model.Frequency == "Quarterly" || Model.Frequency == "Yearly")
+    {
+        <div class="form-group">
+            <label for="dayOfMonth">Day of Month:</label>
+            <input id="dayOfMonth"
+                   type="number"
+                   min="1"
+                   max="31"
+                   @bind="Model.DayOfMonth"
+                   placeholder="1-31" />
+            <small class="form-hint">Leave empty to use start date day</small>
+        </div>
+    }
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="startDate">Start Date:</label>
+            <input id="startDate"
+                   type="date"
+                   @bind="startDateInput"
+                   required />
+        </div>
+        <div class="form-group">
+            <label for="endDate">End Date (optional):</label>
+            <input id="endDate"
+                   type="date"
+                   @bind="endDateInput" />
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>@SubmitButtonText</span>
+            }
+        </button>
+        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+    </div>
+</form>
+
+@code {
+    /// <summary>
+    /// Gets or sets the recurring transfer model to create.
+    /// </summary>
+    [Parameter]
+    public RecurringTransferCreateDto Model { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the callback when the form is submitted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<RecurringTransferCreateDto> OnSubmit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when cancel is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the submit button text.
+    /// </summary>
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Save";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the form is submitting.
+    /// </summary>
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    private List<AccountDto> accounts = new();
+    private DateTime startDateInput;
+    private DateTime? endDateInput;
+
+    private decimal AmountValue
+    {
+        get => Model.Amount.Amount;
+        set => Model.Amount = new MoneyDto { Amount = value, Currency = Model.Amount.Currency ?? "USD" };
+    }
+
+    private string CurrencyValue
+    {
+        get => Model.Amount.Currency ?? "USD";
+        set => Model.Amount = new MoneyDto { Amount = Model.Amount.Amount, Currency = value };
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = (await ApiService.GetAccountsAsync()).ToList();
+        startDateInput = Model.StartDate.ToDateTime(TimeOnly.MinValue);
+        if (Model.EndDate.HasValue)
+        {
+            endDateInput = Model.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+        }
+    }
+
+    private void OnFrequencyChanged()
+    {
+        // Set sensible defaults when frequency changes
+        if (Model.Frequency == "Weekly" || Model.Frequency == "BiWeekly")
+        {
+            Model.DayOfWeek ??= "Monday";
+            Model.DayOfMonth = null;
+        }
+        else if (Model.Frequency == "Monthly" || Model.Frequency == "Quarterly" || Model.Frequency == "Yearly")
+        {
+            Model.DayOfWeek = null;
+        }
+        else
+        {
+            Model.DayOfWeek = null;
+            Model.DayOfMonth = null;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(Model.Description) ||
+            Model.SourceAccountId == Guid.Empty ||
+            Model.DestinationAccountId == Guid.Empty)
+        {
+            return;
+        }
+
+        // Convert DateTime inputs to DateOnly
+        Model.StartDate = DateOnly.FromDateTime(startDateInput);
+        Model.EndDate = endDateInput.HasValue ? DateOnly.FromDateTime(endDateInput.Value) : null;
+
+        await OnSubmit.InvokeAsync(Model);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

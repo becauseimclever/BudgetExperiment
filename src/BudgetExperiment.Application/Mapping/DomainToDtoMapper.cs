@@ -145,4 +145,82 @@ public static class DomainToDtoMapper
             GeneratedTransactionId = generatedTransactionId,
         };
     }
+
+    /// <summary>
+    /// Maps a <see cref="RecurringTransfer"/> to a <see cref="RecurringTransferDto"/>.
+    /// </summary>
+    /// <param name="recurring">The recurring transfer entity.</param>
+    /// <param name="sourceAccountName">The source account name.</param>
+    /// <param name="destAccountName">The destination account name.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static RecurringTransferDto ToDto(RecurringTransfer recurring, string sourceAccountName = "", string destAccountName = "")
+    {
+        return new RecurringTransferDto
+        {
+            Id = recurring.Id,
+            SourceAccountId = recurring.SourceAccountId,
+            SourceAccountName = sourceAccountName,
+            DestinationAccountId = recurring.DestinationAccountId,
+            DestinationAccountName = destAccountName,
+            Description = recurring.Description,
+            Amount = ToDto(recurring.Amount),
+            Frequency = recurring.RecurrencePattern.Frequency.ToString(),
+            Interval = recurring.RecurrencePattern.Interval,
+            DayOfMonth = recurring.RecurrencePattern.DayOfMonth,
+            DayOfWeek = recurring.RecurrencePattern.DayOfWeek?.ToString(),
+            MonthOfYear = recurring.RecurrencePattern.MonthOfYear,
+            StartDate = recurring.StartDate,
+            EndDate = recurring.EndDate,
+            NextOccurrence = recurring.NextOccurrence,
+            IsActive = recurring.IsActive,
+            CreatedAtUtc = recurring.CreatedAtUtc,
+            UpdatedAtUtc = recurring.UpdatedAtUtc,
+        };
+    }
+
+    /// <summary>
+    /// Maps a recurring transfer instance to a <see cref="RecurringTransferInstanceDto"/>.
+    /// </summary>
+    /// <param name="recurring">The recurring transfer entity.</param>
+    /// <param name="scheduledDate">The scheduled date of the instance.</param>
+    /// <param name="sourceAccountName">The source account name.</param>
+    /// <param name="destAccountName">The destination account name.</param>
+    /// <param name="exception">Optional exception for this instance.</param>
+    /// <param name="sourceTransactionId">Optional ID of generated source transaction.</param>
+    /// <param name="destTransactionId">Optional ID of generated destination transaction.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static RecurringTransferInstanceDto ToTransferInstanceDto(
+        RecurringTransfer recurring,
+        DateOnly scheduledDate,
+        string sourceAccountName,
+        string destAccountName,
+        RecurringTransferException? exception = null,
+        Guid? sourceTransactionId = null,
+        Guid? destTransactionId = null)
+    {
+        var isSkipped = exception?.ExceptionType == ExceptionType.Skipped;
+        var isModified = exception?.ExceptionType == ExceptionType.Modified;
+
+        return new RecurringTransferInstanceDto
+        {
+            RecurringTransferId = recurring.Id,
+            ScheduledDate = scheduledDate,
+            EffectiveDate = exception?.GetEffectiveDate() ?? scheduledDate,
+            Amount = isModified && exception?.ModifiedAmount != null
+                ? ToDto(exception.ModifiedAmount)
+                : ToDto(recurring.Amount),
+            Description = isModified && exception?.ModifiedDescription != null
+                ? exception.ModifiedDescription
+                : recurring.Description,
+            SourceAccountId = recurring.SourceAccountId,
+            SourceAccountName = sourceAccountName,
+            DestinationAccountId = recurring.DestinationAccountId,
+            DestinationAccountName = destAccountName,
+            IsModified = isModified,
+            IsSkipped = isSkipped,
+            IsGenerated = sourceTransactionId.HasValue || destTransactionId.HasValue,
+            SourceTransactionId = sourceTransactionId,
+            DestinationTransactionId = destTransactionId,
+        };
+    }
 }

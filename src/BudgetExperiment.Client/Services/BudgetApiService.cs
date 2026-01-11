@@ -337,4 +337,131 @@ public sealed class BudgetApiService : IBudgetApiService
         var response = await this._httpClient.DeleteAsync($"api/v1/transfers/{transferId}");
         return response.IsSuccessStatusCode;
     }
+
+    // Recurring Transfers
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null)
+    {
+        var url = "api/v1/recurring-transfers";
+        if (accountId.HasValue)
+        {
+            url += $"?accountId={accountId.Value}";
+        }
+
+        var result = await this._httpClient.GetFromJsonAsync<List<RecurringTransferDto>>(url, JsonOptions);
+        return result ?? new List<RecurringTransferDto>();
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransferDto?> GetRecurringTransferAsync(Guid id)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<RecurringTransferDto>($"api/v1/recurring-transfers/{id}", JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransferDto?> CreateRecurringTransferAsync(RecurringTransferCreateDto model)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/recurring-transfers", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransferDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransferDto?> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model)
+    {
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transfers/{id}", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransferDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteRecurringTransferAsync(Guid id)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/recurring-transfers/{id}");
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransferDto?> PauseRecurringTransferAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/recurring-transfers/{id}/pause", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransferDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransferDto?> ResumeRecurringTransferAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/recurring-transfers/{id}/resume", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransferDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransferDto?> SkipNextRecurringTransferAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/recurring-transfers/{id}/skip", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransferDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<RecurringTransferInstanceDto>> GetProjectedRecurringTransfersAsync(DateOnly from, DateOnly to, Guid? accountId = null)
+    {
+        var url = $"api/v1/recurring-transfers/projected?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        if (accountId.HasValue)
+        {
+            url += $"&accountId={accountId.Value}";
+        }
+
+        var result = await this._httpClient.GetFromJsonAsync<List<RecurringTransferInstanceDto>>(url, JsonOptions);
+        return result ?? new List<RecurringTransferInstanceDto>();
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SkipRecurringTransferInstanceAsync(Guid id, DateOnly date)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/recurring-transfers/{id}/instances/{date:yyyy-MM-dd}");
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecurringTransferInstanceDto?> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model)
+    {
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transfers/{id}/instances/{date:yyyy-MM-dd}", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<RecurringTransferInstanceDto>(JsonOptions);
+        }
+
+        return null;
+    }
 }

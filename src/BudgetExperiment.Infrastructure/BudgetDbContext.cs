@@ -37,6 +37,16 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<RecurringTransactionException> RecurringTransactionExceptions => this.Set<RecurringTransactionException>();
 
+    /// <summary>
+    /// Gets the recurring transfers.
+    /// </summary>
+    public DbSet<RecurringTransfer> RecurringTransfers => this.Set<RecurringTransfer>();
+
+    /// <summary>
+    /// Gets the recurring transfer exceptions.
+    /// </summary>
+    public DbSet<RecurringTransferException> RecurringTransferExceptions => this.Set<RecurringTransferException>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

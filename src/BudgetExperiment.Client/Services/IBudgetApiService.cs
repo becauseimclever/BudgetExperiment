@@ -215,4 +215,89 @@ public interface IBudgetApiService
     /// <param name="transferId">The transfer identifier.</param>
     /// <returns>True if deleted successfully.</returns>
     Task<bool> DeleteTransferAsync(Guid transferId);
+
+    // Recurring Transfers
+
+    /// <summary>
+    /// Gets all recurring transfers.
+    /// </summary>
+    /// <param name="accountId">Optional filter by account (source or destination).</param>
+    /// <returns>List of recurring transfers.</returns>
+    Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null);
+
+    /// <summary>
+    /// Gets a recurring transfer by ID.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <returns>The recurring transfer or null if not found.</returns>
+    Task<RecurringTransferDto?> GetRecurringTransferAsync(Guid id);
+
+    /// <summary>
+    /// Creates a new recurring transfer.
+    /// </summary>
+    /// <param name="model">The creation data.</param>
+    /// <returns>The created recurring transfer.</returns>
+    Task<RecurringTransferDto?> CreateRecurringTransferAsync(RecurringTransferCreateDto model);
+
+    /// <summary>
+    /// Updates a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <param name="model">The update data.</param>
+    /// <returns>The updated recurring transfer.</returns>
+    Task<RecurringTransferDto?> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model);
+
+    /// <summary>
+    /// Deletes a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <returns>True if deleted successfully.</returns>
+    Task<bool> DeleteRecurringTransferAsync(Guid id);
+
+    /// <summary>
+    /// Pauses a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <returns>The updated recurring transfer.</returns>
+    Task<RecurringTransferDto?> PauseRecurringTransferAsync(Guid id);
+
+    /// <summary>
+    /// Resumes a paused recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <returns>The updated recurring transfer.</returns>
+    Task<RecurringTransferDto?> ResumeRecurringTransferAsync(Guid id);
+
+    /// <summary>
+    /// Skips the next occurrence of a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <returns>The updated recurring transfer.</returns>
+    Task<RecurringTransferDto?> SkipNextRecurringTransferAsync(Guid id);
+
+    /// <summary>
+    /// Gets projected recurring transfer instances for a date range.
+    /// </summary>
+    /// <param name="from">Start date.</param>
+    /// <param name="to">End date.</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>List of projected instances.</returns>
+    Task<IReadOnlyList<RecurringTransferInstanceDto>> GetProjectedRecurringTransfersAsync(DateOnly from, DateOnly to, Guid? accountId = null);
+
+    /// <summary>
+    /// Skips a specific instance of a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <param name="date">The scheduled date to skip.</param>
+    /// <returns>True if skipped successfully.</returns>
+    Task<bool> SkipRecurringTransferInstanceAsync(Guid id, DateOnly date);
+
+    /// <summary>
+    /// Modifies a specific instance of a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer ID.</param>
+    /// <param name="date">The scheduled date to modify.</param>
+    /// <param name="model">The modification data.</param>
+    /// <returns>The modified instance.</returns>
+    Task<RecurringTransferInstanceDto?> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model);
 }

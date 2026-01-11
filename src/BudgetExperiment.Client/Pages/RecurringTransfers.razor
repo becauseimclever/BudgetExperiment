@@ -1,0 +1,585 @@
+@page "/recurring-transfers"
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Recurring Transfers - Budget Experiment</PageTitle>
+
+<div class="recurring-container">
+    <PageHeader Title="Recurring Transfers">
+        <Actions>
+            <button class="add-button" @onclick="ShowAddForm">+ Add Recurring Transfer</button>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                IsDismissible="true"
+                IsRetrying="@isRetrying"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading recurring transfers..." />
+    }
+    else if (errorMessage != null)
+    {
+        @* Error is displayed by ErrorAlert above *@
+    }
+    else if (recurringTransfers.Count == 0)
+    {
+        <div class="empty-state">
+            <div class="empty-icon">↔️🔄</div>
+            <h3>No Recurring Transfers</h3>
+            <p>Set up recurring transfers for automatic money movement between accounts.</p>
+            <button class="btn-primary" @onclick="ShowAddForm">Create Your First Recurring Transfer</button>
+        </div>
+    }
+    else
+    {
+        <div class="recurring-list">
+            @foreach (var transfer in recurringTransfers)
+            {
+                <div class="recurring-card @(transfer.IsActive ? "" : "inactive")">
+                    <div class="recurring-main">
+                        <div class="recurring-info">
+                            <h3 class="recurring-description">@transfer.Description</h3>
+                            <div class="recurring-meta">
+                                <span class="transfer-flow">
+                                    <span class="account-badge from">@transfer.SourceAccountName</span>
+                                    <span class="transfer-arrow">→</span>
+                                    <span class="account-badge to">@transfer.DestinationAccountName</span>
+                                </span>
+                                <span class="frequency-badge">@FormatFrequency(transfer)</span>
+                            </div>
+                        </div>
+                        <div class="recurring-amount positive">
+                            @FormatMoney(transfer.Amount)
+                        </div>
+                    </div>
+                    <div class="recurring-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Next:</span>
+                            <span class="detail-value">@transfer.NextOccurrence.ToString("MMM d, yyyy")</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Started:</span>
+                            <span class="detail-value">@transfer.StartDate.ToString("MMM d, yyyy")</span>
+                        </div>
+                        @if (transfer.EndDate.HasValue)
+                        {
+                            <div class="detail-item">
+                                <span class="detail-label">Ends:</span>
+                                <span class="detail-value">@transfer.EndDate.Value.ToString("MMM d, yyyy")</span>
+                            </div>
+                        }
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="status-badge @(transfer.IsActive ? "active" : "paused")">
+                                @(transfer.IsActive ? "Active" : "Paused")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="recurring-actions">
+                        @if (transfer.IsActive)
+                        {
+                            <button class="btn-action" @onclick="() => SkipNext(transfer)" title="Skip next occurrence">
+                                ⏭️ Skip
+                            </button>
+                            <button class="btn-action" @onclick="() => Pause(transfer)" title="Pause">
+                                ⏸️ Pause
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn-action btn-resume" @onclick="() => Resume(transfer)" title="Resume">
+                                ▶️ Resume
+                            </button>
+                        }
+                        <button class="btn-action btn-edit" @onclick="() => ShowEditForm(transfer)" title="Edit">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn-action btn-delete" @onclick="() => ShowDeleteConfirm(transfer)" title="Delete">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <Modal IsVisible="@showAddForm" Title="Add Recurring Transfer" OnClose="HideForm">
+        <RecurringTransferForm Model="@newRecurring"
+                               OnSubmit="CreateRecurring"
+                               OnCancel="HideForm"
+                               IsSubmitting="@isSubmitting" />
+    </Modal>
+
+    <Modal IsVisible="@showEditForm" Title="Edit Recurring Transfer" OnClose="HideForm">
+        <EditRecurringTransferForm Model="@editModel"
+                                   OnSubmit="UpdateRecurring"
+                                   OnCancel="HideForm"
+                                   IsSubmitting="@isSubmitting" />
+    </Modal>
+
+    <ConfirmDialog IsVisible="@showDeleteConfirm"
+                   Title="Delete Recurring Transfer"
+                   Message="@($"Are you sure you want to delete '{deletingTransfer?.Description}'? Future occurrences will no longer be scheduled.")"
+                   ConfirmText="Delete"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="ConfirmDelete"
+                   OnCancel="CancelDelete" />
+</div>
+
+<style>
+    .recurring-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .add-button {
+        padding: 10px 20px;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .add-button:hover {
+        background: #059669;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #f9fafb;
+        border-radius: 12px;
+        border: 2px dashed #e5e7eb;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 8px;
+        color: #374151;
+    }
+
+    .empty-state p {
+        color: #6b7280;
+        margin: 0 0 24px;
+    }
+
+    .recurring-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .recurring-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.2s;
+    }
+
+    .recurring-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .recurring-card.inactive {
+        opacity: 0.7;
+        background: #f9fafb;
+    }
+
+    .recurring-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .recurring-description {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+        color: #111827;
+    }
+
+    .recurring-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .transfer-flow {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .transfer-arrow {
+        color: #6b7280;
+        font-weight: bold;
+    }
+
+    .account-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .account-badge.from {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .account-badge.to {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .frequency-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .recurring-amount {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .recurring-amount.positive {
+        color: #059669;
+    }
+
+    .recurring-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 12px 0;
+        border-top: 1px solid #f3f4f6;
+        border-bottom: 1px solid #f3f4f6;
+        margin-bottom: 12px;
+    }
+
+    .detail-item {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .detail-label {
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+
+    .detail-value {
+        color: #374151;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.paused {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .recurring-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 6px 12px;
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-action.btn-resume {
+        background: #d1fae5;
+        border-color: #a7f3d0;
+        color: #065f46;
+    }
+
+    .btn-action.btn-resume:hover {
+        background: #a7f3d0;
+    }
+
+    .btn-action.btn-delete {
+        background: #fee2e2;
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+
+    .btn-action.btn-delete:hover {
+        background: #fecaca;
+    }
+
+    .btn-primary {
+        padding: 12px 24px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+</style>
+
+@code {
+    private bool isLoading = true;
+    private bool isRetrying;
+    private bool isSubmitting = false;
+    private bool isDeleting = false;
+    private string? errorMessage;
+    private List<RecurringTransferDto> recurringTransfers = new();
+
+    private bool showAddForm = false;
+    private bool showEditForm = false;
+    private bool showDeleteConfirm = false;
+
+    private RecurringTransferCreateDto newRecurring = new();
+    private RecurringTransferUpdateDto editModel = new();
+    private Guid editingId;
+    private RecurringTransferDto? deletingTransfer;
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecurringTransfers();
+    }
+
+    private async Task LoadRecurringTransfers()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            recurringTransfers = (await ApiService.GetRecurringTransfersAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load recurring transfers: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadRecurringTransfers();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private void ShowAddForm()
+    {
+        newRecurring = new RecurringTransferCreateDto
+        {
+            Frequency = "Monthly",
+            StartDate = DateOnly.FromDateTime(DateTime.Today),
+            Amount = new MoneyDto { Currency = "USD", Amount = 0 },
+        };
+        showAddForm = true;
+    }
+
+    private void ShowEditForm(RecurringTransferDto transfer)
+    {
+        editingId = transfer.Id;
+        editModel = new RecurringTransferUpdateDto
+        {
+            Description = transfer.Description,
+            Amount = transfer.Amount,
+            Frequency = transfer.Frequency,
+            Interval = transfer.Interval,
+            DayOfMonth = transfer.DayOfMonth,
+            DayOfWeek = transfer.DayOfWeek,
+            MonthOfYear = transfer.MonthOfYear,
+            EndDate = transfer.EndDate,
+        };
+        showEditForm = true;
+    }
+
+    private void HideForm()
+    {
+        showAddForm = false;
+        showEditForm = false;
+    }
+
+    private async Task CreateRecurring(RecurringTransferCreateDto model)
+    {
+        isSubmitting = true;
+        try
+        {
+            var result = await ApiService.CreateRecurringTransferAsync(model);
+            if (result != null)
+            {
+                showAddForm = false;
+                await LoadRecurringTransfers();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task UpdateRecurring(RecurringTransferUpdateDto model)
+    {
+        isSubmitting = true;
+        try
+        {
+            var result = await ApiService.UpdateRecurringTransferAsync(editingId, model);
+            if (result != null)
+            {
+                showEditForm = false;
+                await LoadRecurringTransfers();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task SkipNext(RecurringTransferDto transfer)
+    {
+        var result = await ApiService.SkipNextRecurringTransferAsync(transfer.Id);
+        if (result != null)
+        {
+            await LoadRecurringTransfers();
+        }
+    }
+
+    private async Task Pause(RecurringTransferDto transfer)
+    {
+        var result = await ApiService.PauseRecurringTransferAsync(transfer.Id);
+        if (result != null)
+        {
+            await LoadRecurringTransfers();
+        }
+    }
+
+    private async Task Resume(RecurringTransferDto transfer)
+    {
+        var result = await ApiService.ResumeRecurringTransferAsync(transfer.Id);
+        if (result != null)
+        {
+            await LoadRecurringTransfers();
+        }
+    }
+
+    private void ShowDeleteConfirm(RecurringTransferDto transfer)
+    {
+        deletingTransfer = transfer;
+        showDeleteConfirm = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (deletingTransfer == null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        StateHasChanged();
+
+        try
+        {
+            var deleted = await ApiService.DeleteRecurringTransferAsync(deletingTransfer.Id);
+            if (deleted)
+            {
+                showDeleteConfirm = false;
+                deletingTransfer = null;
+                await LoadRecurringTransfers();
+            }
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+        deletingTransfer = null;
+    }
+
+    private static string FormatFrequency(RecurringTransferDto transfer)
+    {
+        return transfer.Frequency switch
+        {
+            "Daily" => "Daily",
+            "Weekly" => $"Weekly on {transfer.DayOfWeek}",
+            "BiWeekly" => $"Bi-Weekly on {transfer.DayOfWeek}",
+            "Monthly" => transfer.DayOfMonth.HasValue ? $"Monthly on day {transfer.DayOfMonth}" : "Monthly",
+            "Quarterly" => transfer.DayOfMonth.HasValue ? $"Quarterly on day {transfer.DayOfMonth}" : "Quarterly",
+            "Yearly" => transfer.DayOfMonth.HasValue ? $"Yearly on day {transfer.DayOfMonth}" : "Yearly",
+            _ => transfer.Frequency,
+        };
+    }
+
+    private static string FormatMoney(MoneyDto money)
+    {
+        return $"{money.Currency} {money.Amount:N2}";
+    }
+}

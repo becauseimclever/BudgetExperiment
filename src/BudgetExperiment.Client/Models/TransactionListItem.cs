@@ -45,6 +45,12 @@ public sealed class TransactionListItem
     /// <summary>Gets or sets the transfer direction (null if not a transfer).</summary>
     public string? TransferDirection { get; set; }
 
+    /// <summary>Gets or sets whether this is a recurring transfer instance.</summary>
+    public bool IsRecurringTransfer { get; set; }
+
+    /// <summary>Gets or sets the recurring transfer ID (if from recurring transfer).</summary>
+    public Guid? RecurringTransferId { get; set; }
+
     /// <summary>
     /// Creates a TransactionListItem from an actual transaction.
     /// </summary>
@@ -85,6 +91,38 @@ public sealed class TransactionListItem
             IsRecurring = true,
             IsModified = instance.IsModified,
             CreatedAt = null,
+        };
+    }
+
+    /// <summary>
+    /// Creates a TransactionListItem from a recurring transfer instance.
+    /// </summary>
+    /// <param name="instance">The recurring transfer instance DTO.</param>
+    /// <param name="isSource">True if viewing from source account perspective (outgoing), false for destination (incoming).</param>
+    /// <returns>A new TransactionListItem.</returns>
+    public static TransactionListItem FromRecurringTransferInstance(RecurringTransferInstanceDto instance, bool isSource)
+    {
+        var amount = isSource
+            ? new MoneyDto { Currency = instance.Amount.Currency, Amount = -instance.Amount.Amount }
+            : instance.Amount;
+        var description = isSource
+            ? $"Transfer to {instance.DestinationAccountName}: {instance.Description}"
+            : $"Transfer from {instance.SourceAccountName}: {instance.Description}";
+
+        return new TransactionListItem
+        {
+            Id = instance.RecurringTransferId,
+            Date = instance.EffectiveDate,
+            Description = description,
+            Category = null,
+            Amount = amount,
+            IsRecurring = true,
+            IsRecurringTransfer = true,
+            IsModified = instance.IsModified,
+            CreatedAt = null,
+            IsTransfer = true,
+            RecurringTransferId = instance.RecurringTransferId,
+            TransferDirection = isSource ? "Source" : "Destination",
         };
     }
 }
