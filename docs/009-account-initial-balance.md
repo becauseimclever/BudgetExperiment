@@ -195,47 +195,47 @@ All fields optional - only provided fields are updated.
 ## Implementation Plan (TDD Order)
 
 ### Phase 1: Domain Layer
-1. [ ] Add `InitialBalance` (MoneyValue) property to `Account` entity
-2. [ ] Add `InitialBalanceDate` (DateOnly) property to `Account` entity
-3. [ ] Update `Account.Create()` factory method with new parameters (with defaults)
-4. [ ] Add `Account.Update()` method or individual update methods
-5. [ ] Add `Account.UpdateInitialBalance()` method with validation
-6. [ ] Unit tests for entity creation with initial balance
-7. [ ] Unit tests for entity update methods
+1. [x] Add `InitialBalance` (MoneyValue) property to `Account` entity
+2. [x] Add `InitialBalanceDate` (DateOnly) property to `Account` entity
+3. [x] Update `Account.Create()` factory method with new parameters (with defaults)
+4. [x] Add `Account.Update()` method or individual update methods
+5. [x] Add `Account.UpdateInitialBalance()` method with validation
+6. [x] Unit tests for entity creation with initial balance
+7. [x] Unit tests for entity update methods
 
 ### Phase 2: Infrastructure Layer
-1. [ ] Update `AccountConfiguration` with new column mappings
-2. [ ] Create migration adding `InitialBalance` and `InitialBalanceDate` columns
-3. [ ] Add data migration to set default values for existing accounts
-4. [ ] Integration tests for repository with new fields
+1. [x] Update `AccountConfiguration` with new column mappings
+2. [x] Create migration adding `InitialBalance` and `InitialBalanceDate` columns
+3. [x] Add data migration to set default values for existing accounts
+4. [x] Integration tests for repository with new fields
 
 ### Phase 3: Application Layer
-1. [ ] Update `AccountCreateDto` with `InitialBalance` and `InitialBalanceDate`
-2. [ ] Create `AccountUpdateDto` for edit operations
-3. [ ] Update `AccountDto` response with new fields
-4. [ ] Update `AccountService.CreateAsync()` to handle initial balance
-5. [ ] Add `AccountService.UpdateAsync()` method
-6. [ ] Update mapping logic
-7. [ ] Unit tests with mocked repository
+1. [x] Update `AccountCreateDto` with `InitialBalance` and `InitialBalanceDate`
+2. [x] Create `AccountUpdateDto` for edit operations
+3. [x] Update `AccountDto` response with new fields
+4. [x] Update `AccountService.CreateAsync()` to handle initial balance
+5. [x] Add `AccountService.UpdateAsync()` method
+6. [x] Update mapping logic
+7. [x] Unit tests with mocked repository
 
 ### Phase 4: API Layer
-1. [ ] Update `AccountsController.CreateAsync()` to accept new fields
-2. [ ] Add `AccountsController.UpdateAsync()` endpoint (PUT)
-3. [ ] Update OpenAPI documentation
-4. [ ] Integration tests for create with initial balance
-5. [ ] Integration tests for update endpoint
+1. [x] Update `AccountsController.CreateAsync()` to accept new fields
+2. [x] Add `AccountsController.UpdateAsync()` endpoint (PUT)
+3. [x] Update OpenAPI documentation
+4. [x] Integration tests for create with initial balance
+5. [x] Integration tests for update endpoint
 
 ### Phase 5: Client Layer
-1. [ ] Update `AccountCreateModel` with `InitialBalance` and `InitialBalanceDate`
-2. [ ] Create `AccountUpdateModel` for edit operations
-3. [ ] Update `AccountModel` with new fields
-4. [ ] Update `AccountForm.razor` to include initial balance fields
-5. [ ] Create `AccountEditForm.razor` or extend existing form
-6. [ ] Add edit button and dialog to `Accounts.razor` page
-7. [ ] Extend `IBudgetApiService` with `UpdateAccountAsync()` method
-8. [ ] Implement API client method
-9. [ ] Update calendar balance calculations to use initial balance
-10. [ ] Update account transaction view to show initial balance
+1. [x] Update `AccountCreateModel` with `InitialBalance` and `InitialBalanceDate`
+2. [x] Create `AccountUpdateModel` for edit operations
+3. [x] Update `AccountModel` with new fields
+4. [x] Update `AccountForm.razor` to include initial balance fields
+5. [x] Create `AccountEditForm.razor` or extend existing form
+6. [x] Add edit button and dialog to `Accounts.razor` page
+7. [x] Extend `IBudgetApiService` with `UpdateAccountAsync()` method
+8. [x] Implement API client method
+9. [x] Update calendar balance calculations to use initial balance
+10. [x] Update account transaction view to show initial balance
 11. [ ] Component tests where appropriate
 
 ---

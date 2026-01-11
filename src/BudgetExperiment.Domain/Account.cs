@@ -37,6 +37,16 @@ public sealed class Account
     public AccountType Type { get; private set; }
 
     /// <summary>
+    /// Gets the initial balance for this account.
+    /// </summary>
+    public MoneyValue InitialBalance { get; private set; } = MoneyValue.Zero("USD");
+
+    /// <summary>
+    /// Gets the date as of which the initial balance was recorded.
+    /// </summary>
+    public DateOnly InitialBalanceDate { get; private set; }
+
+    /// <summary>
     /// Gets the UTC timestamp when the account was created.
     /// </summary>
     public DateTime CreatedAt { get; private set; }
@@ -56,9 +66,15 @@ public sealed class Account
     /// </summary>
     /// <param name="name">The account name.</param>
     /// <param name="type">The account type.</param>
+    /// <param name="initialBalance">Optional initial balance (defaults to zero USD).</param>
+    /// <param name="initialBalanceDate">Optional date for initial balance (defaults to today).</param>
     /// <returns>A new <see cref="Account"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static Account Create(string name, AccountType type)
+    public static Account Create(
+        string name,
+        AccountType type,
+        MoneyValue? initialBalance = null,
+        DateOnly? initialBalanceDate = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -71,6 +87,8 @@ public sealed class Account
             Id = Guid.NewGuid(),
             Name = name.Trim(),
             Type = type,
+            InitialBalance = initialBalance ?? MoneyValue.Zero("USD"),
+            InitialBalanceDate = initialBalanceDate ?? DateOnly.FromDateTime(now),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -99,6 +117,24 @@ public sealed class Account
     public void UpdateType(AccountType type)
     {
         this.Type = type;
+        this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the initial balance and its effective date.
+    /// </summary>
+    /// <param name="balance">The new initial balance.</param>
+    /// <param name="asOfDate">The date as of which the balance is recorded.</param>
+    /// <exception cref="DomainException">Thrown when balance is null.</exception>
+    public void UpdateInitialBalance(MoneyValue balance, DateOnly asOfDate)
+    {
+        if (balance is null)
+        {
+            throw new DomainException("Initial balance is required.");
+        }
+
+        this.InitialBalance = balance;
+        this.InitialBalanceDate = asOfDate;
         this.UpdatedAt = DateTime.UtcNow;
     }
 

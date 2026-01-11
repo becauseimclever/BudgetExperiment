@@ -205,4 +205,84 @@ public class AccountTests
         // Assert
         Assert.Equal(type, account.Type);
     }
+
+    [Fact]
+    public void Create_With_Default_InitialBalance_Returns_Zero()
+    {
+        // Act
+        var account = Account.Create("Checking", AccountType.Checking);
+
+        // Assert
+        Assert.NotNull(account.InitialBalance);
+        Assert.Equal(0m, account.InitialBalance.Amount);
+        Assert.Equal("USD", account.InitialBalance.Currency);
+    }
+
+    [Fact]
+    public void Create_With_Default_InitialBalanceDate_Returns_Today()
+    {
+        // Act
+        var account = Account.Create("Checking", AccountType.Checking);
+
+        // Assert
+        Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), account.InitialBalanceDate);
+    }
+
+    [Fact]
+    public void Create_With_InitialBalance_Sets_Balance()
+    {
+        // Arrange
+        var initialBalance = MoneyValue.Create("USD", 1500.00m);
+        var initialBalanceDate = new DateOnly(2026, 1, 1);
+
+        // Act
+        var account = Account.Create("Checking", AccountType.Checking, initialBalance, initialBalanceDate);
+
+        // Assert
+        Assert.Equal(initialBalance, account.InitialBalance);
+        Assert.Equal(initialBalanceDate, account.InitialBalanceDate);
+    }
+
+    [Fact]
+    public void Create_With_Negative_InitialBalance_Succeeds()
+    {
+        // Arrange - Credit card with existing debt
+        var initialBalance = MoneyValue.Create("USD", -2500.00m);
+        var initialBalanceDate = new DateOnly(2026, 1, 1);
+
+        // Act
+        var account = Account.Create("Credit Card", AccountType.CreditCard, initialBalance, initialBalanceDate);
+
+        // Assert
+        Assert.Equal(-2500.00m, account.InitialBalance.Amount);
+    }
+
+    [Fact]
+    public void UpdateInitialBalance_Changes_Balance_And_UpdatedAt()
+    {
+        // Arrange
+        var account = Account.Create("Checking", AccountType.Checking);
+        var originalUpdatedAt = account.UpdatedAt;
+        var newBalance = MoneyValue.Create("USD", 2000.00m);
+        var newDate = new DateOnly(2026, 1, 15);
+
+        // Act
+        account.UpdateInitialBalance(newBalance, newDate);
+
+        // Assert
+        Assert.Equal(newBalance, account.InitialBalance);
+        Assert.Equal(newDate, account.InitialBalanceDate);
+        Assert.True(account.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void UpdateInitialBalance_With_Null_Balance_Throws()
+    {
+        // Arrange
+        var account = Account.Create("Checking", AccountType.Checking);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => account.UpdateInitialBalance(null!, new DateOnly(2026, 1, 1)));
+        Assert.Contains("balance", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

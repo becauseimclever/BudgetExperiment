@@ -22,6 +22,25 @@
                 OnDismiss="DismissError"
                 IsRetrying="@isRetrying" />
 
+    @if (account != null && account.InitialBalance != 0)
+    {
+        <div class="initial-balance-banner">
+            <div class="balance-info">
+                <span class="balance-label">Starting Balance:</span>
+                <span class="balance-amount @(account.InitialBalance < 0 ? "negative" : "")">
+                    @account.InitialBalance.ToString("C")
+                </span>
+                <span class="balance-date">(as of @account.InitialBalanceDate.ToString("MMM d, yyyy"))</span>
+            </div>
+            <div class="current-balance">
+                <span class="balance-label">Current Balance:</span>
+                <span class="balance-amount @(currentBalance < 0 ? "negative" : "")">
+                    @currentBalance.ToString("C")
+                </span>
+            </div>
+        </div>
+    }
+
     <div class="filter-section">
         <div class="date-filter">
             <label>From:</label>
@@ -165,6 +184,50 @@
     .recurring-count {
         color: #007bff;
     }
+
+    .initial-balance-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .balance-info,
+    .current-balance {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .balance-label {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .balance-amount {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #0f172a;
+    }
+
+    .balance-amount.negative {
+        color: #dc2626;
+    }
+
+    .balance-date {
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+
+    .current-balance .balance-amount {
+        font-size: 1.2rem;
+    }
 </style>
 
 @code {
@@ -202,6 +265,7 @@
 
     private decimal totalAmount => allItems.Sum(i => i.Amount.Amount);
     private int recurringCount => allItems.Count(i => i.IsRecurring);
+    private decimal currentBalance => (account?.InitialBalance ?? 0) + totalAmount;
 
     private Guid previousAccountId;
 

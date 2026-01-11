@@ -64,8 +64,57 @@ public sealed class AccountService
             throw new DomainException($"Invalid account type: {dto.Type}");
         }
 
-        var account = Account.Create(dto.Name, accountType);
+        var initialBalance = MoneyValue.Create(dto.InitialBalanceCurrency, dto.InitialBalance);
+        var initialBalanceDate = dto.InitialBalanceDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var account = Account.Create(dto.Name, accountType, initialBalance, initialBalanceDate);
         await this._repository.AddAsync(account, cancellationToken);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        return DomainToDtoMapper.ToDto(account);
+    }
+
+    /// <summary>
+    /// Updates an existing account.
+    /// </summary>
+    /// <param name="id">The account identifier.</param>
+    /// <param name="dto">The account update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated account DTO, or null if not found.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public async Task<AccountDto?> UpdateAsync(Guid id, AccountUpdateDto dto, CancellationToken cancellationToken = default)
+    {
+        var account = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (account is null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Name))
+        {
+            account.UpdateName(dto.Name);
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Type))
+        {
+            if (!Enum.TryParse<AccountType>(dto.Type, ignoreCase: true, out var accountType))
+            {
+                throw new DomainException($"Invalid account type: {dto.Type}");
+            }
+
+            account.UpdateType(accountType);
+        }
+
+        if (dto.InitialBalance.HasValue || dto.InitialBalanceCurrency != null || dto.InitialBalanceDate.HasValue)
+        {
+            var currentBalance = account.InitialBalance;
+            var newAmount = dto.InitialBalance ?? currentBalance.Amount;
+            var newCurrency = dto.InitialBalanceCurrency ?? currentBalance.Currency;
+            var newDate = dto.InitialBalanceDate ?? account.InitialBalanceDate;
+
+            var newBalance = MoneyValue.Create(newCurrency, newAmount);
+            account.UpdateInitialBalance(newBalance, newDate);
+        }
+
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(account);
     }

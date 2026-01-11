@@ -35,8 +35,16 @@
                     <div class="account-info">
                         <h3>@account.Name</h3>
                         <span class="account-type">@account.Type</span>
+                        <div class="initial-balance">
+                            <span class="balance-label">Initial Balance:</span>
+                            <span class="balance-value @(account.InitialBalance < 0 ? "negative" : "")">
+                                @(account.InitialBalance.ToString("C"))
+                            </span>
+                            <span class="balance-date">(as of @account.InitialBalanceDate.ToString("M/d/yyyy"))</span>
+                        </div>
                     </div>
                     <div class="account-actions">
+                        <button class="btn-edit" @onclick="() => ShowEditAccount(account)" title="Edit account">✏️</button>
                         <button class="btn-transfer" @onclick="() => ShowTransferFrom(account.Id)" title="Transfer from this account">↔</button>
                         <button class="btn-view" @onclick="() => ViewAccount(account.Id)">Transactions</button>
                         <button class="btn-delete" @onclick="() => DeleteAccount(account.Id)">Delete</button>
@@ -51,6 +59,17 @@
                      OnSubmit="CreateAccount"
                      OnCancel="HideAddAccount"
                      IsSubmitting="@isSubmitting" />
+    </Modal>
+
+    <Modal IsVisible="@showEditAccount" Title="Edit Account" OnClose="HideEditAccount">
+        <AccountForm Model="@editAccount"
+                     OnSubmit="UpdateAccount"
+                     OnCancel="HideEditAccount"
+                     SubmitButtonText="Save Changes"
+                     IsSubmitting="@isSubmitting" />
+        <div class="edit-warning">
+            ⚠️ Changing initial balance will affect all calculated running balances.
+        </div>
     </Modal>
 
     <Modal IsVisible="@showTransfer" Title="Transfer Between Accounts" OnClose="HideTransfer">
@@ -133,10 +152,49 @@
         font-size: 0.9em;
     }
 
+    .initial-balance {
+        margin-top: 10px;
+        font-size: 0.9em;
+    }
+
+    .balance-label {
+        color: #666;
+    }
+
+    .balance-value {
+        font-weight: 600;
+        color: #2d3748;
+        margin-left: 5px;
+    }
+
+    .balance-value.negative {
+        color: #dc3545;
+    }
+
+    .balance-date {
+        color: #888;
+        font-size: 0.85em;
+        margin-left: 5px;
+    }
+
     .account-actions {
         margin-top: 15px;
         display: flex;
         gap: 10px;
+    }
+
+    .btn-edit {
+        padding: 6px 10px;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-edit:hover {
+        background: #d97706;
     }
 
     .btn-view {
@@ -178,6 +236,16 @@
     .btn-delete:hover {
         background: #c82333;
     }
+
+    .edit-warning {
+        margin-top: 15px;
+        padding: 10px;
+        background: #fef3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        font-size: 0.9em;
+        color: #856404;
+    }
 </style>
 
 @code {
@@ -188,6 +256,11 @@
     private List<AccountDto> accounts = new();
     private bool showAddAccount = false;
     private AccountCreateDto newAccount = new();
+
+    // Edit state
+    private bool showEditAccount = false;
+    private AccountCreateDto editAccount = new();
+    private Guid? editingAccountId = null;
 
     // Transfer state
     private bool showTransfer = false;
@@ -252,6 +325,59 @@
     private void HideAddAccount()
     {
         showAddAccount = false;
+    }
+
+    private void ShowEditAccount(AccountDto account)
+    {
+        editingAccountId = account.Id;
+        editAccount = new AccountCreateDto
+        {
+            Name = account.Name,
+            Type = account.Type,
+            InitialBalance = account.InitialBalance,
+            InitialBalanceCurrency = account.InitialBalanceCurrency,
+            InitialBalanceDate = account.InitialBalanceDate,
+        };
+        showEditAccount = true;
+    }
+
+    private void HideEditAccount()
+    {
+        showEditAccount = false;
+        editingAccountId = null;
+    }
+
+    private async Task UpdateAccount(AccountCreateDto model)
+    {
+        if (editingAccountId == null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            var updateDto = new AccountUpdateDto
+            {
+                Name = model.Name,
+                Type = model.Type,
+                InitialBalance = model.InitialBalance,
+                InitialBalanceCurrency = model.InitialBalanceCurrency,
+                InitialBalanceDate = model.InitialBalanceDate,
+            };
+
+            var result = await ApiService.UpdateAccountAsync(editingAccountId.Value, updateDto);
+            if (result != null)
+            {
+                showEditAccount = false;
+                editingAccountId = null;
+                await LoadAccounts();
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 
     private void ShowTransfer()

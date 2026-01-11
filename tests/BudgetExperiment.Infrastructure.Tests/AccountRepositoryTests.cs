@@ -179,4 +179,75 @@ public class AccountRepositoryTests
         Assert.Equal(2, page2.Count);
         Assert.NotEqual(page1[0].Id, page2[0].Id);
     }
+
+    [Fact]
+    public async Task AddAsync_Persists_Account_With_InitialBalance()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new AccountRepository(context);
+        var initialBalance = MoneyValue.Create("USD", 1500.00m);
+        var initialBalanceDate = new DateOnly(2026, 1, 1);
+        var account = Account.Create("Checking With Balance", AccountType.Checking, initialBalance, initialBalanceDate);
+
+        // Act
+        await repository.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Assert
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new AccountRepository(verifyContext);
+        var retrieved = await verifyRepo.GetByIdAsync(account.Id);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal(1500.00m, retrieved.InitialBalance.Amount);
+        Assert.Equal("USD", retrieved.InitialBalance.Currency);
+        Assert.Equal(new DateOnly(2026, 1, 1), retrieved.InitialBalanceDate);
+    }
+
+    [Fact]
+    public async Task Account_InitialBalance_Update_Persists()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new AccountRepository(context);
+        var account = Account.Create("Update Balance Test", AccountType.Savings);
+        await repository.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act - update initial balance
+        account.UpdateInitialBalance(MoneyValue.Create("USD", 2500.00m), new DateOnly(2026, 1, 15));
+        await context.SaveChangesAsync();
+
+        // Assert
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new AccountRepository(verifyContext);
+        var retrieved = await verifyRepo.GetByIdAsync(account.Id);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal(2500.00m, retrieved.InitialBalance.Amount);
+        Assert.Equal(new DateOnly(2026, 1, 15), retrieved.InitialBalanceDate);
+    }
+
+    [Fact]
+    public async Task Account_With_Negative_InitialBalance_Persists()
+    {
+        // Arrange - credit card with existing debt
+        await using var context = this._fixture.CreateContext();
+        var repository = new AccountRepository(context);
+        var initialBalance = MoneyValue.Create("USD", -2500.00m);
+        var account = Account.Create("Credit Card Debt", AccountType.CreditCard, initialBalance, new DateOnly(2026, 1, 1));
+
+        // Act
+        await repository.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Assert
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new AccountRepository(verifyContext);
+        var retrieved = await verifyRepo.GetByIdAsync(account.Id);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal(-2500.00m, retrieved.InitialBalance.Amount);
+    }
 }

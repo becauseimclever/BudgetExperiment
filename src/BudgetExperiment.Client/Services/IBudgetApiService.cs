@@ -33,6 +33,14 @@ public interface IBudgetApiService
     Task<AccountDto?> CreateAccountAsync(AccountCreateDto model);
 
     /// <summary>
+    /// Updates an existing account.
+    /// </summary>
+    /// <param name="id">The account ID.</param>
+    /// <param name="model">The account update data.</param>
+    /// <returns>The updated account.</returns>
+    Task<AccountDto?> UpdateAccountAsync(Guid id, AccountUpdateDto model);
+
+    /// <summary>
     /// Deletes an account.
     /// </summary>
     /// <param name="id">The account ID.</param>

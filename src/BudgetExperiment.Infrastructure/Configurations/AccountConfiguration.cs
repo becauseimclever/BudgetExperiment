@@ -32,6 +32,23 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasConversion<string>()
             .HasMaxLength(50);
 
+        // Initial balance as owned type
+        builder.OwnsOne(a => a.InitialBalance, money =>
+        {
+            money.Property(m => m.Amount)
+                .HasColumnName("InitialBalance")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            money.Property(m => m.Currency)
+                .HasColumnName("InitialBalanceCurrency")
+                .HasMaxLength(3)
+                .IsRequired();
+        });
+
+        builder.Property(a => a.InitialBalanceDate)
+            .IsRequired();
+
         builder.Property(a => a.CreatedAt)
             .IsRequired();
 

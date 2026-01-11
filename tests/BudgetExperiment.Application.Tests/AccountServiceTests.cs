@@ -90,4 +90,135 @@ public class AccountServiceTests
         Assert.False(result);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
     }
+
+    [Fact]
+    public async Task CreateAsync_With_InitialBalance_Creates_Account()
+    {
+        // Arrange
+        var repo = new Mock<IAccountRepository>();
+        repo.Setup(r => r.AddAsync(It.IsAny<Account>(), default)).Returns(Task.CompletedTask);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new AccountService(repo.Object, uow.Object);
+        var dto = new AccountCreateDto
+        {
+            Name = "Checking With Balance",
+            Type = "Checking",
+            InitialBalance = 1500.00m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2026, 1, 1),
+        };
+
+        // Act
+        var result = await service.CreateAsync(dto);
+
+        // Assert
+        Assert.Equal("Checking With Balance", result.Name);
+        Assert.Equal(1500.00m, result.InitialBalance);
+        Assert.Equal("USD", result.InitialBalanceCurrency);
+        Assert.Equal(new DateOnly(2026, 1, 1), result.InitialBalanceDate);
+    }
+
+    [Fact]
+    public async Task CreateAsync_Without_InitialBalanceDate_Defaults_To_Today()
+    {
+        // Arrange
+        var repo = new Mock<IAccountRepository>();
+        repo.Setup(r => r.AddAsync(It.IsAny<Account>(), default)).Returns(Task.CompletedTask);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new AccountService(repo.Object, uow.Object);
+        var dto = new AccountCreateDto
+        {
+            Name = "Default Date Test",
+            Type = "Savings",
+            InitialBalance = 100.00m,
+        };
+
+        // Act
+        var result = await service.CreateAsync(dto);
+
+        // Assert
+        Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), result.InitialBalanceDate);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Updates_Account_Name()
+    {
+        // Arrange
+        var account = Account.Create("Original Name", AccountType.Checking);
+        var repo = new Mock<IAccountRepository>();
+        repo.Setup(r => r.GetByIdAsync(account.Id, default)).ReturnsAsync(account);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new AccountService(repo.Object, uow.Object);
+        var dto = new AccountUpdateDto { Name = "Updated Name" };
+
+        // Act
+        var result = await service.UpdateAsync(account.Id, dto);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Updated Name", result.Name);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Updates_InitialBalance()
+    {
+        // Arrange
+        var account = Account.Create("Balance Test", AccountType.Savings);
+        var repo = new Mock<IAccountRepository>();
+        repo.Setup(r => r.GetByIdAsync(account.Id, default)).ReturnsAsync(account);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new AccountService(repo.Object, uow.Object);
+        var dto = new AccountUpdateDto
+        {
+            InitialBalance = 2500.00m,
+            InitialBalanceDate = new DateOnly(2026, 1, 15),
+        };
+
+        // Act
+        var result = await service.UpdateAsync(account.Id, dto);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2500.00m, result.InitialBalance);
+        Assert.Equal(new DateOnly(2026, 1, 15), result.InitialBalanceDate);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Returns_Null_If_Not_Found()
+    {
+        // Arrange
+        var repo = new Mock<IAccountRepository>();
+        repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Account?)null);
+        var uow = new Mock<IUnitOfWork>();
+        var service = new AccountService(repo.Object, uow.Object);
+        var dto = new AccountUpdateDto { Name = "New Name" };
+
+        // Act
+        var result = await service.UpdateAsync(Guid.NewGuid(), dto);
+
+        // Assert
+        Assert.Null(result);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_With_Invalid_Type_Throws()
+    {
+        // Arrange
+        var account = Account.Create("Type Test", AccountType.Checking);
+        var repo = new Mock<IAccountRepository>();
+        repo.Setup(r => r.GetByIdAsync(account.Id, default)).ReturnsAsync(account);
+        var uow = new Mock<IUnitOfWork>();
+        var service = new AccountService(repo.Object, uow.Object);
+        var dto = new AccountUpdateDto { Type = "InvalidType" };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<DomainException>(() => service.UpdateAsync(account.Id, dto));
+        Assert.Contains("Invalid account type", ex.Message);
+    }
 }

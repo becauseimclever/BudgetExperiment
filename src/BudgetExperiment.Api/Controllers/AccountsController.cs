@@ -77,6 +77,28 @@ public sealed class AccountsController : ControllerBase
     }
 
     /// <summary>
+    /// Updates an existing account.
+    /// </summary>
+    /// <param name="id">The account identifier.</param>
+    /// <param name="dto">The account update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated account.</returns>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType<AccountDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] AccountUpdateDto dto, CancellationToken cancellationToken)
+    {
+        var account = await this._service.UpdateAsync(id, dto, cancellationToken);
+        if (account is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(account);
+    }
+
+    /// <summary>
     /// Deletes an account by ID.
     /// </summary>
     /// <param name="id">The account identifier.</param>

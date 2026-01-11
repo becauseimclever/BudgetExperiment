@@ -64,6 +64,18 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<AccountDto?> UpdateAccountAsync(Guid id, AccountUpdateDto model)
+    {
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/accounts/{id}", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
     public async Task<bool> DeleteAccountAsync(Guid id)
     {
         var response = await this._httpClient.DeleteAsync($"api/v1/accounts/{id}");
