@@ -1,0 +1,64 @@
+/* ==========================================================================
+   Icon Component Styles
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* Base icon styling */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Icon sizes */
+.icon-xs { width: 12px; height: 12px; }
+.icon-sm { width: 16px; height: 16px; }
+.icon-md { width: 20px; height: 20px; }
+.icon-lg { width: 24px; height: 24px; }
+.icon-xl { width: 32px; height: 32px; }
+.icon-2xl { width: 48px; height: 48px; }
+
+/* Icon colors (inherit from parent by default via currentColor) */
+.icon-primary { color: var(--color-brand-primary); }
+.icon-secondary { color: var(--color-text-secondary); }
+.icon-success { color: var(--color-success); }
+.icon-warning { color: var(--color-warning); }
+.icon-error { color: var(--color-error); }
+.icon-info { color: var(--color-info); }
+.icon-income { color: var(--color-income); }
+.icon-expense { color: var(--color-expense); }
+.icon-transfer { color: var(--color-transfer); }
+.icon-recurring { color: var(--color-recurring); }
+
+/* Spinning animation for loading icons */
+.icon-spin {
+  animation: icon-spin 1s linear infinite;
+}
+
+@keyframes icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Icon in button - adjust spacing */
+.btn .icon {
+  margin-right: var(--space-1);
+}
+
+.btn .icon:last-child {
+  margin-right: 0;
+  margin-left: var(--space-1);
+}
+
+.btn .icon:only-child {
+  margin: 0;
+}
+
+/* Icon button (icon only) */
+.btn-icon .icon {
+  margin: 0;
+}

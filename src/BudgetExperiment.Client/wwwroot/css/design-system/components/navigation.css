@@ -1,0 +1,316 @@
+/* ==========================================================================
+   Navigation Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Sidebar Navigation
+   ========================================================================== */
+
+.nav-sidebar {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  height: 100%;
+}
+
+.nav-sidebar-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.nav-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2) 0;
+}
+
+.nav-sidebar-footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* ==========================================================================
+   Nav Group (Section within sidebar)
+   ========================================================================== */
+
+.nav-group {
+  margin-bottom: var(--space-2);
+}
+
+.nav-group-title {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   Nav Item
+   ========================================================================== */
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-base);
+  text-align: left;
+}
+
+.nav-item:hover {
+  background-color: var(--color-surface-secondary);
+  text-decoration: none;
+}
+
+.nav-item:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+}
+
+.nav-item.active {
+  background-color: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+}
+
+.nav-item.active:hover {
+  background-color: var(--color-brand-primary-hover);
+}
+
+/* Nav Item Icon */
+.nav-item .nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-icon {
+  color: var(--color-text-inverse);
+}
+
+/* Nav Item Badge */
+.nav-item .nav-badge {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  background-color: var(--color-surface-secondary);
+  border-radius: var(--radius-full);
+}
+
+.nav-item.active .nav-badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-inverse);
+}
+
+/* ==========================================================================
+   Collapsible Nav (with sub-items)
+   ========================================================================== */
+
+.nav-item-expandable {
+  position: relative;
+}
+
+.nav-item-expandable::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  margin-left: auto;
+  transition: transform var(--transition-fast);
+}
+
+.nav-item-expandable.expanded::after {
+  transform: rotate(180deg);
+}
+
+.nav-subitems {
+  display: none;
+  padding-left: var(--space-4);
+}
+
+.nav-item-expandable.expanded + .nav-subitems {
+  display: block;
+}
+
+.nav-subitems .nav-item {
+  padding-left: calc(var(--space-4) + 20px + var(--space-3));
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Top Navigation Bar
+   ========================================================================== */
+
+.nav-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.nav-topbar-brand {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.nav-topbar-brand:hover {
+  text-decoration: none;
+}
+
+.nav-topbar-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+/* ==========================================================================
+   Breadcrumb Navigation
+   ========================================================================== */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb-item a {
+  color: var(--color-text-secondary);
+}
+
+.breadcrumb-item a:hover {
+  color: var(--color-brand-primary);
+}
+
+.breadcrumb-item:not(:last-child)::after {
+  content: "/";
+  margin-left: var(--space-2);
+  color: var(--color-text-disabled);
+}
+
+.breadcrumb-item:last-child {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ==========================================================================
+   Tab Navigation
+   ========================================================================== */
+
+.nav-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.nav-tab {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  transition: color var(--transition-fast);
+}
+
+.nav-tab:hover {
+  color: var(--color-text-primary);
+}
+
+.nav-tab.active {
+  color: var(--color-brand-primary);
+}
+
+.nav-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-brand-primary);
+}
+
+.nav-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ==========================================================================
+   Pagination
+   ========================================================================== */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.pagination-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background-color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.pagination-item:hover {
+  background-color: var(--color-surface-secondary);
+  border-color: var(--color-text-secondary);
+}
+
+.pagination-item.active {
+  background-color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+}
+
+.pagination-item:disabled,
+.pagination-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pagination-ellipsis {
+  padding: 0 var(--space-2);
+  color: var(--color-text-secondary);
+}

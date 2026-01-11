@@ -1,0 +1,334 @@
+/* ==========================================================================
+   Alert/Notification Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Base Alert
+   ========================================================================== */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  border: 1px solid transparent;
+}
+
+.alert-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-1);
+}
+
+.alert-message {
+  color: inherit;
+  opacity: 0.9;
+}
+
+.alert-dismiss {
+  flex-shrink: 0;
+  padding: var(--space-1);
+  margin: calc(var(--space-1) * -1);
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast);
+}
+
+.alert-dismiss:hover {
+  opacity: 1;
+}
+
+.alert-dismiss:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ==========================================================================
+   Alert Variants
+   ========================================================================== */
+
+/* Info Alert */
+.alert-info {
+  background-color: rgba(0, 120, 212, 0.1);
+  border-color: rgba(0, 120, 212, 0.2);
+  color: var(--color-info);
+}
+
+[data-theme="dark"] .alert-info,
+[data-theme="vscode-dark"] .alert-info {
+  background-color: rgba(75, 160, 232, 0.15);
+  border-color: rgba(75, 160, 232, 0.25);
+}
+
+/* Success Alert */
+.alert-success {
+  background-color: rgba(16, 124, 16, 0.1);
+  border-color: rgba(16, 124, 16, 0.2);
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .alert-success,
+[data-theme="vscode-dark"] .alert-success {
+  background-color: rgba(108, 203, 95, 0.15);
+  border-color: rgba(108, 203, 95, 0.25);
+}
+
+/* Warning Alert */
+.alert-warning {
+  background-color: rgba(255, 185, 0, 0.15);
+  border-color: rgba(255, 185, 0, 0.3);
+  color: #986f0b;
+}
+
+[data-theme="dark"] .alert-warning,
+[data-theme="vscode-dark"] .alert-warning {
+  background-color: rgba(255, 200, 61, 0.15);
+  border-color: rgba(255, 200, 61, 0.25);
+  color: var(--color-warning);
+}
+
+/* Error/Danger Alert */
+.alert-error,
+.alert-danger {
+  background-color: rgba(209, 52, 56, 0.1);
+  border-color: rgba(209, 52, 56, 0.2);
+  color: var(--color-error);
+}
+
+[data-theme="dark"] .alert-error,
+[data-theme="dark"] .alert-danger,
+[data-theme="vscode-dark"] .alert-error,
+[data-theme="vscode-dark"] .alert-danger {
+  background-color: rgba(248, 124, 124, 0.15);
+  border-color: rgba(248, 124, 124, 0.25);
+}
+
+/* ==========================================================================
+   Inline Alert (Smaller, for form feedback)
+   ========================================================================== */
+
+.alert-inline {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+}
+
+.alert-inline .alert-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ==========================================================================
+   Toast Notifications
+   ========================================================================== */
+
+.toast-container {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+/* Position variants */
+.toast-container-top-right {
+  top: var(--space-4);
+  right: var(--space-4);
+}
+
+.toast-container-top-left {
+  top: var(--space-4);
+  left: var(--space-4);
+}
+
+.toast-container-bottom-right {
+  bottom: var(--space-4);
+  right: var(--space-4);
+}
+
+.toast-container-bottom-left {
+  bottom: var(--space-4);
+  left: var(--space-4);
+}
+
+.toast-container-top-center {
+  top: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toast-container-bottom-center {
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Toast Item */
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 300px;
+  max-width: 400px;
+  pointer-events: auto;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform var(--transition-base),
+              opacity var(--transition-base);
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast-container-top-left .toast,
+.toast-container-bottom-left .toast {
+  transform: translateX(-100%);
+}
+
+.toast-container-top-left .toast.show,
+.toast-container-bottom-left .toast.show {
+  transform: translateX(0);
+}
+
+.toast-container-top-center .toast,
+.toast-container-bottom-center .toast {
+  transform: translateY(-20px);
+}
+
+.toast-container-top-center .toast.show,
+.toast-container-bottom-center .toast.show {
+  transform: translateY(0);
+}
+
+.toast-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.toast-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+.toast-dismiss {
+  flex-shrink: 0;
+  padding: var(--space-1);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.toast-dismiss:hover {
+  color: var(--color-text-primary);
+}
+
+/* Toast with status colors */
+.toast-success .toast-icon {
+  color: var(--color-success);
+}
+
+.toast-error .toast-icon {
+  color: var(--color-error);
+}
+
+.toast-warning .toast-icon {
+  color: var(--color-warning);
+}
+
+.toast-info .toast-icon {
+  color: var(--color-info);
+}
+
+/* ==========================================================================
+   Banner (Full-width notification)
+   ========================================================================== */
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.banner-info {
+  background-color: var(--color-info);
+  color: var(--color-text-inverse);
+}
+
+.banner-success {
+  background-color: var(--color-success);
+  color: var(--color-text-inverse);
+}
+
+.banner-warning {
+  background-color: var(--color-warning);
+  color: #323130;
+}
+
+.banner-error {
+  background-color: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-action {
+  flex-shrink: 0;
+}
+
+.banner-dismiss {
+  flex-shrink: 0;
+  padding: var(--space-1);
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.banner-dismiss:hover {
+  opacity: 1;
+}

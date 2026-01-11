@@ -34,22 +34,22 @@ else
                                 @item.Date.ToString("MMM d, yyyy")
                                 @if (item.IsRecurring)
                                 {
-                                    <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")">🔄</span>
+                                    <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")"><Icon Name="recurring" Size="14" Class="icon-recurring" /></span>
                                 }
                                 @if (item.IsTransfer)
                                 {
-                                    <span class="transfer-indicator" title="@GetTransferTooltip(item)">↔️</span>
+                                    <span class="transfer-indicator" title="@GetTransferTooltip(item)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                                 }
                             </td>
                         }
                         <td>
                             @if (!ShowDate && item.IsRecurring)
                             {
-                                <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")">🔄</span>
+                                <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")"><Icon Name="recurring" Size="14" Class="icon-recurring" /></span>
                             }
                             @if (item.IsTransfer)
                             {
-                                <span class="transfer-indicator" title="@GetTransferTooltip(item)">↔️</span>
+                                <span class="transfer-indicator" title="@GetTransferTooltip(item)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                             }
                             @item.Description
                             @if (item.IsModified)
@@ -90,14 +90,14 @@ else
                                 @txn.Date.ToString("MMM d, yyyy")
                                 @if (txn.IsTransfer)
                                 {
-                                    <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)">↔️</span>
+                                    <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                                 }
                             </td>
                         }
                         <td>
                             @if (!ShowDate && txn.IsTransfer)
                             {
-                                <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)">↔️</span>
+                                <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                             }
                             @txn.Description
                         </td>

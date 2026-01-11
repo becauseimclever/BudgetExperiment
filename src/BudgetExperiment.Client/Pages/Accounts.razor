@@ -8,7 +8,7 @@
 <div class="accounts-container">
     <PageHeader Title="Accounts">
         <Actions>
-            <button class="transfer-button" @onclick="ShowTransfer">↔ Transfer</button>
+            <button class="transfer-button" @onclick="ShowTransfer"><Icon Name="arrows-horizontal" Size="16" /> Transfer</button>
             <button class="add-button" @onclick="ShowAddAccount">+ Add Account</button>
         </Actions>
     </PageHeader>
@@ -44,8 +44,8 @@
                         </div>
                     </div>
                     <div class="account-actions">
-                        <button class="btn-edit" @onclick="() => ShowEditAccount(account)" title="Edit account">✏️</button>
-                        <button class="btn-transfer" @onclick="() => ShowTransferFrom(account.Id)" title="Transfer from this account">↔</button>
+                        <button class="btn-edit" @onclick="() => ShowEditAccount(account)" title="Edit account"><Icon Name="edit" Size="16" /></button>
+                        <button class="btn-transfer" @onclick="() => ShowTransferFrom(account.Id)" title="Transfer from this account"><Icon Name="arrows-horizontal" Size="16" /></button>
                         <button class="btn-view" @onclick="() => ViewAccount(account.Id)">Transactions</button>
                         <button class="btn-delete" @onclick="() => DeleteAccount(account.Id)">Delete</button>
                     </div>
@@ -68,7 +68,7 @@
                      SubmitButtonText="Save Changes"
                      IsSubmitting="@isSubmitting" />
         <div class="edit-warning">
-            ⚠️ Changing initial balance will affect all calculated running balances.
+            <Icon Name="alert-triangle" Size="16" Class="icon-warning" /> Changing initial balance will affect all calculated running balances.
         </div>
     </Modal>
 

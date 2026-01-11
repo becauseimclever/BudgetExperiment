@@ -1,0 +1,190 @@
+/* ==========================================================================
+   Card Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Base Card
+   ========================================================================== */
+
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ==========================================================================
+   Card Sections
+   ========================================================================== */
+
+.card-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.card-header:last-child {
+  border-bottom: none;
+}
+
+.card-body {
+  padding: var(--space-4);
+}
+
+.card-footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.card-footer:first-child {
+  border-top: none;
+}
+
+/* ==========================================================================
+   Card Title & Subtitle
+   ========================================================================== */
+
+.card-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.card-subtitle {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Card Variants
+   ========================================================================== */
+
+/* Elevated Card - More prominent shadow */
+.card-elevated {
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevated:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Flat Card - No shadow */
+.card-flat {
+  box-shadow: none;
+}
+
+/* Outlined Card - More visible border */
+.card-outlined {
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+/* Clickable/Interactive Card */
+.card-clickable {
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.card-clickable:hover {
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.card-clickable:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ==========================================================================
+   Card with Status Border
+   ========================================================================== */
+
+.card-status-success {
+  border-left: 3px solid var(--color-success);
+}
+
+.card-status-warning {
+  border-left: 3px solid var(--color-warning);
+}
+
+.card-status-error {
+  border-left: 3px solid var(--color-error);
+}
+
+.card-status-info {
+  border-left: 3px solid var(--color-info);
+}
+
+/* ==========================================================================
+   Compact Card
+   ========================================================================== */
+
+.card-compact .card-header,
+.card-compact .card-body,
+.card-compact .card-footer {
+  padding: var(--space-3);
+}
+
+/* ==========================================================================
+   Card Grid (for card layouts)
+   ========================================================================== */
+
+.card-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* ==========================================================================
+   Panel (Alternative to card - full width, no rounded corners)
+   ========================================================================== */
+
+.panel {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.panel-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background-color: var(--color-surface-secondary);
+}
+
+.panel-body {
+  padding: var(--space-4);
+}
+
+/* ==========================================================================
+   Empty State Card
+   ========================================================================== */
+
+.card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.card-empty .icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.card-empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-2);
+}
+
+.card-empty-description {
+  font-size: var(--font-size-sm);
+  max-width: 300px;
+}

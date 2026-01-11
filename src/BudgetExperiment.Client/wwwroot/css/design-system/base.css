@@ -1,0 +1,282 @@
+/* ==========================================================================
+   Base Element Styles
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Document
+   ========================================================================== */
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   Typography - Headings
+   ========================================================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+}
+
+h1 {
+  font-size: var(--font-size-3xl);
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+}
+
+h4 {
+  font-size: var(--font-size-lg);
+}
+
+h5 {
+  font-size: var(--font-size-base);
+}
+
+h6 {
+  font-size: var(--font-size-sm);
+}
+
+/* Remove focus outline on headings (for Blazor navigation) */
+h1:focus,
+h2:focus,
+h3:focus {
+  outline: none;
+}
+
+/* ==========================================================================
+   Typography - Body Text
+   ========================================================================== */
+
+p {
+  margin-bottom: var(--space-4);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+small {
+  font-size: var(--font-size-xs);
+}
+
+strong,
+b {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ==========================================================================
+   Links
+   ========================================================================== */
+
+a {
+  color: var(--color-brand-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-brand-primary-hover);
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   Code
+   ========================================================================== */
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+}
+
+code {
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-surface-secondary);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+}
+
+pre {
+  padding: var(--space-4);
+  background-color: var(--color-surface-secondary);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+pre code {
+  padding: 0;
+  background: none;
+}
+
+/* ==========================================================================
+   Horizontal Rule
+   ========================================================================== */
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border-subtle);
+  margin: var(--space-6) 0;
+}
+
+/* ==========================================================================
+   Selection
+   ========================================================================== */
+
+::selection {
+  background-color: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+}
+
+/* ==========================================================================
+   Scrollbar Styling (Webkit browsers)
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-surface-secondary);
+}
+
+/* ==========================================================================
+   Blazor-specific styles
+   ========================================================================== */
+
+#blazor-error-ui {
+  background: var(--color-warning);
+  color: var(--color-text-primary);
+  bottom: 0;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  left: 0;
+  padding: var(--space-3) var(--space-5);
+  position: fixed;
+  width: 100%;
+  z-index: var(--z-fixed);
+}
+
+#blazor-error-ui .dismiss {
+  cursor: pointer;
+  position: absolute;
+  right: var(--space-4);
+  top: var(--space-3);
+}
+
+.blazor-error-boundary {
+  background: var(--color-error);
+  padding: var(--space-4);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-md);
+}
+
+.blazor-error-boundary::after {
+  content: "An error has occurred.";
+}
+
+/* ==========================================================================
+   Loading Progress (Blazor WASM)
+   ========================================================================== */
+
+.loading-progress {
+  position: absolute;
+  display: block;
+  width: 8rem;
+  height: 8rem;
+  inset: 20vh 0 auto 0;
+  margin: 0 auto;
+}
+
+.loading-progress circle {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 0.6rem;
+  transform-origin: 50% 50%;
+  transform: rotate(-90deg);
+}
+
+.loading-progress circle:last-child {
+  stroke: var(--color-brand-primary);
+  stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+  transition: stroke-dasharray 0.05s ease-in-out;
+}
+
+.loading-progress-text {
+  position: absolute;
+  text-align: center;
+  font-weight: var(--font-weight-semibold);
+  inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+  color: var(--color-text-primary);
+}
+
+.loading-progress-text::after {
+  content: var(--blazor-load-percentage-text, "Loading");
+}
+
+/* ==========================================================================
+   Form Validation (Blazor)
+   ========================================================================== */
+
+.valid.modified:not([type="checkbox"]) {
+  outline: 1px solid var(--color-success);
+}
+
+.invalid {
+  outline: 1px solid var(--color-error);
+}
+
+.validation-message {
+  color: var(--color-error);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}

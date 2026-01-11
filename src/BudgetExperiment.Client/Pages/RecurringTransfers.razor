@@ -29,7 +29,7 @@
     else if (recurringTransfers.Count == 0)
     {
         <div class="empty-state">
-            <div class="empty-icon">↔️🔄</div>
+            <div class="empty-icon"><Icon Name="repeat" Size="48" /></div>
             <h3>No Recurring Transfers</h3>
             <p>Set up recurring transfers for automatic money movement between accounts.</p>
             <button class="btn-primary" @onclick="ShowAddForm">Create Your First Recurring Transfer</button>
@@ -84,23 +84,23 @@
                         @if (transfer.IsActive)
                         {
                             <button class="btn-action" @onclick="() => SkipNext(transfer)" title="Skip next occurrence">
-                                ⏭️ Skip
+                                <Icon Name="skip-forward" Size="16" /> Skip
                             </button>
                             <button class="btn-action" @onclick="() => Pause(transfer)" title="Pause">
-                                ⏸️ Pause
+                                <Icon Name="pause" Size="16" /> Pause
                             </button>
                         }
                         else
                         {
                             <button class="btn-action btn-resume" @onclick="() => Resume(transfer)" title="Resume">
-                                ▶️ Resume
+                                <Icon Name="play" Size="16" /> Resume
                             </button>
                         }
                         <button class="btn-action btn-edit" @onclick="() => ShowEditForm(transfer)" title="Edit">
-                            ✏️ Edit
+                            <Icon Name="edit" Size="16" /> Edit
                         </button>
                         <button class="btn-action btn-delete" @onclick="() => ShowDeleteConfirm(transfer)" title="Delete">
-                            🗑️ Delete
+                            <Icon Name="trash" Size="16" /> Delete
                         </button>
                     </div>
                 </div>

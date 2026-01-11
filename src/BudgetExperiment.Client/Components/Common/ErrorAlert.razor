@@ -4,7 +4,7 @@
 {
     <div class="error-alert @(IsDismissible ? "dismissible" : "")">
         <div class="error-content">
-            <span class="error-icon">⚠️</span>
+            <span class="error-icon"><Icon Name="alert-triangle" Size="20" Class="icon-warning" /></span>
             <div class="error-text">
                 <span class="error-message">@Message</span>
                 @if (!string.IsNullOrEmpty(Details))
@@ -23,13 +23,13 @@
                     }
                     else
                     {
-                        <span>🔄 Retry</span>
+                        <span><Icon Name="refresh" Size="16" /> Retry</span>
                     }
                 </button>
             }
             @if (IsDismissible && OnDismiss.HasDelegate)
             {
-                <button class="btn-dismiss" @onclick="HandleDismiss" title="Dismiss">✕</button>
+                <button class="btn-dismiss" @onclick="HandleDismiss" title="Dismiss"><Icon Name="x" Size="16" /></button>
             }
         </div>
     </div>

@@ -641,34 +641,35 @@ public enum ThemeMode
 ## Implementation Plan
 
 ### Phase 1: Design Tokens & Base Styles
-1. [ ] Create `wwwroot/css/design-system/` directory structure
-2. [ ] Create `tokens.css` with all CSS custom properties
-3. [ ] Create `reset.css` with modern CSS reset
-4. [ ] Create `base.css` with base element styles
-5. [ ] Create light and dark theme files
+1. [x] Create `wwwroot/css/design-system/` directory structure
+2. [x] Create `tokens.css` with all CSS custom properties
+3. [x] Create `reset.css` with modern CSS reset
+4. [x] Create `base.css` with base element styles
+5. [x] Create light and dark theme files
 6. [ ] Update `index.html` to load new CSS structure
 
-### Phase 2: Component Styles
-1. [ ] Create `buttons.css` with button variants
-2. [ ] Create `cards.css` with card styles
-3. [ ] Create `forms.css` with form control styles
-4. [ ] Create `tables.css` with table styles
-5. [ ] Create `modals.css` with modal/dialog styles
-6. [ ] Create `navigation.css` with nav styles
-7. [ ] Create `alerts.css` with alert/notification styles
-8. [ ] Create `utilities.css` with utility classes
+### Phase 2: Component Styles ✅
+1. [x] Create `buttons.css` with button variants
+2. [x] Create `cards.css` with card styles
+3. [x] Create `forms.css` with form control styles
+4. [x] Create `tables.css` with table styles
+5. [x] Create `modals.css` with modal/dialog styles
+6. [x] Create `navigation.css` with nav styles
+7. [x] Create `alerts.css` with alert/notification styles
+8. [x] Create `utilities.css` with utility classes
 
-### Phase 3: Layout System
-1. [ ] Create `layout.css` with grid and flex utilities
-2. [ ] Define responsive breakpoints
-3. [ ] Create spacing utilities
-4. [ ] Create container classes
+### Phase 3: Layout System ✅
+1. [x] Create `layout.css` with grid and flex utilities
+2. [x] Define responsive breakpoints
+3. [x] Create spacing utilities
+4. [x] Create container classes
 
-### Phase 4: Icon System
-1. [ ] Create `Icon.razor` component
-2. [ ] Add SVG icons as embedded resources or inline
-3. [ ] Replace all emoji icons with Icon component
-4. [ ] Add icon documentation
+### Phase 4: Icon System ✅
+1. [x] Create `Icon.razor` component
+2. [x] Add SVG icons as embedded resources or inline
+3. [x] Replace all emoji icons with Icon component
+4. [x] Create `icons.css` for icon styling
+5. [ ] Add icon documentation
 
 ### Phase 5: Theme System
 1. [ ] Create `ThemeService.cs`
@@ -687,15 +688,15 @@ public enum ThemeMode
 6. [ ] Migrate `Recurring.razor` - use design system classes
 7. [ ] Migrate all components in `/Components/`
 
-### Phase 0: Cleanup Unused Dependencies
-1. [ ] Remove `fluentui-app.css` from `wwwroot/css/`
-2. [ ] Remove FluentUI CSS references from `index.html`:
+### Phase 0: Cleanup Unused Dependencies ✅
+1. [x] Remove `fluentui-app.css` from `wwwroot/css/`
+2. [x] Remove FluentUI CSS references from `index.html`:
    - `css/fluentui-app.css`
    - `_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css`
    - `_content/Microsoft.FluentUI.AspNetCore.Components/css/fluent.css`
    - `_content/Microsoft.FluentUI.AspNetCore.Components/css/fluent-icons.css`
-3. [ ] Remove `Microsoft.FluentUI.AspNetCore.Components` NuGet package if installed
-4. [ ] Verify application still runs correctly
+3. [x] Remove `Microsoft.FluentUI.AspNetCore.Components` NuGet package if installed (was not installed)
+4. [x] Verify application still runs correctly
 
 ### Phase 7: Polish & Documentation
 1. [ ] Review all pages for consistency

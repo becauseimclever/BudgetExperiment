@@ -1,0 +1,307 @@
+/* ==========================================================================
+   Table Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Base Table
+   ========================================================================== */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--color-surface);
+  font-size: var(--font-size-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.table th {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface-secondary);
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   Table Hover
+   ========================================================================== */
+
+.table-hover tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--color-surface-secondary);
+}
+
+/* ==========================================================================
+   Table Striped
+   ========================================================================== */
+
+.table-striped tbody tr:nth-child(even) {
+  background-color: var(--color-surface-secondary);
+}
+
+.table-striped.table-hover tbody tr:hover {
+  background-color: var(--color-border-subtle);
+}
+
+/* ==========================================================================
+   Table Bordered
+   ========================================================================== */
+
+.table-bordered {
+  border: 1px solid var(--color-border-subtle);
+}
+
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* ==========================================================================
+   Table Compact
+   ========================================================================== */
+
+.table-compact th,
+.table-compact td {
+  padding: var(--space-2) var(--space-3);
+}
+
+/* ==========================================================================
+   Table Responsive (Wrapper)
+   ========================================================================== */
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   Column Alignment
+   ========================================================================== */
+
+.table .text-left {
+  text-align: left;
+}
+
+.table .text-center {
+  text-align: center;
+}
+
+.table .text-right {
+  text-align: right;
+}
+
+/* ==========================================================================
+   Amount/Money Columns (Transaction-specific)
+   ========================================================================== */
+
+.table .amount {
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table .amount-positive,
+.amount-positive {
+  color: var(--color-income);
+}
+
+.table .amount-negative,
+.amount-negative {
+  color: var(--color-expense);
+}
+
+.table .amount-neutral,
+.amount-neutral {
+  color: var(--color-text-secondary);
+}
+
+.table .amount-transfer,
+.amount-transfer {
+  color: var(--color-transfer);
+}
+
+/* ==========================================================================
+   Date Column
+   ========================================================================== */
+
+.table .date {
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Status/Badge in Table
+   ========================================================================== */
+
+.table .status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.table .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.table .status-dot-success {
+  background-color: var(--color-success);
+}
+
+.table .status-dot-warning {
+  background-color: var(--color-warning);
+}
+
+.table .status-dot-error {
+  background-color: var(--color-error);
+}
+
+.table .status-dot-info {
+  background-color: var(--color-info);
+}
+
+/* ==========================================================================
+   Action Column
+   ========================================================================== */
+
+.table .actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.table .actions .btn {
+  margin-left: var(--space-1);
+}
+
+.table .actions .btn:first-child {
+  margin-left: 0;
+}
+
+/* ==========================================================================
+   Clickable/Selectable Rows
+   ========================================================================== */
+
+.table-clickable tbody tr {
+  cursor: pointer;
+}
+
+.table-clickable tbody tr:active {
+  background-color: var(--color-border-subtle);
+}
+
+.table tbody tr.selected {
+  background-color: rgba(0, 120, 212, 0.1);
+}
+
+.table tbody tr.selected:hover {
+  background-color: rgba(0, 120, 212, 0.15);
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+
+.table-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.table-empty-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-4);
+  opacity: 0.5;
+}
+
+.table-empty-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-2);
+}
+
+.table-empty-description {
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Table Card (Table inside a card)
+   ========================================================================== */
+
+.card > .table {
+  margin: 0;
+}
+
+.card > .table:first-child th:first-child {
+  border-top-left-radius: var(--radius-lg);
+}
+
+.card > .table:first-child th:last-child {
+  border-top-right-radius: var(--radius-lg);
+}
+
+.card > .table:last-child tbody tr:last-child td:first-child {
+  border-bottom-left-radius: var(--radius-lg);
+}
+
+.card > .table:last-child tbody tr:last-child td:last-child {
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+/* ==========================================================================
+   Sortable Column Headers
+   ========================================================================== */
+
+.table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table th.sortable:hover {
+  background-color: var(--color-border-subtle);
+}
+
+.table th.sortable::after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: var(--space-2);
+  vertical-align: middle;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid var(--color-text-disabled);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.table th.sortable:hover::after {
+  opacity: 1;
+}
+
+.table th.sorted-asc::after,
+.table th.sorted-desc::after {
+  opacity: 1;
+  border-top-color: var(--color-brand-primary);
+}
+
+.table th.sorted-desc::after {
+  border-top: none;
+  border-bottom: 4px solid var(--color-brand-primary);
+}

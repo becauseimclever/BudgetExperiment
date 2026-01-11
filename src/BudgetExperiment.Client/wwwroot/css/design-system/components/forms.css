@@ -1,0 +1,337 @@
+/* ==========================================================================
+   Form Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Form Layout
+   ========================================================================== */
+
+.form-group {
+  margin-bottom: var(--space-4);
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.form-row > * {
+  flex: 1;
+}
+
+/* ==========================================================================
+   Labels
+   ========================================================================== */
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.form-label-required::after {
+  content: " *";
+  color: var(--color-error);
+}
+
+/* ==========================================================================
+   Text Inputs, Textareas, Selects
+   ========================================================================== */
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+
+.form-control::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.form-control:hover {
+  border-color: var(--color-text-secondary);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 1px var(--color-brand-primary);
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+/* Validation States */
+.form-control.is-valid,
+.form-control.valid {
+  border-color: var(--color-success);
+}
+
+.form-control.is-valid:focus,
+.form-control.valid:focus {
+  box-shadow: 0 0 0 1px var(--color-success);
+}
+
+.form-control.is-invalid,
+.form-control.invalid {
+  border-color: var(--color-error);
+}
+
+.form-control.is-invalid:focus,
+.form-control.invalid:focus {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+/* Size Variants */
+.form-control-sm {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.form-control-lg {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-base);
+}
+
+/* ==========================================================================
+   Textarea
+   ========================================================================== */
+
+textarea.form-control {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ==========================================================================
+   Select
+   ========================================================================== */
+
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23605e5c' d='M6 8.825L1.175 4 2.238 2.938 6 6.7 9.763 2.937 10.825 4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-8);
+}
+
+select.form-control:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230078d4' d='M6 8.825L1.175 4 2.238 2.938 6 6.7 9.763 2.937 10.825 4z'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   Checkbox & Radio
+   ========================================================================== */
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.form-check:last-child {
+  margin-bottom: 0;
+}
+
+.form-check-input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-brand-primary);
+}
+
+.form-check-input:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.form-check-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.form-check-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.form-check-input:disabled + .form-check-label {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+/* Inline Checkboxes/Radios */
+.form-check-inline {
+  display: inline-flex;
+  margin-right: var(--space-4);
+  margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Switch (Toggle)
+   ========================================================================== */
+
+.form-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.form-switch-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.form-switch-slider {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.form-switch-slider::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+
+.form-switch-input:checked + .form-switch-slider {
+  background-color: var(--color-brand-primary);
+}
+
+.form-switch-input:checked + .form-switch-slider::before {
+  transform: translateX(18px);
+}
+
+.form-switch-input:focus + .form-switch-slider {
+  box-shadow: var(--focus-ring);
+}
+
+.form-switch-input:disabled + .form-switch-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Help Text & Validation Messages
+   ========================================================================== */
+
+.form-text {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.form-feedback {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-xs);
+}
+
+.form-feedback-valid {
+  color: var(--color-success);
+}
+
+.form-feedback-invalid {
+  color: var(--color-error);
+}
+
+/* ==========================================================================
+   Input Group (Input with addons)
+   ========================================================================== */
+
+.input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-group .form-control {
+  flex: 1;
+  border-radius: 0;
+}
+
+.input-group .form-control:first-child {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.input-group .form-control:last-child {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.input-group-text {
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.input-group-text:first-child {
+  border-right: 0;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.input-group-text:last-child {
+  border-left: 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+/* ==========================================================================
+   Form Actions (Button container at bottom of forms)
+   ========================================================================== */
+
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.form-actions-right {
+  justify-content: flex-end;
+}
+
+.form-actions-between {
+  justify-content: space-between;
+}

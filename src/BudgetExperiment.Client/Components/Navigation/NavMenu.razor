@@ -6,7 +6,7 @@
 <nav class="nav-menu @(IsCollapsed ? "collapsed" : "expanded")">
     <div class="nav-items">
         <NavLink class="nav-item" href="" Match="NavLinkMatch.All" title="Calendar">
-            <span class="nav-icon">📅</span>
+            <span class="nav-icon"><Icon Name="calendar" Size="20" /></span>
             @if (!IsCollapsed)
             {
                 <span class="nav-text">Calendar</span>
@@ -14,7 +14,7 @@
         </NavLink>
 
         <NavLink class="nav-item" href="recurring" title="Recurring Transactions">
-            <span class="nav-icon">🔄</span>
+            <span class="nav-icon"><Icon Name="refresh" Size="20" /></span>
             @if (!IsCollapsed)
             {
                 <span class="nav-text">Recurring</span>
@@ -22,7 +22,7 @@
         </NavLink>
 
         <NavLink class="nav-item" href="recurring-transfers" title="Recurring Transfers">
-            <span class="nav-icon">🔁</span>
+            <span class="nav-icon"><Icon Name="repeat" Size="20" /></span>
             @if (!IsCollapsed)
             {
                 <span class="nav-text">Recurring Transfers</span>
@@ -30,7 +30,7 @@
         </NavLink>
 
         <NavLink class="nav-item" href="transfers" title="Transfers">
-            <span class="nav-icon">↔️</span>
+            <span class="nav-icon"><Icon Name="arrows-horizontal" Size="20" /></span>
             @if (!IsCollapsed)
             {
                 <span class="nav-text">Transfers</span>
@@ -39,7 +39,7 @@
 
         <div class="nav-section">
             <NavLink class="nav-item" href="accounts" title="Accounts">
-                <span class="nav-icon">🏦</span>
+                <span class="nav-icon"><Icon Name="bank" Size="20" /></span>
                 @if (!IsCollapsed)
                 {
                     <span class="nav-text">Accounts</span>
@@ -52,7 +52,7 @@
                     @foreach (var account in accounts)
                     {
                         <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name">
-                            <span class="nav-icon">💳</span>
+                            <span class="nav-icon"><Icon Name="credit-card" Size="16" /></span>
                             <span class="nav-text">@TruncateName(account.Name)</span>
                         </NavLink>
                     }

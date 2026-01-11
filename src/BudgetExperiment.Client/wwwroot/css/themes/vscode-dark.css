@@ -1,0 +1,60 @@
+/* ==========================================================================
+   VS Code Dark Theme
+   Budget Experiment Design System
+   
+   Inspired by VS Code's default dark theme with signature blue accents
+   and darker backgrounds for a familiar developer experience.
+   ========================================================================== */
+
+[data-theme="vscode-dark"] {
+  /* Backgrounds - VS Code's signature dark grays */
+  --color-background: #1e1e1e;
+  --color-surface: #252526;
+  --color-surface-secondary: #2d2d2d;
+  --color-border: #3c3c3c;
+  --color-border-subtle: #333333;
+
+  /* Text Colors */
+  --color-text-primary: #cccccc;
+  --color-text-secondary: #9d9d9d;
+  --color-text-disabled: #6b6b6b;
+  --color-text-inverse: #ffffff;
+
+  /* Brand Colors - VS Code blue */
+  --color-brand-primary: #0e639c;
+  --color-brand-primary-hover: #1177bb;
+  --color-brand-primary-active: #094771;
+
+  /* Semantic Colors - VS Code palette */
+  --color-success: #4ec9b0;    /* VS Code teal/cyan */
+  --color-warning: #dcdcaa;    /* VS Code yellow */
+  --color-error: #f14c4c;      /* VS Code red */
+  --color-info: #3794ff;       /* VS Code bright blue */
+
+  /* Transaction-Specific */
+  --color-income: #4ec9b0;     /* Teal for positive */
+  --color-expense: #f14c4c;    /* Red for negative */
+  --color-transfer: #569cd6;   /* VS Code blue */
+  --color-recurring: #c586c0;  /* VS Code purple/magenta */
+
+  /* Shadows - Deeper for dark theme */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.6);
+
+  /* Focus ring - VS Code blue */
+  --focus-ring: 0 0 0 1px var(--color-background),
+                0 0 0 3px #007fd4;
+
+  /* Accent colors for syntax-highlighting-like UI elements */
+  --color-accent-blue: #569cd6;
+  --color-accent-green: #6a9955;
+  --color-accent-orange: #ce9178;
+  --color-accent-purple: #c586c0;
+  --color-accent-yellow: #dcdcaa;
+  --color-accent-cyan: #4ec9b0;
+
+  /* Color scheme for native elements */
+  color-scheme: dark;
+}

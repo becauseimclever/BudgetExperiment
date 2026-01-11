@@ -12,7 +12,7 @@
     @if (recurringItems.Count > 0)
     {
         <div class="recurring-section">
-            <h4 class="section-title">🔄 Scheduled Recurring</h4>
+            <h4 class="section-title"><Icon Name="recurring" Size="16" Class="icon-recurring" /> Scheduled Recurring</h4>
             <div class="recurring-list">
                 @foreach (var item in recurringItems)
                 {
@@ -26,8 +26,8 @@
                                 @FormatAmount(item.Amount.Amount)
                             </span>
                             <div class="recurring-actions">
-                                <button class="btn-icon" @onclick="() => HandleEditInstance(item)" @onclick:stopPropagation="true" title="Edit this occurrence">✏️</button>
-                                <button class="btn-icon btn-skip" @onclick="() => HandleSkipInstance(item)" @onclick:stopPropagation="true" title="Skip this occurrence">⏭️</button>
+                                <button class="btn-icon" @onclick="() => HandleEditInstance(item)" @onclick:stopPropagation="true" title="Edit this occurrence"><Icon Name="edit" Size="16" /></button>
+                                <button class="btn-icon btn-skip" @onclick="() => HandleSkipInstance(item)" @onclick:stopPropagation="true" title="Skip this occurrence"><Icon Name="skip-forward" Size="16" /></button>
                             </div>
                         </div>
                     </div>
@@ -39,7 +39,7 @@
     <div class="transactions-section">
         @if (recurringItems.Count > 0)
         {
-            <h4 class="section-title">💰 Actual Transactions</h4>
+            <h4 class="section-title"><Icon Name="wallet" Size="16" /> Actual Transactions</h4>
         }
         @if (transactionItems.Count > 0)
         {
