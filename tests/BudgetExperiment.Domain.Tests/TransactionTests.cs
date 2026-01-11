@@ -504,4 +504,91 @@ public class TransactionTests
         // Act & Assert
         Assert.False(transaction.IsTransfer);
     }
+
+    [Fact]
+    public void CreateFromRecurringTransfer_Sets_All_Properties()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var transferId = Guid.NewGuid();
+        var recurringTransferId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 2, 1);
+        var amount = MoneyValue.Create("USD", -500m);
+
+        // Act
+        var transaction = Transaction.CreateFromRecurringTransfer(
+            accountId,
+            amount,
+            instanceDate,
+            "Monthly Savings Transfer",
+            transferId,
+            TransferDirection.Source,
+            recurringTransferId,
+            instanceDate);
+
+        // Assert
+        Assert.NotEqual(Guid.Empty, transaction.Id);
+        Assert.Equal(accountId, transaction.AccountId);
+        Assert.Equal(amount, transaction.Amount);
+        Assert.Equal(instanceDate, transaction.Date);
+        Assert.Equal("Monthly Savings Transfer", transaction.Description);
+        Assert.Equal(transferId, transaction.TransferId);
+        Assert.Equal(TransferDirection.Source, transaction.TransferDirection);
+        Assert.Equal(recurringTransferId, transaction.RecurringTransferId);
+        Assert.Equal(instanceDate, transaction.RecurringTransferInstanceDate);
+        Assert.True(transaction.IsTransfer);
+        Assert.True(transaction.IsFromRecurringTransfer);
+    }
+
+    [Fact]
+    public void CreateFromRecurringTransfer_With_Empty_RecurringTransferId_Throws()
+    {
+        // Arrange & Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            Transaction.CreateFromRecurringTransfer(
+                Guid.NewGuid(),
+                MoneyValue.Create("USD", -500m),
+                new DateOnly(2026, 2, 1),
+                "Monthly Savings Transfer",
+                Guid.NewGuid(),
+                TransferDirection.Source,
+                Guid.Empty,
+                new DateOnly(2026, 2, 1)));
+
+        Assert.Contains("Recurring transfer ID is required", ex.Message);
+    }
+
+    [Fact]
+    public void IsFromRecurringTransfer_Returns_True_When_RecurringTransferId_Set()
+    {
+        // Arrange
+        var transaction = Transaction.CreateFromRecurringTransfer(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 500m),
+            new DateOnly(2026, 2, 1),
+            "Transfer",
+            Guid.NewGuid(),
+            TransferDirection.Destination,
+            Guid.NewGuid(),
+            new DateOnly(2026, 2, 1));
+
+        // Act & Assert
+        Assert.True(transaction.IsFromRecurringTransfer);
+    }
+
+    [Fact]
+    public void Create_Regular_Transaction_Has_Null_RecurringTransferId()
+    {
+        // Arrange & Act
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Regular transaction");
+
+        // Assert
+        Assert.Null(transaction.RecurringTransferId);
+        Assert.Null(transaction.RecurringTransferInstanceDate);
+        Assert.False(transaction.IsFromRecurringTransfer);
+    }
 }

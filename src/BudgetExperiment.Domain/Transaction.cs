@@ -92,6 +92,21 @@ public sealed class Transaction
     public bool IsTransfer => this.TransferId.HasValue;
 
     /// <summary>
+    /// Gets the identifier of the recurring transfer this was generated from (null for non-recurring transfers).
+    /// </summary>
+    public Guid? RecurringTransferId { get; private set; }
+
+    /// <summary>
+    /// Gets the scheduled date this transaction was generated for from the recurring transfer.
+    /// </summary>
+    public DateOnly? RecurringTransferInstanceDate { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether this transaction was generated from a recurring transfer.
+    /// </summary>
+    public bool IsFromRecurringTransfer => this.RecurringTransferId.HasValue;
+
+    /// <summary>
     /// Creates a new transaction.
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
@@ -200,6 +215,42 @@ public sealed class Transaction
         var transaction = Create(accountId, amount, date, description, category);
         transaction.TransferId = transferId;
         transaction.TransferDirection = direction;
+        return transaction;
+    }
+
+    /// <summary>
+    /// Creates a new transaction as part of a recurring transfer.
+    /// </summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="amount">The monetary amount (negative for source, positive for destination).</param>
+    /// <param name="date">The transaction date.</param>
+    /// <param name="description">The transaction description.</param>
+    /// <param name="transferId">The identifier linking paired transfer transactions.</param>
+    /// <param name="direction">The direction of this transaction in the transfer.</param>
+    /// <param name="recurringTransferId">The recurring transfer identifier.</param>
+    /// <param name="recurringTransferInstanceDate">The scheduled date this was generated for.</param>
+    /// <param name="category">Optional category.</param>
+    /// <returns>A new <see cref="Transaction"/> instance linked to a recurring transfer.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public static Transaction CreateFromRecurringTransfer(
+        Guid accountId,
+        MoneyValue amount,
+        DateOnly date,
+        string description,
+        Guid transferId,
+        TransferDirection direction,
+        Guid recurringTransferId,
+        DateOnly recurringTransferInstanceDate,
+        string? category = null)
+    {
+        if (recurringTransferId == Guid.Empty)
+        {
+            throw new DomainException("Recurring transfer ID is required.");
+        }
+
+        var transaction = CreateTransfer(accountId, amount, date, description, transferId, direction, category);
+        transaction.RecurringTransferId = recurringTransferId;
+        transaction.RecurringTransferInstanceDate = recurringTransferInstanceDate;
         return transaction;
     }
 

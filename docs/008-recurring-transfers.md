@@ -343,15 +343,26 @@ public TransferPair GenerateTransferPair(
 
 ## Implementation Plan (TDD Order)
 
-### Phase 1: Domain Layer
-1. [ ] Create `RecurringTransfer` entity with factory method and validation
-2. [ ] Create `RecurringTransferException` entity
-3. [ ] Create `IRecurringTransferRepository` interface
-4. [ ] Add `RecurringTransferId` and `RecurringTransferInstanceDate` to `Transaction` entity
-5. [ ] Add projection methods for calculating upcoming instances
-6. [ ] Unit tests for entity creation, validation, and instance projection
+### Phase 1: Domain Layer ✅ COMPLETED (2026-01-11)
+1. [x] Create `RecurringTransfer` entity with factory method and validation
+2. [x] Create `RecurringTransferException` entity
+3. [x] Create `IRecurringTransferRepository` interface
+4. [x] Add `RecurringTransferId` and `RecurringTransferInstanceDate` to `Transaction` entity
+5. [x] Add `CreateFromRecurringTransfer()` factory method to `Transaction`
+6. [x] Unit tests for entity creation and validation (24 + 15 + 4 = 43 new tests)
 
-### Phase 2: Infrastructure Layer
+**Files Created/Modified:**
+- `src/BudgetExperiment.Domain/RecurringTransfer.cs` (new)
+- `src/BudgetExperiment.Domain/RecurringTransferException.cs` (new)
+- `src/BudgetExperiment.Domain/IRecurringTransferRepository.cs` (new)
+- `src/BudgetExperiment.Domain/Transaction.cs` (extended with RecurringTransferId properties)
+- `tests/BudgetExperiment.Domain.Tests/RecurringTransferTests.cs` (new - 24 tests)
+- `tests/BudgetExperiment.Domain.Tests/RecurringTransferExceptionTests.cs` (new - 15 tests)
+- `tests/BudgetExperiment.Domain.Tests/TransactionTests.cs` (extended - 4 new tests)
+
+**All 184 domain tests passing.**
+
+### Phase 2: Infrastructure Layer ⬅️ START HERE
 1. [ ] Create `RecurringTransferConfiguration` EF Core config
 2. [ ] Create `RecurringTransferExceptionConfiguration` EF Core config
 3. [ ] Update `TransactionConfiguration` for new FK columns
