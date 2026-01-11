@@ -1,7 +1,5 @@
 @* TransferDialog.razor - Dialog for creating or editing account transfers *@
 
-@using BudgetExperiment.Client.Models
-
 <div class="transfer-dialog">
     <div class="dialog-header">
         <h2>@(IsEdit ? "Edit Transfer" : "Transfer Between Accounts")</h2>
@@ -105,7 +103,7 @@
     /// Gets or sets the list of accounts for selection.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<AccountModel> Accounts { get; set; } = Array.Empty<AccountModel>();
+    public IReadOnlyList<AccountDto> Accounts { get; set; } = Array.Empty<AccountDto>();
 
     /// <summary>
     /// Gets or sets whether this is an edit operation.
@@ -129,25 +127,25 @@
     /// Gets or sets the create model (for new transfers).
     /// </summary>
     [Parameter]
-    public TransferCreateModel Model { get; set; } = new();
+    public CreateTransferRequest Model { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the update model (for editing).
     /// </summary>
     [Parameter]
-    public TransferUpdateModel? UpdateModel { get; set; }
+    public UpdateTransferRequest? UpdateModel { get; set; }
 
     /// <summary>
     /// Gets or sets the callback when a transfer is created.
     /// </summary>
     [Parameter]
-    public EventCallback<TransferCreateModel> OnCreate { get; set; }
+    public EventCallback<CreateTransferRequest> OnCreate { get; set; }
 
     /// <summary>
     /// Gets or sets the callback when a transfer is updated.
     /// </summary>
     [Parameter]
-    public EventCallback<TransferUpdateModel> OnUpdate { get; set; }
+    public EventCallback<UpdateTransferRequest> OnUpdate { get; set; }
 
     /// <summary>
     /// Gets or sets the callback when cancel is clicked.
@@ -230,7 +228,7 @@
         {
             if (IsEdit)
             {
-                var updateModel = new TransferUpdateModel
+                var updateModel = new UpdateTransferRequest
                 {
                     Amount = Amount,
                     Currency = Currency,

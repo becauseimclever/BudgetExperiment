@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Application.Dtos;
+namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
 /// DTO for returning recurring transaction details.
@@ -23,6 +23,9 @@ public sealed class RecurringTransactionDto
 
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
+
+    /// <summary>Gets or sets the optional category.</summary>
+    public string? Category { get; set; }
 
     /// <summary>Gets or sets the recurrence frequency.</summary>
     public string Frequency { get; set; } = string.Empty;
@@ -72,6 +75,9 @@ public sealed class RecurringTransactionCreateDto
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
+    /// <summary>Gets or sets the optional category.</summary>
+    public string? Category { get; set; }
+
     /// <summary>Gets or sets the recurrence frequency (Daily, Weekly, BiWeekly, Monthly, Quarterly, Yearly).</summary>
     public string Frequency { get; set; } = string.Empty;
 
@@ -104,6 +110,9 @@ public sealed class RecurringTransactionUpdateDto
 
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
+
+    /// <summary>Gets or sets the optional category.</summary>
+    public string? Category { get; set; }
 
     /// <summary>Gets or sets the recurrence frequency.</summary>
     public string Frequency { get; set; } = string.Empty;
@@ -144,6 +153,9 @@ public sealed class RecurringInstanceDto
     /// <summary>Gets or sets the description (may be modified from series).</summary>
     public string Description { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the account name.</summary>
+    public string AccountName { get; set; } = string.Empty;
+
     /// <summary>Gets or sets a value indicating whether this instance has modifications.</summary>
     public bool IsModified { get; set; }
 
@@ -155,6 +167,9 @@ public sealed class RecurringInstanceDto
 
     /// <summary>Gets or sets the generated transaction ID (null if not yet generated).</summary>
     public Guid? GeneratedTransactionId { get; set; }
+
+    /// <summary>Gets or sets the optional category.</summary>
+    public string? Category { get; set; }
 }
 
 /// <summary>

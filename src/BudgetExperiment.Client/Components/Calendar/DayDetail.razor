@@ -1,30 +1,33 @@
 @* DayDetail.razor - Selected day transaction detail panel *@
 
-@using BudgetExperiment.Client.Models
-
 <div class="day-detail">
-    <h3>Transactions for @SelectedDate.ToString("MMMM d, yyyy")</h3>
+    <h3>Transactions for @Detail.Date.ToString("MMMM d, yyyy")</h3>
     <button class="add-button" @onclick="HandleAddClick">+ Add Transaction</button>
 
-    @if (RecurringInstances.Count > 0)
+    @{
+        var recurringItems = Detail.Items.Where(i => i.Type == "recurring" && !i.IsSkipped).ToList();
+        var transactionItems = Detail.Items.Where(i => i.Type != "recurring").ToList();
+    }
+
+    @if (recurringItems.Count > 0)
     {
         <div class="recurring-section">
             <h4 class="section-title">🔄 Scheduled Recurring</h4>
             <div class="recurring-list">
-                @foreach (var instance in RecurringInstances.Where(r => !r.IsSkipped))
+                @foreach (var item in recurringItems)
                 {
-                    <div class="recurring-item @(instance.IsModified ? "modified" : "")" @onclick="() => SelectInstance(instance)">
+                    <div class="recurring-item @(item.IsModified ? "modified" : "")" @onclick="() => SelectItem(item)">
                         <div class="recurring-info">
-                            <span class="recurring-description">@instance.Description</span>
-                            <span class="recurring-account">@instance.AccountName</span>
+                            <span class="recurring-description">@item.Description</span>
+                            <span class="recurring-account">@item.AccountName</span>
                         </div>
                         <div class="recurring-right">
-                            <span class="recurring-amount @(instance.Amount.Amount >= 0 ? "positive" : "negative")">
-                                @FormatAmount(instance.Amount.Amount)
+                            <span class="recurring-amount @(item.Amount.Amount >= 0 ? "positive" : "negative")">
+                                @FormatAmount(item.Amount.Amount)
                             </span>
                             <div class="recurring-actions">
-                                <button class="btn-icon" @onclick="() => HandleEditInstance(instance)" @onclick:stopPropagation="true" title="Edit this occurrence">✏️</button>
-                                <button class="btn-icon btn-skip" @onclick="() => HandleSkipInstance(instance)" @onclick:stopPropagation="true" title="Skip this occurrence">⏭️</button>
+                                <button class="btn-icon" @onclick="() => HandleEditInstance(item)" @onclick:stopPropagation="true" title="Edit this occurrence">✏️</button>
+                                <button class="btn-icon btn-skip" @onclick="() => HandleSkipInstance(item)" @onclick:stopPropagation="true" title="Skip this occurrence">⏭️</button>
                             </div>
                         </div>
                     </div>
@@ -34,33 +37,67 @@
     }
 
     <div class="transactions-section">
-        @if (RecurringInstances.Count > 0)
+        @if (recurringItems.Count > 0)
         {
             <h4 class="section-title">💰 Actual Transactions</h4>
         }
-        <TransactionTable Transactions="@Transactions"
-                          EmptyMessage="No transactions for this day." />
+        @if (transactionItems.Count > 0)
+        {
+            <div class="transaction-list">
+                @foreach (var item in transactionItems)
+                {
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <span class="transaction-description">@item.Description</span>
+                            <span class="transaction-account">@item.AccountName</span>
+                        </div>
+                        <span class="transaction-amount @(item.Amount.Amount >= 0 ? "positive" : "negative")">
+                            @FormatAmount(item.Amount.Amount)
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="empty-message">No transactions for this day.</p>
+        }
     </div>
+
+    @if (Detail.Items.Count > 0)
+    {
+        <div class="day-summary">
+            <div class="summary-row">
+                <span>Actual:</span>
+                <span class="@(Detail.Summary.TotalActual.Amount >= 0 ? "positive" : "negative")">
+                    @FormatAmount(Detail.Summary.TotalActual.Amount)
+                </span>
+            </div>
+            @if (recurringItems.Count > 0)
+            {
+                <div class="summary-row">
+                    <span>Projected:</span>
+                    <span class="@(Detail.Summary.TotalProjected.Amount >= 0 ? "positive" : "negative")">
+                        @FormatAmount(Detail.Summary.TotalProjected.Amount)
+                    </span>
+                </div>
+            }
+            <div class="summary-row total">
+                <span>Combined:</span>
+                <span class="@(Detail.Summary.CombinedTotal.Amount >= 0 ? "positive" : "negative")">
+                    @FormatAmount(Detail.Summary.CombinedTotal.Amount)
+                </span>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     /// <summary>
-    /// The selected date to display.
+    /// The day detail data from the API.
     /// </summary>
     [Parameter, EditorRequired]
-    public DateOnly SelectedDate { get; set; }
-
-    /// <summary>
-    /// The transactions for the selected day.
-    /// </summary>
-    [Parameter]
-    public IReadOnlyList<TransactionModel> Transactions { get; set; } = Array.Empty<TransactionModel>();
-
-    /// <summary>
-    /// The recurring transaction instances for the selected day.
-    /// </summary>
-    [Parameter]
-    public IReadOnlyList<RecurringInstanceModel> RecurringInstances { get; set; } = Array.Empty<RecurringInstanceModel>();
+    public DayDetailDto Detail { get; set; } = new();
 
     /// <summary>
     /// Callback when the Add Transaction button is clicked.
@@ -72,32 +109,32 @@
     /// Callback when a recurring instance edit is requested.
     /// </summary>
     [Parameter]
-    public EventCallback<RecurringInstanceModel> OnEditInstance { get; set; }
+    public EventCallback<DayDetailItemDto> OnEditInstance { get; set; }
 
     /// <summary>
     /// Callback when a recurring instance skip is requested.
     /// </summary>
     [Parameter]
-    public EventCallback<RecurringInstanceModel> OnSkipInstance { get; set; }
+    public EventCallback<DayDetailItemDto> OnSkipInstance { get; set; }
 
     private async Task HandleAddClick()
     {
         await OnAddTransaction.InvokeAsync();
     }
 
-    private void SelectInstance(RecurringInstanceModel instance)
+    private void SelectItem(DayDetailItemDto item)
     {
         // Could expand for future detailed view
     }
 
-    private async Task HandleEditInstance(RecurringInstanceModel instance)
+    private async Task HandleEditInstance(DayDetailItemDto item)
     {
-        await OnEditInstance.InvokeAsync(instance);
+        await OnEditInstance.InvokeAsync(item);
     }
 
-    private async Task HandleSkipInstance(RecurringInstanceModel instance)
+    private async Task HandleSkipInstance(DayDetailItemDto item)
     {
-        await OnSkipInstance.InvokeAsync(instance);
+        await OnSkipInstance.InvokeAsync(item);
     }
 
     private static string FormatAmount(decimal amount)

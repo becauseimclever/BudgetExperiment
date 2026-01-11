@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Dtos;
+
 namespace BudgetExperiment.Client.Models;
 
 /// <summary>
@@ -23,7 +25,7 @@ public sealed class TransactionListItem
     public string? Category { get; set; }
 
     /// <summary>Gets or sets the amount.</summary>
-    public MoneyModel Amount { get; set; } = new();
+    public MoneyDto Amount { get; set; } = new();
 
     /// <summary>Gets or sets whether this is a recurring transaction instance (not yet realized).</summary>
     public bool IsRecurring { get; set; }
@@ -46,9 +48,9 @@ public sealed class TransactionListItem
     /// <summary>
     /// Creates a TransactionListItem from an actual transaction.
     /// </summary>
-    /// <param name="transaction">The transaction model.</param>
+    /// <param name="transaction">The transaction DTO.</param>
     /// <returns>A new TransactionListItem.</returns>
-    public static TransactionListItem FromTransaction(TransactionModel transaction)
+    public static TransactionListItem FromTransaction(TransactionDto transaction)
     {
         return new TransactionListItem
         {
@@ -69,9 +71,9 @@ public sealed class TransactionListItem
     /// <summary>
     /// Creates a TransactionListItem from a recurring transaction instance.
     /// </summary>
-    /// <param name="instance">The recurring instance model.</param>
+    /// <param name="instance">The recurring instance DTO.</param>
     /// <returns>A new TransactionListItem.</returns>
-    public static TransactionListItem FromRecurringInstance(RecurringInstanceModel instance)
+    public static TransactionListItem FromRecurringInstance(RecurringInstanceDto instance)
     {
         return new TransactionListItem
         {

@@ -1,8 +1,5 @@
 @* NavMenu.razor - Collapsible side navigation menu *@
 
-@using BudgetExperiment.Client.Models
-@using BudgetExperiment.Client.Services
-
 @inject IBudgetApiService ApiService
 @inject NavigationManager NavigationManager
 
@@ -64,7 +61,7 @@
     [Parameter]
     public bool IsCollapsed { get; set; }
 
-    private List<AccountModel> accounts = new();
+    private List<AccountDto> accounts = new();
 
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
@@ -82,7 +79,7 @@
         catch
         {
             // Silently fail - nav will just show without account links
-            accounts = new List<AccountModel>();
+            accounts = new List<AccountDto>();
         }
     }
 

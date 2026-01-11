@@ -5,7 +5,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using BudgetExperiment.Application.Dtos;
+using BudgetExperiment.Contracts.Dtos;
 
 namespace BudgetExperiment.Api.Tests;
 

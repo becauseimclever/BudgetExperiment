@@ -2,11 +2,6 @@
 
 @page "/accounts/{AccountId:guid}/transactions"
 
-@using BudgetExperiment.Client.Models
-@using BudgetExperiment.Client.Services
-@using BudgetExperiment.Client.Components.Forms
-@using BudgetExperiment.Client.Components.Common
-
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 
@@ -176,21 +171,21 @@
     [Parameter]
     public Guid AccountId { get; set; }
 
-    private AccountModel? account;
-    private List<TransactionModel> transactions = new();
-    private List<RecurringInstanceModel> recurringInstances = new();
+    private AccountDto? account;
+    private List<TransactionDto> transactions = new();
+    private List<RecurringInstanceDto> recurringInstances = new();
     private List<TransactionListItem> allItems = new();
     private bool isLoading = true;
     private bool isSubmitting = false;
     private bool showAddTransaction = false;
-    private TransactionModel? editingTransaction = null;
+    private TransactionDto? editingTransaction = null;
     private DateTime startDate = DateTime.Today.AddMonths(-1);
     private DateTime endDate = DateTime.Today.AddMonths(1); // Include future for recurring
 
     // Delete confirmation state
     private bool showDeleteConfirm = false;
     private bool isDeleting = false;
-    private TransactionModel? deletingTransaction = null;
+    private TransactionDto? deletingTransaction = null;
 
     // Recurring instance state
     private bool showEditRecurring = false;
@@ -336,7 +331,7 @@
         saveErrorMessage = null;
     }
 
-    private async Task SaveTransaction(TransactionCreateModel transaction)
+    private async Task SaveTransaction(TransactionCreateDto transaction)
     {
         isSubmitting = true;
         saveErrorMessage = null;
@@ -415,7 +410,7 @@
         editingRecurringItem = null;
     }
 
-    private async Task SaveRecurringInstance(RecurringInstanceModifyModel model)
+    private async Task SaveRecurringInstance(RecurringInstanceModifyDto model)
     {
         if (editingRecurringItem == null)
         {

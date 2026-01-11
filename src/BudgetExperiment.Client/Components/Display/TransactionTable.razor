@@ -1,7 +1,5 @@
 @* TransactionTable.razor - Reusable transaction table component *@
 
-@using BudgetExperiment.Client.Models
-
 @if ((Transactions == null || Transactions.Count == 0) && (Items == null || Items.Count == 0))
 {
     <p class="empty-message">@EmptyMessage</p>
@@ -126,7 +124,7 @@ else
     /// The list of transactions to display (legacy mode).
     /// </summary>
     [Parameter]
-    public IReadOnlyList<TransactionModel> Transactions { get; set; } = new List<TransactionModel>();
+    public IReadOnlyList<TransactionDto> Transactions { get; set; } = new List<TransactionDto>();
 
     /// <summary>
     /// The list of unified transaction items to display (new mode - includes recurring).
@@ -157,7 +155,7 @@ else
     /// Callback when Edit button is clicked (legacy mode).
     /// </summary>
     [Parameter]
-    public EventCallback<TransactionModel> OnEdit { get; set; }
+    public EventCallback<TransactionDto> OnEdit { get; set; }
 
     /// <summary>
     /// Callback when Delete button is clicked (legacy mode).
@@ -189,7 +187,7 @@ else
     [Parameter]
     public EventCallback<TransactionListItem> OnSkipRecurring { get; set; }
 
-    private IEnumerable<TransactionModel> OrderedTransactions =>
+    private IEnumerable<TransactionDto> OrderedTransactions =>
         ShowDate
             ? Transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
             : Transactions;
@@ -209,7 +207,7 @@ else
             : "Transfer: Money received from another account";
     }
 
-    private static string GetTransactionTransferTooltip(TransactionModel txn)
+    private static string GetTransactionTransferTooltip(TransactionDto txn)
     {
         var direction = txn.TransferDirection?.ToLowerInvariant() ?? "unknown";
         return direction == "source"

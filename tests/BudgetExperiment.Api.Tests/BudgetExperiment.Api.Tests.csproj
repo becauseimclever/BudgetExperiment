@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj" />
+    <ProjectReference Include="..\..\src\BudgetExperiment.Contracts\BudgetExperiment.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

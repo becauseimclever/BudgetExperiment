@@ -1,10 +1,5 @@
 @page "/recurring"
 
-@using BudgetExperiment.Client.Models
-@using BudgetExperiment.Client.Services
-@using BudgetExperiment.Client.Components.Forms
-@using BudgetExperiment.Client.Components.Common
-
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 
@@ -368,16 +363,16 @@
     private bool isSubmitting = false;
     private bool isDeleting = false;
     private string? errorMessage;
-    private List<RecurringTransactionModel> recurringTransactions = new();
+    private List<RecurringTransactionDto> recurringTransactions = new();
 
     private bool showAddForm = false;
     private bool showEditForm = false;
     private bool showDeleteConfirm = false;
 
-    private RecurringTransactionCreateModel newRecurring = new();
-    private RecurringTransactionUpdateModel editModel = new();
+    private RecurringTransactionCreateDto newRecurring = new();
+    private RecurringTransactionUpdateDto editModel = new();
     private Guid editingId;
-    private RecurringTransactionModel? deletingRecurring;
+    private RecurringTransactionDto? deletingRecurring;
 
     protected override async Task OnInitializedAsync()
     {
@@ -425,7 +420,7 @@
 
     private void ShowAddForm()
     {
-        newRecurring = new RecurringTransactionCreateModel
+        newRecurring = new RecurringTransactionCreateDto
         {
             Frequency = "Monthly",
             StartDate = DateOnly.FromDateTime(DateTime.Today),
@@ -433,14 +428,13 @@
         showAddForm = true;
     }
 
-    private void ShowEditForm(RecurringTransactionModel recurring)
+    private void ShowEditForm(RecurringTransactionDto recurring)
     {
         editingId = recurring.Id;
-        editModel = new RecurringTransactionUpdateModel
+        editModel = new RecurringTransactionUpdateDto
         {
             Description = recurring.Description,
-            Amount = recurring.Amount.Amount,
-            Currency = recurring.Amount.Currency,
+            Amount = recurring.Amount,
             EndDate = recurring.EndDate,
             Category = recurring.Category,
         };
@@ -453,7 +447,7 @@
         showEditForm = false;
     }
 
-    private async Task CreateRecurring(RecurringTransactionCreateModel model)
+    private async Task CreateRecurring(RecurringTransactionCreateDto model)
     {
         isSubmitting = true;
         try
@@ -471,7 +465,7 @@
         }
     }
 
-    private async Task UpdateRecurring(RecurringTransactionUpdateModel model)
+    private async Task UpdateRecurring(RecurringTransactionUpdateDto model)
     {
         isSubmitting = true;
         try
@@ -489,7 +483,7 @@
         }
     }
 
-    private async Task SkipNext(RecurringTransactionModel recurring)
+    private async Task SkipNext(RecurringTransactionDto recurring)
     {
         var result = await ApiService.SkipNextRecurringAsync(recurring.Id);
         if (result != null)
@@ -498,7 +492,7 @@
         }
     }
 
-    private async Task Pause(RecurringTransactionModel recurring)
+    private async Task Pause(RecurringTransactionDto recurring)
     {
         var result = await ApiService.PauseRecurringTransactionAsync(recurring.Id);
         if (result != null)
@@ -507,7 +501,7 @@
         }
     }
 
-    private async Task Resume(RecurringTransactionModel recurring)
+    private async Task Resume(RecurringTransactionDto recurring)
     {
         var result = await ApiService.ResumeRecurringTransactionAsync(recurring.Id);
         if (result != null)
@@ -516,7 +510,7 @@
         }
     }
 
-    private void ShowDeleteConfirm(RecurringTransactionModel recurring)
+    private void ShowDeleteConfirm(RecurringTransactionDto recurring)
     {
         deletingRecurring = recurring;
         showDeleteConfirm = true;
@@ -554,7 +548,7 @@
         deletingRecurring = null;
     }
 
-    private static string FormatFrequency(RecurringTransactionModel recurring)
+    private static string FormatFrequency(RecurringTransactionDto recurring)
     {
         return recurring.Frequency switch
         {
@@ -568,7 +562,7 @@
         };
     }
 
-    private static string FormatMoney(MoneyModel money)
+    private static string FormatMoney(MoneyDto money)
     {
         var sign = money.Amount >= 0 ? "+" : "";
         return $"{sign}{money.Currency} {money.Amount:N2}";

@@ -1,11 +1,5 @@
 @page "/transfers"
 
-@using BudgetExperiment.Client.Models
-@using BudgetExperiment.Client.Services
-@using BudgetExperiment.Client.Components.Display
-@using BudgetExperiment.Client.Components.Common
-@using BudgetExperiment.Client.Components.Forms
-
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 
@@ -125,9 +119,9 @@
     private bool isLoading = true;
     private bool isRetrying;
     private string? errorMessage;
-    private List<AccountModel> accounts = new();
-    private List<TransferListItemModel> transfers = new();
-    private List<TransferListItemModel> filteredTransfers = new();
+    private List<AccountDto> accounts = new();
+    private List<TransferListItemResponse> transfers = new();
+    private List<TransferListItemResponse> filteredTransfers = new();
 
     // Filters
     private string selectedAccountId = string.Empty;
@@ -136,9 +130,9 @@
 
     // Transfer dialog state
     private bool showTransferDialog;
-    private TransferCreateModel newTransfer = new();
-    private TransferUpdateModel editTransfer = new();
-    private TransferListItemModel? editingTransfer;
+    private CreateTransferRequest newTransfer = new();
+    private UpdateTransferRequest editTransfer = new();
+    private TransferListItemResponse? editingTransfer;
 
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
@@ -228,7 +222,7 @@
 
     private void ShowCreateTransfer()
     {
-        newTransfer = new TransferCreateModel
+        newTransfer = new CreateTransferRequest
         {
             Date = DateOnly.FromDateTime(DateTime.Today),
         };
@@ -236,10 +230,10 @@
         showTransferDialog = true;
     }
 
-    private void ShowEditTransfer(TransferListItemModel transfer)
+    private void ShowEditTransfer(TransferListItemResponse transfer)
     {
         editingTransfer = transfer;
-        editTransfer = new TransferUpdateModel
+        editTransfer = new UpdateTransferRequest
         {
             Amount = transfer.Amount,
             Date = transfer.Date,
@@ -254,7 +248,7 @@
         editingTransfer = null;
     }
 
-    private async Task CreateTransfer(TransferCreateModel model)
+    private async Task CreateTransfer(CreateTransferRequest model)
     {
         try
         {
@@ -268,7 +262,7 @@
         }
     }
 
-    private async Task UpdateTransfer(TransferUpdateModel model)
+    private async Task UpdateTransfer(UpdateTransferRequest model)
     {
         if (editingTransfer == null)
         {

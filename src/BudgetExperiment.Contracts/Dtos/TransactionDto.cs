@@ -1,13 +1,13 @@
-// <copyright file="TransactionModel.cs" company="BecauseImClever">
+// <copyright file="TransactionDto.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Client.Models;
+namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
-/// Client-side model for transaction data.
+/// DTO for returning transaction details.
 /// </summary>
-public sealed class TransactionModel
+public sealed class TransactionDto
 {
     /// <summary>Gets or sets the unique identifier.</summary>
     public Guid Id { get; set; }
@@ -16,7 +16,7 @@ public sealed class TransactionModel
     public Guid AccountId { get; set; }
 
     /// <summary>Gets or sets the transaction amount.</summary>
-    public MoneyModel Amount { get; set; } = new();
+    public MoneyDto Amount { get; set; } = new();
 
     /// <summary>Gets or sets the transaction date.</summary>
     public DateOnly Date { get; set; }
@@ -44,21 +44,18 @@ public sealed class TransactionModel
 }
 
 /// <summary>
-/// Client-side model for creating a new transaction.
+/// DTO for creating a new transaction.
 /// </summary>
-public sealed class TransactionCreateModel
+public sealed class TransactionCreateDto
 {
     /// <summary>Gets or sets the account identifier.</summary>
     public Guid AccountId { get; set; }
 
     /// <summary>Gets or sets the transaction amount.</summary>
-    public decimal Amount { get; set; }
-
-    /// <summary>Gets or sets the currency code.</summary>
-    public string Currency { get; set; } = "USD";
+    public MoneyDto Amount { get; set; } = new();
 
     /// <summary>Gets or sets the transaction date.</summary>
-    public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly Date { get; set; }
 
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;

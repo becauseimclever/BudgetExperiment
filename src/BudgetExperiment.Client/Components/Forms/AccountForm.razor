@@ -1,7 +1,5 @@
 @* AccountForm.razor - Reusable account create/edit form *@
 
-@using BudgetExperiment.Client.Models
-
 <form @onsubmit="HandleSubmit">
     <div class="form-group">
         <label for="accountName">Account Name:</label>
@@ -44,13 +42,13 @@
     /// Gets or sets the account model to edit.
     /// </summary>
     [Parameter]
-    public AccountCreateModel Model { get; set; } = new();
+    public AccountCreateDto Model { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the callback when the form is submitted.
     /// </summary>
     [Parameter]
-    public EventCallback<AccountCreateModel> OnSubmit { get; set; }
+    public EventCallback<AccountCreateDto> OnSubmit { get; set; }
 
     /// <summary>
     /// Gets or sets the callback when cancel is clicked.

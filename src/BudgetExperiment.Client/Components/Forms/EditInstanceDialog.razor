@@ -1,7 +1,5 @@
 @* EditInstanceDialog.razor - Dialog for editing a single recurring transaction instance *@
 
-@using BudgetExperiment.Client.Models
-
 <div class="edit-instance-form">
     <div class="instance-info">
         <p class="instance-label">Editing occurrence for:</p>
@@ -14,7 +12,7 @@
             <label for="description">Description:</label>
             <input id="description"
                    type="text"
-                   @bind="model.Description"
+                   @bind="descriptionInput"
                    placeholder="@OriginalDescription" />
             <small class="form-hint">Leave empty to use series default</small>
         </div>
@@ -25,12 +23,12 @@
                 <input id="amount"
                        type="number"
                        step="0.01"
-                       @bind="model.Amount"
+                       @bind="amountInput"
                        placeholder="@OriginalAmount.ToString("F2")" />
             </div>
             <div class="form-group form-group-small">
                 <label for="currency">Currency:</label>
-                <select id="currency" @bind="model.Currency">
+                <select id="currency" @bind="currencyInput">
                     <option value="USD">USD</option>
                 </select>
             </div>
@@ -97,7 +95,7 @@
     /// Gets or sets the callback when the form is saved.
     /// </summary>
     [Parameter]
-    public EventCallback<RecurringInstanceModifyModel> OnSave { get; set; }
+    public EventCallback<RecurringInstanceModifyDto> OnSave { get; set; }
 
     /// <summary>
     /// Gets or sets the callback when cancel is clicked.
@@ -111,17 +109,24 @@
     [Parameter]
     public bool IsSubmitting { get; set; }
 
-    private RecurringInstanceModifyModel model = new();
+    private RecurringInstanceModifyDto model = new();
     private DateTime? newDateInput;
+    private decimal? amountInput;
+    private string currencyInput = "USD";
+    private string? descriptionInput;
 
     protected override void OnParametersSet()
     {
-        model.Currency = OriginalCurrency;
+        currencyInput = OriginalCurrency;
     }
 
     private async Task HandleSubmit()
     {
-        model.NewDate = newDateInput.HasValue ? DateOnly.FromDateTime(newDateInput.Value) : null;
+        model.Date = newDateInput.HasValue ? DateOnly.FromDateTime(newDateInput.Value) : null;
+        model.Description = string.IsNullOrWhiteSpace(descriptionInput) ? null : descriptionInput;
+        model.Amount = amountInput.HasValue
+            ? new MoneyDto { Amount = amountInput.Value, Currency = currencyInput }
+            : null;
         await OnSave.InvokeAsync(model);
     }
 

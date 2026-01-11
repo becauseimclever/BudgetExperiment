@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 
 using BudgetExperiment.Client.Models;
+using BudgetExperiment.Contracts.Dtos;
 
 namespace BudgetExperiment.Client.Services;
 
@@ -31,18 +32,18 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AccountModel>> GetAccountsAsync()
+    public async Task<IReadOnlyList<AccountDto>> GetAccountsAsync()
     {
-        var result = await this._httpClient.GetFromJsonAsync<List<AccountModel>>("api/v1/accounts", JsonOptions);
-        return result ?? new List<AccountModel>();
+        var result = await this._httpClient.GetFromJsonAsync<List<AccountDto>>("api/v1/accounts", JsonOptions);
+        return result ?? new List<AccountDto>();
     }
 
     /// <inheritdoc />
-    public async Task<AccountModel?> GetAccountAsync(Guid id)
+    public async Task<AccountDto?> GetAccountAsync(Guid id)
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<AccountModel>($"api/v1/accounts/{id}", JsonOptions);
+            return await this._httpClient.GetFromJsonAsync<AccountDto>($"api/v1/accounts/{id}", JsonOptions);
         }
         catch (HttpRequestException)
         {
@@ -51,12 +52,12 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<AccountModel?> CreateAccountAsync(AccountCreateModel model)
+    public async Task<AccountDto?> CreateAccountAsync(AccountCreateDto model)
     {
         var response = await this._httpClient.PostAsJsonAsync("api/v1/accounts", model, JsonOptions);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<AccountModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
         }
 
         return null;
@@ -70,7 +71,7 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<TransactionModel>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
+    public async Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
     {
         var url = $"api/v1/transactions?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
         if (accountId.HasValue)
@@ -78,16 +79,16 @@ public sealed class BudgetApiService : IBudgetApiService
             url += $"&accountId={accountId.Value}";
         }
 
-        var result = await this._httpClient.GetFromJsonAsync<List<TransactionModel>>(url, JsonOptions);
-        return result ?? new List<TransactionModel>();
+        var result = await this._httpClient.GetFromJsonAsync<List<TransactionDto>>(url, JsonOptions);
+        return result ?? new List<TransactionDto>();
     }
 
     /// <inheritdoc />
-    public async Task<TransactionModel?> GetTransactionAsync(Guid id)
+    public async Task<TransactionDto?> GetTransactionAsync(Guid id)
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<TransactionModel>($"api/v1/transactions/{id}", JsonOptions);
+            return await this._httpClient.GetFromJsonAsync<TransactionDto>($"api/v1/transactions/{id}", JsonOptions);
         }
         catch (HttpRequestException)
         {
@@ -96,29 +97,45 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<TransactionModel?> CreateTransactionAsync(TransactionCreateModel model)
+    public async Task<TransactionDto?> CreateTransactionAsync(TransactionCreateDto model)
     {
-        // Convert client model to API format
-        var apiModel = new
-        {
-            model.AccountId,
-            Amount = new { Currency = model.Currency, Amount = model.Amount },
-            model.Date,
-            model.Description,
-            model.Category,
-        };
-
-        var response = await this._httpClient.PostAsJsonAsync("api/v1/transactions", apiModel, JsonOptions);
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/transactions", model, JsonOptions);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<TransactionModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
         }
 
         return null;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<DailyTotalModel>> GetCalendarSummaryAsync(int year, int month, Guid? accountId = null)
+    public async Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null)
+    {
+        var url = $"api/v1/calendar/grid?year={year}&month={month}";
+        if (accountId.HasValue)
+        {
+            url += $"&accountId={accountId.Value}";
+        }
+
+        var result = await this._httpClient.GetFromJsonAsync<CalendarGridDto>(url, JsonOptions);
+        return result ?? new CalendarGridDto { Year = year, Month = month };
+    }
+
+    /// <inheritdoc />
+    public async Task<DayDetailDto> GetDayDetailAsync(DateOnly date, Guid? accountId = null)
+    {
+        var url = $"api/v1/calendar/day/{date:yyyy-MM-dd}";
+        if (accountId.HasValue)
+        {
+            url += $"?accountId={accountId.Value}";
+        }
+
+        var result = await this._httpClient.GetFromJsonAsync<DayDetailDto>(url, JsonOptions);
+        return result ?? new DayDetailDto { Date = date };
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<DailyTotalDto>> GetCalendarSummaryAsync(int year, int month, Guid? accountId = null)
     {
         var url = $"api/v1/calendar/summary?year={year}&month={month}";
         if (accountId.HasValue)
@@ -126,23 +143,23 @@ public sealed class BudgetApiService : IBudgetApiService
             url += $"&accountId={accountId.Value}";
         }
 
-        var result = await this._httpClient.GetFromJsonAsync<List<DailyTotalModel>>(url, JsonOptions);
-        return result ?? new List<DailyTotalModel>();
+        var result = await this._httpClient.GetFromJsonAsync<List<DailyTotalDto>>(url, JsonOptions);
+        return result ?? new List<DailyTotalDto>();
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<RecurringTransactionModel>> GetRecurringTransactionsAsync()
+    public async Task<IReadOnlyList<RecurringTransactionDto>> GetRecurringTransactionsAsync()
     {
-        var result = await this._httpClient.GetFromJsonAsync<List<RecurringTransactionModel>>("api/v1/recurring-transactions", JsonOptions);
-        return result ?? new List<RecurringTransactionModel>();
+        var result = await this._httpClient.GetFromJsonAsync<List<RecurringTransactionDto>>("api/v1/recurring-transactions", JsonOptions);
+        return result ?? new List<RecurringTransactionDto>();
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransactionModel?> GetRecurringTransactionAsync(Guid id)
+    public async Task<RecurringTransactionDto?> GetRecurringTransactionAsync(Guid id)
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<RecurringTransactionModel>($"api/v1/recurring-transactions/{id}", JsonOptions);
+            return await this._httpClient.GetFromJsonAsync<RecurringTransactionDto>($"api/v1/recurring-transactions/{id}", JsonOptions);
         }
         catch (HttpRequestException)
         {
@@ -151,51 +168,24 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransactionModel?> CreateRecurringTransactionAsync(RecurringTransactionCreateModel model)
+    public async Task<RecurringTransactionDto?> CreateRecurringTransactionAsync(RecurringTransactionCreateDto model)
     {
-        var apiModel = new
-        {
-            model.AccountId,
-            model.Description,
-            Amount = new { Currency = model.Currency, Amount = model.Amount },
-            model.Frequency,
-            model.DayOfMonth,
-            model.DayOfWeek,
-            model.StartDate,
-            model.EndDate,
-            model.Category,
-        };
-
-        var response = await this._httpClient.PostAsJsonAsync("api/v1/recurring-transactions", apiModel, JsonOptions);
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/recurring-transactions", model, JsonOptions);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionDto>(JsonOptions);
         }
 
         return null;
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransactionModel?> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateModel model)
+    public async Task<RecurringTransactionDto?> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model)
     {
-        object? amountObj = null;
-        if (model.Amount.HasValue)
-        {
-            amountObj = new { Currency = model.Currency ?? "USD", Amount = model.Amount.Value };
-        }
-
-        var apiModel = new
-        {
-            model.Description,
-            Amount = amountObj,
-            model.EndDate,
-            model.Category,
-        };
-
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}", apiModel, JsonOptions);
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}", model, JsonOptions);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionDto>(JsonOptions);
         }
 
         return null;
@@ -209,43 +199,43 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransactionModel?> PauseRecurringTransactionAsync(Guid id)
+    public async Task<RecurringTransactionDto?> PauseRecurringTransactionAsync(Guid id)
     {
         var response = await this._httpClient.PostAsync($"api/v1/recurring-transactions/{id}/pause", null);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionDto>(JsonOptions);
         }
 
         return null;
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransactionModel?> ResumeRecurringTransactionAsync(Guid id)
+    public async Task<RecurringTransactionDto?> ResumeRecurringTransactionAsync(Guid id)
     {
         var response = await this._httpClient.PostAsync($"api/v1/recurring-transactions/{id}/resume", null);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionDto>(JsonOptions);
         }
 
         return null;
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransactionModel?> SkipNextRecurringAsync(Guid id)
+    public async Task<RecurringTransactionDto?> SkipNextRecurringAsync(Guid id)
     {
         var response = await this._httpClient.PostAsync($"api/v1/recurring-transactions/{id}/skip", null);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<RecurringTransactionModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<RecurringTransactionDto>(JsonOptions);
         }
 
         return null;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<RecurringInstanceModel>> GetProjectedRecurringAsync(DateOnly from, DateOnly to, Guid? accountId = null)
+    public async Task<IReadOnlyList<RecurringInstanceDto>> GetProjectedRecurringAsync(DateOnly from, DateOnly to, Guid? accountId = null)
     {
         var url = $"api/v1/recurring-transactions/projected?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
         if (accountId.HasValue)
@@ -253,8 +243,8 @@ public sealed class BudgetApiService : IBudgetApiService
             url += $"&accountId={accountId.Value}";
         }
 
-        var result = await this._httpClient.GetFromJsonAsync<List<RecurringInstanceModel>>(url, JsonOptions);
-        return result ?? new List<RecurringInstanceModel>();
+        var result = await this._httpClient.GetFromJsonAsync<List<RecurringInstanceDto>>(url, JsonOptions);
+        return result ?? new List<RecurringInstanceDto>();
     }
 
     /// <inheritdoc />
@@ -265,48 +255,35 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<RecurringInstanceModel?> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyModel model)
+    public async Task<RecurringInstanceDto?> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model)
     {
-        object? amountObj = null;
-        if (model.Amount.HasValue)
-        {
-            amountObj = new { Currency = model.Currency ?? "USD", Amount = model.Amount.Value };
-        }
-
-        var apiModel = new
-        {
-            model.NewDate,
-            Amount = amountObj,
-            model.Description,
-        };
-
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}/instances/{date:yyyy-MM-dd}", apiModel, JsonOptions);
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}/instances/{date:yyyy-MM-dd}", model, JsonOptions);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<RecurringInstanceModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<RecurringInstanceDto>(JsonOptions);
         }
 
         return null;
     }
 
     /// <inheritdoc />
-    public async Task<TransferModel?> CreateTransferAsync(TransferCreateModel model)
+    public async Task<TransferResponse?> CreateTransferAsync(CreateTransferRequest model)
     {
         var response = await this._httpClient.PostAsJsonAsync("api/v1/transfers", model, JsonOptions);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<TransferModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<TransferResponse>(JsonOptions);
         }
 
         return null;
     }
 
     /// <inheritdoc />
-    public async Task<TransferModel?> GetTransferAsync(Guid transferId)
+    public async Task<TransferResponse?> GetTransferAsync(Guid transferId)
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<TransferModel>($"api/v1/transfers/{transferId}", JsonOptions);
+            return await this._httpClient.GetFromJsonAsync<TransferResponse>($"api/v1/transfers/{transferId}", JsonOptions);
         }
         catch (HttpRequestException)
         {
@@ -315,7 +292,7 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<TransferListItemModel>> GetTransfersAsync(
+    public async Task<IReadOnlyList<TransferListItemResponse>> GetTransfersAsync(
         Guid? accountId = null,
         DateOnly? from = null,
         DateOnly? to = null,
@@ -338,17 +315,17 @@ public sealed class BudgetApiService : IBudgetApiService
             url += $"&to={to.Value:yyyy-MM-dd}";
         }
 
-        var result = await this._httpClient.GetFromJsonAsync<List<TransferListItemModel>>(url, JsonOptions);
-        return result ?? new List<TransferListItemModel>();
+        var result = await this._httpClient.GetFromJsonAsync<List<TransferListItemResponse>>(url, JsonOptions);
+        return result ?? new List<TransferListItemResponse>();
     }
 
     /// <inheritdoc />
-    public async Task<TransferModel?> UpdateTransferAsync(Guid transferId, TransferUpdateModel model)
+    public async Task<TransferResponse?> UpdateTransferAsync(Guid transferId, UpdateTransferRequest model)
     {
         var response = await this._httpClient.PutAsJsonAsync($"api/v1/transfers/{transferId}", model, JsonOptions);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<TransferModel>(JsonOptions);
+            return await response.Content.ReadFromJsonAsync<TransferResponse>(JsonOptions);
         }
 
         return null;

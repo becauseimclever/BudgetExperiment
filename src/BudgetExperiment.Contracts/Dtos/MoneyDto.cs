@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Application.Dtos;
+namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
 /// DTO for monetary values.

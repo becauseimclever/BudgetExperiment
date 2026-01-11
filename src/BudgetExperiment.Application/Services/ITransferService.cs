@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Dtos;
+using BudgetExperiment.Contracts.Dtos;
 
 namespace BudgetExperiment.Application.Services;
 

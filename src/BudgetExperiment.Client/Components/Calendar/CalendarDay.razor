@@ -1,24 +1,22 @@
 @* CalendarDay.razor - Individual calendar day cell component *@
 
-@using BudgetExperiment.Client.Models
-
 <div class="calendar-day @CssClasses" @onclick="HandleClick">
     <span class="day-number">@Day.Date.Day</span>
-    @if (Day.DailyTotal != null)
+    @if (Day.TransactionCount > 0)
     {
         <div class="day-total">
-            <MoneyDisplay Amount="@Day.DailyTotal.Total.Amount" />
+            <MoneyDisplay Amount="@Day.ActualTotal.Amount" />
         </div>
         <div class="transaction-count">
-            @Day.DailyTotal.TransactionCount txn@(Day.DailyTotal.TransactionCount != 1 ? "s" : "")
+            @Day.TransactionCount txn@(Day.TransactionCount != 1 ? "s" : "")
         </div>
     }
     @if (Day.HasRecurring)
     {
-        <div class="recurring-indicator" title="@Day.RecurringInstances.Count scheduled">
+        <div class="recurring-indicator" title="@Day.RecurringCount scheduled">
             <span class="recurring-icon">🔄</span>
-            <span class="recurring-total @(Day.RecurringTotal >= 0 ? "positive" : "negative")">
-                @FormatRecurringTotal(Day.RecurringTotal)
+            <span class="recurring-total @(Day.ProjectedTotal.Amount >= 0 ? "positive" : "negative")">
+                @FormatRecurringTotal(Day.ProjectedTotal.Amount)
             </span>
         </div>
     }
@@ -29,7 +27,7 @@
     /// The calendar day data to display.
     /// </summary>
     [Parameter, EditorRequired]
-    public CalendarDayModel Day { get; set; } = default!;
+    public CalendarDaySummaryDto Day { get; set; } = default!;
 
     /// <summary>
     /// Whether this day is currently selected.

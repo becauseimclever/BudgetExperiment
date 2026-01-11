@@ -1,13 +1,13 @@
-// <copyright file="AccountModel.cs" company="BecauseImClever">
+// <copyright file="AccountDto.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Client.Models;
+namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
-/// Client-side model for account data.
+/// DTO for returning account details.
 /// </summary>
-public sealed class AccountModel
+public sealed class AccountDto
 {
     /// <summary>Gets or sets the unique identifier.</summary>
     public Guid Id { get; set; }
@@ -25,13 +25,13 @@ public sealed class AccountModel
     public DateTime UpdatedAt { get; set; }
 
     /// <summary>Gets or sets the transactions for this account.</summary>
-    public List<TransactionModel> Transactions { get; set; } = new();
+    public IReadOnlyList<TransactionDto> Transactions { get; set; } = new List<TransactionDto>();
 }
 
 /// <summary>
-/// Client-side model for creating a new account.
+/// DTO for creating a new account.
 /// </summary>
-public sealed class AccountCreateModel
+public sealed class AccountCreateDto
 {
     /// <summary>Gets or sets the account name.</summary>
     public string Name { get; set; } = string.Empty;

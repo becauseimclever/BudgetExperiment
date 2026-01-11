@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<CalendarService>();
         services.AddScoped<RecurringTransactionService>();
         services.AddScoped<ITransferService, TransferService>();
+        services.AddScoped<ICalendarGridService, CalendarGridService>();
         return services;
     }
 }

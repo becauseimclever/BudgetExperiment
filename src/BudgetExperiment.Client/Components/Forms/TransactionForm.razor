@@ -1,7 +1,5 @@
 @* TransactionForm.razor - Reusable transaction create/edit form *@
 
-@using BudgetExperiment.Client.Models
-
 <form @onsubmit="HandleSubmit">
     @if (ShowAccountSelector)
     {
@@ -30,7 +28,7 @@
         <input id="txnAmount" 
                type="number" 
                step="0.01" 
-               @bind="Model.Amount" 
+               @bind="AmountValue" 
                placeholder="0.00"
                required />
         <small class="help-text">Positive for income, negative for expenses</small>
@@ -81,13 +79,13 @@
     /// Gets or sets the transaction model to edit.
     /// </summary>
     [Parameter]
-    public TransactionCreateModel Model { get; set; } = new();
+    public TransactionCreateDto Model { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the list of accounts for the dropdown.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<AccountModel> Accounts { get; set; } = Array.Empty<AccountModel>();
+    public IReadOnlyList<AccountDto> Accounts { get; set; } = Array.Empty<AccountDto>();
 
     /// <summary>
     /// Gets or sets a value indicating whether to show the account selector.
@@ -99,7 +97,7 @@
     /// Gets or sets the callback when the form is submitted.
     /// </summary>
     [Parameter]
-    public EventCallback<TransactionCreateModel> OnSubmit { get; set; }
+    public EventCallback<TransactionCreateDto> OnSubmit { get; set; }
 
     /// <summary>
     /// Gets or sets the callback when cancel is clicked.
@@ -162,6 +160,12 @@
         set => Model.Date = DateOnly.FromDateTime(value);
     }
 
+    private decimal AmountValue
+    {
+        get => Model.Amount.Amount;
+        set => Model.Amount = new MoneyDto { Amount = value, Currency = Model.Amount.Currency ?? "USD" };
+    }
+
     private DateOnly? _lastAppliedInitialDate;
     private bool _initialValuesApplied;
 
@@ -183,7 +187,7 @@
 
             if (InitialAmount != 0)
             {
-                Model.Amount = InitialAmount;
+                Model.Amount = new MoneyDto { Amount = InitialAmount, Currency = "USD" };
             }
 
             if (!string.IsNullOrEmpty(InitialCategory))

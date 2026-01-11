@@ -1,9 +1,5 @@
 @page "/accounts"
 
-@using BudgetExperiment.Client.Models
-@using BudgetExperiment.Client.Services
-@using BudgetExperiment.Client.Components.Common
-
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 
@@ -189,19 +185,19 @@
     private bool isRetrying;
     private bool isSubmitting = false;
     private string? errorMessage;
-    private List<AccountModel> accounts = new();
+    private List<AccountDto> accounts = new();
     private bool showAddAccount = false;
-    private AccountCreateModel newAccount = new();
+    private AccountCreateDto newAccount = new();
 
     // Transfer state
     private bool showTransfer = false;
-    private TransferCreateModel newTransfer = new();
+    private CreateTransferRequest newTransfer = new();
     private Guid? preSelectedSourceAccountId = null;
 
     // Delete confirmation state
     private bool showDeleteConfirm = false;
     private bool isDeleting = false;
-    private AccountModel? deletingAccount = null;
+    private AccountDto? deletingAccount = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -249,7 +245,7 @@
 
     private void ShowAddAccount()
     {
-        newAccount = new AccountCreateModel { Type = "Checking" };
+        newAccount = new AccountCreateDto { Type = "Checking" };
         showAddAccount = true;
     }
 
@@ -261,14 +257,14 @@
     private void ShowTransfer()
     {
         preSelectedSourceAccountId = null;
-        newTransfer = new TransferCreateModel();
+        newTransfer = new CreateTransferRequest();
         showTransfer = true;
     }
 
     private void ShowTransferFrom(Guid accountId)
     {
         preSelectedSourceAccountId = accountId;
-        newTransfer = new TransferCreateModel { SourceAccountId = accountId };
+        newTransfer = new CreateTransferRequest { SourceAccountId = accountId };
         showTransfer = true;
     }
 
@@ -278,7 +274,7 @@
         preSelectedSourceAccountId = null;
     }
 
-    private async Task CreateTransfer(TransferCreateModel model)
+    private async Task CreateTransfer(CreateTransferRequest model)
     {
         var result = await ApiService.CreateTransferAsync(model);
         if (result != null)
@@ -288,7 +284,7 @@
         }
     }
 
-    private async Task CreateAccount(AccountCreateModel model)
+    private async Task CreateAccount(AccountCreateDto model)
     {
         isSubmitting = true;
         try

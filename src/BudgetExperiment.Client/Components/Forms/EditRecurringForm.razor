@@ -1,7 +1,5 @@
 @* EditRecurringForm.razor - Form for editing existing recurring transactions *@
 
-@using BudgetExperiment.Client.Models
-
 <form @onsubmit="HandleSubmit">
     <div class="form-group">
         <label for="description">Description:</label>
@@ -18,12 +16,12 @@
             <input id="amount"
                    type="number"
                    step="0.01"
-                   @bind="Model.Amount"
+                   @bind="amountInput"
                    placeholder="0.00" />
         </div>
         <div class="form-group form-group-small">
             <label for="currency">Currency:</label>
-            <select id="currency" @bind="Model.Currency">
+            <select id="currency" @bind="currencyInput">
                 <option value="USD">USD</option>
             </select>
         </div>
@@ -67,13 +65,13 @@
     /// Gets or sets the update model.
     /// </summary>
     [Parameter]
-    public RecurringTransactionUpdateModel Model { get; set; } = new();
+    public RecurringTransactionUpdateDto Model { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the callback when the form is submitted.
     /// </summary>
     [Parameter]
-    public EventCallback<RecurringTransactionUpdateModel> OnSubmit { get; set; }
+    public EventCallback<RecurringTransactionUpdateDto> OnSubmit { get; set; }
 
     /// <summary>
     /// Gets or sets the callback when cancel is clicked.
@@ -88,6 +86,8 @@
     public bool IsSubmitting { get; set; }
 
     private DateTime? endDateInput;
+    private decimal amountInput;
+    private string currencyInput = "USD";
 
     protected override void OnParametersSet()
     {
@@ -99,12 +99,16 @@
         {
             endDateInput = null;
         }
+
+        amountInput = Model.Amount.Amount;
+        currencyInput = Model.Amount.Currency;
     }
 
     private async Task HandleSubmit()
     {
         // Convert DateTime input to DateOnly
         Model.EndDate = endDateInput.HasValue ? DateOnly.FromDateTime(endDateInput.Value) : null;
+        Model.Amount = new MoneyDto { Amount = amountInput, Currency = currencyInput };
 
         await OnSubmit.InvokeAsync(Model);
     }
