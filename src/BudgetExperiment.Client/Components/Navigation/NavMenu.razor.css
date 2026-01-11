@@ -1,9 +1,9 @@
 .nav-menu {
-    background: #1e293b;
+    background: var(--color-sidebar-bg);
     height: 100%;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
+    transition: width var(--transition-slow);
     overflow: hidden;
 }
 
@@ -18,40 +18,43 @@
 .nav-items {
     display: flex;
     flex-direction: column;
-    padding: 10px 0;
+    padding: var(--space-3) 0;
 }
 
 /* Use ::deep to target NavLink components which render as <a> tags */
 ::deep .nav-item {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
-    color: #94a3b8;
+    padding: var(--space-3) var(--space-5);
+    color: var(--color-sidebar-text);
     text-decoration: none;
-    transition: background 0.2s, color 0.2s;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
     white-space: nowrap;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 ::deep .nav-item:hover {
-    background: #334155;
-    color: #f1f5f9;
+    background: var(--color-sidebar-hover);
+    color: var(--color-sidebar-text-hover);
 }
 
 ::deep .nav-item.active {
-    background: #3b82f6;
-    color: white;
+    background: var(--color-sidebar-active);
+    color: var(--color-text-inverse);
 }
 
 .nav-icon {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     flex-shrink: 0;
     width: 24px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .nav-text {
-    font-size: 0.95rem;
+    font-size: var(--text-sm);
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -64,22 +67,22 @@
 .nav-subitems {
     display: flex;
     flex-direction: column;
-    background: #0f172a;
+    background: var(--color-sidebar-subitems-bg);
 }
 
 ::deep .nav-subitem {
     padding-left: 44px;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
 }
 
 ::deep .nav-subitem .nav-icon {
-    font-size: 1rem;
+    font-size: var(--text-base);
 }
 
 /* Collapsed state adjustments */
 .collapsed ::deep .nav-item {
     justify-content: center;
-    padding: 12px 8px;
+    padding: var(--space-3) var(--space-2);
 }
 
 .collapsed .nav-icon {

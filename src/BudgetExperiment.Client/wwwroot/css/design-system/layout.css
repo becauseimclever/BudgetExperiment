@@ -419,3 +419,121 @@
   .lg\:px-8 { padding-left: var(--space-8) !important; padding-right: var(--space-8) !important; }
   .lg\:py-8 { padding-top: var(--space-8) !important; padding-bottom: var(--space-8) !important; }
 }
+
+/* ==========================================================================
+   App Shell (Header + Sidebar + Content)
+   ========================================================================== */
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Header Bar */
+.app-top-header {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-5);
+  height: 56px;
+  background: var(--color-header-bg);
+  color: var(--color-header-text);
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+.app-menu-toggle {
+  background: transparent;
+  border: none;
+  color: var(--color-header-text);
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.app-menu-toggle:hover {
+  background: var(--color-header-hover);
+}
+
+.app-brand {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-header-text);
+  text-decoration: none;
+}
+
+.app-brand:hover {
+  color: var(--color-header-text-hover);
+  text-decoration: none;
+}
+
+.app-header-spacer {
+  flex: 1;
+}
+
+/* Content Wrapper (Sidebar + Main) */
+.app-content-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.app-sidebar {
+  flex-shrink: 0;
+  transition: width var(--transition-normal);
+  overflow: hidden;
+  background: var(--color-sidebar-bg);
+}
+
+.app-sidebar.expanded {
+  width: 220px;
+}
+
+.app-sidebar.collapsed {
+  width: 60px;
+}
+
+/* Main Content Area */
+.app-main-content {
+  flex: 1;
+  background: var(--color-bg-secondary);
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .app-sidebar.collapsed {
+    width: 0;
+  }
+
+  .app-sidebar.expanded {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    z-index: var(--z-overlay);
+    width: 220px;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .app-main-content {
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-brand {
+    font-size: var(--text-base);
+  }
+
+  .app-main-content {
+    padding: var(--space-3);
+  }
+}
+

@@ -129,6 +129,22 @@
   --z-modal: 500;
   --z-popover: 600;
   --z-tooltip: 700;
+  --z-overlay: 1000;
+
+  /* ==========================================================================
+     App Shell Colors
+     ========================================================================== */
+  --color-header-bg: #1e293b;
+  --color-header-text: #ffffff;
+  --color-header-text-hover: #e2e8f0;
+  --color-header-hover: rgba(255, 255, 255, 0.1);
+  --color-sidebar-bg: #1e293b;
+  --color-sidebar-text: #94a3b8;
+  --color-sidebar-text-hover: #f1f5f9;
+  --color-sidebar-hover: #334155;
+  --color-sidebar-active: #3b82f6;
+  --color-sidebar-subitems-bg: #0f172a;
+  --color-bg-secondary: #f8f9fa;
 
   /* ==========================================================================
      Responsive Breakpoints (for reference in media queries)

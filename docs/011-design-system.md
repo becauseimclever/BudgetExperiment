@@ -501,42 +501,151 @@ Inspired by VS Code's default dark theme with its signature blue accents and dar
 
 ## Icon System
 
-### Approach: SVG Icons
+### Implementation: Icon.razor Component ✅
 
-Replace emoji icons with consistent SVG icons. Options:
+The icon system uses an inline SVG component with Feather-style icons. This approach provides:
+- No external dependencies
+- Full CSS theming support via `currentColor`
+- Consistent visual language
+- ~45 icons available
 
-1. **Inline SVG** (Recommended for small icon set)
-   - No external dependencies
-   - Themeable with CSS
-   - ~20 icons needed
+### Usage
 
-2. **Icon Component**
-   ```razor
-   <Icon Name="calendar" Size="20" />
-   ```
+```razor
+@* Basic usage *@
+<Icon Name="calendar" />
 
-### Required Icons
+@* With custom size (default is 20) *@
+<Icon Name="edit" Size="16" />
+<Icon Name="bank" Size="24" />
 
-| Icon | Usage |
-|------|-------|
-| calendar | Calendar page nav |
-| refresh | Recurring page nav |
-| arrows-horizontal | Transfers page nav |
-| building-bank | Accounts page nav |
-| credit-card | Account sub-items |
-| plus | Add buttons |
-| pencil | Edit buttons |
-| trash | Delete buttons |
-| chevron-down | Dropdowns |
-| chevron-right | Collapsed nav |
-| x | Close/dismiss |
-| check | Success states |
-| alert-triangle | Warnings |
-| info | Info states |
-| sun | Light theme |
-| moon | Dark theme |
-| code | VS Code theme |
-| computer | System theme |
+@* With custom CSS class *@
+<Icon Name="warning" Class="icon-warning" />
+
+@* With custom stroke width (default is 2) *@
+<Icon Name="check" StrokeWidth="3" />
+
+@* In a button *@
+<button class="btn btn-primary">
+    <Icon Name="plus" Size="16" /> Add Item
+</button>
+```
+
+### Available Icons
+
+#### Navigation
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `calendar` | - | Calendar page |
+| `refresh` | `recurring` | Recurring transactions |
+| `repeat` | - | Recurring transfers |
+| `arrows-horizontal` | `transfer` | Transfers |
+| `bank` | `building-bank` | Accounts |
+| `credit-card` | `card` | Account sub-items |
+| `wallet` | - | Money/transactions |
+| `money` | `dollar` | Currency |
+| `home` | - | Home/dashboard |
+
+#### Actions
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `plus` | `add` | Add/create |
+| `minus` | - | Subtract |
+| `pencil` | `edit` | Edit |
+| `trash` | `delete` | Delete |
+| `save` | - | Save |
+| `x` | `close` | Close/dismiss |
+| `check` | - | Confirm/success |
+| `play` | - | Resume |
+| `pause` | - | Pause |
+| `skip-forward` | - | Skip |
+
+#### Navigation Arrows
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `chevron-down` | - | Dropdown |
+| `chevron-up` | - | Collapse |
+| `chevron-left` | - | Previous |
+| `chevron-right` | - | Next |
+| `arrow-left` | - | Back |
+| `arrow-right` | - | Forward |
+
+#### Status
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `alert-triangle` | `warning` | Warnings |
+| `alert-circle` | `error` | Errors |
+| `info` | `info-circle` | Information |
+| `check-circle` | `success` | Success |
+
+#### Theme
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `sun` | `light` | Light theme |
+| `moon` | `dark` | Dark theme |
+| `code` | `vscode` | VS Code theme |
+| `monitor` | `computer`, `system` | System theme |
+
+#### UI Elements
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `menu` | `hamburger` | Menu toggle |
+| `more-vertical` | `dots-vertical` | More options |
+| `more-horizontal` | `dots-horizontal` | More options |
+| `settings` | `gear` | Settings |
+| `filter` | - | Filter |
+| `search` | - | Search |
+| `eye` | `view` | View/show |
+| `eye-off` | `hide` | Hide |
+
+#### Files & Data
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `file` | - | File |
+| `download` | - | Download |
+| `upload` | - | Upload |
+| `external-link` | - | External link |
+| `copy` | - | Copy |
+
+#### Misc
+| Name | Aliases | Usage |
+|------|---------|-------|
+| `user` | - | User/profile |
+| `spinner` | `loading` | Loading (use with `.icon-spin`) |
+
+### Icon Styling (CSS)
+
+```css
+/* Size variants */
+.icon-xs { width: 12px; height: 12px; }
+.icon-sm { width: 16px; height: 16px; }
+.icon-md { width: 20px; height: 20px; }
+.icon-lg { width: 24px; height: 24px; }
+.icon-xl { width: 32px; height: 32px; }
+
+/* Color variants (icons inherit color by default) */
+.icon-primary { color: var(--color-brand-primary); }
+.icon-success { color: var(--color-success); }
+.icon-warning { color: var(--color-warning); }
+.icon-error { color: var(--color-error); }
+.icon-income { color: var(--color-income); }
+.icon-expense { color: var(--color-expense); }
+.icon-transfer { color: var(--color-transfer); }
+.icon-recurring { color: var(--color-recurring); }
+
+/* Spinning animation for loading */
+.icon-spin { animation: icon-spin 1s linear infinite; }
+```
+
+### Adding New Icons
+
+To add a new icon, add a case to the `GetIconPath()` switch in `Icon.razor`:
+
+```csharp
+"new-icon" => "<path d=\"...\"/>",
+```
+
+SVG paths should use a 24x24 viewBox. Icons from [Feather Icons](https://feathericons.com/) or [Lucide](https://lucide.dev/) work well.
 
 ---
 
@@ -669,7 +778,7 @@ public enum ThemeMode
 2. [x] Add SVG icons as embedded resources or inline
 3. [x] Replace all emoji icons with Icon component
 4. [x] Create `icons.css` for icon styling
-5. [ ] Add icon documentation
+5. [x] Add icon documentation
 
 ### Phase 5: Theme System ✅
 1. [x] Create `ThemeService.cs`
@@ -680,14 +789,15 @@ public enum ThemeMode
 6. [x] Create `theme.js` for FOUC prevention
 7. [x] Create `theme-toggle.css` component styles
 
-### Phase 6: Component Migration
-1. [ ] Migrate `MainLayout.razor` - remove inline styles
-2. [ ] Migrate `NavMenu.razor` - remove inline styles
-3. [ ] Migrate `Accounts.razor` - use design system classes
-4. [ ] Migrate `AccountTransactions.razor` - use design system classes
-5. [ ] Migrate `Calendar.razor` - use design system classes
-6. [ ] Migrate `Recurring.razor` - use design system classes
-7. [ ] Migrate all components in `/Components/`
+### Phase 6: Component Migration (Partial) ✅
+1. [x] Migrate `MainLayout.razor` - remove inline styles, use app-shell classes
+2. [x] Migrate `NavMenu.razor.css` - use design system tokens
+3. [x] Update `app.css` to import all design system files
+4. [x] Add app shell tokens to `tokens.css`
+5. [x] Add app shell layout styles to `layout.css`
+6. [ ] Pages still use inline `<style>` blocks (functional, incremental migration)
+   - Calendar.razor, Accounts.razor, AccountTransactions.razor
+   - Recurring.razor, RecurringTransfers.razor, CalendarLayout.razor
 
 ### Phase 0: Cleanup Unused Dependencies ✅
 1. [x] Remove `fluentui-app.css` from `wwwroot/css/`
