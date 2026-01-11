@@ -9,6 +9,17 @@
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="BudgetExperiment.Client.styles.css" rel="stylesheet" />
+    <!-- Inline theme initialization to prevent FOUC -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('budget-experiment-theme') || 'system';
+            let resolved = theme;
+            if (theme === 'system') {
+                resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', resolved);
+        })();
+    </script>
 </head>
 
 <body>

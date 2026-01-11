@@ -1,13 +1,16 @@
 ﻿@inherits LayoutComponentBase
 
 @using BudgetExperiment.Client.Components.Navigation
+@using BudgetExperiment.Client.Components.Common
 
 <div class="page">
     <header class="top-header">
         <button class="menu-toggle" @onclick="ToggleNavigation" title="@(navCollapsed ? "Expand menu" : "Collapse menu")">
-            <span class="toggle-icon">☰</span>
+            <Icon Name="menu" Size="24" />
         </button>
         <a href="/" class="nav-brand">Budget Experiment</a>
+        <div class="header-spacer"></div>
+        <ThemeToggle />
     </header>
 
     <div class="content-wrapper">
@@ -66,10 +69,6 @@
         background: rgba(255, 255, 255, 0.1);
     }
 
-    .toggle-icon {
-        line-height: 1;
-    }
-
     .nav-brand {
         font-size: 1.25rem;
         font-weight: 600;
@@ -79,6 +78,10 @@
 
     .nav-brand:hover {
         color: #e2e8f0;
+    }
+
+    .header-spacer {
+        flex: 1;
     }
 
     .content-wrapper {

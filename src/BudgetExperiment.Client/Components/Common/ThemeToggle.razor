@@ -1,0 +1,90 @@
+@* ThemeToggle.razor - Theme selection dropdown component *@
+
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<div class="theme-toggle">
+    <button class="theme-toggle-button"
+            @onclick="ToggleDropdown"
+            @onclick:stopPropagation="true"
+            title="Change theme"
+            aria-label="Change theme"
+            aria-expanded="@isOpen"
+            aria-haspopup="true">
+        <Icon Name="@GetCurrentIcon()" Size="20" />
+        @if (ShowLabel)
+        {
+            <span class="theme-toggle-label">@GetCurrentLabel()</span>
+        }
+        <Icon Name="chevron-down" Size="14" Class="@(isOpen ? "rotate-180" : "")" />
+    </button>
+
+    @if (isOpen)
+    {
+        <div class="theme-dropdown" @onclick:stopPropagation="true">
+            @foreach (var theme in ThemeService.AvailableThemes)
+            {
+                <button class="theme-option @(theme.Value == ThemeService.CurrentTheme ? "active" : "")"
+                        @onclick="() => SelectTheme(theme.Value)">
+                    <Icon Name="@theme.Icon" Size="16" />
+                    <span>@theme.Label</span>
+                    @if (theme.Value == ThemeService.CurrentTheme)
+                    {
+                        <Icon Name="check" Size="14" Class="theme-option-check" />
+                    }
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the theme label text.
+    /// </summary>
+    [Parameter]
+    public bool ShowLabel { get; set; } = false;
+
+    private bool isOpen;
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.InitializeAsync();
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private void ToggleDropdown()
+    {
+        isOpen = !isOpen;
+    }
+
+    private async Task SelectTheme(string theme)
+    {
+        await ThemeService.SetThemeAsync(theme);
+        isOpen = false;
+    }
+
+    private string GetCurrentIcon()
+    {
+        var current = ThemeService.AvailableThemes.FirstOrDefault(t => t.Value == ThemeService.CurrentTheme);
+        return current?.Icon ?? "monitor";
+    }
+
+    private string GetCurrentLabel()
+    {
+        var current = ThemeService.AvailableThemes.FirstOrDefault(t => t.Value == ThemeService.CurrentTheme);
+        return current?.Label ?? "System";
+    }
+
+    private void OnThemeChanged(string theme)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
+    }
+}

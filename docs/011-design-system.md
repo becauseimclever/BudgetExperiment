@@ -671,13 +671,14 @@ public enum ThemeMode
 4. [x] Create `icons.css` for icon styling
 5. [ ] Add icon documentation
 
-### Phase 5: Theme System
-1. [ ] Create `ThemeService.cs`
-2. [ ] Create `ThemeToggle.razor` component
-3. [ ] Add theme toggle to header/settings
-4. [ ] Implement localStorage persistence
-5. [ ] Add system theme detection
-6. [ ] Test theme transitions
+### Phase 5: Theme System ✅
+1. [x] Create `ThemeService.cs`
+2. [x] Create `ThemeToggle.razor` component
+3. [x] Add theme toggle to header
+4. [x] Implement localStorage persistence
+5. [x] Add system theme detection
+6. [x] Create `theme.js` for FOUC prevention
+7. [x] Create `theme-toggle.css` component styles
 
 ### Phase 6: Component Migration
 1. [ ] Migrate `MainLayout.razor` - remove inline styles
