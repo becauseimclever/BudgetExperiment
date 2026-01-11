@@ -5,17 +5,17 @@
 
 <PageTitle>Transfers - Budget Experiment</PageTitle>
 
-<div class="transfers-container">
+<div class="page-container-wide">
     <PageHeader Title="Transfers">
         <Actions>
-            <button class="add-button" @onclick="ShowCreateTransfer">+ New Transfer</button>
+            <button class="btn btn-success" @onclick="ShowCreateTransfer">+ New Transfer</button>
         </Actions>
     </PageHeader>
 
-    <div class="filters-row">
+    <div class="filter-section">
         <div class="filter-group">
             <label for="accountFilter">Account:</label>
-            <select id="accountFilter" @bind="selectedAccountId" @bind:after="ApplyFilters">
+            <select id="accountFilter" class="form-control" style="width: auto; min-width: 150px;" @bind="selectedAccountId" @bind:after="ApplyFilters">
                 <option value="">All Accounts</option>
                 @foreach (var account in accounts)
                 {
@@ -23,15 +23,15 @@
                 }
             </select>
         </div>
-        <div class="filter-group">
+        <div class="date-filter">
             <label for="fromDate">From:</label>
             <input type="date" id="fromDate" @bind="fromDate" @bind:after="ApplyFilters" />
         </div>
-        <div class="filter-group">
+        <div class="date-filter">
             <label for="toDate">To:</label>
             <input type="date" id="toDate" @bind="toDate" @bind:after="ApplyFilters" />
         </div>
-        <button class="btn-clear" @onclick="ClearFilters">Clear Filters</button>
+        <button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
     </div>
 
     @if (isLoading)
@@ -48,49 +48,53 @@
     
     @if (!isLoading && filteredTransfers.Count == 0 && errorMessage == null)
     {
-        <p class="empty-message">
-            @if (transfers.Count == 0)
-            {
-                <span>No transfers yet. Create one to move money between accounts!</span>
-            }
-            else
-            {
-                <span>No transfers match the current filters.</span>
-            }
-        </p>
+        <div class="empty-state empty-state-inline">
+            <p class="empty-state-description">
+                @if (transfers.Count == 0)
+                {
+                    <span>No transfers yet. Create one to move money between accounts!</span>
+                }
+                else
+                {
+                    <span>No transfers match the current filters.</span>
+                }
+            </p>
+        </div>
     }
     else if (!isLoading && errorMessage == null)
     {
-        <table class="transfers-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th class="amount-col">Amount</th>
-                    <th>Description</th>
-                    <th class="actions-col">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var transfer in filteredTransfers.OrderByDescending(t => t.Date))
-                {
+        <div class="card">
+            <table class="table table-hover">
+                <thead>
                     <tr>
-                        <td>@transfer.Date.ToString("MMM d, yyyy")</td>
-                        <td>@transfer.SourceAccountName</td>
-                        <td>@transfer.DestinationAccountName</td>
-                        <td class="amount-col">
-                            <MoneyDisplay Amount="@transfer.Amount" />
-                        </td>
-                        <td>@(string.IsNullOrWhiteSpace(transfer.Description) ? "-" : transfer.Description)</td>
-                        <td class="actions-col">
-                            <button class="btn-edit" @onclick="() => ShowEditTransfer(transfer)">Edit</button>
-                            <button class="btn-delete" @onclick="() => DeleteTransfer(transfer.TransferId)">Delete</button>
-                        </td>
+                        <th>Date</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th class="text-right">Amount</th>
+                        <th>Description</th>
+                        <th class="text-center">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var transfer in filteredTransfers.OrderByDescending(t => t.Date))
+                    {
+                        <tr>
+                            <td class="date">@transfer.Date.ToString("MMM d, yyyy")</td>
+                            <td>@transfer.SourceAccountName</td>
+                            <td>@transfer.DestinationAccountName</td>
+                            <td class="text-right">
+                                <MoneyDisplay Amount="@transfer.Amount" />
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(transfer.Description) ? "-" : transfer.Description)</td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <button class="btn btn-sm btn-primary" @onclick="() => ShowEditTransfer(transfer)">Edit</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteTransfer(transfer.TransferId)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 
     <Modal IsVisible="@showTransferDialog" Title="@(editingTransfer == null ? "New Transfer" : "Edit Transfer")" OnClose="HideTransferDialog">

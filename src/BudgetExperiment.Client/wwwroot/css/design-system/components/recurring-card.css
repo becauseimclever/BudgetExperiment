@@ -1,0 +1,149 @@
+/* ==========================================================================
+   Recurring Card Components
+   Budget Experiment Design System
+   
+   Specialized card component for recurring transactions/transfers
+   ========================================================================== */
+
+/* ==========================================================================
+   Recurring List Container
+   ========================================================================== */
+
+.recurring-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ==========================================================================
+   Recurring Card
+   ========================================================================== */
+
+.recurring-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.recurring-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.recurring-card.inactive {
+  opacity: 0.7;
+  background-color: var(--color-surface-secondary);
+}
+
+/* ==========================================================================
+   Recurring Card Layout
+   ========================================================================== */
+
+.recurring-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.recurring-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recurring-card-title {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.recurring-card-amount {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.recurring-card-amount.positive {
+  color: var(--color-income);
+}
+
+.recurring-card-amount.negative {
+  color: var(--color-expense);
+}
+
+/* ==========================================================================
+   Recurring Card Details Section
+   ========================================================================== */
+
+.recurring-card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: var(--space-3);
+}
+
+/* ==========================================================================
+   Recurring Card Actions
+   ========================================================================== */
+
+.recurring-card-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Action buttons specific to recurring cards */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+
+.btn-action:hover {
+  background-color: var(--color-border-subtle);
+  border-color: var(--color-border);
+}
+
+.btn-action-resume {
+  background-color: #d1fae5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.btn-action-resume:hover {
+  background-color: #a7f3d0;
+  border-color: #6ee7b7;
+}
+
+.btn-action-edit {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+}
+
+.btn-action-delete {
+  background-color: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.btn-action-delete:hover {
+  background-color: #fecaca;
+  border-color: #fca5a5;
+}

@@ -14,7 +14,7 @@
     @if (Day.HasRecurring)
     {
         <div class="recurring-indicator" title="@Day.RecurringCount scheduled">
-            <span class="recurring-icon">🔄</span>
+            <Icon Name="refresh" Size="12" Class="recurring-icon" />
             <span class="recurring-total @(Day.ProjectedTotal.Amount >= 0 ? "positive" : "negative")">
                 @FormatRecurringTotal(Day.ProjectedTotal.Amount)
             </span>

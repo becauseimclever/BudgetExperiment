@@ -9,16 +9,16 @@
 
 <PageTitle>Budget Experiment</PageTitle>
 
-<div class="calendar-container">
-    <div class="calendar-header">
-        <button class="nav-button" @onclick="PreviousMonth">&lt; Previous</button>
-        <h2>@currentDate.ToString("MMMM yyyy")</h2>
-        <button class="nav-button" @onclick="NextMonth">Next &gt;</button>
+<div class="page-container">
+    <div class="split mb-4">
+        <button class="btn btn-primary" @onclick="PreviousMonth">&lt; Previous</button>
+        <h2 class="text-secondary m-0">@currentDate.ToString("MMMM yyyy")</h2>
+        <button class="btn btn-primary" @onclick="NextMonth">Next &gt;</button>
     </div>
 
     <div class="account-filter">
         <label for="accountSelect">Filter by Account:</label>
-        <select id="accountSelect" @bind="selectedAccountId" @bind:after="LoadCalendarData">
+        <select id="accountSelect" class="form-control" style="width: auto; display: inline-block; margin-left: var(--space-2);" @bind="selectedAccountId" @bind:after="LoadCalendarData">
             <option value="">All Accounts</option>
             @foreach (var account in accounts)
             {
@@ -85,43 +85,6 @@
                    OnConfirm="ConfirmSkipInstance"
                    OnCancel="CancelSkipInstance" />
 </div>
-
-<style>
-    .calendar-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .calendar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .nav-button {
-        padding: 8px 16px;
-        cursor: pointer;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-    }
-
-    .nav-button:hover {
-        background: #0056b3;
-    }
-
-    .account-filter {
-        margin-bottom: 20px;
-    }
-
-    .account-filter select {
-        padding: 8px;
-        margin-left: 10px;
-    }
-</style>
 
 @code {
     [Parameter]

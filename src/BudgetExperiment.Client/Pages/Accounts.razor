@@ -5,11 +5,11 @@
 
 <PageTitle>Accounts - Budget Experiment</PageTitle>
 
-<div class="accounts-container">
+<div class="page-container">
     <PageHeader Title="Accounts">
         <Actions>
-            <button class="transfer-button" @onclick="ShowTransfer"><Icon Name="arrows-horizontal" Size="16" /> Transfer</button>
-            <button class="add-button" @onclick="ShowAddAccount">+ Add Account</button>
+            <button class="btn btn-primary mr-2" @onclick="ShowTransfer"><Icon Name="arrows-horizontal" Size="16" /> Transfer</button>
+            <button class="btn btn-success" @onclick="ShowAddAccount">+ Add Account</button>
         </Actions>
     </PageHeader>
 
@@ -28,26 +28,26 @@
     }
     else if (errorMessage == null)
     {
-        <div class="accounts-grid">
+        <div class="card-grid">
             @foreach (var account in accounts)
             {
-                <div class="account-card">
-                    <div class="account-info">
-                        <h3>@account.Name</h3>
-                        <span class="account-type">@account.Type</span>
-                        <div class="initial-balance">
-                            <span class="balance-label">Initial Balance:</span>
-                            <span class="balance-value @(account.InitialBalance < 0 ? "negative" : "")">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title">@account.Name</h3>
+                        <span class="text-secondary text-sm">@account.Type</span>
+                        <div class="mt-3 text-sm">
+                            <span class="text-secondary">Initial Balance:</span>
+                            <span class="font-semibold ml-1 @(account.InitialBalance < 0 ? "text-expense" : "")">
                                 @(account.InitialBalance.ToString("C"))
                             </span>
-                            <span class="balance-date">(as of @account.InitialBalanceDate.ToString("M/d/yyyy"))</span>
+                            <span class="text-disabled text-xs ml-1">(as of @account.InitialBalanceDate.ToString("M/d/yyyy"))</span>
                         </div>
                     </div>
-                    <div class="account-actions">
-                        <button class="btn-edit" @onclick="() => ShowEditAccount(account)" title="Edit account"><Icon Name="edit" Size="16" /></button>
-                        <button class="btn-transfer" @onclick="() => ShowTransferFrom(account.Id)" title="Transfer from this account"><Icon Name="arrows-horizontal" Size="16" /></button>
-                        <button class="btn-view" @onclick="() => ViewAccount(account.Id)">Transactions</button>
-                        <button class="btn-delete" @onclick="() => DeleteAccount(account.Id)">Delete</button>
+                    <div class="card-footer d-flex gap-2">
+                        <button class="btn btn-sm btn-secondary" @onclick="() => ShowEditAccount(account)" title="Edit account"><Icon Name="edit" Size="16" /></button>
+                        <button class="btn btn-sm btn-primary" @onclick="() => ShowTransferFrom(account.Id)" title="Transfer from this account"><Icon Name="arrows-horizontal" Size="16" /></button>
+                        <button class="btn btn-sm btn-primary" @onclick="() => ViewAccount(account.Id)">Transactions</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteAccount(account.Id)">Delete</button>
                     </div>
                 </div>
             }
@@ -67,8 +67,8 @@
                      OnCancel="HideEditAccount"
                      SubmitButtonText="Save Changes"
                      IsSubmitting="@isSubmitting" />
-        <div class="edit-warning">
-            <Icon Name="alert-triangle" Size="16" Class="icon-warning" /> Changing initial balance will affect all calculated running balances.
+        <div class="alert alert-warning mt-4">
+            <Icon Name="alert-triangle" Size="16" /> Changing initial balance will affect all calculated running balances.
         </div>
     </Modal>
 
@@ -88,165 +88,6 @@
                    OnConfirm="ConfirmDelete"
                    OnCancel="CancelDelete" />
 </div>
-
-<style>
-    .accounts-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .empty-message {
-        text-align: center;
-        padding: 40px;
-        color: #6c757d;
-    }
-
-    .add-button {
-        padding: 10px 20px;
-        background: #28a745;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .add-button:hover {
-        background: #218838;
-    }
-
-    .transfer-button {
-        padding: 10px 20px;
-        background: #6366f1;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-right: 10px;
-    }
-
-    .transfer-button:hover {
-        background: #4f46e5;
-    }
-
-    .accounts-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-    }
-
-    .account-card {
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .account-info h3 {
-        margin: 0 0 8px 0;
-    }
-
-    .account-type {
-        color: #666;
-        font-size: 0.9em;
-    }
-
-    .initial-balance {
-        margin-top: 10px;
-        font-size: 0.9em;
-    }
-
-    .balance-label {
-        color: #666;
-    }
-
-    .balance-value {
-        font-weight: 600;
-        color: #2d3748;
-        margin-left: 5px;
-    }
-
-    .balance-value.negative {
-        color: #dc3545;
-    }
-
-    .balance-date {
-        color: #888;
-        font-size: 0.85em;
-        margin-left: 5px;
-    }
-
-    .account-actions {
-        margin-top: 15px;
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn-edit {
-        padding: 6px 10px;
-        background: #f59e0b;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-    }
-
-    .btn-edit:hover {
-        background: #d97706;
-    }
-
-    .btn-view {
-        padding: 6px 12px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .btn-view:hover {
-        background: #0056b3;
-    }
-
-    .btn-transfer {
-        padding: 6px 10px;
-        background: #6366f1;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-    }
-
-    .btn-transfer:hover {
-        background: #4f46e5;
-    }
-
-    .btn-delete {
-        padding: 6px 12px;
-        background: #dc3545;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .btn-delete:hover {
-        background: #c82333;
-    }
-
-    .edit-warning {
-        margin-top: 15px;
-        padding: 10px;
-        background: #fef3cd;
-        border: 1px solid #ffc107;
-        border-radius: 4px;
-        font-size: 0.9em;
-        color: #856404;
-    }
-</style>
 
 @code {
     private bool isLoading = true;

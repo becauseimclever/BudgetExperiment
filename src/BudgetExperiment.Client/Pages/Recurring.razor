@@ -5,10 +5,10 @@
 
 <PageTitle>Recurring Transactions - Budget Experiment</PageTitle>
 
-<div class="recurring-container">
+<div class="page-container">
     <PageHeader Title="Recurring Transactions">
         <Actions>
-            <button class="add-button" @onclick="ShowAddForm">+ Add Recurring</button>
+            <button class="btn btn-success" @onclick="ShowAddForm">+ Add Recurring</button>
         </Actions>
     </PageHeader>
 
@@ -29,10 +29,10 @@
     else if (recurringTransactions.Count == 0)
     {
         <div class="empty-state">
-            <div class="empty-icon"><Icon Name="refresh" Size="48" /></div>
-            <h3>No Recurring Transactions</h3>
-            <p>Set up recurring transactions for bills, income, or regular expenses.</p>
-            <button class="btn-primary" @onclick="ShowAddForm">Create Your First Recurring Transaction</button>
+            <div class="empty-state-icon"><Icon Name="refresh" Size="48" /></div>
+            <h3 class="empty-state-title">No Recurring Transactions</h3>
+            <p class="empty-state-description">Set up recurring transactions for bills, income, or regular expenses.</p>
+            <button class="btn btn-primary" @onclick="ShowAddForm">Create Your First Recurring Transaction</button>
         </div>
     }
     else
@@ -41,23 +41,23 @@
             @foreach (var recurring in recurringTransactions)
             {
                 <div class="recurring-card @(recurring.IsActive ? "" : "inactive")">
-                    <div class="recurring-main">
-                        <div class="recurring-info">
-                            <h3 class="recurring-description">@recurring.Description</h3>
-                            <div class="recurring-meta">
-                                <span class="account-badge">@recurring.AccountName</span>
-                                <span class="frequency-badge">@FormatFrequency(recurring)</span>
+                    <div class="recurring-card-header">
+                        <div class="recurring-card-info">
+                            <h3 class="recurring-card-title">@recurring.Description</h3>
+                            <div class="badge-group">
+                                <span class="badge badge-account">@recurring.AccountName</span>
+                                <span class="badge badge-frequency">@FormatFrequency(recurring)</span>
                                 @if (!string.IsNullOrEmpty(recurring.Category))
                                 {
-                                    <span class="category-badge">@recurring.Category</span>
+                                    <span class="badge badge-category">@recurring.Category</span>
                                 }
                             </div>
                         </div>
-                        <div class="recurring-amount @(recurring.Amount.Amount >= 0 ? "positive" : "negative")">
+                        <div class="recurring-card-amount @(recurring.Amount.Amount >= 0 ? "positive" : "negative")">
                             @FormatMoney(recurring.Amount)
                         </div>
                     </div>
-                    <div class="recurring-details">
+                    <div class="detail-list">
                         <div class="detail-item">
                             <span class="detail-label">Next:</span>
                             <span class="detail-value">@recurring.NextOccurrence.ToString("MMM d, yyyy")</span>
@@ -75,12 +75,12 @@
                         }
                         <div class="detail-item">
                             <span class="detail-label">Status:</span>
-                            <span class="status-badge @(recurring.IsActive ? "active" : "paused")">
+                            <span class="badge-status @(recurring.IsActive ? "badge-status-active" : "badge-status-paused")">
                                 @(recurring.IsActive ? "Active" : "Paused")
                             </span>
                         </div>
                     </div>
-                    <div class="recurring-actions">
+                    <div class="recurring-card-actions">
                         @if (recurring.IsActive)
                         {
                             <button class="btn-action" @onclick="() => SkipNext(recurring)" title="Skip next occurrence">
@@ -92,14 +92,14 @@
                         }
                         else
                         {
-                            <button class="btn-action btn-resume" @onclick="() => Resume(recurring)" title="Resume">
+                            <button class="btn-action btn-action-resume" @onclick="() => Resume(recurring)" title="Resume">
                                 <Icon Name="play" Size="16" /> Resume
                             </button>
                         }
-                        <button class="btn-action btn-edit" @onclick="() => ShowEditForm(recurring)" title="Edit">
+                        <button class="btn-action btn-action-edit" @onclick="() => ShowEditForm(recurring)" title="Edit">
                             <Icon Name="edit" Size="16" /> Edit
                         </button>
-                        <button class="btn-action btn-delete" @onclick="() => ShowDeleteConfirm(recurring)" title="Delete">
+                        <button class="btn-action btn-action-delete" @onclick="() => ShowDeleteConfirm(recurring)" title="Delete">
                             <Icon Name="trash" Size="16" /> Delete
                         </button>
                     </div>
@@ -130,232 +130,6 @@
                    OnConfirm="ConfirmDelete"
                    OnCancel="CancelDelete" />
 </div>
-
-<style>
-    .recurring-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .add-button {
-        padding: 10px 20px;
-        background: #10b981;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: background 0.2s;
-    }
-
-    .add-button:hover {
-        background: #059669;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        background: #f9fafb;
-        border-radius: 12px;
-        border: 2px dashed #e5e7eb;
-    }
-
-    .empty-icon {
-        font-size: 3rem;
-        margin-bottom: 16px;
-    }
-
-    .empty-state h3 {
-        margin: 0 0 8px;
-        color: #374151;
-    }
-
-    .empty-state p {
-        color: #6b7280;
-        margin: 0 0 24px;
-    }
-
-    .recurring-list {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .recurring-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 0.2s;
-    }
-
-    .recurring-card:hover {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .recurring-card.inactive {
-        opacity: 0.7;
-        background: #f9fafb;
-    }
-
-    .recurring-main {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 12px;
-    }
-
-    .recurring-description {
-        margin: 0 0 8px;
-        font-size: 1.1rem;
-        color: #111827;
-    }
-
-    .recurring-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .account-badge,
-    .frequency-badge,
-    .category-badge {
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-
-    .account-badge {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-
-    .frequency-badge {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .category-badge {
-        background: #e5e7eb;
-        color: #374151;
-    }
-
-    .recurring-amount {
-        font-size: 1.25rem;
-        font-weight: 600;
-    }
-
-    .recurring-amount.positive {
-        color: #059669;
-    }
-
-    .recurring-amount.negative {
-        color: #dc2626;
-    }
-
-    .recurring-details {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        padding: 12px 0;
-        border-top: 1px solid #f3f4f6;
-        border-bottom: 1px solid #f3f4f6;
-        margin-bottom: 12px;
-    }
-
-    .detail-item {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-    }
-
-    .detail-label {
-        color: #6b7280;
-        font-size: 0.85rem;
-    }
-
-    .detail-value {
-        color: #374151;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-
-    .status-badge {
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .status-badge.active {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .status-badge.paused {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .recurring-actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .btn-action {
-        padding: 6px 12px;
-        background: #f3f4f6;
-        color: #374151;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-    }
-
-    .btn-action:hover {
-        background: #e5e7eb;
-    }
-
-    .btn-action.btn-resume {
-        background: #d1fae5;
-        border-color: #a7f3d0;
-        color: #065f46;
-    }
-
-    .btn-action.btn-resume:hover {
-        background: #a7f3d0;
-    }
-
-    .btn-action.btn-delete {
-        background: #fee2e2;
-        border-color: #fecaca;
-        color: #991b1b;
-    }
-
-    .btn-action.btn-delete:hover {
-        background: #fecaca;
-    }
-
-    .btn-primary {
-        padding: 12px 24px;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-    }
-
-    .btn-primary:hover {
-        background: #2563eb;
-    }
-</style>
 
 @code {
     private bool isLoading = true;

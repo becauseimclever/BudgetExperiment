@@ -1,0 +1,95 @@
+/* ==========================================================================
+   Empty State Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Base Empty State
+   ========================================================================== */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  background-color: var(--color-surface-secondary);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.empty-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--space-4);
+  color: var(--color-text-disabled);
+  opacity: 0.6;
+}
+
+.empty-state-icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+.empty-state-title {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.empty-state-description {
+  margin: 0 0 var(--space-6) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 320px;
+}
+
+.empty-state-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Empty State Variants
+   ========================================================================== */
+
+/* Compact empty state - less padding */
+.empty-state-compact {
+  padding: var(--space-6) var(--space-4);
+}
+
+.empty-state-compact .empty-state-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-3);
+}
+
+.empty-state-compact .empty-state-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Inline empty state - minimal styling */
+.empty-state-inline {
+  padding: var(--space-6) var(--space-4);
+  background-color: transparent;
+  border: none;
+}
+
+/* ==========================================================================
+   Empty Message (simple text)
+   ========================================================================== */
+
+.empty-message {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}

@@ -2,7 +2,7 @@
 
 <div class="day-detail">
     <h3>Transactions for @Detail.Date.ToString("MMMM d, yyyy")</h3>
-    <button class="add-button" @onclick="HandleAddClick">+ Add Transaction</button>
+    <button class="btn btn-success" @onclick="HandleAddClick">+ Add Transaction</button>
 
     @{
         var recurringItems = Detail.Items.Where(i => i.Type == "recurring" && !i.IsSkipped).ToList();

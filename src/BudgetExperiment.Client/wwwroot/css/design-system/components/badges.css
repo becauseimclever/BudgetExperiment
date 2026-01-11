@@ -1,0 +1,168 @@
+/* ==========================================================================
+   Badge Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Base Badge
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Badge Variants
+   ========================================================================== */
+
+/* Default/Neutral */
+.badge-default {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+}
+
+/* Primary */
+.badge-primary {
+  background-color: rgba(var(--color-brand-rgb), 0.15);
+  color: var(--color-brand-primary);
+}
+
+/* Success */
+.badge-success {
+  background-color: rgba(16, 124, 16, 0.15);
+  color: var(--color-success);
+}
+
+/* Warning */
+.badge-warning {
+  background-color: rgba(var(--color-warning-rgb), 0.2);
+  color: #92400e;
+}
+
+/* Danger/Error */
+.badge-danger {
+  background-color: rgba(209, 52, 56, 0.15);
+  color: var(--color-error);
+}
+
+/* Info */
+.badge-info {
+  background-color: rgba(var(--color-brand-rgb), 0.15);
+  color: var(--color-info);
+}
+
+/* Recurring/Purple */
+.badge-recurring {
+  background-color: rgba(var(--color-recurring-rgb), 0.15);
+  color: var(--color-recurring);
+}
+
+/* ==========================================================================
+   Semantic Badge Variants (Domain-specific)
+   ========================================================================== */
+
+/* Account badge - Blue */
+.badge-account {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Frequency badge - Amber */
+.badge-frequency {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Category badge - Gray */
+.badge-category {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+}
+
+/* Transfer source badge - Amber */
+.badge-transfer-from {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Transfer destination badge - Green */
+.badge-transfer-to {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+/* ==========================================================================
+   Status Badges
+   ========================================================================== */
+
+.badge-status {
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border-radius: var(--radius-md);
+}
+
+.badge-status-active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-status-paused {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-status-inactive {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-disabled);
+}
+
+/* ==========================================================================
+   Badge Sizes
+   ========================================================================== */
+
+.badge-sm {
+  padding: 2px var(--space-1);
+  font-size: 0.65rem;
+}
+
+.badge-lg {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Badge Groups (inline badges)
+   ========================================================================== */
+
+.badge-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* ==========================================================================
+   Transfer Flow Badge Group
+   ========================================================================== */
+
+.badge-transfer-flow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.badge-transfer-arrow {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-bold);
+}

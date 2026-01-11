@@ -21,10 +21,12 @@
   --color-brand-primary: #4ba0e8;
   --color-brand-primary-hover: #5caff5;
   --color-brand-primary-active: #3d8fd6;
+  --color-brand-rgb: 75, 160, 232;
 
   /* Semantic Colors - Brighter for dark mode */
   --color-success: #6ccb5f;
   --color-warning: #ffc83d;
+  --color-warning-rgb: 255, 200, 61;
   --color-error: #f87c7c;
   --color-info: #4ba0e8;
 
@@ -33,6 +35,7 @@
   --color-expense: #f87c7c;
   --color-transfer: #4ba0e8;
   --color-recurring: #b794d4;
+  --color-recurring-rgb: 183, 148, 212;
 
   /* Shadows - Deeper for dark theme */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);

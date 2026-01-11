@@ -26,6 +26,12 @@
 @import "design-system/components/alerts.css";
 @import "design-system/components/icons.css";
 @import "design-system/components/theme-toggle.css";
+@import "design-system/components/badges.css";
+@import "design-system/components/empty-state.css";
+@import "design-system/components/detail-list.css";
+@import "design-system/components/filters.css";
+@import "design-system/components/recurring-card.css";
+@import "design-system/components/calendar.css";
 
 /* Utility Classes */
 @import "design-system/utilities.css";

@@ -7,13 +7,13 @@
 
 <PageTitle>@(account?.Name ?? "Account") Transactions - Budget Experiment</PageTitle>
 
-<div class="transactions-container">
+<div class="page-container-wide">
     <PageHeader Title="@($"{account?.Name ?? "Loading..."} Transactions")"
                 Subtitle="@account?.Type"
                 ShowBackButton="true"
                 OnBack="GoBack">
         <Actions>
-            <button class="add-button" @onclick="ShowAddTransaction">+ Add Transaction</button>
+            <button class="btn btn-success" @onclick="ShowAddTransaction">+ Add Transaction</button>
         </Actions>
     </PageHeader>
 
@@ -24,15 +24,15 @@
 
     @if (account != null && account.InitialBalance != 0)
     {
-        <div class="initial-balance-banner">
-            <div class="balance-info">
+        <div class="balance-banner">
+            <div class="balance-display">
                 <span class="balance-label">Starting Balance:</span>
                 <span class="balance-amount @(account.InitialBalance < 0 ? "negative" : "")">
                     @account.InitialBalance.ToString("C")
                 </span>
                 <span class="balance-date">(as of @account.InitialBalanceDate.ToString("MMM d, yyyy"))</span>
             </div>
-            <div class="current-balance">
+            <div class="balance-display">
                 <span class="balance-label">Current Balance:</span>
                 <span class="balance-amount @(currentBalance < 0 ? "negative" : "")">
                     @currentBalance.ToString("C")
@@ -48,14 +48,14 @@
             <label>To:</label>
             <input type="date" @bind="endDate" @bind:after="LoadData" />
         </div>
-        <div class="summary">
+        <div class="summary-stats">
             <span class="summary-item">
                 Total: <MoneyDisplay Amount="@totalAmount" />
             </span>
             <span class="summary-item">Count: @allItems.Count</span>
             @if (recurringCount > 0)
             {
-                <span class="summary-item recurring-count">🔄 @recurringCount recurring</span>
+                <span class="summary-item summary-item-recurring"><Icon Name="refresh" Size="14" /> @recurringCount recurring</span>
             }
         </div>
     </div>
@@ -126,109 +126,6 @@
                    OnConfirm="ConfirmSkipRecurring"
                    OnCancel="CancelSkipRecurring" />
 </div>
-
-<style>
-    .transactions-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .add-button {
-        padding: 10px 20px;
-        background: #28a745;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .add-button:hover {
-        background: #218838;
-    }
-
-    .filter-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding: 15px;
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .date-filter {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .date-filter input {
-        padding: 6px 10px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-    }
-
-    .summary {
-        display: flex;
-        gap: 20px;
-    }
-
-    .summary-item {
-        font-weight: 500;
-    }
-
-    .recurring-count {
-        color: #007bff;
-    }
-
-    .initial-balance-banner {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        padding: 15px 20px;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border: 1px solid #bae6fd;
-        border-radius: 8px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .balance-info,
-    .current-balance {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .balance-label {
-        color: #64748b;
-        font-size: 0.9rem;
-    }
-
-    .balance-amount {
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: #0f172a;
-    }
-
-    .balance-amount.negative {
-        color: #dc2626;
-    }
-
-    .balance-date {
-        color: #94a3b8;
-        font-size: 0.85rem;
-    }
-
-    .current-balance .balance-amount {
-        font-size: 1.2rem;
-    }
-</style>
 
 @code {
     [Parameter]

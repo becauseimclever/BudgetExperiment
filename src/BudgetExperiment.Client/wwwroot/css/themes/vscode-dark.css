@@ -24,10 +24,12 @@
   --color-brand-primary: #0e639c;
   --color-brand-primary-hover: #1177bb;
   --color-brand-primary-active: #094771;
+  --color-brand-rgb: 14, 99, 156;
 
   /* Semantic Colors - VS Code palette */
   --color-success: #4ec9b0;    /* VS Code teal/cyan */
   --color-warning: #dcdcaa;    /* VS Code yellow */
+  --color-warning-rgb: 220, 220, 170;
   --color-error: #f14c4c;      /* VS Code red */
   --color-info: #3794ff;       /* VS Code bright blue */
 
@@ -36,6 +38,7 @@
   --color-expense: #f14c4c;    /* Red for negative */
   --color-transfer: #569cd6;   /* VS Code blue */
   --color-recurring: #c586c0;  /* VS Code purple/magenta */
+  --color-recurring-rgb: 197, 134, 192;
 
   /* Shadows - Deeper for dark theme */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
