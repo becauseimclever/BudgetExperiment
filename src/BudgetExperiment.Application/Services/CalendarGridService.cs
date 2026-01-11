@@ -50,14 +50,10 @@ public sealed class CalendarGridService : ICalendarGridService
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var daysInMonth = DateTime.DaysInMonth(year, month);
 
-        // Fetch data in parallel
-        var dailyTotalsTask = _transactionRepository.GetDailyTotalsAsync(year, month, accountId, cancellationToken);
-        var recurringTask = GetRecurringTransactionsAsync(accountId, cancellationToken);
-
-        await Task.WhenAll(dailyTotalsTask, recurringTask);
-
-        var dailyTotals = dailyTotalsTask.Result.ToDictionary(d => d.Date);
-        var recurringTransactions = recurringTask.Result;
+        // Fetch data sequentially (DbContext is not thread-safe for concurrent operations)
+        var dailyTotalsList = await _transactionRepository.GetDailyTotalsAsync(year, month, accountId, cancellationToken);
+        var dailyTotals = dailyTotalsList.ToDictionary(d => d.Date);
+        var recurringTransactions = await GetRecurringTransactionsAsync(accountId, cancellationToken);
 
         // Project recurring instances for the grid date range
         var recurringByDate = await GetRecurringInstancesByDateAsync(
@@ -112,16 +108,11 @@ public sealed class CalendarGridService : ICalendarGridService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        // Fetch data in parallel
-        var transactionsTask = _transactionRepository.GetByDateRangeAsync(date, date, accountId, cancellationToken);
-        var accountsTask = _accountRepository.GetAllAsync(cancellationToken);
-        var recurringTask = GetRecurringTransactionsAsync(accountId, cancellationToken);
-
-        await Task.WhenAll(transactionsTask, accountsTask, recurringTask);
-
-        var transactions = transactionsTask.Result;
-        var accountMap = accountsTask.Result.ToDictionary(a => a.Id, a => a.Name);
-        var recurringTransactions = recurringTask.Result;
+        // Fetch data sequentially (DbContext is not thread-safe for concurrent operations)
+        var transactions = await _transactionRepository.GetByDateRangeAsync(date, date, accountId, cancellationToken);
+        var accounts = await _accountRepository.GetAllAsync(cancellationToken);
+        var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
+        var recurringTransactions = await GetRecurringTransactionsAsync(accountId, cancellationToken);
 
         // Get recurring instances for this specific date
         var recurringInstances = await GetRecurringInstancesForDateAsync(
