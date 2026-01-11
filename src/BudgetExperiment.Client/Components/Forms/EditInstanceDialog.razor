@@ -1,49 +1,55 @@
 @* EditInstanceDialog.razor - Dialog for editing a single recurring transaction instance *@
 
-<div class="edit-instance-form">
-    <div class="instance-info">
-        <p class="instance-label">Editing occurrence for:</p>
-        <p class="instance-date">@ScheduledDate.ToString("dddd, MMMM d, yyyy")</p>
-        <p class="instance-series">@OriginalDescription @(!string.IsNullOrEmpty(AccountName) ? $"({AccountName})" : "")</p>
+<div>
+    <div class="form-info-box">
+        <p class="form-info-box-label">Editing occurrence for:</p>
+        <p class="form-info-box-title">@ScheduledDate.ToString("dddd, MMMM d, yyyy")</p>
+        <p class="form-info-box-subtitle">@OriginalDescription @(!string.IsNullOrEmpty(AccountName) ? $"({AccountName})" : "")</p>
     </div>
 
     <form @onsubmit="HandleSubmit">
         <div class="form-group">
-            <label for="description">Description:</label>
+            <label for="description" class="form-label">Description:</label>
             <input id="description"
                    type="text"
+                   class="form-control"
                    @bind="descriptionInput"
                    placeholder="@OriginalDescription" />
-            <small class="form-hint">Leave empty to use series default</small>
+            <span class="form-text">Leave empty to use series default</span>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="amount">Amount:</label>
+                <label for="amount" class="form-label">Amount:</label>
                 <input id="amount"
                        type="number"
+                       class="form-control"
                        step="0.01"
                        @bind="amountInput"
                        placeholder="@OriginalAmount.ToString("F2")" />
             </div>
-            <div class="form-group form-group-small">
-                <label for="currency">Currency:</label>
-                <select id="currency" @bind="currencyInput">
+            <div class="form-group form-group-sm">
+                <label for="currency" class="form-label">Currency:</label>
+                <select id="currency" class="form-control" @bind="currencyInput">
                     <option value="USD">USD</option>
                 </select>
             </div>
         </div>
 
         <div class="form-group">
-            <label for="newDate">Reschedule to:</label>
+            <label for="newDate" class="form-label">Reschedule to:</label>
             <input id="newDate"
                    type="date"
+                   class="form-control"
                    @bind="newDateInput" />
-            <small class="form-hint">Leave empty to keep original date</small>
+            <span class="form-text">Leave empty to keep original date</span>
         </div>
 
-        <div class="form-actions">
-            <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+        <div class="form-actions form-actions-right">
+            <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+                Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
                 @if (IsSubmitting)
                 {
                     <span>Saving...</span>
@@ -52,9 +58,6 @@
                 {
                     <span>Save This Occurrence</span>
                 }
-            </button>
-            <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
-                Cancel
             </button>
         </div>
     </form>

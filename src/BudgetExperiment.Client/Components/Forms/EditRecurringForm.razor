@@ -2,9 +2,10 @@
 
 <form @onsubmit="HandleSubmit">
     <div class="form-group">
-        <label for="description">Description:</label>
+        <label for="description" class="form-label">Description:</label>
         <input id="description"
                type="text"
+               class="form-control"
                @bind="Model.Description"
                @bind:event="oninput"
                placeholder="Enter description" />
@@ -12,39 +13,45 @@
 
     <div class="form-row">
         <div class="form-group">
-            <label for="amount">Amount:</label>
+            <label for="amount" class="form-label">Amount:</label>
             <input id="amount"
                    type="number"
+                   class="form-control"
                    step="0.01"
                    @bind="amountInput"
                    placeholder="0.00" />
         </div>
-        <div class="form-group form-group-small">
-            <label for="currency">Currency:</label>
-            <select id="currency" @bind="currencyInput">
+        <div class="form-group form-group-sm">
+            <label for="currency" class="form-label">Currency:</label>
+            <select id="currency" class="form-control" @bind="currencyInput">
                 <option value="USD">USD</option>
             </select>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="endDate">End Date (optional):</label>
+        <label for="endDate" class="form-label">End Date (optional):</label>
         <input id="endDate"
                type="date"
+               class="form-control"
                @bind="endDateInput" />
-        <small class="form-hint">Leave empty for no end date</small>
+        <span class="form-text">Leave empty for no end date</span>
     </div>
 
     <div class="form-group">
-        <label for="category">Category (optional):</label>
+        <label for="category" class="form-label">Category (optional):</label>
         <input id="category"
                type="text"
+               class="form-control"
                @bind="Model.Category"
                placeholder="e.g., Bills, Income, Subscription" />
     </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+    <div class="form-actions form-actions-right">
+        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
             @if (IsSubmitting)
             {
                 <span>Saving...</span>
@@ -53,9 +60,6 @@
             {
                 <span>Save Changes</span>
             }
-        </button>
-        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
-            Cancel
         </button>
     </div>
 </form>

@@ -305,3 +305,82 @@
   border-top: none;
   border-bottom: 4px solid var(--color-brand-primary);
 }
+/* ==========================================================================
+   Recurring Transaction Row
+   ========================================================================== */
+
+.table tbody tr.row-recurring {
+  background: linear-gradient(90deg, rgba(0, 120, 212, 0.05) 0%, transparent 100%);
+  border-left: 3px solid var(--color-brand-primary);
+}
+
+.table-hover tbody tr.row-recurring:hover {
+  background: linear-gradient(90deg, rgba(0, 120, 212, 0.1) 0%, var(--color-surface-secondary) 100%);
+}
+
+[data-theme="dark"] .table tbody tr.row-recurring,
+[data-theme="vscode-dark"] .table tbody tr.row-recurring {
+  background: linear-gradient(90deg, rgba(75, 160, 232, 0.08) 0%, transparent 100%);
+}
+
+[data-theme="dark"] .table-hover tbody tr.row-recurring:hover,
+[data-theme="vscode-dark"] .table-hover tbody tr.row-recurring:hover {
+  background: linear-gradient(90deg, rgba(75, 160, 232, 0.12) 0%, var(--color-surface-secondary) 100%);
+}
+
+/* ==========================================================================
+   Transfer Row
+   ========================================================================== */
+
+.table tbody tr.row-transfer {
+  background: linear-gradient(90deg, rgba(16, 124, 16, 0.05) 0%, transparent 100%);
+  border-left: 3px solid var(--color-success);
+}
+
+.table-hover tbody tr.row-transfer:hover {
+  background: linear-gradient(90deg, rgba(16, 124, 16, 0.1) 0%, var(--color-surface-secondary) 100%);
+}
+
+[data-theme="dark"] .table tbody tr.row-transfer,
+[data-theme="vscode-dark"] .table tbody tr.row-transfer {
+  background: linear-gradient(90deg, rgba(108, 203, 95, 0.08) 0%, transparent 100%);
+}
+
+[data-theme="dark"] .table-hover tbody tr.row-transfer:hover,
+[data-theme="vscode-dark"] .table-hover tbody tr.row-transfer:hover {
+  background: linear-gradient(90deg, rgba(108, 203, 95, 0.12) 0%, var(--color-surface-secondary) 100%);
+}
+
+/* ==========================================================================
+   Row Indicator Icons
+   ========================================================================== */
+
+.row-indicator {
+  font-size: var(--font-size-sm);
+  margin-right: var(--space-1);
+  cursor: help;
+}
+
+.row-indicator-recurring {
+  color: var(--color-brand-primary);
+}
+
+.row-indicator-transfer {
+  color: var(--color-success);
+}
+
+/* ==========================================================================
+   Modified Badge
+   ========================================================================== */
+
+.badge-modified {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  padding: 1px var(--space-1-5);
+  margin-left: var(--space-2);
+  background-color: var(--color-warning);
+  color: #212529;
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+  font-weight: var(--font-weight-medium);
+}

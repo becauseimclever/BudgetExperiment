@@ -1,16 +1,12 @@
 @* TransferDialog.razor - Dialog for creating or editing account transfers *@
 
-<div class="transfer-dialog">
-    <div class="dialog-header">
-        <h2>@(IsEdit ? "Edit Transfer" : "Transfer Between Accounts")</h2>
-    </div>
-
+<div>
     <form @onsubmit="HandleSubmit">
         @if (!IsEdit)
         {
             <div class="form-group">
-                <label for="fromAccount">From Account:</label>
-                <select id="fromAccount" @bind="Model.SourceAccountId" required>
+                <label for="fromAccount" class="form-label">From Account:</label>
+                <select id="fromAccount" class="form-control" @bind="Model.SourceAccountId" required>
                     <option value="">Select source account</option>
                     @foreach (var account in Accounts.Where(a => a.Id != Model.DestinationAccountId || Model.DestinationAccountId == Guid.Empty))
                     {
@@ -20,8 +16,8 @@
             </div>
 
             <div class="form-group">
-                <label for="toAccount">To Account:</label>
-                <select id="toAccount" @bind="Model.DestinationAccountId" required>
+                <label for="toAccount" class="form-label">To Account:</label>
+                <select id="toAccount" class="form-control" @bind="Model.DestinationAccountId" required>
                     <option value="">Select destination account</option>
                     @foreach (var account in Accounts.Where(a => a.Id != Model.SourceAccountId || Model.SourceAccountId == Guid.Empty))
                     {
@@ -32,56 +28,62 @@
         }
         else
         {
-            <div class="transfer-info">
-                <p><strong>From:</strong> @SourceAccountName</p>
-                <p><strong>To:</strong> @DestinationAccountName</p>
+            <div class="form-info-box">
+                <p class="form-info-box-subtitle"><strong>From:</strong> @SourceAccountName</p>
+                <p class="form-info-box-subtitle"><strong>To:</strong> @DestinationAccountName</p>
             </div>
         }
 
         <div class="form-row">
-            <div class="form-group form-group-amount">
-                <label for="amount">Amount:</label>
+            <div class="form-group">
+                <label for="amount" class="form-label">Amount:</label>
                 <input id="amount"
                        type="number"
+                       class="form-control"
                        step="0.01"
                        min="0.01"
                        @bind="Amount"
                        placeholder="0.00"
                        required />
             </div>
-            <div class="form-group form-group-currency">
-                <label for="currency">Currency:</label>
-                <select id="currency" @bind="Currency">
+            <div class="form-group form-group-sm">
+                <label for="currency" class="form-label">Currency:</label>
+                <select id="currency" class="form-control" @bind="Currency">
                     <option value="USD">USD</option>
                 </select>
             </div>
         </div>
 
         <div class="form-group">
-            <label for="date">Date:</label>
+            <label for="date" class="form-label">Date:</label>
             <input id="date"
                    type="date"
+                   class="form-control"
                    @bind="DateValue"
                    required />
         </div>
 
         <div class="form-group">
-            <label for="description">Description (optional):</label>
+            <label for="description" class="form-label">Description (optional):</label>
             <input id="description"
                    type="text"
+                   class="form-control"
                    @bind="Description"
                    placeholder="e.g., Move to savings" />
         </div>
 
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <div class="error-message">
-                @ErrorMessage
+            <div class="form-error-box">
+                <span class="form-error-box-text">@ErrorMessage</span>
             </div>
         }
 
-        <div class="form-actions">
-            <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+        <div class="form-actions form-actions-right">
+            <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+                Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
                 @if (IsSubmitting)
                 {
                     <span>Processing...</span>
@@ -90,9 +92,6 @@
                 {
                     <span>@(IsEdit ? "Update Transfer" : "Transfer")</span>
                 }
-            </button>
-            <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
-                Cancel
             </button>
         </div>
     </form>

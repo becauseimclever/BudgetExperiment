@@ -133,3 +133,24 @@
   gap: var(--space-3);
   justify-content: center;
 }
+
+/* ==========================================================================
+   Money Display
+   ========================================================================== */
+
+.money-display {
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.money-display-positive {
+  color: var(--color-income);
+}
+
+.money-display-negative {
+  color: var(--color-expense);
+}
+
+.money-display-neutral {
+  color: var(--color-text-primary);
+}

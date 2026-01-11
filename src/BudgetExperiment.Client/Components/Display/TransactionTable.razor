@@ -2,11 +2,11 @@
 
 @if ((Transactions == null || Transactions.Count == 0) && (Items == null || Items.Count == 0))
 {
-    <p class="empty-message">@EmptyMessage</p>
+    <p class="empty-state empty-state-inline">@EmptyMessage</p>
 }
 else
 {
-    <table class="transaction-table">
+    <table class="table table-hover">
         <thead>
             <tr>
                 @if (ShowDate)
@@ -15,10 +15,10 @@ else
                 }
                 <th>Description</th>
                 <th>Category</th>
-                <th class="amount-col">Amount</th>
+                <th class="text-right">Amount</th>
                 @if (ShowActions)
                 {
-                    <th class="actions-col">Actions</th>
+                    <th class="actions">Actions</th>
                 }
             </tr>
         </thead>
@@ -34,45 +34,45 @@ else
                                 @item.Date.ToString("MMM d, yyyy")
                                 @if (item.IsRecurring)
                                 {
-                                    <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")"><Icon Name="recurring" Size="14" Class="icon-recurring" /></span>
+                                    <span class="row-indicator row-indicator-recurring" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")"><Icon Name="recurring" Size="14" Class="icon-recurring" /></span>
                                 }
                                 @if (item.IsTransfer)
                                 {
-                                    <span class="transfer-indicator" title="@GetTransferTooltip(item)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
+                                    <span class="row-indicator row-indicator-transfer" title="@GetTransferTooltip(item)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                                 }
                             </td>
                         }
                         <td>
                             @if (!ShowDate && item.IsRecurring)
                             {
-                                <span class="recurring-indicator" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")"><Icon Name="recurring" Size="14" Class="icon-recurring" /></span>
+                                <span class="row-indicator row-indicator-recurring" title="@(item.IsModified ? "Modified recurring transaction" : "Recurring transaction")"><Icon Name="recurring" Size="14" Class="icon-recurring" /></span>
                             }
                             @if (item.IsTransfer)
                             {
-                                <span class="transfer-indicator" title="@GetTransferTooltip(item)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
+                                <span class="row-indicator row-indicator-transfer" title="@GetTransferTooltip(item)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                             }
                             @item.Description
                             @if (item.IsModified)
                             {
-                                <span class="modified-badge">modified</span>
+                                <span class="badge-modified">modified</span>
                             }
                         </td>
                         <td>@(item.Category ?? "-")</td>
-                        <td class="amount-col">
+                        <td class="text-right">
                             <MoneyDisplay Amount="@item.Amount.Amount" />
                         </td>
                         @if (ShowActions)
                         {
-                            <td class="actions-col">
+                            <td class="actions">
                                 @if (item.IsRecurring)
                                 {
-                                    <button class="btn-edit" @onclick="() => OnEditRecurring.InvokeAsync(item)">Edit</button>
-                                    <button class="btn-skip" @onclick="() => OnSkipRecurring.InvokeAsync(item)">Skip</button>
+                                    <button class="btn btn-sm btn-primary" @onclick="() => OnEditRecurring.InvokeAsync(item)">Edit</button>
+                                    <button class="btn btn-sm btn-secondary" @onclick="() => OnSkipRecurring.InvokeAsync(item)">Skip</button>
                                 }
                                 else
                                 {
-                                    <button class="btn-edit" @onclick="() => OnEditItem.InvokeAsync(item)">Edit</button>
-                                    <button class="btn-delete" @onclick="() => OnDeleteItem.InvokeAsync(item.Id)">Delete</button>
+                                    <button class="btn btn-sm btn-primary" @onclick="() => OnEditItem.InvokeAsync(item)">Edit</button>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => OnDeleteItem.InvokeAsync(item.Id)">Delete</button>
                                 }
                             </td>
                         }
@@ -83,33 +83,33 @@ else
             {
                 @foreach (var txn in OrderedTransactions)
                 {
-                    <tr class="@(txn.IsTransfer ? "transfer-row" : "")">
+                    <tr class="@(txn.IsTransfer ? "row-transfer" : "")">
                         @if (ShowDate)
                         {
                             <td>
                                 @txn.Date.ToString("MMM d, yyyy")
                                 @if (txn.IsTransfer)
                                 {
-                                    <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
+                                    <span class="row-indicator row-indicator-transfer" title="@GetTransactionTransferTooltip(txn)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                                 }
                             </td>
                         }
                         <td>
                             @if (!ShowDate && txn.IsTransfer)
                             {
-                                <span class="transfer-indicator" title="@GetTransactionTransferTooltip(txn)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
+                                <span class="row-indicator row-indicator-transfer" title="@GetTransactionTransferTooltip(txn)"><Icon Name="transfer" Size="14" Class="icon-transfer" /></span>
                             }
                             @txn.Description
                         </td>
                         <td>@(txn.Category ?? "-")</td>
-                        <td class="amount-col">
+                        <td class="text-right">
                             <MoneyDisplay Amount="@txn.Amount.Amount" />
                         </td>
                         @if (ShowActions)
                         {
-                            <td class="actions-col">
-                                <button class="btn-edit" @onclick="() => OnEdit.InvokeAsync(txn)">Edit</button>
-                                <button class="btn-delete" @onclick="() => OnDelete.InvokeAsync(txn.Id)">Delete</button>
+                            <td class="actions">
+                                <button class="btn btn-sm btn-primary" @onclick="() => OnEdit.InvokeAsync(txn)">Edit</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => OnDelete.InvokeAsync(txn.Id)">Delete</button>
                             </td>
                         }
                     </tr>
@@ -219,12 +219,12 @@ else
     {
         if (item.IsRecurring)
         {
-            return "recurring-row";
+            return "row-recurring";
         }
 
         if (item.IsTransfer)
         {
-            return "transfer-row";
+            return "row-transfer";
         }
 
         return string.Empty;

@@ -335,3 +335,94 @@ select.form-control:focus {
 .form-actions-between {
   justify-content: space-between;
 }
+
+/* ==========================================================================
+   Fieldset (Grouped form sections)
+   ========================================================================== */
+
+.form-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-5) 0;
+  background: var(--color-surface-secondary);
+}
+
+.form-fieldset legend {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Info Box (Contextual information in forms)
+   ========================================================================== */
+
+.form-info-box {
+  background: var(--color-info-light, #f0f9ff);
+  border: 1px solid var(--color-info, #bfdbfe);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.form-info-box-label {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.form-info-box-title {
+  margin: var(--space-1) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-brand-primary);
+}
+
+.form-info-box-subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+/* ==========================================================================
+   Error Box (Form-level error messages)
+   ========================================================================== */
+
+.form-error-box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-error-light, #fef2f2);
+  border: 1px solid var(--color-error-subtle, #fecaca);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.form-error-box-icon {
+  flex-shrink: 0;
+  color: var(--color-error);
+}
+
+.form-error-box-text {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Width Variants
+   ========================================================================== */
+
+.form-group-sm {
+  max-width: 120px;
+}
+
+.form-group-md {
+  max-width: 200px;
+}
+
+.form-group-lg {
+  max-width: 400px;
+}

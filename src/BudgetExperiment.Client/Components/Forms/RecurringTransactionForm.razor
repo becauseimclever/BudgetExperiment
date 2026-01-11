@@ -4,9 +4,10 @@
 
 <form @onsubmit="HandleSubmit">
     <div class="form-group">
-        <label for="description">Description:</label>
+        <label for="description" class="form-label">Description:</label>
         <input id="description"
                type="text"
+               class="form-control"
                @bind="Model.Description"
                @bind:event="oninput"
                placeholder="Enter description (e.g., Rent, Salary)"
@@ -15,25 +16,26 @@
 
     <div class="form-row">
         <div class="form-group">
-            <label for="amount">Amount:</label>
+            <label for="amount" class="form-label">Amount:</label>
             <input id="amount"
                    type="number"
+                   class="form-control"
                    step="0.01"
                    @bind="AmountValue"
                    placeholder="0.00"
                    required />
         </div>
-        <div class="form-group form-group-small">
-            <label for="currency">Currency:</label>
-            <select id="currency" @bind="CurrencyValue">
+        <div class="form-group form-group-sm">
+            <label for="currency" class="form-label">Currency:</label>
+            <select id="currency" class="form-control" @bind="CurrencyValue">
                 <option value="USD">USD</option>
             </select>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="account">Account:</label>
-        <select id="account" @bind="Model.AccountId" required>
+        <label for="account" class="form-label">Account:</label>
+        <select id="account" class="form-control" @bind="Model.AccountId" required>
             <option value="">Select an account...</option>
             @foreach (var account in accounts)
             {
@@ -43,8 +45,8 @@
     </div>
 
     <div class="form-group">
-        <label for="frequency">Frequency:</label>
-        <select id="frequency" @bind="Model.Frequency" @bind:after="OnFrequencyChanged">
+        <label for="frequency" class="form-label">Frequency:</label>
+        <select id="frequency" class="form-control" @bind="Model.Frequency" @bind:after="OnFrequencyChanged">
             <option value="Daily">Daily</option>
             <option value="Weekly">Weekly</option>
             <option value="BiWeekly">Bi-Weekly</option>
@@ -57,8 +59,8 @@
     @if (Model.Frequency == "Weekly" || Model.Frequency == "BiWeekly")
     {
         <div class="form-group">
-            <label for="dayOfWeek">Day of Week:</label>
-            <select id="dayOfWeek" @bind="Model.DayOfWeek">
+            <label for="dayOfWeek" class="form-label">Day of Week:</label>
+            <select id="dayOfWeek" class="form-control" @bind="Model.DayOfWeek">
                 <option value="Monday">Monday</option>
                 <option value="Tuesday">Tuesday</option>
                 <option value="Wednesday">Wednesday</option>
@@ -73,43 +75,50 @@
     @if (Model.Frequency == "Monthly" || Model.Frequency == "Quarterly" || Model.Frequency == "Yearly")
     {
         <div class="form-group">
-            <label for="dayOfMonth">Day of Month:</label>
+            <label for="dayOfMonth" class="form-label">Day of Month:</label>
             <input id="dayOfMonth"
                    type="number"
+                   class="form-control"
                    min="1"
                    max="31"
                    @bind="Model.DayOfMonth"
                    placeholder="1-31" />
-            <small class="form-hint">Leave empty to use start date day</small>
+            <span class="form-text">Leave empty to use start date day</span>
         </div>
     }
 
     <div class="form-row">
         <div class="form-group">
-            <label for="startDate">Start Date:</label>
+            <label for="startDate" class="form-label">Start Date:</label>
             <input id="startDate"
                    type="date"
+                   class="form-control"
                    @bind="startDateInput"
                    required />
         </div>
         <div class="form-group">
-            <label for="endDate">End Date (optional):</label>
+            <label for="endDate" class="form-label">End Date (optional):</label>
             <input id="endDate"
                    type="date"
+                   class="form-control"
                    @bind="endDateInput" />
         </div>
     </div>
 
     <div class="form-group">
-        <label for="category">Category (optional):</label>
+        <label for="category" class="form-label">Category (optional):</label>
         <input id="category"
                type="text"
+               class="form-control"
                @bind="Model.Category"
                placeholder="e.g., Bills, Income, Subscription" />
     </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+    <div class="form-actions form-actions-right">
+        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
             @if (IsSubmitting)
             {
                 <span>Saving...</span>
@@ -118,9 +127,6 @@
             {
                 <span>@SubmitButtonText</span>
             }
-        </button>
-        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
-            Cancel
         </button>
     </div>
 </form>

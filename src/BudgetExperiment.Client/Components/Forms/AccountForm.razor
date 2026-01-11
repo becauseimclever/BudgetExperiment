@@ -2,17 +2,18 @@
 
 <form @onsubmit="HandleSubmit">
     <div class="form-group">
-        <label for="accountName">Account Name:</label>
+        <label for="accountName" class="form-label">Account Name:</label>
         <input id="accountName" 
-               type="text" 
+               type="text"
+               class="form-control"
                @bind="Model.Name" 
                @bind:event="oninput"
                placeholder="Enter account name"
                required />
     </div>
     <div class="form-group">
-        <label for="accountType">Account Type:</label>
-        <select id="accountType" @bind="Model.Type" required>
+        <label for="accountType" class="form-label">Account Type:</label>
+        <select id="accountType" class="form-control" @bind="Model.Type" required>
             <option value="Checking">Checking</option>
             <option value="Savings">Savings</option>
             <option value="CreditCard">Credit Card</option>
@@ -21,14 +22,15 @@
         </select>
     </div>
     
-    <fieldset class="balance-section">
+    <fieldset class="form-fieldset">
         <legend>Starting Balance</legend>
         <div class="form-group">
-            <label for="initialBalance">Initial Balance:</label>
-            <div class="currency-input">
-                <span class="currency-symbol">$</span>
+            <label for="initialBalance" class="form-label">Initial Balance:</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
                 <input id="initialBalance" 
                        type="number" 
+                       class="form-control"
                        step="0.01"
                        @bind="Model.InitialBalance" 
                        @bind:event="oninput"
@@ -36,15 +38,19 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="initialBalanceDate">As of Date:</label>
+            <label for="initialBalanceDate" class="form-label">As of Date:</label>
             <input id="initialBalanceDate" 
-                   type="date" 
+                   type="date"
+                   class="form-control"
                    @bind="InitialBalanceDateValue" />
         </div>
     </fieldset>
     
-    <div class="form-actions">
-        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
+    <div class="form-actions form-actions-right">
+        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
             @if (IsSubmitting)
             {
                 <span>Saving...</span>
@@ -53,9 +59,6 @@
             {
                 <span>@SubmitButtonText</span>
             }
-        </button>
-        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
-            Cancel
         </button>
     </div>
 </form>
