@@ -27,14 +27,14 @@ Systematically refactor all pages and components to eliminate inline `<style>` b
 **Components with Scoped CSS (.razor.css):**
 | Component | File | Priority |
 |-----------|------|----------|
-| CalendarDay | [CalendarDay.razor.css](../src/BudgetExperiment.Client/Components/Calendar/CalendarDay.razor.css) | Medium |
-| CalendarGrid | [CalendarGrid.razor.css](../src/BudgetExperiment.Client/Components/Calendar/CalendarGrid.razor.css) | Medium |
-| DayDetail | [DayDetail.razor.css](../src/BudgetExperiment.Client/Components/Calendar/DayDetail.razor.css) | Medium |
-| ConfirmDialog | [ConfirmDialog.razor.css](../src/BudgetExperiment.Client/Components/Common/ConfirmDialog.razor.css) | Low |
-| ErrorAlert | [ErrorAlert.razor.css](../src/BudgetExperiment.Client/Components/Common/ErrorAlert.razor.css) | Low |
-| LoadingSpinner | [LoadingSpinner.razor.css](../src/BudgetExperiment.Client/Components/Common/LoadingSpinner.razor.css) | Low |
-| Modal | [Modal.razor.css](../src/BudgetExperiment.Client/Components/Common/Modal.razor.css) | Low |
-| PageHeader | [PageHeader.razor.css](../src/BudgetExperiment.Client/Components/Common/PageHeader.razor.css) | Low |
+| CalendarDay | ~~CalendarDay.razor.css~~ | ✅ Deleted (Phase 8) |
+| CalendarGrid | ~~CalendarGrid.razor.css~~ | ✅ Deleted (Phase 8) |
+| DayDetail | ~~DayDetail.razor.css~~ | ✅ Deleted (Phase 8) |
+| ConfirmDialog | ~~ConfirmDialog.razor.css~~ | ✅ Deleted (Phase 9) |
+| ErrorAlert | ~~ErrorAlert.razor.css~~ | ✅ Deleted (Phase 9) |
+| LoadingSpinner | ~~LoadingSpinner.razor.css~~ | ✅ Deleted (Phase 9) |
+| Modal | ~~Modal.razor.css~~ | ✅ Deleted (Phase 9) |
+| PageHeader | ~~PageHeader.razor.css~~ | ✅ Deleted (Phase 9) |
 | MoneyDisplay | [MoneyDisplay.razor.css](../src/BudgetExperiment.Client/Components/Display/MoneyDisplay.razor.css) | Low |
 | TransactionTable | [TransactionTable.razor.css](../src/BudgetExperiment.Client/Components/Display/TransactionTable.razor.css) | Medium |
 | AccountForm | [AccountForm.razor.css](../src/BudgetExperiment.Client/Components/Forms/AccountForm.razor.css) | Low |
