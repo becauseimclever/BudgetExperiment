@@ -88,6 +88,20 @@ public interface IBudgetApiService
     Task<DayDetailDto> GetDayDetailAsync(DateOnly date, Guid? accountId = null);
 
     /// <summary>
+    /// Gets a pre-merged transaction list for an account over a date range.
+    /// </summary>
+    /// <param name="accountId">The account ID.</param>
+    /// <param name="startDate">The start date of the range.</param>
+    /// <param name="endDate">The end date of the range.</param>
+    /// <param name="includeRecurring">Whether to include recurring transaction instances.</param>
+    /// <returns>The transaction list with pre-computed summaries.</returns>
+    Task<TransactionListDto> GetAccountTransactionListAsync(
+        Guid accountId,
+        DateOnly startDate,
+        DateOnly endDate,
+        bool includeRecurring = true);
+
+    /// <summary>
     /// Gets calendar summary (daily totals) for a month.
     /// </summary>
     /// <param name="year">The year.</param>

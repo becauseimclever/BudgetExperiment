@@ -303,6 +303,169 @@ public class CalendarGridServiceTests
         Assert.Equal(2, result.Summary.ItemCount);
     }
 
+    [Fact]
+    public async Task GetAccountTransactionListAsync_Returns_Pre_Merged_List()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccount(accountId, "Checking");
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransaction(accountId, new DateOnly(2026, 1, 10), -50.00m, "Groceries"),
+            CreateTestTransaction(accountId, new DateOnly(2026, 1, 15), 1000.00m, "Paycheck"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 1, 31));
+
+        // Assert
+        Assert.Equal(accountId, result.AccountId);
+        Assert.Equal("Checking", result.AccountName);
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(2, result.Summary.TransactionCount);
+        Assert.Equal(0, result.Summary.RecurringCount);
+        Assert.Equal(950.00m, result.Summary.TotalAmount.Amount);
+        Assert.Equal(1000.00m, result.Summary.TotalIncome.Amount);
+        Assert.Equal(-50.00m, result.Summary.TotalExpenses.Amount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_Excludes_Recurring_When_Disabled()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccount(accountId, "Checking");
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 1, 31),
+            includeRecurring: false);
+
+        // Assert
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.Summary.RecurringCount);
+
+        // Verify recurring repositories were NOT called
+        _recurringRepo.Verify(
+            r => r.GetByAccountIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_Throws_When_Account_Not_Found()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Account?)null);
+
+        var service = CreateService();
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.GetAccountTransactionListAsync(
+                accountId,
+                new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 1, 31)));
+
+        Assert.Contains("not found", ex.Message);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_Calculates_Current_Balance()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccount(accountId, "Savings");
+
+        // Set initial balance using reflection
+        var initialBalanceProperty = typeof(Account).GetProperty(nameof(Account.InitialBalance));
+        initialBalanceProperty?.SetValue(account, MoneyValue.Create("USD", 1000.00m));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransaction(accountId, new DateOnly(2026, 1, 10), 500.00m, "Deposit"),
+            CreateTestTransaction(accountId, new DateOnly(2026, 1, 20), -200.00m, "Withdrawal"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 1, 31));
+
+        // Assert
+        Assert.Equal(1000.00m, result.InitialBalance.Amount);
+        Assert.Equal(300.00m, result.Summary.TotalAmount.Amount); // 500 - 200
+        Assert.Equal(1300.00m, result.Summary.CurrentBalance.Amount); // 1000 + 300
+    }
+
     private CalendarGridService CreateService()
     {
         return new CalendarGridService(

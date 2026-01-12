@@ -147,6 +147,18 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<TransactionListDto> GetAccountTransactionListAsync(
+        Guid accountId,
+        DateOnly startDate,
+        DateOnly endDate,
+        bool includeRecurring = true)
+    {
+        var url = $"api/v1/calendar/accounts/{accountId}/transactions?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&includeRecurring={includeRecurring}";
+        var result = await this._httpClient.GetFromJsonAsync<TransactionListDto>(url, JsonOptions);
+        return result ?? new TransactionListDto { AccountId = accountId, StartDate = startDate, EndDate = endDate };
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<DailyTotalDto>> GetCalendarSummaryAsync(int year, int month, Guid? accountId = null)
     {
         var url = $"api/v1/calendar/summary?year={year}&month={month}";

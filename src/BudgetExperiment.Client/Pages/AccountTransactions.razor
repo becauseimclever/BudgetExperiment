@@ -1,15 +1,16 @@
 @* AccountTransactions.razor - Transaction management for a specific account *@
+@* Thin client - uses pre-computed data from API, no business logic *@
 
 @page "/accounts/{AccountId:guid}/transactions"
 
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 
-<PageTitle>@(account?.Name ?? "Account") Transactions - Budget Experiment</PageTitle>
+<PageTitle>@(accountName ?? "Account") Transactions - Budget Experiment</PageTitle>
 
 <div class="page-container-wide">
-    <PageHeader Title="@($"{account?.Name ?? "Loading..."} Transactions")"
-                Subtitle="@account?.Type"
+    <PageHeader Title="@($"{accountName ?? "Loading..."} Transactions")"
+                Subtitle="@transactionList?.AccountName"
                 ShowBackButton="true"
                 OnBack="GoBack">
         <Actions>
@@ -22,20 +23,20 @@
                 OnDismiss="DismissError"
                 IsRetrying="@isRetrying" />
 
-    @if (account != null && account.InitialBalance != 0)
+    @if (transactionList != null && transactionList.InitialBalance.Amount != 0)
     {
         <div class="balance-banner">
             <div class="balance-display">
                 <span class="balance-label">Starting Balance:</span>
-                <span class="balance-amount @(account.InitialBalance < 0 ? "negative" : "")">
-                    @account.InitialBalance.ToString("C")
+                <span class="balance-amount @(transactionList.InitialBalance.Amount < 0 ? "negative" : "")">
+                    @transactionList.InitialBalance.Amount.ToString("C")
                 </span>
-                <span class="balance-date">(as of @account.InitialBalanceDate.ToString("MMM d, yyyy"))</span>
+                <span class="balance-date">(as of @transactionList.InitialBalanceDate.ToString("MMM d, yyyy"))</span>
             </div>
             <div class="balance-display">
                 <span class="balance-label">Current Balance:</span>
-                <span class="balance-amount @(currentBalance < 0 ? "negative" : "")">
-                    @currentBalance.ToString("C")
+                <span class="balance-amount @(transactionList.Summary.CurrentBalance.Amount < 0 ? "negative" : "")">
+                    @transactionList.Summary.CurrentBalance.Amount.ToString("C")
                 </span>
             </div>
         </div>
@@ -49,13 +50,16 @@
             <input type="date" @bind="endDate" @bind:after="LoadData" />
         </div>
         <div class="summary-stats">
-            <span class="summary-item">
-                Total: <MoneyDisplay Amount="@totalAmount" />
-            </span>
-            <span class="summary-item">Count: @allItems.Count</span>
-            @if (recurringCount > 0)
+            @if (transactionList != null)
             {
-                <span class="summary-item summary-item-recurring"><Icon Name="refresh" Size="14" /> @recurringCount recurring</span>
+                <span class="summary-item">
+                    Total: <MoneyDisplay Amount="@transactionList.Summary.TotalAmount.Amount" />
+                </span>
+                <span class="summary-item">Count: @transactionList.Items.Count</span>
+                @if (transactionList.Summary.RecurringCount > 0)
+                {
+                    <span class="summary-item summary-item-recurring"><Icon Name="refresh" Size="14" /> @transactionList.Summary.RecurringCount recurring</span>
+                }
             }
         </div>
     </div>
@@ -64,9 +68,9 @@
     {
         <LoadingSpinner Message="Loading transactions..." />
     }
-    else
+    else if (transactionList != null)
     {
-        <TransactionTable Items="@allItems"
+        <TransactionTable Items="@transactionListItems"
                           ShowDate="true"
                           ShowActions="true"
                           EmptyMessage="No transactions found for this period."
@@ -94,7 +98,7 @@
 
     <ConfirmDialog IsVisible="@showDeleteConfirm"
                    Title="Delete Transaction"
-                   Message="@($"Are you sure you want to delete the transaction '{deletingTransaction?.Description}'?")"
+                   Message="@($"Are you sure you want to delete the transaction '{deletingItem?.Description}'?")"
                    ConfirmText="Delete"
                    IsProcessing="@isDeleting"
                    OnConfirm="ConfirmDelete"
@@ -131,10 +135,11 @@
     [Parameter]
     public Guid AccountId { get; set; }
 
-    private AccountDto? account;
-    private List<TransactionDto> transactions = new();
-    private List<RecurringInstanceDto> recurringInstances = new();
-    private List<TransactionListItem> allItems = new();
+    // Data from API - no business logic, just display
+    private TransactionListDto? transactionList;
+    private List<TransactionListItem> transactionListItems = new();
+
+    // UI state
     private bool isLoading = true;
     private bool isSubmitting = false;
     private bool showAddTransaction = false;
@@ -142,10 +147,13 @@
     private DateTime startDate = DateTime.Today.AddMonths(-1);
     private DateTime endDate = DateTime.Today.AddMonths(1); // Include future for recurring
 
+    // Account name for page title (fetched separately for title)
+    private string? accountName;
+
     // Delete confirmation state
     private bool showDeleteConfirm = false;
     private bool isDeleting = false;
-    private TransactionDto? deletingTransaction = null;
+    private TransactionListItem? deletingItem = null;
 
     // Recurring instance state
     private bool showEditRecurring = false;
@@ -160,10 +168,6 @@
     private bool isRetrying;
     private string? saveErrorMessage;
 
-    private decimal totalAmount => allItems.Sum(i => i.Amount.Amount);
-    private int recurringCount => allItems.Count(i => i.IsRecurring);
-    private decimal currentBalance => (account?.InitialBalance ?? 0) + totalAmount;
-
     private Guid previousAccountId;
 
     protected override async Task OnParametersSetAsync()
@@ -172,20 +176,7 @@
         if (AccountId != previousAccountId)
         {
             previousAccountId = AccountId;
-            await LoadAccount();
             await LoadData();
-        }
-    }
-
-    private async Task LoadAccount()
-    {
-        try
-        {
-            account = await ApiService.GetAccountAsync(AccountId);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to load account: {ex.Message}";
         }
     }
 
@@ -200,17 +191,12 @@
             var start = DateOnly.FromDateTime(startDate);
             var end = DateOnly.FromDateTime(endDate);
 
-            // Load transactions and recurring instances in parallel
-            var transactionsTask = ApiService.GetTransactionsAsync(start, end, AccountId);
-            var recurringTask = ApiService.GetProjectedRecurringAsync(start, end, AccountId);
+            // Single API call returns complete pre-merged transaction list
+            transactionList = await ApiService.GetAccountTransactionListAsync(AccountId, start, end);
+            accountName = transactionList.AccountName;
 
-            await Task.WhenAll(transactionsTask, recurringTask);
-
-            transactions = transactionsTask.Result.ToList();
-            recurringInstances = recurringTask.Result.Where(r => !r.IsSkipped).ToList();
-
-            // Merge into unified list
-            MergeTransactionsAndRecurring();
+            // Convert to TransactionListItem for the table component
+            transactionListItems = transactionList.Items.Select(ToTransactionListItem).ToList();
         }
         catch (Exception ex)
         {
@@ -222,6 +208,29 @@
         }
     }
 
+    /// <summary>
+    /// Converts a TransactionListItemDto from API to the client's TransactionListItem for the table component.
+    /// </summary>
+    private static TransactionListItem ToTransactionListItem(TransactionListItemDto dto)
+    {
+        return new TransactionListItem
+        {
+            Id = dto.Id,
+            Date = dto.Date,
+            Description = dto.Description,
+            Category = dto.Category,
+            Amount = dto.Amount,
+            IsRecurring = dto.Type == "recurring" || dto.Type == "recurring-transfer",
+            IsModified = dto.IsModified,
+            CreatedAt = dto.CreatedAt,
+            IsTransfer = dto.IsTransfer,
+            TransferId = dto.TransferId,
+            TransferDirection = dto.TransferDirection,
+            IsRecurringTransfer = dto.Type == "recurring-transfer",
+            RecurringTransferId = dto.RecurringTransferId,
+        };
+    }
+
     private async Task RetryLoad()
     {
         isRetrying = true;
@@ -229,7 +238,6 @@
 
         try
         {
-            await LoadAccount();
             await LoadData();
         }
         finally
@@ -243,32 +251,6 @@
         errorMessage = null;
     }
 
-    private void MergeTransactionsAndRecurring()
-    {
-        allItems.Clear();
-
-        // Add actual transactions
-        foreach (var txn in transactions)
-        {
-            allItems.Add(TransactionListItem.FromTransaction(txn));
-        }
-
-        // Add recurring instances (only those that don't already have a realized transaction)
-        foreach (var instance in recurringInstances)
-        {
-            // Check if there's already a transaction on this date with same description
-            // This is a simple heuristic - could be enhanced with linking logic
-            var hasRealized = transactions.Any(t =>
-                t.Date == instance.ScheduledDate &&
-                t.Description == instance.Description);
-
-            if (!hasRealized)
-            {
-                allItems.Add(TransactionListItem.FromRecurringInstance(instance));
-            }
-        }
-    }
-
     private void ShowAddTransaction()
     {
         editingTransaction = null;
@@ -277,12 +259,22 @@
 
     private void EditTransaction(TransactionListItem item)
     {
-        // Find the original transaction
-        editingTransaction = transactions.FirstOrDefault(t => t.Id == item.Id);
-        if (editingTransaction != null)
+        // Can only edit actual transactions, not recurring instances
+        if (item.IsRecurring)
         {
-            showAddTransaction = true;
+            return;
         }
+
+        // Create a minimal DTO for editing
+        editingTransaction = new TransactionDto
+        {
+            Id = item.Id,
+            Date = item.Date,
+            Description = item.Description,
+            Amount = item.Amount,
+            Category = item.Category,
+        };
+        showAddTransaction = true;
     }
 
     private void HideAddTransaction()
@@ -321,8 +313,8 @@
 
     private async Task DeleteTransaction(Guid id)
     {
-        deletingTransaction = transactions.FirstOrDefault(t => t.Id == id);
-        if (deletingTransaction != null)
+        deletingItem = transactionListItems.FirstOrDefault(t => t.Id == id);
+        if (deletingItem != null)
         {
             showDeleteConfirm = true;
         }
@@ -330,7 +322,7 @@
 
     private async Task ConfirmDelete()
     {
-        if (deletingTransaction == null)
+        if (deletingItem == null)
         {
             return;
         }
@@ -341,9 +333,9 @@
         try
         {
             // TODO: Implement delete when API supports it
-            // await ApiService.DeleteTransactionAsync(deletingTransaction.Id);
+            // await ApiService.DeleteTransactionAsync(deletingItem.Id);
             showDeleteConfirm = false;
-            deletingTransaction = null;
+            deletingItem = null;
             await LoadData();
         }
         finally
@@ -355,7 +347,7 @@
     private void CancelDelete()
     {
         showDeleteConfirm = false;
-        deletingTransaction = null;
+        deletingItem = null;
     }
 
     // Recurring instance methods

@@ -248,6 +248,164 @@ public sealed class CalendarGridService : ICalendarGridService
         };
     }
 
+    /// <inheritdoc/>
+    public async Task<TransactionListDto> GetAccountTransactionListAsync(
+        Guid accountId,
+        DateOnly startDate,
+        DateOnly endDate,
+        bool includeRecurring = true,
+        CancellationToken cancellationToken = default)
+    {
+        // Get the account
+        var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken)
+            ?? throw new InvalidOperationException($"Account with ID {accountId} not found.");
+
+        // Get transactions for date range
+        var transactions = await _transactionRepository.GetByDateRangeAsync(
+            startDate,
+            endDate,
+            accountId,
+            cancellationToken);
+
+        // Build items list
+        var items = new List<TransactionListItemDto>();
+
+        // Add actual transactions
+        foreach (var txn in transactions)
+        {
+            items.Add(new TransactionListItemDto
+            {
+                Id = txn.Id,
+                Type = "transaction",
+                Date = txn.Date,
+                Description = txn.Description,
+                Amount = DomainToDtoMapper.ToDto(txn.Amount),
+                Category = txn.Category,
+                CreatedAt = txn.CreatedAt,
+                IsModified = false,
+                RecurringTransactionId = txn.RecurringTransactionId,
+                RecurringTransferId = txn.RecurringTransferId,
+                IsTransfer = txn.IsTransfer,
+                TransferId = txn.TransferId,
+                TransferDirection = txn.TransferDirection?.ToString(),
+            });
+        }
+
+        // Add recurring instances if requested
+        if (includeRecurring)
+        {
+            var recurringTransactions = await _recurringRepository.GetByAccountIdAsync(accountId, cancellationToken);
+            var recurringInstances = await GetRecurringInstancesByDateAsync(
+                recurringTransactions,
+                startDate,
+                endDate,
+                cancellationToken);
+
+            // Add recurring instances (excluding those that already have realized transactions)
+            foreach (var (date, instances) in recurringInstances)
+            {
+                foreach (var instance in instances.Where(i => i.AccountId == accountId))
+                {
+                    // Check if there's already a transaction for this recurring instance on this date
+                    var hasRealized = transactions.Any(t =>
+                        t.RecurringTransactionId == instance.RecurringTransactionId &&
+                        t.Date == date);
+
+                    if (!hasRealized)
+                    {
+                        items.Add(new TransactionListItemDto
+                        {
+                            Id = instance.RecurringTransactionId,
+                            Type = "recurring",
+                            Date = date,
+                            Description = instance.Description,
+                            Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
+                            Category = instance.Category,
+                            CreatedAt = null,
+                            IsModified = instance.IsModified,
+                            RecurringTransactionId = instance.RecurringTransactionId,
+                            RecurringTransferId = null,
+                            IsTransfer = false,
+                            TransferId = null,
+                            TransferDirection = null,
+                        });
+                    }
+                }
+            }
+
+            // Add recurring transfer instances
+            var recurringTransfers = await _recurringTransferRepository.GetByAccountIdAsync(accountId, cancellationToken);
+            var recurringTransferInstances = await GetRecurringTransferInstancesByDateAsync(
+                recurringTransfers,
+                startDate,
+                endDate,
+                accountId,
+                cancellationToken);
+
+            foreach (var (date, instances) in recurringTransferInstances)
+            {
+                foreach (var instance in instances)
+                {
+                    // Check if there's already a transaction for this recurring transfer instance on this date
+                    var hasRealized = transactions.Any(t =>
+                        t.RecurringTransferId == instance.RecurringTransferId &&
+                        t.Date == date);
+
+                    if (!hasRealized)
+                    {
+                        items.Add(new TransactionListItemDto
+                        {
+                            Id = instance.RecurringTransferId,
+                            Type = "recurring-transfer",
+                            Date = date,
+                            Description = instance.Description,
+                            Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
+                            Category = null,
+                            CreatedAt = null,
+                            IsModified = instance.IsModified,
+                            RecurringTransactionId = null,
+                            RecurringTransferId = instance.RecurringTransferId,
+                            IsTransfer = true,
+                            TransferId = null,
+                            TransferDirection = instance.TransferDirection,
+                        });
+                    }
+                }
+            }
+        }
+
+        // Sort items by date descending, then by created timestamp
+        var sortedItems = items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue).ToList();
+
+        // Calculate summary
+        var transactionCount = sortedItems.Count(i => i.Type == "transaction");
+        var recurringCount = sortedItems.Count(i => i.Type == "recurring" || i.Type == "recurring-transfer");
+        var totalAmount = sortedItems.Sum(i => i.Amount.Amount);
+        var totalIncome = sortedItems.Where(i => i.Amount.Amount > 0).Sum(i => i.Amount.Amount);
+        var totalExpenses = sortedItems.Where(i => i.Amount.Amount < 0).Sum(i => i.Amount.Amount);
+        var currentBalance = account.InitialBalance.Amount + totalAmount;
+
+        return new TransactionListDto
+        {
+            AccountId = accountId,
+            AccountName = account.Name,
+            StartDate = startDate,
+            EndDate = endDate,
+            InitialBalance = new MoneyDto { Currency = account.InitialBalance.Currency, Amount = account.InitialBalance.Amount },
+            InitialBalanceDate = account.InitialBalanceDate,
+            Items = sortedItems,
+            Summary = new TransactionListSummaryDto
+            {
+                TotalAmount = new MoneyDto { Currency = "USD", Amount = totalAmount },
+                TotalIncome = new MoneyDto { Currency = "USD", Amount = totalIncome },
+                TotalExpenses = new MoneyDto { Currency = "USD", Amount = totalExpenses },
+                TransactionCount = transactionCount,
+                RecurringCount = recurringCount,
+                CurrentBalance = new MoneyDto { Currency = "USD", Amount = currentBalance },
+            },
+        };
+    }
+
     private async Task<IReadOnlyList<RecurringTransaction>> GetRecurringTransactionsAsync(
         Guid? accountId,
         CancellationToken cancellationToken)

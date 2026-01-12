@@ -510,7 +510,68 @@ private async Task LoadCalendarGrid()
 
 ---
 
-**Document Version**: 1.0  
+## Implementation Status
+
+### ✅ Completed
+
+#### Phase 1: Calendar Grid (Completed 2026-01)
+- **CalendarController** with `/api/v1/calendar/grid` endpoint
+- **ICalendarGridService** and **CalendarGridService** implementation
+- Calendar.razor refactored to thin client
+- All date calculations, totals, and grid building moved server-side
+- DTOs: `CalendarGridDto`, `CalendarDayDto`, `CalendarSummaryDto`
+
+#### Phase 2: Day Detail (Completed 2026-01)
+- Day detail data included in calendar grid response
+- Click-to-view day detail uses pre-computed data
+
+#### Phase 3: Account Transaction List (Completed 2026-01)
+- **GET /api/v1/calendar/accounts/{accountId}/transactions** endpoint added
+- `GetAccountTransactionListAsync` method in `ICalendarGridService`
+- DTOs: `TransactionListDto`, `TransactionListItemDto`, `TransactionListSummaryDto` in Contracts
+- **AccountTransactions.razor** refactored to thin client:
+  - Removed `MergeTransactionsAndRecurring()` method
+  - Removed client-side duplicate detection
+  - Removed client-side total/count calculations
+  - Single API call returns pre-merged, pre-calculated data
+  - Client only renders data and handles UI state
+
+### Files Created/Modified
+
+**Contracts (New DTOs):**
+- `src/BudgetExperiment.Contracts/Dtos/TransactionListDto.cs`
+- `src/BudgetExperiment.Contracts/Dtos/TransactionListItemDto.cs`
+- `src/BudgetExperiment.Contracts/Dtos/TransactionListSummaryDto.cs`
+
+**Application Layer:**
+- `src/BudgetExperiment.Application/Services/ICalendarGridService.cs` - Added `GetAccountTransactionListAsync`
+- `src/BudgetExperiment.Application/Services/CalendarGridService.cs` - ~150 lines of merge/calculate logic
+
+**API Layer:**
+- `src/BudgetExperiment.Api/Controllers/CalendarController.cs` - New endpoint
+
+**Client Layer:**
+- `src/BudgetExperiment.Client/Services/IBudgetApiService.cs` - Added method
+- `src/BudgetExperiment.Client/Services/BudgetApiService.cs` - Implemented method
+- `src/BudgetExperiment.Client/Pages/AccountTransactions.razor` - Refactored to thin client
+
+**Tests:**
+- `tests/BudgetExperiment.Application.Tests/CalendarGridServiceTests.cs` - 4 new tests
+
+### Test Coverage
+
+Unit tests for `GetAccountTransactionListAsync`:
+1. `GetAccountTransactionListAsync_Returns_Pre_Merged_Transaction_And_Recurring_List`
+2. `GetAccountTransactionListAsync_Excludes_Recurring_When_IncludeRecurring_False`
+3. `GetAccountTransactionListAsync_Throws_When_Account_Not_Found`
+4. `GetAccountTransactionListAsync_Calculates_Current_Balance_From_Initial_Plus_Transactions`
+
+All 342 tests passing.
+
+---
+
+**Document Version**: 2.0  
 **Created**: 2026-01-10  
-**Status**: Draft  
+**Last Updated**: 2026-01-11  
+**Status**: ✅ Complete  
 **Author**: Engineering Team
