@@ -15,6 +15,7 @@ COPY ["src/BudgetExperiment.Application/BudgetExperiment.Application.csproj", "s
 COPY ["src/BudgetExperiment.Infrastructure/BudgetExperiment.Infrastructure.csproj", "src/BudgetExperiment.Infrastructure/"]
 COPY ["src/BudgetExperiment.Api/BudgetExperiment.Api.csproj", "src/BudgetExperiment.Api/"]
 COPY ["src/BudgetExperiment.Client/BudgetExperiment.Client.csproj", "src/BudgetExperiment.Client/"]
+COPY ["src/BudgetExperiment.Contracts/BudgetExperiment.Contracts.csproj", "src/BudgetExperiment.Contracts/"]
 
 # Restore dependencies
 RUN dotnet restore "src/BudgetExperiment.Api/BudgetExperiment.Api.csproj"
