@@ -1,11 +1,50 @@
 # Feature: Automatic Database Migrations at Startup
 
+## Status: ✅ IMPLEMENTED
+
 ## Overview
 Ensure database schema is always up-to-date when the application starts by automatically applying pending EF Core migrations. This eliminates manual migration steps during deployment and ensures consistent database state across all environments.
 
-## Current State
+## Implementation Summary
 
-Currently, migrations and seeding only run in Development environment:
+### What Was Implemented
+1. **Automatic Migrations** - Run in ALL environments at startup
+2. **Development-Only Seed Data** - Sample data only seeded when `IsDevelopment()` is true
+3. **Configuration Options** - `Database:AutoMigrate` and `Database:MigrationTimeoutSeconds` in appsettings.json
+4. **Health Checks** - Database connectivity check + migration status check at `/health`
+5. **Non-Relational Support** - Graceful fallback for in-memory databases (integration tests)
+
+### Configuration
+
+```json
+{
+  "Database": {
+    "AutoMigrate": true,
+    "MigrationTimeoutSeconds": 300
+  }
+}
+```
+
+To disable auto-migrations (e.g., for manual control):
+```json
+{
+  "Database": {
+    "AutoMigrate": false
+  }
+}
+```
+
+### Health Endpoint
+
+`GET /health` returns status of:
+- **database** - Can connect to PostgreSQL
+- **migrations** - No pending migrations (Healthy) or pending migrations exist (Degraded)
+
+---
+
+## Previous State (Before Implementation)
+
+Migrations and seeding only ran in Development environment:
 
 ```csharp
 if (app.Environment.IsDevelopment())
@@ -128,7 +167,7 @@ private static async Task SeedDevelopmentDataAsync(WebApplication app)
 
 ### Test Environment Handling
 
-For integration tests using in-memory database:
+For integration tests using in-memory database, use exception-based detection since `IsRelational()` throws for non-relational providers:
 
 ```csharp
 private static async Task ApplyMigrationsAsync(WebApplication app)
@@ -139,23 +178,33 @@ private static async Task ApplyMigrationsAsync(WebApplication app)
 
     try
     {
-        // Check if using relational database
-        if (context.Database.IsRelational())
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        var migrationList = pendingMigrations.ToList();
+
+        if (migrationList.Count > 0)
         {
-            // Apply migrations for real databases
-            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-            // ... migration logic
+            logger.LogInformation(
+                "Applying {Count} pending database migration(s): {Migrations}",
+                migrationList.Count,
+                string.Join(", ", migrationList));
+
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully.");
         }
         else
         {
-            // In-memory/non-relational: just ensure schema exists
-            logger.LogInformation("Non-relational database detected. Ensuring schema is created.");
-            await context.Database.EnsureCreatedAsync();
+            logger.LogInformation("Database is up to date. No migrations to apply.");
         }
+    }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("relational", StringComparison.OrdinalIgnoreCase))
+    {
+        // In-memory or non-relational database - just ensure schema exists
+        logger.LogInformation("Non-relational database detected. Ensuring schema is created.");
+        await context.Database.EnsureCreatedAsync();
     }
     catch (Exception ex)
     {
-        logger.LogCritical(ex, "Failed to initialize database.");
+        logger.LogCritical(ex, "Failed to apply database migrations. Application cannot start.");
         throw;
     }
 }
@@ -288,33 +337,33 @@ public sealed class MigrationHealthCheck : IHealthCheck
 
 ## Implementation Plan (TDD Order)
 
-### Phase 1: Refactor Program.cs
-1. [ ] Extract `ApplyMigrationsAsync()` method (runs in all environments)
-2. [ ] Extract `SeedDevelopmentDataAsync()` method (runs only in Development)
-3. [ ] Update `InitializeDatabaseAsync()` or replace with new methods
-4. [ ] Add proper logging with migration names
-5. [ ] Handle non-relational database providers (for tests)
+### Phase 1: Refactor Program.cs ✅ COMPLETED
+1. [x] Extract `ApplyMigrationsAsync()` method (runs in all environments)
+2. [x] Extract `SeedDevelopmentDataAsync()` method (runs only in Development)
+3. [x] Update `InitializeDatabaseAsync()` or replace with new methods
+4. [x] Add proper logging with migration names
+5. [x] Handle non-relational database providers (for tests)
 
-### Phase 2: Configuration (Optional)
-1. [ ] Create `DatabaseOptions` configuration class
-2. [ ] Add configuration section to appsettings.json
-3. [ ] Wire up configuration in DI
-4. [ ] Use configuration to control auto-migrate behavior
+### Phase 2: Configuration ✅ COMPLETED
+1. [x] Create `DatabaseOptions` configuration class
+2. [x] Add configuration section to appsettings.json
+3. [x] Wire up configuration in DI
+4. [x] Use configuration to control auto-migrate behavior
 
-### Phase 3: Health Checks
-1. [ ] Verify existing database health check works
-2. [ ] Optionally add migration status health check
+### Phase 3: Health Checks ✅ COMPLETED
+1. [x] Verify existing database health check works
+2. [x] Optionally add migration status health check
 
-### Phase 4: Testing
-1. [ ] Verify integration tests still work (in-memory handling)
-2. [ ] Test with actual PostgreSQL database
-3. [ ] Test migration failure scenarios
-4. [ ] Test seed data only runs in Development
+### Phase 4: Testing ✅ COMPLETED
+1. [x] Verify integration tests still work (in-memory handling)
+2. [x] Test with actual PostgreSQL database (manual verification)
+3. [x] Test migration failure scenarios (manual verification)
+4. [x] Test seed data only runs in Development
 
-### Phase 5: Documentation
-1. [ ] Update deployment documentation
-2. [ ] Document migration timeout configuration
-3. [ ] Document how to disable auto-migrate if needed
+### Phase 5: Documentation ✅ COMPLETED
+1. [x] Update deployment documentation (README.md)
+2. [x] Document migration timeout configuration
+3. [x] Document how to disable auto-migrate if needed
 
 ---
 

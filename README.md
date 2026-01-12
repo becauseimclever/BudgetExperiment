@@ -76,19 +76,15 @@ The connection string is stored in user secrets for security:
 dotnet user-secrets set "ConnectionStrings:AppDb" "Host=localhost;Database=budgetexperiment;Username=your_user;Password=your_password" --project c:\ws\BudgetExpirement\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
 ```
 
-### 3. Apply database migrations
-
-```powershell
-dotnet ef database update --project c:\ws\BudgetExpirement\src\BudgetExperiment.Infrastructure\BudgetExperiment.Infrastructure.csproj --startup-project c:\ws\BudgetExpirement\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
-```
-
-### 4. Run the application
+### 3. Run the application
 
 **Important**: Only run the API project. The Blazor client is hosted by the API.
 
 ```powershell
 dotnet run --project c:\ws\BudgetExpirement\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
 ```
+
+Database migrations are applied automatically at startup. No manual `dotnet ef database update` is required.
 
 The application will be available at:
 - **Web UI**: `http://localhost:5099`

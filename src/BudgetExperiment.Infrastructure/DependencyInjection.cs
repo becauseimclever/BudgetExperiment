@@ -23,6 +23,9 @@ public static class DependencyInjection
             throw new InvalidOperationException("Connection string 'AppDb' is required but was not found in configuration.");
         }
 
+        // Bind DatabaseOptions from configuration
+        services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
+
         services.AddDbContext<BudgetDbContext>(options => options.UseNpgsql(cs));
 
         // Register IUnitOfWork
