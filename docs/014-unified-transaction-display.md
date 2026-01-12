@@ -63,10 +63,10 @@ Ensure all financial activities — transactions, recurring transactions, one-ti
 **So that** I get an accurate picture of my daily financial position
 
 **Acceptance Criteria:**
-- [ ] Daily totals include: transactions, recurring instances, transfers, recurring transfer instances
-- [ ] `ActualTotal` = sum of all realized transactions (including realized transfers)
-- [ ] `ProjectedTotal` = sum of all unrealized recurring instances (transactions + transfers)
-- [ ] Clicking a day shows all items with appropriate type indicators
+- [x] Daily totals include: transactions, recurring instances, transfers, recurring transfer instances
+- [x] `ActualTotal` = sum of all realized transactions (including realized transfers)
+- [x] `ProjectedTotal` = sum of all unrealized recurring instances (transactions + transfers)
+- [x] Clicking a day shows all items with appropriate type indicators
 
 ### REQ-002: All Item Types Visible on Account Transactions
 **As a** user viewing an account's transactions  
@@ -74,10 +74,10 @@ Ensure all financial activities — transactions, recurring transactions, one-ti
 **So that** I understand all money movement for this account
 
 **Acceptance Criteria:**
-- [ ] List includes: transactions, recurring instances, realized transfers, recurring transfer instances
-- [ ] Each item shows appropriate icon (recurring badge, transfer badge, or both)
-- [ ] Summary correctly calculates totals for all item types
-- [ ] Items are sorted by date (descending) with proper deduplication
+- [x] List includes: transactions, recurring instances, realized transfers, recurring transfer instances
+- [x] Each item shows appropriate icon (recurring badge, transfer badge, or both)
+- [x] Summary correctly calculates totals for all item types
+- [x] Items are sorted by date (descending) with proper deduplication
 
 ### REQ-003: Proper Deduplication
 **As a** user  
@@ -85,9 +85,9 @@ Ensure all financial activities — transactions, recurring transactions, one-ti
 **So that** I don't get confused by duplicate entries
 
 **Acceptance Criteria:**
-- [ ] When a recurring transaction is realized, only show the realized transaction (not the projected instance)
-- [ ] When a recurring transfer is realized, only show the realized transfer transactions (not the projected instances)
-- [ ] Deduplication works correctly for skipped/modified instances
+- [x] When a recurring transaction is realized, only show the realized transaction (not the projected instance)
+- [x] When a recurring transfer is realized, only show the realized transfer transactions (not the projected instances)
+- [x] Deduplication works correctly for skipped/modified instances
 
 ### REQ-004: Visual Indicators
 **As a** user  
@@ -95,11 +95,11 @@ Ensure all financial activities — transactions, recurring transactions, one-ti
 **So that** I understand what I'm looking at
 
 **Acceptance Criteria:**
-- [ ] Recurring items show recurring icon (🔄 or similar)
-- [ ] Transfer items show transfer icon (↔️ or similar)
-- [ ] Recurring transfers show both icons
-- [ ] Modified recurring instances show "modified" badge
-- [ ] Transfer direction indicated (→ outgoing, ← incoming)
+- [x] Recurring items show recurring icon (🔄 or similar)
+- [x] Transfer items show transfer icon (↔️ or similar)
+- [x] Recurring transfers show both icons
+- [x] Modified recurring instances show "modified" badge
+- [x] Transfer direction indicated (→ outgoing, ← incoming)
 
 ### REQ-005: Correct Summary Calculations
 **As a** user viewing summaries  
@@ -107,12 +107,12 @@ Ensure all financial activities — transactions, recurring transactions, one-ti
 **So that** I can trust the numbers
 
 **Acceptance Criteria:**
-- [ ] `TotalIncome` = positive amounts (including incoming transfers)
-- [ ] `TotalExpenses` = negative amounts (including outgoing transfers)
-- [ ] `TotalAmount` = net of all items
-- [ ] `TransactionCount` = actual realized items
-- [ ] `RecurringCount` = projected/unrealized items
-- [ ] `CurrentBalance` = InitialBalance + all realized transactions
+- [x] `TotalIncome` = positive amounts (including incoming transfers)
+- [x] `TotalExpenses` = negative amounts (including outgoing transfers)
+- [x] `TotalAmount` = net of all items
+- [x] `TransactionCount` = actual realized items
+- [x] `RecurringCount` = projected/unrealized items
+- [x] `CurrentBalance` = InitialBalance + all realized transactions
 
 ---
 
@@ -267,8 +267,8 @@ Expected: Only the realized transfer transactions show, not the projected instan
 
 ---
 
-**Document Version**: 1.1  
+**Document Version**: 1.2  
 **Created**: 2026-01-11  
-**Updated**: 2026-01-11  
+**Updated**: 2026-01-12  
 **Status**: ✅ Completed  
 **Author**: Engineering Team
