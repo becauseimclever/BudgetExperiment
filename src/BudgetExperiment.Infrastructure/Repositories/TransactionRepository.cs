@@ -121,6 +121,32 @@ internal sealed class TransactionRepository : ITransactionRepository
     }
 
     /// <inheritdoc />
+    public async Task<Transaction?> GetByRecurringInstanceAsync(
+        Guid recurringTransactionId,
+        DateOnly instanceDate,
+        CancellationToken cancellationToken = default)
+    {
+        return await this._context.Transactions
+            .FirstOrDefaultAsync(
+                t => t.RecurringTransactionId == recurringTransactionId
+                    && t.RecurringInstanceDate == instanceDate,
+                cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetByRecurringTransferInstanceAsync(
+        Guid recurringTransferId,
+        DateOnly instanceDate,
+        CancellationToken cancellationToken = default)
+    {
+        return await this._context.Transactions
+            .Where(t => t.RecurringTransferId == recurringTransferId
+                && t.RecurringTransferInstanceDate == instanceDate)
+            .OrderBy(t => t.TransferDirection)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task AddAsync(Transaction entity, CancellationToken cancellationToken = default)
     {
         this._context.Transactions.Add(entity);

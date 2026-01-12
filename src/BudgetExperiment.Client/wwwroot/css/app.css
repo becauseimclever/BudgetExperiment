@@ -136,3 +136,96 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* ==========================================================================
+   Past-Due Alert Styles
+   ========================================================================== */
+
+.past-due-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    background-color: var(--color-warning-bg, #fff3cd);
+    border: 1px solid var(--color-warning-border, #ffecb5);
+    border-radius: var(--border-radius);
+    color: var(--color-warning-text, #664d03);
+}
+
+.past-due-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.past-due-icon {
+    color: var(--color-warning, #ffc107);
+}
+
+.past-due-message {
+    font-weight: var(--font-weight-medium, 500);
+}
+
+.past-due-amount {
+    opacity: 0.8;
+}
+
+/* Past-Due Review Modal */
+.past-due-review {
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.past-due-list {
+    overflow-y: auto;
+    max-height: 40vh;
+    margin-bottom: var(--space-4);
+}
+
+.past-due-list .checkbox-col {
+    width: 40px;
+    text-align: center;
+}
+
+.past-due-summary {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-3);
+    background-color: var(--color-surface-secondary, #f8f9fa);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--space-4);
+}
+
+.selected-count,
+.selected-total {
+    font-weight: var(--font-weight-medium, 500);
+}
+
+.past-due-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+.row-past-due {
+    background-color: var(--color-warning-bg-subtle, rgba(255, 193, 7, 0.1));
+}
+
+.row-past-due-critical {
+    background-color: var(--color-error-bg-subtle, rgba(220, 53, 69, 0.1));
+}
+
+.account-transfer {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.days-late .badge-warning {
+    background-color: var(--color-warning, #ffc107);
+    color: var(--color-warning-text, #664d03);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+}

@@ -500,4 +500,618 @@ public class CalendarGridServiceTests
         var money = MoneyValue.Create("USD", amount);
         return account.AddTransaction(money, date, description);
     }
+
+    private static Transaction CreateTestTransferTransaction(
+        Guid accountId,
+        DateOnly date,
+        decimal amount,
+        string description,
+        Guid transferId,
+        TransferDirection direction)
+    {
+        var money = MoneyValue.Create("USD", amount);
+        return Transaction.CreateTransfer(accountId, money, date, description, transferId, direction);
+    }
+
+    private static Transaction CreateTestRealizedRecurringTransaction(
+        Guid accountId,
+        DateOnly date,
+        decimal amount,
+        string description,
+        Guid recurringTransactionId)
+    {
+        var money = MoneyValue.Create("USD", amount);
+        return Transaction.CreateFromRecurring(accountId, money, date, description, recurringTransactionId, date);
+    }
+
+    private static Transaction CreateTestRealizedRecurringTransfer(
+        Guid accountId,
+        DateOnly date,
+        decimal amount,
+        string description,
+        Guid transferId,
+        TransferDirection direction,
+        Guid recurringTransferId)
+    {
+        var money = MoneyValue.Create("USD", amount);
+        return Transaction.CreateFromRecurringTransfer(
+            accountId,
+            money,
+            date,
+            description,
+            transferId,
+            direction,
+            recurringTransferId,
+            date);
+    }
+
+    private static RecurringTransaction CreateTestRecurringTransaction(
+        Guid accountId,
+        decimal amount,
+        string description,
+        DateOnly startDate)
+    {
+        var money = MoneyValue.Create("USD", amount);
+        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        return RecurringTransaction.Create(accountId, description, money, pattern, startDate);
+    }
+
+    private static RecurringTransfer CreateTestRecurringTransfer(
+        Guid sourceAccountId,
+        Guid destinationAccountId,
+        decimal amount,
+        string description,
+        DateOnly startDate)
+    {
+        var money = MoneyValue.Create("USD", amount);
+        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        return RecurringTransfer.Create(sourceAccountId, destinationAccountId, description, money, pattern, startDate);
+    }
+
+    #region Unified Transaction Display Tests (Feature 014)
+
+    [Fact]
+    public async Task GetDayDetailAsync_Shows_All_Four_Item_Types_On_Same_Day()
+    {
+        // Arrange - Test 1 from Feature 014: Calendar Day Detail with Mixed Items
+        var date = new DateOnly(2026, 1, 15);
+        var checkingId = Guid.NewGuid();
+        var savingsId = Guid.NewGuid();
+        var checking = CreateTestAccount(checkingId, "Checking");
+        var savings = CreateTestAccount(savingsId, "Savings");
+        var transferId = Guid.NewGuid();
+        var recurringTransactionId = Guid.NewGuid();
+        var recurringTransferId = Guid.NewGuid();
+
+        // 1. Regular transaction
+        var regularTransaction = CreateTestTransaction(checkingId, date, -50.00m, "Grocery Store");
+
+        // 2. Recurring transaction (create and set up for occurrence on date)
+        var recurringTransaction = CreateTestRecurringTransaction(checkingId, -15.99m, "Netflix Subscription", date);
+        SetEntityId(recurringTransaction, recurringTransactionId);
+
+        // 3. Transfer (source side - outgoing)
+        var transferTransaction = CreateTestTransferTransaction(
+            checkingId,
+            date,
+            -200.00m,
+            "Transfer to Savings",
+            transferId,
+            TransferDirection.Source);
+
+        // 4. Recurring transfer (will be projected)
+        var recurringTransfer = CreateTestRecurringTransfer(checkingId, savingsId, 100.00m, "Monthly Savings", date);
+        SetEntityId(recurringTransfer, recurringTransferId);
+
+        // Set up mocks
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(date, date, null, default))
+            .ReturnsAsync(new List<Transaction> { regularTransaction, transferTransaction });
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(default))
+            .ReturnsAsync(new List<Account> { checking, savings });
+
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
+
+        _recurringRepo
+            .Setup(r => r.GetExceptionAsync(recurringTransactionId, date, default))
+            .ReturnsAsync((RecurringTransactionException?)null);
+
+        _recurringTransferRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransfer> { recurringTransfer });
+
+        _recurringTransferRepo
+            .Setup(r => r.GetExceptionAsync(recurringTransferId, date, default))
+            .ReturnsAsync((RecurringTransferException?)null);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDayDetailAsync(date);
+
+        // Assert - should have all 4 item types
+        Assert.Equal(date, result.Date);
+
+        // Verify we have items of each type
+        var transactionItems = result.Items.Where(i => i.Type == "transaction").ToList();
+        var recurringItems = result.Items.Where(i => i.Type == "recurring").ToList();
+        var recurringTransferItems = result.Items.Where(i => i.Type == "recurring-transfer").ToList();
+
+        Assert.Equal(2, transactionItems.Count); // regular + transfer (realized)
+        Assert.Single(recurringItems); // Netflix (projected)
+
+        // When no account filter, recurring transfer shows both source and destination
+        Assert.Equal(2, recurringTransferItems.Count); // Monthly Savings source + destination (projected)
+
+        // Verify transfer badges
+        var transferItem = transactionItems.First(i => i.IsTransfer);
+        Assert.True(transferItem.IsTransfer);
+        Assert.Equal(transferId, transferItem.TransferId);
+        Assert.Equal("Source", transferItem.TransferDirection);
+
+        // Verify recurring transaction
+        var recurringItem = recurringItems.First();
+        Assert.Equal("Netflix Subscription", recurringItem.Description);
+        Assert.Equal(-15.99m, recurringItem.Amount.Amount);
+
+        // Verify recurring transfers show as transfers with proper directions
+        Assert.All(recurringTransferItems, item =>
+        {
+            Assert.True(item.IsTransfer);
+            Assert.NotNull(item.TransferDirection);
+        });
+        Assert.Single(recurringTransferItems, i => i.TransferDirection == "Source");
+        Assert.Single(recurringTransferItems, i => i.TransferDirection == "Destination");
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_Shows_All_Four_Item_Types()
+    {
+        // Arrange - Test 2 from Feature 014: Account Transactions List with Mixed Items
+        var startDate = new DateOnly(2026, 1, 1);
+        var endDate = new DateOnly(2026, 1, 31);
+        var targetDate = new DateOnly(2026, 1, 15);
+        var checkingId = Guid.NewGuid();
+        var savingsId = Guid.NewGuid();
+        var checking = CreateTestAccount(checkingId, "Checking");
+        var savings = CreateTestAccount(savingsId, "Savings");
+        var transferId = Guid.NewGuid();
+        var recurringTransactionId = Guid.NewGuid();
+        var recurringTransferId = Guid.NewGuid();
+
+        // 1. Regular transaction
+        var regularTransaction = CreateTestTransaction(checkingId, targetDate, -50.00m, "Grocery Store");
+
+        // 2. Recurring transaction
+        var recurringTransaction = CreateTestRecurringTransaction(checkingId, -15.99m, "Netflix Subscription", targetDate);
+        SetEntityId(recurringTransaction, recurringTransactionId);
+
+        // 3. Transfer (source side)
+        var transferTransaction = CreateTestTransferTransaction(
+            checkingId,
+            targetDate,
+            -200.00m,
+            "Transfer to Savings",
+            transferId,
+            TransferDirection.Source);
+
+        // 4. Recurring transfer
+        var recurringTransfer = CreateTestRecurringTransfer(checkingId, savingsId, 100.00m, "Monthly Savings", targetDate);
+        SetEntityId(recurringTransfer, recurringTransferId);
+
+        // Set up mocks
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(checking);
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(startDate, endDate, checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction> { regularTransaction, transferTransaction });
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Account> { checking, savings });
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer> { recurringTransfer });
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(checkingId, startDate, endDate);
+
+        // Assert
+        var transactionItems = result.Items.Where(i => i.Type == "transaction").ToList();
+        var recurringItems = result.Items.Where(i => i.Type == "recurring").ToList();
+        var recurringTransferItems = result.Items.Where(i => i.Type == "recurring-transfer").ToList();
+
+        Assert.Equal(2, transactionItems.Count); // regular + transfer
+        Assert.Single(recurringItems); // Netflix
+        Assert.Single(recurringTransferItems); // Monthly Savings
+
+        // Verify summary
+        Assert.Equal(2, result.Summary.TransactionCount); // Only realized transactions
+        Assert.Equal(2, result.Summary.RecurringCount); // recurring + recurring-transfer
+    }
+
+    [Fact]
+    public async Task GetDayDetailAsync_Deduplicates_Realized_Recurring_Transaction()
+    {
+        // Arrange - Test 3: Deduplication - Realized Recurring Transaction
+        var date = new DateOnly(2026, 1, 15);
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccount(accountId, "Checking");
+        var recurringTransactionId = Guid.NewGuid();
+
+        // Create recurring transaction
+        var recurringTransaction = CreateTestRecurringTransaction(accountId, -15.99m, "Netflix Subscription", date);
+        SetEntityId(recurringTransaction, recurringTransactionId);
+
+        // Create realized transaction (linked to the recurring)
+        var realizedTransaction = CreateTestRealizedRecurringTransaction(
+            accountId,
+            date,
+            -15.99m,
+            "Netflix Subscription",
+            recurringTransactionId);
+
+        // Set up mocks
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(date, date, null, default))
+            .ReturnsAsync(new List<Transaction> { realizedTransaction });
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(default))
+            .ReturnsAsync(new List<Account> { account });
+
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
+
+        _recurringRepo
+            .Setup(r => r.GetExceptionAsync(recurringTransactionId, date, default))
+            .ReturnsAsync((RecurringTransactionException?)null);
+
+        _recurringTransferRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDayDetailAsync(date);
+
+        // Assert - should only show realized transaction, not projected instance
+        Assert.Single(result.Items);
+        Assert.Equal("transaction", result.Items[0].Type);
+        Assert.Equal(recurringTransactionId, result.Items[0].RecurringTransactionId);
+
+        // Summary should show as actual, not projected
+        Assert.Equal(-15.99m, result.Summary.TotalActual.Amount);
+        Assert.Equal(0m, result.Summary.TotalProjected.Amount);
+    }
+
+    [Fact]
+    public async Task GetDayDetailAsync_Deduplicates_Realized_Recurring_Transfer()
+    {
+        // Arrange - Test 4: Deduplication - Realized Recurring Transfer
+        var date = new DateOnly(2026, 1, 15);
+        var checkingId = Guid.NewGuid();
+        var savingsId = Guid.NewGuid();
+        var checking = CreateTestAccount(checkingId, "Checking");
+        var savings = CreateTestAccount(savingsId, "Savings");
+        var transferId = Guid.NewGuid();
+        var recurringTransferId = Guid.NewGuid();
+
+        // Create recurring transfer
+        var recurringTransfer = CreateTestRecurringTransfer(checkingId, savingsId, 100.00m, "Monthly Savings", date);
+        SetEntityId(recurringTransfer, recurringTransferId);
+
+        // Create realized transfer transactions (linked to the recurring)
+        var sourceTransaction = CreateTestRealizedRecurringTransfer(
+            checkingId,
+            date,
+            -100.00m,
+            "Transfer to Savings: Monthly Savings",
+            transferId,
+            TransferDirection.Source,
+            recurringTransferId);
+
+        var destTransaction = CreateTestRealizedRecurringTransfer(
+            savingsId,
+            date,
+            100.00m,
+            "Transfer from Checking: Monthly Savings",
+            transferId,
+            TransferDirection.Destination,
+            recurringTransferId);
+
+        // Set up mocks - no account filter means we see both sides
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(date, date, null, default))
+            .ReturnsAsync(new List<Transaction> { sourceTransaction, destTransaction });
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(default))
+            .ReturnsAsync(new List<Account> { checking, savings });
+
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransfer> { recurringTransfer });
+
+        _recurringTransferRepo
+            .Setup(r => r.GetExceptionAsync(recurringTransferId, date, default))
+            .ReturnsAsync((RecurringTransferException?)null);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDayDetailAsync(date);
+
+        // Assert - should only show realized transfer transactions, not projected instances
+        Assert.Equal(2, result.Items.Count); // source + destination realized transactions
+
+        // Both should be type "transaction" (realized), not "recurring-transfer" (projected)
+        Assert.All(result.Items, i => Assert.Equal("transaction", i.Type));
+
+        // Both should have the recurring transfer ID set
+        Assert.All(result.Items, i => Assert.Equal(recurringTransferId, i.RecurringTransferId));
+
+        // Summary should show in actual, not projected
+        Assert.Equal(0m, result.Summary.TotalActual.Amount); // -100 + 100 = 0 (transfers cancel)
+        Assert.Equal(0m, result.Summary.TotalProjected.Amount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_Deduplicates_Realized_Recurring_Transaction()
+    {
+        // Arrange
+        var startDate = new DateOnly(2026, 1, 1);
+        var endDate = new DateOnly(2026, 1, 31);
+        var targetDate = new DateOnly(2026, 1, 15);
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccount(accountId, "Checking");
+        var recurringTransactionId = Guid.NewGuid();
+
+        // Create recurring transaction
+        var recurringTransaction = CreateTestRecurringTransaction(accountId, -15.99m, "Netflix Subscription", targetDate);
+        SetEntityId(recurringTransaction, recurringTransactionId);
+
+        // Create realized transaction (linked to the recurring)
+        var realizedTransaction = CreateTestRealizedRecurringTransaction(
+            accountId,
+            targetDate,
+            -15.99m,
+            "Netflix Subscription",
+            recurringTransactionId);
+
+        // Set up mocks
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(startDate, endDate, accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction> { realizedTransaction });
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Account> { account });
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(accountId, startDate, endDate);
+
+        // Assert - should only show realized transaction, not projected instance
+        Assert.Single(result.Items);
+        Assert.Equal("transaction", result.Items[0].Type);
+        Assert.Equal(recurringTransactionId, result.Items[0].RecurringTransactionId);
+
+        // Summary should count as transaction, not recurring
+        Assert.Equal(1, result.Summary.TransactionCount);
+        Assert.Equal(0, result.Summary.RecurringCount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_Deduplicates_Realized_Recurring_Transfer()
+    {
+        // Arrange
+        var startDate = new DateOnly(2026, 1, 1);
+        var endDate = new DateOnly(2026, 1, 31);
+        var targetDate = new DateOnly(2026, 1, 15);
+        var checkingId = Guid.NewGuid();
+        var savingsId = Guid.NewGuid();
+        var checking = CreateTestAccount(checkingId, "Checking");
+        var savings = CreateTestAccount(savingsId, "Savings");
+        var transferId = Guid.NewGuid();
+        var recurringTransferId = Guid.NewGuid();
+
+        // Create recurring transfer
+        var recurringTransfer = CreateTestRecurringTransfer(checkingId, savingsId, 100.00m, "Monthly Savings", targetDate);
+        SetEntityId(recurringTransfer, recurringTransferId);
+
+        // Create realized transfer transaction (source side - for checking account)
+        var realizedTransaction = CreateTestRealizedRecurringTransfer(
+            checkingId,
+            targetDate,
+            -100.00m,
+            "Transfer to Savings: Monthly Savings",
+            transferId,
+            TransferDirection.Source,
+            recurringTransferId);
+
+        // Set up mocks
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(checking);
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(startDate, endDate, checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction> { realizedTransaction });
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Account> { checking, savings });
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(checkingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer> { recurringTransfer });
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(checkingId, startDate, endDate);
+
+        // Assert - should only show realized transfer, not projected instance
+        Assert.Single(result.Items);
+        Assert.Equal("transaction", result.Items[0].Type);
+        Assert.Equal(recurringTransferId, result.Items[0].RecurringTransferId);
+        Assert.True(result.Items[0].IsTransfer);
+
+        // Summary
+        Assert.Equal(1, result.Summary.TransactionCount);
+        Assert.Equal(0, result.Summary.RecurringCount);
+    }
+
+    [Fact]
+    public async Task GetDayDetailAsync_Shows_Recurring_Transfer_With_Both_Icons()
+    {
+        // REQ-004: Visual Indicators - recurring transfers should show both icons
+        var date = new DateOnly(2026, 1, 15);
+        var checkingId = Guid.NewGuid();
+        var savingsId = Guid.NewGuid();
+        var checking = CreateTestAccount(checkingId, "Checking");
+        var savings = CreateTestAccount(savingsId, "Savings");
+        var recurringTransferId = Guid.NewGuid();
+
+        // Create recurring transfer
+        var recurringTransfer = CreateTestRecurringTransfer(checkingId, savingsId, 100.00m, "Monthly Savings", date);
+        SetEntityId(recurringTransfer, recurringTransferId);
+
+        // Set up mocks
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(date, date, null, default))
+            .ReturnsAsync(new List<Transaction>());
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(default))
+            .ReturnsAsync(new List<Account> { checking, savings });
+
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransfer> { recurringTransfer });
+
+        _recurringTransferRepo
+            .Setup(r => r.GetExceptionAsync(recurringTransferId, date, default))
+            .ReturnsAsync((RecurringTransferException?)null);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDayDetailAsync(date);
+
+        // Assert - should show recurring-transfer type with transfer flag
+        var items = result.Items.Where(i => i.Type == "recurring-transfer").ToList();
+        Assert.Equal(2, items.Count); // source + destination
+
+        // All recurring-transfer items should have IsTransfer = true
+        Assert.All(items, i =>
+        {
+            Assert.True(i.IsTransfer);
+            Assert.Equal(recurringTransferId, i.RecurringTransferId);
+            Assert.NotNull(i.TransferDirection);
+        });
+
+        // Verify directions
+        Assert.Single(items, i => i.TransferDirection == "Source");
+        Assert.Single(items, i => i.TransferDirection == "Destination");
+    }
+
+    [Fact]
+    public async Task GetDayDetailAsync_Summary_Separates_Actual_And_Projected_Correctly()
+    {
+        // REQ-005: Correct Summary Calculations
+        var date = new DateOnly(2026, 1, 15);
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccount(accountId, "Checking");
+        var recurringTransactionId = Guid.NewGuid();
+
+        // Actual transactions
+        var actualTransaction1 = CreateTestTransaction(accountId, date, -50.00m, "Grocery");
+        var actualTransaction2 = CreateTestTransaction(accountId, date, 100.00m, "Deposit");
+
+        // Recurring transaction (projected)
+        var recurringTransaction = CreateTestRecurringTransaction(accountId, -15.99m, "Netflix", date);
+        SetEntityId(recurringTransaction, recurringTransactionId);
+
+        // Set up mocks
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(date, date, null, default))
+            .ReturnsAsync(new List<Transaction> { actualTransaction1, actualTransaction2 });
+
+        _accountRepo
+            .Setup(r => r.GetAllAsync(default))
+            .ReturnsAsync(new List<Account> { account });
+
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
+
+        _recurringRepo
+            .Setup(r => r.GetExceptionAsync(recurringTransactionId, date, default))
+            .ReturnsAsync((RecurringTransactionException?)null);
+
+        _recurringTransferRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDayDetailAsync(date);
+
+        // Assert
+        Assert.Equal(50.00m, result.Summary.TotalActual.Amount); // -50 + 100
+        Assert.Equal(-15.99m, result.Summary.TotalProjected.Amount); // Netflix
+        Assert.Equal(34.01m, result.Summary.CombinedTotal.Amount); // 50 + (-15.99)
+        Assert.Equal(3, result.Summary.ItemCount);
+    }
+
+    private static void SetEntityId<T>(T entity, Guid id)
+    {
+        var idProperty = typeof(T).GetProperty("Id");
+        idProperty?.SetValue(entity, id);
+    }
+
+    #endregion
 }

@@ -53,6 +53,10 @@ public static class DomainToDtoMapper
             IsTransfer = transaction.IsTransfer,
             TransferId = transaction.TransferId,
             TransferDirection = transaction.TransferDirection?.ToString(),
+            RecurringTransactionId = transaction.RecurringTransactionId,
+            RecurringInstanceDate = transaction.RecurringInstanceDate,
+            RecurringTransferId = transaction.RecurringTransferId,
+            RecurringTransferInstanceDate = transaction.RecurringTransferInstanceDate,
         };
     }
 

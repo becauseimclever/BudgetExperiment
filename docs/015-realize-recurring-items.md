@@ -408,6 +408,46 @@ public async Task<PastDueSummaryDto> GetPastDueItemsAsync(
 
 ---
 
+## Implementation Status
+
+### Completed ✅
+
+**Phase 1: Service Layer**
+- ✅ `RecurringTransactionService.RealizeInstanceAsync` - 6 unit tests
+- ✅ `RecurringTransferService.RealizeInstanceAsync` - 5 unit tests
+- ✅ Repository methods: `GetByRecurringInstanceAsync`, `GetByRecurringTransferInstanceAsync`
+- ✅ `IPastDueService` interface and `PastDueService` implementation - 9 unit tests
+
+**Phase 2: API Endpoints**
+- ✅ `POST /api/v1/recurring-transactions/{id}/realize`
+- ✅ `POST /api/v1/recurring-transfers/{id}/realize`
+- ✅ `GET /api/v1/recurring/past-due`
+- ✅ `POST /api/v1/recurring/realize-batch`
+
+**Phase 3: Client API Service**
+- ✅ `RealizeRecurringTransactionAsync` method
+- ✅ `RealizeRecurringTransferAsync` method
+- ✅ `GetPastDueItemsAsync` method
+- ✅ `RealizeBatchAsync` method
+
+**Phase 4: UI Components**
+- ✅ "Confirm" button added to `DayDetail` component (Calendar page)
+- ✅ "Confirm" button added to `TransactionTable` component
+- ✅ Wired up in `Calendar.razor` and `AccountTransactions.razor`
+- ✅ `PastDueAlert` component (banner at top of pages)
+- ✅ `PastDueReviewModal` component (bulk confirm modal)
+- ✅ CSS styles for past-due alerts
+
+**DTOs Created**
+- ✅ `RealizeRecurringTransactionRequest.cs`
+- ✅ `RealizeRecurringTransferRequest.cs`
+- ✅ `PastDueItemDto.cs`
+- ✅ `PastDueSummaryDto.cs`
+- ✅ `BatchRealizeRequest.cs`
+- ✅ `BatchRealizeResultDto.cs`
+
+---
+
 ## Edge Cases
 
 1. **Realize on different date**: User confirms Jan 10 Netflix on Jan 12. Store both dates (`RecurringInstanceDate` = Jan 10, `Date` = Jan 12).
@@ -424,7 +464,8 @@ public async Task<PastDueSummaryDto> GetPastDueItemsAsync(
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 1.2  
 **Created**: 2026-01-11  
-**Status**: 📋 Planning  
+**Updated**: 2026-01-11  
+**Status**: ✅ Complete  
 **Author**: Engineering Team

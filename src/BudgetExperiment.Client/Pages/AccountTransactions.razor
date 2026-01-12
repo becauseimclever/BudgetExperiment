@@ -23,6 +23,8 @@
                 OnDismiss="DismissError"
                 IsRetrying="@isRetrying" />
 
+    <PastDueAlert PastDueSummary="@pastDueSummary" OnReviewClick="ShowPastDueReview" />
+
     @if (transactionList != null && transactionList.InitialBalance.Amount != 0)
     {
         <div class="balance-banner">
@@ -77,7 +79,8 @@
                           OnEditItem="EditTransaction"
                           OnDeleteItem="DeleteTransaction"
                           OnEditRecurring="ShowEditRecurringInstance"
-                          OnSkipRecurring="ShowSkipRecurringInstance" />
+                          OnSkipRecurring="ShowSkipRecurringInstance"
+                          OnConfirmRecurring="ConfirmRecurringInstance" />
     }
 
     <Modal IsVisible="@showAddTransaction"
@@ -129,6 +132,13 @@
                    IsProcessing="@isSkippingRecurring"
                    OnConfirm="ConfirmSkipRecurring"
                    OnCancel="CancelSkipRecurring" />
+
+    <PastDueReviewModal IsVisible="@showPastDueReview"
+                        Items="@pastDueSummary?.Items"
+                        IsLoading="@isLoadingPastDue"
+                        OnClose="HidePastDueReview"
+                        OnConfirm="ConfirmPastDueItems"
+                        OnSkip="SkipPastDueItems" />
 </div>
 
 @code {
@@ -162,11 +172,19 @@
     private bool showSkipRecurring = false;
     private bool isSkippingRecurring = false;
     private TransactionListItem? skippingRecurringItem = null;
+#pragma warning disable CS0414 // Field is assigned but never used (will be used for loading state)
+    private bool isConfirmingRecurring = false;
+#pragma warning restore CS0414
 
     // Error handling state
     private string? errorMessage;
     private bool isRetrying;
     private string? saveErrorMessage;
+
+    // Past-due state
+    private PastDueSummaryDto? pastDueSummary;
+    private bool showPastDueReview = false;
+    private bool isLoadingPastDue = false;
 
     private Guid previousAccountId;
 
@@ -177,6 +195,7 @@
         {
             previousAccountId = AccountId;
             await LoadData();
+            await LoadPastDueItems();
         }
     }
 
@@ -434,8 +453,135 @@
         skippingRecurringItem = null;
     }
 
+    private async Task ConfirmRecurringInstance(TransactionListItem item)
+    {
+        isConfirmingRecurring = true;
+        StateHasChanged();
+
+        try
+        {
+            if (item.IsRecurringTransfer && item.RecurringTransferId.HasValue)
+            {
+                // Recurring transfer - realize both transactions
+                var request = new RealizeRecurringTransferRequest
+                {
+                    InstanceDate = item.Date,
+                };
+                var result = await ApiService.RealizeRecurringTransferAsync(item.RecurringTransferId.Value, request);
+                if (result != null)
+                {
+                    await LoadData();
+                }
+            }
+            else
+            {
+                // Regular recurring transaction
+                var request = new RealizeRecurringTransactionRequest
+                {
+                    InstanceDate = item.Date,
+                };
+                var result = await ApiService.RealizeRecurringTransactionAsync(item.Id, request);
+                if (result != null)
+                {
+                    await LoadData();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to confirm recurring instance: {ex.Message}";
+        }
+        finally
+        {
+            isConfirmingRecurring = false;
+            StateHasChanged();
+        }
+    }
+
     private void GoBack()
     {
         Navigation.NavigateTo("/accounts");
+    }
+
+    // Past-due methods
+    private async Task LoadPastDueItems()
+    {
+        try
+        {
+            pastDueSummary = await ApiService.GetPastDueItemsAsync(AccountId);
+        }
+        catch
+        {
+            // Silently fail - past due alert is not critical
+            pastDueSummary = null;
+        }
+    }
+
+    private void ShowPastDueReview()
+    {
+        showPastDueReview = true;
+    }
+
+    private void HidePastDueReview()
+    {
+        showPastDueReview = false;
+    }
+
+    private async Task ConfirmPastDueItems(IReadOnlyList<PastDueItemDto> items)
+    {
+        var request = new BatchRealizeRequest
+        {
+            Items = items.Select(i => new BatchRealizeItemRequest
+            {
+                Id = i.Id,
+                Type = i.Type,
+                InstanceDate = i.InstanceDate,
+            }).ToList(),
+        };
+
+        var result = await ApiService.RealizeBatchAsync(request);
+        if (result != null && result.SuccessCount > 0)
+        {
+            // Refresh data
+            await LoadData();
+            await LoadPastDueItems();
+        }
+
+        if (result?.FailureCount > 0)
+        {
+            throw new Exception($"Failed to confirm {result.FailureCount} items.");
+        }
+    }
+
+    private async Task SkipPastDueItems(IReadOnlyList<PastDueItemDto> items)
+    {
+        var failCount = 0;
+        foreach (var item in items)
+        {
+            try
+            {
+                if (item.Type == "recurring-transaction")
+                {
+                    await ApiService.SkipRecurringInstanceAsync(item.Id, item.InstanceDate);
+                }
+                else if (item.Type == "recurring-transfer")
+                {
+                    await ApiService.SkipRecurringTransferInstanceAsync(item.Id, item.InstanceDate);
+                }
+            }
+            catch
+            {
+                failCount++;
+            }
+        }
+
+        // Refresh data
+        await LoadData();
+        await LoadPastDueItems();
+
+        if (failCount > 0)
+        {
+            throw new Exception($"Failed to skip {failCount} items.");
+        }
     }
 }

@@ -423,6 +423,59 @@ public sealed class RecurringTransactionService
         return result.OrderBy(i => i.EffectiveDate).ToList();
     }
 
+    /// <summary>
+    /// Realizes a recurring transaction instance, converting it to an actual transaction.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+    /// <param name="request">The realization request with optional overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created transaction DTO.</returns>
+    /// <exception cref="DomainException">Thrown when the recurring transaction is not found or already realized.</exception>
+    public async Task<TransactionDto> RealizeInstanceAsync(
+        Guid recurringTransactionId,
+        RealizeRecurringTransactionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var recurring = await this._repository.GetByIdAsync(recurringTransactionId, cancellationToken);
+        if (recurring is null)
+        {
+            throw new DomainException("Recurring transaction not found.");
+        }
+
+        // Check if already realized
+        var existing = await this._transactionRepository.GetByRecurringInstanceAsync(
+            recurringTransactionId, request.InstanceDate, cancellationToken);
+        if (existing != null)
+        {
+            throw new DomainException("This instance has already been realized.");
+        }
+
+        // Get any exception modifications
+        var exception = await this._repository.GetExceptionAsync(
+            recurringTransactionId, request.InstanceDate, cancellationToken);
+
+        // Determine actual values: request overrides > exception > recurring defaults
+        var actualDate = request.Date ?? exception?.ModifiedDate ?? request.InstanceDate;
+        var actualAmount = request.Amount != null
+            ? MoneyValue.Create(request.Amount.Currency, request.Amount.Amount)
+            : exception?.ModifiedAmount ?? recurring.Amount;
+        var actualDescription = request.Description ?? exception?.ModifiedDescription ?? recurring.Description;
+
+        var transaction = Transaction.CreateFromRecurring(
+            recurring.AccountId,
+            actualAmount,
+            actualDate,
+            actualDescription,
+            recurringTransactionId,
+            request.InstanceDate,
+            category: null);
+
+        await this._transactionRepository.AddAsync(transaction, cancellationToken);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return DomainToDtoMapper.ToDto(transaction);
+    }
+
     private static RecurrencePattern CreateRecurrencePattern(
         string frequency,
         int interval,

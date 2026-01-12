@@ -66,6 +66,7 @@ else
                             <td class="actions">
                                 @if (item.IsRecurring)
                                 {
+                                    <button class="btn btn-sm btn-success" @onclick="() => OnConfirmRecurring.InvokeAsync(item)" title="Confirm this occurrence">Confirm</button>
                                     <button class="btn btn-sm btn-primary" @onclick="() => OnEditRecurring.InvokeAsync(item)">Edit</button>
                                     <button class="btn btn-sm btn-secondary" @onclick="() => OnSkipRecurring.InvokeAsync(item)">Skip</button>
                                 }
@@ -186,6 +187,12 @@ else
     /// </summary>
     [Parameter]
     public EventCallback<TransactionListItem> OnSkipRecurring { get; set; }
+
+    /// <summary>
+    /// Callback when Confirm button is clicked for a recurring instance.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransactionListItem> OnConfirmRecurring { get; set; }
 
     private IEnumerable<TransactionDto> OrderedTransactions =>
         ShowDate

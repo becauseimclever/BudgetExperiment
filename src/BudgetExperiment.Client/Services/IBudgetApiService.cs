@@ -322,4 +322,38 @@ public interface IBudgetApiService
     /// <param name="model">The modification data.</param>
     /// <returns>The modified instance.</returns>
     Task<RecurringTransferInstanceDto?> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model);
+
+    // Realize Recurring Items
+
+    /// <summary>
+    /// Realizes a recurring transaction instance, creating an actual transaction.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction ID.</param>
+    /// <param name="request">The realization request with instance date and optional overrides.</param>
+    /// <returns>The created transaction.</returns>
+    Task<TransactionDto?> RealizeRecurringTransactionAsync(Guid recurringTransactionId, RealizeRecurringTransactionRequest request);
+
+    /// <summary>
+    /// Realizes a recurring transfer instance, creating actual transfer transactions.
+    /// </summary>
+    /// <param name="recurringTransferId">The recurring transfer ID.</param>
+    /// <param name="request">The realization request with instance date and optional overrides.</param>
+    /// <returns>The created transfer.</returns>
+    Task<TransferResponse?> RealizeRecurringTransferAsync(Guid recurringTransferId, RealizeRecurringTransferRequest request);
+
+    // Past-Due Operations
+
+    /// <summary>
+    /// Gets a summary of all past-due recurring items.
+    /// </summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>Summary of past-due items.</returns>
+    Task<PastDueSummaryDto?> GetPastDueItemsAsync(Guid? accountId = null);
+
+    /// <summary>
+    /// Realizes multiple past-due items in batch.
+    /// </summary>
+    /// <param name="request">The batch realize request.</param>
+    /// <returns>Results of the batch operation.</returns>
+    Task<BatchRealizeResultDto?> RealizeBatchAsync(BatchRealizeRequest request);
 }

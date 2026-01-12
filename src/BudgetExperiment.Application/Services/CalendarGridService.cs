@@ -163,6 +163,7 @@ public sealed class CalendarGridService : ICalendarGridService
                 IsModified = false,
                 IsSkipped = false,
                 RecurringTransactionId = txn.RecurringTransactionId,
+                RecurringTransferId = txn.RecurringTransferId,
                 IsTransfer = txn.IsTransfer,
                 TransferId = txn.TransferId,
                 TransferDirection = txn.TransferDirection?.ToString(),

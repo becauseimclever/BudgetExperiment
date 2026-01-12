@@ -488,4 +488,50 @@ public sealed class BudgetApiService : IBudgetApiService
 
         return null;
     }
+
+    /// <inheritdoc />
+    public async Task<TransactionDto?> RealizeRecurringTransactionAsync(Guid recurringTransactionId, RealizeRecurringTransactionRequest request)
+    {
+        var response = await this._httpClient.PostAsJsonAsync($"api/v1/recurring-transactions/{recurringTransactionId}/realize", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<TransferResponse?> RealizeRecurringTransferAsync(Guid recurringTransferId, RealizeRecurringTransferRequest request)
+    {
+        var response = await this._httpClient.PostAsJsonAsync($"api/v1/recurring-transfers/{recurringTransferId}/realize", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<TransferResponse>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<PastDueSummaryDto?> GetPastDueItemsAsync(Guid? accountId = null)
+    {
+        var url = accountId.HasValue
+            ? $"api/v1/recurring/past-due?accountId={accountId}"
+            : "api/v1/recurring/past-due";
+
+        return await this._httpClient.GetFromJsonAsync<PastDueSummaryDto>(url, JsonOptions);
+    }
+
+    /// <inheritdoc />
+    public async Task<BatchRealizeResultDto?> RealizeBatchAsync(BatchRealizeRequest request)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/recurring/realize-batch", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<BatchRealizeResultDto>(JsonOptions);
+        }
+
+        return null;
+    }
 }

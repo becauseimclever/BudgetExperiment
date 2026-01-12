@@ -48,4 +48,28 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     Task<IReadOnlyList<Transaction>> GetByTransferIdAsync(
         Guid transferId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a transaction by recurring transaction ID and instance date.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+    /// <param name="instanceDate">The scheduled instance date.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The realized transaction or null if not found.</returns>
+    Task<Transaction?> GetByRecurringInstanceAsync(
+        Guid recurringTransactionId,
+        DateOnly instanceDate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets transactions by recurring transfer ID and instance date.
+    /// </summary>
+    /// <param name="recurringTransferId">The recurring transfer identifier.</param>
+    /// <param name="instanceDate">The scheduled instance date.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The realized transfer transactions (source and destination) or empty if not found.</returns>
+    Task<IReadOnlyList<Transaction>> GetByRecurringTransferInstanceAsync(
+        Guid recurringTransferId,
+        DateOnly instanceDate,
+        CancellationToken cancellationToken = default);
 }

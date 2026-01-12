@@ -311,4 +311,29 @@ public sealed class RecurringTransactionsController : ControllerBase
 
         return this.Ok(recurring);
     }
+
+    /// <summary>
+    /// Realizes a recurring transaction instance, creating an actual transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="request">The realization request with the instance date and optional overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created transaction.</returns>
+    [HttpPost("{id:guid}/realize")]
+    [ProducesResponseType<TransactionDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RealizeAsync(
+        Guid id,
+        [FromBody] RealizeRecurringTransactionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var transaction = await this._service.RealizeInstanceAsync(id, request, cancellationToken);
+        return this.CreatedAtAction(
+            "GetById",
+            "Transactions",
+            new { id = transaction.Id },
+            transaction);
+    }
 }

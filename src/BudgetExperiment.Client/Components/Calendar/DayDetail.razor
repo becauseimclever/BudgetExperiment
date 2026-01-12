@@ -5,8 +5,10 @@
     <button class="btn btn-success" @onclick="HandleAddClick">+ Add Transaction</button>
 
     @{
-        var recurringItems = Detail.Items.Where(i => i.Type == "recurring" && !i.IsSkipped).ToList();
-        var transactionItems = Detail.Items.Where(i => i.Type != "recurring").ToList();
+        // Include both recurring transactions and recurring transfers in the scheduled section
+        var recurringItems = Detail.Items.Where(i => (i.Type == "recurring" || i.Type == "recurring-transfer") && !i.IsSkipped).ToList();
+        // Only actual (realized) transactions in the transactions section
+        var transactionItems = Detail.Items.Where(i => i.Type == "transaction").ToList();
     }
 
     @if (recurringItems.Count > 0)
@@ -16,9 +18,15 @@
             <div class="recurring-list">
                 @foreach (var item in recurringItems)
                 {
-                    <div class="recurring-item @(item.IsModified ? "modified" : "")" @onclick="() => SelectItem(item)">
+                    <div class="recurring-item @(item.IsModified ? "modified" : "") @(item.IsTransfer ? "transfer" : "")" @onclick="() => SelectItem(item)">
                         <div class="recurring-info">
-                            <span class="recurring-description">@item.Description</span>
+                            <span class="recurring-description">
+                                @if (item.IsTransfer)
+                                {
+                                    <Icon Name="transfer" Size="14" Class="icon-transfer" title="@GetTransferTooltip(item)" />
+                                }
+                                @item.Description
+                            </span>
                             <span class="recurring-account">@item.AccountName</span>
                         </div>
                         <div class="recurring-right">
@@ -26,6 +34,7 @@
                                 @FormatAmount(item.Amount.Amount)
                             </span>
                             <div class="recurring-actions">
+                                <button class="btn-icon btn-confirm" @onclick="() => HandleConfirmInstance(item)" @onclick:stopPropagation="true" title="Confirm this occurrence"><Icon Name="check" Size="16" /></button>
                                 <button class="btn-icon" @onclick="() => HandleEditInstance(item)" @onclick:stopPropagation="true" title="Edit this occurrence"><Icon Name="edit" Size="16" /></button>
                                 <button class="btn-icon btn-skip" @onclick="() => HandleSkipInstance(item)" @onclick:stopPropagation="true" title="Skip this occurrence"><Icon Name="skip-forward" Size="16" /></button>
                             </div>
@@ -46,9 +55,15 @@
             <div class="transaction-list">
                 @foreach (var item in transactionItems)
                 {
-                    <div class="transaction-item">
+                    <div class="transaction-item @(item.IsTransfer ? "transfer" : "")">
                         <div class="transaction-info">
-                            <span class="transaction-description">@item.Description</span>
+                            <span class="transaction-description">
+                                @if (item.IsTransfer)
+                                {
+                                    <Icon Name="transfer" Size="14" Class="icon-transfer" title="@GetTransferTooltip(item)" />
+                                }
+                                @item.Description
+                            </span>
                             <span class="transaction-account">@item.AccountName</span>
                         </div>
                         <span class="transaction-amount @(item.Amount.Amount >= 0 ? "positive" : "negative")">
@@ -117,6 +132,12 @@
     [Parameter]
     public EventCallback<DayDetailItemDto> OnSkipInstance { get; set; }
 
+    /// <summary>
+    /// Callback when a recurring instance confirmation (realization) is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DayDetailItemDto> OnConfirmInstance { get; set; }
+
     private async Task HandleAddClick()
     {
         await OnAddTransaction.InvokeAsync();
@@ -137,9 +158,22 @@
         await OnSkipInstance.InvokeAsync(item);
     }
 
+    private async Task HandleConfirmInstance(DayDetailItemDto item)
+    {
+        await OnConfirmInstance.InvokeAsync(item);
+    }
+
     private static string FormatAmount(decimal amount)
     {
         var sign = amount >= 0 ? "+" : "";
         return $"{sign}${Math.Abs(amount):N2}";
+    }
+
+    private static string GetTransferTooltip(DayDetailItemDto item)
+    {
+        var direction = item.TransferDirection?.ToLowerInvariant() ?? "unknown";
+        return direction == "source"
+            ? "Transfer: Money sent to another account"
+            : "Transfer: Money received from another account";
     }
 }

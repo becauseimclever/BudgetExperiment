@@ -1,0 +1,262 @@
+@* PastDueReviewModal.razor - Modal for reviewing and bulk-confirming past-due items *@
+
+<Modal IsVisible="@IsVisible" Title="Review Past-Due Items" OnClose="HandleClose">
+    @if (IsLoading)
+    {
+        <LoadingSpinner Message="Loading past-due items..." />
+    }
+    else if (Items == null || Items.Count == 0)
+    {
+        <p class="empty-state">No past-due items found.</p>
+    }
+    else
+    {
+        <div class="past-due-review">
+            <div class="past-due-list">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-col">
+                                <input type="checkbox" @bind="selectAll" @bind:after="OnSelectAllChanged" />
+                            </th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Account</th>
+                            <th class="text-right">Amount</th>
+                            <th>Days Late</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Items)
+                        {
+                            <tr class="@GetRowClass(item)">
+                                <td class="checkbox-col">
+                                    <input type="checkbox" @bind="selectedItems[item]" />
+                                </td>
+                                <td>@item.InstanceDate.ToString("MMM d")</td>
+                                <td>
+                                    @if (item.Type == "recurring-transfer")
+                                    {
+                                        <Icon Name="transfer" Size="14" Class="icon-transfer" />
+                                    }
+                                    else
+                                    {
+                                        <Icon Name="recurring" Size="14" Class="icon-recurring" />
+                                    }
+                                    @item.Description
+                                </td>
+                                <td>
+                                    @if (item.Type == "recurring-transfer")
+                                    {
+                                        <span class="account-transfer">@item.SourceAccountName → @item.DestinationAccountName</span>
+                                    }
+                                    else
+                                    {
+                                        @item.AccountName
+                                    }
+                                </td>
+                                <td class="text-right">
+                                    <MoneyDisplay Amount="@item.Amount.Amount" />
+                                </td>
+                                <td class="days-late">
+                                    <span class="badge badge-warning">@item.DaysPastDue days</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="past-due-summary">
+                <span class="selected-count">Selected: @SelectedCount of @Items.Count items</span>
+                @if (SelectedTotal != 0)
+                {
+                    <span class="selected-total">Total: <MoneyDisplay Amount="@SelectedTotal" /></span>
+                }
+            </div>
+
+            <div class="past-due-actions">
+                <button class="btn btn-secondary" @onclick="HandleClose" disabled="@IsProcessing">Cancel</button>
+                <button class="btn btn-outline-secondary" @onclick="SkipSelected" disabled="@(IsProcessing || SelectedCount == 0)">
+                    Skip Selected
+                </button>
+                <button class="btn btn-success" @onclick="ConfirmSelected" disabled="@(IsProcessing || SelectedCount == 0)">
+                    @if (IsProcessing)
+                    {
+                        <span>Processing...</span>
+                    }
+                    else
+                    {
+                        <span>Confirm Selected</span>
+                    }
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger mt-3">@ErrorMessage</div>
+            }
+
+            @if (!string.IsNullOrEmpty(SuccessMessage))
+            {
+                <div class="alert alert-success mt-3">@SuccessMessage</div>
+            }
+        </div>
+    }
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets whether the modal is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of past-due items.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<PastDueItemDto>? Items { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether data is loading.
+    /// </summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the modal is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when items are confirmed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<IReadOnlyList<PastDueItemDto>> OnConfirm { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when items are skipped.
+    /// </summary>
+    [Parameter]
+    public EventCallback<IReadOnlyList<PastDueItemDto>> OnSkip { get; set; }
+
+    private Dictionary<PastDueItemDto, bool> selectedItems = new();
+    private bool selectAll = false;
+    private bool IsProcessing { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        if (Items != null)
+        {
+            // Initialize selection dictionary
+            var newSelection = new Dictionary<PastDueItemDto, bool>();
+            foreach (var item in Items)
+            {
+                // Preserve existing selection or default to selected
+                newSelection[item] = selectedItems.GetValueOrDefault(item, true);
+            }
+
+            selectedItems = newSelection;
+            UpdateSelectAll();
+        }
+    }
+
+    private int SelectedCount => selectedItems.Count(x => x.Value);
+
+    private decimal SelectedTotal => selectedItems
+        .Where(x => x.Value)
+        .Sum(x => x.Key.Amount.Amount);
+
+    private void OnSelectAllChanged()
+    {
+        foreach (var key in selectedItems.Keys.ToList())
+        {
+            selectedItems[key] = selectAll;
+        }
+    }
+
+    private void UpdateSelectAll()
+    {
+        selectAll = selectedItems.Count > 0 && selectedItems.All(x => x.Value);
+    }
+
+    private async Task ConfirmSelected()
+    {
+        var selected = selectedItems.Where(x => x.Value).Select(x => x.Key).ToList();
+        if (selected.Count == 0)
+        {
+            return;
+        }
+
+        IsProcessing = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await OnConfirm.InvokeAsync(selected);
+            SuccessMessage = $"Successfully confirmed {selected.Count} items.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to confirm items: {ex.Message}";
+        }
+        finally
+        {
+            IsProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SkipSelected()
+    {
+        var selected = selectedItems.Where(x => x.Value).Select(x => x.Key).ToList();
+        if (selected.Count == 0)
+        {
+            return;
+        }
+
+        IsProcessing = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await OnSkip.InvokeAsync(selected);
+            SuccessMessage = $"Successfully skipped {selected.Count} items.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to skip items: {ex.Message}";
+        }
+        finally
+        {
+            IsProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleClose()
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+        await OnClose.InvokeAsync();
+    }
+
+    private static string GetRowClass(PastDueItemDto item)
+    {
+        if (item.DaysPastDue > 7)
+        {
+            return "row-past-due-critical";
+        }
+
+        return "row-past-due";
+    }
+}

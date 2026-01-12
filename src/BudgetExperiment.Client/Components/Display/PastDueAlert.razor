@@ -1,0 +1,41 @@
+@* PastDueAlert.razor - Alert banner for past-due recurring items *@
+
+@if (PastDueSummary != null && PastDueSummary.TotalCount > 0)
+{
+    <div class="past-due-alert">
+        <div class="past-due-content">
+            <Icon Name="warning" Size="20" Class="past-due-icon" />
+            <span class="past-due-message">
+                @PastDueSummary.TotalCount recurring @(PastDueSummary.TotalCount == 1 ? "item is" : "items are") past due
+                @if (PastDueSummary.TotalAmount != null)
+                {
+                    <span class="past-due-amount">
+                        (<MoneyDisplay Amount="@PastDueSummary.TotalAmount.Amount" />)
+                    </span>
+                }
+            </span>
+        </div>
+        <button class="btn btn-warning btn-sm" @onclick="HandleReviewClick">
+            Review <Icon Name="arrow-right" Size="14" />
+        </button>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the past-due summary data.
+    /// </summary>
+    [Parameter]
+    public PastDueSummaryDto? PastDueSummary { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when Review button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnReviewClick { get; set; }
+
+    private async Task HandleReviewClick()
+    {
+        await OnReviewClick.InvokeAsync();
+    }
+}

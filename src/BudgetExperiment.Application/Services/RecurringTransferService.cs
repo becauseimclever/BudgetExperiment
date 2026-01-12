@@ -467,6 +467,92 @@ public sealed class RecurringTransferService
         return result.OrderBy(i => i.EffectiveDate).ToList();
     }
 
+    /// <summary>
+    /// Realizes a recurring transfer instance, converting it to actual transfer transactions.
+    /// </summary>
+    /// <param name="recurringTransferId">The recurring transfer identifier.</param>
+    /// <param name="request">The realization request with optional overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created transfer response DTO.</returns>
+    /// <exception cref="DomainException">Thrown when the recurring transfer is not found or already realized.</exception>
+    public async Task<TransferResponse> RealizeInstanceAsync(
+        Guid recurringTransferId,
+        RealizeRecurringTransferRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var recurring = await this._repository.GetByIdAsync(recurringTransferId, cancellationToken);
+        if (recurring is null)
+        {
+            throw new DomainException("Recurring transfer not found.");
+        }
+
+        // Check if already realized
+        var existing = await this._transactionRepository.GetByRecurringTransferInstanceAsync(
+            recurringTransferId, request.InstanceDate, cancellationToken);
+        if (existing.Count > 0)
+        {
+            throw new DomainException("This instance has already been realized.");
+        }
+
+        // Get any exception modifications
+        var exception = await this._repository.GetExceptionAsync(
+            recurringTransferId, request.InstanceDate, cancellationToken);
+
+        // Determine actual values: request overrides > exception > recurring defaults
+        var actualDate = request.Date ?? exception?.ModifiedDate ?? request.InstanceDate;
+        var actualAmount = request.Amount != null
+            ? MoneyValue.Create(request.Amount.Currency, request.Amount.Amount)
+            : exception?.ModifiedAmount ?? recurring.Amount;
+
+        var transferId = Guid.NewGuid();
+
+        // Create source transaction (negative - money leaving)
+        var sourceTransaction = Transaction.CreateFromRecurringTransfer(
+            recurring.SourceAccountId,
+            MoneyValue.Create(actualAmount.Currency, -actualAmount.Amount),
+            actualDate,
+            recurring.Description,
+            transferId,
+            TransferDirection.Source,
+            recurringTransferId,
+            request.InstanceDate,
+            category: null);
+
+        // Create destination transaction (positive - money entering)
+        var destTransaction = Transaction.CreateFromRecurringTransfer(
+            recurring.DestinationAccountId,
+            actualAmount,
+            actualDate,
+            recurring.Description,
+            transferId,
+            TransferDirection.Destination,
+            recurringTransferId,
+            request.InstanceDate,
+            category: null);
+
+        await this._transactionRepository.AddAsync(sourceTransaction, cancellationToken);
+        await this._transactionRepository.AddAsync(destTransaction, cancellationToken);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
+
+        return new TransferResponse
+        {
+            TransferId = transferId,
+            SourceAccountId = recurring.SourceAccountId,
+            SourceAccountName = accounts.sourceName,
+            DestinationAccountId = recurring.DestinationAccountId,
+            DestinationAccountName = accounts.destName,
+            Amount = actualAmount.Amount,
+            Currency = actualAmount.Currency,
+            Date = actualDate,
+            Description = recurring.Description,
+            SourceTransactionId = sourceTransaction.Id,
+            DestinationTransactionId = destTransaction.Id,
+            CreatedAtUtc = sourceTransaction.CreatedAt,
+        };
+    }
+
     private async Task<(string sourceName, string destName)> GetAccountNamesAsync(
         Guid sourceAccountId,
         Guid destAccountId,

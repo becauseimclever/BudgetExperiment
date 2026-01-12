@@ -41,6 +41,18 @@ public sealed class TransactionDto
 
     /// <summary>Gets or sets the transfer direction (null if not a transfer).</summary>
     public string? TransferDirection { get; set; }
+
+    /// <summary>Gets or sets the recurring transaction identifier (null if not from recurring).</summary>
+    public Guid? RecurringTransactionId { get; set; }
+
+    /// <summary>Gets or sets the scheduled instance date from the recurring transaction (null if not from recurring).</summary>
+    public DateOnly? RecurringInstanceDate { get; set; }
+
+    /// <summary>Gets or sets the recurring transfer identifier (null if not from recurring transfer).</summary>
+    public Guid? RecurringTransferId { get; set; }
+
+    /// <summary>Gets or sets the scheduled instance date from the recurring transfer (null if not from recurring transfer).</summary>
+    public DateOnly? RecurringTransferInstanceDate { get; set; }
 }
 
 /// <summary>

@@ -355,4 +355,29 @@ public sealed class RecurringTransfersController : ControllerBase
 
         return this.Ok(transfer);
     }
+
+    /// <summary>
+    /// Realizes a recurring transfer instance, creating actual transfer transactions.
+    /// </summary>
+    /// <param name="id">The recurring transfer identifier.</param>
+    /// <param name="request">The realization request with the instance date and optional overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created transfer.</returns>
+    [HttpPost("{id:guid}/realize")]
+    [ProducesResponseType<TransferResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RealizeAsync(
+        Guid id,
+        [FromBody] RealizeRecurringTransferRequest request,
+        CancellationToken cancellationToken)
+    {
+        var transfer = await this._service.RealizeInstanceAsync(id, request, cancellationToken);
+        return this.CreatedAtAction(
+            "GetById",
+            "Transfers",
+            new { id = transfer.TransferId },
+            transfer);
+    }
 }
