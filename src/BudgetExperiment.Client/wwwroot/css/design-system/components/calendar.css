@@ -31,6 +31,8 @@
    ========================================================================== */
 
 .calendar-day {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   color: var(--color-text-primary);
   min-height: 80px;
@@ -369,6 +371,49 @@
   .calendar-day-header {
     padding: var(--space-1);
     font-size: 0.7rem;
+  }
+}
+
+/* ==========================================================================
+   Running Balance Display
+   ========================================================================== */
+
+.day-balance {
+  margin-top: auto;
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-align: right;
+}
+
+.day-balance.negative {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
+}
+
+.calendar-day.balance-negative {
+  background-color: rgba(var(--color-danger-rgb, 220, 53, 69), 0.08);
+}
+
+.calendar-day.balance-negative:hover {
+  background-color: rgba(var(--color-danger-rgb, 220, 53, 69), 0.12);
+}
+
+.calendar-day.balance-negative.other-month {
+  background-color: rgba(var(--color-danger-rgb, 220, 53, 69), 0.05);
+}
+
+@media (max-width: 768px) {
+  .day-balance {
+    font-size: 0.65em;
+  }
+}
+
+@media (max-width: 480px) {
+  .day-balance {
+    font-size: 0.6em;
   }
 }
 

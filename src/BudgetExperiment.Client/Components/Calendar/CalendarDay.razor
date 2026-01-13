@@ -20,6 +20,9 @@
             </span>
         </div>
     }
+    <div class="day-balance @(Day.IsBalanceNegative ? "negative" : "")">
+        <MoneyDisplay Amount="@Day.EndOfDayBalance.Amount" />
+    </div>
 </div>
 
 @code {
@@ -50,6 +53,7 @@
             if (Day.IsToday) classes.Add("today");
             if (IsSelected) classes.Add("selected");
             if (Day.HasRecurring) classes.Add("has-recurring");
+            if (Day.IsBalanceNegative) classes.Add("balance-negative");
             return string.Join(" ", classes);
         }
     }

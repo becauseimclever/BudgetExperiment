@@ -51,6 +51,9 @@ public sealed class TransactionListItem
     /// <summary>Gets or sets the recurring transfer ID (if from recurring transfer).</summary>
     public Guid? RecurringTransferId { get; set; }
 
+    /// <summary>Gets or sets the running balance after this transaction.</summary>
+    public MoneyDto RunningBalance { get; set; } = new();
+
     /// <summary>
     /// Creates a TransactionListItem from an actual transaction.
     /// </summary>

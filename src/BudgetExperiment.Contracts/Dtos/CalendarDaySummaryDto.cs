@@ -35,4 +35,10 @@ public sealed class CalendarDaySummaryDto
 
     /// <summary>Gets or sets a value indicating whether this day has recurring transactions.</summary>
     public bool HasRecurring { get; set; }
+
+    /// <summary>Gets or sets the running balance at the end of this day.</summary>
+    public MoneyDto EndOfDayBalance { get; set; } = new();
+
+    /// <summary>Gets or sets a value indicating whether the end-of-day balance is negative.</summary>
+    public bool IsBalanceNegative { get; set; }
 }

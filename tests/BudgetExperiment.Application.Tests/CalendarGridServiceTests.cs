@@ -19,6 +19,7 @@ public class CalendarGridServiceTests
     private readonly Mock<IAccountRepository> _accountRepo;
     private readonly Mock<IAppSettingsRepository> _settingsRepo;
     private readonly Mock<IUnitOfWork> _unitOfWork;
+    private readonly Mock<IBalanceCalculationService> _balanceService;
 
     public CalendarGridServiceTests()
     {
@@ -28,6 +29,7 @@ public class CalendarGridServiceTests
         _accountRepo = new Mock<IAccountRepository>();
         _settingsRepo = new Mock<IAppSettingsRepository>();
         _unitOfWork = new Mock<IUnitOfWork>();
+        _balanceService = new Mock<IBalanceCalculationService>();
 
         // Default setup for settings - auto-realize disabled
         _settingsRepo
@@ -66,6 +68,14 @@ public class CalendarGridServiceTests
         _accountRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Account>());
+
+        // Default setup for balance calculation - return zero
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Zero("USD"));
     }
 
     [Fact]
@@ -483,7 +493,8 @@ public class CalendarGridServiceTests
             _recurringTransferRepo.Object,
             _accountRepo.Object,
             _settingsRepo.Object,
-            _unitOfWork.Object);
+            _unitOfWork.Object,
+            _balanceService.Object);
     }
 
     private static Account CreateTestAccount(Guid id, string name)
@@ -1386,6 +1397,601 @@ public class CalendarGridServiceTests
         _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    #endregion
+
+    #region Running Balance Tests
+
+    [Fact]
+    public async Task GetCalendarGridAsync_IncludesStartingBalance()
+    {
+        // Arrange
+        var startingBalance = MoneyValue.Create("USD", 5000m);
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(new List<DailyTotal>());
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert
+        Assert.Equal(5000m, result.StartingBalance.Amount);
+        Assert.Equal("USD", result.StartingBalance.Currency);
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_CalculatesEndOfDayBalance_FromStartingBalance()
+    {
+        // Arrange
+        var startingBalance = MoneyValue.Create("USD", 1000m);
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(new List<DailyTotal>());
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert - First day should have starting balance as end-of-day (no transactions)
+        Assert.Equal(1000m, result.Days[0].EndOfDayBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_AccumulatesEndOfDayBalance_AcrossDays()
+    {
+        // Arrange - Starting balance of 1000, transaction of +500 on first day
+        var startingBalance = MoneyValue.Create("USD", 1000m);
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        // January 2026 grid starts on December 28, 2025 (Sunday)
+        var gridStartDate = new DateOnly(2025, 12, 28);
+
+        var dailyTotals = new List<DailyTotal>
+        {
+            new(gridStartDate, MoneyValue.Create("USD", 500m), 1), // +500 on first grid day
+            new(gridStartDate.AddDays(2), MoneyValue.Create("USD", -200m), 1), // -200 on third grid day
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(dailyTotals);
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert
+        // Day 0: 1000 + 500 = 1500
+        Assert.Equal(1500m, result.Days[0].EndOfDayBalance.Amount);
+        // Day 1: 1500 + 0 = 1500
+        Assert.Equal(1500m, result.Days[1].EndOfDayBalance.Amount);
+        // Day 2: 1500 - 200 = 1300
+        Assert.Equal(1300m, result.Days[2].EndOfDayBalance.Amount);
+        // Day 3: 1300 + 0 = 1300
+        Assert.Equal(1300m, result.Days[3].EndOfDayBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_IncludesRecurringInEndOfDayBalance()
+    {
+        // Arrange - Starting balance of 1000, recurring transaction of -50 on Jan 15
+        var startingBalance = MoneyValue.Create("USD", 1000m);
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(new List<DailyTotal>());
+
+        var accountId = Guid.NewGuid();
+        var recurringTransaction = CreateTestRecurringTransaction(accountId, new DateOnly(2026, 1, 15));
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert - Jan 15, 2026 is at index 18 (grid starts Dec 28)
+        // Days 0-17: 1000 (no transactions/recurring)
+        // Jan 15 (index 18): 1000 - 50 = 950
+        var jan15Index = 18; // December has 4 days in grid (28-31), then Jan 1-15 = 18 days
+        Assert.Equal(950m, result.Days[jan15Index].EndOfDayBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_SetsIsBalanceNegative_WhenBalanceGoesNegative()
+    {
+        // Arrange - Starting balance of 100, transaction of -200 on first day
+        var startingBalance = MoneyValue.Create("USD", 100m);
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        var gridStartDate = new DateOnly(2025, 12, 28);
+        var dailyTotals = new List<DailyTotal>
+        {
+            new(gridStartDate, MoneyValue.Create("USD", -200m), 1), // -200 on first grid day
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(dailyTotals);
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert - First day should be negative: 100 - 200 = -100
+        Assert.Equal(-100m, result.Days[0].EndOfDayBalance.Amount);
+        Assert.True(result.Days[0].IsBalanceNegative);
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_IsBalanceNegative_IsFalse_WhenBalancePositive()
+    {
+        // Arrange
+        var startingBalance = MoneyValue.Create("USD", 1000m);
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(new List<DailyTotal>());
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert
+        Assert.False(result.Days[0].IsBalanceNegative);
+        Assert.All(result.Days, d => Assert.False(d.IsBalanceNegative));
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_PassesAccountIdToBalanceService()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 2000m));
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), accountId, default))
+            .ReturnsAsync(new List<DailyTotal>());
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1, accountId);
+
+        // Assert
+        _balanceService.Verify(
+            s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Equal(2000m, result.StartingBalance.Amount);
+    }
+
+    #endregion
+
+    #region Transaction List Running Balance Tests
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_IncludesStartingBalance()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 10),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 1500m));
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction>());
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 10),
+            new DateOnly(2026, 1, 20));
+
+        // Assert
+        Assert.Equal(1500m, result.StartingBalance.Amount);
+        Assert.Equal("USD", result.StartingBalance.Currency);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_CalculatesRunningBalanceForEachItem()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 10),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 1000m));
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransaction(accountId, 500m, new DateOnly(2026, 1, 10), "Deposit"),
+            CreateTestTransaction(accountId, -200m, new DateOnly(2026, 1, 12), "Expense"),
+            CreateTestTransaction(accountId, -100m, new DateOnly(2026, 1, 12), "Another expense"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 10),
+            new DateOnly(2026, 1, 20));
+
+        // Assert - Items are sorted by date ascending for running balance calculation
+        // Starting: 1000
+        // After +500 on Jan 10: 1500
+        // After -200 on Jan 12: 1300
+        // After -100 on Jan 12: 1200
+
+        // Note: Items are returned descending for display, but running balance should reflect chronological order
+        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt).ToList();
+        Assert.Equal(1500m, itemsByDateAsc[0].RunningBalance.Amount); // After first txn
+        Assert.Equal(1300m, itemsByDateAsc[1].RunningBalance.Amount); // After second txn
+        Assert.Equal(1200m, itemsByDateAsc[2].RunningBalance.Amount); // After third txn
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_CalculatesDailyBalanceSummaries()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 10),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 1000m));
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransaction(accountId, 500m, new DateOnly(2026, 1, 10), "Deposit"),
+            CreateTestTransaction(accountId, -200m, new DateOnly(2026, 1, 12), "Expense 1"),
+            CreateTestTransaction(accountId, -100m, new DateOnly(2026, 1, 12), "Expense 2"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 10),
+            new DateOnly(2026, 1, 20));
+
+        // Assert
+        Assert.Equal(2, result.DailyBalances.Count);
+
+        // Day 1: Jan 10 - starts at 1000, +500, ends at 1500
+        var day1 = result.DailyBalances.First(d => d.Date == new DateOnly(2026, 1, 10));
+        Assert.Equal(1000m, day1.StartingBalance.Amount);
+        Assert.Equal(1500m, day1.EndingBalance.Amount);
+        Assert.Equal(500m, day1.DayTotal.Amount);
+        Assert.Equal(1, day1.TransactionCount);
+
+        // Day 2: Jan 12 - starts at 1500, -200 -100 = -300, ends at 1200
+        var day2 = result.DailyBalances.First(d => d.Date == new DateOnly(2026, 1, 12));
+        Assert.Equal(1500m, day2.StartingBalance.Amount);
+        Assert.Equal(1200m, day2.EndingBalance.Amount);
+        Assert.Equal(-300m, day2.DayTotal.Amount);
+        Assert.Equal(2, day2.TransactionCount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_DailyBalances_SortedByDateDescending()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 1000m));
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransaction(accountId, 100m, new DateOnly(2026, 1, 10), "Day 1"),
+            CreateTestTransaction(accountId, 100m, new DateOnly(2026, 1, 15), "Day 2"),
+            CreateTestTransaction(accountId, 100m, new DateOnly(2026, 1, 20), "Day 3"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 10),
+            new DateOnly(2026, 1, 20));
+
+        // Assert - Daily balances should be sorted descending (most recent first)
+        Assert.Equal(new DateOnly(2026, 1, 20), result.DailyBalances[0].Date);
+        Assert.Equal(new DateOnly(2026, 1, 15), result.DailyBalances[1].Date);
+        Assert.Equal(new DateOnly(2026, 1, 10), result.DailyBalances[2].Date);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_IncludesRecurringInRunningBalance()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 10),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 1000m));
+
+        // One actual transaction
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransaction(accountId, 500m, new DateOnly(2026, 1, 10), "Deposit"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        // One recurring transaction on Jan 15
+        var recurring = CreateTestRecurringTransaction(accountId, new DateOnly(2026, 1, 15));
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction> { recurring });
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 10),
+            new DateOnly(2026, 1, 20));
+
+        // Assert - Should include both actual and recurring in running balance
+        // Starting: 1000
+        // After +500 on Jan 10: 1500
+        // After -50 recurring on Jan 15: 1450
+        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ToList();
+        Assert.Equal(2, itemsByDateAsc.Count);
+        Assert.Equal(1500m, itemsByDateAsc[0].RunningBalance.Amount); // After deposit
+        Assert.Equal(1450m, itemsByDateAsc[1].RunningBalance.Amount); // After recurring
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_EmptyDateRange_ReturnsEmptyWithStartingBalance()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 2500m));
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction>());
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 10),
+            new DateOnly(2026, 1, 20));
+
+        // Assert
+        Assert.Empty(result.Items);
+        Assert.Empty(result.DailyBalances);
+        Assert.Equal(2500m, result.StartingBalance.Amount);
+    }
+
+    #endregion
+
+    private static Account CreateTestAccountWithInitialBalance(Guid id, string name, decimal initialBalance, DateOnly initialBalanceDate)
+    {
+        var account = Account.Create(name, AccountType.Checking, MoneyValue.Create("USD", initialBalance), initialBalanceDate);
+        var idProperty = typeof(Account).GetProperty(nameof(Account.Id));
+        idProperty?.SetValue(account, id);
+        return account;
+    }
+
+    private static Transaction CreateTestTransaction(Guid accountId, decimal amount, DateOnly date, string description)
+    {
+        return Transaction.Create(accountId, MoneyValue.Create("USD", amount), date, description);
+    }
+
     private static RecurringTransaction CreateTestRecurringTransaction(Guid accountId, DateOnly startDate)
     {
         var amount = MoneyValue.Create("USD", -50.00m);
@@ -1413,6 +2019,4 @@ public class CalendarGridServiceTests
 
         return transfer;
     }
-
-    #endregion
 }

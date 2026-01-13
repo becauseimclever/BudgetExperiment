@@ -22,6 +22,7 @@ public sealed class CalendarGridService : ICalendarGridService
     private readonly IAccountRepository _accountRepository;
     private readonly IAppSettingsRepository _settingsRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBalanceCalculationService _balanceCalculationService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CalendarGridService"/> class.
@@ -32,13 +33,15 @@ public sealed class CalendarGridService : ICalendarGridService
     /// <param name="accountRepository">The account repository.</param>
     /// <param name="settingsRepository">The app settings repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="balanceCalculationService">The balance calculation service.</param>
     public CalendarGridService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
         IRecurringTransferRepository recurringTransferRepository,
         IAccountRepository accountRepository,
         IAppSettingsRepository settingsRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IBalanceCalculationService balanceCalculationService)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -46,6 +49,7 @@ public sealed class CalendarGridService : ICalendarGridService
         _accountRepository = accountRepository;
         _settingsRepository = settingsRepository;
         _unitOfWork = unitOfWork;
+        _balanceCalculationService = balanceCalculationService;
     }
 
     /// <inheritdoc/>
@@ -117,6 +121,20 @@ public sealed class CalendarGridService : ICalendarGridService
             });
         }
 
+        // Calculate starting balance and running balances
+        var startingBalance = await _balanceCalculationService.GetBalanceBeforeDateAsync(
+            gridStartDate,
+            accountId,
+            cancellationToken);
+
+        var runningBalance = startingBalance.Amount;
+        foreach (var day in days)
+        {
+            runningBalance += day.CombinedTotal.Amount;
+            day.EndOfDayBalance = new MoneyDto { Currency = "USD", Amount = runningBalance };
+            day.IsBalanceNegative = runningBalance < 0;
+        }
+
         // Calculate month summary (only for current month days)
         var monthSummary = CalculateMonthSummary(days, recurringByDate, year, month);
 
@@ -126,6 +144,7 @@ public sealed class CalendarGridService : ICalendarGridService
             Month = month,
             Days = days,
             MonthSummary = monthSummary,
+            StartingBalance = new MoneyDto { Currency = startingBalance.Currency, Amount = startingBalance.Amount },
         };
     }
 
@@ -389,6 +408,43 @@ public sealed class CalendarGridService : ICalendarGridService
         // Sort items by date descending, then by created timestamp
         var sortedItems = items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue).ToList();
 
+        // Calculate starting balance for the date range
+        var startingBalance = await _balanceCalculationService.GetBalanceBeforeDateAsync(
+            startDate,
+            accountId,
+            cancellationToken);
+
+        // Sort items by date ascending for running balance calculation
+        var sortedForBalance = items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt ?? DateTime.MinValue).ToList();
+
+        // Calculate running balance for each item
+        var runningBalance = startingBalance.Amount;
+        foreach (var item in sortedForBalance)
+        {
+            runningBalance += item.Amount.Amount;
+            item.RunningBalance = new MoneyDto { Currency = "USD", Amount = runningBalance };
+        }
+
+        // Calculate daily balance summaries
+        var dailyBalances = new List<DailyBalanceSummaryDto>();
+        var dayBalance = startingBalance.Amount;
+
+        foreach (var dayGroup in sortedForBalance.GroupBy(i => i.Date).OrderBy(g => g.Key))
+        {
+            var dayStart = dayBalance;
+            var dayTotal = dayGroup.Sum(i => i.Amount.Amount);
+            dayBalance += dayTotal;
+
+            dailyBalances.Add(new DailyBalanceSummaryDto
+            {
+                Date = dayGroup.Key,
+                StartingBalance = new MoneyDto { Currency = "USD", Amount = dayStart },
+                EndingBalance = new MoneyDto { Currency = "USD", Amount = dayBalance },
+                DayTotal = new MoneyDto { Currency = "USD", Amount = dayTotal },
+                TransactionCount = dayGroup.Count(),
+            });
+        }
+
         // Calculate summary
         var transactionCount = sortedItems.Count(i => i.Type == "transaction");
         var recurringCount = sortedItems.Count(i => i.Type == "recurring" || i.Type == "recurring-transfer");
@@ -415,6 +471,8 @@ public sealed class CalendarGridService : ICalendarGridService
                 RecurringCount = recurringCount,
                 CurrentBalance = new MoneyDto { Currency = "USD", Amount = currentBalance },
             },
+            DailyBalances = dailyBalances.OrderByDescending(d => d.Date).ToList(),
+            StartingBalance = new MoneyDto { Currency = startingBalance.Currency, Amount = startingBalance.Amount },
         };
     }
 

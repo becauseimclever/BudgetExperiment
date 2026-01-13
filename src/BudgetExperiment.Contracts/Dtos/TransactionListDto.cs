@@ -32,4 +32,10 @@ public sealed class TransactionListDto
 
     /// <summary>Gets or sets the summary for this list.</summary>
     public TransactionListSummaryDto Summary { get; set; } = new();
+
+    /// <summary>Gets or sets the daily balance summaries for each day with transactions.</summary>
+    public IReadOnlyList<DailyBalanceSummaryDto> DailyBalances { get; set; } = [];
+
+    /// <summary>Gets or sets the starting balance at the beginning of the date range.</summary>
+    public MoneyDto StartingBalance { get; set; } = new();
 }

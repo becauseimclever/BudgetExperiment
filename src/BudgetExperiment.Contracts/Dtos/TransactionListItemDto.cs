@@ -48,4 +48,7 @@ public sealed class TransactionListItemDto
 
     /// <summary>Gets or sets the transfer direction (null if not a transfer).</summary>
     public string? TransferDirection { get; set; }
+
+    /// <summary>Gets or sets the running balance after this transaction.</summary>
+    public MoneyDto RunningBalance { get; set; } = new();
 }

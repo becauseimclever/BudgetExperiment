@@ -20,4 +20,7 @@ public sealed class CalendarGridDto
 
     /// <summary>Gets or sets the month summary with totals.</summary>
     public CalendarMonthSummaryDto MonthSummary { get; set; } = new();
+
+    /// <summary>Gets or sets the starting balance at the beginning of the first day in the grid.</summary>
+    public MoneyDto StartingBalance { get; set; } = new();
 }

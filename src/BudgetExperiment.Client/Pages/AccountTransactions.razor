@@ -75,6 +75,7 @@
         <TransactionTable Items="@transactionListItems"
                           ShowDate="true"
                           ShowActions="true"
+                          ShowBalance="true"
                           EmptyMessage="No transactions found for this period."
                           OnEditItem="EditTransaction"
                           OnDeleteItem="DeleteTransaction"
@@ -247,6 +248,7 @@
             TransferDirection = dto.TransferDirection,
             IsRecurringTransfer = dto.Type == "recurring-transfer",
             RecurringTransferId = dto.RecurringTransferId,
+            RunningBalance = dto.RunningBalance,
         };
     }
 

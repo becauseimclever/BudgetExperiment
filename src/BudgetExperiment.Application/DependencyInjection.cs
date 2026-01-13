@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<ICalendarGridService, CalendarGridService>();
         services.AddScoped<IPastDueService, PastDueService>();
         services.AddScoped<IAppSettingsService, AppSettingsService>();
+        services.AddScoped<IBalanceCalculationService, BalanceCalculationService>();
         return services;
     }
 }

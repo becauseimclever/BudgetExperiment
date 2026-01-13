@@ -384,3 +384,19 @@
   vertical-align: middle;
   font-weight: var(--font-weight-medium);
 }
+
+/* ==========================================================================
+   Running Balance Column
+   ========================================================================== */
+
+.table .running-balance {
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.table .running-balance.balance-negative {
+  color: var(--color-error);
+  font-weight: var(--font-weight-semibold);
+}

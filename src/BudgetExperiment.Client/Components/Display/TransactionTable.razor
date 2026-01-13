@@ -16,6 +16,10 @@ else
                 <th>Description</th>
                 <th>Category</th>
                 <th class="text-right">Amount</th>
+                @if (ShowBalance)
+                {
+                    <th class="text-right">Balance</th>
+                }
                 @if (ShowActions)
                 {
                     <th class="actions">Actions</th>
@@ -27,7 +31,7 @@ else
             {
                 @foreach (var item in OrderedItems)
                 {
-                    <tr class="@GetRowClass(item)">>
+                    <tr class="@GetRowClass(item)">
                         @if (ShowDate)
                         {
                             <td>
@@ -61,6 +65,12 @@ else
                         <td class="text-right">
                             <MoneyDisplay Amount="@item.Amount.Amount" />
                         </td>
+                        @if (ShowBalance)
+                        {
+                            <td class="text-right running-balance @(item.RunningBalance.Amount < 0 ? "balance-negative" : "")">
+                                <MoneyDisplay Amount="@item.RunningBalance.Amount" />
+                            </td>
+                        }
                         @if (ShowActions)
                         {
                             <td class="actions">
@@ -106,6 +116,10 @@ else
                         <td class="text-right">
                             <MoneyDisplay Amount="@txn.Amount.Amount" />
                         </td>
+                        @if (ShowBalance)
+                        {
+                            <td class="text-right running-balance">-</td>
+                        }
                         @if (ShowActions)
                         {
                             <td class="actions">
@@ -145,6 +159,12 @@ else
     /// </summary>
     [Parameter]
     public bool ShowActions { get; set; } = false;
+
+    /// <summary>
+    /// Whether to show the running balance column. Default is false.
+    /// </summary>
+    [Parameter]
+    public bool ShowBalance { get; set; } = false;
 
     /// <summary>
     /// Message to display when there are no transactions.

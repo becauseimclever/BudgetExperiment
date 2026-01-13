@@ -224,29 +224,127 @@ public sealed class TransactionListItemDto
 
 ## Implementation Plan
 
-### Phase 1: Calculate Account Starting Balance
-1. Add method to calculate total balance up to a date
-2. Account for initial balances across all accounts
-3. Sum all transactions before the start date
+### Phase 1: Calculate Account Starting Balance ✅
+1. ✅ Add method to calculate total balance up to a date
+2. ✅ Account for initial balances across all accounts
+3. ✅ Sum all transactions before the start date
 
-### Phase 2: Calendar Running Balances
-1. Calculate starting balance for calendar grid
-2. Iterate through days, accumulating daily totals
-3. Set `EndOfDayBalance` and `IsBalanceNegative` for each day
-4. Update calendar UI to display balance
+**Completed**: 2026-01-12
+- Created `IBalanceCalculationService` interface
+- Implemented `BalanceCalculationService` with `GetBalanceBeforeDateAsync` method
+- Registered service in DI container
+- Added 10 unit tests covering:
+  - No accounts returns zero
+  - Single account with no transactions returns initial balance
+  - Account starting after query date excludes initial balance
+  - Transactions sum correctly with initial balance
+  - Multiple accounts sum all balances
+  - Account filter only includes specified account
+  - Non-existent account filter returns zero
+  - Edge case: query date equals initial balance date
+  - Multiple accounts with different start dates
+  - Negative balances handled correctly
 
-### Phase 3: Transaction List Balances
-1. Calculate starting balance for date range
-2. Group transactions by day
-3. Calculate daily start/end balances
-4. Calculate running balance for each transaction
-5. Update transaction list UI
+### Phase 2: Calendar Running Balances ✅
+1. ✅ Calculate starting balance for calendar grid
+2. ✅ Iterate through days, accumulating daily totals
+3. ✅ Set `EndOfDayBalance` and `IsBalanceNegative` for each day
+4. ✅ Update calendar UI to display balance
 
-### Phase 4: Multi-Account Support
-1. When no account filter: sum all account balances
-2. Handle currency (assume single currency for now)
+**Completed**: 2026-01-12
+- Added `EndOfDayBalance` and `IsBalanceNegative` to `CalendarDaySummaryDto`
+- Added `StartingBalance` to `CalendarGridDto`
+- Injected `IBalanceCalculationService` into `CalendarGridService`
+- Running balance accumulates across all 42 grid days
+- Updated `CalendarDay.razor` to show end-of-day balance in each cell
+- Added CSS styles for balance display with negative balance highlighting
+- Added 7 unit tests covering:
+  - Grid includes starting balance
+  - End-of-day balance calculated from starting balance
+  - Balance accumulates across days
+  - Recurring transactions included in balance
+  - Negative balance flag set correctly
+  - Positive balance flag is false
+  - Account filter passed to balance service
+
+### Phase 3: Transaction List Balances ✅
+1. ✅ Calculate starting balance for date range
+2. ✅ Group transactions by day
+3. ✅ Calculate daily start/end balances
+4. ✅ Calculate running balance for each transaction
+5. ✅ Update transaction list UI
+
+**Completed**: 2026-01-12
+- Created `DailyBalanceSummaryDto` with Date, StartingBalance, EndingBalance, DayTotal, TransactionCount
+- Added `RunningBalance` to `TransactionListItemDto`
+- Added `DailyBalances` and `StartingBalance` to `TransactionListDto`
+- Updated `CalendarGridService.GetAccountTransactionListAsync` to calculate running balances
+- Running balance flows chronologically through each transaction
+- Daily summaries provide start/end balance for each day in the range
+- Updated `TransactionListItem` client model with `RunningBalance` property
+- Added `ShowBalance` parameter to `TransactionTable.razor` component
+- Added Balance column to transaction table with negative balance highlighting
+- Enabled balance display in `AccountTransactions.razor`
+- Added CSS styles for running balance column in `tables.css`
+- Added 6 unit tests covering:
+  - Transaction list includes starting balance
+  - Running balance calculated for each item
+  - Balance accumulates across transactions
+  - Recurring transactions included in balance
+  - Daily balance summaries generated
+  - Daily totals calculated correctly
+
+### Phase 4: Multi-Account Support ✅
+1. ✅ When no account filter: sum all account balances
+2. ✅ Handle currency (assume single currency for now)
+
+**Completed**: 2026-01-12
+- `BalanceCalculationService.GetBalanceBeforeDateAsync` accepts optional `accountId` parameter
+- When `accountId` is null, all accounts are summed
+- When `accountId` is provided, only that account is included
+- Calendar and transaction list both support account filtering
+- Test coverage included in Phase 1 tests:
+  - Multiple accounts sum all balances
+  - Account filter only includes specified account
+  - Non-existent account filter returns zero
 
 ---
+
+## Feature Summary
+
+**Feature 017: Running Balance Display** is now complete.
+
+### Delivered Capabilities:
+1. **Calendar Running Balances** - Each day cell shows end-of-day projected balance with negative highlighting
+2. **Transaction List Running Balances** - Each transaction shows cumulative balance after that transaction
+3. **Daily Balance Summaries** - Transaction list includes start/end balance for each day
+4. **Multi-Account Support** - Calendar shows combined balance across all accounts or single account when filtered
+
+### Files Created:
+- [IBalanceCalculationService.cs](../src/BudgetExperiment.Application/Services/IBalanceCalculationService.cs)
+- [BalanceCalculationService.cs](../src/BudgetExperiment.Application/Services/BalanceCalculationService.cs)
+- [DailyBalanceSummaryDto.cs](../src/BudgetExperiment.Contracts/Dtos/DailyBalanceSummaryDto.cs)
+- [BalanceCalculationServiceTests.cs](../tests/BudgetExperiment.Application.Tests/BalanceCalculationServiceTests.cs)
+
+### Files Modified:
+- CalendarDaySummaryDto.cs - Added EndOfDayBalance, IsBalanceNegative
+- CalendarGridDto.cs - Added StartingBalance
+- TransactionListItemDto.cs - Added RunningBalance
+- TransactionListDto.cs - Added DailyBalances, StartingBalance
+- CalendarGridService.cs - Integrated balance calculation for calendar and transaction list
+- CalendarDay.razor - Display end-of-day balance
+- TransactionTable.razor - Added Balance column with ShowBalance parameter
+- TransactionListItem.cs - Added RunningBalance property
+- AccountTransactions.razor - Enabled balance display
+- calendar.css - Balance display styles
+- tables.css - Running balance column styles
+- DependencyInjection.cs - Registered IBalanceCalculationService
+
+### Test Coverage:
+- 10 tests for BalanceCalculationService
+- 7 tests for calendar running balances
+- 6 tests for transaction list running balances
+- **Total: 23 new tests** (all passing)---
 
 ## Technical Details
 
@@ -621,7 +719,8 @@ public async Task<TransactionListDto> GetAccountTransactionListAsync(
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 1.2  
 **Created**: 2026-01-11  
-**Status**: 📋 Planning  
+**Updated**: 2026-01-12  
+**Status**: 🚧 In Progress (Phase 2 Complete)  
 **Author**: Engineering Team
