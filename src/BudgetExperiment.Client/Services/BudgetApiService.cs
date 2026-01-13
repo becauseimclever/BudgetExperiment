@@ -534,4 +534,29 @@ public sealed class BudgetApiService : IBudgetApiService
 
         return null;
     }
+
+    /// <inheritdoc />
+    public async Task<AppSettingsDto?> GetSettingsAsync()
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<AppSettingsDto>("api/v1/settings", JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto)
+    {
+        var response = await this._httpClient.PutAsJsonAsync("api/v1/settings", dto, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<AppSettingsDto>(JsonOptions);
+        }
+
+        return null;
+    }
 }

@@ -33,6 +33,7 @@
 @import "design-system/components/recurring-card.css";
 @import "design-system/components/calendar.css";
 @import "design-system/components/common.css";
+@import "design-system/components/settings.css";
 
 /* Utility Classes */
 @import "design-system/utilities.css";

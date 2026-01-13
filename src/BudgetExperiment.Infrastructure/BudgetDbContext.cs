@@ -47,6 +47,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<RecurringTransferException> RecurringTransferExceptions => this.Set<RecurringTransferException>();
 
+    /// <summary>
+    /// Gets the application settings.
+    /// </summary>
+    public DbSet<AppSettings> AppSettings => this.Set<AppSettings>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

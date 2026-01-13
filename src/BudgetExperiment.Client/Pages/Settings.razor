@@ -1,0 +1,137 @@
+@page "/settings"
+
+@inject IBudgetApiService ApiService
+
+<PageTitle>Settings - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Settings" Subtitle="Configure your preferences" />
+
+    <ErrorAlert Message="@errorMessage"
+                OnDismiss="DismissError" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading settings..." />
+    }
+    else if (settings != null)
+    {
+        <div class="settings-page">
+            <section class="settings-section">
+                <h3 class="settings-section-title">Recurring Items</h3>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <label class="setting-label">Auto-realize past-due items</label>
+                        <p class="setting-description">
+                            When enabled, recurring items past their scheduled date will be
+                            automatically converted to transactions without requiring manual
+                            confirmation.
+                        </p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox"
+                                   checked="@settings.AutoRealizePastDueItems"
+                                   @onchange="OnAutoRealizeChanged"
+                                   disabled="@isSaving" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <label class="setting-label">Past-due lookback days</label>
+                        <p class="setting-description">
+                            How many days back to check for past-due recurring items (1-365).
+                        </p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number"
+                               min="1"
+                               max="365"
+                               value="@settings.PastDueLookbackDays"
+                               @onchange="OnLookbackDaysChanged"
+                               disabled="@isSaving"
+                               class="form-control settings-number-input" />
+                    </div>
+                </div>
+            </section>
+        </div>
+    }
+</div>
+
+@code {
+    private AppSettingsDto? settings;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string? errorMessage;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettingsAsync();
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            settings = await ApiService.GetSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load settings: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnAutoRealizeChanged(ChangeEventArgs e)
+    {
+        if (e.Value is bool value)
+        {
+            await SaveSettingAsync(new AppSettingsUpdateDto { AutoRealizePastDueItems = value });
+        }
+    }
+
+    private async Task OnLookbackDaysChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var days) && days >= 1 && days <= 365)
+        {
+            await SaveSettingAsync(new AppSettingsUpdateDto { PastDueLookbackDays = days });
+        }
+    }
+
+    private async Task SaveSettingAsync(AppSettingsUpdateDto update)
+    {
+        isSaving = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            settings = await ApiService.UpdateSettingsAsync(update);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save setting: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+}

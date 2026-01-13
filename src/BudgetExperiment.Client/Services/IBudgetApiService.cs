@@ -356,4 +356,19 @@ public interface IBudgetApiService
     /// <param name="request">The batch realize request.</param>
     /// <returns>Results of the batch operation.</returns>
     Task<BatchRealizeResultDto?> RealizeBatchAsync(BatchRealizeRequest request);
+
+    // Settings Operations
+
+    /// <summary>
+    /// Gets the current application settings.
+    /// </summary>
+    /// <returns>The application settings.</returns>
+    Task<AppSettingsDto?> GetSettingsAsync();
+
+    /// <summary>
+    /// Updates the application settings.
+    /// </summary>
+    /// <param name="dto">The settings update data.</param>
+    /// <returns>The updated application settings.</returns>
+    Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto);
 }
