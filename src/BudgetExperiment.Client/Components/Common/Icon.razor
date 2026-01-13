@@ -9,7 +9,13 @@
      stroke-width="@StrokeWidth"
      stroke-linecap="round"
      stroke-linejoin="round"
-     aria-hidden="true">
+     aria-hidden="@(string.IsNullOrEmpty(Title) ? "true" : null)"
+     role="@(string.IsNullOrEmpty(Title) ? null : "img")"
+     aria-label="@Title">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <title>@Title</title>
+    }
     @((MarkupString)GetIconPath())
 </svg>
 
@@ -37,6 +43,12 @@
     /// </summary>
     [Parameter]
     public double StrokeWidth { get; set; } = 2;
+
+    /// <summary>
+    /// Optional title/tooltip for the icon (also used for accessibility).
+    /// </summary>
+    [Parameter]
+    public string? Title { get; set; }
 
     private string GetIconPath() => Name.ToLowerInvariant() switch
     {
