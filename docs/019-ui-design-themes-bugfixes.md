@@ -38,9 +38,9 @@ The application has a design system established in [011-design-system.md](011-de
 
 | ID | Component | Description | Severity | Status |
 |----|-----------|-------------|----------|--------|
-| BUG-001 | AccountTransactions | Column headers don't align with data columns in the transaction list | Medium | Open |
-| BUG-002 | Theme Dropdown | Theme selector dropdown is transparent and unreadable in most contexts | High | Open |
-| BUG-003 | Calendar Page | White background persists in dark mode (calendar itself is dark but page background is white) | High | Open |
+| BUG-001 | AccountTransactions | Column headers don't align with data columns in the transaction list | Medium | Fixed |
+| BUG-002 | Theme Dropdown | Theme selector dropdown is transparent and unreadable in most contexts | High | Fixed |
+| BUG-003 | Calendar Page | White background persists in dark mode (calendar itself is dark but page background is white) | High | Fixed |
 
 ---
 
@@ -94,10 +94,10 @@ The application has a design system established in [011-design-system.md](011-de
 - [ ] Icon usage and consistency
 
 ### Theme System
-- [ ] Light theme color palette review
-- [ ] Dark theme color palette review
-- [ ] Theme toggle functionality
-- [ ] Theme persistence (localStorage)
+- [x] Light theme color palette review
+- [x] Dark theme color palette review
+- [x] Theme toggle functionality
+- [x] Theme persistence (localStorage)
 - [ ] System preference detection
 - [ ] No flash of wrong theme on load
 

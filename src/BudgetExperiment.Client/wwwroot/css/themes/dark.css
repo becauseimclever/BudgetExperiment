@@ -11,6 +11,10 @@
   --color-border: #484644;
   --color-border-subtle: #3b3a39;
 
+  /* App Shell Colors */
+  --color-bg-secondary: #1f1f1f;
+  --color-bg-elevated: #292929;
+
   /* Text Colors */
   --color-text-primary: #f3f2f1;
   --color-text-secondary: #b3b0ad;
@@ -60,6 +64,10 @@
     --color-surface-secondary: #333333;
     --color-border: #484644;
     --color-border-subtle: #3b3a39;
+
+    /* App Shell Colors */
+    --color-bg-secondary: #1f1f1f;
+    --color-bg-elevated: #292929;
 
     /* Text Colors */
     --color-text-primary: #f3f2f1;

@@ -311,7 +311,8 @@
 
 .table tbody tr.row-recurring {
   background: linear-gradient(90deg, rgba(0, 120, 212, 0.05) 0%, transparent 100%);
-  border-left: 3px solid var(--color-brand-primary);
+  /* Use box-shadow instead of border to prevent column misalignment */
+  box-shadow: inset 3px 0 0 0 var(--color-brand-primary);
 }
 
 .table-hover tbody tr.row-recurring:hover {
@@ -334,7 +335,8 @@
 
 .table tbody tr.row-transfer {
   background: linear-gradient(90deg, rgba(16, 124, 16, 0.05) 0%, transparent 100%);
-  border-left: 3px solid var(--color-success);
+  /* Use box-shadow instead of border to prevent column misalignment */
+  box-shadow: inset 3px 0 0 0 var(--color-success);
 }
 
 .table-hover tbody tr.row-transfer:hover {
