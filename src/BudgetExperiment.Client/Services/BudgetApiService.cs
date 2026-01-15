@@ -559,4 +559,28 @@ public sealed class BudgetApiService : IBudgetApiService
 
         return null;
     }
+
+    /// <inheritdoc />
+    public async Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null)
+    {
+        var url = $"api/v1/allocations/paycheck?frequency={Uri.EscapeDataString(frequency)}";
+        if (amount.HasValue)
+        {
+            url += $"&amount={amount.Value}";
+        }
+
+        if (accountId.HasValue)
+        {
+            url += $"&accountId={accountId.Value}";
+        }
+
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<PaycheckAllocationSummaryDto>(url, JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
 }

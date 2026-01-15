@@ -371,4 +371,15 @@ public interface IBudgetApiService
     /// <param name="dto">The settings update data.</param>
     /// <returns>The updated application settings.</returns>
     Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto);
+
+    // Paycheck Allocation Operations
+
+    /// <summary>
+    /// Gets paycheck allocation summary for budgeting.
+    /// </summary>
+    /// <param name="frequency">The paycheck frequency (Weekly, BiWeekly, Monthly).</param>
+    /// <param name="amount">Optional paycheck amount.</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>The allocation summary.</returns>
+    Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null);
 }

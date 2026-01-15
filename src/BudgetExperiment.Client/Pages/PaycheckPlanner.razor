@@ -1,0 +1,480 @@
+@page "/paycheck-planner"
+
+@inject IBudgetApiService ApiService
+
+<PageTitle>Paycheck Planner - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Paycheck Planner" Subtitle="Plan your paycheck allocations for recurring bills" />
+
+    <ErrorAlert Message="@errorMessage"
+                OnDismiss="DismissError" />
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">
+            <span>@successMessage</span>
+            <button class="alert-dismiss" @onclick="DismissSuccess">×</button>
+        </div>
+    }
+
+    @if (isLoadingAccounts)
+    {
+        <LoadingSpinner Message="Loading accounts..." />
+    }
+    else
+    {
+        <div class="paycheck-planner-page">
+            <section class="config-section card">
+                <h3 class="section-title">Configure Your Paycheck</h3>
+
+                <div class="config-form">
+                    <div class="form-group">
+                        <label class="form-label" for="frequency">Pay Frequency</label>
+                        <select id="frequency"
+                                class="form-control"
+                                @bind="selectedFrequency"
+                                disabled="@isCalculating">
+                            <option value="Weekly">Weekly</option>
+                            <option value="BiWeekly">BiWeekly</option>
+                            <option value="Monthly">Monthly</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="amount">Paycheck Amount (optional)</label>
+                        <div class="input-group">
+                            <span class="input-addon">$</span>
+                            <input id="amount"
+                                   type="number"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control @(HasAmountError ? "is-invalid" : "")"
+                                   @bind="paycheckAmount"
+                                   @bind:after="ValidateAmount"
+                                   disabled="@isCalculating"
+                                   placeholder="Enter amount" />
+                        </div>
+                        @if (HasAmountError)
+                        {
+                            <span class="validation-message">@amountErrorMessage</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="accountFilter">Filter by Account (optional)</label>
+                        <select id="accountFilter"
+                                class="form-control"
+                                @bind="selectedAccountId"
+                                disabled="@isCalculating">
+                            <option value="">All Accounts</option>
+                            @foreach (var account in accounts)
+                            {
+                                <option value="@account.Id">@account.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary"
+                                @onclick="CalculateAllocation"
+                                disabled="@isCalculating">
+                            @if (isCalculating)
+                            {
+                                <span class="spinner-small"></span>
+                                <span>Calculating...</span>
+                            }
+                            else
+                            {
+                                <Icon Name="calculator" Size="16" />
+                                <span>Calculate</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            @if (allocationSummary != null)
+            {
+                @if (allocationSummary.Warnings.Count > 0)
+                {
+                    <section class="warnings-section">
+                        @foreach (var warning in allocationSummary.Warnings)
+                        {
+                            <div class="warning-banner @GetWarningClass(warning.Type)">
+                                <Icon Name="@GetWarningIcon(warning.Type)" Size="20" />
+                                <span>@warning.Message</span>
+                            </div>
+                        }
+                    </section>
+                }
+
+                @if (allocationSummary.Allocations.Count > 0)
+                {
+                    <section class="summary-section card">
+                        <h3 class="section-title">Summary</h3>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <span class="summary-label">Total per Paycheck</span>
+                                <span class="summary-value highlight">@FormatMoney(allocationSummary.TotalPerPaycheck)</span>
+                            </div>
+                            @if (paycheckAmount.HasValue && paycheckAmount.Value > 0)
+                            {
+                                <div class="summary-item">
+                                    <span class="summary-label">Your Paycheck</span>
+                                    <span class="summary-value">@FormatCurrency(paycheckAmount.Value)</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Remaining</span>
+                                    <span class="summary-value @(paycheckAmount.Value - allocationSummary.TotalPerPaycheck.Amount >= 0 ? "positive" : "negative")">
+                                        @FormatCurrency(paycheckAmount.Value - allocationSummary.TotalPerPaycheck.Amount)
+                                    </span>
+                                </div>
+                            }
+                            <div class="summary-item">
+                                <span class="summary-label">Annual Total</span>
+                                <span class="summary-value">@FormatMoney(allocationSummary.TotalAnnualBills)</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="breakdown-section card">
+                        <h3 class="section-title">Bill Breakdown</h3>
+                        <div class="table-container">
+                            <table class="allocation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Bill</th>
+                                        <th class="text-right">Amount</th>
+                                        <th>Frequency</th>
+                                        <th class="text-right">Per Paycheck</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var allocation in allocationSummary.Allocations)
+                                    {
+                                        <tr>
+                                            <td>@allocation.Description</td>
+                                            <td class="text-right">@FormatMoney(allocation.BillAmount)</td>
+                                            <td>@allocation.BillFrequency</td>
+                                            <td class="text-right highlight">@FormatMoney(allocation.AmountPerPaycheck)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="total-row">
+                                        <td colspan="3"><strong>Total</strong></td>
+                                        <td class="text-right highlight"><strong>@FormatMoney(allocationSummary.TotalPerPaycheck)</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="set-aside-section card">
+                        <h3 class="section-title">Set Aside Money</h3>
+                        <p class="section-description">
+                            Create a recurring transfer to automatically save for your bills each paycheck.
+                        </p>
+
+                        <div class="set-aside-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="fromAccount">From Account</label>
+                                    <select id="fromAccount"
+                                            class="form-control @(HasFromAccountError ? "is-invalid" : "")"
+                                            @bind="fromAccountId"
+                                            @bind:after="ValidateTransferAccounts"
+                                            disabled="@isCreatingTransfer">
+                                        <option value="">Select source account...</option>
+                                        @foreach (var account in accounts)
+                                        {
+                                            <option value="@account.Id">@account.Name</option>
+                                        }
+                                    </select>
+                                    @if (HasFromAccountError)
+                                    {
+                                        <span class="validation-message">Please select a source account</span>
+                                    }
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="toAccount">To Account</label>
+                                    <select id="toAccount"
+                                            class="form-control @(HasToAccountError ? "is-invalid" : "")"
+                                            @bind="toAccountId"
+                                            @bind:after="ValidateTransferAccounts"
+                                            disabled="@isCreatingTransfer">
+                                        <option value="">Select destination account...</option>
+                                        @foreach (var account in accounts)
+                                        {
+                                            <option value="@account.Id">@account.Name</option>
+                                        }
+                                    </select>
+                                    @if (HasToAccountError)
+                                    {
+                                        <span class="validation-message">Please select a destination account</span>
+                                    }
+                                </div>
+                            </div>
+                            @if (HasSameAccountError)
+                            {
+                                <div class="validation-message-block">
+                                    <Icon Name="alert-circle" Size="16" />
+                                    <span>Source and destination accounts must be different</span>
+                                </div>
+                            }
+
+                            <div class="form-actions">
+                                <button class="btn btn-primary"
+                                        @onclick="CreateRecurringTransfer"
+                                        disabled="@(!CanCreateTransfer)">
+                                    @if (isCreatingTransfer)
+                                    {
+                                        <span class="spinner-small"></span>
+                                        <span>Creating...</span>
+                                    }
+                                    else
+                                    {
+                                        <Icon Name="repeat" Size="16" />
+                                        <span>Set Aside Total (@FormatMoney(allocationSummary.TotalPerPaycheck)/paycheck)</span>
+                                    }
+                                </button>
+                            </div>
+
+                            <p class="help-text">
+                                This will create a @selectedFrequency recurring transfer to automatically save for your bills.
+                            </p>
+                        </div>
+                    </section>
+                }
+                else if (allocationSummary.Warnings.Count == 0)
+                {
+                    <section class="empty-state card">
+                        <Icon Name="info" Size="48" />
+                        <h4>No Bills Found</h4>
+                        <p>You don't have any recurring transactions configured. Add some recurring transactions to see your paycheck allocation.</p>
+                        <a href="recurring" class="btn btn-secondary">
+                            <Icon Name="refresh" Size="16" />
+                            Manage Recurring Transactions
+                        </a>
+                    </section>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<AccountDto> accounts = new();
+    private PaycheckAllocationSummaryDto? allocationSummary;
+
+    private string selectedFrequency = "BiWeekly";
+    private decimal? paycheckAmount;
+    private string? selectedAccountId;
+    private string? fromAccountId;
+    private string? toAccountId;
+
+    private bool isLoadingAccounts = true;
+    private bool isCalculating = false;
+    private bool isCreatingTransfer = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    // Validation state
+    private string? amountErrorMessage;
+    private bool transferFormTouched = false;
+
+    private bool HasAmountError => !string.IsNullOrEmpty(amountErrorMessage);
+    private bool HasFromAccountError => transferFormTouched && string.IsNullOrEmpty(fromAccountId);
+    private bool HasToAccountError => transferFormTouched && string.IsNullOrEmpty(toAccountId);
+    private bool HasSameAccountError => !string.IsNullOrEmpty(fromAccountId) && !string.IsNullOrEmpty(toAccountId) && fromAccountId == toAccountId;
+
+    private bool CanCreateTransfer =>
+        !isCreatingTransfer &&
+        allocationSummary != null &&
+        allocationSummary.TotalPerPaycheck.Amount > 0 &&
+        !string.IsNullOrEmpty(fromAccountId) &&
+        !string.IsNullOrEmpty(toAccountId) &&
+        fromAccountId != toAccountId;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccountsAsync();
+    }
+
+    private async Task LoadAccountsAsync()
+    {
+        isLoadingAccounts = true;
+
+        try
+        {
+            var result = await ApiService.GetAccountsAsync();
+            accounts = result.ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load accounts: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingAccounts = false;
+        }
+    }
+
+    private async Task CalculateAllocation()
+    {
+        isCalculating = true;
+        errorMessage = null;
+        allocationSummary = null;
+        StateHasChanged();
+
+        try
+        {
+            Guid? accountId = null;
+            if (!string.IsNullOrEmpty(selectedAccountId) && Guid.TryParse(selectedAccountId, out var parsedId))
+            {
+                accountId = parsedId;
+            }
+
+            allocationSummary = await ApiService.GetPaycheckAllocationAsync(
+                selectedFrequency,
+                paycheckAmount,
+                accountId);
+
+            if (allocationSummary == null)
+            {
+                errorMessage = "Failed to calculate allocation. Please check your input and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to calculate allocation: {ex.Message}";
+        }
+        finally
+        {
+            isCalculating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateRecurringTransfer()
+    {
+        if (!CanCreateTransfer || allocationSummary == null)
+        {
+            return;
+        }
+
+        isCreatingTransfer = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var frequency = selectedFrequency switch
+            {
+                "Weekly" => "Weekly",
+                "BiWeekly" => "BiWeekly",
+                "Monthly" => "Monthly",
+                _ => "BiWeekly"
+            };
+
+            var request = new RecurringTransferCreateDto
+            {
+                SourceAccountId = Guid.Parse(fromAccountId!),
+                DestinationAccountId = Guid.Parse(toAccountId!),
+                Amount = new MoneyDto
+                {
+                    Amount = allocationSummary.TotalPerPaycheck.Amount,
+                    Currency = allocationSummary.TotalPerPaycheck.Currency
+                },
+                Description = "Bills Fund - Paycheck Allocation",
+                Frequency = frequency,
+                StartDate = DateOnly.FromDateTime(DateTime.UtcNow)
+            };
+
+            var result = await ApiService.CreateRecurringTransferAsync(request);
+            if (result != null)
+            {
+                successMessage = "Recurring transfer created successfully!";
+                // Reset the form state
+                fromAccountId = null;
+                toAccountId = null;
+            }
+            else
+            {
+                errorMessage = "Failed to create recurring transfer. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create recurring transfer: {ex.Message}";
+        }
+        finally
+        {
+            isCreatingTransfer = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetWarningClass(string warningType)
+    {
+        return warningType switch
+        {
+            "InsufficientIncome" => "warning-yellow",
+            "CannotReconcile" => "warning-red",
+            "NoBillsConfigured" => "warning-info",
+            "NoIncomeConfigured" => "warning-info",
+            _ => "warning-info"
+        };
+    }
+
+    private string GetWarningIcon(string warningType)
+    {
+        return warningType switch
+        {
+            "InsufficientIncome" => "alert-triangle",
+            "CannotReconcile" => "alert-circle",
+            "NoBillsConfigured" => "info",
+            "NoIncomeConfigured" => "info",
+            _ => "info"
+        };
+    }
+
+    private void ValidateAmount()
+    {
+        if (paycheckAmount.HasValue && paycheckAmount.Value < 0)
+        {
+            amountErrorMessage = "Amount must be a positive number";
+        }
+        else
+        {
+            amountErrorMessage = null;
+        }
+    }
+
+    private void ValidateTransferAccounts()
+    {
+        transferFormTouched = true;
+    }
+
+    private static string FormatCurrency(decimal amount)
+    {
+        return amount.ToString("C2");
+    }
+
+    private static string FormatMoney(MoneyDto money)
+    {
+        return money.Amount.ToString("C2");
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private void DismissSuccess()
+    {
+        successMessage = null;
+    }
+}

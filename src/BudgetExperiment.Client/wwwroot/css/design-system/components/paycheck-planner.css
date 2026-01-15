@@ -1,0 +1,416 @@
+/* ==========================================================================
+   Paycheck Planner Page Styles
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Page Layout
+   ========================================================================== */
+
+.paycheck-planner-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 900px;
+}
+
+/* ==========================================================================
+   Configuration Section
+   ========================================================================== */
+
+.config-section {
+  padding: var(--space-5);
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4) 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.config-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.config-form .form-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ==========================================================================
+   Input Group (Currency)
+   ========================================================================== */
+
+.input-group {
+  display: flex;
+  align-items: center;
+}
+
+.input-addon {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  border-right: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.input-group .form-control {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+/* ==========================================================================
+   Warning Banners
+   ========================================================================== */
+
+.warnings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.warning-yellow {
+  background-color: rgba(255, 185, 0, 0.15);
+  border: 1px solid rgba(255, 185, 0, 0.3);
+  color: #986f0b;
+}
+
+[data-theme="dark"] .warning-yellow,
+[data-theme="vscode-dark"] .warning-yellow {
+  background-color: rgba(255, 185, 0, 0.15);
+  color: #d4a50c;
+}
+
+.warning-red {
+  background-color: rgba(196, 43, 28, 0.1);
+  border: 1px solid rgba(196, 43, 28, 0.2);
+  color: var(--color-error);
+}
+
+[data-theme="dark"] .warning-red,
+[data-theme="vscode-dark"] .warning-red {
+  background-color: rgba(232, 79, 79, 0.15);
+}
+
+.warning-info {
+  background-color: rgba(0, 120, 212, 0.1);
+  border: 1px solid rgba(0, 120, 212, 0.2);
+  color: var(--color-info);
+}
+
+[data-theme="dark"] .warning-info,
+[data-theme="vscode-dark"] .warning-info {
+  background-color: rgba(75, 160, 232, 0.15);
+  border-color: rgba(75, 160, 232, 0.25);
+}
+
+/* ==========================================================================
+   Summary Section
+   ========================================================================== */
+
+.summary-section {
+  padding: var(--space-5);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-4);
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background-color: var(--color-surface-secondary);
+  border-radius: var(--radius-md);
+}
+
+.summary-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.summary-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.summary-value.highlight {
+  color: var(--color-brand-primary);
+}
+
+.summary-value.positive {
+  color: var(--color-success);
+}
+
+.summary-value.negative {
+  color: var(--color-error);
+}
+
+/* ==========================================================================
+   Bill Breakdown Table
+   ========================================================================== */
+
+.breakdown-section {
+  padding: var(--space-5);
+}
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.allocation-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.allocation-table th,
+.allocation-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.allocation-table th {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface-secondary);
+  white-space: nowrap;
+}
+
+.allocation-table tbody tr:hover {
+  background-color: var(--color-surface-secondary);
+}
+
+.allocation-table .text-right {
+  text-align: right;
+}
+
+.allocation-table .highlight {
+  color: var(--color-brand-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.allocation-table tfoot {
+  font-weight: var(--font-weight-semibold);
+}
+
+.allocation-table .total-row td {
+  border-top: 2px solid var(--color-border);
+  border-bottom: none;
+  padding-top: var(--space-4);
+}
+
+/* ==========================================================================
+   Set Aside Section
+   ========================================================================== */
+
+.set-aside-section {
+  padding: var(--space-5);
+}
+
+.set-aside-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.set-aside-form .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.set-aside-form .form-actions {
+  padding-top: var(--space-2);
+}
+
+.help-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+  gap: var(--space-3);
+}
+
+.empty-state h4 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  max-width: 400px;
+}
+
+/* ==========================================================================
+   Validation Styles
+   ========================================================================== */
+
+.validation-message {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-top: var(--space-1);
+}
+
+.validation-message-block {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: rgba(196, 43, 28, 0.1);
+  border: 1px solid rgba(196, 43, 28, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-3);
+}
+
+[data-theme="dark"] .validation-message-block,
+[data-theme="vscode-dark"] .validation-message-block {
+  background-color: rgba(232, 79, 79, 0.15);
+  border-color: rgba(232, 79, 79, 0.25);
+}
+
+/* ==========================================================================
+   Small Spinner (inline button spinner)
+   ========================================================================== */
+
+.spinner-small {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .config-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .set-aside-form .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Convert table to card-like display on mobile */
+  .allocation-table {
+    display: block;
+  }
+  
+  .allocation-table thead {
+    display: none;
+  }
+  
+  .allocation-table tbody,
+  .allocation-table tr,
+  .allocation-table td {
+    display: block;
+  }
+  
+  .allocation-table tbody tr {
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-2);
+  }
+  
+  .allocation-table td {
+    border-bottom: none;
+    padding: var(--space-1) 0;
+    text-align: left !important;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .allocation-table td::before {
+    content: attr(data-label);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+  
+  .allocation-table tfoot {
+    display: block;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 2px solid var(--color-border);
+  }
+  
+  .allocation-table tfoot tr {
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    border: none;
+  }
+  
+  .allocation-table .total-row td {
+    border-top: none;
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
