@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IPastDueService, PastDueService>();
         services.AddScoped<IAppSettingsService, AppSettingsService>();
         services.AddScoped<IBalanceCalculationService, BalanceCalculationService>();
+        services.AddScoped<IPaycheckAllocationService, PaycheckAllocationService>();
         return services;
     }
 }

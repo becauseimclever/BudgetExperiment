@@ -423,28 +423,54 @@ Warnings should be prominently displayed:
 
 ## Implementation Plan
 
-### Phase 1: Domain Layer (TDD)
-1. Write tests for `BillInfo` value object
-2. Implement `BillInfo`
-3. Write tests for `PaycheckAllocation` value object
-4. Implement `PaycheckAllocation`
-5. Write tests for `PaycheckAllocationWarning` value object
-6. Implement `PaycheckAllocationWarning`
-7. Write tests for `PaycheckAllocationSummary` value object
-8. Implement `PaycheckAllocationSummary`
-9. Write tests for `PaycheckAllocationCalculator`
-10. Implement `PaycheckAllocationCalculator`
+### Phase 1: Domain Layer (TDD) ✅ COMPLETED
+1. ✅ Write tests for `BillInfo` value object
+2. ✅ Implement `BillInfo`
+3. ✅ Write tests for `PaycheckAllocation` value object
+4. ✅ Implement `PaycheckAllocation`
+5. ✅ Write tests for `PaycheckAllocationWarning` value object
+6. ✅ Implement `PaycheckAllocationWarning`
+7. ✅ Write tests for `PaycheckAllocationSummary` value object
+8. ✅ Implement `PaycheckAllocationSummary`
+9. ✅ Write tests for `PaycheckAllocationCalculator`
+10. ✅ Implement `PaycheckAllocationCalculator`
+11. ✅ Create `AllocationWarningType` enum
 
-### Phase 2: Application Layer
-1. Write tests for `PaycheckAllocationService`
-2. Implement `PaycheckAllocationService`
-3. Add DI registration
+**Files Created:**
+- `src/BudgetExperiment.Domain/BillInfo.cs`
+- `src/BudgetExperiment.Domain/AllocationWarningType.cs`
+- `src/BudgetExperiment.Domain/PaycheckAllocation.cs`
+- `src/BudgetExperiment.Domain/PaycheckAllocationWarning.cs`
+- `src/BudgetExperiment.Domain/PaycheckAllocationSummary.cs`
+- `src/BudgetExperiment.Domain/PaycheckAllocationCalculator.cs`
+- `tests/BudgetExperiment.Domain.Tests/BillInfoTests.cs`
+- `tests/BudgetExperiment.Domain.Tests/PaycheckAllocationTests.cs`
+- `tests/BudgetExperiment.Domain.Tests/PaycheckAllocationWarningTests.cs`
+- `tests/BudgetExperiment.Domain.Tests/PaycheckAllocationSummaryTests.cs`
+- `tests/BudgetExperiment.Domain.Tests/PaycheckAllocationCalculatorTests.cs`
 
-### Phase 3: Contracts & API
-1. Create DTOs in Contracts project
-2. Add mapping methods
-3. Create `AllocationsController`
-4. Write API integration tests
+### Phase 2: Application Layer ✅ COMPLETED
+1. ✅ Create DTOs in Contracts project
+2. ✅ Add mapping methods to `DomainToDtoMapper`
+3. ✅ Write tests for `PaycheckAllocationService`
+4. ✅ Implement `PaycheckAllocationService`
+5. ✅ Add DI registration
+
+**Files Created:**
+- `src/BudgetExperiment.Contracts/Dtos/PaycheckAllocationDto.cs`
+- `src/BudgetExperiment.Contracts/Dtos/PaycheckAllocationWarningDto.cs`
+- `src/BudgetExperiment.Contracts/Dtos/PaycheckAllocationSummaryDto.cs`
+- `src/BudgetExperiment.Application/Services/IPaycheckAllocationService.cs`
+- `src/BudgetExperiment.Application/Services/PaycheckAllocationService.cs`
+- `tests/BudgetExperiment.Application.Tests/PaycheckAllocationServiceTests.cs`
+
+**Files Modified:**
+- `src/BudgetExperiment.Application/Mapping/DomainToDtoMapper.cs` (added ToDto methods)
+- `src/BudgetExperiment.Application/DependencyInjection.cs` (registered service)
+
+### Phase 3: API
+1. Create `AllocationsController`
+2. Write API integration tests
 
 ### Phase 4: Client
 1. Create `PaycheckPlanner.razor` page
@@ -519,12 +545,12 @@ Allow users to export or print their paycheck allocation plan.
 
 ---
 
-## Open Questions
+## Design Decisions
 
-1. **Should we include recurring transfers as "bills"?** Transfers to savings could be considered a required allocation.
+1. **Should we include recurring transfers as "bills"?** **No.** Since recurring transfers are the mechanism for setting aside allocation amounts, including them as bills would create a feedback loop. Only recurring transactions (actual expenses) are considered bills.
 
-2. **How to handle mixed currencies?** Currently assume single currency (USD). Multi-currency support may require more complex logic.
+2. **How to handle mixed currencies?** **Deferred.** Currently assume single currency (USD). Multi-currency support will be addressed in a future iteration.
 
-3. **Should there be a "recommended" paycheck frequency?** Auto-suggest based on income patterns?
+3. **Should there be a "recommended" paycheck frequency?** **Yes.** When the user has recurring income transactions (positive amounts), auto-suggest a paycheck frequency based on detected income patterns.
 
-4. **Include one-time upcoming bills?** Or strictly recurring only?
+4. **Include one-time upcoming bills?** **No.** Strictly recurring transactions only for now. One-time bills may be added in a future enhancement.
