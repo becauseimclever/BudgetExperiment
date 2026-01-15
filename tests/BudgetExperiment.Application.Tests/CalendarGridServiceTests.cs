@@ -17,9 +17,10 @@ public class CalendarGridServiceTests
     private readonly Mock<IRecurringTransactionRepository> _recurringRepo;
     private readonly Mock<IRecurringTransferRepository> _recurringTransferRepo;
     private readonly Mock<IAccountRepository> _accountRepo;
-    private readonly Mock<IAppSettingsRepository> _settingsRepo;
-    private readonly Mock<IUnitOfWork> _unitOfWork;
     private readonly Mock<IBalanceCalculationService> _balanceService;
+    private readonly Mock<IRecurringInstanceProjector> _recurringInstanceProjector;
+    private readonly Mock<IRecurringTransferInstanceProjector> _recurringTransferInstanceProjector;
+    private readonly Mock<IAutoRealizeService> _autoRealizeService;
 
     public CalendarGridServiceTests()
     {
@@ -27,14 +28,10 @@ public class CalendarGridServiceTests
         _recurringRepo = new Mock<IRecurringTransactionRepository>();
         _recurringTransferRepo = new Mock<IRecurringTransferRepository>();
         _accountRepo = new Mock<IAccountRepository>();
-        _settingsRepo = new Mock<IAppSettingsRepository>();
-        _unitOfWork = new Mock<IUnitOfWork>();
         _balanceService = new Mock<IBalanceCalculationService>();
-
-        // Default setup for settings - auto-realize disabled
-        _settingsRepo
-            .Setup(r => r.GetAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(AppSettings.CreateDefault());
+        _recurringInstanceProjector = new Mock<IRecurringInstanceProjector>();
+        _recurringTransferInstanceProjector = new Mock<IRecurringTransferInstanceProjector>();
+        _autoRealizeService = new Mock<IAutoRealizeService>();
 
         // Default setup for exceptions - return empty list
         _recurringRepo
@@ -76,6 +73,39 @@ public class CalendarGridServiceTests
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(MoneyValue.Zero("USD"));
+
+        // Default setup for projectors - return empty dictionaries/lists
+        _recurringInstanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>());
+
+        _recurringInstanceProjector
+            .Setup(p => p.GetInstancesForDateAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringInstanceInfo>());
+
+        _recurringTransferInstanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransfer>>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>());
+
+        _recurringTransferInstanceProjector
+            .Setup(p => p.GetInstancesForDateAsync(
+                It.IsAny<IReadOnlyList<RecurringTransfer>>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransferInstanceInfo>());
     }
 
     [Fact]
@@ -492,9 +522,10 @@ public class CalendarGridServiceTests
             _recurringRepo.Object,
             _recurringTransferRepo.Object,
             _accountRepo.Object,
-            _settingsRepo.Object,
-            _unitOfWork.Object,
-            _balanceService.Object);
+            _balanceService.Object,
+            _recurringInstanceProjector.Object,
+            _recurringTransferInstanceProjector.Object,
+            _autoRealizeService.Object);
     }
 
     private static Account CreateTestAccount(Guid id, string name)
@@ -650,6 +681,56 @@ public class CalendarGridServiceTests
             .Setup(r => r.GetExceptionAsync(recurringTransferId, date, default))
             .ReturnsAsync((RecurringTransferException?)null);
 
+        // Set up projector mocks for this test
+        _recurringInstanceProjector
+            .Setup(p => p.GetInstancesForDateAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                date,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringInstanceInfo>
+            {
+                new RecurringInstanceInfo(
+                    recurringTransactionId,
+                    date,
+                    checkingId,
+                    "Checking",
+                    "Netflix Subscription",
+                    MoneyValue.Create("USD", -15.99m),
+                    null,
+                    false,
+                    false),
+            });
+
+        _recurringTransferInstanceProjector
+            .Setup(p => p.GetInstancesForDateAsync(
+                It.IsAny<IReadOnlyList<RecurringTransfer>>(),
+                date,
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransferInstanceInfo>
+            {
+                new RecurringTransferInstanceInfo(
+                    recurringTransferId,
+                    date,
+                    checkingId,
+                    "Checking",
+                    "Transfer to Savings: Monthly Savings",
+                    MoneyValue.Create("USD", -100.00m),
+                    false,
+                    false,
+                    "Source"),
+                new RecurringTransferInstanceInfo(
+                    recurringTransferId,
+                    date,
+                    savingsId,
+                    "Savings",
+                    "Transfer from Checking: Monthly Savings",
+                    MoneyValue.Create("USD", 100.00m),
+                    false,
+                    false,
+                    "Destination"),
+            });
+
         var service = CreateService();
 
         // Act
@@ -745,6 +826,58 @@ public class CalendarGridServiceTests
         _recurringTransferRepo
             .Setup(r => r.GetByAccountIdAsync(checkingId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransfer> { recurringTransfer });
+
+        // Set up projector mocks for this test
+        _recurringInstanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                startDate,
+                endDate,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            {
+                {
+                    targetDate, new List<RecurringInstanceInfo>
+                    {
+                        new RecurringInstanceInfo(
+                            recurringTransactionId,
+                            targetDate,
+                            checkingId,
+                            "Checking",
+                            "Netflix Subscription",
+                            MoneyValue.Create("USD", -15.99m),
+                            null,
+                            false,
+                            false),
+                    }
+                },
+            });
+
+        _recurringTransferInstanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransfer>>(),
+                startDate,
+                endDate,
+                checkingId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>
+            {
+                {
+                    targetDate, new List<RecurringTransferInstanceInfo>
+                    {
+                        new RecurringTransferInstanceInfo(
+                            recurringTransferId,
+                            targetDate,
+                            checkingId,
+                            "Checking",
+                            "Transfer to Savings: Monthly Savings",
+                            MoneyValue.Create("USD", -100.00m),
+                            false,
+                            false,
+                            "Source"),
+                    }
+                },
+            });
 
         var service = CreateService();
 
@@ -1057,6 +1190,37 @@ public class CalendarGridServiceTests
             .Setup(r => r.GetExceptionAsync(recurringTransferId, date, default))
             .ReturnsAsync((RecurringTransferException?)null);
 
+        // Set up projector mocks for this test
+        _recurringTransferInstanceProjector
+            .Setup(p => p.GetInstancesForDateAsync(
+                It.IsAny<IReadOnlyList<RecurringTransfer>>(),
+                date,
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransferInstanceInfo>
+            {
+                new RecurringTransferInstanceInfo(
+                    recurringTransferId,
+                    date,
+                    checkingId,
+                    "Checking",
+                    "Transfer to Savings: Monthly Savings",
+                    MoneyValue.Create("USD", -100.00m),
+                    false,
+                    false,
+                    "Source"),
+                new RecurringTransferInstanceInfo(
+                    recurringTransferId,
+                    date,
+                    savingsId,
+                    "Savings",
+                    "Transfer from Checking: Monthly Savings",
+                    MoneyValue.Create("USD", 100.00m),
+                    false,
+                    false,
+                    "Destination"),
+            });
+
         var service = CreateService();
 
         // Act
@@ -1117,6 +1281,26 @@ public class CalendarGridServiceTests
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransfer>());
 
+        // Set up projector mock for this test
+        _recurringInstanceProjector
+            .Setup(p => p.GetInstancesForDateAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                date,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringInstanceInfo>
+            {
+                new RecurringInstanceInfo(
+                    recurringTransactionId,
+                    date,
+                    accountId,
+                    "Checking",
+                    "Netflix",
+                    MoneyValue.Create("USD", -15.99m),
+                    null,
+                    false,
+                    false),
+            });
+
         var service = CreateService();
 
         // Act
@@ -1133,268 +1317,6 @@ public class CalendarGridServiceTests
     {
         var idProperty = typeof(T).GetProperty("Id");
         idProperty?.SetValue(entity, id);
-    }
-
-    #endregion
-
-    #region Auto-Realize Tests
-
-    [Fact]
-    public async Task GetCalendarGridAsync_DoesNotAutoRealize_WhenSettingDisabled()
-    {
-        // Arrange
-        var accountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var pastDueDate = today.AddDays(-5);
-
-        var settings = AppSettings.CreateDefault();
-        // AutoRealizePastDueItems is false by default
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        var recurringTransaction = CreateTestRecurringTransaction(accountId, pastDueDate);
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - no transaction should be added
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
-        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task GetCalendarGridAsync_AutoRealizesPastDueItems_WhenSettingEnabled()
-    {
-        // Arrange
-        var accountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var pastDueDate = today.AddDays(-5);
-
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateAutoRealize(true);
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        var recurringTransaction = CreateTestRecurringTransaction(accountId, pastDueDate);
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
-        _recurringRepo.Setup(r => r.GetExceptionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RecurringTransactionException?)null);
-        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Transaction?)null);
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - transaction should be added
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetCalendarGridAsync_SkipsAlreadyRealizedItems_WhenAutoRealizeEnabled()
-    {
-        // Arrange
-        var accountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var pastDueDate = today.AddDays(-5);
-
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateAutoRealize(true);
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        var recurringTransaction = CreateTestRecurringTransaction(accountId, pastDueDate);
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
-        _recurringRepo.Setup(r => r.GetExceptionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RecurringTransactionException?)null);
-
-        // Already realized
-        var existingTransaction = CreateTestTransaction(accountId, pastDueDate, -50m, "Already realized");
-        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingTransaction);
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - no new transaction should be added
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task GetCalendarGridAsync_SkipsSkippedItems_WhenAutoRealizeEnabled()
-    {
-        // Arrange
-        var accountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var pastDueDate = today.AddDays(-5);
-
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateAutoRealize(true);
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        var recurringTransaction = CreateTestRecurringTransaction(accountId, pastDueDate);
-        var skippedException = RecurringTransactionException.CreateSkipped(recurringTransaction.Id, pastDueDate);
-
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
-        _recurringRepo.Setup(r => r.GetExceptionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(skippedException);
-        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Transaction?)null);
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - no transaction should be added for skipped item
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task GetCalendarGridAsync_RespectsLookbackDays_WhenAutoRealizeEnabled()
-    {
-        // Arrange
-        var accountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var withinLookback = today.AddDays(-10);
-
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateAutoRealize(true);
-        settings.UpdatePastDueLookbackDays(15); // Set lookback to 15 days
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        // Create a recurring transaction that started 10 days ago (within 15-day lookback)
-        var recurringWithinLookback = CreateTestRecurringTransaction(accountId, withinLookback);
-
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurringWithinLookback });
-        _recurringRepo.Setup(r => r.GetExceptionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RecurringTransactionException?)null);
-        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Transaction?)null);
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - should be realized (within lookback)
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetCalendarGridAsync_SkipsItemsOutsideLookback_WhenAutoRealizeEnabled()
-    {
-        // Arrange
-        var accountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        // Set lookback to 5 days: [today-5, yesterday]
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateAutoRealize(true);
-        settings.UpdatePastDueLookbackDays(5);
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        // Create a recurring transaction that started 10 days ago
-        // Day of month = (today - 10).Day, which is outside the 5-day lookback
-        var outsideLookback = today.AddDays(-10);
-        var recurringOutsideLookback = CreateTestRecurringTransaction(accountId, outsideLookback);
-
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurringOutsideLookback });
-        _recurringRepo.Setup(r => r.GetExceptionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RecurringTransactionException?)null);
-        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Transaction?)null);
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - should NOT be realized (occurrence on day (today-10) is outside 5-day lookback)
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task GetCalendarGridAsync_AutoRealizesRecurringTransfers_WhenSettingEnabled()
-    {
-        // Arrange
-        var fromAccountId = Guid.NewGuid();
-        var toAccountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var pastDueDate = today.AddDays(-5);
-
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateAutoRealize(true);
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        var recurringTransfer = CreateTestRecurringTransfer(fromAccountId, toAccountId, pastDueDate);
-        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransfer> { recurringTransfer });
-        _recurringTransferRepo.Setup(r => r.GetExceptionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RecurringTransferException?)null);
-        _transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Transaction>());
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - two transactions should be added (from and to)
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetCalendarGridAsync_DoesNotRealizeToday_WhenAutoRealizeEnabled()
-    {
-        // Arrange - recurring scheduled for today should NOT be auto-realized
-        var accountId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateAutoRealize(true);
-        _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
-
-        var recurringTransaction = CreateTestRecurringTransaction(accountId, today);
-        _recurringRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
-        _transactionRepo.Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
-
-        var service = CreateService();
-
-        // Act
-        await service.GetCalendarGridAsync(today.Year, today.Month);
-
-        // Assert - today's item should not be auto-realized
-        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion
@@ -1523,6 +1445,35 @@ public class CalendarGridServiceTests
         _recurringRepo
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurringTransaction });
+
+        // Set up projector mock for this test - return recurring instance on Jan 15
+        var jan15 = new DateOnly(2026, 1, 15);
+        var gridStartDate = new DateOnly(2025, 12, 28);
+        var gridEndDate = gridStartDate.AddDays(41);
+        _recurringInstanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                gridStartDate,
+                gridEndDate,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            {
+                {
+                    jan15, new List<RecurringInstanceInfo>
+                    {
+                        new RecurringInstanceInfo(
+                            Guid.NewGuid(),
+                            jan15,
+                            accountId,
+                            "Test",
+                            "Recurring Transaction",
+                            MoneyValue.Create("USD", -50.00m),
+                            null,
+                            false,
+                            false),
+                    }
+                },
+            });
 
         var service = CreateService();
 
@@ -1910,6 +1861,33 @@ public class CalendarGridServiceTests
         _recurringTransferRepo
             .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransfer>());
+
+        // Set up projector mock for this test
+        var jan15 = new DateOnly(2026, 1, 15);
+        _recurringInstanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                new DateOnly(2026, 1, 10),
+                new DateOnly(2026, 1, 20),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            {
+                {
+                    jan15, new List<RecurringInstanceInfo>
+                    {
+                        new RecurringInstanceInfo(
+                            Guid.NewGuid(),
+                            jan15,
+                            accountId,
+                            "Checking",
+                            "Recurring Transaction",
+                            MoneyValue.Create("USD", -50.00m),
+                            null,
+                            false,
+                            false),
+                    }
+                },
+            });
 
         var service = CreateService();
 

@@ -1,6 +1,6 @@
 # Feature 020: SOLID Principles Refactoring
 
-📋 **Status**: Planning
+📋 **Status**: In Progress (Phase 2 Complete)
 
 ## Overview
 
@@ -116,21 +116,21 @@ Several classes in the codebase have grown large and accumulated multiple respon
 
 ## Implementation Phases
 
-### Phase 1: Extract Recurring Instance Projectors
-- [ ] Create `IRecurringInstanceProjector` interface in Domain
-- [ ] Create `RecurringInstanceProjector` implementation in Application
-- [ ] Create `IRecurringTransferInstanceProjector` interface in Domain
-- [ ] Create `RecurringTransferInstanceProjector` implementation in Application
-- [ ] Update `CalendarGridService` to use the new projectors
-- [ ] Update DI registration
-- [ ] Write unit tests for projectors
+### Phase 1: Extract Recurring Instance Projectors ✅
+- [x] Create `IRecurringInstanceProjector` interface in Domain
+- [x] Create `RecurringInstanceProjector` implementation in Application
+- [x] Create `IRecurringTransferInstanceProjector` interface in Domain
+- [x] Create `RecurringTransferInstanceProjector` implementation in Application
+- [x] Update `CalendarGridService` to use the new projectors
+- [x] Update DI registration
+- [x] Write unit tests for projectors (existing tests updated to mock projectors)
 
-### Phase 2: Extract Auto-Realize Service
-- [ ] Create `IAutoRealizeService` interface in Domain
-- [ ] Create `AutoRealizeService` implementation in Application
-- [ ] Move auto-realize logic from `CalendarGridService`
-- [ ] Update DI registration
-- [ ] Write unit tests
+### Phase 2: Extract Auto-Realize Service ✅
+- [x] Create `IAutoRealizeService` interface in Domain
+- [x] Create `AutoRealizeService` implementation in Application
+- [x] Move auto-realize logic from `CalendarGridService`
+- [x] Update DI registration
+- [x] Write unit tests (AutoRealizeServiceTests.cs created)
 
 ### Phase 3: Split Calendar Services
 - [ ] Create `IDayDetailService` interface

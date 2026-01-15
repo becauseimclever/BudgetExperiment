@@ -1,4 +1,5 @@
 using BudgetExperiment.Application.Services;
+using BudgetExperiment.Domain;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +26,9 @@ public static class DependencyInjection
         services.AddScoped<IAppSettingsService, AppSettingsService>();
         services.AddScoped<IBalanceCalculationService, BalanceCalculationService>();
         services.AddScoped<IPaycheckAllocationService, PaycheckAllocationService>();
+        services.AddScoped<IRecurringInstanceProjector, RecurringInstanceProjector>();
+        services.AddScoped<IRecurringTransferInstanceProjector, RecurringTransferInstanceProjector>();
+        services.AddScoped<IAutoRealizeService, AutoRealizeService>();
         return services;
     }
 }
