@@ -1,0 +1,81 @@
+/* ==========================================================================
+   Monopoly Theme
+   Budget Experiment Design System
+   
+   Inspired by the classic Monopoly board game with its signature green,
+   red, and cream colors for a playful financial management experience.
+   ========================================================================== */
+
+[data-theme="monopoly"] {
+  /* Backgrounds - Monopoly board inspired (dark mode) */
+  --color-background: #1a2e1a;     /* Dark green base */
+  --color-surface: #234023;        /* Board green */
+  --color-surface-secondary: #2d4d2d;  /* Lighter green */
+  --color-border: #4a7c4a;
+  --color-border-subtle: #3d6b3d;
+
+  /* App Shell Colors - Railroad/Title Deed style */
+  --color-bg-secondary: #1a2e1a;
+  --color-bg-elevated: #234023;
+  --color-header-bg: #1c1c1c;      /* Black like railroad spaces */
+  --color-header-text: #f5e6c8;    /* Cream/parchment */
+  --color-header-text-hover: #ffffff;
+  --color-header-hover: rgba(245, 230, 200, 0.1);
+  --color-sidebar-bg: #234023;
+  --color-sidebar-text: #d4c4a8;
+  --color-sidebar-text-hover: #f5e6c8;
+
+  /* Text Colors - Parchment and cream tones */
+  --color-text-primary: #f5e6c8;   /* Cream/parchment */
+  --color-text-secondary: #c4b496;
+  --color-text-disabled: #7a7056;
+  --color-text-inverse: #1a2e1a;
+
+  /* Brand Colors - Monopoly red */
+  --color-brand-primary: #c41e3a;  /* Monopoly red */
+  --color-brand-primary-hover: #d62f4a;
+  --color-brand-primary-active: #a01830;
+  --color-brand-rgb: 196, 30, 58;
+
+  /* Semantic Colors - Monopoly property colors */
+  --color-success: #1fb25a;        /* GO green / money green */
+  --color-warning: #f7c331;        /* Chance card yellow */
+  --color-warning-rgb: 247, 195, 49;
+  --color-error: #c41e3a;          /* Monopoly red */
+  --color-info: #37abc8;           /* Light blue property */
+
+  /* Warning alert colors */
+  --color-warning-bg: #3d3520;
+  --color-warning-border: #5a4d2a;
+  --color-warning-text: #f7c331;
+
+  /* Transaction-Specific - Property deed colors */
+  --color-income: #1fb25a;         /* Money green */
+  --color-expense: #c41e3a;        /* Red - paying rent! */
+  --color-transfer: #0072bb;       /* Dark blue property */
+  --color-recurring: #9656a1;      /* Purple property */
+  --color-recurring-rgb: 150, 86, 161;
+
+  /* Property Color Accents (for potential future use) */
+  --color-property-brown: #955436;
+  --color-property-lightblue: #aae0fa;
+  --color-property-pink: #d93a96;
+  --color-property-orange: #f7941d;
+  --color-property-red: #ed1b24;
+  --color-property-yellow: #fef200;
+  --color-property-green: #1fb25a;
+  --color-property-darkblue: #0072bb;
+
+  /* Shadows - Deeper for dark theme */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.6);
+
+  /* Focus ring - Monopoly red */
+  --focus-ring: 0 0 0 2px var(--color-background),
+                0 0 0 4px #c41e3a;
+
+  /* Color scheme for native elements */
+  color-scheme: dark;
+}

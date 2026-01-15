@@ -49,6 +49,7 @@ public sealed class ThemeService : IAsyncDisposable
         new("light", "Light", "sun"),
         new("dark", "Dark", "moon"),
         new("vscode-dark", "VS Code", "code"),
+        new("monopoly", "Monopoly", "dice"),
     };
 
     /// <summary>

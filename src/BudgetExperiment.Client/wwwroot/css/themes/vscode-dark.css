@@ -7,18 +7,29 @@
    ========================================================================== */
 
 [data-theme="vscode-dark"] {
-  /* Backgrounds - VS Code's signature dark grays */
+  /* Backgrounds - VS Code's signature dark grays (NO WHITE) */
   --color-background: #1e1e1e;
   --color-surface: #252526;
   --color-surface-secondary: #2d2d2d;
   --color-border: #3c3c3c;
   --color-border-subtle: #333333;
 
+  /* App Shell Colors - True VS Code style */
+  --color-bg-secondary: #1e1e1e;
+  --color-bg-elevated: #252526;
+  --color-header-bg: #3c3c3c;
+  --color-header-text: #cccccc;
+  --color-header-text-hover: #ffffff;
+  --color-header-hover: rgba(255, 255, 255, 0.1);
+  --color-sidebar-bg: #252526;
+  --color-sidebar-text: #cccccc;
+  --color-sidebar-text-hover: #ffffff;
+
   /* Text Colors */
   --color-text-primary: #cccccc;
   --color-text-secondary: #9d9d9d;
   --color-text-disabled: #6b6b6b;
-  --color-text-inverse: #ffffff;
+  --color-text-inverse: #1e1e1e;
 
   /* Brand Colors - VS Code blue */
   --color-brand-primary: #0e639c;
@@ -32,6 +43,11 @@
   --color-warning-rgb: 220, 220, 170;
   --color-error: #f14c4c;      /* VS Code red */
   --color-info: #3794ff;       /* VS Code bright blue */
+
+  /* Warning alert colors for dark theme */
+  --color-warning-bg: #3c3a2e;
+  --color-warning-border: #524d33;
+  --color-warning-text: #dcdcaa;
 
   /* Transaction-Specific */
   --color-income: #4ec9b0;     /* Teal for positive */

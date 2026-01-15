@@ -12,6 +12,7 @@
 @import "themes/light.css";
 @import "themes/dark.css";
 @import "themes/vscode-dark.css";
+@import "themes/monopoly.css";
 
 /* Layout System */
 @import "design-system/layout.css";
