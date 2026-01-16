@@ -1,0 +1,398 @@
+@page "/categories"
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Budget Categories - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Budget Categories">
+        <Actions>
+            <button class="btn btn-success" @onclick="ShowAddCategory">+ Add Category</button>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading categories..." />
+    }
+    else if (categories.Count == 0 && errorMessage == null)
+    {
+        <p class="empty-message">No categories yet. Create one to organize your budget!</p>
+    }
+    else if (errorMessage == null)
+    {
+        @if (ExpenseCategories.Count > 0)
+        {
+            <div class="category-section">
+                <h3 class="category-section-title">
+                    <span class="text-expense">Expense Categories</span>
+                    <span class="badge badge-secondary">@ExpenseCategories.Count</span>
+                </h3>
+                <div class="card-grid">
+                    @foreach (var category in ExpenseCategories)
+                    {
+                        <CategoryCard Category="@category"
+                                      OnEdit="ShowEditCategory"
+                                      OnDelete="ConfirmDeleteCategory"
+                                      OnActivate="ActivateCategory"
+                                      OnDeactivate="DeactivateCategory" />
+                    }
+                </div>
+            </div>
+        }
+        
+        @if (IncomeCategories.Count > 0)
+        {
+            <div class="category-section">
+                <h3 class="category-section-title">
+                    <span class="text-income">Income Categories</span>
+                    <span class="badge badge-secondary">@IncomeCategories.Count</span>
+                </h3>
+                <div class="card-grid">
+                    @foreach (var category in IncomeCategories)
+                    {
+                        <CategoryCard Category="@category"
+                                      OnEdit="ShowEditCategory"
+                                      OnDelete="ConfirmDeleteCategory"
+                                      OnActivate="ActivateCategory"
+                                      OnDeactivate="DeactivateCategory" />
+                    }
+                </div>
+            </div>
+        }
+        
+        @if (TransferCategories.Count > 0)
+        {
+            <div class="category-section">
+                <h3 class="category-section-title">
+                    <span class="text-secondary">Transfer Categories</span>
+                    <span class="badge badge-secondary">@TransferCategories.Count</span>
+                </h3>
+                <div class="card-grid">
+                    @foreach (var category in TransferCategories)
+                    {
+                        <CategoryCard Category="@category"
+                                      OnEdit="ShowEditCategory"
+                                      OnDelete="ConfirmDeleteCategory"
+                                      OnActivate="ActivateCategory"
+                                      OnDeactivate="DeactivateCategory" />
+                    }
+                </div>
+            </div>
+        }
+    }
+
+    <Modal IsVisible="@showAddCategory" Title="Add Category" OnClose="HideAddCategory">
+        <CategoryForm Model="@newCategory"
+                      OnSubmit="CreateCategory"
+                      OnCancel="HideAddCategory"
+                      IsSubmitting="@isSubmitting" />
+    </Modal>
+
+    <Modal IsVisible="@showEditCategory" Title="Edit Category" OnClose="HideEditCategory">
+        <CategoryForm Model="@editCategory"
+                      OnSubmit="UpdateCategory"
+                      OnCancel="HideEditCategory"
+                      SubmitButtonText="Save Changes"
+                      IsSubmitting="@isSubmitting"
+                      ShowSortOrder="true"
+                      SortOrder="@editSortOrder"
+                      SortOrderChanged="@(value => editSortOrder = value)" />
+    </Modal>
+
+    <ConfirmDialog IsVisible="@showDeleteConfirm"
+                   Title="Delete Category"
+                   Message="@($"Are you sure you want to delete '{deletingCategory?.Name}'? This action cannot be undone.")"
+                   ConfirmText="Delete"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="DeleteCategory"
+                   OnCancel="CancelDelete" />
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool isRetrying;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private List<BudgetCategoryDto> categories = new();
+    
+    // Computed category lists
+    private List<BudgetCategoryDto> ExpenseCategories =>
+        categories.Where(c => c.Type == "Expense").OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
+    
+    private List<BudgetCategoryDto> IncomeCategories =>
+        categories.Where(c => c.Type == "Income").OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
+    
+    private List<BudgetCategoryDto> TransferCategories =>
+        categories.Where(c => c.Type == "Transfer").OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
+    
+    // Add state
+    private bool showAddCategory = false;
+    private BudgetCategoryCreateDto newCategory = new() { Type = "Expense", Color = "#4CAF50" };
+
+    // Edit state
+    private bool showEditCategory = false;
+    private BudgetCategoryCreateDto editCategory = new();
+    private Guid? editingCategoryId = null;
+    private int editSortOrder = 0;
+
+    // Delete confirmation state
+    private bool showDeleteConfirm = false;
+    private bool isDeleting = false;
+    private BudgetCategoryDto? deletingCategory = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            categories = (await ApiService.GetCategoriesAsync(false)).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load categories: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadCategories();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private void ShowAddCategory()
+    {
+        newCategory = new BudgetCategoryCreateDto { Type = "Expense", Color = "#4CAF50" };
+        showAddCategory = true;
+    }
+
+    private void HideAddCategory()
+    {
+        showAddCategory = false;
+    }
+
+    private async Task CreateCategory(BudgetCategoryCreateDto model)
+    {
+        isSubmitting = true;
+
+        try
+        {
+            var created = await ApiService.CreateCategoryAsync(model);
+            if (created != null)
+            {
+                categories.Add(created);
+                showAddCategory = false;
+            }
+            else
+            {
+                errorMessage = "Failed to create category.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create category: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ShowEditCategory(BudgetCategoryDto category)
+    {
+        editingCategoryId = category.Id;
+        editCategory = new BudgetCategoryCreateDto
+        {
+            Name = category.Name,
+            Type = category.Type,
+            Icon = category.Icon,
+            Color = category.Color ?? "#4CAF50"
+        };
+        editSortOrder = category.SortOrder;
+        showEditCategory = true;
+    }
+
+    private void HideEditCategory()
+    {
+        showEditCategory = false;
+        editingCategoryId = null;
+    }
+
+    private async Task UpdateCategory(BudgetCategoryCreateDto model)
+    {
+        if (editingCategoryId is null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            var updateDto = new BudgetCategoryUpdateDto
+            {
+                Name = model.Name,
+                Icon = model.Icon,
+                Color = model.Color,
+                SortOrder = editSortOrder
+            };
+
+            var updated = await ApiService.UpdateCategoryAsync(editingCategoryId.Value, updateDto);
+            if (updated != null)
+            {
+                var index = categories.FindIndex(c => c.Id == editingCategoryId.Value);
+                if (index >= 0)
+                {
+                    categories[index] = updated;
+                }
+
+                showEditCategory = false;
+                editingCategoryId = null;
+            }
+            else
+            {
+                errorMessage = "Failed to update category.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to update category: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ConfirmDeleteCategory(BudgetCategoryDto category)
+    {
+        deletingCategory = category;
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+        deletingCategory = null;
+    }
+
+    private async Task DeleteCategory()
+    {
+        if (deletingCategory is null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+
+        try
+        {
+            var success = await ApiService.DeleteCategoryAsync(deletingCategory.Id);
+            if (success)
+            {
+                categories.RemoveAll(c => c.Id == deletingCategory.Id);
+                showDeleteConfirm = false;
+                deletingCategory = null;
+            }
+            else
+            {
+                errorMessage = "Failed to delete category.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete category: {ex.Message}";
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private async Task ActivateCategory(BudgetCategoryDto category)
+    {
+        try
+        {
+            var success = await ApiService.ActivateCategoryAsync(category.Id);
+            if (success)
+            {
+                var index = categories.FindIndex(c => c.Id == category.Id);
+                if (index >= 0)
+                {
+                    var updated = await ApiService.GetCategoryAsync(category.Id);
+                    if (updated != null)
+                    {
+                        categories[index] = updated;
+                    }
+                }
+            }
+            else
+            {
+                errorMessage = "Failed to activate category.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to activate category: {ex.Message}";
+        }
+    }
+
+    private async Task DeactivateCategory(BudgetCategoryDto category)
+    {
+        try
+        {
+            var success = await ApiService.DeactivateCategoryAsync(category.Id);
+            if (success)
+            {
+                var index = categories.FindIndex(c => c.Id == category.Id);
+                if (index >= 0)
+                {
+                    var updated = await ApiService.GetCategoryAsync(category.Id);
+                    if (updated != null)
+                    {
+                        categories[index] = updated;
+                    }
+                }
+            }
+            else
+            {
+                errorMessage = "Failed to deactivate category.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to deactivate category: {ex.Message}";
+        }
+    }
+}

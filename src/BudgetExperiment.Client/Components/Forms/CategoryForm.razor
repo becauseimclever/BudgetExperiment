@@ -1,0 +1,165 @@
+@* CategoryForm.razor - Reusable budget category create/edit form *@
+
+<form @onsubmit="HandleSubmit">
+    <div class="form-group">
+        <label for="categoryName" class="form-label">Category Name:</label>
+        <input id="categoryName" 
+               type="text"
+               class="form-control"
+               @bind="Model.Name" 
+               @bind:event="oninput"
+               placeholder="Enter category name"
+               required />
+    </div>
+    
+    <div class="form-group">
+        <label for="categoryType" class="form-label">Category Type:</label>
+        <select id="categoryType" class="form-control" @bind="Model.Type" required>
+            <option value="Expense">Expense</option>
+            <option value="Income">Income</option>
+            <option value="Transfer">Transfer</option>
+        </select>
+        <small class="text-secondary">
+            @switch (Model.Type)
+            {
+                case "Expense":
+                    <span>Expense categories track spending (money going out)</span>
+                    break;
+                case "Income":
+                    <span>Income categories track money coming in</span>
+                    break;
+                case "Transfer":
+                    <span>Transfer categories are for internal account transfers</span>
+                    break;
+            }
+        </small>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group form-group-half">
+            <label for="categoryIcon" class="form-label">Icon:</label>
+            <select id="categoryIcon" class="form-control" @bind="Model.Icon">
+                <option value="">None</option>
+                <option value="cart">🛒 Cart (Groceries)</option>
+                <option value="home">🏠 Home (Housing)</option>
+                <option value="car">🚗 Car (Transportation)</option>
+                <option value="bolt">💡 Bolt (Utilities)</option>
+                <option value="film">🎬 Film (Entertainment)</option>
+                <option value="utensils">🍽️ Utensils (Dining)</option>
+                <option value="heart">❤️ Heart (Healthcare)</option>
+                <option value="shopping-bag">🛍️ Bag (Shopping)</option>
+                <option value="briefcase">💼 Briefcase (Work)</option>
+                <option value="trending-up">📈 Trending (Investments)</option>
+                <option value="gift">🎁 Gift (Gifts)</option>
+                <option value="book">📚 Book (Education)</option>
+                <option value="plane">✈️ Plane (Travel)</option>
+                <option value="repeat">🔄 Repeat (Subscriptions)</option>
+                <option value="plus-circle">➕ Plus (Other)</option>
+            </select>
+        </div>
+        
+        <div class="form-group form-group-half">
+            <label for="categoryColor" class="form-label">Color:</label>
+            <div class="color-picker-wrapper">
+                <input id="categoryColor" 
+                       type="color" 
+                       class="form-control form-control-color"
+                       @bind="Model.Color" />
+                <input type="text" 
+                       class="form-control form-control-color-text"
+                       @bind="Model.Color" 
+                       placeholder="#000000"
+                       maxlength="7" />
+            </div>
+        </div>
+    </div>
+
+    @if (ShowSortOrder)
+    {
+        <div class="form-group">
+            <label for="sortOrder" class="form-label">Sort Order:</label>
+            <input id="sortOrder" 
+                   type="number" 
+                   class="form-control"
+                   @bind="SortOrder"
+                   min="0" />
+            <small class="text-secondary">Lower numbers appear first in lists</small>
+        </div>
+    }
+    
+    <div class="form-actions form-actions-right">
+        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>@SubmitButtonText</span>
+            }
+        </button>
+    </div>
+</form>
+
+@code {
+    /// <summary>
+    /// Gets or sets the category model to edit.
+    /// </summary>
+    [Parameter]
+    public BudgetCategoryCreateDto Model { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the callback when the form is submitted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetCategoryCreateDto> OnSubmit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when cancel is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the submit button text.
+    /// </summary>
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Create Category";
+
+    /// <summary>
+    /// Gets or sets whether the form is in a submitting state.
+    /// </summary>
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to show the sort order field (for edit mode).
+    /// </summary>
+    [Parameter]
+    public bool ShowSortOrder { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the sort order (for edit mode).
+    /// </summary>
+    [Parameter]
+    public int SortOrder { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when sort order changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> SortOrderChanged { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        await OnSubmit.InvokeAsync(Model);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

@@ -382,4 +382,109 @@ public interface IBudgetApiService
     /// <param name="accountId">Optional account filter.</param>
     /// <returns>The allocation summary.</returns>
     Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null);
+
+    // Budget Category Operations
+
+    /// <summary>
+    /// Gets all budget categories.
+    /// </summary>
+    /// <param name="activeOnly">If true, returns only active categories.</param>
+    /// <returns>List of budget categories.</returns>
+    Task<IReadOnlyList<BudgetCategoryDto>> GetCategoriesAsync(bool activeOnly = false);
+
+    /// <summary>
+    /// Gets a budget category by ID.
+    /// </summary>
+    /// <param name="id">The category ID.</param>
+    /// <returns>The category or null if not found.</returns>
+    Task<BudgetCategoryDto?> GetCategoryAsync(Guid id);
+
+    /// <summary>
+    /// Creates a new budget category.
+    /// </summary>
+    /// <param name="model">The category creation data.</param>
+    /// <returns>The created category.</returns>
+    Task<BudgetCategoryDto?> CreateCategoryAsync(BudgetCategoryCreateDto model);
+
+    /// <summary>
+    /// Updates an existing budget category.
+    /// </summary>
+    /// <param name="id">The category ID.</param>
+    /// <param name="model">The category update data.</param>
+    /// <returns>The updated category.</returns>
+    Task<BudgetCategoryDto?> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model);
+
+    /// <summary>
+    /// Deletes a budget category.
+    /// </summary>
+    /// <param name="id">The category ID.</param>
+    /// <returns>True if deleted successfully.</returns>
+    Task<bool> DeleteCategoryAsync(Guid id);
+
+    /// <summary>
+    /// Activates a budget category.
+    /// </summary>
+    /// <param name="id">The category ID.</param>
+    /// <returns>True if activated successfully.</returns>
+    Task<bool> ActivateCategoryAsync(Guid id);
+
+    /// <summary>
+    /// Deactivates a budget category.
+    /// </summary>
+    /// <param name="id">The category ID.</param>
+    /// <returns>True if deactivated successfully.</returns>
+    Task<bool> DeactivateCategoryAsync(Guid id);
+
+    // Budget Goal Operations
+
+    /// <summary>
+    /// Gets all budget goals for a specific month.
+    /// </summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <returns>List of budget goals.</returns>
+    Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsAsync(int year, int month);
+
+    /// <summary>
+    /// Gets all budget goals for a specific category.
+    /// </summary>
+    /// <param name="categoryId">The category ID.</param>
+    /// <returns>List of budget goals for the category.</returns>
+    Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsByCategoryAsync(Guid categoryId);
+
+    /// <summary>
+    /// Sets or updates a budget goal for a category.
+    /// </summary>
+    /// <param name="categoryId">The category ID.</param>
+    /// <param name="model">The goal data.</param>
+    /// <returns>The created or updated goal.</returns>
+    Task<BudgetGoalDto?> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model);
+
+    /// <summary>
+    /// Deletes a budget goal.
+    /// </summary>
+    /// <param name="categoryId">The category ID.</param>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <returns>True if deleted successfully.</returns>
+    Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month);
+
+    // Budget Progress Operations
+
+    /// <summary>
+    /// Gets the budget summary for a specific month.
+    /// </summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <returns>The budget summary with progress for all categories.</returns>
+    Task<BudgetSummaryDto?> GetBudgetSummaryAsync(int year, int month);
+
+    /// <summary>
+    /// Gets the budget progress for a specific category and month.
+    /// </summary>
+    /// <param name="categoryId">The category ID.</param>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <returns>The budget progress for the category.</returns>
+    Task<BudgetProgressDto?> GetCategoryProgressAsync(Guid categoryId, int year, int month);
 }

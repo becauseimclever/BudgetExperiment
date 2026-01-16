@@ -1,0 +1,109 @@
+@* CategoryCard.razor - Display card for a budget category *@
+
+<div class="card @(Category.IsActive ? "" : "card-inactive")">
+    <div class="card-body">
+        <div class="category-header">
+            <span class="category-icon" style="@GetIconStyle()">
+                @GetIconEmoji()
+            </span>
+            <div class="category-info">
+                <h3 class="card-title">@Category.Name</h3>
+                <span class="text-secondary text-sm">@Category.Type</span>
+            </div>
+        </div>
+        @if (!Category.IsActive)
+        {
+            <span class="badge badge-warning mt-2">Inactive</span>
+        }
+    </div>
+    <div class="card-footer d-flex gap-2">
+        <button class="btn btn-sm btn-secondary" @onclick="HandleEdit" title="Edit category">
+            <Icon Name="edit" Size="16" />
+        </button>
+        @if (Category.IsActive)
+        {
+            <button class="btn btn-sm btn-warning" @onclick="HandleDeactivate" title="Deactivate category">
+                <Icon Name="pause" Size="16" />
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-sm btn-success" @onclick="HandleActivate" title="Activate category">
+                <Icon Name="play" Size="16" />
+            </button>
+        }
+        <button class="btn btn-sm btn-danger" @onclick="HandleDelete" title="Delete category">
+            <Icon Name="trash" Size="16" />
+        </button>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the category to display.
+    /// </summary>
+    [Parameter]
+    public BudgetCategoryDto Category { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the callback when edit is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetCategoryDto> OnEdit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when delete is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetCategoryDto> OnDelete { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when activate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetCategoryDto> OnActivate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when deactivate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetCategoryDto> OnDeactivate { get; set; }
+
+    private async Task HandleEdit() => await OnEdit.InvokeAsync(Category);
+    private async Task HandleDelete() => await OnDelete.InvokeAsync(Category);
+    private async Task HandleActivate() => await OnActivate.InvokeAsync(Category);
+    private async Task HandleDeactivate() => await OnDeactivate.InvokeAsync(Category);
+
+    private string GetIconStyle()
+    {
+        if (string.IsNullOrEmpty(Category.Color))
+        {
+            return string.Empty;
+        }
+
+        return $"background-color: {Category.Color}20; border-color: {Category.Color};";
+    }
+
+    private string GetIconEmoji()
+    {
+        return Category.Icon switch
+        {
+            "cart" => "🛒",
+            "home" => "🏠",
+            "car" => "🚗",
+            "bolt" => "💡",
+            "film" => "🎬",
+            "utensils" => "🍽️",
+            "heart" => "❤️",
+            "shopping-bag" => "🛍️",
+            "briefcase" => "💼",
+            "trending-up" => "📈",
+            "gift" => "🎁",
+            "book" => "📚",
+            "plane" => "✈️",
+            "repeat" => "🔄",
+            "plus-circle" => "➕",
+            _ => "📁"
+        };
+    }
+}

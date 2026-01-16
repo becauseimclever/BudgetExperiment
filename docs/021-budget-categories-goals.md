@@ -428,11 +428,11 @@ Replace free-form category text input with dropdown:
 - [x] Write API integration tests (41 tests)
 
 ### Phase 4: Client - Categories
-- [ ] Add category endpoints to `IBudgetApiService`
-- [ ] Create Categories page (`/categories`)
-- [ ] Create CategoryForm component
-- [ ] Create CategoryList component
-- [ ] Add category CRUD functionality
+- [x] Add category endpoints to `IBudgetApiService`
+- [x] Create Categories page (`/categories`)
+- [x] Create CategoryForm component
+- [x] Create CategoryCard component (CategoryList)
+- [x] Add category CRUD functionality
 
 ### Phase 5: Client - Budget Overview
 - [ ] Add budget endpoints to `IBudgetApiService`

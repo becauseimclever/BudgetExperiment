@@ -583,4 +583,143 @@ public sealed class BudgetApiService : IBudgetApiService
             return null;
         }
     }
+
+    // Budget Category Operations
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<BudgetCategoryDto>> GetCategoriesAsync(bool activeOnly = false)
+    {
+        var url = activeOnly ? "api/v1/categories?activeOnly=true" : "api/v1/categories";
+        var result = await this._httpClient.GetFromJsonAsync<List<BudgetCategoryDto>>(url, JsonOptions);
+        return result ?? new List<BudgetCategoryDto>();
+    }
+
+    /// <inheritdoc />
+    public async Task<BudgetCategoryDto?> GetCategoryAsync(Guid id)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<BudgetCategoryDto>($"api/v1/categories/{id}", JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<BudgetCategoryDto?> CreateCategoryAsync(BudgetCategoryCreateDto model)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/categories", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<BudgetCategoryDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<BudgetCategoryDto?> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model)
+    {
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/categories/{id}", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<BudgetCategoryDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteCategoryAsync(Guid id)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/categories/{id}");
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ActivateCategoryAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/categories/{id}/activate", null);
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeactivateCategoryAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/categories/{id}/deactivate", null);
+        return response.IsSuccessStatusCode;
+    }
+
+    // Budget Goal Operations
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsAsync(int year, int month)
+    {
+        var result = await this._httpClient.GetFromJsonAsync<List<BudgetGoalDto>>(
+            $"api/v1/budgets?year={year}&month={month}",
+            JsonOptions);
+        return result ?? new List<BudgetGoalDto>();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsByCategoryAsync(Guid categoryId)
+    {
+        var result = await this._httpClient.GetFromJsonAsync<List<BudgetGoalDto>>(
+            $"api/v1/budgets/category/{categoryId}",
+            JsonOptions);
+        return result ?? new List<BudgetGoalDto>();
+    }
+
+    /// <inheritdoc />
+    public async Task<BudgetGoalDto?> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model)
+    {
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/budgets/{categoryId}", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<BudgetGoalDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/budgets/{categoryId}?year={year}&month={month}");
+        return response.IsSuccessStatusCode;
+    }
+
+    // Budget Progress Operations
+
+    /// <inheritdoc />
+    public async Task<BudgetSummaryDto?> GetBudgetSummaryAsync(int year, int month)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<BudgetSummaryDto>(
+                $"api/v1/budgets/summary?year={year}&month={month}",
+                JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<BudgetProgressDto?> GetCategoryProgressAsync(Guid categoryId, int year, int month)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<BudgetProgressDto>(
+                $"api/v1/budgets/progress/{categoryId}?year={year}&month={month}",
+                JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
 }
