@@ -35,6 +35,9 @@ public static class DependencyInjection
         services.AddScoped<IRecurringTransactionRealizationService, RecurringTransactionRealizationService>();
         services.AddScoped<IRecurringTransferInstanceService, RecurringTransferInstanceService>();
         services.AddScoped<IRecurringTransferRealizationService, RecurringTransferRealizationService>();
+        services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
+        services.AddScoped<IBudgetGoalService, BudgetGoalService>();
+        services.AddScoped<IBudgetProgressService, BudgetProgressService>();
         return services;
     }
 }

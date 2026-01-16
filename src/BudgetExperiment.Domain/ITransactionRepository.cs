@@ -72,4 +72,18 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
         Guid recurringTransferId,
         DateOnly instanceDate,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the total spending for a category in a specific month.
+    /// </summary>
+    /// <param name="categoryId">The budget category identifier.</param>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The total spending amount for the category.</returns>
+    Task<MoneyValue> GetSpendingByCategoryAsync(
+        Guid categoryId,
+        int year,
+        int month,
+        CancellationToken cancellationToken = default);
 }

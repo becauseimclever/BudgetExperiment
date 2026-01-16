@@ -159,4 +159,37 @@ internal sealed class TransactionRepository : ITransactionRepository
         this._context.Transactions.Remove(entity);
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc />
+    public async Task<MoneyValue> GetSpendingByCategoryAsync(
+        Guid categoryId,
+        int year,
+        int month,
+        CancellationToken cancellationToken = default)
+    {
+        var startDate = new DateOnly(year, month, 1);
+        var endDate = startDate.AddMonths(1).AddDays(-1);
+
+        // Get the category name to match against transactions
+        // For now, transactions use a string category. Later phases will add a proper CategoryId FK.
+        var category = await this._context.BudgetCategories
+            .Where(c => c.Id == categoryId)
+            .Select(c => c.Name)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (category is null)
+        {
+            return MoneyValue.Create("USD", 0m);
+        }
+
+        // Sum all spending (negative amounts represent expenses)
+        var totalSpending = await this._context.Transactions
+            .Where(t => t.Date >= startDate
+                && t.Date <= endDate
+                && t.Category == category
+                && t.Amount.Amount < 0)
+            .SumAsync(t => Math.Abs(t.Amount.Amount), cancellationToken);
+
+        return MoneyValue.Create("USD", totalSpending);
+    }
 }

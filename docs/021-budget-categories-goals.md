@@ -408,18 +408,22 @@ Replace free-form category text input with dropdown:
 - [x] Write unit tests for domain logic (50 tests)
 
 ### Phase 2: Application Services
-- [ ] Create `IBudgetCategoryService` interface
-- [ ] Implement `BudgetCategoryService`
-- [ ] Create `IBudgetGoalService` interface
-- [ ] Implement `BudgetGoalService`
-- [ ] Create `IBudgetProgressService` interface
-- [ ] Implement `BudgetProgressService`
-- [ ] Write service unit tests
+- [x] Create `IBudgetCategoryService` interface
+- [x] Implement `BudgetCategoryService`
+- [x] Create `IBudgetGoalService` interface
+- [x] Implement `BudgetGoalService`
+- [x] Create `IBudgetProgressService` interface
+- [x] Implement `BudgetProgressService`
+- [x] Write service unit tests
+- [x] Create DTOs in Contracts project
+- [x] Add mapping methods to DomainToDtoMapper
+- [x] Register services in DI
+- [x] Add `GetSpendingByCategoryAsync` to `ITransactionRepository`
 
 ### Phase 3: API Layer
 - [ ] Create `CategoriesController`
 - [ ] Create `BudgetsController`
-- [ ] Add DTOs to Contracts project
+- [x] Add DTOs to Contracts project (moved to Phase 2)
 - [ ] Add validation
 - [ ] Write API integration tests
 
