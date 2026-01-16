@@ -114,6 +114,19 @@ Tests under `tests/` mirroring structure:
 ## 17. Security & Configuration
 - Store connection strings & secrets outside code (user-secrets/local env). NEVER commit secrets.
 - **Database Connection**: The database connection string (`AppDb`) is stored in user secrets for the API project (`BudgetExperiment.Api`). Use `dotnet user-secrets set "ConnectionStrings:AppDb" "<connection-string>"` to configure locally.
+- **Authentication (Authentik)**: Authentication settings must be stored in user secrets (local dev) or environment variables (production). NEVER commit real Authority/Audience values to appsettings files.
+  - Local development (user secrets):
+    ```powershell
+    dotnet user-secrets set "Authentication:Authentik:Enabled" "true" --project src/BudgetExperiment.Api
+    dotnet user-secrets set "Authentication:Authentik:Authority" "https://auth.example.com/application/o/budget-experiment/" --project src/BudgetExperiment.Api
+    dotnet user-secrets set "Authentication:Authentik:Audience" "budget-experiment" --project src/BudgetExperiment.Api
+    ```
+  - Production (environment variables via `.env` file - see `.env.example`):
+    ```
+    AUTHENTIK_ENABLED=true
+    AUTHENTIK_AUTHORITY=https://auth.example.com/application/o/budget-experiment/
+    AUTHENTIK_AUDIENCE=budget-experiment
+    ```
 - Validate all external inputs (DTO validation). Avoid over-posting.
 - Use HTTPS redirection & security headers middleware.
 

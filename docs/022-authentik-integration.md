@@ -779,10 +779,12 @@ public sealed class AccountCreateDto
 
 ### Phase 1: Infrastructure Setup
 - [ ] Configure Authentik application and provider
-- [ ] Add authentication packages to API
-- [ ] Configure JWT Bearer authentication in Program.cs
-- [ ] Create `IUserContext` interface and implementation
-- [ ] Write authentication middleware tests
+- [x] Add authentication packages to API
+- [x] Configure JWT Bearer authentication in Program.cs
+- [x] Create `IUserContext` interface and implementation
+- [x] Write authentication middleware tests
+- [x] Update `.env.example` with authentication environment variables (do NOT commit actual secrets)
+- [x] Update `docker-compose.pi.yml` to pass authentication settings via environment variables
 
 ### Phase 2: Database Migration
 - [ ] Add `Scope`, `OwnerUserId`, `CreatedByUserId` columns to all entities

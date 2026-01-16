@@ -1,13 +1,17 @@
 // <copyright file="Program.cs" company="Fortinbra">
 // Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
 
+using BudgetExperiment.Api;
 using BudgetExperiment.Api.HealthChecks;
 using BudgetExperiment.Application;
+using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 using Scalar.AspNetCore;
 
@@ -28,6 +32,12 @@ public partial class Program
         // Add controllers + OpenAPI (ASP.NET Core built-in OpenAPI services).
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
+
+        // Authentication & Authorization
+        builder.Services.Configure<AuthentikOptions>(builder.Configuration.GetSection(AuthentikOptions.SectionName));
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<IUserContext, UserContext>();
+        ConfigureAuthentication(builder.Services, builder.Configuration);
 
         // Application & Infrastructure
         builder.Services.AddApplication();
@@ -71,6 +81,8 @@ public partial class Program
         app.MapOpenApi();
         app.MapScalarApiReference();
 
+        // Authentication & Authorization
+        app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
         app.MapHealthChecks("/health");
@@ -162,5 +174,54 @@ public partial class Program
 
             // Don't throw - seed failure shouldn't prevent app from starting in dev
         }
+    }
+
+    /// <summary>
+    /// Configures JWT Bearer authentication for Authentik OIDC integration.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The configuration root.</param>
+    private static void ConfigureAuthentication(IServiceCollection services, IConfiguration configuration)
+    {
+        var authentikOptions = configuration.GetSection(AuthentikOptions.SectionName).Get<AuthentikOptions>() ?? new AuthentikOptions();
+
+        if (!authentikOptions.Enabled)
+        {
+            // Authentication is disabled - add a no-op authentication scheme
+            services.AddAuthentication();
+            services.AddAuthorization();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(authentikOptions.Authority))
+        {
+            throw new InvalidOperationException("Authentication is enabled but 'Authentication:Authentik:Authority' is not configured.");
+        }
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.Authority = authentikOptions.Authority;
+            options.Audience = authentikOptions.Audience;
+            options.RequireHttpsMetadata = authentikOptions.RequireHttpsMetadata;
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = !string.IsNullOrWhiteSpace(authentikOptions.Audience),
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ClockSkew = TimeSpan.FromMinutes(1),
+            };
+
+            // Map Authentik claims to standard .NET claims
+            options.MapInboundClaims = false;
+        });
+
+        services.AddAuthorization();
     }
 }

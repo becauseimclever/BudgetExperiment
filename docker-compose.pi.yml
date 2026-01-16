@@ -11,6 +11,10 @@
 #
 # Example .env file:
 #   DB_CONNECTION_STRING=Host=your-db-server;Port=5432;Database=budgetexperiment;Username=your-user;Password=your-password
+#   AUTHENTIK_ENABLED=true
+#   AUTHENTIK_AUTHORITY=https://auth.example.com/application/o/budget-experiment/
+#   AUTHENTIK_AUDIENCE=budget-experiment
+#   AUTHENTIK_REQUIRE_HTTPS=true
 
 services:
   budgetexperiment:
@@ -25,6 +29,12 @@ services:
       
       # Database connection (from .env file or Docker secrets)
       - ConnectionStrings__AppDb=${DB_CONNECTION_STRING}
+      
+      # Authentication (Authentik OIDC)
+      - Authentication__Authentik__Enabled=${AUTHENTIK_ENABLED:-false}
+      - Authentication__Authentik__Authority=${AUTHENTIK_AUTHORITY:-}
+      - Authentication__Authentik__Audience=${AUTHENTIK_AUDIENCE:-}
+      - Authentication__Authentik__RequireHttpsMetadata=${AUTHENTIK_REQUIRE_HTTPS:-true}
       
       # Logging
       - Logging__LogLevel__Default=Information
