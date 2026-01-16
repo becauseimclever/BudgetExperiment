@@ -90,6 +90,11 @@ public sealed class BudgetProgressService : IBudgetProgressService
             totalSpent = MoneyValue.Create(totalSpent.Currency, totalSpent.Amount + spent.Amount);
         }
 
+        // Calculate category status counts
+        var categoriesOnTrack = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.OnTrack));
+        var categoriesWarning = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.Warning));
+        var categoriesOverBudget = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.OverBudget));
+
         return new BudgetSummaryDto
         {
             Year = year,
@@ -98,6 +103,9 @@ public sealed class BudgetProgressService : IBudgetProgressService
             TotalBudgeted = DomainToDtoMapper.ToDto(totalBudgeted),
             TotalSpent = DomainToDtoMapper.ToDto(totalSpent),
             TotalRemaining = DomainToDtoMapper.ToDto(MoneyValue.Create(totalBudgeted.Currency, totalBudgeted.Amount - totalSpent.Amount)),
+            CategoriesOnTrack = categoriesOnTrack,
+            CategoriesWarning = categoriesWarning,
+            CategoriesOverBudget = categoriesOverBudget,
         };
     }
 }

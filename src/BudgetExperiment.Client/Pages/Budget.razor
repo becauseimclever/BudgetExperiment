@@ -42,19 +42,19 @@
                 <div class="summary-stat">
                     <span class="stat-label">Total Budgeted</span>
                     <span class="stat-value">
-                        <MoneyDisplay Amount="@summary.TotalBudgeted.Amount" Currency="@summary.TotalBudgeted.Currency" />
+                        <MoneyDisplay Amount="@summary.TotalBudgeted.Amount" CurrencyCode="@summary.TotalBudgeted.Currency" />
                     </span>
                 </div>
                 <div class="summary-stat">
                     <span class="stat-label">Total Spent</span>
                     <span class="stat-value text-expense">
-                        <MoneyDisplay Amount="@summary.TotalSpent.Amount" Currency="@summary.TotalSpent.Currency" />
+                        <MoneyDisplay Amount="@summary.TotalSpent.Amount" CurrencyCode="@summary.TotalSpent.Currency" />
                     </span>
                 </div>
                 <div class="summary-stat">
                     <span class="stat-label">Remaining</span>
                     <span class="stat-value @(summary.TotalRemaining.Amount >= 0 ? "text-income" : "text-expense")">
-                        <MoneyDisplay Amount="@summary.TotalRemaining.Amount" Currency="@summary.TotalRemaining.Currency" />
+                        <MoneyDisplay Amount="@summary.TotalRemaining.Amount" CurrencyCode="@summary.TotalRemaining.Currency" />
                     </span>
                 </div>
             </div>
