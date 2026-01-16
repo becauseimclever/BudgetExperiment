@@ -5,6 +5,7 @@ using BudgetExperiment.Api.HealthChecks;
 using BudgetExperiment.Application;
 using BudgetExperiment.Infrastructure;
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -52,6 +53,12 @@ public partial class Program
         {
             await SeedDevelopmentDataAsync(app);
         }
+
+        // Handle forwarded headers from reverse proxy (NGINX/Cloudflare)
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+        });
 
         app.UseHttpsRedirection();
         app.UseCors("dev");
