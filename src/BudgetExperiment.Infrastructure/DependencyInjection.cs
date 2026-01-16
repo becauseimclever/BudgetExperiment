@@ -37,6 +37,8 @@ public static class DependencyInjection
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<IRecurringTransferRepository, RecurringTransferRepository>();
         services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
+        services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
+        services.AddScoped<IBudgetGoalRepository, BudgetGoalRepository>();
 
         return services;
     }

@@ -398,14 +398,14 @@ Replace free-form category text input with dropdown:
 ## Implementation Plan
 
 ### Phase 1: Domain & Infrastructure
-- [ ] Create `BudgetCategory` entity
-- [ ] Create `BudgetGoal` entity
-- [ ] Create `BudgetProgress` value object
-- [ ] Create repository interfaces
-- [ ] Create EF Core configurations
-- [ ] Add database migration
-- [ ] Implement repositories
-- [ ] Write unit tests for domain logic
+- [x] Create `BudgetCategory` entity
+- [x] Create `BudgetGoal` entity
+- [x] Create `BudgetProgress` value object
+- [x] Create repository interfaces
+- [x] Create EF Core configurations
+- [x] Add database migration
+- [x] Implement repositories
+- [x] Write unit tests for domain logic (50 tests)
 
 ### Phase 2: Application Services
 - [ ] Create `IBudgetCategoryService` interface
