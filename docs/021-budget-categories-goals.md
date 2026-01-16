@@ -421,11 +421,11 @@ Replace free-form category text input with dropdown:
 - [x] Add `GetSpendingByCategoryAsync` to `ITransactionRepository`
 
 ### Phase 3: API Layer
-- [ ] Create `CategoriesController`
-- [ ] Create `BudgetsController`
+- [x] Create `CategoriesController`
+- [x] Create `BudgetsController`
 - [x] Add DTOs to Contracts project (moved to Phase 2)
-- [ ] Add validation
-- [ ] Write API integration tests
+- [x] Add validation (month validation in controllers)
+- [x] Write API integration tests (41 tests)
 
 ### Phase 4: Client - Categories
 - [ ] Add category endpoints to `IBudgetApiService`
