@@ -435,11 +435,11 @@ Replace free-form category text input with dropdown:
 - [x] Add category CRUD functionality
 
 ### Phase 5: Client - Budget Overview
-- [ ] Add budget endpoints to `IBudgetApiService`
-- [ ] Create Budget page (`/budget`)
-- [ ] Create BudgetSummary component
-- [ ] Create BudgetProgressBar component
-- [ ] Create CategoryBudgetCard component
+- [x] Add budget endpoints to `IBudgetApiService`
+- [x] Create Budget page (`/budget`)
+- [x] Create BudgetSummary display (integrated in Budget page)
+- [x] Create BudgetProgressBar component
+- [x] Create CategoryBudgetCard component
 
 ### Phase 6: Transaction Integration
 - [ ] Update transaction forms with category dropdown

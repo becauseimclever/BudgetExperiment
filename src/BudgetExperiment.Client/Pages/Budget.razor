@@ -1,0 +1,343 @@
+@page "/budget"
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Budget Overview - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Budget Overview">
+        <Actions>
+            <div class="month-navigation">
+                <button class="btn btn-secondary btn-sm" @onclick="PreviousMonth" title="Previous month">
+                    <Icon Name="chevron-left" Size="16" />
+                </button>
+                <span class="current-month">@currentDate.ToString("MMMM yyyy")</span>
+                <button class="btn btn-secondary btn-sm" @onclick="NextMonth" title="Next month">
+                    <Icon Name="chevron-right" Size="16" />
+                </button>
+            </div>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading budget..." />
+    }
+    else if (summary == null && errorMessage == null)
+    {
+        <p class="empty-message">No budget data available. Set up budget goals in Categories.</p>
+    }
+    else if (errorMessage == null && summary != null)
+    {
+        @* Summary Card *@
+        <div class="budget-summary-card">
+            <h3>Monthly Summary</h3>
+            <div class="summary-stats">
+                <div class="summary-stat">
+                    <span class="stat-label">Total Budgeted</span>
+                    <span class="stat-value">
+                        <MoneyDisplay Amount="@summary.TotalBudgeted.Amount" Currency="@summary.TotalBudgeted.Currency" />
+                    </span>
+                </div>
+                <div class="summary-stat">
+                    <span class="stat-label">Total Spent</span>
+                    <span class="stat-value text-expense">
+                        <MoneyDisplay Amount="@summary.TotalSpent.Amount" Currency="@summary.TotalSpent.Currency" />
+                    </span>
+                </div>
+                <div class="summary-stat">
+                    <span class="stat-label">Remaining</span>
+                    <span class="stat-value @(summary.TotalRemaining.Amount >= 0 ? "text-income" : "text-expense")">
+                        <MoneyDisplay Amount="@summary.TotalRemaining.Amount" Currency="@summary.TotalRemaining.Currency" />
+                    </span>
+                </div>
+            </div>
+            
+            <BudgetProgressBar PercentUsed="@summary.OverallPercentUsed" 
+                               Status="@GetOverallStatus()" />
+            
+            <div class="summary-status-counts">
+                @if (summary.CategoriesOnTrack > 0)
+                {
+                    <span class="status-count status-success">
+                        ✓ @summary.CategoriesOnTrack on track
+                    </span>
+                }
+                @if (summary.CategoriesWarning > 0)
+                {
+                    <span class="status-count status-warning">
+                        ⚠️ @summary.CategoriesWarning warning
+                    </span>
+                }
+                @if (summary.CategoriesOverBudget > 0)
+                {
+                    <span class="status-count status-danger">
+                        🔴 @summary.CategoriesOverBudget over budget
+                    </span>
+                }
+            </div>
+        </div>
+
+        @* Category Progress *@
+        @if (summary.CategoryProgress.Count > 0)
+        {
+            <div class="budget-categories-section">
+                <h3>By Category</h3>
+                <div class="card-grid">
+                    @foreach (var progress in summary.CategoryProgress.OrderByDescending(p => p.PercentUsed))
+                    {
+                        <CategoryBudgetCard Progress="@progress"
+                                            ShowEditButton="true"
+                                            OnEditGoal="ShowEditGoal" />
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <p>No budget goals set for @currentDate.ToString("MMMM yyyy").</p>
+                <button class="btn btn-primary" @onclick="NavigateToCategories">
+                    <Icon Name="tag" Size="16" /> Manage Categories
+                </button>
+            </div>
+        }
+    }
+
+    <Modal IsVisible="@showEditGoal" Title="Edit Budget Goal" OnClose="HideEditGoal">
+        <div class="form-group">
+            <label class="form-label">Category</label>
+            <p class="form-static">@editingProgress?.CategoryName</p>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Month</label>
+            <p class="form-static">@currentDate.ToString("MMMM yyyy")</p>
+        </div>
+        <div class="form-group">
+            <label for="targetAmount" class="form-label">Budget Amount:</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input id="targetAmount" 
+                       type="number" 
+                       class="form-control"
+                       step="0.01"
+                       min="0"
+                       @bind="editTargetAmount"
+                       placeholder="0.00" />
+            </div>
+        </div>
+        <div class="form-actions form-actions-right">
+            <button type="button" class="btn btn-danger" @onclick="DeleteGoal" disabled="@isSubmitting">
+                Delete Goal
+            </button>
+            <button type="button" class="btn btn-secondary" @onclick="HideEditGoal" disabled="@isSubmitting">
+                Cancel
+            </button>
+            <button type="button" class="btn btn-primary" @onclick="SaveGoal" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save</span>
+                }
+            </button>
+        </div>
+    </Modal>
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool isRetrying;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private BudgetSummaryDto? summary;
+    private DateTime currentDate = DateTime.Today;
+
+    // Edit goal state
+    private bool showEditGoal = false;
+    private BudgetProgressDto? editingProgress;
+    private decimal editTargetAmount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBudget();
+    }
+
+    private async Task LoadBudget()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            summary = await ApiService.GetBudgetSummaryAsync(currentDate.Year, currentDate.Month);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load budget: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadBudget();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private async Task PreviousMonth()
+    {
+        currentDate = currentDate.AddMonths(-1);
+        await LoadBudget();
+    }
+
+    private async Task NextMonth()
+    {
+        currentDate = currentDate.AddMonths(1);
+        await LoadBudget();
+    }
+
+    private string GetOverallStatus()
+    {
+        if (summary == null)
+        {
+            return "NoBudgetSet";
+        }
+
+        if (summary.OverallPercentUsed >= 100)
+        {
+            return "OverBudget";
+        }
+
+        if (summary.OverallPercentUsed >= 80)
+        {
+            return "Warning";
+        }
+
+        return "OnTrack";
+    }
+
+    private void ShowEditGoal(BudgetProgressDto progress)
+    {
+        editingProgress = progress;
+        editTargetAmount = progress.TargetAmount.Amount;
+        showEditGoal = true;
+    }
+
+    private void HideEditGoal()
+    {
+        showEditGoal = false;
+        editingProgress = null;
+    }
+
+    private async Task SaveGoal()
+    {
+        if (editingProgress == null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            var goalDto = new BudgetGoalSetDto
+            {
+                Year = currentDate.Year,
+                Month = currentDate.Month,
+                TargetAmount = new MoneyDto
+                {
+                    Amount = editTargetAmount,
+                    Currency = editingProgress.TargetAmount.Currency ?? "USD"
+                }
+            };
+
+            var result = await ApiService.SetBudgetGoalAsync(editingProgress.CategoryId, goalDto);
+            if (result != null)
+            {
+                showEditGoal = false;
+                editingProgress = null;
+                await LoadBudget();
+            }
+            else
+            {
+                errorMessage = "Failed to save budget goal.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save budget goal: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task DeleteGoal()
+    {
+        if (editingProgress == null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            var success = await ApiService.DeleteBudgetGoalAsync(
+                editingProgress.CategoryId,
+                currentDate.Year,
+                currentDate.Month);
+
+            if (success)
+            {
+                showEditGoal = false;
+                editingProgress = null;
+                await LoadBudget();
+            }
+            else
+            {
+                errorMessage = "Failed to delete budget goal.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete budget goal: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void NavigateToCategories()
+    {
+        Navigation.NavigateTo("/categories");
+    }
+}

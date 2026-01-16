@@ -1,0 +1,110 @@
+@* CategoryBudgetCard.razor - Display card for category budget progress *@
+
+<div class="card category-budget-card @GetStatusClass()">
+    <div class="card-body">
+        <div class="category-budget-header">
+            <span class="category-icon" style="@GetIconStyle()">
+                @GetIconEmoji()
+            </span>
+            <div class="category-info">
+                <h4 class="card-title-sm">@Progress.CategoryName</h4>
+                <span class="budget-amounts">
+                    <MoneyDisplay Amount="@Progress.SpentAmount.Amount" Currency="@Progress.SpentAmount.Currency" />
+                    <span class="text-secondary"> / </span>
+                    <MoneyDisplay Amount="@Progress.TargetAmount.Amount" Currency="@Progress.TargetAmount.Currency" />
+                </span>
+            </div>
+        </div>
+        
+        <BudgetProgressBar PercentUsed="@Progress.PercentUsed" Status="@Progress.Status" />
+        
+        <div class="budget-details">
+            <span class="budget-remaining @(Progress.RemainingAmount.Amount < 0 ? "text-expense" : "text-income")">
+                @if (Progress.RemainingAmount.Amount >= 0)
+                {
+                    <span>@Progress.RemainingAmount.Amount.ToString("C") remaining</span>
+                }
+                else
+                {
+                    <span>@Math.Abs(Progress.RemainingAmount.Amount).ToString("C") over budget</span>
+                }
+            </span>
+            <span class="text-secondary text-sm">@Progress.TransactionCount transactions</span>
+        </div>
+    </div>
+    
+    @if (ShowEditButton)
+    {
+        <div class="card-footer">
+            <button class="btn btn-sm btn-secondary" @onclick="HandleEditGoal" title="Edit budget goal">
+                <Icon Name="edit" Size="16" /> Edit Goal
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the budget progress to display.
+    /// </summary>
+    [Parameter]
+    public BudgetProgressDto Progress { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets whether to show the edit button.
+    /// </summary>
+    [Parameter]
+    public bool ShowEditButton { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the callback when edit goal is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetProgressDto> OnEditGoal { get; set; }
+
+    private async Task HandleEditGoal() => await OnEditGoal.InvokeAsync(Progress);
+
+    private string GetStatusClass()
+    {
+        return Progress.Status switch
+        {
+            "OverBudget" => "status-danger",
+            "Warning" => "status-warning",
+            "OnTrack" => "status-success",
+            _ => ""
+        };
+    }
+
+    private string GetIconStyle()
+    {
+        if (string.IsNullOrEmpty(Progress.CategoryColor))
+        {
+            return string.Empty;
+        }
+
+        return $"background-color: {Progress.CategoryColor}20; border-color: {Progress.CategoryColor};";
+    }
+
+    private string GetIconEmoji()
+    {
+        return Progress.CategoryIcon switch
+        {
+            "cart" => "🛒",
+            "home" => "🏠",
+            "car" => "🚗",
+            "bolt" => "💡",
+            "film" => "🎬",
+            "utensils" => "🍽️",
+            "heart" => "❤️",
+            "shopping-bag" => "🛍️",
+            "briefcase" => "💼",
+            "trending-up" => "📈",
+            "gift" => "🎁",
+            "book" => "📚",
+            "plane" => "✈️",
+            "repeat" => "🔄",
+            "plus-circle" => "➕",
+            _ => "📁"
+        };
+    }
+}

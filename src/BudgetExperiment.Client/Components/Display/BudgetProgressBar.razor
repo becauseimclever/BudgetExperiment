@@ -1,0 +1,60 @@
+@* BudgetProgressBar.razor - Visual progress bar for budget spending *@
+
+<div class="budget-progress-container">
+    <div class="budget-progress-bar">
+        <div class="budget-progress-fill @GetStatusClass()" 
+             style="width: @GetProgressWidth()%"></div>
+    </div>
+    <div class="budget-progress-label">
+        <span class="budget-progress-percent">@PercentUsed.ToString("N0")%</span>
+        @if (!string.IsNullOrEmpty(StatusIcon))
+        {
+            <span class="budget-progress-status-icon">@StatusIcon</span>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the percentage of budget used (0-100+).
+    /// </summary>
+    [Parameter]
+    public decimal PercentUsed { get; set; }
+
+    /// <summary>
+    /// Gets or sets the budget status (OnTrack, Warning, OverBudget, NoBudgetSet).
+    /// </summary>
+    [Parameter]
+    public string Status { get; set; } = "OnTrack";
+
+    /// <summary>
+    /// Gets or sets whether to show a compact version.
+    /// </summary>
+    [Parameter]
+    public bool Compact { get; set; } = false;
+
+    private string GetStatusClass()
+    {
+        return Status switch
+        {
+            "OverBudget" => "progress-danger",
+            "Warning" => "progress-warning",
+            "OnTrack" => "progress-success",
+            _ => "progress-neutral"
+        };
+    }
+
+    private string? StatusIcon => Status switch
+    {
+        "OverBudget" => "🔴",
+        "Warning" => "⚠️",
+        "OnTrack" when PercentUsed >= 100 => "✓",
+        _ => null
+    };
+
+    private decimal GetProgressWidth()
+    {
+        // Cap at 100% for visual display, but show actual percentage in label
+        return Math.Min(PercentUsed, 100);
+    }
+}
