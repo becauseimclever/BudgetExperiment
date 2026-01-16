@@ -47,7 +47,7 @@ public static class DomainToDtoMapper
             Amount = ToDto(transaction.Amount),
             Date = transaction.Date,
             Description = transaction.Description,
-            Category = transaction.Category,
+            CategoryId = transaction.CategoryId,
             CreatedAt = transaction.CreatedAt,
             UpdatedAt = transaction.UpdatedAt,
             IsTransfer = transaction.IsTransfer,

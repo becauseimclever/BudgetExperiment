@@ -138,7 +138,7 @@ public sealed class RecurringTransactionService
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
         var pattern = CreateRecurrencePattern(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
 
-        recurring.Update(dto.Description, amount, pattern, dto.EndDate);
+        recurring.Update(dto.Description, amount, pattern, dto.EndDate, dto.CategoryId);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
@@ -258,7 +258,7 @@ public sealed class RecurringTransactionService
         // Update the series
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
         var pattern = CreateRecurrencePattern(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
-        recurring.Update(dto.Description, amount, pattern, dto.EndDate);
+        recurring.Update(dto.Description, amount, pattern, dto.EndDate, dto.CategoryId);
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 

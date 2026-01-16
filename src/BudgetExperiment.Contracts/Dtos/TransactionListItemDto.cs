@@ -25,8 +25,8 @@ public sealed class TransactionListItemDto
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
-    /// <summary>Gets or sets the category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 
     /// <summary>Gets or sets the creation timestamp (for actual transactions).</summary>
     public DateTime? CreatedAt { get; set; }

@@ -90,10 +90,11 @@
         <TransactionForm
             ShowAccountSelector="false"
             FixedAccountId="@AccountId"
+            Categories="@categories"
             InitialDate="@(editingTransaction?.Date ?? DateOnly.FromDateTime(DateTime.Today))"
             InitialDescription="@(editingTransaction?.Description ?? "")"
             InitialAmount="@(editingTransaction?.Amount.Amount ?? 0)"
-            InitialCategory="@editingTransaction?.Category"
+            InitialCategoryId="@editingTransaction?.CategoryId"
             IsSubmitting="@isSubmitting"
             ErrorMessage="@saveErrorMessage"
             OnSubmit="@SaveTransaction"
@@ -149,6 +150,7 @@
     // Data from API - no business logic, just display
     private TransactionListDto? transactionList;
     private List<TransactionListItem> transactionListItems = new();
+    private List<BudgetCategoryDto> categories = new();
 
     // UI state
     private bool isLoading = true;
@@ -196,7 +198,20 @@
         {
             previousAccountId = AccountId;
             await LoadData();
+            await LoadCategories();
             await LoadPastDueItems();
+        }
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            categories = (await ApiService.GetCategoriesAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load categories: {ex.Message}";
         }
     }
 
@@ -238,7 +253,7 @@
             Id = dto.Id,
             Date = dto.Date,
             Description = dto.Description,
-            Category = dto.Category,
+            CategoryId = dto.CategoryId,
             Amount = dto.Amount,
             IsRecurring = dto.Type == "recurring" || dto.Type == "recurring-transfer",
             IsModified = dto.IsModified,
@@ -293,7 +308,7 @@
             Date = item.Date,
             Description = item.Description,
             Amount = item.Amount,
-            Category = item.Category,
+            CategoryId = item.CategoryId,
         };
         showAddTransaction = true;
     }

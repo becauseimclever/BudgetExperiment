@@ -47,9 +47,9 @@
                             <div class="badge-group">
                                 <span class="badge badge-account">@recurring.AccountName</span>
                                 <span class="badge badge-frequency">@FormatFrequency(recurring)</span>
-                                @if (!string.IsNullOrEmpty(recurring.Category))
+                                @if (recurring.CategoryId.HasValue)
                                 {
-                                    <span class="badge badge-category">@recurring.Category</span>
+                                    <span class="badge badge-category">@recurring.CategoryId.ToString()![..8]</span>
                                 }
                             </div>
                         </div>
@@ -110,6 +110,7 @@
 
     <Modal IsVisible="@showAddForm" Title="Add Recurring Transaction" OnClose="HideForm">
         <RecurringTransactionForm Model="@newRecurring"
+                                   Categories="@categories"
                                    OnSubmit="CreateRecurring"
                                    OnCancel="HideForm"
                                    IsSubmitting="@isSubmitting" />
@@ -117,6 +118,7 @@
 
     <Modal IsVisible="@showEditForm" Title="Edit Recurring Transaction" OnClose="HideForm">
         <EditRecurringForm Model="@editModel"
+                           Categories="@categories"
                            OnSubmit="UpdateRecurring"
                            OnCancel="HideForm"
                            IsSubmitting="@isSubmitting" />
@@ -138,6 +140,7 @@
     private bool isDeleting = false;
     private string? errorMessage;
     private List<RecurringTransactionDto> recurringTransactions = new();
+    private List<BudgetCategoryDto> categories = new();
 
     private bool showAddForm = false;
     private bool showEditForm = false;
@@ -151,6 +154,19 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadRecurringTransactions();
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            categories = (await ApiService.GetCategoriesAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load categories: {ex.Message}";
+        }
     }
 
     private async Task LoadRecurringTransactions()
@@ -210,7 +226,7 @@
             Description = recurring.Description,
             Amount = recurring.Amount,
             EndDate = recurring.EndDate,
-            Category = recurring.Category,
+            CategoryId = recurring.CategoryId,
         };
         showEditForm = true;
     }

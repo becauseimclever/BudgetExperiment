@@ -50,26 +50,22 @@ public static class DatabaseSeeder
         checking.AddTransaction(
             MoneyValue.Create("USD", -1200.00m),
             startOfMonth.AddDays(1),
-            "Rent Payment",
-            "Housing");
+            "Rent Payment");
 
         checking.AddTransaction(
             MoneyValue.Create("USD", -85.50m),
             startOfMonth.AddDays(3),
-            "Electric Bill",
-            "Utilities");
+            "Electric Bill");
 
         checking.AddTransaction(
             MoneyValue.Create("USD", -120.00m),
             startOfMonth.AddDays(5),
-            "Grocery Store",
-            "Food");
+            "Grocery Store");
 
         checking.AddTransaction(
             MoneyValue.Create("USD", -45.00m),
             startOfMonth.AddDays(7),
-            "Gas Station",
-            "Transportation");
+            "Gas Station");
 
         checking.AddTransaction(
             MoneyValue.Create("USD", 3500.00m),
@@ -79,14 +75,12 @@ public static class DatabaseSeeder
         checking.AddTransaction(
             MoneyValue.Create("USD", -65.00m),
             startOfMonth.AddDays(16),
-            "Internet Bill",
-            "Utilities");
+            "Internet Bill");
 
         checking.AddTransaction(
             MoneyValue.Create("USD", -150.00m),
             startOfMonth.AddDays(18),
-            "Grocery Store",
-            "Food");
+            "Grocery Store");
 
         checking.AddTransaction(
             MoneyValue.Create("USD", -500.00m),
@@ -108,44 +102,37 @@ public static class DatabaseSeeder
         creditCard.AddTransaction(
             MoneyValue.Create("USD", -89.99m),
             startOfMonth.AddDays(2),
-            "Amazon Purchase",
-            "Shopping");
+            "Amazon Purchase");
 
         creditCard.AddTransaction(
             MoneyValue.Create("USD", -35.00m),
             startOfMonth.AddDays(4),
-            "Restaurant Dinner",
-            "Food");
+            "Restaurant Dinner");
 
         creditCard.AddTransaction(
             MoneyValue.Create("USD", -12.99m),
             startOfMonth.AddDays(6),
-            "Netflix Subscription",
-            "Entertainment");
+            "Netflix Subscription");
 
         creditCard.AddTransaction(
             MoneyValue.Create("USD", -15.99m),
             startOfMonth.AddDays(6),
-            "Spotify Subscription",
-            "Entertainment");
+            "Spotify Subscription");
 
         creditCard.AddTransaction(
             MoneyValue.Create("USD", -250.00m),
             startOfMonth.AddDays(10),
-            "Credit Card Payment",
-            "Payment");
+            "Credit Card Payment");
 
         creditCard.AddTransaction(
             MoneyValue.Create("USD", -42.50m),
             startOfMonth.AddDays(12),
-            "Coffee Shop",
-            "Food");
+            "Coffee Shop");
 
         creditCard.AddTransaction(
             MoneyValue.Create("USD", -199.00m),
             startOfMonth.AddDays(14),
-            "New Shoes",
-            "Shopping");
+            "New Shoes");
 
         // Cash transactions
         cash.AddTransaction(
@@ -156,14 +143,12 @@ public static class DatabaseSeeder
         cash.AddTransaction(
             MoneyValue.Create("USD", -25.00m),
             startOfMonth.AddDays(8),
-            "Farmers Market",
-            "Food");
+            "Farmers Market");
 
         cash.AddTransaction(
             MoneyValue.Create("USD", -15.00m),
             startOfMonth.AddDays(15),
-            "Parking",
-            "Transportation");
+            "Parking");
 
         // Add all accounts to the context
         context.Accounts.AddRange(checking, savings, creditCard, cash);

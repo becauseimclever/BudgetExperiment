@@ -24,8 +24,8 @@ public sealed class TransactionDto
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the optional category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the optional category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 
     /// <summary>Gets or sets the creation timestamp (UTC).</summary>
     public DateTime CreatedAt { get; set; }
@@ -72,6 +72,6 @@ public sealed class TransactionCreateDto
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the optional category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the optional category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 }

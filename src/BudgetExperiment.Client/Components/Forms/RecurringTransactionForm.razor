@@ -105,13 +105,16 @@
         </div>
     </div>
 
+    @* Category selection *@
     <div class="form-group">
-        <label for="category" class="form-label">Category (optional):</label>
-        <input id="category"
-               type="text"
-               class="form-control"
-               @bind="Model.Category"
-               placeholder="e.g., Bills, Income, Subscription" />
+        <label for="recCategory" class="form-label">Category:</label>
+        <select id="recCategory" class="form-control" @bind="Model.CategoryId">
+            <option value="">None</option>
+            @foreach (var category in Categories.Where(c => c.IsActive))
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
     </div>
 
     <div class="form-actions form-actions-right">
@@ -137,6 +140,12 @@
     /// </summary>
     [Parameter]
     public RecurringTransactionCreateDto Model { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the list of budget categories for the dropdown.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<BudgetCategoryDto> Categories { get; set; } = Array.Empty<BudgetCategoryDto>();
 
     /// <summary>
     /// Gets or sets the callback when the form is submitted.

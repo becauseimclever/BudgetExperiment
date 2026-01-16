@@ -232,3 +232,46 @@ code {
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
 }
+
+/* ==========================================================================
+   Budget Alert Styles
+   ========================================================================== */
+
+.budget-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    border-radius: var(--border-radius);
+}
+
+.budget-alert-warning {
+    background-color: var(--color-warning-bg, #fff3cd);
+    border: 1px solid var(--color-warning-border, #ffecb5);
+    color: var(--color-warning-text, #664d03);
+}
+
+.budget-alert-danger {
+    background-color: var(--color-error-bg, #f8d7da);
+    border: 1px solid var(--color-error-border, #f5c2c7);
+    color: var(--color-error-text, #842029);
+}
+
+.budget-alert-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.budget-alert-warning .budget-alert-icon {
+    color: var(--color-warning, #ffc107);
+}
+
+.budget-alert-danger .budget-alert-icon {
+    color: var(--color-error, #dc3545);
+}
+
+.budget-alert-message {
+    font-weight: var(--font-weight-medium, 500);
+}

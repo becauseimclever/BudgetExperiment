@@ -144,14 +144,14 @@ public sealed class Account
     /// <param name="amount">The monetary amount.</param>
     /// <param name="date">The transaction date.</param>
     /// <param name="description">The transaction description.</param>
-    /// <param name="category">Optional category.</param>
+    /// <param name="categoryId">Optional category identifier.</param>
     /// <returns>The created transaction.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public Transaction AddTransaction(
         MoneyValue amount,
         DateOnly date,
         string description,
-        string? category = null)
+        Guid? categoryId = null)
     {
         if (amount is null)
         {
@@ -163,7 +163,7 @@ public sealed class Account
             throw new DomainException("Description is required.");
         }
 
-        var transaction = Transaction.Create(this.Id, amount, date, description, category);
+        var transaction = Transaction.Create(this.Id, amount, date, description, categoryId);
         this._transactions.Add(transaction);
         this.UpdatedAt = DateTime.UtcNow;
         return transaction;

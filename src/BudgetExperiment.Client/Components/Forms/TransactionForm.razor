@@ -35,14 +35,16 @@
                required />
         <span class="form-text">Positive for income, negative for expenses</span>
     </div>
+    @* Category selection will be added when budget categories feature is complete *@
     <div class="form-group">
-        <label for="txnCategory" class="form-label">Category (optional):</label>
-        <input id="txnCategory" 
-               type="text"
-               class="form-control"
-               @bind="Model.Category" 
-               @bind:event="oninput"
-               placeholder="e.g., Groceries, Utilities" />
+        <label for="txnCategory" class="form-label">Category:</label>
+        <select id="txnCategory" class="form-control" @bind="Model.CategoryId">
+            <option value="">None</option>
+            @foreach (var category in Categories.Where(c => c.IsActive))
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
     </div>
     <div class="form-group">
         <label for="txnDate" class="form-label">Date:</label>
@@ -90,6 +92,12 @@
     /// </summary>
     [Parameter]
     public IReadOnlyList<AccountDto> Accounts { get; set; } = Array.Empty<AccountDto>();
+
+    /// <summary>
+    /// Gets or sets the list of budget categories for the dropdown.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<BudgetCategoryDto> Categories { get; set; } = Array.Empty<BudgetCategoryDto>();
 
     /// <summary>
     /// Gets or sets a value indicating whether to show the account selector.
@@ -153,10 +161,10 @@
     public decimal InitialAmount { get; set; }
 
     /// <summary>
-    /// Gets or sets the initial category.
+    /// Gets or sets the initial category ID.
     /// </summary>
     [Parameter]
-    public string? InitialCategory { get; set; }
+    public Guid? InitialCategoryId { get; set; }
 
     private DateTime DateValue
     {
@@ -194,9 +202,9 @@
                 Model.Amount = new MoneyDto { Amount = InitialAmount, Currency = "USD" };
             }
 
-            if (!string.IsNullOrEmpty(InitialCategory))
+            if (InitialCategoryId.HasValue)
             {
-                Model.Category = InitialCategory;
+                Model.CategoryId = InitialCategoryId;
             }
 
             _initialValuesApplied = true;

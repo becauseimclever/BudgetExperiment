@@ -73,6 +73,14 @@ internal sealed class RecurringTransactionConfiguration : IEntityTypeConfigurati
 
         builder.Property(r => r.EndDate);
 
+        // Category FK (nullable)
+        builder.Property(r => r.CategoryId);
+
+        builder.HasOne<BudgetCategory>()
+            .WithMany()
+            .HasForeignKey(r => r.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(r => r.NextOccurrence)
             .IsRequired();
 
@@ -98,5 +106,6 @@ internal sealed class RecurringTransactionConfiguration : IEntityTypeConfigurati
         builder.HasIndex(r => r.AccountId);
         builder.HasIndex(r => r.NextOccurrence);
         builder.HasIndex(r => r.IsActive);
+        builder.HasIndex(r => r.CategoryId);
     }
 }

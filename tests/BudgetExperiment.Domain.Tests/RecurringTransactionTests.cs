@@ -249,7 +249,8 @@ public class RecurringTransactionTests
             "New Monthly Rent",
             newAmount,
             newPattern,
-            newEndDate);
+            newEndDate,
+            null);
 
         Assert.Equal("New Monthly Rent", recurring.Description);
         Assert.Equal(newAmount, recurring.Amount);
@@ -272,6 +273,7 @@ public class RecurringTransactionTests
                 "",
                 this._validAmount,
                 this._validPattern,
+                null,
                 null));
 
         Assert.Contains("Description is required", ex.Message);
@@ -294,7 +296,8 @@ public class RecurringTransactionTests
                 "Monthly Rent",
                 this._validAmount,
                 this._validPattern,
-                invalidEndDate));
+                invalidEndDate,
+                null));
 
         Assert.Contains("End date must be on or after start date", ex.Message);
     }
@@ -417,6 +420,7 @@ public class RecurringTransactionTests
             "Updated Rent",
             this._validAmount,
             this._validPattern,
+            null,
             null);
 
         Assert.True(recurring.UpdatedAtUtc > originalUpdatedAt);

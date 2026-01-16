@@ -121,18 +121,19 @@ public class AccountTests
     }
 
     [Fact]
-    public void AddTransaction_With_Category_Sets_Category()
+    public void AddTransaction_With_CategoryId_Sets_CategoryId()
     {
         // Arrange
         var account = Account.Create("Checking", AccountType.Checking);
         var amount = MoneyValue.Create("USD", 50.00m);
         var date = new DateOnly(2026, 1, 9);
+        var categoryId = Guid.NewGuid();
 
         // Act
-        var transaction = account.AddTransaction(amount, date, "Groceries", category: "Food");
+        var transaction = account.AddTransaction(amount, date, "Groceries", categoryId: categoryId);
 
         // Assert
-        Assert.Equal("Food", transaction.Category);
+        Assert.Equal(categoryId, transaction.CategoryId);
     }
 
     [Fact]

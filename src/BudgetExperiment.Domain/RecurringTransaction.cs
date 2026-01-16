@@ -55,6 +55,11 @@ public sealed class RecurringTransaction
     public DateOnly? EndDate { get; private set; }
 
     /// <summary>
+    /// Gets the optional category identifier linking to a BudgetCategory.
+    /// </summary>
+    public Guid? CategoryId { get; private set; }
+
+    /// <summary>
     /// Gets the date of the next scheduled occurrence.
     /// </summary>
     public DateOnly NextOccurrence { get; private set; }
@@ -88,6 +93,7 @@ public sealed class RecurringTransaction
     /// <param name="recurrencePattern">The recurrence pattern.</param>
     /// <param name="startDate">The start date.</param>
     /// <param name="endDate">Optional end date.</param>
+    /// <param name="categoryId">Optional category identifier.</param>
     /// <returns>A new <see cref="RecurringTransaction"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static RecurringTransaction Create(
@@ -96,7 +102,8 @@ public sealed class RecurringTransaction
         MoneyValue amount,
         RecurrencePattern recurrencePattern,
         DateOnly startDate,
-        DateOnly? endDate = null)
+        DateOnly? endDate = null,
+        Guid? categoryId = null)
     {
         if (accountId == Guid.Empty)
         {
@@ -133,6 +140,7 @@ public sealed class RecurringTransaction
             RecurrencePattern = recurrencePattern,
             StartDate = startDate,
             EndDate = endDate,
+            CategoryId = categoryId,
             NextOccurrence = startDate,
             IsActive = true,
             LastGeneratedDate = null,
@@ -148,12 +156,14 @@ public sealed class RecurringTransaction
     /// <param name="amount">The new amount.</param>
     /// <param name="recurrencePattern">The new recurrence pattern.</param>
     /// <param name="endDate">The new end date (null to remove).</param>
+    /// <param name="categoryId">The new category identifier (null to remove).</param>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public void Update(
         string description,
         MoneyValue amount,
         RecurrencePattern recurrencePattern,
-        DateOnly? endDate)
+        DateOnly? endDate,
+        Guid? categoryId)
     {
         if (string.IsNullOrWhiteSpace(description))
         {
@@ -179,6 +189,7 @@ public sealed class RecurringTransaction
         this.Amount = amount;
         this.RecurrencePattern = recurrencePattern;
         this.EndDate = endDate;
+        this.CategoryId = categoryId;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 

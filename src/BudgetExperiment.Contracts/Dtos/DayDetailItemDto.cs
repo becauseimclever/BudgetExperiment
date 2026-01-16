@@ -21,8 +21,8 @@ public sealed class DayDetailItemDto
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
-    /// <summary>Gets or sets the category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 
     /// <summary>Gets or sets the account name.</summary>
     public string AccountName { get; set; } = string.Empty;

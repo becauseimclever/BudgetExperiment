@@ -29,24 +29,25 @@ public class TransactionTests
         Assert.Equal(amount, transaction.Amount);
         Assert.Equal(date, transaction.Date);
         Assert.Equal(description, transaction.Description);
-        Assert.Null(transaction.Category);
+        Assert.Null(transaction.CategoryId);
         Assert.NotEqual(default, transaction.CreatedAt);
         Assert.NotEqual(default, transaction.UpdatedAt);
     }
 
     [Fact]
-    public void Create_With_Category_Sets_Category()
+    public void Create_With_CategoryId_Sets_CategoryId()
     {
         // Arrange
         var accountId = Guid.NewGuid();
         var amount = MoneyValue.Create("USD", 50.00m);
         var date = new DateOnly(2026, 1, 9);
+        var categoryId = Guid.NewGuid();
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, "Groceries", category: "Food");
+        var transaction = Transaction.Create(accountId, amount, date, "Groceries", categoryId: categoryId);
 
         // Assert
-        Assert.Equal("Food", transaction.Category);
+        Assert.Equal(categoryId, transaction.CategoryId);
     }
 
     [Fact]
@@ -65,7 +66,7 @@ public class TransactionTests
     }
 
     [Fact]
-    public void Create_Trims_Category()
+    public void Create_With_Null_CategoryId_Sets_Null()
     {
         // Arrange
         var accountId = Guid.NewGuid();
@@ -73,10 +74,10 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, "Groceries", "  Food  ");
+        var transaction = Transaction.Create(accountId, amount, date, "Groceries", categoryId: null);
 
         // Assert
-        Assert.Equal("Food", transaction.Category);
+        Assert.Null(transaction.CategoryId);
     }
 
     [Fact]
@@ -242,7 +243,7 @@ public class TransactionTests
     }
 
     [Fact]
-    public void UpdateCategory_Changes_Category_And_UpdatedAt()
+    public void UpdateCategory_Changes_CategoryId_And_UpdatedAt()
     {
         // Arrange
         var transaction = Transaction.Create(
@@ -251,48 +252,33 @@ public class TransactionTests
             new DateOnly(2026, 1, 9),
             "Test");
         var originalUpdatedAt = transaction.UpdatedAt;
+        var newCategoryId = Guid.NewGuid();
 
         // Act
-        transaction.UpdateCategory("Groceries");
+        transaction.UpdateCategory(newCategoryId);
 
         // Assert
-        Assert.Equal("Groceries", transaction.Category);
+        Assert.Equal(newCategoryId, transaction.CategoryId);
         Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
     }
 
     [Fact]
-    public void UpdateCategory_With_Null_Clears_Category()
+    public void UpdateCategory_With_Null_Clears_CategoryId()
     {
         // Arrange
+        var categoryId = Guid.NewGuid();
         var transaction = Transaction.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
             "Test",
-            "OldCategory");
+            categoryId);
 
         // Act
         transaction.UpdateCategory(null);
 
         // Assert
-        Assert.Null(transaction.Category);
-    }
-
-    [Fact]
-    public void UpdateCategory_Trims_Value()
-    {
-        // Arrange
-        var transaction = Transaction.Create(
-            Guid.NewGuid(),
-            MoneyValue.Create("USD", 100m),
-            new DateOnly(2026, 1, 9),
-            "Test");
-
-        // Act
-        transaction.UpdateCategory("  Groceries  ");
-
-        // Assert
-        Assert.Equal("Groceries", transaction.Category);
+        Assert.Null(transaction.CategoryId);
     }
 
     [Fact]

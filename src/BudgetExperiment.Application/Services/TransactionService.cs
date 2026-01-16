@@ -72,7 +72,7 @@ public sealed class TransactionService
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
-        var transaction = account.AddTransaction(amount, dto.Date, dto.Description, dto.Category);
+        var transaction = account.AddTransaction(amount, dto.Date, dto.Description, dto.CategoryId);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(transaction);
     }

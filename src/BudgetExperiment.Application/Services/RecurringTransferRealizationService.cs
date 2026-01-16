@@ -78,7 +78,7 @@ public sealed class RecurringTransferRealizationService : IRecurringTransferReal
             TransferDirection.Source,
             recurringTransferId,
             request.InstanceDate,
-            category: null);
+            categoryId: null);
 
         // Create destination transaction (positive - money entering)
         var destTransaction = Transaction.CreateFromRecurringTransfer(
@@ -90,7 +90,7 @@ public sealed class RecurringTransferRealizationService : IRecurringTransferReal
             TransferDirection.Destination,
             recurringTransferId,
             request.InstanceDate,
-            category: null);
+            categoryId: null);
 
         await _transactionRepository.AddAsync(sourceTransaction, cancellationToken);
         await _transactionRepository.AddAsync(destTransaction, cancellationToken);

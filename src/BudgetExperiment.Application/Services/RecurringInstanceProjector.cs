@@ -64,7 +64,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
                     AccountName: accountMap.GetValueOrDefault(recurring.AccountId, string.Empty),
                     Description: exception?.ModifiedDescription ?? recurring.Description,
                     Amount: exception?.ModifiedAmount ?? recurring.Amount,
-                    Category: null,
+                    CategoryId: recurring.CategoryId,
                     IsModified: exception?.ExceptionType == ExceptionType.Modified,
                     IsSkipped: false);
 
@@ -108,7 +108,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
                 AccountName: accountMap.GetValueOrDefault(recurring.AccountId, string.Empty),
                 Description: exception?.ModifiedDescription ?? recurring.Description,
                 Amount: exception?.ModifiedAmount ?? recurring.Amount,
-                Category: null,
+                CategoryId: recurring.CategoryId,
                 IsModified: exception?.ExceptionType == ExceptionType.Modified,
                 IsSkipped: exception?.ExceptionType == ExceptionType.Skipped));
         }

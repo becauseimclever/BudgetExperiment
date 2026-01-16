@@ -172,12 +172,11 @@ internal sealed class TransactionRepository : ITransactionRepository
 
         // Get the category name to match against transactions
         // For now, transactions use a string category. Later phases will add a proper CategoryId FK.
-        var category = await this._context.BudgetCategories
-            .Where(c => c.Id == categoryId)
-            .Select(c => c.Name)
-            .FirstOrDefaultAsync(cancellationToken);
+        // Verify the category exists
+        var categoryExists = await this._context.BudgetCategories
+            .AnyAsync(c => c.Id == categoryId, cancellationToken);
 
-        if (category is null)
+        if (!categoryExists)
         {
             return MoneyValue.Create("USD", 0m);
         }
@@ -186,7 +185,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         var totalSpending = await this._context.Transactions
             .Where(t => t.Date >= startDate
                 && t.Date <= endDate
-                && t.Category == category
+                && t.CategoryId == categoryId
                 && t.Amount.Amount < 0)
             .SumAsync(t => Math.Abs(t.Amount.Amount), cancellationToken);
 

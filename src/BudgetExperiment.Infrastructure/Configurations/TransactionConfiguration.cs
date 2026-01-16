@@ -47,8 +47,13 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(t => t.Category)
-            .HasMaxLength(100);
+        // Category FK (nullable)
+        builder.Property(t => t.CategoryId);
+
+        builder.HasOne<BudgetCategory>()
+            .WithMany()
+            .HasForeignKey(t => t.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Property(t => t.CreatedAt)
             .IsRequired();
@@ -89,5 +94,6 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.HasIndex(t => t.RecurringTransactionId);
         builder.HasIndex(t => t.TransferId);
         builder.HasIndex(t => t.RecurringTransferId);
+        builder.HasIndex(t => t.CategoryId);
     }
 }

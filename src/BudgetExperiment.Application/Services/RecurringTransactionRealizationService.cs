@@ -71,7 +71,7 @@ public sealed class RecurringTransactionRealizationService : IRecurringTransacti
             actualDescription,
             recurringTransactionId,
             request.InstanceDate,
-            category: null);
+            categoryId: recurring.CategoryId);
 
         await _transactionRepository.AddAsync(transaction, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

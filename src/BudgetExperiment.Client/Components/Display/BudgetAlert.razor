@@ -1,0 +1,73 @@
+@* BudgetAlert.razor - Alert banner for over-budget and warning status categories *@
+
+@if (HasAlerts)
+{
+    <div class="budget-alert @AlertClass">
+        <div class="budget-alert-content">
+            <Icon Name="@AlertIcon" Size="20" Class="budget-alert-icon" />
+            <span class="budget-alert-message">
+                @AlertMessage
+            </span>
+        </div>
+        <button class="btn @ButtonClass btn-sm" @onclick="HandleViewBudgetClick">
+            View Budget <Icon Name="arrow-right" Size="14" />
+        </button>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the budget summary data.
+    /// </summary>
+    [Parameter]
+    public BudgetSummaryDto? BudgetSummary { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when View Budget button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnViewBudgetClick { get; set; }
+
+    private bool HasAlerts => BudgetSummary != null &&
+        (BudgetSummary.CategoriesOverBudget > 0 || BudgetSummary.CategoriesWarning > 0);
+
+    private bool HasOverBudget => BudgetSummary?.CategoriesOverBudget > 0;
+
+    private string AlertClass => HasOverBudget ? "budget-alert-danger" : "budget-alert-warning";
+
+    private string ButtonClass => HasOverBudget ? "btn-danger" : "btn-warning";
+
+    private string AlertIcon => HasOverBudget ? "alert-circle" : "alert-triangle";
+
+    private string AlertMessage
+    {
+        get
+        {
+            if (BudgetSummary == null)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>();
+
+            if (BudgetSummary.CategoriesOverBudget > 0)
+            {
+                var plural = BudgetSummary.CategoriesOverBudget == 1 ? "category is" : "categories are";
+                parts.Add($"{BudgetSummary.CategoriesOverBudget} {plural} over budget");
+            }
+
+            if (BudgetSummary.CategoriesWarning > 0)
+            {
+                var plural = BudgetSummary.CategoriesWarning == 1 ? "category is" : "categories are";
+                parts.Add($"{BudgetSummary.CategoriesWarning} {plural} approaching limit");
+            }
+
+            return string.Join(" and ", parts);
+        }
+    }
+
+    private async Task HandleViewBudgetClick()
+    {
+        await OnViewBudgetClick.InvokeAsync();
+    }
+}

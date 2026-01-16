@@ -21,8 +21,8 @@ public sealed class TransactionListItem
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the optional category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the optional category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
@@ -66,7 +66,7 @@ public sealed class TransactionListItem
             Id = transaction.Id,
             Date = transaction.Date,
             Description = transaction.Description,
-            Category = transaction.Category,
+            CategoryId = transaction.CategoryId,
             Amount = transaction.Amount,
             IsRecurring = false,
             IsModified = false,
@@ -89,7 +89,7 @@ public sealed class TransactionListItem
             Id = instance.RecurringTransactionId,
             Date = instance.ScheduledDate,
             Description = instance.Description,
-            Category = instance.Category,
+            CategoryId = instance.CategoryId,
             Amount = instance.Amount,
             IsRecurring = true,
             IsModified = instance.IsModified,
@@ -117,7 +117,7 @@ public sealed class TransactionListItem
             Id = instance.RecurringTransferId,
             Date = instance.EffectiveDate,
             Description = description,
-            Category = null,
+            CategoryId = null,
             Amount = amount,
             IsRecurring = true,
             IsRecurringTransfer = true,

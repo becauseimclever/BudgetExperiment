@@ -24,8 +24,8 @@ public sealed class RecurringTransactionDto
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
-    /// <summary>Gets or sets the optional category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the optional category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 
     /// <summary>Gets or sets the recurrence frequency.</summary>
     public string Frequency { get; set; } = string.Empty;
@@ -75,8 +75,8 @@ public sealed class RecurringTransactionCreateDto
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
-    /// <summary>Gets or sets the optional category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the optional category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 
     /// <summary>Gets or sets the recurrence frequency (Daily, Weekly, BiWeekly, Monthly, Quarterly, Yearly).</summary>
     public string Frequency { get; set; } = string.Empty;
@@ -111,8 +111,8 @@ public sealed class RecurringTransactionUpdateDto
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
-    /// <summary>Gets or sets the optional category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the optional category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 
     /// <summary>Gets or sets the recurrence frequency.</summary>
     public string Frequency { get; set; } = string.Empty;
@@ -168,8 +168,8 @@ public sealed class RecurringInstanceDto
     /// <summary>Gets or sets the generated transaction ID (null if not yet generated).</summary>
     public Guid? GeneratedTransactionId { get; set; }
 
-    /// <summary>Gets or sets the optional category.</summary>
-    public string? Category { get; set; }
+    /// <summary>Gets or sets the optional category identifier.</summary>
+    public Guid? CategoryId { get; set; }
 }
 
 /// <summary>

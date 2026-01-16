@@ -1,5 +1,7 @@
 # Feature 021: Budget Categories & Goals
 
+**Status: ✅ COMPLETED** (January 2026)
+
 ## Overview
 
 Implement a comprehensive budgeting system that allows users to define spending categories, set monthly budget targets, and track progress against those goals. This feature transforms the application from a transaction tracker into a true budgeting tool.
@@ -442,16 +444,16 @@ Replace free-form category text input with dropdown:
 - [x] Create CategoryBudgetCard component
 
 ### Phase 6: Transaction Integration
-- [ ] Update transaction forms with category dropdown
-- [ ] Update recurring transaction forms
-- [ ] Migrate existing free-text categories to `CategoryId` reference
-- [ ] Add "Uncategorized" handling
+- [x] Update transaction forms with category dropdown
+- [x] Update recurring transaction forms
+- [x] Migrate existing free-text categories to `CategoryId` reference
+- [x] Add "Uncategorized" handling (null CategoryId allowed)
 
 ### Phase 7: Navigation & Polish
-- [ ] Add Categories link to navigation
-- [ ] Add Budget link to navigation
-- [ ] Add budget status indicators to calendar
-- [ ] Add over-budget alerts
+- [x] Add Categories link to navigation
+- [x] Add Budget link to navigation
+- [x] Add budget status indicators to calendar
+- [x] Add over-budget alerts
 
 ---
 
@@ -459,14 +461,14 @@ Replace free-form category text input with dropdown:
 
 ### Existing Category Data
 
-Current transactions have a free-form `Category` string field. Migration approach:
+Previous transactions had a free-form `Category` string field. Migration approach:
 
-1. **Extract unique categories** from existing transactions
-2. **Create BudgetCategory records** for each unique value
-3. **Add `CategoryId` column** to Transaction table
-4. **Populate `CategoryId`** based on string matching
-5. **Keep `Category` string** temporarily for rollback safety
-6. **Remove `Category` string** in future cleanup migration
+1. **Drop `Category` string column** - Since single-user, no data migration needed
+2. **Add `CategoryId` column** to Transaction and RecurringTransaction tables
+3. **Add foreign key** to BudgetCategories table with SetNull delete behavior
+4. **Add index** on CategoryId for efficient budget progress queries
+
+Migration: `AddCategoryIdToTransactions` (2026-01-16)
 
 ### Default Categories
 

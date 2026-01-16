@@ -47,9 +47,9 @@ public sealed class Transaction
     public string Description { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Gets the optional category of the transaction.
+    /// Gets the optional category identifier linking to a BudgetCategory.
     /// </summary>
-    public string? Category { get; private set; }
+    public Guid? CategoryId { get; private set; }
 
     /// <summary>
     /// Gets the UTC timestamp when the transaction was created.
@@ -113,7 +113,7 @@ public sealed class Transaction
     /// <param name="amount">The monetary amount.</param>
     /// <param name="date">The transaction date.</param>
     /// <param name="description">The transaction description.</param>
-    /// <param name="category">Optional category.</param>
+    /// <param name="categoryId">Optional category identifier.</param>
     /// <returns>A new <see cref="Transaction"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static Transaction Create(
@@ -121,7 +121,7 @@ public sealed class Transaction
         MoneyValue amount,
         DateOnly date,
         string description,
-        string? category = null)
+        Guid? categoryId = null)
     {
         if (accountId == Guid.Empty)
         {
@@ -146,7 +146,7 @@ public sealed class Transaction
             Amount = amount,
             Date = date,
             Description = description.Trim(),
-            Category = string.IsNullOrWhiteSpace(category) ? null : category.Trim(),
+            CategoryId = categoryId,
             CreatedAt = now,
             UpdatedAt = now,
             RecurringTransactionId = null,
@@ -163,7 +163,7 @@ public sealed class Transaction
     /// <param name="description">The transaction description.</param>
     /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
     /// <param name="recurringInstanceDate">The scheduled date this was generated for.</param>
-    /// <param name="category">Optional category.</param>
+    /// <param name="categoryId">Optional category identifier.</param>
     /// <returns>A new <see cref="Transaction"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static Transaction CreateFromRecurring(
@@ -173,14 +173,14 @@ public sealed class Transaction
         string description,
         Guid recurringTransactionId,
         DateOnly recurringInstanceDate,
-        string? category = null)
+        Guid? categoryId = null)
     {
         if (recurringTransactionId == Guid.Empty)
         {
             throw new DomainException("Recurring transaction ID is required.");
         }
 
-        var transaction = Create(accountId, amount, date, description, category);
+        var transaction = Create(accountId, amount, date, description, categoryId);
         transaction.RecurringTransactionId = recurringTransactionId;
         transaction.RecurringInstanceDate = recurringInstanceDate;
         return transaction;
@@ -195,7 +195,7 @@ public sealed class Transaction
     /// <param name="description">The transaction description.</param>
     /// <param name="transferId">The identifier linking paired transfer transactions.</param>
     /// <param name="direction">The direction of this transaction in the transfer.</param>
-    /// <param name="category">Optional category.</param>
+    /// <param name="categoryId">Optional category identifier.</param>
     /// <returns>A new <see cref="Transaction"/> instance linked to a transfer.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static Transaction CreateTransfer(
@@ -205,14 +205,14 @@ public sealed class Transaction
         string description,
         Guid transferId,
         TransferDirection direction,
-        string? category = null)
+        Guid? categoryId = null)
     {
         if (transferId == Guid.Empty)
         {
             throw new DomainException("Transfer ID is required.");
         }
 
-        var transaction = Create(accountId, amount, date, description, category);
+        var transaction = Create(accountId, amount, date, description, categoryId);
         transaction.TransferId = transferId;
         transaction.TransferDirection = direction;
         return transaction;
@@ -229,7 +229,7 @@ public sealed class Transaction
     /// <param name="direction">The direction of this transaction in the transfer.</param>
     /// <param name="recurringTransferId">The recurring transfer identifier.</param>
     /// <param name="recurringTransferInstanceDate">The scheduled date this was generated for.</param>
-    /// <param name="category">Optional category.</param>
+    /// <param name="categoryId">Optional category identifier.</param>
     /// <returns>A new <see cref="Transaction"/> instance linked to a recurring transfer.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static Transaction CreateFromRecurringTransfer(
@@ -241,14 +241,14 @@ public sealed class Transaction
         TransferDirection direction,
         Guid recurringTransferId,
         DateOnly recurringTransferInstanceDate,
-        string? category = null)
+        Guid? categoryId = null)
     {
         if (recurringTransferId == Guid.Empty)
         {
             throw new DomainException("Recurring transfer ID is required.");
         }
 
-        var transaction = CreateTransfer(accountId, amount, date, description, transferId, direction, category);
+        var transaction = CreateTransfer(accountId, amount, date, description, transferId, direction, categoryId);
         transaction.RecurringTransferId = recurringTransferId;
         transaction.RecurringTransferInstanceDate = recurringTransferInstanceDate;
         return transaction;
@@ -299,10 +299,10 @@ public sealed class Transaction
     /// <summary>
     /// Updates the category.
     /// </summary>
-    /// <param name="category">New category (null to clear).</param>
-    public void UpdateCategory(string? category)
+    /// <param name="categoryId">New category identifier (null to clear).</param>
+    public void UpdateCategory(Guid? categoryId)
     {
-        this.Category = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
+        this.CategoryId = categoryId;
         this.UpdatedAt = DateTime.UtcNow;
     }
 }
