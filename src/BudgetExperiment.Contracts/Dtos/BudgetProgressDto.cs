@@ -111,6 +111,11 @@ public sealed class BudgetSummaryDto
     public int CategoriesOverBudget { get; set; }
 
     /// <summary>
+    /// Gets or sets the number of categories with no budget set.
+    /// </summary>
+    public int CategoriesNoBudgetSet { get; set; }
+
+    /// <summary>
     /// Gets or sets the progress for each category.
     /// </summary>
     public IReadOnlyList<BudgetProgressDto> CategoryProgress { get; set; } = [];

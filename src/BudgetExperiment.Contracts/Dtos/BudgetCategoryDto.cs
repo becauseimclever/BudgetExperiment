@@ -69,6 +69,12 @@ public sealed class BudgetCategoryCreateDto
     /// Gets or sets the category type (defaults to "Expense").
     /// </summary>
     public string Type { get; set; } = "Expense";
+
+    /// <summary>
+    /// Gets or sets the optional initial budget amount for the current month.
+    /// When provided, a budget goal will be created for the current month.
+    /// </summary>
+    public MoneyDto? InitialBudget { get; set; }
 }
 
 /// <summary>

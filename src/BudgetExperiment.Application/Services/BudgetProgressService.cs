@@ -64,29 +64,46 @@ public sealed class BudgetProgressService : IBudgetProgressService
     public async Task<BudgetSummaryDto> GetMonthlySummaryAsync(int year, int month, CancellationToken cancellationToken = default)
     {
         var goals = await this._goalRepository.GetByMonthAsync(year, month, cancellationToken);
+        var allExpenseCategories = await this._categoryRepository.GetByTypeAsync(CategoryType.Expense, cancellationToken);
         var categoryProgress = new List<BudgetProgressDto>();
         var totalBudgeted = MoneyValue.Create("USD", 0m);
         var totalSpent = MoneyValue.Create("USD", 0m);
 
-        foreach (var goal in goals)
+        // Create a lookup of goals by category ID
+        var goalByCategoryId = goals.ToDictionary(g => g.CategoryId);
+
+        // Process all active expense categories
+        foreach (var category in allExpenseCategories.Where(c => c.IsActive))
         {
-            var category = await this._categoryRepository.GetByIdAsync(goal.CategoryId, cancellationToken);
-            if (category is null)
+            var spent = await this._transactionRepository.GetSpendingByCategoryAsync(category.Id, year, month, cancellationToken);
+            BudgetProgress progress;
+
+            if (goalByCategoryId.TryGetValue(category.Id, out var goal))
             {
-                continue;
+                // Category has a budget goal
+                progress = BudgetProgress.Create(
+                    category.Id,
+                    category.Name,
+                    category.Icon,
+                    category.Color,
+                    goal.TargetAmount,
+                    spent,
+                    transactionCount: 0);
+                totalBudgeted = MoneyValue.Create(totalBudgeted.Currency, totalBudgeted.Amount + goal.TargetAmount.Amount);
+            }
+            else
+            {
+                // Category has no budget goal
+                progress = BudgetProgress.CreateWithNoBudget(
+                    category.Id,
+                    category.Name,
+                    category.Icon,
+                    category.Color,
+                    spent,
+                    transactionCount: 0);
             }
 
-            var spent = await this._transactionRepository.GetSpendingByCategoryAsync(goal.CategoryId, year, month, cancellationToken);
-            var progress = BudgetProgress.Create(
-                category.Id,
-                category.Name,
-                category.Icon,
-                category.Color,
-                goal.TargetAmount,
-                spent,
-                transactionCount: 0);
             categoryProgress.Add(DomainToDtoMapper.ToDto(progress));
-            totalBudgeted = MoneyValue.Create(totalBudgeted.Currency, totalBudgeted.Amount + goal.TargetAmount.Amount);
             totalSpent = MoneyValue.Create(totalSpent.Currency, totalSpent.Amount + spent.Amount);
         }
 
@@ -94,6 +111,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
         var categoriesOnTrack = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.OnTrack));
         var categoriesWarning = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.Warning));
         var categoriesOverBudget = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.OverBudget));
+        var categoriesNoBudgetSet = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.NoBudgetSet));
 
         return new BudgetSummaryDto
         {
@@ -106,6 +124,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
             CategoriesOnTrack = categoriesOnTrack,
             CategoriesWarning = categoriesWarning,
             CategoriesOverBudget = categoriesOverBudget,
+            CategoriesNoBudgetSet = categoriesNoBudgetSet,
         };
     }
 }

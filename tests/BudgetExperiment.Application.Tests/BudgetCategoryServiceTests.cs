@@ -14,6 +14,17 @@ namespace BudgetExperiment.Application.Tests;
 /// </summary>
 public class BudgetCategoryServiceTests
 {
+    private static BudgetCategoryService CreateService(
+        Mock<IBudgetCategoryRepository>? categoryRepo = null,
+        Mock<IBudgetGoalRepository>? goalRepo = null,
+        Mock<IUnitOfWork>? uow = null)
+    {
+        return new BudgetCategoryService(
+            categoryRepo?.Object ?? new Mock<IBudgetCategoryRepository>().Object,
+            goalRepo?.Object ?? new Mock<IBudgetGoalRepository>().Object,
+            uow?.Object ?? new Mock<IUnitOfWork>().Object);
+    }
+
     [Fact]
     public async Task GetByIdAsync_Returns_CategoryDto()
     {
@@ -21,8 +32,7 @@ public class BudgetCategoryServiceTests
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense, "cart", "#4CAF50");
         var repo = new Mock<IBudgetCategoryRepository>();
         repo.Setup(r => r.GetByIdAsync(category.Id, default)).ReturnsAsync(category);
-        var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo);
 
         // Act
         var result = await service.GetByIdAsync(category.Id);
@@ -42,8 +52,7 @@ public class BudgetCategoryServiceTests
         // Arrange
         var repo = new Mock<IBudgetCategoryRepository>();
         repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((BudgetCategory?)null);
-        var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo);
 
         // Act
         var result = await service.GetByIdAsync(Guid.NewGuid());
@@ -63,8 +72,7 @@ public class BudgetCategoryServiceTests
         };
         var repo = new Mock<IBudgetCategoryRepository>();
         repo.Setup(r => r.GetAllAsync(default)).ReturnsAsync(categories);
-        var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo);
 
         // Act
         var result = await service.GetAllAsync();
@@ -80,8 +88,7 @@ public class BudgetCategoryServiceTests
         var activeCategory = BudgetCategory.Create("Groceries", CategoryType.Expense);
         var repo = new Mock<IBudgetCategoryRepository>();
         repo.Setup(r => r.GetActiveAsync(default)).ReturnsAsync(new List<BudgetCategory> { activeCategory });
-        var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo);
 
         // Act
         var result = await service.GetActiveAsync();
@@ -99,7 +106,7 @@ public class BudgetCategoryServiceTests
         repo.Setup(r => r.AddAsync(It.IsAny<BudgetCategory>(), default)).Returns(Task.CompletedTask);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
         var dto = new BudgetCategoryCreateDto
         {
             Name = "Groceries",
@@ -124,14 +131,70 @@ public class BudgetCategoryServiceTests
     public async Task CreateAsync_With_Invalid_Type_Throws()
     {
         // Arrange
-        var repo = new Mock<IBudgetCategoryRepository>();
-        var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService();
         var dto = new BudgetCategoryCreateDto { Name = "Test", Type = "InvalidType" };
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<DomainException>(() => service.CreateAsync(dto));
         Assert.Contains("type", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CreateAsync_With_InitialBudget_Creates_BudgetGoal()
+    {
+        // Arrange
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.AddAsync(It.IsAny<BudgetCategory>(), default)).Returns(Task.CompletedTask);
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        goalRepo.Setup(r => r.AddAsync(It.IsAny<BudgetGoal>(), default)).Returns(Task.CompletedTask);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = CreateService(categoryRepo: categoryRepo, goalRepo: goalRepo, uow: uow);
+        var dto = new BudgetCategoryCreateDto
+        {
+            Name = "Groceries",
+            Type = "Expense",
+            Icon = "cart",
+            Color = "#4CAF50",
+            InitialBudget = new MoneyDto { Amount = 500m, Currency = "USD" },
+        };
+
+        // Act
+        var result = await service.CreateAsync(dto);
+
+        // Assert
+        Assert.Equal("Groceries", result.Name);
+        goalRepo.Verify(r => r.AddAsync(It.Is<BudgetGoal>(g =>
+            g.TargetAmount.Amount == 500m &&
+            g.TargetAmount.Currency == "USD" &&
+            g.Year == DateTime.UtcNow.Year &&
+            g.Month == DateTime.UtcNow.Month), default), Times.Once);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_With_InitialBudget_On_Income_Category_Does_Not_Create_Goal()
+    {
+        // Arrange
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.AddAsync(It.IsAny<BudgetCategory>(), default)).Returns(Task.CompletedTask);
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = CreateService(categoryRepo: categoryRepo, goalRepo: goalRepo, uow: uow);
+        var dto = new BudgetCategoryCreateDto
+        {
+            Name = "Salary",
+            Type = "Income",
+            InitialBudget = new MoneyDto { Amount = 5000m, Currency = "USD" },
+        };
+
+        // Act
+        var result = await service.CreateAsync(dto);
+
+        // Assert
+        Assert.Equal("Salary", result.Name);
+        goalRepo.Verify(r => r.AddAsync(It.IsAny<BudgetGoal>(), default), Times.Never);
     }
 
     [Fact]
@@ -143,7 +206,7 @@ public class BudgetCategoryServiceTests
         repo.Setup(r => r.GetByIdAsync(category.Id, default)).ReturnsAsync(category);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
         var dto = new BudgetCategoryUpdateDto
         {
             Name = "Updated",
@@ -171,7 +234,7 @@ public class BudgetCategoryServiceTests
         var repo = new Mock<IBudgetCategoryRepository>();
         repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((BudgetCategory?)null);
         var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
 
         // Act
         var result = await service.UpdateAsync(Guid.NewGuid(), new BudgetCategoryUpdateDto());
@@ -190,7 +253,7 @@ public class BudgetCategoryServiceTests
         repo.Setup(r => r.GetByIdAsync(category.Id, default)).ReturnsAsync(category);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
 
         // Act
         var result = await service.DeactivateAsync(category.Id);
@@ -208,7 +271,7 @@ public class BudgetCategoryServiceTests
         var repo = new Mock<IBudgetCategoryRepository>();
         repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((BudgetCategory?)null);
         var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
 
         // Act
         var result = await service.DeactivateAsync(Guid.NewGuid());
@@ -228,7 +291,7 @@ public class BudgetCategoryServiceTests
         repo.Setup(r => r.GetByIdAsync(category.Id, default)).ReturnsAsync(category);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
 
         // Act
         var result = await service.ActivateAsync(category.Id);
@@ -249,7 +312,7 @@ public class BudgetCategoryServiceTests
         repo.Setup(r => r.RemoveAsync(category, default)).Returns(Task.CompletedTask);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
 
         // Act
         var result = await service.DeleteAsync(category.Id);
@@ -267,7 +330,7 @@ public class BudgetCategoryServiceTests
         var repo = new Mock<IBudgetCategoryRepository>();
         repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((BudgetCategory?)null);
         var uow = new Mock<IUnitOfWork>();
-        var service = new BudgetCategoryService(repo.Object, uow.Object);
+        var service = CreateService(categoryRepo: repo, uow: uow);
 
         // Act
         var result = await service.DeleteAsync(Guid.NewGuid());

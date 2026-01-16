@@ -14,16 +14,22 @@ namespace BudgetExperiment.Application.Services;
 public sealed class BudgetCategoryService : IBudgetCategoryService
 {
     private readonly IBudgetCategoryRepository _repository;
+    private readonly IBudgetGoalRepository _goalRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetCategoryService"/> class.
     /// </summary>
     /// <param name="repository">The budget category repository.</param>
+    /// <param name="goalRepository">The budget goal repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
-    public BudgetCategoryService(IBudgetCategoryRepository repository, IUnitOfWork unitOfWork)
+    public BudgetCategoryService(
+        IBudgetCategoryRepository repository,
+        IBudgetGoalRepository goalRepository,
+        IUnitOfWork unitOfWork)
     {
         this._repository = repository;
+        this._goalRepository = goalRepository;
         this._unitOfWork = unitOfWork;
     }
 
@@ -58,6 +64,16 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
 
         var category = BudgetCategory.Create(dto.Name, categoryType, dto.Icon, dto.Color);
         await this._repository.AddAsync(category, cancellationToken);
+
+        // If initial budget is provided and category is Expense type, create a budget goal for the current month
+        if (dto.InitialBudget != null && dto.InitialBudget.Amount > 0 && categoryType == CategoryType.Expense)
+        {
+            var now = DateTime.UtcNow;
+            var targetAmount = MoneyValue.Create(dto.InitialBudget.Currency ?? "USD", dto.InitialBudget.Amount);
+            var goal = BudgetGoal.Create(category.Id, now.Year, now.Month, targetAmount);
+            await this._goalRepository.AddAsync(goal, cancellationToken);
+        }
+
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(category);
     }

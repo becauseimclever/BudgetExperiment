@@ -1,0 +1,185 @@
+/* ==========================================================================
+   Budget Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Budget Summary Card
+   ========================================================================== */
+
+.budget-summary-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.budget-summary-card h3 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.summary-stats {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-mono);
+}
+
+.summary-status-counts {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+}
+
+.status-count {
+  font-size: var(--font-size-sm);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.status-count.status-success {
+  background-color: rgba(16, 124, 16, 0.1);
+  color: var(--color-success);
+}
+
+.status-count.status-warning {
+  background-color: rgba(255, 185, 0, 0.1);
+  color: #996600;
+}
+
+.status-count.status-danger {
+  background-color: rgba(209, 52, 56, 0.1);
+  color: var(--color-error);
+}
+
+.status-count.status-no-budget {
+  background-color: rgba(96, 94, 92, 0.1);
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Budget Categories Section
+   ========================================================================== */
+
+.budget-categories-section {
+  margin-top: var(--space-5);
+}
+
+.budget-categories-section h3 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ==========================================================================
+   Category Budget Card
+   ========================================================================== */
+
+.category-budget-card {
+  transition: box-shadow 0.2s ease;
+}
+
+.category-budget-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.category-budget-card.status-success {
+  border-left: 3px solid var(--color-success);
+}
+
+.category-budget-card.status-warning {
+  border-left: 3px solid var(--color-warning);
+}
+
+.category-budget-card.status-danger {
+  border-left: 3px solid var(--color-error);
+}
+
+.category-budget-card.status-no-budget {
+  border-left: 3px solid var(--color-border);
+  opacity: 0.9;
+}
+
+.category-budget-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.category-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+.category-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-info .card-title-sm {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.budget-amounts {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-mono);
+}
+
+.budget-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.budget-remaining {
+  font-weight: var(--font-weight-medium);
+}
+
+/* ==========================================================================
+   Month Navigation
+   ========================================================================== */
+
+.month-navigation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.current-month {
+  min-width: 140px;
+  text-align: center;
+  font-weight: var(--font-weight-medium);
+}

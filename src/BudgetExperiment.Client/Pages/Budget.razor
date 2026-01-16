@@ -81,6 +81,12 @@
                         🔴 @summary.CategoriesOverBudget over budget
                     </span>
                 }
+                @if (summary.CategoriesNoBudgetSet > 0)
+                {
+                    <span class="status-count status-no-budget">
+                        ⬚ @summary.CategoriesNoBudgetSet no budget
+                    </span>
+                }
             </div>
         </div>
 
@@ -110,7 +116,7 @@
         }
     }
 
-    <Modal IsVisible="@showEditGoal" Title="Edit Budget Goal" OnClose="HideEditGoal">
+    <Modal IsVisible="@showEditGoal" Title="@GetModalTitle()" OnClose="HideEditGoal">
         <div class="form-group">
             <label class="form-label">Category</label>
             <p class="form-static">@editingProgress?.CategoryName</p>
@@ -133,9 +139,12 @@
             </div>
         </div>
         <div class="form-actions form-actions-right">
-            <button type="button" class="btn btn-danger" @onclick="DeleteGoal" disabled="@isSubmitting">
-                Delete Goal
-            </button>
+            @if (!IsCreatingNewGoal())
+            {
+                <button type="button" class="btn btn-danger" @onclick="DeleteGoal" disabled="@isSubmitting">
+                    Delete Goal
+                </button>
+            }
             <button type="button" class="btn btn-secondary" @onclick="HideEditGoal" disabled="@isSubmitting">
                 Cancel
             </button>
@@ -253,6 +262,16 @@
     {
         showEditGoal = false;
         editingProgress = null;
+    }
+
+    private string GetModalTitle()
+    {
+        return IsCreatingNewGoal() ? "Set Budget Goal" : "Edit Budget Goal";
+    }
+
+    private bool IsCreatingNewGoal()
+    {
+        return editingProgress?.Status == "NoBudgetSet";
     }
 
     private async Task SaveGoal()

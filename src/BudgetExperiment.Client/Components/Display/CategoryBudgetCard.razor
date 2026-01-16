@@ -8,27 +8,44 @@
             </span>
             <div class="category-info">
                 <h4 class="card-title-sm">@Progress.CategoryName</h4>
-                <span class="budget-amounts">
-                    <MoneyDisplay Amount="@Progress.SpentAmount.Amount" CurrencyCode="@Progress.SpentAmount.Currency" />
-                    <span class="text-secondary"> / </span>
-                    <MoneyDisplay Amount="@Progress.TargetAmount.Amount" CurrencyCode="@Progress.TargetAmount.Currency" />
-                </span>
-            </div>
-        </div>
-        
-        <BudgetProgressBar PercentUsed="@Progress.PercentUsed" Status="@Progress.Status" />
-        
-        <div class="budget-details">
-            <span class="budget-remaining @(Progress.RemainingAmount.Amount < 0 ? "text-expense" : "text-income")">
-                @if (Progress.RemainingAmount.Amount >= 0)
+                @if (Progress.Status == "NoBudgetSet")
                 {
-                    <span>@Progress.RemainingAmount.Amount.ToString("C") remaining</span>
+                    <span class="budget-amounts text-secondary">No budget set</span>
                 }
                 else
                 {
-                    <span>@Math.Abs(Progress.RemainingAmount.Amount).ToString("C") over budget</span>
+                    <span class="budget-amounts">
+                        <MoneyDisplay Amount="@Progress.SpentAmount.Amount" CurrencyCode="@Progress.SpentAmount.Currency" />
+                        <span class="text-secondary"> / </span>
+                        <MoneyDisplay Amount="@Progress.TargetAmount.Amount" CurrencyCode="@Progress.TargetAmount.Currency" />
+                    </span>
                 }
-            </span>
+            </div>
+        </div>
+        
+        @if (Progress.Status != "NoBudgetSet")
+        {
+            <BudgetProgressBar PercentUsed="@Progress.PercentUsed" Status="@Progress.Status" />
+        }
+        
+        <div class="budget-details">
+            @if (Progress.Status == "NoBudgetSet")
+            {
+                <span class="text-secondary">Set a budget to track spending</span>
+            }
+            else
+            {
+                <span class="budget-remaining @(Progress.RemainingAmount.Amount < 0 ? "text-expense" : "text-income")">
+                    @if (Progress.RemainingAmount.Amount >= 0)
+                    {
+                        <span>@Progress.RemainingAmount.Amount.ToString("C") remaining</span>
+                    }
+                    else
+                    {
+                        <span>@Math.Abs(Progress.RemainingAmount.Amount).ToString("C") over budget</span>
+                    }
+                </span>
+            }
             <span class="text-secondary text-sm">@Progress.TransactionCount transactions</span>
         </div>
     </div>
@@ -36,9 +53,18 @@
     @if (ShowEditButton)
     {
         <div class="card-footer">
-            <button class="btn btn-sm btn-secondary" @onclick="HandleEditGoal" title="Edit budget goal">
-                <Icon Name="edit" Size="16" /> Edit Goal
-            </button>
+            @if (Progress.Status == "NoBudgetSet")
+            {
+                <button class="btn btn-sm btn-primary" @onclick="HandleEditGoal" title="Set budget goal">
+                    <Icon Name="plus" Size="16" /> Set Budget
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-sm btn-secondary" @onclick="HandleEditGoal" title="Edit budget goal">
+                    <Icon Name="edit" Size="16" /> Edit Goal
+                </button>
+            }
         </div>
     }
 </div>
@@ -71,6 +97,7 @@
             "OverBudget" => "status-danger",
             "Warning" => "status-warning",
             "OnTrack" => "status-success",
+            "NoBudgetSet" => "status-no-budget",
             _ => ""
         };
     }

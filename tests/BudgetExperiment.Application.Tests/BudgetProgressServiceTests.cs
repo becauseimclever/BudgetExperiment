@@ -118,6 +118,7 @@ public class BudgetProgressServiceTests
         var category2 = BudgetCategory.Create("Entertainment", CategoryType.Expense);
         var category1Id = category1.Id;
         var category2Id = category2.Id;
+        var allExpenseCategories = new List<BudgetCategory> { category1, category2 };
         var goals = new List<BudgetGoal>
         {
             BudgetGoal.Create(category1Id, 2026, 1, MoneyValue.Create("USD", 500m)),
@@ -126,8 +127,7 @@ public class BudgetProgressServiceTests
         var goalRepo = new Mock<IBudgetGoalRepository>();
         goalRepo.Setup(r => r.GetByMonthAsync(2026, 1, default)).ReturnsAsync(goals);
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
-        categoryRepo.Setup(r => r.GetByIdAsync(category1Id, default)).ReturnsAsync(category1);
-        categoryRepo.Setup(r => r.GetByIdAsync(category2Id, default)).ReturnsAsync(category2);
+        categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(allExpenseCategories);
         var transactionRepo = new Mock<ITransactionRepository>();
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(category1Id, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 250m));

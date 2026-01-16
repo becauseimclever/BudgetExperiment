@@ -86,6 +86,24 @@
             <small class="text-secondary">Lower numbers appear first in lists</small>
         </div>
     }
+
+    @if (Model.Type == "Expense" && !ShowSortOrder)
+    {
+        <div class="form-group">
+            <label for="initialBudget" class="form-label">Monthly Budget (optional):</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input id="initialBudget" 
+                       type="number" 
+                       class="form-control"
+                       step="0.01"
+                       min="0"
+                       @bind="InitialBudgetAmount"
+                       placeholder="0.00" />
+            </div>
+            <small class="text-secondary">Set an initial budget goal for the current month</small>
+        </div>
+    }
     
     <div class="form-actions form-actions-right">
         <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
@@ -152,6 +170,28 @@
     /// </summary>
     [Parameter]
     public EventCallback<int> SortOrderChanged { get; set; }
+
+    private decimal _initialBudgetAmount;
+
+    /// <summary>
+    /// Gets or sets the initial budget amount.
+    /// </summary>
+    private decimal InitialBudgetAmount
+    {
+        get => _initialBudgetAmount;
+        set
+        {
+            _initialBudgetAmount = value;
+            if (value > 0)
+            {
+                Model.InitialBudget = new MoneyDto { Amount = value, Currency = "USD" };
+            }
+            else
+            {
+                Model.InitialBudget = null;
+            }
+        }
+    }
 
     private async Task HandleSubmit()
     {
