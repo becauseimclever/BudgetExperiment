@@ -18,14 +18,23 @@ namespace BudgetExperiment.Api.Controllers;
 public sealed class RecurringTransfersController : ControllerBase
 {
     private readonly RecurringTransferService _service;
+    private readonly IRecurringTransferInstanceService _instanceService;
+    private readonly IRecurringTransferRealizationService _realizationService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RecurringTransfersController"/> class.
     /// </summary>
     /// <param name="service">The recurring transfer service.</param>
-    public RecurringTransfersController(RecurringTransferService service)
+    /// <param name="instanceService">The recurring transfer instance service.</param>
+    /// <param name="realizationService">The recurring transfer realization service.</param>
+    public RecurringTransfersController(
+        RecurringTransferService service,
+        IRecurringTransferInstanceService instanceService,
+        IRecurringTransferRealizationService realizationService)
     {
         this._service = service;
+        this._instanceService = instanceService;
+        this._realizationService = realizationService;
     }
 
     /// <summary>
@@ -245,7 +254,7 @@ public sealed class RecurringTransfersController : ControllerBase
             return this.BadRequest("from must be less than or equal to to.");
         }
 
-        var instances = await this._service.GetProjectedInstancesAsync(from, to, accountId, cancellationToken);
+        var instances = await this._instanceService.GetProjectedInstancesAsync(from, to, accountId, cancellationToken);
         return this.Ok(instances);
     }
 
@@ -272,7 +281,7 @@ public sealed class RecurringTransfersController : ControllerBase
             return this.BadRequest("from must be less than or equal to to.");
         }
 
-        var instances = await this._service.GetInstancesAsync(id, from, to, cancellationToken);
+        var instances = await this._instanceService.GetInstancesAsync(id, from, to, cancellationToken);
         if (instances is null)
         {
             return this.NotFound();
@@ -299,7 +308,7 @@ public sealed class RecurringTransfersController : ControllerBase
         [FromBody] RecurringTransferInstanceModifyDto dto,
         CancellationToken cancellationToken)
     {
-        var instance = await this._service.ModifyInstanceAsync(id, date, dto, cancellationToken);
+        var instance = await this._instanceService.ModifyInstanceAsync(id, date, dto, cancellationToken);
         if (instance is null)
         {
             return this.NotFound();
@@ -320,7 +329,7 @@ public sealed class RecurringTransfersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SkipInstanceAsync(Guid id, DateOnly date, CancellationToken cancellationToken)
     {
-        var skipped = await this._service.SkipInstanceAsync(id, date, cancellationToken);
+        var skipped = await this._instanceService.SkipInstanceAsync(id, date, cancellationToken);
         if (!skipped)
         {
             return this.NotFound();
@@ -373,7 +382,7 @@ public sealed class RecurringTransfersController : ControllerBase
         [FromBody] RealizeRecurringTransferRequest request,
         CancellationToken cancellationToken)
     {
-        var transfer = await this._service.RealizeInstanceAsync(id, request, cancellationToken);
+        var transfer = await this._realizationService.RealizeInstanceAsync(id, request, cancellationToken);
         return this.CreatedAtAction(
             "GetById",
             "Transfers",

@@ -22,6 +22,8 @@ public static class DependencyInjection
         services.AddScoped<RecurringTransferService>();
         services.AddScoped<ITransferService, TransferService>();
         services.AddScoped<ICalendarGridService, CalendarGridService>();
+        services.AddScoped<IDayDetailService, DayDetailService>();
+        services.AddScoped<ITransactionListService, TransactionListService>();
         services.AddScoped<IPastDueService, PastDueService>();
         services.AddScoped<IAppSettingsService, AppSettingsService>();
         services.AddScoped<IBalanceCalculationService, BalanceCalculationService>();
@@ -29,6 +31,10 @@ public static class DependencyInjection
         services.AddScoped<IRecurringInstanceProjector, RecurringInstanceProjector>();
         services.AddScoped<IRecurringTransferInstanceProjector, RecurringTransferInstanceProjector>();
         services.AddScoped<IAutoRealizeService, AutoRealizeService>();
+        services.AddScoped<IRecurringTransactionInstanceService, RecurringTransactionInstanceService>();
+        services.AddScoped<IRecurringTransactionRealizationService, RecurringTransactionRealizationService>();
+        services.AddScoped<IRecurringTransferInstanceService, RecurringTransferInstanceService>();
+        services.AddScoped<IRecurringTransferRealizationService, RecurringTransferRealizationService>();
         return services;
     }
 }

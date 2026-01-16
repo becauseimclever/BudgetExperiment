@@ -1,6 +1,6 @@
 # Feature 020: SOLID Principles Refactoring
 
-📋 **Status**: In Progress (Phase 2 Complete)
+📋 **Status**: ✅ Complete
 
 ## Overview
 
@@ -8,109 +8,108 @@ Several classes in the codebase have grown large and accumulated multiple respon
 
 ## Target Classes
 
-### 1. CalendarGridService (801 lines) - **Critical Priority**
+### 1. CalendarGridService (~~801~~ 185 lines) - ✅ **Refactored**
 
 **Location**: [src/BudgetExperiment.Application/Services/CalendarGridService.cs](../src/BudgetExperiment.Application/Services/CalendarGridService.cs)
 
-**Current Responsibilities** (SRP violations):
-1. Building calendar grid views (`GetCalendarGridAsync`)
-2. Building day detail views (`GetDayDetailAsync`)
-3. Building account transaction lists (`GetAccountTransactionListAsync`)
-4. Projecting recurring transaction instances
-5. Projecting recurring transfer instances
-6. Auto-realizing past-due recurring items
-7. Managing exception lookups for recurring items
-8. Computing running balances
+**Original Responsibilities** (SRP violations - now fixed):
+1. ~~Building calendar grid views (`GetCalendarGridAsync`)~~ → Kept (slim orchestration)
+2. ~~Building day detail views (`GetDayDetailAsync`)~~ → Moved to `DayDetailService`
+3. ~~Building account transaction lists (`GetAccountTransactionListAsync`)~~ → Moved to `TransactionListService`
+4. ~~Projecting recurring transaction instances~~ → Moved to `RecurringInstanceProjector`
+5. ~~Projecting recurring transfer instances~~ → Moved to `RecurringTransferInstanceProjector`
+6. ~~Auto-realizing past-due recurring items~~ → Moved to `AutoRealizeService`
+7. ~~Managing exception lookups for recurring items~~ → Handled by projectors
+8. ~~Computing running balances~~ → Handled by `BalanceCalculationService`
 
-**Dependencies** (6 repositories - potential ISP concern):
+**Current Dependencies** (7 services - proper composition):
 - `ITransactionRepository`
 - `IRecurringTransactionRepository`
 - `IRecurringTransferRepository`
-- `IAccountRepository`
-- `IAppSettingsRepository`
-- `IUnitOfWork`
+- `IBalanceCalculationService`
+- `IRecurringInstanceProjector`
+- `IRecurringTransferInstanceProjector`
+- `IAutoRealizeService`
 
-**Proposed Decomposition**:
+**Completed Decomposition**:
 
-| New Service | Responsibility | Methods to Extract |
-|-------------|----------------|-------------------|
-| `IRecurringInstanceProjector` | Project recurring transaction instances for date ranges | `GetRecurringInstancesByDateAsync`, `GetRecurringInstancesForDateAsync` |
-| `IRecurringTransferInstanceProjector` | Project recurring transfer instances for date ranges | `GetRecurringTransferInstancesByDateAsync`, `GetRecurringTransferInstancesForDateAsync` |
-| `IAutoRealizeService` | Auto-realize past-due recurring items | `AutoRealizePastDueItemsIfEnabledAsync`, `AutoRealizeRecurringTransactionsAsync`, `AutoRealizeRecurringTransfersAsync` |
-| `IRunningBalanceCalculator` | Calculate running balances for transaction lists | Balance computation logic |
-| `CalendarGridService` (refactored) | Orchestrate calendar grid building | `GetCalendarGridAsync` (slim) |
-| `DayDetailService` | Build day detail views | `GetDayDetailAsync` |
-| `TransactionListService` | Build account transaction lists | `GetAccountTransactionListAsync` |
+| New Service | Lines | Responsibility |
+|-------------|-------|----------------|
+| `IRecurringInstanceProjector` | ~200 | Project recurring transaction instances |
+| `IRecurringTransferInstanceProjector` | ~200 | Project recurring transfer instances |
+| `IAutoRealizeService` | ~150 | Auto-realize past-due recurring items |
+| `IDayDetailService` | 179 | Build day detail views |
+| `ITransactionListService` | 251 | Build account transaction lists |
+| `CalendarGridService` (refactored) | 185 | Orchestrate calendar grid building |
 
 ---
 
-### 2. RecurringTransferService (527 lines) - **High Priority**
+### 2. RecurringTransferService (~~605~~ 304 lines) - ✅ **Refactored**
 
 **Location**: [src/BudgetExperiment.Application/Services/RecurringTransferService.cs](../src/BudgetExperiment.Application/Services/RecurringTransferService.cs)
 
-**Current Responsibilities** (SRP violations):
-1. CRUD operations for recurring transfers
-2. Lifecycle management (pause/resume/skip)
-3. Instance projection
-4. Instance modification (exceptions)
-5. Instance realization (creating actual transfers)
-6. Account name resolution
+**Original Responsibilities** (SRP violations - now fixed):
+1. ~~CRUD operations for recurring transfers~~ → Kept
+2. ~~Lifecycle management (pause/resume/skip)~~ → Kept
+3. ~~Instance projection~~ → Moved to `RecurringTransferInstanceService`
+4. ~~Instance modification (exceptions)~~ → Moved to `RecurringTransferInstanceService`
+5. ~~Instance realization (creating actual transfers)~~ → Moved to `RecurringTransferRealizationService`
+6. ~~Account name resolution~~ → Kept (internal helper)
 
-**Proposed Decomposition**:
+**Completed Decomposition**:
 
-| New Service | Responsibility | Methods to Extract |
-|-------------|----------------|-------------------|
-| `RecurringTransferService` (refactored) | CRUD + lifecycle | `GetByIdAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`, `PauseAsync`, `ResumeAsync`, `SkipNextAsync` |
-| `IRecurringTransferInstanceService` | Instance projection and modification | `GetInstancesAsync`, `ModifyInstanceAsync`, `SkipInstanceAsync`, `GetProjectedInstancesAsync` |
-| `IRecurringTransferRealizationService` | Realize instances into actual transfers | `RealizeInstanceAsync` |
+| New Service | Lines | Responsibility |
+|-------------|-------|----------------|
+| `RecurringTransferService` (refactored) | 304 | CRUD + lifecycle |
+| `RecurringTransferInstanceService` | 164 | Instance projection and modification |
+| `RecurringTransferRealizationService` | 112 | Realize instances into actual transfers |
 
 ---
 
-### 3. RecurringTransactionService (448 lines) - **High Priority**
+### 3. RecurringTransactionService (~~518~~ 266 lines) - ✅ **Refactored**
 
 **Location**: [src/BudgetExperiment.Application/Services/RecurringTransactionService.cs](../src/BudgetExperiment.Application/Services/RecurringTransactionService.cs)
 
-**Current Responsibilities** (similar pattern to RecurringTransferService):
-1. CRUD operations
-2. Lifecycle management
-3. Instance projection
-4. Instance modification
-5. Instance realization
+**Original Responsibilities** (SRP violations - now fixed):
+1. ~~CRUD operations~~ → Kept
+2. ~~Lifecycle management~~ → Kept
+3. ~~Instance projection~~ → Moved to `RecurringTransactionInstanceService`
+4. ~~Instance modification~~ → Moved to `RecurringTransactionInstanceService`
+5. ~~Instance realization~~ → Moved to `RecurringTransactionRealizationService`
 
-**Proposed Decomposition**: Mirror the RecurringTransferService refactoring pattern.
+**Completed Decomposition**:
 
----
-
-### 4. BudgetApiService (478 lines) - **Medium Priority**
-
-**Location**: [src/BudgetExperiment.Client/Services/BudgetApiService.cs](../src/BudgetExperiment.Client/Services/BudgetApiService.cs)
-
-**Current Responsibilities**:
-- HTTP client wrapper for ALL API endpoints (accounts, transactions, recurring transactions, recurring transfers, transfers, calendar, settings)
-
-**Note**: This is a thin client façade that follows the API structure. While large, it's primarily pass-through methods with consistent patterns. Consider splitting only if the file becomes unmanageable or if certain API domains need specialized handling.
-
-**Proposed Decomposition** (if pursued):
-
-| New Service | Responsibility |
-|-------------|----------------|
-| `IAccountApiService` | Account CRUD operations |
-| `ITransactionApiService` | Transaction CRUD operations |
-| `IRecurringTransactionApiService` | Recurring transaction operations |
-| `IRecurringTransferApiService` | Recurring transfer operations |
-| `ITransferApiService` | Transfer operations |
-| `ICalendarApiService` | Calendar grid and day detail |
-| `ISettingsApiService` | App settings operations |
+| New Service | Lines | Responsibility |
+|-------------|-------|----------------|
+| `RecurringTransactionService` (refactored) | 266 | CRUD + lifecycle |
+| `RecurringTransactionInstanceService` | 140 | Instance projection and modification |
+| `RecurringTransactionRealizationService` | 70 | Realize instances into actual transactions |
 
 ---
 
-### 5. IBudgetApiService Interface (323 lines) - **Medium Priority**
+### 4. BudgetApiService (499 lines) + IBudgetApiService (332 lines) - ⏭️ **Evaluated - Not Required**
 
-**Location**: [src/BudgetExperiment.Client/Services/IBudgetApiService.cs](../src/BudgetExperiment.Client/Services/IBudgetApiService.cs)
+**Location**: 
+- [src/BudgetExperiment.Client/Services/BudgetApiService.cs](../src/BudgetExperiment.Client/Services/BudgetApiService.cs)
+- [src/BudgetExperiment.Client/Services/IBudgetApiService.cs](../src/BudgetExperiment.Client/Services/IBudgetApiService.cs)
 
-**ISP Violation**: Single interface with 40+ methods. Components depending on this interface depend on methods they don't use.
+**Analysis**: Interface has 46 methods spanning 8 API domains (Accounts, Transactions, Calendar, Recurring Transactions, Recurring Transfers, Transfers, Settings, Allocations).
 
-**Proposed Decomposition**: Split into focused interfaces matching the service decomposition above, then have `IBudgetApiService` inherit from all (or remove entirely).
+**Decision: Skip splitting** for the following reasons:
+
+1. **Thin Client Façade**: The service is primarily HTTP pass-through with consistent patterns (`GetAsync`, `PostAsync`). No business logic to isolate.
+
+2. **Single Dependency**: All methods depend only on `HttpClient` - no complexity reduction from splitting.
+
+3. **Lines Acceptable**: At 499/332 lines, both files are under the 600-line threshold where splitting becomes clearly beneficial.
+
+4. **Blazor DI Simplicity**: Having one `IBudgetApiService` is simpler for component authors than injecting 7+ different services.
+
+5. **No Testing Benefit**: Tests belong at the API layer, not the client façade.
+
+6. **Risk vs. Reward**: Splitting would require 14+ new files, updating 11 components, all for pass-through code.
+
+**Future Consideration**: Revisit if any domain needs caching, retry logic, or specialized error handling.
 
 ---
 
@@ -132,29 +131,40 @@ Several classes in the codebase have grown large and accumulated multiple respon
 - [x] Update DI registration
 - [x] Write unit tests (AutoRealizeServiceTests.cs created)
 
-### Phase 3: Split Calendar Services
-- [ ] Create `IDayDetailService` interface
-- [ ] Create `DayDetailService` implementation
-- [ ] Create `ITransactionListService` interface  
-- [ ] Create `TransactionListService` implementation
-- [ ] Slim down `CalendarGridService` to orchestration only
-- [ ] Update controllers/API endpoints
-- [ ] Update DI registration
-- [ ] Write unit tests
+### Phase 3: Split Calendar Services ✅
+- [x] Create `IDayDetailService` interface
+- [x] Create `DayDetailService` implementation
+- [x] Create `ITransactionListService` interface  
+- [x] Create `TransactionListService` implementation
+- [x] Slim down `CalendarGridService` to orchestration only
+- [x] Update controllers/API endpoints
+- [x] Update DI registration
+- [x] Write unit tests (DayDetailServiceTests.cs, TransactionListServiceTests.cs created)
 
-### Phase 4: Refactor Recurring Transfer/Transaction Services
-- [ ] Create `IRecurringTransferInstanceService` interface
-- [ ] Create `IRecurringTransferRealizationService` interface
-- [ ] Create implementations and move methods
-- [ ] Repeat for `RecurringTransactionService`
-- [ ] Update DI registration
-- [ ] Write unit tests
+### Phase 4: Refactor Recurring Transfer/Transaction Services ✅
+- [x] Create `IRecurringTransferInstanceService` interface
+- [x] Create `IRecurringTransferRealizationService` interface
+- [x] Create `IRecurringTransactionInstanceService` interface
+- [x] Create `IRecurringTransactionRealizationService` interface
+- [x] Create implementations and move methods
+- [x] Update controllers (RecurringTransactionsController, RecurringTransfersController, RecurringController)
+- [x] Update DI registration
+- [x] Move and update unit tests to new service test files
 
-### Phase 5: Client API Service Split (Optional)
-- [ ] Evaluate if split is warranted based on complexity
-- [ ] If yes, create focused API service interfaces
-- [ ] Create implementations
-- [ ] Update DI registration in Client
+**Results**:
+- `RecurringTransactionService`: 518 → 266 lines
+- `RecurringTransferService`: 605 → 304 lines
+- New services created (all under 300 lines):
+  - `RecurringTransactionInstanceService`: 140 lines
+  - `RecurringTransactionRealizationService`: 70 lines
+  - `RecurringTransferInstanceService`: 164 lines
+  - `RecurringTransferRealizationService`: 112 lines
+
+### Phase 5: Client API Service Split - ⏭️ Evaluated (Not Required)
+- [x] Evaluated complexity and usage patterns
+- [x] Determined splitting not warranted (see section 4 above)
+- Reasons: thin façade, single dependency, acceptable line count, DI simplicity
+- Future trigger: Revisit if caching/retry logic needed or lines exceed 600
 
 ---
 

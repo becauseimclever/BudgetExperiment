@@ -18,23 +18,23 @@ namespace BudgetExperiment.Api.Controllers;
 public sealed class RecurringController : ControllerBase
 {
     private readonly IPastDueService _pastDueService;
-    private readonly RecurringTransactionService _recurringTransactionService;
-    private readonly RecurringTransferService _recurringTransferService;
+    private readonly IRecurringTransactionRealizationService _transactionRealizationService;
+    private readonly IRecurringTransferRealizationService _transferRealizationService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RecurringController"/> class.
     /// </summary>
     /// <param name="pastDueService">The past-due service.</param>
-    /// <param name="recurringTransactionService">The recurring transaction service.</param>
-    /// <param name="recurringTransferService">The recurring transfer service.</param>
+    /// <param name="transactionRealizationService">The recurring transaction realization service.</param>
+    /// <param name="transferRealizationService">The recurring transfer realization service.</param>
     public RecurringController(
         IPastDueService pastDueService,
-        RecurringTransactionService recurringTransactionService,
-        RecurringTransferService recurringTransferService)
+        IRecurringTransactionRealizationService transactionRealizationService,
+        IRecurringTransferRealizationService transferRealizationService)
     {
         this._pastDueService = pastDueService;
-        this._recurringTransactionService = recurringTransactionService;
-        this._recurringTransferService = recurringTransferService;
+        this._transactionRealizationService = transactionRealizationService;
+        this._transferRealizationService = transferRealizationService;
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public sealed class RecurringController : ControllerBase
                     {
                         InstanceDate = item.InstanceDate,
                     };
-                    await this._recurringTransactionService.RealizeInstanceAsync(
+                    await this._transactionRealizationService.RealizeInstanceAsync(
                         item.Id,
                         realizeRequest,
                         cancellationToken);
@@ -96,7 +96,7 @@ public sealed class RecurringController : ControllerBase
                     {
                         InstanceDate = item.InstanceDate,
                     };
-                    await this._recurringTransferService.RealizeInstanceAsync(
+                    await this._transferRealizationService.RealizeInstanceAsync(
                         item.Id,
                         realizeRequest,
                         cancellationToken);

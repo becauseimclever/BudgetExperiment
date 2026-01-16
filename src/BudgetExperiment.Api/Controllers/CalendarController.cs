@@ -19,16 +19,26 @@ public sealed class CalendarController : ControllerBase
 {
     private readonly CalendarService _calendarService;
     private readonly ICalendarGridService _gridService;
+    private readonly IDayDetailService _dayDetailService;
+    private readonly ITransactionListService _transactionListService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CalendarController"/> class.
     /// </summary>
     /// <param name="calendarService">The calendar service.</param>
     /// <param name="gridService">The calendar grid service.</param>
-    public CalendarController(CalendarService calendarService, ICalendarGridService gridService)
+    /// <param name="dayDetailService">The day detail service.</param>
+    /// <param name="transactionListService">The transaction list service.</param>
+    public CalendarController(
+        CalendarService calendarService,
+        ICalendarGridService gridService,
+        IDayDetailService dayDetailService,
+        ITransactionListService transactionListService)
     {
         this._calendarService = calendarService;
         this._gridService = gridService;
+        this._dayDetailService = dayDetailService;
+        this._transactionListService = transactionListService;
     }
 
     /// <summary>
@@ -77,7 +87,7 @@ public sealed class CalendarController : ControllerBase
         [FromQuery] Guid? accountId,
         CancellationToken cancellationToken)
     {
-        var detail = await this._gridService.GetDayDetailAsync(date, accountId, cancellationToken);
+        var detail = await this._dayDetailService.GetDayDetailAsync(date, accountId, cancellationToken);
         return this.Ok(detail);
     }
 
@@ -108,7 +118,7 @@ public sealed class CalendarController : ControllerBase
 
         try
         {
-            var result = await this._gridService.GetAccountTransactionListAsync(
+            var result = await this._transactionListService.GetAccountTransactionListAsync(
                 accountId,
                 startDate,
                 endDate,

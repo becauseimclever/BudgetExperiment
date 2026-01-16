@@ -1,38 +1,35 @@
-// <copyright file="RecurringTransactionServiceTests.cs" company="BecauseImClever">
+// <copyright file="RecurringTransactionRealizationServiceTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Application.Services;
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
 
 /// <summary>
-/// Unit tests for RecurringTransactionService.
+/// Unit tests for RecurringTransactionRealizationService.
 /// </summary>
-public class RecurringTransactionServiceTests
+public class RecurringTransactionRealizationServiceTests
 {
     private readonly Mock<IRecurringTransactionRepository> _repository;
-    private readonly Mock<IAccountRepository> _accountRepo;
     private readonly Mock<ITransactionRepository> _transactionRepo;
     private readonly Mock<IUnitOfWork> _uow;
-    private readonly RecurringTransactionService _service;
+    private readonly RecurringTransactionRealizationService _service;
     private readonly Account _account;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RecurringTransactionServiceTests"/> class.
+    /// Initializes a new instance of the <see cref="RecurringTransactionRealizationServiceTests"/> class.
     /// </summary>
-    public RecurringTransactionServiceTests()
+    public RecurringTransactionRealizationServiceTests()
     {
         this._repository = new Mock<IRecurringTransactionRepository>();
-        this._accountRepo = new Mock<IAccountRepository>();
         this._transactionRepo = new Mock<ITransactionRepository>();
         this._uow = new Mock<IUnitOfWork>();
-        this._service = new RecurringTransactionService(
+        this._service = new RecurringTransactionRealizationService(
             this._repository.Object,
-            this._accountRepo.Object,
             this._transactionRepo.Object,
             this._uow.Object);
 
@@ -59,7 +56,6 @@ public class RecurringTransactionServiceTests
         this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
         this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync((RecurringTransactionException?)null);
         this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._account.Id, default)).ReturnsAsync(this._account);
         this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
@@ -146,13 +142,9 @@ public class RecurringTransactionServiceTests
             Description = "Netflix Premium",
         };
 
-        Transaction? capturedTransaction = null;
         this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
         this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync((RecurringTransactionException?)null);
         this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._transactionRepo.Setup(r => r.AddAsync(It.IsAny<Transaction>(), default))
-            .Callback<Transaction, CancellationToken>((t, ct) => capturedTransaction = t);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._account.Id, default)).ReturnsAsync(this._account);
         this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
@@ -194,7 +186,6 @@ public class RecurringTransactionServiceTests
         this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
         this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync(exception);
         this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._account.Id, default)).ReturnsAsync(this._account);
         this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
@@ -238,7 +229,6 @@ public class RecurringTransactionServiceTests
         this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
         this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync(exception);
         this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._account.Id, default)).ReturnsAsync(this._account);
         this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
