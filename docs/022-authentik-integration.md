@@ -868,31 +868,43 @@ builder.Services.AddCors(options =>
 
 ## Environment Configuration
 
-### Development
+### API Configuration (User Secrets)
+
+The API uses ASP.NET Core User Secrets for local development. Configure with:
+
+```powershell
+# Enable authentication
+dotnet user-secrets set "Authentication:Authentik:Enabled" "true" --project src/BudgetExperiment.Api
+
+# Set Authentik provider details
+dotnet user-secrets set "Authentication:Authentik:Authority" "https://your-authentik.example.com/application/o/budget-experiment/" --project src/BudgetExperiment.Api
+dotnet user-secrets set "Authentication:Authentik:Audience" "your-client-id" --project src/BudgetExperiment.Api
+dotnet user-secrets set "Authentication:Authentik:RequireHttpsMetadata" "false" --project src/BudgetExperiment.Api
+```
+
+### Client Configuration (wwwroot/appsettings.*.json)
+
+The Blazor WASM client requires OIDC settings in `wwwroot/appsettings.Development.json` (gitignored):
+
 ```json
 {
   "Authentication": {
     "Authentik": {
-      "Authority": "https://auth.dev.example.com/application/o/budget-experiment-dev/",
-      "ClientId": "budget-experiment-dev",
-      "RequireHttpsMetadata": false
+      "Authority": "https://your-authentik.example.com/application/o/budget-experiment/",
+      "ClientId": "your-client-id",
+      "ResponseType": "code",
+      "PostLogoutRedirectUri": "/",
+      "RedirectUri": "authentication/login-callback"
     }
   }
 }
 ```
 
-### Production
-```json
-{
-  "Authentication": {
-    "Authentik": {
-      "Authority": "https://auth.example.com/application/o/budget-experiment/",
-      "ClientId": "budget-experiment",
-      "RequireHttpsMetadata": true
-    }
-  }
-}
-```
+> **Note:** For OIDC public clients (Blazor WASM), the Authority and ClientId are not secrets - they're public configuration needed by the browser to redirect to the IdP. The actual security is in the PKCE flow and Authentik's validation.
+
+### Production Deployment
+
+For production, create `wwwroot/appsettings.Production.json` with production Authentik settings. This file is gitignored and should be configured during deployment.
 
 ---
 

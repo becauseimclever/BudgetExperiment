@@ -429,6 +429,10 @@ FodyWeavers.xsd
 .env.local
 .env.*.local
 
+# Client-side authentication config (contains environment-specific OIDC settings)
+**/wwwroot/appsettings.Development.json
+**/wwwroot/appsettings.Production.json
+
 # Docker build artifacts (no longer needed - CI builds in GitHub Actions)
 publish/
 *.tar
