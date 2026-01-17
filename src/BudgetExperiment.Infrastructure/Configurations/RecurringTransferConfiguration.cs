@@ -108,5 +108,20 @@ internal sealed class RecurringTransferConfiguration : IEntityTypeConfiguration<
         builder.HasIndex(r => r.DestinationAccountId);
         builder.HasIndex(r => r.NextOccurrence);
         builder.HasIndex(r => r.IsActive);
+
+        // Scope properties for multi-user support
+        builder.Property(r => r.Scope)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(r => r.OwnerUserId);
+
+        builder.Property(r => r.CreatedByUserId)
+            .IsRequired();
+
+        // Indexes for scope filtering
+        builder.HasIndex(r => r.Scope);
+        builder.HasIndex(r => r.OwnerUserId);
     }
 }

@@ -107,5 +107,20 @@ internal sealed class RecurringTransactionConfiguration : IEntityTypeConfigurati
         builder.HasIndex(r => r.NextOccurrence);
         builder.HasIndex(r => r.IsActive);
         builder.HasIndex(r => r.CategoryId);
+
+        // Scope properties for multi-user support
+        builder.Property(r => r.Scope)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(r => r.OwnerUserId);
+
+        builder.Property(r => r.CreatedByUserId)
+            .IsRequired();
+
+        // Indexes for scope filtering
+        builder.HasIndex(r => r.Scope);
+        builder.HasIndex(r => r.OwnerUserId);
     }
 }

@@ -62,6 +62,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<BudgetGoal> BudgetGoals => this.Set<BudgetGoal>();
 
+    /// <summary>
+    /// Gets the user settings.
+    /// </summary>
+    public DbSet<UserSettings> UserSettings => this.Set<UserSettings>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

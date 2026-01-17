@@ -55,6 +55,17 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.UpdatedAt)
             .IsRequired();
 
+        // Scope properties for multi-user support
+        builder.Property(a => a.Scope)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(a => a.OwnerUserId);
+
+        builder.Property(a => a.CreatedByUserId)
+            .IsRequired();
+
         // Navigation to Transactions
         builder.HasMany(a => a.Transactions)
             .WithOne()
@@ -64,5 +75,9 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         // Index for efficient listing
         builder.HasIndex(a => a.Name);
         builder.HasIndex(a => a.Type);
+
+        // Indexes for scope filtering
+        builder.HasIndex(a => a.Scope);
+        builder.HasIndex(a => a.OwnerUserId);
     }
 }

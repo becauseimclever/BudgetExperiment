@@ -577,4 +577,20 @@ public class TransactionTests
         Assert.Null(transaction.RecurringTransferInstanceDate);
         Assert.False(transaction.IsFromRecurringTransfer);
     }
+
+    [Fact]
+    public void Transaction_Has_Scope_Properties()
+    {
+        // Arrange & Act
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Test");
+
+        // Assert - Default values before scope is set by parent aggregate
+        Assert.Equal(BudgetScope.Shared, transaction.Scope);
+        Assert.Null(transaction.OwnerUserId);
+        Assert.Equal(Guid.Empty, transaction.CreatedByUserId);
+    }
 }

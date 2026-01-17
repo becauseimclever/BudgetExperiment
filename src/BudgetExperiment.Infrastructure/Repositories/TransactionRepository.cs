@@ -13,27 +13,30 @@ namespace BudgetExperiment.Infrastructure.Repositories;
 internal sealed class TransactionRepository : ITransactionRepository
 {
     private readonly BudgetDbContext _context;
+    private readonly IUserContext _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    public TransactionRepository(BudgetDbContext context)
+    /// <param name="userContext">The user context for scope filtering.</param>
+    public TransactionRepository(BudgetDbContext context, IUserContext userContext)
     {
         this._context = context;
+        this._userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<Transaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this._context.Transactions
+        return await this.ApplyScopeFilter(this._context.Transactions)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<Transaction>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this._context.Transactions
+        return await this.ApplyScopeFilter(this._context.Transactions)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAt)
             .Skip(skip)
@@ -44,7 +47,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.Transactions.LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(this._context.Transactions).LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -78,7 +81,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
-        var query = this._context.Transactions
+        var query = this.ApplyScopeFilter(this._context.Transactions)
             .Where(t => t.Date >= startDate && t.Date <= endDate);
 
         if (accountId.HasValue)
@@ -114,7 +117,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         Guid transferId,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.Transactions
+        return await this.ApplyScopeFilter(this._context.Transactions)
             .Where(t => t.TransferId == transferId)
             .OrderBy(t => t.TransferDirection)
             .ToListAsync(cancellationToken);
@@ -126,7 +129,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         DateOnly instanceDate,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.Transactions
+        return await this.ApplyScopeFilter(this._context.Transactions)
             .FirstOrDefaultAsync(
                 t => t.RecurringTransactionId == recurringTransactionId
                     && t.RecurringInstanceDate == instanceDate,
@@ -139,7 +142,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         DateOnly instanceDate,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.Transactions
+        return await this.ApplyScopeFilter(this._context.Transactions)
             .Where(t => t.RecurringTransferId == recurringTransferId
                 && t.RecurringTransferInstanceDate == instanceDate)
             .OrderBy(t => t.TransferDirection)
@@ -181,8 +184,8 @@ internal sealed class TransactionRepository : ITransactionRepository
             return MoneyValue.Create("USD", 0m);
         }
 
-        // Sum all spending (negative amounts represent expenses)
-        var totalSpending = await this._context.Transactions
+        // Sum all spending (negative amounts represent expenses) with scope filtering
+        var totalSpending = await this.ApplyScopeFilter(this._context.Transactions)
             .Where(t => t.Date >= startDate
                 && t.Date <= endDate
                 && t.CategoryId == categoryId
@@ -190,5 +193,19 @@ internal sealed class TransactionRepository : ITransactionRepository
             .SumAsync(t => Math.Abs(t.Amount.Amount), cancellationToken);
 
         return MoneyValue.Create("USD", totalSpending);
+    }
+
+    private IQueryable<Transaction> ApplyScopeFilter(IQueryable<Transaction> query)
+    {
+        var userId = this._userContext.UserIdAsGuid;
+
+        return this._userContext.CurrentScope switch
+        {
+            BudgetScope.Shared => query.Where(t => t.Scope == BudgetScope.Shared),
+            BudgetScope.Personal => query.Where(t => t.Scope == BudgetScope.Personal && t.OwnerUserId == userId),
+            _ => query.Where(t =>
+                t.Scope == BudgetScope.Shared ||
+                (t.Scope == BudgetScope.Personal && t.OwnerUserId == userId)),
+        };
     }
 }

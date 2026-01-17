@@ -778,7 +778,7 @@ public sealed class AccountCreateDto
 ## Implementation Plan
 
 ### Phase 1: Infrastructure Setup
-- [ ] Configure Authentik application and provider
+- [x] Configure Authentik application and provider
 - [x] Add authentication packages to API
 - [x] Configure JWT Bearer authentication in Program.cs
 - [x] Create `IUserContext` interface and implementation
@@ -787,11 +787,11 @@ public sealed class AccountCreateDto
 - [x] Update `docker-compose.pi.yml` to pass authentication settings via environment variables
 
 ### Phase 2: Database Migration
-- [ ] Add `Scope`, `OwnerUserId`, `CreatedByUserId` columns to all entities
-- [ ] Create `UserSettings` entity (migrate from `AppSettings`)
-- [ ] Create EF Core migration
-- [ ] Update all repository implementations with scope filtering
-- [ ] Write repository tests with scope filtering
+- [x] Add `Scope`, `OwnerUserId`, `CreatedByUserId` columns to all entities
+- [x] Create `UserSettings` entity (migrate from `AppSettings`)
+- [x] Create EF Core migration
+- [x] Update all repository implementations with scope filtering
+- [x] Write repository tests with scope filtering
 
 ### Phase 3: API Protection
 - [ ] Add `[Authorize]` to all controllers

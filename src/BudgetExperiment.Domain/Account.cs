@@ -57,6 +57,21 @@ public sealed class Account
     public DateTime UpdatedAt { get; private set; }
 
     /// <summary>
+    /// Gets the budget scope (Shared or Personal).
+    /// </summary>
+    public BudgetScope Scope { get; private set; }
+
+    /// <summary>
+    /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
+    /// </summary>
+    public Guid? OwnerUserId { get; private set; }
+
+    /// <summary>
+    /// Gets the user ID of who created this account.
+    /// </summary>
+    public Guid CreatedByUserId { get; private set; }
+
+    /// <summary>
     /// Gets the transactions in this account.
     /// </summary>
     public IReadOnlyCollection<Transaction> Transactions => this._transactions.AsReadOnly();
@@ -89,6 +104,92 @@ public sealed class Account
             Type = type,
             InitialBalance = initialBalance ?? MoneyValue.Zero("USD"),
             InitialBalanceDate = initialBalanceDate ?? DateOnly.FromDateTime(now),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+    }
+
+    /// <summary>
+    /// Creates a new shared account (visible to all authenticated users).
+    /// </summary>
+    /// <param name="name">The account name.</param>
+    /// <param name="type">The account type.</param>
+    /// <param name="createdByUserId">The user ID of who is creating this account.</param>
+    /// <param name="initialBalance">Optional initial balance (defaults to zero USD).</param>
+    /// <param name="initialBalanceDate">Optional date for initial balance (defaults to today).</param>
+    /// <returns>A new <see cref="Account"/> instance with Shared scope.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public static Account CreateShared(
+        string name,
+        AccountType type,
+        Guid createdByUserId,
+        MoneyValue? initialBalance = null,
+        DateOnly? initialBalanceDate = null)
+    {
+        if (createdByUserId == Guid.Empty)
+        {
+            throw new DomainException("Created by user ID is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new DomainException("Account name is required.");
+        }
+
+        var now = DateTime.UtcNow;
+        return new Account
+        {
+            Id = Guid.NewGuid(),
+            Name = name.Trim(),
+            Type = type,
+            InitialBalance = initialBalance ?? MoneyValue.Zero("USD"),
+            InitialBalanceDate = initialBalanceDate ?? DateOnly.FromDateTime(now),
+            Scope = BudgetScope.Shared,
+            OwnerUserId = null,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+    }
+
+    /// <summary>
+    /// Creates a new personal account (visible only to the owner).
+    /// </summary>
+    /// <param name="name">The account name.</param>
+    /// <param name="type">The account type.</param>
+    /// <param name="ownerUserId">The user ID who owns this personal account.</param>
+    /// <param name="initialBalance">Optional initial balance (defaults to zero USD).</param>
+    /// <param name="initialBalanceDate">Optional date for initial balance (defaults to today).</param>
+    /// <returns>A new <see cref="Account"/> instance with Personal scope.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public static Account CreatePersonal(
+        string name,
+        AccountType type,
+        Guid ownerUserId,
+        MoneyValue? initialBalance = null,
+        DateOnly? initialBalanceDate = null)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            throw new DomainException("Owner user ID is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new DomainException("Account name is required.");
+        }
+
+        var now = DateTime.UtcNow;
+        return new Account
+        {
+            Id = Guid.NewGuid(),
+            Name = name.Trim(),
+            Type = type,
+            InitialBalance = initialBalance ?? MoneyValue.Zero("USD"),
+            InitialBalanceDate = initialBalanceDate ?? DateOnly.FromDateTime(now),
+            Scope = BudgetScope.Personal,
+            OwnerUserId = ownerUserId,
+            CreatedByUserId = ownerUserId,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -164,6 +265,7 @@ public sealed class Account
         }
 
         var transaction = Transaction.Create(this.Id, amount, date, description, categoryId);
+        transaction.SetScope(this.Scope, this.OwnerUserId, this.CreatedByUserId);
         this._transactions.Add(transaction);
         this.UpdatedAt = DateTime.UtcNow;
         return transaction;

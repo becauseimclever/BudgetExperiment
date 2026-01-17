@@ -29,7 +29,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
         var account = Account.Create("Test Checking", AccountType.Checking);
 
         // Act
@@ -38,7 +38,7 @@ public class AccountRepositoryTests
 
         // Assert - use shared context to verify persistence
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(account.Id);
 
         Assert.NotNull(retrieved);
@@ -52,7 +52,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         // Act
         var result = await repository.GetByIdAsync(Guid.NewGuid());
@@ -66,7 +66,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account1 = Account.Create("Zebra Account", AccountType.Savings);
         var account2 = Account.Create("Alpha Account", AccountType.Checking);
@@ -77,7 +77,7 @@ public class AccountRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var accounts = await verifyRepo.GetAllAsync();
 
         // Assert - should be ordered by name
@@ -91,7 +91,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Account With Transactions", AccountType.Checking);
         account.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 9), "Test Transaction");
@@ -101,7 +101,7 @@ public class AccountRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdWithTransactionsAsync(account.Id);
 
         // Assert
@@ -115,7 +115,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("To Be Deleted", AccountType.Cash);
         await repository.AddAsync(account);
@@ -127,7 +127,7 @@ public class AccountRepositoryTests
 
         // Assert
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(account.Id);
         Assert.Null(retrieved);
     }
@@ -137,7 +137,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var initialCount = await repository.CountAsync();
         Assert.Equal(0, initialCount);
@@ -158,7 +158,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         for (int i = 0; i < 5; i++)
         {
@@ -170,7 +170,7 @@ public class AccountRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var page1 = await verifyRepo.ListAsync(0, 2);
         var page2 = await verifyRepo.ListAsync(2, 2);
 
@@ -185,7 +185,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
         var initialBalance = MoneyValue.Create("USD", 1500.00m);
         var initialBalanceDate = new DateOnly(2026, 1, 1);
         var account = Account.Create("Checking With Balance", AccountType.Checking, initialBalance, initialBalanceDate);
@@ -196,7 +196,7 @@ public class AccountRepositoryTests
 
         // Assert
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(account.Id);
 
         Assert.NotNull(retrieved);
@@ -210,7 +210,7 @@ public class AccountRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
         var account = Account.Create("Update Balance Test", AccountType.Savings);
         await repository.AddAsync(account);
         await context.SaveChangesAsync();
@@ -221,7 +221,7 @@ public class AccountRepositoryTests
 
         // Assert
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(account.Id);
 
         Assert.NotNull(retrieved);
@@ -234,7 +234,7 @@ public class AccountRepositoryTests
     {
         // Arrange - credit card with existing debt
         await using var context = this._fixture.CreateContext();
-        var repository = new AccountRepository(context);
+        var repository = new AccountRepository(context, FakeUserContext.CreateDefault());
         var initialBalance = MoneyValue.Create("USD", -2500.00m);
         var account = Account.Create("Credit Card Debt", AccountType.CreditCard, initialBalance, new DateOnly(2026, 1, 1));
 
@@ -244,7 +244,7 @@ public class AccountRepositoryTests
 
         // Assert
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new AccountRepository(verifyContext);
+        var verifyRepo = new AccountRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(account.Id);
 
         Assert.NotNull(retrieved);

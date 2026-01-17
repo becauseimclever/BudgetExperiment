@@ -95,5 +95,20 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.HasIndex(t => t.TransferId);
         builder.HasIndex(t => t.RecurringTransferId);
         builder.HasIndex(t => t.CategoryId);
+
+        // Scope properties for multi-user support
+        builder.Property(t => t.Scope)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(t => t.OwnerUserId);
+
+        builder.Property(t => t.CreatedByUserId)
+            .IsRequired();
+
+        // Indexes for scope filtering
+        builder.HasIndex(t => t.Scope);
+        builder.HasIndex(t => t.OwnerUserId);
     }
 }

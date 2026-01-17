@@ -107,6 +107,21 @@ public sealed class Transaction
     public bool IsFromRecurringTransfer => this.RecurringTransferId.HasValue;
 
     /// <summary>
+    /// Gets the budget scope (Shared or Personal).
+    /// </summary>
+    public BudgetScope Scope { get; private set; }
+
+    /// <summary>
+    /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
+    /// </summary>
+    public Guid? OwnerUserId { get; private set; }
+
+    /// <summary>
+    /// Gets the user ID of who created this transaction.
+    /// </summary>
+    public Guid CreatedByUserId { get; private set; }
+
+    /// <summary>
     /// Creates a new transaction.
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
@@ -304,5 +319,18 @@ public sealed class Transaction
     {
         this.CategoryId = categoryId;
         this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the scope from the parent account.
+    /// </summary>
+    /// <param name="scope">The budget scope.</param>
+    /// <param name="ownerUserId">The owner user ID (null for shared).</param>
+    /// <param name="createdByUserId">The user ID who created this transaction.</param>
+    internal void SetScope(BudgetScope scope, Guid? ownerUserId, Guid createdByUserId)
+    {
+        this.Scope = scope;
+        this.OwnerUserId = ownerUserId;
+        this.CreatedByUserId = createdByUserId;
     }
 }

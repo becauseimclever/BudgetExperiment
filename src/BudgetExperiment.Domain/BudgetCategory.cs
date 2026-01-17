@@ -72,6 +72,21 @@ public sealed class BudgetCategory
     public DateTime UpdatedAtUtc { get; private set; }
 
     /// <summary>
+    /// Gets the budget scope (Shared or Personal).
+    /// </summary>
+    public BudgetScope Scope { get; private set; }
+
+    /// <summary>
+    /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
+    /// </summary>
+    public Guid? OwnerUserId { get; private set; }
+
+    /// <summary>
+    /// Gets the user ID of who created this category.
+    /// </summary>
+    public Guid CreatedByUserId { get; private set; }
+
+    /// <summary>
     /// Gets the budget goals for this category.
     /// </summary>
     public IReadOnlyCollection<BudgetGoal> Goals => this._goals.AsReadOnly();

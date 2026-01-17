@@ -14,6 +14,7 @@ namespace BudgetExperiment.Api;
 public sealed class UserContext : IUserContext
 {
     private readonly IHttpContextAccessor httpContextAccessor;
+    private BudgetScope? currentScope;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserContext"/> class.
@@ -26,6 +27,9 @@ public sealed class UserContext : IUserContext
 
     /// <inheritdoc/>
     public string UserId => this.GetClaimValue(ClaimTypes.NameIdentifier) ?? this.GetClaimValue("sub") ?? string.Empty;
+
+    /// <inheritdoc/>
+    public Guid? UserIdAsGuid => Guid.TryParse(this.UserId, out var guid) ? guid : null;
 
     /// <inheritdoc/>
     public string Username => this.GetClaimValue("preferred_username") ?? this.GetClaimValue(ClaimTypes.Name) ?? string.Empty;
@@ -42,7 +46,16 @@ public sealed class UserContext : IUserContext
     /// <inheritdoc/>
     public bool IsAuthenticated => this.httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 
+    /// <inheritdoc/>
+    public BudgetScope? CurrentScope => this.currentScope;
+
     private ClaimsPrincipal? User => this.httpContextAccessor.HttpContext?.User;
+
+    /// <inheritdoc/>
+    public void SetScope(BudgetScope? scope)
+    {
+        this.currentScope = scope;
+    }
 
     private string? GetClaimValue(string claimType)
     {

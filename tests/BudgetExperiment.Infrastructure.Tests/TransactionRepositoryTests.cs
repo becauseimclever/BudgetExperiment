@@ -29,8 +29,8 @@ public class TransactionRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var accountRepo = new AccountRepository(context);
-        var transactionRepo = new TransactionRepository(context);
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Transaction Test Account", AccountType.Checking);
         var transaction = account.AddTransaction(
@@ -43,7 +43,7 @@ public class TransactionRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var verifyRepo = new TransactionRepository(verifyContext);
+        var verifyRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(transaction.Id);
 
         // Assert
@@ -59,7 +59,7 @@ public class TransactionRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var accountRepo = new AccountRepository(context);
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Date Range Test", AccountType.Checking);
         account.AddTransaction(MoneyValue.Create("USD", 10m), new DateOnly(2026, 1, 5), "Before Range");
@@ -72,7 +72,7 @@ public class TransactionRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(verifyContext);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await transactionRepo.GetByDateRangeAsync(
             new DateOnly(2026, 1, 10),
             new DateOnly(2026, 1, 20));
@@ -89,7 +89,7 @@ public class TransactionRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var accountRepo = new AccountRepository(context);
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account1 = Account.Create("Account Filter Test 1", AccountType.Checking);
         account1.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 2, 15), "Account 1 Trans");
@@ -103,7 +103,7 @@ public class TransactionRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(verifyContext);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await transactionRepo.GetByDateRangeAsync(
             new DateOnly(2026, 2, 1),
             new DateOnly(2026, 2, 28),
@@ -119,7 +119,7 @@ public class TransactionRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var accountRepo = new AccountRepository(context);
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Daily Totals Test", AccountType.Checking);
         account.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 3, 10), "Day 10 Trans 1");
@@ -131,7 +131,7 @@ public class TransactionRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(verifyContext);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var dailyTotals = await transactionRepo.GetDailyTotalsAsync(2026, 3, account.Id);
 
         // Assert
@@ -152,7 +152,7 @@ public class TransactionRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var accountRepo = new AccountRepository(context);
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Month Filter Test", AccountType.Checking);
         account.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 4, 15), "April Trans");
@@ -163,7 +163,7 @@ public class TransactionRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(verifyContext);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var aprilTotals = await transactionRepo.GetDailyTotalsAsync(2026, 4, account.Id);
 
         // Assert
@@ -176,7 +176,7 @@ public class TransactionRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var accountRepo = new AccountRepository(context);
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("List Order Test", AccountType.Checking);
         account.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 6, 1), "First");
@@ -188,7 +188,7 @@ public class TransactionRepositoryTests
 
         // Act
         await using var verifyContext = this._fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(verifyContext);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var transactions = await transactionRepo.ListAsync(0, 100);
 
         // Assert - most recent first
@@ -203,8 +203,8 @@ public class TransactionRepositoryTests
     {
         // Arrange
         await using var context = this._fixture.CreateContext();
-        var accountRepo = new AccountRepository(context);
-        var transactionRepo = new TransactionRepository(context);
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(context, FakeUserContext.CreateDefault());
 
         var initialCount = await transactionRepo.CountAsync();
         Assert.Equal(0, initialCount);

@@ -57,9 +57,27 @@ internal sealed class BudgetCategoryConfiguration : IEntityTypeConfiguration<Bud
             .OnDelete(DeleteBehavior.Cascade);
 
         // Indexes
-        builder.HasIndex(c => c.Name).IsUnique();
+        builder.HasIndex(c => c.Name);
         builder.HasIndex(c => c.Type);
         builder.HasIndex(c => c.IsActive);
         builder.HasIndex(c => c.SortOrder);
+
+        // Scope properties for multi-user support
+        builder.Property(c => c.Scope)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(c => c.OwnerUserId);
+
+        builder.Property(c => c.CreatedByUserId)
+            .IsRequired();
+
+        // Indexes for scope filtering
+        builder.HasIndex(c => c.Scope);
+        builder.HasIndex(c => c.OwnerUserId);
+
+        // Unique constraint on name within scope
+        builder.HasIndex(c => new { c.Name, c.Scope, c.OwnerUserId }).IsUnique();
     }
 }

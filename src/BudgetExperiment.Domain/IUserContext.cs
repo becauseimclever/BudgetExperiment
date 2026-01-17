@@ -15,6 +15,12 @@ public interface IUserContext
     string UserId { get; }
 
     /// <summary>
+    /// Gets the unique identifier of the current user as a Guid.
+    /// Returns null if the UserId cannot be parsed as a Guid.
+    /// </summary>
+    Guid? UserIdAsGuid { get; }
+
+    /// <summary>
     /// Gets the username of the current user (from the 'preferred_username' claim).
     /// </summary>
     string Username { get; }
@@ -38,4 +44,16 @@ public interface IUserContext
     /// Gets a value indicating whether the current request is authenticated.
     /// </summary>
     bool IsAuthenticated { get; }
+
+    /// <summary>
+    /// Gets the current budget scope filter.
+    /// NULL means show all (both Shared and Personal items accessible to this user).
+    /// </summary>
+    BudgetScope? CurrentScope { get; }
+
+    /// <summary>
+    /// Sets the current budget scope filter for this request/session.
+    /// </summary>
+    /// <param name="scope">The scope to filter by, or null for all accessible items.</param>
+    void SetScope(BudgetScope? scope);
 }
