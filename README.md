@@ -5,15 +5,18 @@
 
 # Budget Experiment
 
-A clean architecture .NET 10 budgeting application that intelligently allocates portions of each paycheck to future bills, ensuring on-time payments and surfacing potential shortfalls early.
+A clean architecture .NET 10 budgeting application with multi-user authentication, transaction tracking, budget categories, and intelligent paycheck allocation planning.
 
 ## 🎯 Purpose
 
-Budget Experiment helps you manage cash flow by:
-- **Automatic allocation planning**: Distributes bill amounts across pay periods leading up to each due date
-- **Early shortfall detection**: Alerts you before you run short, not after
-- **Flexible scheduling**: Supports varied paycheck frequencies (bi-weekly, semi-monthly, monthly, custom) and bill recurrence patterns
-- **Precise tracking**: Shows exactly how much to set aside from each paycheck for upcoming bills
+Budget Experiment helps you manage your finances by:
+- **Multi-user authentication**: Secure login via Authentik OIDC with personal and shared budget scopes
+- **Transaction management**: Track income and expenses across multiple accounts
+- **Budget categories & goals**: Set spending targets and monitor progress
+- **Paycheck allocation planning**: Distribute bill amounts across pay periods to ensure timely payments
+- **Recurring transactions**: Automate regular income and expenses with flexible scheduling
+- **CSV import**: Import transactions from Bank of America, Capital One, and UHCU with duplicate detection
+- **Calendar view**: Visualize daily transaction summaries and navigate spending history
 
 ## 🏗️ Architecture
 
@@ -21,7 +24,7 @@ Built using **Clean Architecture** principles with strict layer separation:
 
 ```
 ┌─────────────────────────────────────────┐
-│   Client (Blazor WebAssembly + FluentUI)│  ← Presentation
+│   Client (Blazor WebAssembly)           │  ← Presentation
 ├─────────────────────────────────────────┤
 │   API (ASP.NET Core + OpenAPI/Scalar)   │  ← Interface/Controllers
 ├─────────────────────────────────────────┤
@@ -39,8 +42,9 @@ Built using **Clean Architecture** principles with strict layer separation:
 - `BudgetExperiment.Domain` - Pure domain models, value objects, business rules
 - `BudgetExperiment.Application` - Use cases, services, DTOs, orchestration
 - `BudgetExperiment.Infrastructure` - EF Core, repositories, database migrations
-- `BudgetExperiment.Api` - REST API, dependency injection, OpenAPI
-- `BudgetExperiment.Client` - Blazor WebAssembly UI with FluentUI components
+- `BudgetExperiment.Contracts` - Shared DTOs for API and client communication
+- `BudgetExperiment.Api` - REST API, dependency injection, OpenAPI, authentication
+- `BudgetExperiment.Client` - Blazor WebAssembly UI with custom design system
 
 **Tests (`tests/`)**
 - Corresponding test projects for each layer using xUnit + Shouldly
@@ -49,12 +53,13 @@ Built using **Clean Architecture** principles with strict layer separation:
 ## 🚀 Technology Stack
 
 - **.NET 10** - Latest framework
-- **Blazor WebAssembly** - Modern client-side UI
-- **FluentUI-Blazor** - Microsoft Fluent Design components
-- **ASP.NET Core** - RESTful API
+- **Blazor WebAssembly** - Modern client-side UI with custom design system
+- **ASP.NET Core** - RESTful API with JWT authentication
+- **Authentik** - OIDC identity provider integration
 - **EF Core + Npgsql** - PostgreSQL database
 - **OpenAPI + Scalar** - Interactive API documentation
 - **xUnit + Shouldly** - Unit testing
+- **Docker** - Multi-architecture container builds (amd64, arm64)
 
 ## 📋 Prerequisites
 
@@ -76,15 +81,23 @@ cd BudgetExpirement
 The connection string is stored in user secrets for security:
 
 ```powershell
-dotnet user-secrets set "ConnectionStrings:AppDb" "Host=localhost;Database=budgetexperiment;Username=your_user;Password=your_password" --project c:\ws\BudgetExpirement\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
+dotnet user-secrets set "ConnectionStrings:AppDb" "Host=localhost;Database=budgetexperiment;Username=your_user;Password=your_password" --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 ```
 
-### 3. Run the application
+### 3. (Optional) Configure authentication for local development
+
+Authentication uses Authentik OIDC. For local development without HTTPS:
+
+```powershell
+dotnet user-secrets set "Authentication:Authentik:RequireHttpsMetadata" "false" --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
+```
+
+### 4. Run the application
 
 **Important**: Only run the API project. The Blazor client is hosted by the API.
 
 ```powershell
-dotnet run --project c:\ws\BudgetExpirement\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
+dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 ```
 
 Database migrations are applied automatically at startup. No manual `dotnet ef database update` is required.
@@ -101,19 +114,19 @@ Run all tests:
 dotnet test
 ```
 
-## 🐳 Deployment (Docker)
-
-For Raspberry Pi or server deployment, use pre-built images from CI/CD as documented in:
-- [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md)
-- [README.Docker.md](README.Docker.md)
-
-Note: Local Docker build scripts have been removed. Follow the guides above to pull images from GitHub Container Registry and run with `docker compose` on the target device.
-
-
 Run tests for a specific project:
 ```powershell
-dotnet test tests\BudgetExperiment.Domain.Tests\BudgetExperiment.Domain.Tests.csproj
+dotnet test tests/BudgetExperiment.Domain.Tests/BudgetExperiment.Domain.Tests.csproj
 ```
+
+## 🐳 Deployment (Docker)
+
+For Raspberry Pi or server deployment, use pre-built images from CI/CD:
+- [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md) - Quick deployment guide
+
+Images are automatically built and published to GitHub Container Registry on push to `main` or version tags.
+
+Note: Local Docker builds are not supported. Pull pre-built images from `ghcr.io/becauseimclever/budgetexperiment`.
 
 ## 🛠️ Development Guidelines
 
@@ -129,25 +142,22 @@ See [`.github/copilot-instructions.md`](.github/copilot-instructions.md) for com
 
 ## 📚 Key Domain Concepts
 
-### Value Objects
-- **MoneyValue** - Amount with currency, arithmetic operations, validation
-- **RecurrencePatternValue** - Flexible scheduling (weekly, bi-weekly, monthly, custom)
-- **DateRangeValue** - Period boundaries with overlap detection
-- **DueDateValue** - Bill due dates with validation
+### Entities
+- **Account** - Financial account with type (Checking, Savings, Credit, etc.) and running balance
+- **Transaction** - Individual financial transaction with amount, date, description, and category
+- **RecurringTransaction** - Template for auto-generated transactions with recurrence pattern
+- **RecurringTransfer** - Scheduled transfers between accounts
+- **BudgetCategory** - Spending category with type (Income, Expense, Transfer, Savings)
+- **BudgetGoal** - Monthly or yearly spending/savings target for a category
 
-### Aggregates
-- **Budget** - Root aggregate containing bills and paycheck schedules
-- **Bill** - Recurring expense with amount and due date pattern
-- **PaycheckSchedule** - Income source with recurrence pattern
-- **PayPeriod** - Generated pay period instance
-- **Allocation** - Planned distribution of funds from paycheck to bill
+### Value Objects
+- **MoneyValue** - Amount with currency validation and arithmetic operations
+- **RecurrencePattern** - Flexible scheduling (daily, weekly, bi-weekly, monthly, yearly)
 
 ### Services
-- **PayPeriodGeneratorService** - Generates pay period instances from schedules
-- **BillOccurrenceService** - Expands bill recurrence into concrete due dates
-- **AllocationPlannerService** - Core algorithm distributing funds across periods
-- **ShortfallDetectionService** - Identifies potential cash flow gaps
-- **ProjectionService** - Orchestrates complete budget projection
+- **PaycheckAllocationCalculator** - Core algorithm distributing funds across pay periods
+- **RecurringInstanceProjector** - Projects future recurring transaction instances
+- **AutoRealizeService** - Converts due recurring items into actual transactions
 
 ## 📥 CSV Import
 
@@ -184,22 +194,30 @@ curl -X POST http://localhost:5099/api/v1/csv-import/commit \`n  -H "Content-Typ
 
 ## 🔍 API Overview
 
-The API follows RESTful conventions with versioned endpoints:
+The API follows RESTful conventions with versioned endpoints and JWT authentication:
 
 **Base Path**: `/api/v1`
 
-Key endpoints (planned):
-- `POST /api/v1/budgets` - Create a new budget
-- `GET /api/v1/budgets/{id}` - Retrieve budget details
-- `GET /api/v1/budgets/{id}/projection` - Get allocation projection with alerts
+Key endpoints:
+- **Accounts**: `/api/v1/accounts` - CRUD for financial accounts
+- **Transactions**: `/api/v1/transactions` - Transaction management
+- **Recurring**: `/api/v1/recurring-transactions`, `/api/v1/recurring-transfers` - Recurring item management
+- **Categories**: `/api/v1/categories` - Budget category management
+- **Budgets**: `/api/v1/budgets` - Budget goals and progress tracking
+- **Calendar**: `/api/v1/calendar` - Calendar view data with daily summaries
+- **Allocations**: `/api/v1/allocations` - Paycheck allocation planning
+- **Settings**: `/api/v1/settings` - Application settings
+- **User**: `/api/v1/user` - Current user info
+- **Version**: `/api/version` - Application version info
 
 All endpoints documented with OpenAPI. Explore interactively at `/scalar`.
 
 ## 📖 Documentation
 
-- [Architecture Plan](docs/architecture-plan.md) - Detailed architectural decisions and algorithm design
-- [FluentUI Integration](docs/fluentui-integration.md) - UI component guidelines
 - [Copilot Instructions](.github/copilot-instructions.md) - Comprehensive engineering guide
+- [CHANGELOG.md](CHANGELOG.md) - Version history and release notes
+- [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md) - Raspberry Pi deployment guide
+- [docs/](docs/) - Feature specifications and design documents
 
 ## 🤝 Contributing
 
@@ -216,13 +234,8 @@ See [LICENSE](LICENSE) file for details.
 ## 🐛 Known Issues
 
 - Project is in active development
-- Some planned features may not yet be implemented
 - See GitHub Issues for current status
 
 ## 📧 Contact
 
 Repository: [https://github.com/becauseimclever/BudgetExperiment](https://github.com/becauseimclever/BudgetExperiment)
-
----
-
-**Note**: The typo "Expirement" in the repository name is intentional and preserved for consistency.
