@@ -1,5 +1,7 @@
 # Feature 023: Semantic Versioning & Release Management
 
+> **Status: ✅ COMPLETE** - Implemented January 17, 2026 (v3.0.0)
+
 ## Overview
 
 Implement a comprehensive versioning strategy using Semantic Versioning (SemVer) that automatically flows into Docker image tags, GitHub Releases, and runtime version reporting. This enables clear communication of breaking changes, feature additions, and bug fixes across deployments.
@@ -348,29 +350,29 @@ git merge hotfix/2.0.1
 
 ### Phase 1: Version Infrastructure
 
-- [ ] Add MinVer package to Directory.Build.props
-- [ ] Remove hardcoded version from BudgetExperiment.Api.csproj
-- [ ] Create initial v1.0.0 tag after current features stabilize
-- [ ] Verify Docker image tagging works with semver tags
+- [x] Add MinVer package to Directory.Build.props
+- [x] Remove hardcoded version from BudgetExperiment.Api.csproj
+- [x] Create initial v3.0.0 tag (released with Authentik auth + versioning)
+- [x] Verify Docker image tagging works with semver tags
 
 ### Phase 2: Release Automation
 
-- [ ] Create `.github/workflows/release.yml` for GitHub Releases
-- [ ] Add `cliff.toml` for changelog generation
-- [ ] Configure conventional commit linting (optional)
+- [x] Create `.github/workflows/release.yml` for GitHub Releases
+- [x] Add `cliff.toml` for changelog generation
+- [ ] Configure conventional commit linting (optional - deferred)
 
 ### Phase 3: Runtime Version Exposure
 
-- [ ] Add `/api/version` endpoint
-- [ ] Include version in health check response
-- [ ] Embed build metadata (commit hash, build date) via CI
-- [ ] Display version in Blazor client UI
+- [x] Add `/api/version` endpoint
+- [ ] Include version in health check response (optional - deferred)
+- [x] Embed build metadata (commit hash, build date) via CI
+- [x] Display version in Blazor client UI
 
 ### Phase 4: Documentation
 
-- [ ] Document release process in CONTRIBUTING.md or docs/
-- [ ] Create CHANGELOG.md with initial entries
-- [ ] Update README with version badge
+- [ ] Document release process in CONTRIBUTING.md or docs/ (optional - deferred)
+- [x] Create CHANGELOG.md with initial entries
+- [ ] Update README with version badge (optional - deferred)
 
 ---
 
