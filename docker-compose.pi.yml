@@ -18,7 +18,7 @@
 
 services:
   budgetexperiment:
-    image: ghcr.io/becauseimclever/budgetexperiment:latest
+    image: ghcr.io/becauseimclever/budgetexperiment:3
     container_name: budgetexperiment
     ports:
       - "5099:8080"
