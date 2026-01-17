@@ -370,9 +370,9 @@ git merge hotfix/2.0.1
 
 ### Phase 4: Documentation
 
-- [ ] Document release process in CONTRIBUTING.md or docs/ (optional - deferred)
+- [x] Document release process in CONTRIBUTING.md or docs/
 - [x] Create CHANGELOG.md with initial entries
-- [ ] Update README with version badge (optional - deferred)
+- [x] Update README with version badge
 
 ---
 
