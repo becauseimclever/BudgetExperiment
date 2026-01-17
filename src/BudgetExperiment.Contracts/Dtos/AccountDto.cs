@@ -56,6 +56,9 @@ public sealed class AccountCreateDto
 
     /// <summary>Gets or sets the date as of which the initial balance is recorded (defaults to today).</summary>
     public DateOnly? InitialBalanceDate { get; set; }
+
+    /// <summary>Gets or sets the budget scope ("Shared" or "Personal"). Defaults to "Shared".</summary>
+    public string Scope { get; set; } = "Shared";
 }
 
 /// <summary>

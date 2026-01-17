@@ -794,11 +794,11 @@ public sealed class AccountCreateDto
 - [x] Write repository tests with scope filtering
 
 ### Phase 3: API Protection
-- [ ] Add `[Authorize]` to all controllers
-- [ ] Update service layer to use `IUserContext`
-- [ ] Create user provisioning endpoint (first login creates user record)
-- [ ] Add scope selection endpoint
-- [ ] Write API integration tests with authentication
+- [x] Add `[Authorize]` to all controllers
+- [x] Update service layer to use `IUserContext`
+- [x] Create user provisioning endpoint (first login creates user record)
+- [x] Add scope selection endpoint
+- [x] Write API integration tests with authentication
 
 ### Phase 4: Client Authentication
 - [ ] Add OIDC authentication packages

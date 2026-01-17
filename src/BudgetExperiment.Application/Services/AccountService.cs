@@ -15,16 +15,19 @@ public sealed class AccountService
 {
     private readonly IAccountRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserContext _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountService"/> class.
     /// </summary>
     /// <param name="repository">The account repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
-    public AccountService(IAccountRepository repository, IUnitOfWork unitOfWork)
+    /// <param name="userContext">The user context for scope and user identification.</param>
+    public AccountService(IAccountRepository repository, IUnitOfWork unitOfWork, IUserContext userContext)
     {
         this._repository = repository;
         this._unitOfWork = unitOfWork;
+        this._userContext = userContext;
     }
 
     /// <summary>
@@ -64,10 +67,24 @@ public sealed class AccountService
             throw new DomainException($"Invalid account type: {dto.Type}");
         }
 
+        if (!Enum.TryParse<BudgetScope>(dto.Scope, ignoreCase: true, out var scope))
+        {
+            throw new DomainException($"Invalid scope: {dto.Scope}. Valid values are 'Shared' or 'Personal'.");
+        }
+
+        var userId = this._userContext.UserIdAsGuid
+            ?? throw new DomainException("User is not authenticated.");
+
         var initialBalance = MoneyValue.Create(dto.InitialBalanceCurrency, dto.InitialBalance);
         var initialBalanceDate = dto.InitialBalanceDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var account = Account.Create(dto.Name, accountType, initialBalance, initialBalanceDate);
+        Account account = scope switch
+        {
+            BudgetScope.Shared => Account.CreateShared(dto.Name, accountType, userId, initialBalance, initialBalanceDate),
+            BudgetScope.Personal => Account.CreatePersonal(dto.Name, accountType, userId, initialBalance, initialBalanceDate),
+            _ => throw new DomainException($"Invalid scope: {scope}"),
+        };
+
         await this._repository.AddAsync(account, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(account);

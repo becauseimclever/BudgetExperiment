@@ -14,16 +14,28 @@ namespace BudgetExperiment.Application.Tests;
 /// </summary>
 public class AccountServiceTests
 {
+    private static readonly Guid TestUserId = new("11111111-1111-1111-1111-111111111111");
+
+    private static Mock<IUserContext> CreateMockUserContext()
+    {
+        var userContext = new Mock<IUserContext>();
+        userContext.Setup(u => u.UserIdAsGuid).Returns(TestUserId);
+        userContext.Setup(u => u.UserId).Returns(TestUserId.ToString());
+        userContext.Setup(u => u.IsAuthenticated).Returns(true);
+        return userContext;
+    }
+
     [Fact]
-    public async Task CreateAsync_Creates_Account()
+    public async Task CreateAsync_Creates_SharedAccount()
     {
         // Arrange
         var repo = new Mock<IAccountRepository>();
         repo.Setup(r => r.AddAsync(It.IsAny<Account>(), default)).Returns(Task.CompletedTask);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new AccountService(repo.Object, uow.Object);
-        var dto = new AccountCreateDto { Name = "Test", Type = "Checking" };
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
+        var dto = new AccountCreateDto { Name = "Test", Type = "Checking", Scope = "Shared" };
 
         // Act
         var result = await service.CreateAsync(dto);
@@ -36,6 +48,28 @@ public class AccountServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_Creates_PersonalAccount()
+    {
+        // Arrange
+        var repo = new Mock<IAccountRepository>();
+        repo.Setup(r => r.AddAsync(It.IsAny<Account>(), default)).Returns(Task.CompletedTask);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
+        var dto = new AccountCreateDto { Name = "Personal Test", Type = "Savings", Scope = "Personal" };
+
+        // Act
+        var result = await service.CreateAsync(dto);
+
+        // Assert
+        Assert.Equal("Personal Test", result.Name);
+        Assert.Equal("Savings", result.Type);
+        Assert.NotEqual(Guid.Empty, result.Id);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
     public async Task GetByIdAsync_Returns_AccountDto()
     {
         // Arrange
@@ -43,7 +77,8 @@ public class AccountServiceTests
         var repo = new Mock<IAccountRepository>();
         repo.Setup(r => r.GetByIdWithTransactionsAsync(account.Id, default)).ReturnsAsync(account);
         var uow = new Mock<IUnitOfWork>();
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
 
         // Act
         var result = await service.GetByIdAsync(account.Id);
@@ -64,7 +99,8 @@ public class AccountServiceTests
         repo.Setup(r => r.RemoveAsync(account, default)).Returns(Task.CompletedTask);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
 
         // Act
         var result = await service.RemoveAsync(account.Id);
@@ -81,7 +117,8 @@ public class AccountServiceTests
         var repo = new Mock<IAccountRepository>();
         repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Account?)null);
         var uow = new Mock<IUnitOfWork>();
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
 
         // Act
         var result = await service.RemoveAsync(Guid.NewGuid());
@@ -99,7 +136,8 @@ public class AccountServiceTests
         repo.Setup(r => r.AddAsync(It.IsAny<Account>(), default)).Returns(Task.CompletedTask);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
         var dto = new AccountCreateDto
         {
             Name = "Checking With Balance",
@@ -107,6 +145,7 @@ public class AccountServiceTests
             InitialBalance = 1500.00m,
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2026, 1, 1),
+            Scope = "Shared",
         };
 
         // Act
@@ -127,12 +166,14 @@ public class AccountServiceTests
         repo.Setup(r => r.AddAsync(It.IsAny<Account>(), default)).Returns(Task.CompletedTask);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
         var dto = new AccountCreateDto
         {
             Name = "Default Date Test",
             Type = "Savings",
             InitialBalance = 100.00m,
+            Scope = "Shared",
         };
 
         // Act
@@ -151,7 +192,8 @@ public class AccountServiceTests
         repo.Setup(r => r.GetByIdAsync(account.Id, default)).ReturnsAsync(account);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
         var dto = new AccountUpdateDto { Name = "Updated Name" };
 
         // Act
@@ -172,7 +214,8 @@ public class AccountServiceTests
         repo.Setup(r => r.GetByIdAsync(account.Id, default)).ReturnsAsync(account);
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
         var dto = new AccountUpdateDto
         {
             InitialBalance = 2500.00m,
@@ -195,7 +238,8 @@ public class AccountServiceTests
         var repo = new Mock<IAccountRepository>();
         repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Account?)null);
         var uow = new Mock<IUnitOfWork>();
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
         var dto = new AccountUpdateDto { Name = "New Name" };
 
         // Act
@@ -214,11 +258,27 @@ public class AccountServiceTests
         var repo = new Mock<IAccountRepository>();
         repo.Setup(r => r.GetByIdAsync(account.Id, default)).ReturnsAsync(account);
         var uow = new Mock<IUnitOfWork>();
-        var service = new AccountService(repo.Object, uow.Object);
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
         var dto = new AccountUpdateDto { Type = "InvalidType" };
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<DomainException>(() => service.UpdateAsync(account.Id, dto));
         Assert.Contains("Invalid account type", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateAsync_With_Invalid_Scope_Throws()
+    {
+        // Arrange
+        var repo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        var userContext = CreateMockUserContext();
+        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
+        var dto = new AccountCreateDto { Name = "Test", Type = "Checking", Scope = "InvalidScope" };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<DomainException>(() => service.CreateAsync(dto));
+        Assert.Contains("Invalid scope", ex.Message);
     }
 }

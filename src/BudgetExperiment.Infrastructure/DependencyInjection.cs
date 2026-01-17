@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
         services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
         services.AddScoped<IBudgetGoalRepository, BudgetGoalRepository>();
+        services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
 
         return services;
     }

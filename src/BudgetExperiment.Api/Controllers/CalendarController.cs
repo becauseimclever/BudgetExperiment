@@ -5,6 +5,7 @@
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Application.Services;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetExperiment.Api.Controllers;
@@ -13,6 +14,7 @@ namespace BudgetExperiment.Api.Controllers;
 /// REST API controller for calendar-related operations.
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
 public sealed class CalendarController : ControllerBase

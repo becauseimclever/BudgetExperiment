@@ -5,6 +5,7 @@
 using BudgetExperiment.Application.Services;
 using BudgetExperiment.Contracts.Dtos;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetExperiment.Api.Controllers;
@@ -13,6 +14,7 @@ namespace BudgetExperiment.Api.Controllers;
 /// REST API controller for cross-cutting recurring operations (past-due, batch operations).
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/v1/recurring")]
 [Produces("application/json")]
 public sealed class RecurringController : ControllerBase
