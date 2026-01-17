@@ -1,7 +1,12 @@
 @page "/transfers"
 
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
+@inject ScopeService ScopeService
 
 <PageTitle>Transfers - Budget Experiment</PageTitle>
 
@@ -141,7 +146,23 @@
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
+        ScopeService.ScopeChanged += OnScopeChanged;
         await LoadDataAsync();
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadDataAsync();
+            StateHasChanged();
+        });
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
     }
 
     private async Task LoadDataAsync()

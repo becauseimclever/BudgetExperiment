@@ -1,7 +1,12 @@
 @page "/categories"
 
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
+@inject ScopeService ScopeService
 
 <PageTitle>Budget Categories - Budget Experiment</PageTitle>
 
@@ -149,7 +154,22 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ScopeService.ScopeChanged += OnScopeChanged;
         await LoadCategories();
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadCategories();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
     }
 
     private async Task LoadCategories()

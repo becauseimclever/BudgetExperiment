@@ -1,6 +1,11 @@
 @page "/paycheck-planner"
 
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
 @inject IBudgetApiService ApiService
+@inject ScopeService ScopeService
 
 <PageTitle>Paycheck Planner - Budget Experiment</PageTitle>
 
@@ -300,7 +305,24 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        ScopeService.ScopeChanged += OnScopeChanged;
         await LoadAccountsAsync();
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await InvokeAsync(async () =>
+        {
+            allocationSummary = null;
+            await LoadAccountsAsync();
+            StateHasChanged();
+        });
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
     }
 
     private async Task LoadAccountsAsync()

@@ -1,7 +1,12 @@
 @page "/recurring-transfers"
 
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
+@inject ScopeService ScopeService
 
 <PageTitle>Recurring Transfers - Budget Experiment</PageTitle>
 
@@ -151,7 +156,23 @@
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
+        ScopeService.ScopeChanged += OnScopeChanged;
         await LoadRecurringTransfers();
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadRecurringTransfers();
+            StateHasChanged();
+        });
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
     }
 
     private async Task LoadRecurringTransfers()

@@ -1,7 +1,12 @@
 @page "/recurring"
 
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
+@inject ScopeService ScopeService
 
 <PageTitle>Recurring Transactions - Budget Experiment</PageTitle>
 
@@ -153,8 +158,24 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ScopeService.ScopeChanged += OnScopeChanged;
         await LoadRecurringTransactions();
         await LoadCategories();
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadRecurringTransactions();
+            await LoadCategories();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
     }
 
     private async Task LoadCategories()
