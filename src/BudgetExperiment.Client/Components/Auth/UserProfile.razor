@@ -1,0 +1,112 @@
+@* UserProfile.razor - Displays current user info and logout button *@
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<AuthorizeView>
+    <Authorized>
+        <div class="user-profile">
+            <div class="user-avatar" title="@context.User.Identity?.Name">
+                @if (!string.IsNullOrEmpty(avatarUrl))
+                {
+                    <img src="@avatarUrl" alt="@context.User.Identity?.Name" />
+                }
+                else
+                {
+                    <span class="user-avatar-initials">@GetInitials(context.User.Identity?.Name)</span>
+                }
+            </div>
+            <button class="user-profile-button" @onclick="ToggleDropdown" @onclick:stopPropagation="true" title="Account options">
+                <span class="user-name">@GetDisplayName(context.User.Identity?.Name)</span>
+                <span class="user-chevron"><Icon Name="@(isOpen ? "chevron-up" : "chevron-down")" Size="14" /></span>
+            </button>
+            @if (isOpen)
+            {
+                <div class="user-dropdown">
+                    <div class="user-dropdown-header">
+                        <span class="user-dropdown-name">@context.User.Identity?.Name</span>
+                        @if (!string.IsNullOrEmpty(email))
+                        {
+                            <span class="user-dropdown-email">@email</span>
+                        }
+                    </div>
+                    <div class="user-dropdown-divider"></div>
+                    <button class="user-dropdown-item" @onclick="Logout">
+                        <Icon Name="log-out" Size="16" />
+                        <span>Sign out</span>
+                    </button>
+                </div>
+            }
+        </div>
+        @if (isOpen)
+        {
+            <div class="user-overlay" @onclick="CloseDropdown"></div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login" class="btn btn-primary btn-sm">
+            <Icon Name="log-in" Size="16" />
+            <span>Sign in</span>
+        </a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool isOpen;
+    private string? avatarUrl;
+    private string? email;
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        avatarUrl = authState.User.FindFirst("picture")?.Value;
+        email = authState.User.FindFirst("email")?.Value;
+    }
+
+    private void ToggleDropdown()
+    {
+        isOpen = !isOpen;
+    }
+
+    private void CloseDropdown()
+    {
+        isOpen = false;
+    }
+
+    private void Logout()
+    {
+        isOpen = false;
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+
+    private static string GetDisplayName(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return "User";
+        }
+
+        // If name is too long, truncate it
+        return name.Length > 20 ? name[..17] + "..." : name;
+    }
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return "?";
+        }
+
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+        {
+            return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+        }
+
+        return name[0].ToString().ToUpperInvariant();
+    }
+}

@@ -801,26 +801,26 @@ public sealed class AccountCreateDto
 - [x] Write API integration tests with authentication
 
 ### Phase 4: Client Authentication
-- [ ] Add OIDC authentication packages
-- [ ] Configure authentication in Program.cs
-- [ ] Create Authentication.razor page
-- [ ] Create RedirectToLogin component
-- [ ] Update App.razor with CascadingAuthenticationState
-- [ ] Configure HttpClient with auth message handler
+- [x] Add OIDC authentication packages
+- [x] Configure authentication in Program.cs
+- [x] Create Authentication.razor page
+- [x] Create RedirectToLogin component
+- [x] Update App.razor with CascadingAuthenticationState
+- [x] Configure HttpClient with auth message handler
 
 ### Phase 5: Client - Scope Management
-- [ ] Create ScopeSwitcher component
-- [ ] Add scope to navigation header
-- [ ] Update create/edit forms with scope selection
-- [ ] Add scope badges to list views
-- [ ] Persist scope preference in user settings
+- [x] Create ScopeSwitcher component
+- [x] Add scope to navigation header
+- [x] Update create/edit forms with scope selection
+- [x] Add scope badges to list views
+- [x] Persist scope preference in user settings
 
 ### Phase 6: User Experience
-- [ ] Create UserProfile component
-- [ ] Add user profile to navigation header
-- [ ] Add login/logout buttons
-- [ ] Handle token expiration gracefully
-- [ ] Show appropriate errors for 401/403 responses
+- [x] Create UserProfile component
+- [x] Add user profile to navigation header
+- [x] Add login/logout buttons
+- [x] Handle token expiration gracefully
+- [x] Show appropriate errors for 401/403 responses
 
 ### Phase 7: Testing & Polish
 - [ ] End-to-end authentication flow testing

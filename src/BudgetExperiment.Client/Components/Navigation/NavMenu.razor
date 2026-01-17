@@ -4,6 +4,8 @@
 @inject NavigationManager NavigationManager
 
 <nav class="nav-menu @(IsCollapsed ? "collapsed" : "expanded")">
+    <ScopeSwitcher IsCollapsed="@IsCollapsed" />
+
     <div class="nav-items">
         <NavLink class="nav-item" href="" Match="NavLinkMatch.All" title="Calendar">
             <span class="nav-icon"><Icon Name="calendar" Size="20" /></span>

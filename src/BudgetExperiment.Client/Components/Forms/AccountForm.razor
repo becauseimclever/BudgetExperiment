@@ -2,6 +2,32 @@
 
 <form @onsubmit="HandleSubmit">
     <div class="form-group">
+        <label class="form-label">Scope:</label>
+        <div class="scope-radio-group">
+            <label class="scope-radio @(Model.Scope == "Shared" ? "selected" : "")">
+                <input type="radio" name="scope" value="Shared" checked="@(Model.Scope == "Shared")" @onchange="@(() => Model.Scope = "Shared")" />
+                <span class="scope-radio-icon"><Icon Name="home" Size="18" /></span>
+                <span class="scope-radio-text">Shared</span>
+            </label>
+            <label class="scope-radio @(Model.Scope == "Personal" ? "selected" : "")">
+                <input type="radio" name="scope" value="Personal" checked="@(Model.Scope == "Personal")" @onchange="@(() => Model.Scope = "Personal")" />
+                <span class="scope-radio-icon"><Icon Name="user" Size="18" /></span>
+                <span class="scope-radio-text">Personal</span>
+            </label>
+        </div>
+        <p class="form-hint">
+            @if (Model.Scope == "Shared")
+            {
+                <text>Shared accounts are visible to all family members.</text>
+            }
+            else
+            {
+                <text>Personal accounts are private to you.</text>
+            }
+        </p>
+    </div>
+
+    <div class="form-group">
         <label for="accountName" class="form-label">Account Name:</label>
         <input id="accountName" 
                type="text"

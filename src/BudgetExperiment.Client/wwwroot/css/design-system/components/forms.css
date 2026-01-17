@@ -426,3 +426,74 @@ select.form-control:focus {
 .form-group-lg {
   max-width: 400px;
 }
+
+/* ==========================================================================
+   Scope Radio Group (for Shared/Personal selection)
+   ========================================================================== */
+
+.scope-radio-group {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.scope-radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.scope-radio:hover {
+  border-color: var(--color-brand-primary);
+  background: var(--color-surface-secondary);
+}
+
+.scope-radio.selected {
+  border-color: var(--color-brand-primary);
+  background: var(--color-brand-light, rgba(0, 120, 212, 0.1));
+  color: var(--color-brand-primary);
+}
+
+.scope-radio input[type="radio"] {
+  display: none;
+}
+
+.scope-radio-icon {
+  display: flex;
+  align-items: center;
+  color: inherit;
+}
+
+.scope-radio-text {
+  color: inherit;
+}
+
+/* Scope Badge for list items */
+.scope-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.scope-badge.scope-shared {
+  background: var(--color-info-light, rgba(0, 120, 212, 0.1));
+  color: var(--color-info, #0078d4);
+}
+
+.scope-badge.scope-personal {
+  background: var(--color-success-light, rgba(16, 124, 16, 0.1));
+  color: var(--color-success, #107c10);
+}

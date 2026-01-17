@@ -33,6 +33,9 @@ public sealed class AccountDto
     /// <summary>Gets or sets the last update timestamp (UTC).</summary>
     public DateTime UpdatedAt { get; set; }
 
+    /// <summary>Gets or sets the budget scope ("Shared" or "Personal").</summary>
+    public string Scope { get; set; } = "Shared";
+
     /// <summary>Gets or sets the transactions for this account.</summary>
     public IReadOnlyList<TransactionDto> Transactions { get; set; } = new List<TransactionDto>();
 }

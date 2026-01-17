@@ -2,11 +2,14 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Contracts.Dtos;
+
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BudgetExperiment.Client.Services;
 
@@ -34,8 +37,16 @@ public sealed class BudgetApiService : IBudgetApiService
     /// <inheritdoc />
     public async Task<IReadOnlyList<AccountDto>> GetAccountsAsync()
     {
-        var result = await this._httpClient.GetFromJsonAsync<List<AccountDto>>("api/v1/accounts", JsonOptions);
-        return result ?? new List<AccountDto>();
+        try
+        {
+            var result = await this._httpClient.GetFromJsonAsync<List<AccountDto>>("api/v1/accounts", JsonOptions);
+            return result ?? new List<AccountDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<AccountDto>();
+        }
     }
 
     /// <inheritdoc />
@@ -44,6 +55,11 @@ public sealed class BudgetApiService : IBudgetApiService
         try
         {
             return await this._httpClient.GetFromJsonAsync<AccountDto>($"api/v1/accounts/{id}", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
         }
         catch (HttpRequestException)
         {
@@ -54,45 +70,77 @@ public sealed class BudgetApiService : IBudgetApiService
     /// <inheritdoc />
     public async Task<AccountDto?> CreateAccountAsync(AccountCreateDto model)
     {
-        var response = await this._httpClient.PostAsJsonAsync("api/v1/accounts", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
-        }
+            var response = await this._httpClient.PostAsJsonAsync("api/v1/accounts", model, JsonOptions);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
+            }
 
-        return null;
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
     }
 
     /// <inheritdoc />
     public async Task<AccountDto?> UpdateAccountAsync(Guid id, AccountUpdateDto model)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/accounts/{id}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
-        }
+            var response = await this._httpClient.PutAsJsonAsync($"api/v1/accounts/{id}", model, JsonOptions);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
+            }
 
-        return null;
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
     }
 
     /// <inheritdoc />
     public async Task<bool> DeleteAccountAsync(Guid id)
     {
-        var response = await this._httpClient.DeleteAsync($"api/v1/accounts/{id}");
-        return response.IsSuccessStatusCode;
+        try
+        {
+            var response = await this._httpClient.DeleteAsync($"api/v1/accounts/{id}");
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
     {
-        var url = $"api/v1/transactions?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
-        if (accountId.HasValue)
+        try
         {
-            url += $"&accountId={accountId.Value}";
-        }
+            var url = $"api/v1/transactions?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            if (accountId.HasValue)
+            {
+                url += $"&accountId={accountId.Value}";
+            }
 
-        var result = await this._httpClient.GetFromJsonAsync<List<TransactionDto>>(url, JsonOptions);
-        return result ?? new List<TransactionDto>();
+            var result = await this._httpClient.GetFromJsonAsync<List<TransactionDto>>(url, JsonOptions);
+            return result ?? new List<TransactionDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<TransactionDto>();
+        }
     }
 
     /// <inheritdoc />
@@ -101,6 +149,11 @@ public sealed class BudgetApiService : IBudgetApiService
         try
         {
             return await this._httpClient.GetFromJsonAsync<TransactionDto>($"api/v1/transactions/{id}", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
         }
         catch (HttpRequestException)
         {
@@ -111,39 +164,63 @@ public sealed class BudgetApiService : IBudgetApiService
     /// <inheritdoc />
     public async Task<TransactionDto?> CreateTransactionAsync(TransactionCreateDto model)
     {
-        var response = await this._httpClient.PostAsJsonAsync("api/v1/transactions", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
-        }
+            var response = await this._httpClient.PostAsJsonAsync("api/v1/transactions", model, JsonOptions);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
+            }
 
-        return null;
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
     }
 
     /// <inheritdoc />
     public async Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null)
     {
-        var url = $"api/v1/calendar/grid?year={year}&month={month}";
-        if (accountId.HasValue)
+        try
         {
-            url += $"&accountId={accountId.Value}";
-        }
+            var url = $"api/v1/calendar/grid?year={year}&month={month}";
+            if (accountId.HasValue)
+            {
+                url += $"&accountId={accountId.Value}";
+            }
 
-        var result = await this._httpClient.GetFromJsonAsync<CalendarGridDto>(url, JsonOptions);
-        return result ?? new CalendarGridDto { Year = year, Month = month };
+            var result = await this._httpClient.GetFromJsonAsync<CalendarGridDto>(url, JsonOptions);
+            return result ?? new CalendarGridDto { Year = year, Month = month };
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new CalendarGridDto { Year = year, Month = month };
+        }
     }
 
     /// <inheritdoc />
     public async Task<DayDetailDto> GetDayDetailAsync(DateOnly date, Guid? accountId = null)
     {
-        var url = $"api/v1/calendar/day/{date:yyyy-MM-dd}";
-        if (accountId.HasValue)
+        try
         {
-            url += $"?accountId={accountId.Value}";
-        }
+            var url = $"api/v1/calendar/day/{date:yyyy-MM-dd}";
+            if (accountId.HasValue)
+            {
+                url += $"?accountId={accountId.Value}";
+            }
 
-        var result = await this._httpClient.GetFromJsonAsync<DayDetailDto>(url, JsonOptions);
-        return result ?? new DayDetailDto { Date = date };
+            var result = await this._httpClient.GetFromJsonAsync<DayDetailDto>(url, JsonOptions);
+            return result ?? new DayDetailDto { Date = date };
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new DayDetailDto { Date = date };
+        }
     }
 
     /// <inheritdoc />
@@ -153,29 +230,53 @@ public sealed class BudgetApiService : IBudgetApiService
         DateOnly endDate,
         bool includeRecurring = true)
     {
-        var url = $"api/v1/calendar/accounts/{accountId}/transactions?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&includeRecurring={includeRecurring}";
-        var result = await this._httpClient.GetFromJsonAsync<TransactionListDto>(url, JsonOptions);
-        return result ?? new TransactionListDto { AccountId = accountId, StartDate = startDate, EndDate = endDate };
+        try
+        {
+            var url = $"api/v1/calendar/accounts/{accountId}/transactions?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}&includeRecurring={includeRecurring}";
+            var result = await this._httpClient.GetFromJsonAsync<TransactionListDto>(url, JsonOptions);
+            return result ?? new TransactionListDto { AccountId = accountId, StartDate = startDate, EndDate = endDate };
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new TransactionListDto { AccountId = accountId, StartDate = startDate, EndDate = endDate };
+        }
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<DailyTotalDto>> GetCalendarSummaryAsync(int year, int month, Guid? accountId = null)
     {
-        var url = $"api/v1/calendar/summary?year={year}&month={month}";
-        if (accountId.HasValue)
+        try
         {
-            url += $"&accountId={accountId.Value}";
-        }
+            var url = $"api/v1/calendar/summary?year={year}&month={month}";
+            if (accountId.HasValue)
+            {
+                url += $"&accountId={accountId.Value}";
+            }
 
-        var result = await this._httpClient.GetFromJsonAsync<List<DailyTotalDto>>(url, JsonOptions);
-        return result ?? new List<DailyTotalDto>();
+            var result = await this._httpClient.GetFromJsonAsync<List<DailyTotalDto>>(url, JsonOptions);
+            return result ?? new List<DailyTotalDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<DailyTotalDto>();
+        }
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringTransactionDto>> GetRecurringTransactionsAsync()
     {
-        var result = await this._httpClient.GetFromJsonAsync<List<RecurringTransactionDto>>("api/v1/recurring-transactions", JsonOptions);
-        return result ?? new List<RecurringTransactionDto>();
+        try
+        {
+            var result = await this._httpClient.GetFromJsonAsync<List<RecurringTransactionDto>>("api/v1/recurring-transactions", JsonOptions);
+            return result ?? new List<RecurringTransactionDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<RecurringTransactionDto>();
+        }
     }
 
     /// <inheritdoc />
@@ -184,6 +285,11 @@ public sealed class BudgetApiService : IBudgetApiService
         try
         {
             return await this._httpClient.GetFromJsonAsync<RecurringTransactionDto>($"api/v1/recurring-transactions/{id}", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
         }
         catch (HttpRequestException)
         {

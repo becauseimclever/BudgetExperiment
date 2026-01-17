@@ -33,7 +33,10 @@
             {
                 <div class="card">
                     <div class="card-body">
-                        <h3 class="card-title">@account.Name</h3>
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="card-title">@account.Name</h3>
+                            <ScopeBadge Scope="@account.Scope" ShowLabel="false" />
+                        </div>
                         <span class="text-secondary text-sm">@account.Type</span>
                         <div class="mt-3 text-sm">
                             <span class="text-secondary">Initial Balance:</span>

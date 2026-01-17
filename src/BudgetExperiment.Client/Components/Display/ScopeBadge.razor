@@ -1,0 +1,56 @@
+@* ScopeBadge.razor - Displays a badge indicating Shared or Personal scope *@
+
+@if (!string.IsNullOrEmpty(Scope))
+{
+    <span class="scope-badge @GetCssClass()" title="@GetTooltip()">
+        <Icon Name="@GetIconName()" Size="12" />
+        @if (ShowLabel)
+        {
+            <span>@Scope</span>
+        }
+    </span>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the scope value ("Shared" or "Personal").
+    /// </summary>
+    [Parameter]
+    public string? Scope { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the label text.
+    /// </summary>
+    [Parameter]
+    public bool ShowLabel { get; set; } = true;
+
+    private string GetCssClass()
+    {
+        return Scope?.ToLowerInvariant() switch
+        {
+            "shared" => "scope-shared",
+            "personal" => "scope-personal",
+            _ => string.Empty,
+        };
+    }
+
+    private string GetIconName()
+    {
+        return Scope?.ToLowerInvariant() switch
+        {
+            "shared" => "home",
+            "personal" => "user",
+            _ => "layers",
+        };
+    }
+
+    private string GetTooltip()
+    {
+        return Scope?.ToLowerInvariant() switch
+        {
+            "shared" => "Shared with family members",
+            "personal" => "Private to you",
+            _ => string.Empty,
+        };
+    }
+}

@@ -29,6 +29,7 @@ public static class DomainToDtoMapper
             InitialBalanceDate = account.InitialBalanceDate,
             CreatedAt = account.CreatedAt,
             UpdatedAt = account.UpdatedAt,
+            Scope = account.Scope.ToString(),
             Transactions = account.Transactions.Select(ToDto).ToList(),
         };
     }

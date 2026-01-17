@@ -1,0 +1,129 @@
+/* ScopeSwitcher.razor.css - Styles for the scope switcher dropdown */
+
+.scope-switcher {
+    position: relative;
+    margin: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.scope-switcher.collapsed {
+    margin: 0.5rem 0.25rem;
+}
+
+.scope-switcher-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.scope-switcher.collapsed .scope-switcher-button {
+    justify-content: center;
+    padding: 0.625rem;
+}
+
+.scope-switcher-button:hover {
+    background: var(--surface-tertiary);
+    border-color: var(--border-color-hover);
+}
+
+.scope-switcher-button:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
+}
+
+.scope-icon {
+    display: flex;
+    align-items: center;
+    color: var(--accent-color);
+}
+
+.scope-text {
+    flex: 1;
+    text-align: left;
+}
+
+.scope-chevron {
+    display: flex;
+    align-items: center;
+    color: var(--text-secondary);
+}
+
+.scope-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.25rem;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    overflow: hidden;
+    min-width: 180px;
+}
+
+.scope-switcher.collapsed .scope-dropdown {
+    left: auto;
+    right: auto;
+    min-width: 180px;
+}
+
+.scope-option {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-size: 0.875rem;
+    text-align: left;
+}
+
+.scope-option:hover {
+    background: var(--surface-secondary);
+}
+
+.scope-option.selected {
+    background: var(--accent-color-light);
+    color: var(--accent-color);
+}
+
+.scope-option-icon {
+    display: flex;
+    align-items: center;
+    color: inherit;
+}
+
+.scope-option-text {
+    flex: 1;
+}
+
+.scope-option-check {
+    display: flex;
+    align-items: center;
+    color: var(--accent-color);
+}
+
+.scope-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99;
+}

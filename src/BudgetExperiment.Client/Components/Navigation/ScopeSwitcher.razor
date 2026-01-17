@@ -1,0 +1,83 @@
+@* ScopeSwitcher.razor - Dropdown to switch between Shared, Personal, and All scopes *@
+
+@using BudgetExperiment.Domain
+
+@inject ScopeService ScopeService
+
+<div class="scope-switcher @(IsCollapsed ? "collapsed" : "")">
+    <button class="scope-switcher-button" @onclick="ToggleDropdown" @onclick:stopPropagation="true" title="@GetTooltip()">
+        <span class="scope-icon"><Icon Name="@ScopeService.GetCurrentScopeIcon()" Size="20" /></span>
+        @if (!IsCollapsed)
+        {
+            <span class="scope-text">@ScopeService.GetCurrentScopeDisplayName()</span>
+            <span class="scope-chevron"><Icon Name="@(isOpen ? "chevron-up" : "chevron-down")" Size="16" /></span>
+        }
+    </button>
+
+    @if (isOpen)
+    {
+        <div class="scope-dropdown" @onclick:stopPropagation="true">
+            @foreach (var option in ScopeService.AvailableScopes)
+            {
+                <button class="scope-option @(IsSelected(option.Scope) ? "selected" : "")"
+                        @onclick="() => SelectScope(option.Scope)"
+                        title="@option.Description">
+                    <span class="scope-option-icon"><Icon Name="@option.IconName" Size="18" /></span>
+                    <span class="scope-option-text">@option.DisplayName</span>
+                    @if (IsSelected(option.Scope))
+                    {
+                        <span class="scope-option-check"><Icon Name="check" Size="16" /></span>
+                    }
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@if (isOpen)
+{
+    <div class="scope-overlay" @onclick="CloseDropdown"></div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the navigation is collapsed.
+    /// </summary>
+    [Parameter]
+    public bool IsCollapsed { get; set; }
+
+    private bool isOpen;
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        await ScopeService.InitializeAsync();
+    }
+
+    private void ToggleDropdown()
+    {
+        isOpen = !isOpen;
+    }
+
+    private void CloseDropdown()
+    {
+        isOpen = false;
+    }
+
+    private async Task SelectScope(BudgetScope? scope)
+    {
+        await ScopeService.SetScopeAsync(scope);
+        isOpen = false;
+    }
+
+    private bool IsSelected(BudgetScope? scope)
+    {
+        return ScopeService.CurrentScope == scope;
+    }
+
+    private string GetTooltip()
+    {
+        var option = ScopeService.AvailableScopes.FirstOrDefault(o => o.Scope == ScopeService.CurrentScope);
+        return option?.Description ?? "Select budget scope";
+    }
+}

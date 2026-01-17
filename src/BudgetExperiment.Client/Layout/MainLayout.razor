@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
+@using BudgetExperiment.Client.Components.Auth
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
 
@@ -11,6 +12,7 @@
         <a href="/" class="app-brand">Budget Experiment</a>
         <div class="app-header-spacer"></div>
         <ThemeToggle />
+        <UserProfile />
     </header>
 
     <div class="app-content-wrapper">
