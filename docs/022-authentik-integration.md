@@ -823,11 +823,11 @@ public sealed class AccountCreateDto
 - [x] Show appropriate errors for 401/403 responses
 
 ### Phase 7: Testing & Polish
-- [ ] End-to-end authentication flow testing
-- [ ] Token refresh testing
-- [ ] Scope filtering isolation testing
-- [ ] Performance testing with auth overhead
-- [ ] Documentation updates
+- [x] End-to-end authentication flow testing
+- [ ] Token refresh testing (deferred - requires long-running session test)
+- [x] Scope filtering isolation testing
+- [ ] Performance testing with auth overhead (deferred - optimization phase)
+- [x] Documentation updates
 
 ---
 
