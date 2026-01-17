@@ -4,8 +4,14 @@
 @page "/"
 @page "/{Year:int}/{Month:int}"
 
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
+@inject ScopeService ScopeService
 
 <PageTitle>Budget Experiment</PageTitle>
 
@@ -150,6 +156,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ScopeService.ScopeChanged += OnScopeChanged;
+
         if (Year == 0 || Month == 0)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
@@ -561,5 +569,24 @@
         {
             throw new Exception($"Failed to skip {failCount} items.");
         }
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await InvokeAsync(async () =>
+        {
+            selectedDate = null;
+            dayDetail = null;
+            await LoadAccounts();
+            await LoadCalendarData();
+            await LoadPastDueItems();
+            await LoadBudgetSummary();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
     }
 }

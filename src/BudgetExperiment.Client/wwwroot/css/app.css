@@ -125,8 +125,25 @@ h1:focus {
 .loading-progress-text:after {
     content: var(--blazor-load-percentage-text, "Loading");
 }
-        content: var(--blazor-load-percentage-text, "Loading");
-    }
+
+/* ==========================================================================
+   Authentication Loading State
+   ========================================================================== */
+
+.auth-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--color-surface-primary, #ffffff);
+    color: var(--color-text-primary, #333333);
+    font-size: var(--font-size-lg, 1.125rem);
+}
+
+.auth-loading p {
+    margin: 0;
+    padding: var(--space-4, 1rem);
+}
 
 code {
     color: #c02d76;

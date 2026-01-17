@@ -19,17 +19,24 @@ builder.Services.AddOidcAuthentication(options =>
     options.ProviderOptions.DefaultScopes.Add("email");
 });
 
+// Register ScopeService as singleton so it persists across the app lifetime
+builder.Services.AddSingleton<ScopeService>();
+
+// Register the ScopeMessageHandler as transient (DelegatingHandler instances should be transient)
+builder.Services.AddTransient<ScopeMessageHandler>();
+
 // Configure HttpClient with authorization message handler to include auth token
+// and scope message handler to include X-Budget-Scope header
 builder.Services.AddHttpClient(
     "BudgetApi",
     client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
-    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
+    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>()
+    .AddHttpMessageHandler<ScopeMessageHandler>();
 
 // Provide scoped HttpClient for injection (uses BudgetApi named client)
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BudgetApi"));
 
 builder.Services.AddScoped<IBudgetApiService, BudgetApiService>();
 builder.Services.AddScoped<ThemeService>();
-builder.Services.AddScoped<ScopeService>();
 
 await builder.Build().RunAsync();

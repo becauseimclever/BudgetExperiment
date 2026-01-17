@@ -84,6 +84,10 @@ public partial class Program
         // Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // Budget scope extraction from X-Budget-Scope header
+        app.UseMiddleware<BudgetExperiment.Api.Middleware.BudgetScopeMiddleware>();
+
         app.MapControllers();
         app.MapHealthChecks("/health");
 

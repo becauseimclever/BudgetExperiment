@@ -1,25 +1,32 @@
 ﻿<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                <NotAuthorized>
-                    @if (context.User.Identity?.IsAuthenticated != true)
-                    {
-                        <RedirectToLogin />
-                    }
-                    else
-                    {
-                        <LayoutView Layout="@typeof(MainLayout)">
-                            <p role="alert">You are not authorized to access this resource.</p>
-                        </LayoutView>
-                    }
-                </NotAuthorized>
-                <Authorizing>
-                    <LayoutView Layout="@typeof(MainLayout)">
-                        <p>Checking authorization...</p>
-                    </LayoutView>
-                </Authorizing>
-            </AuthorizeRouteView>
+            @if (IsAuthenticationRoute(routeData))
+            {
+                <RouteView RouteData="@routeData" />
+            }
+            else
+            {
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        @if (context.User.Identity?.IsAuthenticated != true)
+                        {
+                            <RedirectToLogin />
+                        }
+                        else
+                        {
+                            <LayoutView Layout="@typeof(MainLayout)">
+                                <p role="alert">You are not authorized to access this resource.</p>
+                            </LayoutView>
+                        }
+                    </NotAuthorized>
+                    <Authorizing>
+                        <div class="auth-loading">
+                            <p>Loading...</p>
+                        </div>
+                    </Authorizing>
+                </AuthorizeRouteView>
+            }
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
@@ -30,3 +37,10 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    private static bool IsAuthenticationRoute(RouteData routeData)
+    {
+        return routeData.PageType.FullName?.Contains("Authentication") == true;
+    }
+}

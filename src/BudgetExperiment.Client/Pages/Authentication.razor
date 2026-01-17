@@ -1,28 +1,43 @@
 @page "/authentication/{Action}"
+@layout EmptyLayout
 
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 <RemoteAuthenticatorView Action="@Action">
     <LoggingIn>
-        <p>Redirecting to login...</p>
+        <div class="auth-loading">
+            <p>Redirecting to login...</p>
+        </div>
     </LoggingIn>
     <CompletingLoggingIn>
-        <p>Completing login...</p>
+        <div class="auth-loading">
+            <p>Completing login...</p>
+        </div>
     </CompletingLoggingIn>
     <LogInFailed>
-        <p>There was an error logging in. Please try again.</p>
+        <div class="auth-loading">
+            <p>There was an error logging in. Please try again.</p>
+        </div>
     </LogInFailed>
     <LogOut>
-        <p>Logging out...</p>
+        <div class="auth-loading">
+            <p>Logging out...</p>
+        </div>
     </LogOut>
     <CompletingLogOut>
-        <p>Completing logout...</p>
+        <div class="auth-loading">
+            <p>Completing logout...</p>
+        </div>
     </CompletingLogOut>
     <LogOutSucceeded>
-        <p>You have been logged out.</p>
+        <div class="auth-loading">
+            <p>You have been logged out.</p>
+        </div>
     </LogOutSucceeded>
     <LogOutFailed>
-        <p>There was an error logging out. Please try again.</p>
+        <div class="auth-loading">
+            <p>There was an error logging out. Please try again.</p>
+        </div>
     </LogOutFailed>
 </RemoteAuthenticatorView>
 

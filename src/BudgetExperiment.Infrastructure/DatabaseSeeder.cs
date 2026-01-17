@@ -15,6 +15,12 @@ namespace BudgetExperiment.Infrastructure;
 public static class DatabaseSeeder
 {
     /// <summary>
+    /// A well-known system user ID used for seeding shared data.
+    /// This represents data created by the system/seeder, not by any real user.
+    /// </summary>
+    public static readonly Guid SystemUserId = new("00000000-0000-0000-0000-000000000001");
+
+    /// <summary>
     /// Seeds the database with sample accounts and transactions.
     /// </summary>
     /// <param name="context">The database context.</param>
@@ -31,11 +37,11 @@ public static class DatabaseSeeder
 
         logger?.LogInformation("Seeding database with sample data...");
 
-        // Create accounts
-        var checking = Account.Create("Primary Checking", AccountType.Checking);
-        var savings = Account.Create("Emergency Fund", AccountType.Savings);
-        var creditCard = Account.Create("Rewards Card", AccountType.CreditCard);
-        var cash = Account.Create("Wallet Cash", AccountType.Cash);
+        // Create shared accounts (visible to all authenticated users)
+        var checking = Account.CreateShared("Primary Checking", AccountType.Checking, SystemUserId);
+        var savings = Account.CreateShared("Emergency Fund", AccountType.Savings, SystemUserId);
+        var creditCard = Account.CreateShared("Rewards Card", AccountType.CreditCard, SystemUserId);
+        var cash = Account.CreateShared("Wallet Cash", AccountType.Cash, SystemUserId);
 
         // Add transactions to checking account
         var today = DateOnly.FromDateTime(DateTime.UtcNow);

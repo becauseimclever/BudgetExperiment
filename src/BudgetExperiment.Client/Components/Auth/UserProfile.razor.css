@@ -12,7 +12,7 @@
     height: 32px;
     border-radius: 50%;
     overflow: hidden;
-    background: var(--accent-color);
+    background: var(--color-brand-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -40,14 +40,14 @@
     background: transparent;
     border: none;
     border-radius: 0.375rem;
-    color: var(--text-primary);
+    color: var(--color-text-primary);
     cursor: pointer;
     transition: background 0.15s ease;
     font-size: 0.875rem;
 }
 
 .user-profile-button:hover {
-    background: var(--surface-secondary);
+    background: var(--color-surface-secondary);
 }
 
 .user-name {
@@ -60,7 +60,7 @@
 .user-chevron {
     display: flex;
     align-items: center;
-    color: var(--text-secondary);
+    color: var(--color-text-secondary);
 }
 
 .user-dropdown {
@@ -69,10 +69,10 @@
     right: 0;
     margin-top: 0.5rem;
     min-width: 200px;
-    background: var(--surface-primary);
-    border: 1px solid var(--border-color);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-lg);
     z-index: 100;
     overflow: hidden;
 }
@@ -86,18 +86,18 @@
 
 .user-dropdown-name {
     font-weight: 500;
-    color: var(--text-primary);
+    color: var(--color-text-primary);
     font-size: 0.875rem;
 }
 
 .user-dropdown-email {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: var(--color-text-secondary);
 }
 
 .user-dropdown-divider {
     height: 1px;
-    background: var(--border-color);
+    background: var(--color-border);
 }
 
 .user-dropdown-item {
@@ -108,7 +108,7 @@
     padding: 0.625rem 1rem;
     background: transparent;
     border: none;
-    color: var(--text-primary);
+    color: var(--color-text-primary);
     cursor: pointer;
     transition: background 0.15s ease;
     font-size: 0.875rem;
@@ -116,7 +116,7 @@
 }
 
 .user-dropdown-item:hover {
-    background: var(--surface-secondary);
+    background: var(--color-surface-secondary);
 }
 
 .user-overlay {
