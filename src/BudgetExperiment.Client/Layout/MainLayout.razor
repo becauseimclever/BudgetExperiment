@@ -3,6 +3,8 @@
 @using BudgetExperiment.Client.Components.Auth
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Client.Services
+@inject VersionService VersionService
 
 <div class="app-shell">
     <header class="app-top-header">
@@ -24,10 +26,19 @@
             @Body
         </main>
     </div>
+
+    <footer class="app-footer">
+        <span class="app-version">v@VersionService.CurrentVersion</span>
+    </footer>
 </div>
 
 @code {
     private bool navCollapsed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await VersionService.LoadVersionAsync();
+    }
 
     private void ToggleNavigation()
     {

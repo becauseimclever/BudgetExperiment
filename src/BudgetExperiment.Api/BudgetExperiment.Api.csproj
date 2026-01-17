@@ -7,9 +7,7 @@
     <UserSecretsId>465afe4b-be3b-4f3c-a2d9-e571a59386bb</UserSecretsId>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <Version>0.1.0-preview</Version>
-  </PropertyGroup>
+  <!-- Version is now managed by MinVer from Git tags (see Directory.Build.props) -->
 
   <ItemGroup>
   <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

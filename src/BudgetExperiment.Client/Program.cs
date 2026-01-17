@@ -38,5 +38,6 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 
 builder.Services.AddScoped<IBudgetApiService, BudgetApiService>();
 builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<VersionService>();
 
 await builder.Build().RunAsync();
