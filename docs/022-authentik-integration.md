@@ -902,6 +902,18 @@ The Blazor WASM client requires OIDC settings in `wwwroot/appsettings.Developmen
 
 > **Note:** For OIDC public clients (Blazor WASM), the Authority and ClientId are not secrets - they're public configuration needed by the browser to redirect to the IdP. The actual security is in the PKCE flow and Authentik's validation.
 
+### Test Credentials
+
+For development and testing, a demo user is available in Authentik:
+
+| Field | Value |
+|-------|-------|
+| Username | `Test` |
+| Password | `demo123` |
+| Group | `budget-users` |
+
+> **Note:** This is a shared test account. Do not use for production data or personal information.
+
 ### Production Deployment
 
 For production, create `wwwroot/appsettings.Production.json` with production Authentik settings. This file is gitignored and should be configured during deployment.

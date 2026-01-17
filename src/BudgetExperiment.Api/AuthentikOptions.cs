@@ -30,10 +30,4 @@ public sealed class AuthentikOptions
     /// Should be true in production, can be false for local development.
     /// </summary>
     public bool RequireHttpsMetadata { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets a value indicating whether authentication is enabled.
-    /// When false, authentication is bypassed (useful for development/testing).
-    /// </summary>
-    public bool Enabled { get; set; } = true;
 }

@@ -185,17 +185,9 @@ public partial class Program
     {
         var authentikOptions = configuration.GetSection(AuthentikOptions.SectionName).Get<AuthentikOptions>() ?? new AuthentikOptions();
 
-        if (!authentikOptions.Enabled)
-        {
-            // Authentication is disabled - add a no-op authentication scheme
-            services.AddAuthentication();
-            services.AddAuthorization();
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(authentikOptions.Authority))
         {
-            throw new InvalidOperationException("Authentication is enabled but 'Authentication:Authentik:Authority' is not configured.");
+            throw new InvalidOperationException("'Authentication:Authentik:Authority' is not configured. Authentication is required.");
         }
 
         services.AddAuthentication(options =>
