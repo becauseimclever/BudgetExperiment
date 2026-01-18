@@ -76,7 +76,7 @@ internal sealed class RecurringTransactionConfiguration : IEntityTypeConfigurati
         // Category FK (nullable)
         builder.Property(r => r.CategoryId);
 
-        builder.HasOne<BudgetCategory>()
+        builder.HasOne(r => r.Category)
             .WithMany()
             .HasForeignKey(r => r.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);

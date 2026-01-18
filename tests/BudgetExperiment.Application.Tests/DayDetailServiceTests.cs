@@ -244,6 +244,7 @@ public class DayDetailServiceTests
                     "Netflix Subscription",
                     MoneyValue.Create("USD", -15.99m),
                     null,
+                    null,
                     false,
                     false),
             });
@@ -592,6 +593,7 @@ public class DayDetailServiceTests
                     "Checking",
                     "Netflix",
                     MoneyValue.Create("USD", -15.99m),
+                    null,
                     null,
                     false,
                     false),

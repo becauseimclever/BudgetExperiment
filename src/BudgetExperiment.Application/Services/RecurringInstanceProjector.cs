@@ -65,6 +65,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
                     Description: exception?.ModifiedDescription ?? recurring.Description,
                     Amount: exception?.ModifiedAmount ?? recurring.Amount,
                     CategoryId: recurring.CategoryId,
+                    CategoryName: recurring.Category?.Name,
                     IsModified: exception?.ExceptionType == ExceptionType.Modified,
                     IsSkipped: false);
 
@@ -109,6 +110,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
                 Description: exception?.ModifiedDescription ?? recurring.Description,
                 Amount: exception?.ModifiedAmount ?? recurring.Amount,
                 CategoryId: recurring.CategoryId,
+                CategoryName: recurring.Category?.Name,
                 IsModified: exception?.ExceptionType == ExceptionType.Modified,
                 IsSkipped: exception?.ExceptionType == ExceptionType.Skipped));
         }

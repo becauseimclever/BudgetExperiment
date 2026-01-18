@@ -50,7 +50,7 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         // Category FK (nullable)
         builder.Property(t => t.CategoryId);
 
-        builder.HasOne<BudgetCategory>()
+        builder.HasOne(t => t.Category)
             .WithMany()
             .HasForeignKey(t => t.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);

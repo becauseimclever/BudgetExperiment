@@ -14,6 +14,7 @@ namespace BudgetExperiment.Domain;
 /// <param name="Description">The description (may be modified by exception).</param>
 /// <param name="Amount">The amount (may be modified by exception).</param>
 /// <param name="CategoryId">The category ID (if any).</param>
+/// <param name="CategoryName">The category name (null if uncategorized).</param>
 /// <param name="IsModified">Whether this instance has been modified via exception.</param>
 /// <param name="IsSkipped">Whether this instance has been skipped via exception.</param>
 public sealed record RecurringInstanceInfo(
@@ -24,5 +25,6 @@ public sealed record RecurringInstanceInfo(
     string Description,
     MoneyValue Amount,
     Guid? CategoryId,
+    string? CategoryName,
     bool IsModified,
     bool IsSkipped);

@@ -347,6 +347,7 @@ public class TransactionListServiceTests
                             "Netflix Subscription",
                             MoneyValue.Create("USD", -15.99m),
                             null,
+                            null,
                             false,
                             false),
                     }
@@ -819,6 +820,7 @@ public class TransactionListServiceTests
                             "Checking",
                             "Recurring Transaction",
                             MoneyValue.Create("USD", -50.00m),
+                            null,
                             null,
                             false,
                             false),

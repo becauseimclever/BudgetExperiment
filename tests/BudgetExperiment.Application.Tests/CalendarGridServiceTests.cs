@@ -447,6 +447,7 @@ public class CalendarGridServiceTests
                             "Recurring Transaction",
                             MoneyValue.Create("USD", -50.00m),
                             null,
+                            null,
                             false,
                             false),
                     }

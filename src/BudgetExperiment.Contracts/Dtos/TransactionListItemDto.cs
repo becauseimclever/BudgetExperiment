@@ -28,6 +28,9 @@ public sealed class TransactionListItemDto
     /// <summary>Gets or sets the category identifier.</summary>
     public Guid? CategoryId { get; set; }
 
+    /// <summary>Gets or sets the category name (null if uncategorized).</summary>
+    public string? CategoryName { get; set; }
+
     /// <summary>Gets or sets the creation timestamp (for actual transactions).</summary>
     public DateTime? CreatedAt { get; set; }
 
