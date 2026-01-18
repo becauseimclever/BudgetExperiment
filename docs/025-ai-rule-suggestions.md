@@ -746,16 +746,16 @@ Refs: #025"
 
 ---
 
-### Phase 6: API Endpoints
+### Phase 6: API Endpoints ✅
 
 **Objective:** Expose AI features via REST API
 
 **Tasks:**
-- [ ] Add DTOs to Contracts project
-- [ ] Implement `AiController` for status and settings
-- [ ] Implement `SuggestionsController` for suggestion management
-- [ ] Add endpoint for comprehensive analysis
-- [ ] Write API integration tests
+- [x] Add DTOs to Contracts project
+- [x] Implement `AiController` for status and settings
+- [x] Implement `SuggestionsController` for suggestion management
+- [x] Add endpoint for comprehensive analysis
+- [x] Write API integration tests
 
 **Commit:**
 ```bash
@@ -899,8 +899,8 @@ Refs: #025"
 - [x] Repository CRUD operations for suggestions
 - [ ] AI service connection and model listing (requires Ollama)
 - [ ] Full flow: analyze → generate suggestion → accept → verify rule created
-- [ ] API endpoint authorization
-- [ ] API endpoint validation
+- [x] API endpoint authorization
+- [x] API endpoint validation
 
 ### Manual Testing Checklist
 
