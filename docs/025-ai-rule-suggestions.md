@@ -611,16 +611,16 @@ New table: `AiSettings` (or extend existing settings)
 
 ## Implementation Plan
 
-### Phase 1: Domain Model
+### Phase 1: Domain Model ✅
 
 **Objective:** Establish the RuleSuggestion entity and enums
 
 **Tasks:**
-- [ ] Write unit tests for `RuleSuggestion` factory methods
-- [ ] Write unit tests for status transitions (Accept, Dismiss)
-- [ ] Implement `SuggestionType` and `SuggestionStatus` enums
-- [ ] Implement `RuleSuggestion` entity with factory methods
-- [ ] Add `IRuleSuggestionRepository` interface
+- [x] Write unit tests for `RuleSuggestion` factory methods
+- [x] Write unit tests for status transitions (Accept, Dismiss)
+- [x] Implement `SuggestionType` and `SuggestionStatus` enums
+- [x] Implement `RuleSuggestion` entity with factory methods
+- [x] Add `IRuleSuggestionRepository` interface
 
 **Commit:**
 ```bash
@@ -637,17 +637,17 @@ Refs: #025"
 
 ---
 
-### Phase 2: AI Service Infrastructure
+### Phase 2: AI Service Infrastructure ✅
 
 **Objective:** Implement Ollama integration
 
 **Tasks:**
-- [ ] Create `IAiService` interface
-- [ ] Implement `OllamaAiService` with HTTP client
-- [ ] Add connection testing and model listing
-- [ ] Add AI settings to configuration
-- [ ] Write integration tests (requires running Ollama)
-- [ ] Handle timeouts and errors gracefully
+- [x] Create `IAiService` interface
+- [x] Implement `OllamaAiService` with HTTP client
+- [x] Add connection testing and model listing
+- [x] Add AI settings to configuration
+- [x] Write integration tests (requires running Ollama)
+- [x] Handle timeouts and errors gracefully
 
 **Commit:**
 ```bash
@@ -665,16 +665,16 @@ Refs: #025"
 
 ---
 
-### Phase 3: Infrastructure - Repository & Migrations
+### Phase 3: Infrastructure - Repository & Migrations ✅
 
 **Objective:** Implement database persistence for suggestions
 
 **Tasks:**
-- [ ] Create EF Core configuration for `RuleSuggestion`
-- [ ] Add migration for `RuleSuggestions` table
-- [ ] Add migration for AI settings storage
-- [ ] Implement `RuleSuggestionRepository`
-- [ ] Write integration tests for repository operations
+- [x] Create EF Core configuration for `RuleSuggestion`
+- [x] Add migration for `RuleSuggestions` table
+- [x] Add migration for AI settings storage (AI settings in appsettings.json instead)
+- [x] Implement `RuleSuggestionRepository`
+- [x] Write integration tests for repository operations
 
 **Commit:**
 ```bash
