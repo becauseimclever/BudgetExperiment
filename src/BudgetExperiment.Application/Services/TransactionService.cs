@@ -16,6 +16,7 @@ public sealed class TransactionService
     private readonly ITransactionRepository _repository;
     private readonly IAccountRepository _accountRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICategorizationEngine _categorizationEngine;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionService"/> class.
@@ -23,11 +24,17 @@ public sealed class TransactionService
     /// <param name="repository">The transaction repository.</param>
     /// <param name="accountRepository">The account repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
-    public TransactionService(ITransactionRepository repository, IAccountRepository accountRepository, IUnitOfWork unitOfWork)
+    /// <param name="categorizationEngine">The categorization engine for auto-categorization.</param>
+    public TransactionService(
+        ITransactionRepository repository,
+        IAccountRepository accountRepository,
+        IUnitOfWork unitOfWork,
+        ICategorizationEngine categorizationEngine)
     {
         this._repository = repository;
         this._accountRepository = accountRepository;
         this._unitOfWork = unitOfWork;
+        this._categorizationEngine = categorizationEngine;
     }
 
     /// <summary>
@@ -71,8 +78,15 @@ public sealed class TransactionService
             throw new DomainException("Account not found.");
         }
 
+        // Determine category: use manual category if provided, otherwise auto-categorize
+        Guid? categoryId = dto.CategoryId;
+        if (!categoryId.HasValue)
+        {
+            categoryId = await this._categorizationEngine.FindMatchingCategoryAsync(dto.Description, cancellationToken);
+        }
+
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
-        var transaction = account.AddTransaction(amount, dto.Date, dto.Description, dto.CategoryId);
+        var transaction = account.AddTransaction(amount, dto.Date, dto.Description, categoryId);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(transaction);
     }
