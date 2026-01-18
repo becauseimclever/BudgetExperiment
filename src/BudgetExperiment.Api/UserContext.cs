@@ -29,7 +29,7 @@ public sealed class UserContext : IUserContext
     public string UserId => this.GetClaimValue(ClaimTypes.NameIdentifier) ?? this.GetClaimValue("sub") ?? string.Empty;
 
     /// <inheritdoc/>
-    public Guid? UserIdAsGuid => Guid.TryParse(this.UserId, out var guid) ? guid : null;
+    public Guid? UserIdAsGuid => ParseUserIdAsGuid(this.UserId);
 
     /// <inheritdoc/>
     public string Username => this.GetClaimValue("preferred_username") ?? this.GetClaimValue(ClaimTypes.Name) ?? string.Empty;
@@ -55,6 +55,57 @@ public sealed class UserContext : IUserContext
     public void SetScope(BudgetScope? scope)
     {
         this.currentScope = scope;
+    }
+
+    /// <summary>
+    /// Parses a user ID string as a GUID, handling both standard GUID format
+    /// and Authentik's 64-character hex format (taking first 32 chars).
+    /// </summary>
+    /// <param name="userId">The user ID string to parse.</param>
+    /// <returns>A GUID if parsing succeeds; otherwise, null.</returns>
+    private static Guid? ParseUserIdAsGuid(string userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            return null;
+        }
+
+        // First, try standard GUID parsing (handles "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" format)
+        if (Guid.TryParse(userId, out var guid))
+        {
+            return guid;
+        }
+
+        // Handle Authentik's 64-character hex format by taking first 32 hex chars
+        // and formatting as a GUID. This creates a deterministic GUID from the hex string.
+        if (userId.Length >= 32 && IsHexString(userId))
+        {
+            var hexSubstring = userId[..32];
+            if (Guid.TryParseExact(hexSubstring, "N", out var derivedGuid))
+            {
+                return derivedGuid;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Checks if a string contains only hexadecimal characters.
+    /// </summary>
+    /// <param name="value">The string to check.</param>
+    /// <returns>True if all characters are hex digits; otherwise, false.</returns>
+    private static bool IsHexString(string value)
+    {
+        foreach (var c in value)
+        {
+            if (!char.IsAsciiHexDigit(c))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private string? GetClaimValue(string claimType)

@@ -257,10 +257,109 @@ public sealed class UserContextTests
         // Act & Assert
         Assert.False(userContext.IsAuthenticated);
         Assert.Equal(string.Empty, userContext.UserId);
+        Assert.Null(userContext.UserIdAsGuid);
         Assert.Equal(string.Empty, userContext.Username);
         Assert.Null(userContext.Email);
         Assert.Null(userContext.DisplayName);
         Assert.Null(userContext.AvatarUrl);
+    }
+
+    /// <summary>
+    /// UserIdAsGuid returns the UserId parsed as a GUID when valid.
+    /// </summary>
+    [Fact]
+    public void UserIdAsGuid_WhenUserIdIsValidGuid_ReturnsGuid()
+    {
+        // Arrange
+        var expectedGuid = Guid.NewGuid();
+        var claims = new[] { new Claim("sub", expectedGuid.ToString()) };
+        var httpContextAccessor = CreateHttpContextAccessor(authenticated: true, claims: claims);
+        var userContext = new UserContext(httpContextAccessor);
+
+        // Act
+        var result = userContext.UserIdAsGuid;
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedGuid, result.Value);
+    }
+
+    /// <summary>
+    /// UserIdAsGuid derives a GUID from Authentik's 64-character hex format.
+    /// </summary>
+    [Fact]
+    public void UserIdAsGuid_WhenAuthentikHexFormat_ReturnsDerivedGuid()
+    {
+        // Arrange - Real Authentik sub claim format (64 hex chars)
+        var authentikSub = "2aeb3c500a39985c209121ba8aa440a1254c7533fbe5bf1ee2be8be5a5907637";
+        var claims = new[] { new Claim("sub", authentikSub) };
+        var httpContextAccessor = CreateHttpContextAccessor(authenticated: true, claims: claims);
+        var userContext = new UserContext(httpContextAccessor);
+
+        // Act
+        var result = userContext.UserIdAsGuid;
+
+        // Assert - Should derive GUID from first 32 hex chars: "2aeb3c500a39985c209121ba8aa440a1"
+        Assert.NotNull(result);
+        Assert.Equal(Guid.Parse("2aeb3c50-0a39-985c-2091-21ba8aa440a1"), result.Value);
+    }
+
+    /// <summary>
+    /// UserIdAsGuid returns consistent GUID for the same Authentik sub claim.
+    /// </summary>
+    [Fact]
+    public void UserIdAsGuid_WhenAuthentikHexFormat_ReturnsDeterministicGuid()
+    {
+        // Arrange
+        var authentikSub = "2aeb3c500a39985c209121ba8aa440a1254c7533fbe5bf1ee2be8be5a5907637";
+        var claims1 = new[] { new Claim("sub", authentikSub) };
+        var claims2 = new[] { new Claim("sub", authentikSub) };
+        var userContext1 = new UserContext(CreateHttpContextAccessor(authenticated: true, claims: claims1));
+        var userContext2 = new UserContext(CreateHttpContextAccessor(authenticated: true, claims: claims2));
+
+        // Act
+        var result1 = userContext1.UserIdAsGuid;
+        var result2 = userContext2.UserIdAsGuid;
+
+        // Assert - Same input should always produce same GUID
+        Assert.NotNull(result1);
+        Assert.NotNull(result2);
+        Assert.Equal(result1.Value, result2.Value);
+    }
+
+    /// <summary>
+    /// UserIdAsGuid returns null when UserId is not a valid GUID or hex string.
+    /// </summary>
+    [Fact]
+    public void UserIdAsGuid_WhenUserIdIsNotValidGuidOrHex_ReturnsNull()
+    {
+        // Arrange
+        var claims = new[] { new Claim("sub", "not-a-guid-or-hex") };
+        var httpContextAccessor = CreateHttpContextAccessor(authenticated: true, claims: claims);
+        var userContext = new UserContext(httpContextAccessor);
+
+        // Act
+        var result = userContext.UserIdAsGuid;
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// UserIdAsGuid returns null when user is not authenticated.
+    /// </summary>
+    [Fact]
+    public void UserIdAsGuid_WhenNotAuthenticated_ReturnsNull()
+    {
+        // Arrange
+        var httpContextAccessor = CreateHttpContextAccessor(authenticated: false);
+        var userContext = new UserContext(httpContextAccessor);
+
+        // Act
+        var result = userContext.UserIdAsGuid;
+
+        // Assert
+        Assert.Null(result);
     }
 
     private static IHttpContextAccessor CreateHttpContextAccessor(bool authenticated, Claim[]? claims = null)

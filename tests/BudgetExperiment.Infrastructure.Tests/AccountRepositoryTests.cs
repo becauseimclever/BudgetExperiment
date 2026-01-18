@@ -250,4 +250,70 @@ public class AccountRepositoryTests
         Assert.NotNull(retrieved);
         Assert.Equal(-2500.00m, retrieved.InitialBalance.Amount);
     }
+
+    [Fact]
+    public async Task GetAllAsync_WithPersonalScope_Returns_Only_Users_Personal_Accounts()
+    {
+        // Arrange - create a personal account for the test user
+        await using var context = this._fixture.CreateContext();
+        var userId = FakeUserContext.DefaultUserId;
+        var otherUserId = Guid.NewGuid();
+
+        // Create personal account for test user
+        var userPersonalAccount = Account.CreatePersonal("My Personal Account", AccountType.Checking, userId);
+
+        // Create personal account for another user
+        var otherUserAccount = Account.CreatePersonal("Other User Account", AccountType.Savings, otherUserId);
+
+        // Create shared account (should not be returned in Personal scope)
+        var sharedAccount = Account.CreateShared("Shared Account", AccountType.Checking, userId);
+
+        context.Accounts.AddRange(userPersonalAccount, otherUserAccount, sharedAccount);
+        await context.SaveChangesAsync();
+
+        // Act - query with Personal scope for the test user
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var personalScopeContext = FakeUserContext.CreateForPersonalScope(userId);
+        var repository = new AccountRepository(verifyContext, personalScopeContext);
+        var accounts = await repository.GetAllAsync();
+
+        // Assert - should only return the current user's personal account
+        Assert.Single(accounts);
+        Assert.Equal("My Personal Account", accounts[0].Name);
+        Assert.Equal(BudgetScope.Personal, accounts[0].Scope);
+        Assert.Equal(userId, accounts[0].OwnerUserId);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_WithAllScope_Returns_Shared_And_Users_Personal_Accounts()
+    {
+        // Arrange - create accounts with different scopes
+        await using var context = this._fixture.CreateContext();
+        var userId = FakeUserContext.DefaultUserId;
+        var otherUserId = Guid.NewGuid();
+
+        // Create personal account for test user
+        var userPersonalAccount = Account.CreatePersonal("My Personal Account", AccountType.Checking, userId);
+
+        // Create personal account for another user (should NOT be returned)
+        var otherUserAccount = Account.CreatePersonal("Other User Account", AccountType.Savings, otherUserId);
+
+        // Create shared account (should be returned)
+        var sharedAccount = Account.CreateShared("Shared Account", AccountType.Checking, userId);
+
+        context.Accounts.AddRange(userPersonalAccount, otherUserAccount, sharedAccount);
+        await context.SaveChangesAsync();
+
+        // Act - query with "All" scope (null CurrentScope) for the test user
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var allScopeContext = new FakeUserContext(userId: userId, currentScope: null); // null = All
+        var repository = new AccountRepository(verifyContext, allScopeContext);
+        var accounts = await repository.GetAllAsync();
+
+        // Assert - should return shared AND the current user's personal account, but NOT other user's personal
+        Assert.Equal(2, accounts.Count);
+        Assert.Contains(accounts, a => a.Name == "My Personal Account");
+        Assert.Contains(accounts, a => a.Name == "Shared Account");
+        Assert.DoesNotContain(accounts, a => a.Name == "Other User Account");
+    }
 }
