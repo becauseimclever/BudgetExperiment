@@ -2,6 +2,28 @@
 
 All notable changes to Budget Experiment.
 
+## [3.1.0] - 2026-01-17
+
+### Features
+
+- **rules:** Auto-categorization rules engine with pattern matching (Feature 024)
+- **rules:** Rule management UI with create, edit, delete, and reorder
+- **rules:** Bulk categorization of existing transactions by rule
+- **rules:** Rule testing interface to preview matches before applying
+- **api:** Categorization rules REST endpoints with priority ordering
+- **app:** Automatic category assignment on transaction creation
+
+### Bug Fixes
+
+- **auth:** Handle Authentik 64-char hex sub claim format for user identification
+- **ui:** Display category names instead of GUIDs in transaction lists
+- **api:** Add CategoryName to transaction list API response for calendar view
+
+### Miscellaneous
+
+- **docs:** Remove references to FluentUI-Blazor components
+- **client:** Implement IDisposable for scope change handlers
+
 ## [3.0.0] - 2026-01-17
 
 ### Features
