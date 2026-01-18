@@ -67,6 +67,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<UserSettings> UserSettings => this.Set<UserSettings>();
 
+    /// <summary>
+    /// Gets the categorization rules.
+    /// </summary>
+    public DbSet<CategorizationRule> CategorizationRules => this.Set<CategorizationRule>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

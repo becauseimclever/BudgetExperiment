@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
         services.AddScoped<IBudgetGoalRepository, BudgetGoalRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+        services.AddScoped<ICategorizationRuleRepository, CategorizationRuleRepository>();
 
         return services;
     }

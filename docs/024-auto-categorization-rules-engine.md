@@ -404,18 +404,18 @@ Index: `IX_CategorizationRules_CategoryId` (CategoryId)
 
 ## Implementation Plan
 
-### Phase 1: Domain Model
+### Phase 1: Domain Model ✅
 
 **Objective:** Establish the CategorizationRule entity and core domain logic
 
 **Tasks:**
-- [ ] Write unit tests for `RuleMatchType` enum
-- [ ] Write unit tests for `CategorizationRule.Create()` validation
-- [ ] Write unit tests for `CategorizationRule.Matches()` method (all match types)
-- [ ] Implement `RuleMatchType` enum
-- [ ] Implement `CategorizationRule` entity with factory methods
-- [ ] Implement pattern matching logic for each match type
-- [ ] Add `ICategorizationRuleRepository` interface
+- [x] Write unit tests for `RuleMatchType` enum
+- [x] Write unit tests for `CategorizationRule.Create()` validation
+- [x] Write unit tests for `CategorizationRule.Matches()` method (all match types)
+- [x] Implement `RuleMatchType` enum
+- [x] Implement `CategorizationRule` entity with factory methods
+- [x] Implement pattern matching logic for each match type
+- [x] Add `ICategorizationRuleRepository` interface
 
 **Commit:**
 ```bash
@@ -432,15 +432,15 @@ Refs: #024"
 
 ---
 
-### Phase 2: Infrastructure - Repository & Migrations
+### Phase 2: Infrastructure - Repository & Migrations ✅
 
 **Objective:** Implement database persistence for categorization rules
 
 **Tasks:**
-- [ ] Create EF Core configuration for `CategorizationRule`
-- [ ] Add migration for `CategorizationRules` table
-- [ ] Implement `CategorizationRuleRepository`
-- [ ] Write integration tests for repository operations
+- [x] Create EF Core configuration for `CategorizationRule`
+- [x] Add migration for `CategorizationRules` table
+- [x] Implement `CategorizationRuleRepository`
+- [x] Write integration tests for repository operations
 
 **Commit:**
 ```bash
