@@ -345,4 +345,27 @@ public static class DomainToDtoMapper
             TransactionCount = progress.TransactionCount,
         };
     }
+
+    /// <summary>
+    /// Maps a <see cref="CategorizationRule"/> to a <see cref="CategorizationRuleDto"/>.
+    /// </summary>
+    /// <param name="rule">The categorization rule entity.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static CategorizationRuleDto ToDto(CategorizationRule rule)
+    {
+        return new CategorizationRuleDto
+        {
+            Id = rule.Id,
+            Name = rule.Name,
+            Pattern = rule.Pattern,
+            MatchType = rule.MatchType.ToString(),
+            CaseSensitive = rule.CaseSensitive,
+            CategoryId = rule.CategoryId,
+            CategoryName = rule.Category?.Name,
+            Priority = rule.Priority,
+            IsActive = rule.IsActive,
+            CreatedAt = rule.CreatedAtUtc,
+            UpdatedAt = rule.UpdatedAtUtc,
+        };
+    }
 }

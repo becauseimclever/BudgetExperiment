@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IBudgetProgressService, BudgetProgressService>();
         services.AddScoped<IUserSettingsService, UserSettingsService>();
         services.AddScoped<ICategorizationEngine, CategorizationEngine>();
+        services.AddScoped<ICategorizationRuleService, CategorizationRuleService>();
         return services;
     }
 }
