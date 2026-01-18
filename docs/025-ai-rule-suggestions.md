@@ -805,12 +805,12 @@ Refs: #025"
 **Objective:** Build suggestion queue and management interface
 
 **Tasks:**
-- [ ] Create `SuggestionList` component
-- [ ] Create `SuggestionCard` component with actions
-- [ ] Create `SuggestionDetail` dialog
-- [ ] Implement accept/dismiss flows
-- [ ] Add feedback buttons
-- [ ] Add "Get AI Suggestions" button to rules page
+- [x] Create `SuggestionList` component
+- [x] Create `SuggestionCard` component with actions
+- [x] Create `SuggestionDetail` dialog
+- [x] Implement accept/dismiss flows
+- [x] Add feedback buttons
+- [x] Add "Get AI Suggestions" button to rules page
 
 **Commit:**
 ```bash

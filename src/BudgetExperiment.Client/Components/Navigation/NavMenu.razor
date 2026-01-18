@@ -101,6 +101,14 @@
     </div>
 
     <div class="nav-footer">
+        <NavLink class="nav-item" href="ai/suggestions" title="AI Suggestions">
+            <span class="nav-icon"><Icon Name="lightbulb" Size="20" /></span>
+            @if (!IsCollapsed)
+            {
+                <span class="nav-text">AI Suggestions</span>
+            }
+        </NavLink>
+
         <NavLink class="nav-item" href="ai/settings" title="AI Settings">
             <span class="nav-icon"><Icon Name="sparkles" Size="20" /></span>
             @if (!IsCollapsed)

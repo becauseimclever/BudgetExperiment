@@ -13,6 +13,9 @@
 <div class="page-container">
     <PageHeader Title="Categorization Rules">
         <Actions>
+            <button class="btn btn-outline" @onclick="NavigateToAiSuggestions" title="Get AI-powered rule suggestions">
+                <Icon Name="sparkles" Size="16" /> AI Suggestions
+            </button>
             <button class="btn btn-secondary" @onclick="ShowApplyRules" disabled="@(rules.Count == 0)">
                 <Icon Name="play" Size="16" /> Apply Rules
             </button>
@@ -126,6 +129,11 @@
 
     // Apply rules state
     private bool showApplyRules;
+
+    private void NavigateToAiSuggestions()
+    {
+        Navigation.NavigateTo("/ai/suggestions");
+    }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()

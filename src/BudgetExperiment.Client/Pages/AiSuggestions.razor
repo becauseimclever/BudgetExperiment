@@ -1,0 +1,337 @@
+@page "/ai/suggestions"
+@using BudgetExperiment.Client.Components.AI
+@using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+@inject IAiApiService AiService
+@inject NavigationManager Navigation
+
+<PageHeader Title="AI Suggestions" Subtitle="Review and manage AI-generated rule suggestions" />
+
+<div class="suggestions-page">
+    <div class="suggestions-toolbar">
+        <div class="toolbar-left">
+            <button class="btn btn-primary" @onclick="RunAnalysis" disabled="@(IsAnalyzing || !IsAiAvailable)">
+                @if (IsAnalyzing)
+                {
+                    <LoadingSpinner Size="SpinnerSize.Small" />
+                    <span>Analyzing...</span>
+                }
+                else
+                {
+                    <Icon Name="sparkles" Size="16" />
+                    <span>Run AI Analysis</span>
+                }
+            </button>
+
+            <button class="btn btn-secondary" @onclick="RefreshSuggestions" disabled="@IsLoading">
+                <Icon Name="refresh-cw" Size="16" />
+                <span>Refresh</span>
+            </button>
+        </div>
+
+        <div class="toolbar-right">
+            @if (Status != null)
+            {
+                <div class="ai-status-indicator @(Status.IsAvailable ? "available" : "unavailable")">
+                    <Icon Name="@(Status.IsAvailable ? "check-circle" : "x-circle")" Size="16" />
+                    <span>@(Status.IsAvailable ? "AI Available" : "AI Unavailable")</span>
+                    @if (!string.IsNullOrEmpty(Status.CurrentModel))
+                    {
+                        <span class="model-name">(@Status.CurrentModel)</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (AnalysisResult != null)
+    {
+        <div class="analysis-summary">
+            <div class="summary-header">
+                <Icon Name="bar-chart-2" Size="20" />
+                <h3>Analysis Complete</h3>
+                <button class="btn btn-ghost btn-sm" @onclick="DismissAnalysisSummary">
+                    <Icon Name="x" Size="16" />
+                </button>
+            </div>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-value">@AnalysisResult.NewRuleSuggestions</span>
+                    <span class="stat-label">New Rules</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">@AnalysisResult.OptimizationSuggestions</span>
+                    <span class="stat-label">Optimizations</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">@AnalysisResult.ConflictSuggestions</span>
+                    <span class="stat-label">Conflicts</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">@AnalysisResult.UncategorizedTransactionsAnalyzed</span>
+                    <span class="stat-label">Transactions Analyzed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">@AnalysisResult.AnalysisDurationSeconds.ToString("F1")s</span>
+                    <span class="stat-label">Duration</span>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <ErrorAlert Message="@ErrorMessage" OnDismiss="DismissError" />
+    }
+
+    <SuggestionList Suggestions="Suggestions"
+                    IsLoading="IsLoading"
+                    OnAccept="HandleAccept"
+                    OnDismiss="HandleDismiss"
+                    OnFeedback="HandleFeedback"
+                    OnViewDetails="HandleViewDetails" />
+
+    <SuggestionDetailDialog IsVisible="SelectedSuggestion != null"
+                            Suggestion="SelectedSuggestion"
+                            OnClose="CloseDetailDialog"
+                            OnAccept="HandleAccept"
+                            OnDismiss="HandleDismiss"
+                            OnFeedback="HandleFeedback" />
+</div>
+
+@code {
+    private IReadOnlyList<RuleSuggestionDto> Suggestions { get; set; } = Array.Empty<RuleSuggestionDto>();
+    private AiStatusDto? Status { get; set; }
+    private AnalysisResponseDto? AnalysisResult { get; set; }
+    private RuleSuggestionDto? SelectedSuggestion { get; set; }
+
+    private bool IsLoading { get; set; }
+    private bool IsAnalyzing { get; set; }
+    private bool IsAiAvailable => Status?.IsAvailable == true && Status?.IsEnabled == true;
+    private string? ErrorMessage { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatusAsync();
+        await LoadSuggestionsAsync();
+    }
+
+    private async Task LoadStatusAsync()
+    {
+        try
+        {
+            Status = await AiService.GetStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load AI status: {ex.Message}";
+        }
+    }
+
+    private async Task LoadSuggestionsAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            Suggestions = await AiService.GetPendingSuggestionsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load suggestions: {ex.Message}";
+            Suggestions = Array.Empty<RuleSuggestionDto>();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task RefreshSuggestions()
+    {
+        await LoadSuggestionsAsync();
+    }
+
+    private async Task RunAnalysis()
+    {
+        if (IsAnalyzing || !IsAiAvailable)
+        {
+            return;
+        }
+
+        IsAnalyzing = true;
+        ErrorMessage = null;
+        AnalysisResult = null;
+
+        try
+        {
+            AnalysisResult = await AiService.AnalyzeAsync();
+
+            if (AnalysisResult != null)
+            {
+                // Reload suggestions to show new ones
+                await LoadSuggestionsAsync();
+            }
+            else
+            {
+                ErrorMessage = "Analysis failed. AI service may be unavailable.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Analysis failed: {ex.Message}";
+        }
+        finally
+        {
+            IsAnalyzing = false;
+        }
+    }
+
+    private async Task HandleAccept(Guid id)
+    {
+        try
+        {
+            var rule = await AiService.AcceptSuggestionAsync(id);
+            if (rule != null)
+            {
+                // Remove the accepted suggestion from the list
+                Suggestions = Suggestions.Where(s => s.Id != id).ToList();
+
+                // Close detail dialog if open
+                if (SelectedSuggestion?.Id == id)
+                {
+                    SelectedSuggestion = null;
+                }
+            }
+            else
+            {
+                ErrorMessage = "Failed to accept suggestion.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to accept suggestion: {ex.Message}";
+        }
+    }
+
+    private async Task HandleDismiss(Guid id)
+    {
+        try
+        {
+            var success = await AiService.DismissSuggestionAsync(id);
+            if (success)
+            {
+                // Remove the dismissed suggestion from the list
+                Suggestions = Suggestions.Where(s => s.Id != id).ToList();
+
+                // Close detail dialog if open
+                if (SelectedSuggestion?.Id == id)
+                {
+                    SelectedSuggestion = null;
+                }
+            }
+            else
+            {
+                ErrorMessage = "Failed to dismiss suggestion.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
+        }
+    }
+
+    private async Task HandleFeedback((Guid Id, bool IsPositive) feedback)
+    {
+        try
+        {
+            var success = await AiService.ProvideFeedbackAsync(feedback.Id, feedback.IsPositive);
+            if (success)
+            {
+                // Update the local suggestion to reflect feedback
+                var suggestion = Suggestions.FirstOrDefault(s => s.Id == feedback.Id);
+                if (suggestion != null)
+                {
+                    // Create a new list with updated feedback (immutable update)
+                    Suggestions = Suggestions.Select(s =>
+                    {
+                        if (s.Id == feedback.Id)
+                        {
+                            return new RuleSuggestionDto
+                            {
+                                Id = s.Id,
+                                Type = s.Type,
+                                Status = s.Status,
+                                Title = s.Title,
+                                Description = s.Description,
+                                Reasoning = s.Reasoning,
+                                Confidence = s.Confidence,
+                                SuggestedPattern = s.SuggestedPattern,
+                                SuggestedMatchType = s.SuggestedMatchType,
+                                SuggestedCategoryId = s.SuggestedCategoryId,
+                                SuggestedCategoryName = s.SuggestedCategoryName,
+                                TargetRuleId = s.TargetRuleId,
+                                TargetRuleName = s.TargetRuleName,
+                                OptimizedPattern = s.OptimizedPattern,
+                                ConflictingRuleIds = s.ConflictingRuleIds,
+                                AffectedTransactionCount = s.AffectedTransactionCount,
+                                SampleDescriptions = s.SampleDescriptions,
+                                CreatedAtUtc = s.CreatedAtUtc,
+                                ReviewedAtUtc = s.ReviewedAtUtc,
+                                UserFeedbackPositive = feedback.IsPositive,
+                            };
+                        }
+
+                        return s;
+                    }).ToList();
+
+                    // Update selected suggestion if it's the one being updated
+                    if (SelectedSuggestion?.Id == feedback.Id)
+                    {
+                        SelectedSuggestion = Suggestions.FirstOrDefault(s => s.Id == feedback.Id);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to submit feedback: {ex.Message}";
+        }
+    }
+
+    private async Task HandleViewDetails(Guid id)
+    {
+        try
+        {
+            SelectedSuggestion = await AiService.GetSuggestionAsync(id);
+            if (SelectedSuggestion == null)
+            {
+                // Fall back to local copy
+                SelectedSuggestion = Suggestions.FirstOrDefault(s => s.Id == id);
+            }
+        }
+        catch
+        {
+            // Fall back to local copy on error
+            SelectedSuggestion = Suggestions.FirstOrDefault(s => s.Id == id);
+        }
+    }
+
+    private void CloseDetailDialog()
+    {
+        SelectedSuggestion = null;
+    }
+
+    private void DismissError()
+    {
+        ErrorMessage = null;
+    }
+
+    private void DismissAnalysisSummary()
+    {
+        AnalysisResult = null;
+    }
+}

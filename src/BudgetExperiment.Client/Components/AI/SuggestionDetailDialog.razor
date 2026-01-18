@@ -1,0 +1,312 @@
+@* SuggestionDetailDialog.razor - Modal dialog showing full suggestion details *@
+
+@using BudgetExperiment.Contracts.Dtos
+
+<Modal IsVisible="IsVisible" Title="Suggestion Details" Size="ModalSize.Large" OnClose="Close">
+    <ChildContent>
+        @if (Suggestion != null)
+        {
+            <div class="suggestion-detail">
+                <div class="detail-header">
+                    <div class="detail-type-badge @GetTypeClass()">
+                        <Icon Name="@GetTypeIcon()" Size="16" />
+                        <span>@GetTypeLabel()</span>
+                    </div>
+                    <div class="detail-confidence">
+                        <span class="confidence-label">Confidence:</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: @((Suggestion.Confidence * 100).ToString("F0"))%"></div>
+                        </div>
+                        <span class="confidence-value">@((Suggestion.Confidence * 100).ToString("F0"))%</span>
+                    </div>
+                </div>
+
+                <h3 class="detail-title">@Suggestion.Title</h3>
+                <p class="detail-description">@Suggestion.Description</p>
+
+                <div class="detail-section">
+                    <h4>
+                        <Icon Name="message-circle" Size="16" />
+                        AI Reasoning
+                    </h4>
+                    <div class="reasoning-content">
+                        @Suggestion.Reasoning
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Suggestion.SuggestedPattern))
+                {
+                    <div class="detail-section">
+                        <h4>
+                            <Icon Name="code" Size="16" />
+                            Suggested Rule
+                        </h4>
+                        <div class="rule-preview">
+                            <div class="rule-field">
+                                <span class="field-label">Pattern:</span>
+                                <code class="field-value">@Suggestion.SuggestedPattern</code>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Suggestion.SuggestedMatchType))
+                            {
+                                <div class="rule-field">
+                                    <span class="field-label">Match Type:</span>
+                                    <span class="field-value">@Suggestion.SuggestedMatchType</span>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Suggestion.SuggestedCategoryName))
+                            {
+                                <div class="rule-field">
+                                    <span class="field-label">Category:</span>
+                                    <span class="field-value category-badge">
+                                        <Icon Name="tag" Size="14" />
+                                        @Suggestion.SuggestedCategoryName
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Suggestion.OptimizedPattern))
+                {
+                    <div class="detail-section">
+                        <h4>
+                            <Icon Name="zap" Size="16" />
+                            Optimized Pattern
+                        </h4>
+                        <div class="pattern-comparison">
+                            <div class="pattern-before">
+                                <span class="pattern-label">Current:</span>
+                                <code>@(Suggestion.TargetRuleName ?? "Unknown")</code>
+                            </div>
+                            <Icon Name="arrow-right" Size="20" />
+                            <div class="pattern-after">
+                                <span class="pattern-label">Optimized:</span>
+                                <code>@Suggestion.OptimizedPattern</code>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (Suggestion.ConflictingRuleIds.Count > 0)
+                {
+                    <div class="detail-section">
+                        <h4>
+                            <Icon Name="alert-triangle" Size="16" />
+                            Conflicting Rules
+                        </h4>
+                        <p class="conflict-info">
+                            This suggestion addresses @Suggestion.ConflictingRuleIds.Count conflicting rule(s).
+                        </p>
+                    </div>
+                }
+
+                @if (Suggestion.AffectedTransactionCount > 0)
+                {
+                    <div class="detail-section">
+                        <h4>
+                            <Icon Name="layers" Size="16" />
+                            Impact
+                        </h4>
+                        <p class="impact-info">
+                            This suggestion would affect <strong>@Suggestion.AffectedTransactionCount</strong> transaction(s).
+                        </p>
+                    </div>
+                }
+
+                @if (Suggestion.SampleDescriptions.Count > 0)
+                {
+                    <div class="detail-section">
+                        <h4>
+                            <Icon Name="list" Size="16" />
+                            Sample Matches (@Suggestion.SampleDescriptions.Count)
+                        </h4>
+                        <ul class="sample-list">
+                            @foreach (var sample in Suggestion.SampleDescriptions)
+                            {
+                                <li>@sample</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <div class="detail-meta">
+                    <span class="meta-item">
+                        <Icon Name="calendar" Size="14" />
+                        Created: @Suggestion.CreatedAtUtc.ToLocalTime().ToString("g")
+                    </span>
+                    @if (Suggestion.ReviewedAtUtc.HasValue)
+                    {
+                        <span class="meta-item">
+                            <Icon Name="check-circle" Size="14" />
+                            Reviewed: @Suggestion.ReviewedAtUtc.Value.ToLocalTime().ToString("g")
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </ChildContent>
+
+    <FooterContent>
+        <div class="dialog-actions">
+            <div class="feedback-section">
+                <span>Was this helpful?</span>
+                <button class="feedback-btn @(Suggestion?.UserFeedbackPositive == true ? "active positive" : "")"
+                        @onclick="() => HandleFeedback(true)"
+                        disabled="@IsProcessing">
+                    <Icon Name="thumbs-up" Size="16" />
+                </button>
+                <button class="feedback-btn @(Suggestion?.UserFeedbackPositive == false ? "active negative" : "")"
+                        @onclick="() => HandleFeedback(false)"
+                        disabled="@IsProcessing">
+                    <Icon Name="thumbs-down" Size="16" />
+                </button>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" @onclick="Close" disabled="@IsProcessing">
+                    Cancel
+                </button>
+                <button class="btn btn-outline" @onclick="HandleDismiss" disabled="@IsProcessing">
+                    @if (IsDismissing)
+                    {
+                        <LoadingSpinner Size="SpinnerSize.Small" />
+                    }
+                    <span>Dismiss</span>
+                </button>
+                <button class="btn btn-primary" @onclick="HandleAccept" disabled="@IsProcessing">
+                    @if (IsAccepting)
+                    {
+                        <LoadingSpinner Size="SpinnerSize.Small" />
+                    }
+                    <span>Accept & Create Rule</span>
+                </button>
+            </div>
+        </div>
+    </FooterContent>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the dialog is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the suggestion to display.
+    /// </summary>
+    [Parameter]
+    public RuleSuggestionDto? Suggestion { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the dialog is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the suggestion is accepted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnAccept { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the suggestion is dismissed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDismiss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when feedback is provided.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(Guid Id, bool IsPositive)> OnFeedback { get; set; }
+
+    private bool IsAccepting { get; set; }
+    private bool IsDismissing { get; set; }
+    private bool IsProcessing => IsAccepting || IsDismissing;
+
+    private string GetTypeClass() => Suggestion?.Type switch
+    {
+        "NewRule" => "type-new-rule",
+        "PatternOptimization" => "type-optimization",
+        "RuleConsolidation" => "type-consolidation",
+        "RuleConflict" => "type-conflict",
+        "UnusedRule" => "type-unused",
+        _ => string.Empty
+    };
+
+    private string GetTypeIcon() => Suggestion?.Type switch
+    {
+        "NewRule" => "plus-circle",
+        "PatternOptimization" => "zap",
+        "RuleConsolidation" => "git-merge",
+        "RuleConflict" => "alert-triangle",
+        "UnusedRule" => "trash-2",
+        _ => "help-circle"
+    };
+
+    private string GetTypeLabel() => Suggestion?.Type switch
+    {
+        "NewRule" => "New Rule",
+        "PatternOptimization" => "Optimization",
+        "RuleConsolidation" => "Consolidation",
+        "RuleConflict" => "Conflict",
+        "UnusedRule" => "Unused Rule",
+        _ => Suggestion?.Type ?? "Unknown"
+    };
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleAccept()
+    {
+        if (Suggestion == null || IsProcessing)
+        {
+            return;
+        }
+
+        IsAccepting = true;
+        try
+        {
+            await OnAccept.InvokeAsync(Suggestion.Id);
+            await Close();
+        }
+        finally
+        {
+            IsAccepting = false;
+        }
+    }
+
+    private async Task HandleDismiss()
+    {
+        if (Suggestion == null || IsProcessing)
+        {
+            return;
+        }
+
+        IsDismissing = true;
+        try
+        {
+            await OnDismiss.InvokeAsync(Suggestion.Id);
+            await Close();
+        }
+        finally
+        {
+            IsDismissing = false;
+        }
+    }
+
+    private async Task HandleFeedback(bool isPositive)
+    {
+        if (Suggestion == null || IsProcessing)
+        {
+            return;
+        }
+
+        await OnFeedback.InvokeAsync((Suggestion.Id, isPositive));
+    }
+}
