@@ -13,6 +13,9 @@
 <div class="page-container">
     <PageHeader Title="Categorization Rules">
         <Actions>
+            <button class="btn btn-secondary" @onclick="ShowApplyRules" disabled="@(rules.Count == 0)">
+                <Icon Name="play" Size="16" /> Apply Rules
+            </button>
             <button class="btn btn-success" @onclick="ShowAddRule">+ Add Rule</button>
         </Actions>
     </PageHeader>
@@ -55,7 +58,15 @@
                           OnDeactivate="DeactivateRule" />
             }
         </div>
+
+        <div class="section-divider mt-4 mb-4"></div>
+
+        <RuleTestPanel OnCreateRule="CreateRuleFromTest" />
     }
+
+    <ApplyRulesDialog IsVisible="@showApplyRules"
+                      OnClose="HideApplyRules"
+                      OnApplied="OnRulesApplied" />
 
     <Modal IsVisible="@showAddRule" Title="Add Categorization Rule" OnClose="HideAddRule">
         <RuleForm Model="@newRule"
@@ -112,6 +123,9 @@
     // Delete confirmation state
     private bool showDeleteConfirm;
     private CategorizationRuleDto? deletingRule;
+
+    // Apply rules state
+    private bool showApplyRules;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -384,5 +398,35 @@
         {
             isTesting = false;
         }
+    }
+
+    // Apply Rules
+    private void ShowApplyRules()
+    {
+        showApplyRules = true;
+    }
+
+    private void HideApplyRules()
+    {
+        showApplyRules = false;
+    }
+
+    private void OnRulesApplied(ApplyRulesResponse response)
+    {
+        // Optionally refresh data or show notification
+        // The dialog shows the results, so we just need to handle any side effects
+    }
+
+    // Create Rule from Test Panel
+    private void CreateRuleFromTest((string Pattern, string MatchType, bool CaseSensitive) patternInfo)
+    {
+        newRule = new CategorizationRuleCreateDto
+        {
+            Pattern = patternInfo.Pattern,
+            MatchType = patternInfo.MatchType,
+            CaseSensitive = patternInfo.CaseSensitive,
+        };
+        testResult = null;
+        showAddRule = true;
     }
 }

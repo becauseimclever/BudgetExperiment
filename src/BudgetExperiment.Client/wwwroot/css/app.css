@@ -37,6 +37,7 @@
 @import "design-system/components/settings.css";
 @import "design-system/components/paycheck-planner.css";
 @import "design-system/components/budget.css";
+@import "design-system/components/rules.css";
 
 /* Utility Classes */
 @import "design-system/utilities.css";

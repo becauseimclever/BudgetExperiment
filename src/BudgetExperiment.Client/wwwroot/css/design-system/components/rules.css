@@ -1,0 +1,210 @@
+/* ==========================================================================
+   Categorization Rules Components
+   Budget Experiment Design System
+   ========================================================================== */
+
+/* ==========================================================================
+   Rules List
+   ========================================================================== */
+
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rules-info {
+  padding: var(--space-3);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
+   Rule Card
+   ========================================================================== */
+
+.rule-header {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.rule-priority {
+  flex-shrink: 0;
+}
+
+.rule-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rule-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-1);
+}
+
+.rule-pattern {
+  font-size: var(--font-size-sm);
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+}
+
+.rule-target {
+  font-size: var(--font-size-sm);
+}
+
+.rule-target .category-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+/* ==========================================================================
+   Rule Test Panel
+   ========================================================================== */
+
+.rule-test-panel {
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.rule-test-panel h4 {
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.test-form {
+  margin-top: var(--space-3);
+}
+
+.test-form .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.test-form .form-group-expand {
+  flex: 2;
+  min-width: 200px;
+}
+
+.test-form .form-group-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.test-form .form-group-button {
+  flex-shrink: 0;
+}
+
+.test-results {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+}
+
+.test-summary {
+  font-size: var(--font-size-md);
+  margin-bottom: var(--space-3);
+}
+
+.test-matches-list {
+  margin-top: var(--space-2);
+}
+
+.test-matches-list table {
+  font-size: var(--font-size-sm);
+}
+
+.test-matches-list mark {
+  background-color: var(--color-warning-subtle);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-xs);
+}
+
+.test-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ==========================================================================
+   Apply Rules Dialog
+   ========================================================================== */
+
+.apply-rules-dialog {
+  min-width: 400px;
+}
+
+.apply-options {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+}
+
+.apply-results {
+  text-align: center;
+  padding: var(--space-4);
+}
+
+.apply-results .result-icon {
+  margin-bottom: var(--space-3);
+}
+
+.apply-results h4 {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--color-text-primary);
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-6);
+  margin: var(--space-4) 0;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.stat-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+.error-details {
+  text-align: left;
+}
+
+.error-list {
+  margin-top: var(--space-2);
+  padding-left: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Section Divider
+   ========================================================================== */
+
+.section-divider {
+  height: 1px;
+  background-color: var(--color-border-subtle);
+}

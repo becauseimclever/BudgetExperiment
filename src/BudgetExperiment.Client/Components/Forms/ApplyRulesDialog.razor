@@ -1,0 +1,196 @@
+@* ApplyRulesDialog.razor - Dialog for bulk applying categorization rules *@
+
+@inject IBudgetApiService ApiService
+
+<Modal IsVisible="@IsVisible" Title="Apply Categorization Rules" OnClose="HandleClose">
+    <div class="apply-rules-dialog">
+        @if (!isComplete)
+        {
+            <p>
+                Apply your categorization rules to automatically assign categories to transactions.
+            </p>
+
+            <div class="apply-options">
+                <div class="form-check mb-2">
+                    <input type="checkbox" 
+                           id="overwriteExisting" 
+                           class="form-check-input"
+                           @bind="overwriteExisting" />
+                    <label for="overwriteExisting" class="form-check-label">
+                        Overwrite existing categories
+                    </label>
+                </div>
+                <small class="text-secondary">
+                    @if (overwriteExisting)
+                    {
+                        <span>Rules will be applied to ALL transactions. Existing categories will be replaced.</span>
+                    }
+                    else
+                    {
+                        <span>Rules will only be applied to uncategorized transactions.</span>
+                    }
+                </small>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger mt-3">@errorMessage</div>
+            }
+
+            <div class="form-actions mt-3">
+                <button class="btn btn-primary" @onclick="ApplyRules" disabled="@isProcessing">
+                    @if (isProcessing)
+                    {
+                        <span>Applying Rules...</span>
+                    }
+                    else
+                    {
+                        <span>Apply Rules</span>
+                    }
+                </button>
+                <button class="btn btn-secondary" @onclick="HandleClose" disabled="@isProcessing">
+                    Cancel
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="apply-results">
+                <div class="result-icon text-success">
+                    <Icon Name="check-circle" Size="48" />
+                </div>
+                <h4>Rules Applied Successfully</h4>
+
+                <div class="result-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">@result!.TotalProcessed</span>
+                        <span class="stat-label">Transactions Processed</span>
+                    </div>
+                    <div class="stat-item text-success">
+                        <span class="stat-value">@result.Categorized</span>
+                        <span class="stat-label">Categorized</span>
+                    </div>
+                    <div class="stat-item text-secondary">
+                        <span class="stat-value">@result.Skipped</span>
+                        <span class="stat-label">Skipped</span>
+                    </div>
+                    @if (result.Errors > 0)
+                    {
+                        <div class="stat-item text-danger">
+                            <span class="stat-value">@result.Errors</span>
+                            <span class="stat-label">Errors</span>
+                        </div>
+                    }
+                </div>
+
+                @if (result.ErrorMessages.Count > 0)
+                {
+                    <div class="error-details mt-3">
+                        <details>
+                            <summary class="text-danger">View Errors</summary>
+                            <ul class="error-list">
+                                @foreach (var error in result.ErrorMessages)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        </details>
+                    </div>
+                }
+
+                <div class="form-actions mt-3">
+                    <button class="btn btn-primary" @onclick="HandleClose">
+                        Done
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets whether the dialog is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the dialog is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when rules have been applied successfully.
+    /// </summary>
+    [Parameter]
+    public EventCallback<ApplyRulesResponse> OnApplied { get; set; }
+
+    private bool overwriteExisting;
+    private bool isProcessing;
+    private bool isComplete;
+    private string? errorMessage;
+    private ApplyRulesResponse? result;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        // Reset state when dialog becomes visible
+        if (IsVisible && isComplete)
+        {
+            Reset();
+        }
+    }
+
+    private void Reset()
+    {
+        overwriteExisting = false;
+        isProcessing = false;
+        isComplete = false;
+        errorMessage = null;
+        result = null;
+    }
+
+    private async Task ApplyRules()
+    {
+        isProcessing = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var request = new ApplyRulesRequest
+            {
+                TransactionIds = null, // Apply to all matching transactions
+                OverwriteExisting = overwriteExisting,
+            };
+
+            result = await ApiService.ApplyCategorizationRulesAsync(request);
+
+            if (result != null)
+            {
+                isComplete = true;
+                await OnApplied.InvokeAsync(result);
+            }
+            else
+            {
+                errorMessage = "Failed to apply rules. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to apply rules: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task HandleClose()
+    {
+        Reset();
+        await OnClose.InvokeAsync();
+    }
+}

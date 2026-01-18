@@ -1,0 +1,193 @@
+@* RuleTestPanel.razor - Component for testing categorization rule patterns *@
+
+@inject IBudgetApiService ApiService
+
+<div class="rule-test-panel">
+    <h4>Test Pattern</h4>
+    <p class="text-secondary text-sm">
+        Test your pattern against existing transactions to see what matches.
+    </p>
+
+    <div class="test-form">
+        <div class="form-row">
+            <div class="form-group form-group-expand">
+                <label for="testPattern" class="form-label">Pattern:</label>
+                <input id="testPattern" 
+                       type="text"
+                       class="form-control"
+                       @bind="pattern" 
+                       @bind:event="oninput"
+                       placeholder="Enter pattern to test" />
+            </div>
+
+            <div class="form-group">
+                <label for="testMatchType" class="form-label">Match Type:</label>
+                <select id="testMatchType" class="form-control" @bind="matchType">
+                    <option value="Contains">Contains</option>
+                    <option value="Exact">Exact Match</option>
+                    <option value="StartsWith">Starts With</option>
+                    <option value="EndsWith">Ends With</option>
+                    <option value="Regex">Regular Expression</option>
+                </select>
+            </div>
+
+            <div class="form-group form-group-checkbox">
+                <label class="form-label">&nbsp;</label>
+                <div class="form-check">
+                    <input type="checkbox" 
+                           id="testCaseSensitive" 
+                           class="form-check-input"
+                           @bind="caseSensitive" />
+                    <label for="testCaseSensitive" class="form-check-label">Case Sensitive</label>
+                </div>
+            </div>
+
+            <div class="form-group form-group-button">
+                <label class="form-label">&nbsp;</label>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        @onclick="RunTest" 
+                        disabled="@(isTesting || string.IsNullOrWhiteSpace(pattern))">
+                    @if (isTesting)
+                    {
+                        <span>Testing...</span>
+                    }
+                    else
+                    {
+                        <span>🔍 Test</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (testResult != null)
+    {
+        <div class="test-results">
+            <div class="test-summary">
+                <strong>@testResult.MatchCount</strong> transaction(s) match this pattern
+            </div>
+
+            @if (testResult.MatchingDescriptions.Count > 0)
+            {
+                <div class="test-matches-list">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Matching Descriptions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var desc in testResult.MatchingDescriptions)
+                            {
+                                <tr>
+                                    <td>
+                                        @HighlightMatch(desc)
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (testResult.MatchCount > testResult.MatchingDescriptions.Count)
+                    {
+                        <p class="text-secondary text-sm">
+                            Showing @testResult.MatchingDescriptions.Count of @testResult.MatchCount matches
+                        </p>
+                    }
+                </div>
+            }
+
+            @if (testResult.MatchCount > 0 && OnCreateRule.HasDelegate)
+            {
+                <div class="test-actions mt-2">
+                    <button class="btn btn-success btn-sm" @onclick="CreateRuleFromPattern">
+                        + Create Rule with this Pattern
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-2">@errorMessage</div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the callback when user wants to create a rule from the tested pattern.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(string Pattern, string MatchType, bool CaseSensitive)> OnCreateRule { get; set; }
+
+    private string pattern = string.Empty;
+    private string matchType = "Contains";
+    private bool caseSensitive;
+    private bool isTesting;
+    private TestPatternResponse? testResult;
+    private string? errorMessage;
+
+    private async Task RunTest()
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return;
+        }
+
+        isTesting = true;
+        errorMessage = null;
+        testResult = null;
+        StateHasChanged();
+
+        try
+        {
+            var request = new TestPatternRequest
+            {
+                Pattern = pattern,
+                MatchType = matchType,
+                CaseSensitive = caseSensitive,
+                Limit = 20,
+            };
+
+            testResult = await ApiService.TestPatternAsync(request);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to test pattern: {ex.Message}";
+        }
+        finally
+        {
+            isTesting = false;
+        }
+    }
+
+    private async Task CreateRuleFromPattern()
+    {
+        await OnCreateRule.InvokeAsync((pattern, matchType, caseSensitive));
+    }
+
+    private MarkupString HighlightMatch(string description)
+    {
+        if (string.IsNullOrWhiteSpace(pattern) || matchType == "Regex")
+        {
+            return new MarkupString(System.Web.HttpUtility.HtmlEncode(description));
+        }
+
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var encoded = System.Web.HttpUtility.HtmlEncode(description);
+        var encodedPattern = System.Web.HttpUtility.HtmlEncode(pattern);
+
+        // For simple match types, highlight the pattern in the description
+        var index = description.IndexOf(pattern, comparison);
+        if (index >= 0)
+        {
+            var before = System.Web.HttpUtility.HtmlEncode(description[..index]);
+            var match = System.Web.HttpUtility.HtmlEncode(description.Substring(index, pattern.Length));
+            var after = System.Web.HttpUtility.HtmlEncode(description[(index + pattern.Length)..]);
+            return new MarkupString($"{before}<mark>{match}</mark>{after}");
+        }
+
+        return new MarkupString(encoded);
+    }
+}
