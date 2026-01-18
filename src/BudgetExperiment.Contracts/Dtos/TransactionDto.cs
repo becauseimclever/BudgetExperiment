@@ -27,6 +27,9 @@ public sealed class TransactionDto
     /// <summary>Gets or sets the optional category identifier.</summary>
     public Guid? CategoryId { get; set; }
 
+    /// <summary>Gets or sets the category name (null if uncategorized).</summary>
+    public string? CategoryName { get; set; }
+
     /// <summary>Gets or sets the creation timestamp (UTC).</summary>
     public DateTime CreatedAt { get; set; }
 

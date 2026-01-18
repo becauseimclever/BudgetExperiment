@@ -30,6 +30,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     public async Task<RecurringTransaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.RecurringTransactions)
+            .Include(r => r.Category)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
@@ -39,6 +40,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
         // RecurringTransaction doesn't have a navigation property to exceptions,
         // so we fetch them separately if needed. For now, just return the entity.
         return await this._context.RecurringTransactions
+            .Include(r => r.Category)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
@@ -46,6 +48,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     public async Task<IReadOnlyList<RecurringTransaction>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.RecurringTransactions)
+            .Include(r => r.Category)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
     }
@@ -54,6 +57,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     public async Task<IReadOnlyList<RecurringTransaction>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.RecurringTransactions)
+            .Include(r => r.Category)
             .Where(r => r.AccountId == accountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -63,6 +67,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     public async Task<IReadOnlyList<RecurringTransaction>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.RecurringTransactions)
+            .Include(r => r.Category)
             .Where(r => r.IsActive)
             .OrderBy(r => r.NextOccurrence)
             .ToListAsync(cancellationToken);
@@ -72,6 +77,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     public async Task<IReadOnlyList<RecurringTransaction>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.RecurringTransactions)
+            .Include(r => r.Category)
             .OrderBy(r => r.Description)
             .Skip(skip)
             .Take(take)

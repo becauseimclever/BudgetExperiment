@@ -49,6 +49,7 @@ public static class DomainToDtoMapper
             Date = transaction.Date,
             Description = transaction.Description,
             CategoryId = transaction.CategoryId,
+            CategoryName = transaction.Category?.Name,
             CreatedAt = transaction.CreatedAt,
             UpdatedAt = transaction.UpdatedAt,
             IsTransfer = transaction.IsTransfer,
@@ -151,6 +152,8 @@ public static class DomainToDtoMapper
             IsSkipped = isSkipped,
             IsGenerated = generatedTransactionId.HasValue,
             GeneratedTransactionId = generatedTransactionId,
+            CategoryId = recurring.CategoryId,
+            CategoryName = recurring.Category?.Name,
         };
     }
 

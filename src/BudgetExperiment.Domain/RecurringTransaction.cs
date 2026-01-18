@@ -60,6 +60,11 @@ public sealed class RecurringTransaction
     public Guid? CategoryId { get; private set; }
 
     /// <summary>
+    /// Gets the associated budget category (navigation property for queries).
+    /// </summary>
+    public BudgetCategory? Category { get; private set; }
+
+    /// <summary>
     /// Gets the date of the next scheduled occurrence.
     /// </summary>
     public DateOnly NextOccurrence { get; private set; }

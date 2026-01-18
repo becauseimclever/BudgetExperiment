@@ -30,6 +30,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     public async Task<Transaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
     }
 
@@ -37,6 +38,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     public async Task<IReadOnlyList<Transaction>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAt)
             .Skip(skip)
@@ -58,6 +60,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         CancellationToken cancellationToken = default)
     {
         var query = this._context.Transactions
+            .Include(t => t.Category)
             .Where(t => t.Date >= startDate && t.Date <= endDate);
 
         if (accountId.HasValue)
@@ -118,6 +121,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category)
             .Where(t => t.TransferId == transferId)
             .OrderBy(t => t.TransferDirection)
             .ToListAsync(cancellationToken);
@@ -130,6 +134,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category)
             .FirstOrDefaultAsync(
                 t => t.RecurringTransactionId == recurringTransactionId
                     && t.RecurringInstanceDate == instanceDate,
@@ -143,6 +148,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category)
             .Where(t => t.RecurringTransferId == recurringTransferId
                 && t.RecurringTransferInstanceDate == instanceDate)
             .OrderBy(t => t.TransferDirection)
@@ -199,6 +205,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     public async Task<IReadOnlyList<Transaction>> GetUncategorizedAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category)
             .Where(t => t.CategoryId == null)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAt)

@@ -170,6 +170,9 @@ public sealed class RecurringInstanceDto
 
     /// <summary>Gets or sets the optional category identifier.</summary>
     public Guid? CategoryId { get; set; }
+
+    /// <summary>Gets or sets the category name (null if uncategorized).</summary>
+    public string? CategoryName { get; set; }
 }
 
 /// <summary>

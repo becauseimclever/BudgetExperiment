@@ -52,6 +52,11 @@ public sealed class Transaction
     public Guid? CategoryId { get; private set; }
 
     /// <summary>
+    /// Gets the associated budget category (navigation property for queries).
+    /// </summary>
+    public BudgetCategory? Category { get; private set; }
+
+    /// <summary>
     /// Gets the UTC timestamp when the transaction was created.
     /// </summary>
     public DateTime CreatedAt { get; private set; }

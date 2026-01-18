@@ -61,7 +61,7 @@ else
                                 <span class="badge-modified">modified</span>
                             }
                         </td>
-                        <td>@(item.CategoryId.HasValue ? item.CategoryId.ToString()![..8] : "-")</td>
+                        <td>@(item.CategoryName ?? "-")</td>
                         <td class="text-right">
                             <MoneyDisplay Amount="@item.Amount.Amount" />
                         </td>
@@ -112,7 +112,7 @@ else
                             }
                             @txn.Description
                         </td>
-                        <td>@(txn.CategoryId.HasValue ? txn.CategoryId.ToString()![..8] : "-")</td>
+                        <td>@(txn.CategoryName ?? "-")</td>
                         <td class="text-right">
                             <MoneyDisplay Amount="@txn.Amount.Amount" />
                         </td>
