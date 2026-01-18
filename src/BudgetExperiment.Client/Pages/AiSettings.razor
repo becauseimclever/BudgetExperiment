@@ -1,0 +1,179 @@
+@page "/ai/settings"
+
+@inject IAiApiService AiService
+
+<PageTitle>AI Settings - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="AI Settings" Subtitle="Configure local AI integration" />
+
+    <ErrorAlert Message="@errorMessage" OnDismiss="DismissError" />
+
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <span>@successMessage</span>
+            <button type="button" class="btn-close" @onclick="DismissSuccess">×</button>
+        </div>
+    }
+
+    <div class="ai-settings-page">
+        <section class="settings-section">
+            <h3 class="settings-section-title">Connection Status</h3>
+            <div class="status-panel">
+                @if (isLoadingStatus)
+                {
+                    <LoadingSpinner Message="Checking connection..." />
+                }
+                else if (status != null)
+                {
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Status:</span>
+                            <span class="status-value @(status.IsAvailable ? "text-success" : "text-warning")">
+                                @(status.IsAvailable ? "✅ Connected" : "⚠️ Not Connected")
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Enabled:</span>
+                            <span class="status-value">@(status.IsEnabled ? "Yes" : "No")</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Endpoint:</span>
+                            <span class="status-value">@status.Endpoint</span>
+                        </div>
+                        @if (status.CurrentModel != null)
+                        {
+                            <div class="status-item">
+                                <span class="status-label">Model:</span>
+                                <span class="status-value">@status.CurrentModel</span>
+                            </div>
+                        }
+                        @if (status.ErrorMessage != null)
+                        {
+                            <div class="status-item status-error">
+                                <span class="status-label">Error:</span>
+                                <span class="status-value">@status.ErrorMessage</span>
+                            </div>
+                        }
+                    </div>
+                    <button class="btn btn-secondary btn-sm mt-2" @onclick="RefreshStatus">
+                        🔄 Refresh Status
+                    </button>
+                }
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h3 class="settings-section-title">Configuration</h3>
+            <AiSettingsForm OnSave="OnSettingsSaved" OnError="OnSettingsError" />
+        </section>
+
+        <section class="settings-section">
+            <h3 class="settings-section-title">Available Models</h3>
+            @if (isLoadingModels)
+            {
+                <LoadingSpinner Message="Loading models..." />
+            }
+            else if (models.Count > 0)
+            {
+                <div class="model-list">
+                    @foreach (var model in models)
+                    {
+                        <div class="model-card">
+                            <div class="model-name">@model.Name</div>
+                            <div class="model-details">
+                                <span class="model-size">@FormatSize(model.SizeBytes)</span>
+                                <span class="model-modified">Modified: @model.ModifiedAt.ToString("g")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-secondary">
+                    No models found. Make sure Ollama is running and has models installed.
+                </p>
+            }
+        </section>
+
+        <section class="settings-section">
+            <h3 class="settings-section-title">About Local AI</h3>
+            <div class="info-panel">
+                <p>
+                    Budget Experiment uses <strong>Ollama</strong> for local AI processing.
+                    All your financial data stays on your machine — nothing is ever sent to external services.
+                </p>
+                <ul>
+                    <li>Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a></li>
+                    <li>Run <code>ollama pull llama3.2</code> to download a model</li>
+                    <li>Start Ollama with <code>ollama serve</code></li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+    private AiStatusDto? status;
+    private IReadOnlyList<AiModelDto> models = Array.Empty<AiModelDto>();
+    private bool isLoadingStatus = true;
+    private bool isLoadingModels = true;
+    private string? errorMessage;
+    private string? successMessage;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(
+            RefreshStatus(),
+            LoadModels());
+    }
+
+    private async Task RefreshStatus()
+    {
+        isLoadingStatus = true;
+        status = await AiService.GetStatusAsync();
+        isLoadingStatus = false;
+    }
+
+    private async Task LoadModels()
+    {
+        isLoadingModels = true;
+        models = await AiService.GetModelsAsync();
+        isLoadingModels = false;
+    }
+
+    private void OnSettingsSaved(AiSettingsDto saved)
+    {
+        successMessage = "Settings saved successfully!";
+        errorMessage = null;
+        _ = RefreshStatus();
+    }
+
+    private void OnSettingsError(string error)
+    {
+        errorMessage = error;
+        successMessage = null;
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private void DismissSuccess()
+    {
+        successMessage = null;
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes >= 1_073_741_824)
+            return $"{bytes / 1_073_741_824.0:F1} GB";
+        if (bytes >= 1_048_576)
+            return $"{bytes / 1_048_576.0:F1} MB";
+        return $"{bytes / 1024.0:F1} KB";
+    }
+}

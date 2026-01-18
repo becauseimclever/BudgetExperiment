@@ -37,6 +37,7 @@ builder.Services.AddHttpClient(
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BudgetApi"));
 
 builder.Services.AddScoped<IBudgetApiService, BudgetApiService>();
+builder.Services.AddScoped<IAiApiService, AiApiService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<VersionService>();
 

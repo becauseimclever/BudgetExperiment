@@ -778,11 +778,11 @@ Refs: #025"
 **Objective:** Build AI configuration interface
 
 **Tasks:**
-- [ ] Create `AiSettingsForm` component
-- [ ] Create AI settings page
-- [ ] Implement connection testing UI
-- [ ] Add model selection dropdown
-- [ ] Create `AiStatusBadge` component for header
+- [x] Create `AiSettingsForm` component
+- [x] Create AI settings page
+- [x] Implement connection testing UI
+- [x] Add model selection dropdown
+- [x] Create `AiStatusBadge` component for header
 
 **Commit:**
 ```bash
