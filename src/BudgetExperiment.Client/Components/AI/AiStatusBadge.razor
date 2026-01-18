@@ -1,0 +1,81 @@
+@* AiStatusBadge.razor - Status indicator showing AI availability *@
+
+@inject IAiApiService AiService
+
+<div class="ai-status-badge @GetStatusClass()" title="@GetTooltip()">
+    <span class="status-indicator"></span>
+    <span class="status-text">@GetStatusText()</span>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets whether to auto-refresh the status periodically.
+    /// </summary>
+    [Parameter]
+    public bool AutoRefresh { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the auto-refresh interval in seconds.
+    /// </summary>
+    [Parameter]
+    public int RefreshIntervalSeconds { get; set; } = 60;
+
+    private AiStatusDto? status;
+    private bool isLoading = true;
+    private Timer? refreshTimer;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStatusAsync();
+
+        if (AutoRefresh)
+        {
+            refreshTimer = new Timer(async _ =>
+            {
+                await RefreshStatusAsync();
+                await InvokeAsync(StateHasChanged);
+            }, null, TimeSpan.FromSeconds(RefreshIntervalSeconds), TimeSpan.FromSeconds(RefreshIntervalSeconds));
+        }
+    }
+
+    private async Task RefreshStatusAsync()
+    {
+        isLoading = true;
+        status = await AiService.GetStatusAsync();
+        isLoading = false;
+    }
+
+    private string GetStatusClass()
+    {
+        if (isLoading) return "status-loading";
+        if (status == null) return "status-unknown";
+        if (!status.IsEnabled) return "status-disabled";
+        if (status.IsAvailable) return "status-available";
+        return "status-unavailable";
+    }
+
+    private string GetStatusText()
+    {
+        if (isLoading) return "AI...";
+        if (status == null) return "AI: ?";
+        if (!status.IsEnabled) return "AI: Off";
+        if (status.IsAvailable) return "AI: On";
+        return "AI: ⚠";
+    }
+
+    private string GetTooltip()
+    {
+        if (isLoading) return "Checking AI status...";
+        if (status == null) return "Unable to check AI status";
+        if (!status.IsEnabled) return "AI features are disabled";
+        if (status.IsAvailable) return $"Connected to {status.CurrentModel ?? "AI"}";
+        return $"AI unavailable: {status.ErrorMessage ?? "Unknown error"}";
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+}

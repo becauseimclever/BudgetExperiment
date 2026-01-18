@@ -3,6 +3,7 @@ using System;
 using BudgetExperiment.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BudgetExperiment.Infrastructure.Migrations
 {
     [DbContext(typeof(BudgetDbContext))]
-    partial class BudgetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260118092146_AddRuleSuggestions")]
+    partial class AddRuleSuggestions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,41 +78,6 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("AiIsEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("AiMaxTokens")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(2000);
-
-                    b.Property<string>("AiModelName")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasDefaultValue("llama3.2");
-
-                    b.Property<string>("AiOllamaEndpoint")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasDefaultValue("http://localhost:11434");
-
-                    b.Property<decimal>("AiTemperature")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(3, 2)
-                        .HasColumnType("numeric(3,2)")
-                        .HasDefaultValue(0.3m);
-
-                    b.Property<int>("AiTimeoutSeconds")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(120);
-
                     b.Property<bool>("AutoRealizePastDueItems")
                         .HasColumnType("boolean");
 
@@ -130,12 +98,6 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000001"),
-                            AiIsEnabled = true,
-                            AiMaxTokens = 2000,
-                            AiModelName = "llama3.2",
-                            AiOllamaEndpoint = "http://localhost:11434",
-                            AiTemperature = 0.3m,
-                            AiTimeoutSeconds = 120,
                             AutoRealizePastDueItems = false,
                             CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             PastDueLookbackDays = 30,

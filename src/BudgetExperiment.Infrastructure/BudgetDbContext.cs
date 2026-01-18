@@ -72,6 +72,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<CategorizationRule> CategorizationRules => this.Set<CategorizationRule>();
 
+    /// <summary>
+    /// Gets the AI-generated rule suggestions.
+    /// </summary>
+    public DbSet<RuleSuggestion> RuleSuggestions => this.Set<RuleSuggestion>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

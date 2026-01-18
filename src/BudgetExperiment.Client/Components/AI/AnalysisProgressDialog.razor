@@ -1,0 +1,281 @@
+@* AnalysisProgressDialog.razor - Modal showing AI analysis progress with step indicators *@
+
+@using BudgetExperiment.Contracts.Dtos
+
+<Modal IsVisible="IsVisible" Title="AI Analysis" Size="ModalSize.Medium" ShowCloseButton="@(!IsRunning)" CloseOnOverlayClick="@(!IsRunning)" OnClose="HandleClose">
+    <ChildContent>
+        <div class="analysis-progress">
+            @if (IsRunning)
+            {
+                <div class="progress-header">
+                    <LoadingSpinner Size="SpinnerSize.Medium" />
+                    <h4>Analyzing your transactions...</h4>
+                    <p class="progress-subtitle">This may take a moment depending on the number of transactions.</p>
+                </div>
+
+                <div class="progress-steps">
+                    @foreach (var step in ProgressSteps)
+                    {
+                        <div class="progress-step @GetStepClass(step)">
+                            <div class="step-indicator">
+                                @if (step.IsComplete)
+                                {
+                                    <Icon Name="check-circle" Size="20" />
+                                }
+                                else if (step.IsActive)
+                                {
+                                    <div class="step-spinner"></div>
+                                }
+                                else
+                                {
+                                    <Icon Name="circle" Size="20" />
+                                }
+                            </div>
+                            <div class="step-content">
+                                <span class="step-label">@step.Label</span>
+                                @if (!string.IsNullOrEmpty(step.Detail))
+                                {
+                                    <span class="step-detail">@step.Detail</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (ElapsedTime.TotalSeconds > 0)
+                {
+                    <div class="progress-elapsed">
+                        <Icon Name="clock" Size="14" />
+                        <span>Elapsed: @FormatElapsed(ElapsedTime)</span>
+                    </div>
+                }
+            }
+            else if (Result != null)
+            {
+                <div class="analysis-complete">
+                    <div class="complete-header">
+                        <Icon Name="check-circle" Size="48" />
+                        <h4>Analysis Complete!</h4>
+                    </div>
+
+                    <div class="result-summary">
+                        <div class="result-row">
+                            <span class="result-label">Transactions Analyzed</span>
+                            <span class="result-value">@Result.UncategorizedTransactionsAnalyzed</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Rules Analyzed</span>
+                            <span class="result-value">@Result.RulesAnalyzed</span>
+                        </div>
+                        <div class="result-divider"></div>
+                        <div class="result-row suggestion-row">
+                            <span class="result-label">
+                                <Icon Name="plus-circle" Size="16" />
+                                New Rule Suggestions
+                            </span>
+                            <span class="result-value highlight">@Result.NewRuleSuggestions</span>
+                        </div>
+                        <div class="result-row suggestion-row">
+                            <span class="result-label">
+                                <Icon Name="zap" Size="16" />
+                                Optimization Suggestions
+                            </span>
+                            <span class="result-value">@Result.OptimizationSuggestions</span>
+                        </div>
+                        <div class="result-row suggestion-row">
+                            <span class="result-label">
+                                <Icon Name="alert-triangle" Size="16" />
+                                Conflict Suggestions
+                            </span>
+                            <span class="result-value">@Result.ConflictSuggestions</span>
+                        </div>
+                        <div class="result-divider"></div>
+                        <div class="result-row">
+                            <span class="result-label">Duration</span>
+                            <span class="result-value">@Result.AnalysisDurationSeconds.ToString("F1")s</span>
+                        </div>
+                    </div>
+
+                    @if (TotalSuggestions > 0)
+                    {
+                        <p class="result-hint">
+                            <Icon Name="info" Size="14" />
+                            Review the suggestions to improve your categorization rules.
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="result-hint success">
+                            <Icon Name="thumbs-up" Size="14" />
+                            Great! Your rules are working well. No suggestions at this time.
+                        </p>
+                    }
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="analysis-error">
+                    <Icon Name="alert-circle" Size="48" />
+                    <h4>Analysis Failed</h4>
+                    <p class="error-message">@ErrorMessage</p>
+                    <p class="error-hint">Please check your AI settings and try again.</p>
+                </div>
+            }
+        </div>
+    </ChildContent>
+
+    <FooterContent>
+        @if (IsRunning)
+        {
+            <button class="btn btn-secondary" @onclick="HandleCancel">
+                Cancel
+            </button>
+        }
+        else if (Result != null)
+        {
+            <button class="btn btn-secondary" @onclick="HandleClose">
+                Close
+            </button>
+            @if (TotalSuggestions > 0)
+            {
+                <button class="btn btn-primary" @onclick="HandleViewSuggestions">
+                    <Icon Name="arrow-right" Size="16" />
+                    View Suggestions (@TotalSuggestions)
+                </button>
+            }
+        }
+        else
+        {
+            <button class="btn btn-secondary" @onclick="HandleClose">
+                Close
+            </button>
+            <button class="btn btn-primary" @onclick="HandleRetry">
+                <Icon Name="refresh-cw" Size="16" />
+                Retry
+            </button>
+        }
+    </FooterContent>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the dialog is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether analysis is running.
+    /// </summary>
+    [Parameter]
+    public bool IsRunning { get; set; }
+
+    /// <summary>
+    /// Gets or sets the analysis result.
+    /// </summary>
+    [Parameter]
+    public AnalysisResponseDto? Result { get; set; }
+
+    /// <summary>
+    /// Gets or sets the error message if analysis failed.
+    /// </summary>
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current analysis step (0-based).
+    /// </summary>
+    [Parameter]
+    public int CurrentStep { get; set; }
+
+    /// <summary>
+    /// Gets or sets the elapsed time.
+    /// </summary>
+    [Parameter]
+    public TimeSpan ElapsedTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the dialog is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when analysis is cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when retry is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when view suggestions is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnViewSuggestions { get; set; }
+
+    private int TotalSuggestions => Result != null
+        ? Result.NewRuleSuggestions + Result.OptimizationSuggestions + Result.ConflictSuggestions
+        : 0;
+
+    private List<ProgressStep> ProgressSteps => new()
+    {
+        new ProgressStep("Connecting to AI", CurrentStep == 0, CurrentStep > 0),
+        new ProgressStep("Loading transactions", CurrentStep == 1, CurrentStep > 1, CurrentStep >= 1 ? $"{Result?.UncategorizedTransactionsAnalyzed ?? 0} uncategorized" : null),
+        new ProgressStep("Analyzing patterns", CurrentStep == 2, CurrentStep > 2),
+        new ProgressStep("Loading existing rules", CurrentStep == 3, CurrentStep > 3, CurrentStep >= 3 ? $"{Result?.RulesAnalyzed ?? 0} rules" : null),
+        new ProgressStep("Generating suggestions", CurrentStep == 4, CurrentStep > 4),
+        new ProgressStep("Finalizing", CurrentStep == 5, CurrentStep > 5),
+    };
+
+    private string GetStepClass(ProgressStep step)
+    {
+        if (step.IsComplete)
+        {
+            return "step-complete";
+        }
+
+        if (step.IsActive)
+        {
+            return "step-active";
+        }
+
+        return "step-pending";
+    }
+
+    private string FormatElapsed(TimeSpan elapsed)
+    {
+        if (elapsed.TotalMinutes >= 1)
+        {
+            return $"{(int)elapsed.TotalMinutes}:{elapsed.Seconds:D2}";
+        }
+
+        return $"{elapsed.Seconds}s";
+    }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task HandleRetry()
+    {
+        await OnRetry.InvokeAsync();
+    }
+
+    private async Task HandleViewSuggestions()
+    {
+        await OnViewSuggestions.InvokeAsync();
+    }
+
+    private sealed record ProgressStep(string Label, bool IsActive, bool IsComplete, string? Detail = null);
+}

@@ -1,3 +1,4 @@
+using BudgetExperiment.Application.Services;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,13 @@ public static class DependencyInjection
         services.AddScoped<IBudgetGoalRepository, BudgetGoalRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
         services.AddScoped<ICategorizationRuleRepository, CategorizationRuleRepository>();
+        services.AddScoped<IRuleSuggestionRepository, RuleSuggestionRepository>();
+
+        // AI Settings Provider (database-backed)
+        services.AddScoped<IAiSettingsProvider, AiSettingsProvider>();
+
+        // AI Service - HttpClient configured dynamically from database settings
+        services.AddHttpClient<IAiService, OllamaAiService>();
 
         return services;
     }

@@ -15,6 +15,7 @@ Budget Experiment helps you manage your finances by:
 - **Budget categories & goals**: Set spending targets and monitor progress
 - **Paycheck allocation planning**: Distribute bill amounts across pay periods to ensure timely payments
 - **Recurring transactions**: Automate regular income and expenses with flexible scheduling
+- **AI-powered categorization**: Get intelligent rule suggestions using local AI (via Ollama)
 - **CSV import**: Import transactions from Bank of America, Capital One, and UHCU with duplicate detection
 - **Calendar view**: Visualize daily transaction summaries and navigate spending history
 
@@ -206,11 +207,47 @@ Key endpoints:
 - **Budgets**: `/api/v1/budgets` - Budget goals and progress tracking
 - **Calendar**: `/api/v1/calendar` - Calendar view data with daily summaries
 - **Allocations**: `/api/v1/allocations` - Paycheck allocation planning
+- **AI**: `/api/v1/ai` - AI-powered rule suggestions (requires Ollama)
 - **Settings**: `/api/v1/settings` - Application settings
 - **User**: `/api/v1/user` - Current user info
 - **Version**: `/api/version` - Application version info
 
 All endpoints documented with OpenAPI. Explore interactively at `/scalar`.
+
+## 🤖 AI-Powered Rule Suggestions
+
+Budget Experiment includes AI-powered categorization rule suggestions using a local LLM via [Ollama](https://ollama.ai/).
+
+### Features
+
+- **New Rule Suggestions**: Analyzes uncategorized transactions and suggests patterns for automatic categorization
+- **Pattern Optimizations**: Improves existing rule patterns for better matching
+- **Conflict Detection**: Identifies overlapping rules that may cause unexpected behavior
+- **Rule Consolidation**: Suggests merging similar rules to reduce complexity
+- **Unused Rule Detection**: Finds rules that no longer match any transactions
+
+### Setup
+
+1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai/)
+2. **Pull a model**: `ollama pull llama3.2` (or another supported model)
+3. **Start Ollama**: Ensure the Ollama service is running (default: `http://localhost:11434`)
+4. **Configure (optional)**: Customize settings via appsettings or user secrets:
+   ```powershell
+   dotnet user-secrets set "AiSettings:OllamaEndpoint" "http://localhost:11434" --project src/BudgetExperiment.Api
+   dotnet user-secrets set "AiSettings:ModelName" "llama3.2" --project src/BudgetExperiment.Api
+   ```
+
+### Usage
+
+1. Navigate to **AI Suggestions** in the sidebar
+2. Click **Run AI Analysis** to generate suggestions
+3. Review each suggestion with AI reasoning and confidence scores
+4. **Accept** to create rules automatically, or **Dismiss** to skip
+5. Provide feedback (thumbs up/down) to help improve future suggestions
+
+### Privacy
+
+All AI processing happens locally on your machine. Your financial data is never sent to external services. The AI runs entirely through your local Ollama instance.
 
 ## 📖 Documentation
 

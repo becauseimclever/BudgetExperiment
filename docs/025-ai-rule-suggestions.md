@@ -370,17 +370,45 @@ public sealed record AnalysisProgress
 
 ### AI Configuration Settings
 
+AI settings are stored in the database as part of the `AppSettings` singleton entity, not in configuration files.
+This allows users to modify settings at runtime without restarting the application.
+
 ```csharp
-// Extension to existing AppSettings or new AiSettings entity
-public sealed class AiSettings
+// AI settings are properties on the AppSettings domain entity
+public sealed class AppSettings
 {
-    public string OllamaEndpoint { get; set; } = "http://localhost:11434";
-    public string ModelName { get; set; } = "llama3.2";
-    public decimal Temperature { get; set; } = 0.3m;
-    public int MaxTokens { get; set; } = 2000;
-    public int TimeoutSeconds { get; set; } = 120;
-    public bool IsEnabled { get; set; } = true;
+    // ... other settings ...
+
+    public string AiOllamaEndpoint { get; private set; } = "http://localhost:11434";
+    public string AiModelName { get; private set; } = "llama3.2";
+    public decimal AiTemperature { get; private set; } = 0.3m;
+    public int AiMaxTokens { get; private set; } = 2000;
+    public int AiTimeoutSeconds { get; private set; } = 120;
+    public bool AiIsEnabled { get; private set; } = true;
+
+    public void UpdateAiSettings(
+        string ollamaEndpoint,
+        string modelName,
+        decimal temperature,
+        int maxTokens,
+        int timeoutSeconds,
+        bool isEnabled);
 }
+
+// IAiSettingsProvider abstracts reading/writing AI settings from the database
+public interface IAiSettingsProvider
+{
+    Task<AiSettingsData> GetSettingsAsync(CancellationToken cancellationToken = default);
+    Task<AiSettingsData> UpdateSettingsAsync(AiSettingsData settings, CancellationToken cancellationToken = default);
+}
+
+public sealed record AiSettingsData(
+    string OllamaEndpoint,
+    string ModelName,
+    decimal Temperature,
+    int MaxTokens,
+    int TimeoutSeconds,
+    bool IsEnabled);
 ```
 
 ### Prompt Engineering
@@ -611,16 +639,16 @@ New table: `AiSettings` (or extend existing settings)
 
 ## Implementation Plan
 
-### Phase 1: Domain Model
+### Phase 1: Domain Model ✅
 
 **Objective:** Establish the RuleSuggestion entity and enums
 
 **Tasks:**
-- [ ] Write unit tests for `RuleSuggestion` factory methods
-- [ ] Write unit tests for status transitions (Accept, Dismiss)
-- [ ] Implement `SuggestionType` and `SuggestionStatus` enums
-- [ ] Implement `RuleSuggestion` entity with factory methods
-- [ ] Add `IRuleSuggestionRepository` interface
+- [x] Write unit tests for `RuleSuggestion` factory methods
+- [x] Write unit tests for status transitions (Accept, Dismiss)
+- [x] Implement `SuggestionType` and `SuggestionStatus` enums
+- [x] Implement `RuleSuggestion` entity with factory methods
+- [x] Add `IRuleSuggestionRepository` interface
 
 **Commit:**
 ```bash
@@ -637,17 +665,17 @@ Refs: #025"
 
 ---
 
-### Phase 2: AI Service Infrastructure
+### Phase 2: AI Service Infrastructure ✅
 
 **Objective:** Implement Ollama integration
 
 **Tasks:**
-- [ ] Create `IAiService` interface
-- [ ] Implement `OllamaAiService` with HTTP client
-- [ ] Add connection testing and model listing
-- [ ] Add AI settings to configuration
-- [ ] Write integration tests (requires running Ollama)
-- [ ] Handle timeouts and errors gracefully
+- [x] Create `IAiService` interface
+- [x] Implement `OllamaAiService` with HTTP client
+- [x] Add connection testing and model listing
+- [x] Add AI settings to configuration
+- [x] Write integration tests (requires running Ollama)
+- [x] Handle timeouts and errors gracefully
 
 **Commit:**
 ```bash
@@ -665,16 +693,16 @@ Refs: #025"
 
 ---
 
-### Phase 3: Infrastructure - Repository & Migrations
+### Phase 3: Infrastructure - Repository & Migrations ✅
 
 **Objective:** Implement database persistence for suggestions
 
 **Tasks:**
-- [ ] Create EF Core configuration for `RuleSuggestion`
-- [ ] Add migration for `RuleSuggestions` table
-- [ ] Add migration for AI settings storage
-- [ ] Implement `RuleSuggestionRepository`
-- [ ] Write integration tests for repository operations
+- [x] Create EF Core configuration for `RuleSuggestion`
+- [x] Add migration for `RuleSuggestions` table
+- [x] Add migration for AI settings storage (AI settings in appsettings.json instead)
+- [x] Implement `RuleSuggestionRepository`
+- [x] Write integration tests for repository operations
 
 **Commit:**
 ```bash
@@ -691,17 +719,17 @@ Refs: #025"
 
 ---
 
-### Phase 4: Application Service - Rule Suggestion Service
+### Phase 4: Application Service - Rule Suggestion Service ✅
 
 **Objective:** Implement the suggestion generation logic
 
 **Tasks:**
-- [ ] Define prompt templates for each suggestion type
-- [ ] Implement `IRuleSuggestionService` interface
-- [ ] Implement `RuleSuggestionService` with prompt construction
-- [ ] Parse AI responses into structured suggestions
-- [ ] Implement `SuggestNewRulesAsync` method
-- [ ] Write unit tests with mocked AI service
+- [x] Define prompt templates for each suggestion type
+- [x] Implement `IRuleSuggestionService` interface
+- [x] Implement `RuleSuggestionService` with prompt construction
+- [x] Parse AI responses into structured suggestions
+- [x] Implement `SuggestNewRulesAsync` method
+- [x] Write unit tests with mocked AI service
 
 **Commit:**
 ```bash
@@ -719,16 +747,16 @@ Refs: #025"
 
 ---
 
-### Phase 5: Application Service - Optimization & Conflict Detection
+### Phase 5: Application Service - Optimization & Conflict Detection ✅
 
 **Objective:** Implement optimization analysis and conflict detection
 
 **Tasks:**
-- [ ] Implement `SuggestOptimizationsAsync` method
-- [ ] Implement `DetectConflictsAsync` method
-- [ ] Implement `AnalyzeAllAsync` with progress reporting
-- [ ] Implement suggestion acceptance (creates/updates rules)
-- [ ] Write unit tests for all analysis paths
+- [x] Implement `SuggestOptimizationsAsync` method
+- [x] Implement `DetectConflictsAsync` method
+- [x] Implement `AnalyzeAllAsync` with progress reporting
+- [x] Implement suggestion acceptance (creates/updates rules)
+- [x] Write unit tests for all analysis paths
 
 **Commit:**
 ```bash
@@ -746,16 +774,16 @@ Refs: #025"
 
 ---
 
-### Phase 6: API Endpoints
+### Phase 6: API Endpoints ✅
 
 **Objective:** Expose AI features via REST API
 
 **Tasks:**
-- [ ] Add DTOs to Contracts project
-- [ ] Implement `AiController` for status and settings
-- [ ] Implement `SuggestionsController` for suggestion management
-- [ ] Add endpoint for comprehensive analysis
-- [ ] Write API integration tests
+- [x] Add DTOs to Contracts project
+- [x] Implement `AiController` for status and settings
+- [x] Implement `SuggestionsController` for suggestion management
+- [x] Add endpoint for comprehensive analysis
+- [x] Write API integration tests
 
 **Commit:**
 ```bash
@@ -778,11 +806,11 @@ Refs: #025"
 **Objective:** Build AI configuration interface
 
 **Tasks:**
-- [ ] Create `AiSettingsForm` component
-- [ ] Create AI settings page
-- [ ] Implement connection testing UI
-- [ ] Add model selection dropdown
-- [ ] Create `AiStatusBadge` component for header
+- [x] Create `AiSettingsForm` component
+- [x] Create AI settings page
+- [x] Implement connection testing UI
+- [x] Add model selection dropdown
+- [x] Create `AiStatusBadge` component for header
 
 **Commit:**
 ```bash
@@ -805,12 +833,12 @@ Refs: #025"
 **Objective:** Build suggestion queue and management interface
 
 **Tasks:**
-- [ ] Create `SuggestionList` component
-- [ ] Create `SuggestionCard` component with actions
-- [ ] Create `SuggestionDetail` dialog
-- [ ] Implement accept/dismiss flows
-- [ ] Add feedback buttons
-- [ ] Add "Get AI Suggestions" button to rules page
+- [x] Create `SuggestionList` component
+- [x] Create `SuggestionCard` component with actions
+- [x] Create `SuggestionDetail` dialog
+- [x] Implement accept/dismiss flows
+- [x] Add feedback buttons
+- [x] Add "Get AI Suggestions" button to rules page
 
 **Commit:**
 ```bash
@@ -833,11 +861,11 @@ Refs: #025"
 **Objective:** Implement comprehensive analysis UI and polish
 
 **Tasks:**
-- [ ] Create `AnalysisProgressDialog` component
-- [ ] Implement real-time progress updates
-- [ ] Add analysis summary view
-- [ ] Polish loading states and error handling
-- [ ] Add empty states and onboarding hints
+- [x] Create `AnalysisProgressDialog` component
+- [x] Implement real-time progress updates
+- [x] Add analysis summary view
+- [x] Polish loading states and error handling
+- [x] Add empty states and onboarding hints
 
 **Commit:**
 ```bash
@@ -859,12 +887,12 @@ Refs: #025"
 **Objective:** Final polish, documentation updates, and cleanup
 
 **Tasks:**
-- [ ] Update API documentation / OpenAPI specs
-- [ ] Add XML comments for public APIs
-- [ ] Document AI setup requirements (Ollama installation)
-- [ ] Update README with AI feature information
-- [ ] Remove any TODO comments
-- [ ] Final code review
+- [x] Update API documentation / OpenAPI specs
+- [x] Add XML comments for public APIs
+- [x] Document AI setup requirements (Ollama installation)
+- [x] Update README with AI feature information
+- [x] Remove any TODO comments
+- [x] Final code review
 
 **Commit:**
 ```bash
@@ -885,22 +913,22 @@ Refs: #025"
 
 ### Unit Tests
 
-- [ ] `RuleSuggestion.CreateNewRuleSuggestion()` validation
-- [ ] `RuleSuggestion.Accept()` and `Dismiss()` state transitions
-- [ ] `OllamaAiService` response parsing (mocked HTTP)
-- [ ] `RuleSuggestionService.SuggestNewRulesAsync()` prompt construction
-- [ ] `RuleSuggestionService.SuggestOptimizationsAsync()` analysis logic
-- [ ] `RuleSuggestionService.DetectConflictsAsync()` conflict identification
-- [ ] AI response JSON parsing edge cases
-- [ ] Handling of invalid/malformed AI responses
+- [x] `RuleSuggestion.CreateNewRuleSuggestion()` validation
+- [x] `RuleSuggestion.Accept()` and `Dismiss()` state transitions
+- [x] `OllamaAiService` response parsing (mocked HTTP)
+- [x] `RuleSuggestionService.SuggestNewRulesAsync()` prompt construction
+- [x] `RuleSuggestionService.SuggestOptimizationsAsync()` analysis logic
+- [x] `RuleSuggestionService.DetectConflictsAsync()` conflict identification
+- [x] AI response JSON parsing edge cases
+- [x] Handling of invalid/malformed AI responses
 
 ### Integration Tests
 
-- [ ] Repository CRUD operations for suggestions
+- [x] Repository CRUD operations for suggestions
 - [ ] AI service connection and model listing (requires Ollama)
 - [ ] Full flow: analyze → generate suggestion → accept → verify rule created
-- [ ] API endpoint authorization
-- [ ] API endpoint validation
+- [x] API endpoint authorization
+- [x] API endpoint validation
 
 ### Manual Testing Checklist
 
@@ -1005,3 +1033,4 @@ For acceptable AI inference performance:
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-15 | Initial draft | @copilot |
+| 2026-01-18 | Move AI settings from config file to database (AppSettings entity) | @copilot |

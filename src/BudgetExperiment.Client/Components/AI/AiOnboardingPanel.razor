@@ -1,0 +1,89 @@
+@* AiOnboardingPanel.razor - Onboarding hints and guidance for AI features *@
+
+<div class="ai-onboarding-panel">
+    <div class="onboarding-icon">
+        <Icon Name="sparkles" Size="48" />
+    </div>
+
+    <h3>Get Started with AI-Powered Suggestions</h3>
+
+    <p class="onboarding-intro">
+        Our AI analyzes your transactions and existing rules to suggest improvements
+        that save you time and improve categorization accuracy.
+    </p>
+
+    <div class="onboarding-steps">
+        <div class="onboarding-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Configure AI Settings</h4>
+                <p>Connect to your local Ollama instance and select a model.</p>
+                <a href="/ai/settings" class="step-link">
+                    <Icon Name="settings" Size="14" />
+                    Open AI Settings
+                </a>
+            </div>
+        </div>
+
+        <div class="onboarding-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Import Transactions</h4>
+                <p>Make sure you have transactions imported for the AI to analyze.</p>
+            </div>
+        </div>
+
+        <div class="onboarding-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Run Analysis</h4>
+                <p>Click "Run AI Analysis" to generate smart suggestions.</p>
+            </div>
+        </div>
+
+        <div class="onboarding-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>Review & Accept</h4>
+                <p>Review suggestions and accept the ones that work for you.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="onboarding-features">
+        <h4>What the AI Can Do</h4>
+        <ul class="feature-list">
+            <li>
+                <Icon Name="plus-circle" Size="16" />
+                <span><strong>New Rules:</strong> Detect patterns in uncategorized transactions</span>
+            </li>
+            <li>
+                <Icon Name="zap" Size="16" />
+                <span><strong>Optimizations:</strong> Improve existing rule patterns for better matching</span>
+            </li>
+            <li>
+                <Icon Name="git-merge" Size="16" />
+                <span><strong>Consolidation:</strong> Merge similar rules to reduce complexity</span>
+            </li>
+            <li>
+                <Icon Name="alert-triangle" Size="16" />
+                <span><strong>Conflicts:</strong> Identify and resolve overlapping rules</span>
+            </li>
+            <li>
+                <Icon Name="trash-2" Size="16" />
+                <span><strong>Cleanup:</strong> Find rules that are no longer being used</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="onboarding-privacy">
+        <Icon Name="shield" Size="16" />
+        <p>
+            <strong>Privacy First:</strong> All analysis happens locally using Ollama.
+            Your financial data never leaves your machine.
+        </p>
+    </div>
+</div>
+
+@code {
+}

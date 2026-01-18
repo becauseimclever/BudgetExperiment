@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IUserSettingsService, UserSettingsService>();
         services.AddScoped<ICategorizationEngine, CategorizationEngine>();
         services.AddScoped<ICategorizationRuleService, CategorizationRuleService>();
+        services.AddScoped<IRuleSuggestionService, RuleSuggestionService>();
         return services;
     }
 }

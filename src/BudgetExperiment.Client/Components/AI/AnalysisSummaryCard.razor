@@ -1,0 +1,138 @@
+@* AnalysisSummaryCard.razor - Display card for analysis results *@
+
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="analysis-summary-card @(IsExpanded ? "expanded" : "collapsed")">
+    <div class="summary-card-header" @onclick="ToggleExpand">
+        <div class="summary-card-title">
+            <Icon Name="bar-chart-2" Size="20" />
+            <span>Analysis Results</span>
+            <span class="summary-timestamp">@Result.AnalysisDurationSeconds.ToString("F1")s</span>
+        </div>
+        <div class="summary-card-stats">
+            <span class="stat-badge new-rules" title="New rule suggestions">
+                <Icon Name="plus-circle" Size="14" />
+                @Result.NewRuleSuggestions
+            </span>
+            <span class="stat-badge optimizations" title="Optimization suggestions">
+                <Icon Name="zap" Size="14" />
+                @Result.OptimizationSuggestions
+            </span>
+            <span class="stat-badge conflicts" title="Conflict suggestions">
+                <Icon Name="alert-triangle" Size="14" />
+                @Result.ConflictSuggestions
+            </span>
+        </div>
+        <button class="expand-toggle" title="@(IsExpanded ? "Collapse" : "Expand")">
+            <Icon Name="@(IsExpanded ? "chevron-up" : "chevron-down")" Size="16" />
+        </button>
+    </div>
+
+    @if (IsExpanded)
+    {
+        <div class="summary-card-body">
+            <div class="summary-details">
+                <div class="detail-item">
+                    <Icon Name="file-text" Size="16" />
+                    <span class="detail-label">Transactions analyzed:</span>
+                    <span class="detail-value">@Result.UncategorizedTransactionsAnalyzed</span>
+                </div>
+                <div class="detail-item">
+                    <Icon Name="list" Size="16" />
+                    <span class="detail-label">Rules reviewed:</span>
+                    <span class="detail-value">@Result.RulesAnalyzed</span>
+                </div>
+            </div>
+
+            @if (TotalSuggestions > 0)
+            {
+                <div class="summary-breakdown">
+                    <h5>Suggestions Generated</h5>
+                    @if (Result.NewRuleSuggestions > 0)
+                    {
+                        <div class="breakdown-item">
+                            <Icon Name="plus-circle" Size="14" />
+                            <span>@Result.NewRuleSuggestions new rule(s) for uncategorized transactions</span>
+                        </div>
+                    }
+                    @if (Result.OptimizationSuggestions > 0)
+                    {
+                        <div class="breakdown-item">
+                            <Icon Name="zap" Size="14" />
+                            <span>@Result.OptimizationSuggestions pattern optimization(s)</span>
+                        </div>
+                    }
+                    @if (Result.ConflictSuggestions > 0)
+                    {
+                        <div class="breakdown-item">
+                            <Icon Name="alert-triangle" Size="14" />
+                            <span>@Result.ConflictSuggestions conflict resolution(s)</span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="summary-no-suggestions">
+                    <Icon Name="check-circle" Size="16" />
+                    <span>No suggestions needed - your rules are working great!</span>
+                </div>
+            }
+
+            <div class="summary-card-actions">
+                <button class="btn btn-ghost btn-sm" @onclick="HandleDismiss">
+                    <Icon Name="x" Size="14" />
+                    Dismiss
+                </button>
+                @if (TotalSuggestions > 0)
+                {
+                    <button class="btn btn-primary btn-sm" @onclick="HandleViewSuggestions">
+                        Review @TotalSuggestions Suggestion(s)
+                        <Icon Name="arrow-right" Size="14" />
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the analysis result to display.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public AnalysisResponseDto Result { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the callback when dismiss is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when view suggestions is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnViewSuggestions { get; set; }
+
+    private bool IsExpanded { get; set; } = true;
+
+    private int TotalSuggestions =>
+        Result.NewRuleSuggestions + Result.OptimizationSuggestions + Result.ConflictSuggestions;
+
+    private void ToggleExpand()
+    {
+        IsExpanded = !IsExpanded;
+    }
+
+    private async Task HandleDismiss()
+    {
+        await OnDismiss.InvokeAsync();
+    }
+
+    private async Task HandleViewSuggestions()
+    {
+        await OnViewSuggestions.InvokeAsync();
+    }
+}

@@ -1,0 +1,232 @@
+@* SuggestionCard.razor - Display card for an AI rule suggestion *@
+
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="suggestion-card @GetTypeClass()">
+    <div class="suggestion-header">
+        <div class="suggestion-type-badge">
+            <Icon Name="@GetTypeIcon()" Size="14" />
+            <span>@GetTypeLabel()</span>
+        </div>
+        <div class="suggestion-confidence" title="AI Confidence">
+            <Icon Name="gauge" Size="14" />
+            <span>@((Suggestion.Confidence * 100).ToString("F0"))%</span>
+        </div>
+    </div>
+
+    <div class="suggestion-body" @onclick="HandleCardClick">
+        <h4 class="suggestion-title">@Suggestion.Title</h4>
+        <p class="suggestion-description">@Suggestion.Description</p>
+
+        @if (!string.IsNullOrEmpty(Suggestion.SuggestedPattern))
+        {
+            <div class="suggestion-pattern">
+                <span class="pattern-label">Pattern:</span>
+                <code class="pattern-value">@Suggestion.SuggestedPattern</code>
+                @if (!string.IsNullOrEmpty(Suggestion.SuggestedMatchType))
+                {
+                    <span class="match-type">(@Suggestion.SuggestedMatchType)</span>
+                }
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Suggestion.SuggestedCategoryName))
+        {
+            <div class="suggestion-category">
+                <Icon Name="tag" Size="14" />
+                <span>@Suggestion.SuggestedCategoryName</span>
+            </div>
+        }
+
+        @if (Suggestion.AffectedTransactionCount > 0)
+        {
+            <div class="suggestion-impact">
+                <Icon Name="layers" Size="14" />
+                <span>@Suggestion.AffectedTransactionCount transaction(s) affected</span>
+            </div>
+        }
+    </div>
+
+    <div class="suggestion-footer">
+        <div class="suggestion-actions">
+            <button class="btn btn-success btn-sm" @onclick="HandleAccept" disabled="@IsProcessing" title="Accept suggestion and create rule">
+                @if (IsAccepting)
+                {
+                    <LoadingSpinner Size="SpinnerSize.Small" />
+                }
+                else
+                {
+                    <Icon Name="check" Size="14" />
+                }
+                <span>Accept</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" @onclick="HandleDismiss" disabled="@IsProcessing" title="Dismiss this suggestion">
+                @if (IsDismissing)
+                {
+                    <LoadingSpinner Size="SpinnerSize.Small" />
+                }
+                else
+                {
+                    <Icon Name="x" Size="14" />
+                }
+                <span>Dismiss</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" @onclick="HandleViewDetails" title="View full details">
+                <Icon Name="eye" Size="14" />
+                <span>Details</span>
+            </button>
+        </div>
+
+        <div class="suggestion-feedback">
+            <span class="feedback-label">Helpful?</span>
+            <button class="feedback-btn @(Suggestion.UserFeedbackPositive == true ? "active" : "")"
+                    @onclick="() => HandleFeedback(true)"
+                    disabled="@IsProcessing"
+                    title="This suggestion was helpful">
+                <Icon Name="thumbs-up" Size="14" />
+            </button>
+            <button class="feedback-btn @(Suggestion.UserFeedbackPositive == false ? "active" : "")"
+                    @onclick="() => HandleFeedback(false)"
+                    disabled="@IsProcessing"
+                    title="This suggestion was not helpful">
+                <Icon Name="thumbs-down" Size="14" />
+            </button>
+        </div>
+    </div>
+
+    @if (Suggestion.SampleDescriptions.Count > 0)
+    {
+        <div class="suggestion-samples">
+            <span class="samples-label">Sample matches:</span>
+            <ul class="samples-list">
+                @foreach (var sample in Suggestion.SampleDescriptions.Take(3))
+                {
+                    <li>@sample</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the suggestion to display.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public RuleSuggestionDto Suggestion { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the callback when the suggestion is accepted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnAccept { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the suggestion is dismissed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDismiss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when feedback is provided.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(Guid Id, bool IsPositive)> OnFeedback { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when details are requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnViewDetails { get; set; }
+
+    private bool IsAccepting { get; set; }
+    private bool IsDismissing { get; set; }
+    private bool IsProcessing => IsAccepting || IsDismissing;
+
+    private string GetTypeClass() => Suggestion.Type switch
+    {
+        "NewRule" => "type-new-rule",
+        "PatternOptimization" => "type-optimization",
+        "RuleConsolidation" => "type-consolidation",
+        "RuleConflict" => "type-conflict",
+        "UnusedRule" => "type-unused",
+        _ => string.Empty
+    };
+
+    private string GetTypeIcon() => Suggestion.Type switch
+    {
+        "NewRule" => "plus-circle",
+        "PatternOptimization" => "zap",
+        "RuleConsolidation" => "git-merge",
+        "RuleConflict" => "alert-triangle",
+        "UnusedRule" => "trash-2",
+        _ => "help-circle"
+    };
+
+    private string GetTypeLabel() => Suggestion.Type switch
+    {
+        "NewRule" => "New Rule",
+        "PatternOptimization" => "Optimization",
+        "RuleConsolidation" => "Consolidation",
+        "RuleConflict" => "Conflict",
+        "UnusedRule" => "Unused Rule",
+        _ => Suggestion.Type
+    };
+
+    private async Task HandleAccept()
+    {
+        if (IsProcessing)
+        {
+            return;
+        }
+
+        IsAccepting = true;
+        try
+        {
+            await OnAccept.InvokeAsync(Suggestion.Id);
+        }
+        finally
+        {
+            IsAccepting = false;
+        }
+    }
+
+    private async Task HandleDismiss()
+    {
+        if (IsProcessing)
+        {
+            return;
+        }
+
+        IsDismissing = true;
+        try
+        {
+            await OnDismiss.InvokeAsync(Suggestion.Id);
+        }
+        finally
+        {
+            IsDismissing = false;
+        }
+    }
+
+    private async Task HandleFeedback(bool isPositive)
+    {
+        if (IsProcessing)
+        {
+            return;
+        }
+
+        await OnFeedback.InvokeAsync((Suggestion.Id, isPositive));
+    }
+
+    private async Task HandleViewDetails()
+    {
+        await OnViewDetails.InvokeAsync(Suggestion.Id);
+    }
+
+    private async Task HandleCardClick()
+    {
+        await OnViewDetails.InvokeAsync(Suggestion.Id);
+    }
+}

@@ -1,0 +1,175 @@
+@* SuggestionList.razor - Display list of AI rule suggestions with filtering *@
+
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="suggestion-list">
+    <div class="suggestion-list-header">
+        <div class="suggestion-filters">
+            <div class="filter-group">
+                <label for="typeFilter">Type:</label>
+                <select id="typeFilter" class="form-select form-select-sm" @bind="SelectedType" @bind:after="OnFilterChanged">
+                    <option value="">All Types</option>
+                    <option value="NewRule">New Rules</option>
+                    <option value="PatternOptimization">Optimizations</option>
+                    <option value="RuleConsolidation">Consolidations</option>
+                    <option value="RuleConflict">Conflicts</option>
+                    <option value="UnusedRule">Unused Rules</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sortBy">Sort:</label>
+                <select id="sortBy" class="form-select form-select-sm" @bind="SelectedSort" @bind:after="OnFilterChanged">
+                    <option value="confidence-desc">Confidence (High → Low)</option>
+                    <option value="confidence-asc">Confidence (Low → High)</option>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="impact-desc">Most Impact</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="suggestion-stats">
+            <span class="stat-item">
+                <strong>@FilteredSuggestions.Count</strong> suggestion(s)
+            </span>
+            @if (Suggestions.Count != FilteredSuggestions.Count)
+            {
+                <span class="stat-item text-muted">
+                    of @Suggestions.Count total
+                </span>
+            }
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="suggestion-list-loading">
+            <LoadingSpinner />
+            <p>Loading suggestions...</p>
+        </div>
+    }
+    else if (FilteredSuggestions.Count == 0)
+    {
+        <div class="suggestion-list-empty">
+            @if (Suggestions.Count == 0)
+            {
+                <Icon Name="inbox" Size="48" />
+                <h4>No Suggestions</h4>
+                <p>Run an AI analysis to generate suggestions for improving your categorization rules.</p>
+            }
+            else
+            {
+                <Icon Name="filter" Size="48" />
+                <h4>No Matching Suggestions</h4>
+                <p>No suggestions match the current filters. Try adjusting your filters.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="suggestion-cards">
+            @foreach (var suggestion in FilteredSuggestions)
+            {
+                <SuggestionCard Suggestion="suggestion"
+                                OnAccept="HandleAccept"
+                                OnDismiss="HandleDismiss"
+                                OnFeedback="HandleFeedback"
+                                OnViewDetails="HandleViewDetails" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the list of suggestions to display.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<RuleSuggestionDto> Suggestions { get; set; } = Array.Empty<RuleSuggestionDto>();
+
+    /// <summary>
+    /// Gets or sets a value indicating whether suggestions are loading.
+    /// </summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a suggestion is accepted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnAccept { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a suggestion is dismissed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDismiss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when feedback is provided.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(Guid Id, bool IsPositive)> OnFeedback { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when details are requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnViewDetails { get; set; }
+
+    private string SelectedType { get; set; } = string.Empty;
+    private string SelectedSort { get; set; } = "confidence-desc";
+
+    private IReadOnlyList<RuleSuggestionDto> FilteredSuggestions => GetFilteredSuggestions();
+
+    private IReadOnlyList<RuleSuggestionDto> GetFilteredSuggestions()
+    {
+        var filtered = Suggestions.AsEnumerable();
+
+        // Apply type filter
+        if (!string.IsNullOrEmpty(SelectedType))
+        {
+            filtered = filtered.Where(s => s.Type == SelectedType);
+        }
+
+        // Apply sorting
+        filtered = SelectedSort switch
+        {
+            "confidence-desc" => filtered.OrderByDescending(s => s.Confidence),
+            "confidence-asc" => filtered.OrderBy(s => s.Confidence),
+            "date-desc" => filtered.OrderByDescending(s => s.CreatedAtUtc),
+            "date-asc" => filtered.OrderBy(s => s.CreatedAtUtc),
+            "impact-desc" => filtered.OrderByDescending(s => s.AffectedTransactionCount),
+            _ => filtered.OrderByDescending(s => s.Confidence)
+        };
+
+        return filtered.ToList();
+    }
+
+    private void OnFilterChanged()
+    {
+        // Triggers re-render which recalculates FilteredSuggestions
+        StateHasChanged();
+    }
+
+    private async Task HandleAccept(Guid id)
+    {
+        await OnAccept.InvokeAsync(id);
+    }
+
+    private async Task HandleDismiss(Guid id)
+    {
+        await OnDismiss.InvokeAsync(id);
+    }
+
+    private async Task HandleFeedback((Guid Id, bool IsPositive) feedback)
+    {
+        await OnFeedback.InvokeAsync(feedback);
+    }
+
+    private async Task HandleViewDetails(Guid id)
+    {
+        await OnViewDetails.InvokeAsync(id);
+    }
+}
