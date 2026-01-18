@@ -691,17 +691,17 @@ Refs: #025"
 
 ---
 
-### Phase 4: Application Service - Rule Suggestion Service
+### Phase 4: Application Service - Rule Suggestion Service ✅
 
 **Objective:** Implement the suggestion generation logic
 
 **Tasks:**
-- [ ] Define prompt templates for each suggestion type
-- [ ] Implement `IRuleSuggestionService` interface
-- [ ] Implement `RuleSuggestionService` with prompt construction
-- [ ] Parse AI responses into structured suggestions
-- [ ] Implement `SuggestNewRulesAsync` method
-- [ ] Write unit tests with mocked AI service
+- [x] Define prompt templates for each suggestion type
+- [x] Implement `IRuleSuggestionService` interface
+- [x] Implement `RuleSuggestionService` with prompt construction
+- [x] Parse AI responses into structured suggestions
+- [x] Implement `SuggestNewRulesAsync` method
+- [x] Write unit tests with mocked AI service
 
 **Commit:**
 ```bash
