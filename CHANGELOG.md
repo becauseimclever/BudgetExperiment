@@ -2,6 +2,17 @@
 
 All notable changes to Budget Experiment.
 
+## [Unreleased]
+
+### Features
+
+- **e2e:** Playwright end-to-end test framework (Feature 024.4)
+- **e2e:** Page object model for maintainable UI tests
+- **e2e:** Smoke tests for application accessibility
+- **e2e:** Navigation tests for all main pages
+- **e2e:** Account management tests (CRUD operations)
+- **e2e:** Budget page tests with month navigation
+
 ## [3.1.0] - 2026-01-17
 
 ### Features
