@@ -1,3 +1,4 @@
+using BudgetExperiment.Application.Services;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,15 @@ public static class DependencyInjection
         services.AddScoped<IBudgetGoalRepository, BudgetGoalRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
         services.AddScoped<ICategorizationRuleRepository, CategorizationRuleRepository>();
+
+        // AI Service
+        services.Configure<AiSettings>(configuration.GetSection(AiSettings.SectionName));
+        var aiSettings = configuration.GetSection(AiSettings.SectionName).Get<AiSettings>() ?? new AiSettings();
+        services.AddHttpClient<IAiService, OllamaAiService>(client =>
+        {
+            client.BaseAddress = new Uri(aiSettings.OllamaEndpoint);
+            client.Timeout = TimeSpan.FromSeconds(aiSettings.TimeoutSeconds + 10); // Add buffer for HTTP overhead
+        });
 
         return services;
     }
