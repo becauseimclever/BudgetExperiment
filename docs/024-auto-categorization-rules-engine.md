@@ -541,7 +541,7 @@ Refs: #024"
 **Objective:** Build the Blazor UI for managing rules
 
 **Tasks:**
-- [ ] Create `RuleList` component with FluentUI DataGrid
+- [ ] Create `RuleList` component with data table
 - [ ] Create `RuleEditor` dialog component
 - [ ] Implement drag-drop reordering
 - [ ] Add rules page to navigation

@@ -7,7 +7,7 @@ Budget Experiment: .NET 10 solution with a clean, test-first, modular architectu
 
 ## 2. High-Level Architecture (Clean / Onion Hybrid)
 Layers (outer → inner depends inward only):
-- Client (Blazor WebAssembly UI) – presentation layer using FluentUI-Blazor.
+- Client (Blazor WebAssembly UI) – presentation layer.
 - API (ASP.NET Core Minimal or Controllers) – REST interface, validation, auth, OpenAPI + Scalar UI.
 - Application / Services – use cases (business workflows), orchestration, domain-centric service interfaces.
 - Domain / Models – entities, value objects, enums, domain events, interfaces (abstractions only, NO EF types).
@@ -18,7 +18,7 @@ Layers (outer → inner depends inward only):
 - `BudgetExperiment.Application` (services, DTOs, validators, mapping, domain event handlers)
 - `BudgetExperiment.Infrastructure` (EF Core DbContext, repository implementations, migrations, third-party adapters)
 - `BudgetExperiment.Api` (REST API, DI wiring, OpenAPI, Scalar page, versioning, error handling)
-- `BudgetExperiment.Client` (Blazor WebAssembly app + FluentUI-Blazor components)
+- `BudgetExperiment.Client` (Blazor WebAssembly app)
 
 Tests under `tests/` mirroring structure:
 - `BudgetExperiment.Domain.Tests`
@@ -29,7 +29,7 @@ Tests under `tests/` mirroring structure:
 
 ## 4. Technology Stack
 - .NET 10
-- Blazor WebAssembly + FluentUI-Blazor (UI)
+- Blazor WebAssembly (UI) – plain Blazor components only, NO FluentUI-Blazor
 - ASP.NET Core API
 - EF Core + Npgsql (PostgreSQL)
 - xUnit (unit tests) + Shouldly OR built-in Assert (NO FluentAssertions, NO AutoFixture)
@@ -173,6 +173,7 @@ root
 - [ ] Unit + integration tests green
 
 ## 24. Forbidden / Discouraged
+- FluentUI-Blazor (use plain Blazor components only)
 - FluentAssertions
 - AutoFixture
 - Leaking EF Core types outside Infrastructure
@@ -189,7 +190,7 @@ Avoid vague prompts ("write code for budgets"). Always specify layer & intent.
 2. Infrastructure: DbContext + migrations + repository skeletons.
 3. Application services + tests (faking repos).
 4. API project (controllers/endpoints + OpenAPI + Scalar).
-5. Blazor Client shell + FluentUI integration.
+5. Blazor Client shell (plain Blazor components).
 6. Integration tests (data + API).
 7. Additional features/optimizations.
 
