@@ -96,6 +96,44 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     }
 
     /// <inheritdoc />
+    public async Task<bool> ExistsPendingForRuleAsync(Guid ruleId, SuggestionType type, CancellationToken cancellationToken = default)
+    {
+        return await _context.RuleSuggestions
+            .AnyAsync(
+                s => s.Status == SuggestionStatus.Pending &&
+                     s.Type == type &&
+                     s.TargetRuleId == ruleId,
+                cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ExistsPendingForRulesAsync(IReadOnlyList<Guid> ruleIds, SuggestionType type, CancellationToken cancellationToken = default)
+    {
+        if (ruleIds == null || ruleIds.Count < 2)
+        {
+            return false;
+        }
+
+        // Check if there's a pending suggestion that involves the same set of rules
+        // For RuleConflict and RuleConsolidation types, we check ConflictingRuleIds
+        var pendingSuggestions = await _context.RuleSuggestions
+            .Where(s => s.Status == SuggestionStatus.Pending && s.Type == type)
+            .ToListAsync(cancellationToken);
+
+        foreach (var suggestion in pendingSuggestions)
+        {
+            var existingIds = suggestion.ConflictingRuleIds;
+            if (existingIds.Count == ruleIds.Count &&
+                existingIds.All(id => ruleIds.Contains(id)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <inheritdoc />
     public async Task AddRangeAsync(IEnumerable<RuleSuggestion> suggestions, CancellationToken cancellationToken = default)
     {
         await _context.RuleSuggestions.AddRangeAsync(suggestions, cancellationToken);

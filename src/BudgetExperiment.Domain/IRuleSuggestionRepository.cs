@@ -43,6 +43,24 @@ public interface IRuleSuggestionRepository : IReadRepository<RuleSuggestion>, IW
     Task<bool> ExistsPendingWithPatternAsync(string pattern, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks if a pending suggestion already exists for a specific rule and suggestion type.
+    /// </summary>
+    /// <param name="ruleId">The target rule ID.</param>
+    /// <param name="type">The suggestion type.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if a pending suggestion exists for the rule.</returns>
+    Task<bool> ExistsPendingForRuleAsync(Guid ruleId, SuggestionType type, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a pending suggestion already exists for a set of conflicting rules.
+    /// </summary>
+    /// <param name="ruleIds">The conflicting rule IDs.</param>
+    /// <param name="type">The suggestion type.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if a pending suggestion exists for the same set of rules.</returns>
+    Task<bool> ExistsPendingForRulesAsync(IReadOnlyList<Guid> ruleIds, SuggestionType type, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Adds multiple suggestions in a batch.
     /// </summary>
     /// <param name="suggestions">The suggestions to add.</param>

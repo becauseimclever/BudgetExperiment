@@ -482,6 +482,561 @@ public class RuleSuggestionServiceTests
 
     #endregion
 
+    #region SuggestOptimizationsAsync Tests
+
+    [Fact]
+    public async Task SuggestOptimizationsAsync_Returns_Empty_When_No_Rules()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, _, _) = CreateService();
+        ruleRepo
+            .Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CategorizationRule>());
+
+        // Act
+        var result = await service.SuggestOptimizationsAsync();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task SuggestOptimizationsAsync_Returns_Empty_When_AI_Not_Available()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, _) = CreateService();
+        SetupRulesWithCategories(ruleRepo, categoryRepo, ("Amazon Rule", "AMAZON", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "AMAZON PURCHASE", "WALMART STORE");
+        aiService
+            .Setup(s => s.GetStatusAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiServiceStatus(false, null, "Connection refused"));
+
+        // Act
+        var result = await service.SuggestOptimizationsAsync();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task SuggestOptimizationsAsync_Detects_Unused_Rules()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        var unusedRuleId = SetupRulesWithCategories(ruleRepo, categoryRepo, ("Unused Rule", "NONEXISTENT", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "WALMART STORE", "TARGET STORE");
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRuleAsync(It.IsAny<Guid>(), SuggestionType.UnusedRule, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var aiResponse = """
+            {
+              "suggestions": [
+                {
+                  "type": "remove",
+                  "targetRuleId": "{RULE_ID}",
+                  "reasoning": "Rule 'Unused Rule' has never matched any transactions"
+                }
+              ]
+            }
+            """.Replace("{RULE_ID}", unusedRuleId.ToString());
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.SuggestOptimizationsAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(SuggestionType.UnusedRule, result[0].Type);
+    }
+
+    [Fact]
+    public async Task SuggestOptimizationsAsync_Suggests_Pattern_Simplification()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        var ruleId = SetupRulesWithCategories(ruleRepo, categoryRepo, ("Complex Amazon Rule", "AMAZON\\.COM|AMZN|AMAZON PRIME", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "AMAZON.COM PURCHASE", "AMZN MARKETPLACE");
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRuleAsync(It.IsAny<Guid>(), SuggestionType.PatternOptimization, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var aiResponse = """
+            {
+              "suggestions": [
+                {
+                  "type": "simplify",
+                  "targetRuleId": "{RULE_ID}",
+                  "suggestedPattern": "AMAZON",
+                  "reasoning": "Pattern can be simplified to 'AMAZON' which would match all relevant transactions"
+                }
+              ]
+            }
+            """.Replace("{RULE_ID}", ruleId.ToString());
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.SuggestOptimizationsAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(SuggestionType.PatternOptimization, result[0].Type);
+        Assert.Equal("AMAZON", result[0].OptimizedPattern);
+    }
+
+    [Fact]
+    public async Task SuggestOptimizationsAsync_Suggests_Rule_Consolidation()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        var ruleIds = SetupMultipleRulesWithCategories(
+            ruleRepo,
+            categoryRepo,
+            ("Amazon Rule 1", "AMAZON.COM", GroceryCategoryId),
+            ("Amazon Rule 2", "AMZN", GroceryCategoryId),
+            ("Amazon Rule 3", "AMAZON PRIME", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "AMAZON.COM PURCHASE", "AMZN MARKETPLACE", "AMAZON PRIME VIDEO");
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRulesAsync(It.IsAny<IReadOnlyList<Guid>>(), SuggestionType.RuleConsolidation, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var aiResponse = """
+            {
+              "suggestions": [
+                {
+                  "type": "consolidate",
+                  "targetRuleIds": ["{RULE1}", "{RULE2}", "{RULE3}"],
+                  "suggestedPattern": "AMAZON|AMZN",
+                  "reasoning": "These three rules all target Amazon transactions and can be merged"
+                }
+              ]
+            }
+            """
+            .Replace("{RULE1}", ruleIds[0].ToString())
+            .Replace("{RULE2}", ruleIds[1].ToString())
+            .Replace("{RULE3}", ruleIds[2].ToString());
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.SuggestOptimizationsAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(SuggestionType.RuleConsolidation, result[0].Type);
+        Assert.Equal(3, result[0].ConflictingRuleIds.Count);
+    }
+
+    [Fact]
+    public async Task SuggestOptimizationsAsync_Persists_Suggestions_To_Repository()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        var ruleId = SetupRulesWithCategories(ruleRepo, categoryRepo, ("Test Rule", "PATTERN", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo);
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRuleAsync(It.IsAny<Guid>(), It.IsAny<SuggestionType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var aiResponse = """
+            {
+              "suggestions": [
+                {
+                  "type": "remove",
+                  "targetRuleId": "{RULE_ID}",
+                  "reasoning": "Unused rule"
+                }
+              ]
+            }
+            """.Replace("{RULE_ID}", ruleId.ToString());
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 100, TimeSpan.FromSeconds(1)));
+
+        // Act
+        await service.SuggestOptimizationsAsync();
+
+        // Assert
+        suggestionRepo.Verify(
+            r => r.AddRangeAsync(
+                It.Is<IEnumerable<RuleSuggestion>>(s => s.Any()),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region DetectConflictsAsync Tests
+
+    [Fact]
+    public async Task DetectConflictsAsync_Returns_Empty_When_No_Rules()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, _, _) = CreateService();
+        ruleRepo
+            .Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CategorizationRule>());
+
+        // Act
+        var result = await service.DetectConflictsAsync();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task DetectConflictsAsync_Returns_Empty_When_Single_Rule()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, categoryRepo, _) = CreateService();
+        SetupRulesWithCategories(ruleRepo, categoryRepo, ("Single Rule", "PATTERN", GroceryCategoryId));
+
+        // Act
+        var result = await service.DetectConflictsAsync();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task DetectConflictsAsync_Detects_Overlapping_Rules()
+    {
+        // Arrange
+        var (service, aiService, _, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        var ruleIds = SetupMultipleRulesWithCategories(
+            ruleRepo,
+            categoryRepo,
+            ("Amazon Rule", "AMAZON", GroceryCategoryId),
+            ("Amazon Prime Rule", "AMAZON PRIME", RestaurantCategoryId));
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRulesAsync(It.IsAny<IReadOnlyList<Guid>>(), SuggestionType.RuleConflict, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var aiResponse = """
+            {
+              "conflicts": [
+                {
+                  "ruleIds": ["{RULE1}", "{RULE2}"],
+                  "conflictType": "overlap",
+                  "description": "Both rules match 'AMAZON PRIME' transactions",
+                  "resolution": "Adjust priorities or make patterns more specific"
+                }
+              ]
+            }
+            """
+            .Replace("{RULE1}", ruleIds[0].ToString())
+            .Replace("{RULE2}", ruleIds[1].ToString());
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.DetectConflictsAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(SuggestionType.RuleConflict, result[0].Type);
+        Assert.Equal(2, result[0].ConflictingRuleIds.Count);
+    }
+
+    [Fact]
+    public async Task DetectConflictsAsync_Detects_Contradictory_Rules()
+    {
+        // Arrange
+        var (service, aiService, _, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        var ruleIds = SetupMultipleRulesWithCategories(
+            ruleRepo,
+            categoryRepo,
+            ("Amazon Groceries", "AMAZON", GroceryCategoryId),
+            ("Amazon Shopping", "AMAZON", RestaurantCategoryId));
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRulesAsync(It.IsAny<IReadOnlyList<Guid>>(), SuggestionType.RuleConflict, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var aiResponse = """
+            {
+              "conflicts": [
+                {
+                  "ruleIds": ["{RULE1}", "{RULE2}"],
+                  "conflictType": "contradiction",
+                  "description": "Same pattern 'AMAZON' maps to different categories",
+                  "resolution": "Remove duplicate or use more specific patterns"
+                }
+              ]
+            }
+            """
+            .Replace("{RULE1}", ruleIds[0].ToString())
+            .Replace("{RULE2}", ruleIds[1].ToString());
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.DetectConflictsAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(SuggestionType.RuleConflict, result[0].Type);
+    }
+
+    [Fact]
+    public async Task DetectConflictsAsync_Persists_Conflict_Suggestions()
+    {
+        // Arrange
+        var (service, aiService, _, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        var ruleIds = SetupMultipleRulesWithCategories(
+            ruleRepo,
+            categoryRepo,
+            ("Rule A", "PATTERN", GroceryCategoryId),
+            ("Rule B", "PATTERN", RestaurantCategoryId));
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRulesAsync(It.IsAny<IReadOnlyList<Guid>>(), SuggestionType.RuleConflict, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var aiResponse = """
+            {
+              "conflicts": [
+                {
+                  "ruleIds": ["{RULE1}", "{RULE2}"],
+                  "conflictType": "contradiction",
+                  "description": "Conflict detected",
+                  "resolution": "Fix it"
+                }
+              ]
+            }
+            """
+            .Replace("{RULE1}", ruleIds[0].ToString())
+            .Replace("{RULE2}", ruleIds[1].ToString());
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 100, TimeSpan.FromSeconds(1)));
+
+        // Act
+        await service.DetectConflictsAsync();
+
+        // Assert
+        suggestionRepo.Verify(
+            r => r.AddRangeAsync(
+                It.Is<IEnumerable<RuleSuggestion>>(s => s.Any()),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region AnalyzeAllAsync Tests
+
+    [Fact]
+    public async Task AnalyzeAllAsync_Runs_All_Analysis_Types()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "TX1", "TX2");
+        SetupRulesWithCategories(ruleRepo, categoryRepo, ("Rule1", "PATTERN", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "TX1", "TX2");
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRuleAsync(It.IsAny<Guid>(), It.IsAny<SuggestionType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRulesAsync(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<SuggestionType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, "{\"suggestions\": []}", null, 100, TimeSpan.FromSeconds(1)));
+
+        // Act
+        var result = await service.AnalyzeAllAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.AnalysisDuration > TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task AnalyzeAllAsync_Reports_Progress()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "TX1");
+        SetupRulesWithCategories(ruleRepo, categoryRepo, ("Rule1", "PATTERN", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "TX1");
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRuleAsync(It.IsAny<Guid>(), It.IsAny<SuggestionType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRulesAsync(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<SuggestionType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, "{\"suggestions\": []}", null, 100, TimeSpan.FromSeconds(1)));
+
+        var progressReports = new List<AnalysisProgress>();
+        var progress = new Progress<AnalysisProgress>(p => progressReports.Add(p));
+
+        // Act
+        await service.AnalyzeAllAsync(progress);
+
+        // Assert - allow time for progress to be reported
+        await Task.Delay(50);
+        Assert.True(progressReports.Count >= 3); // At least 3 steps
+        Assert.Contains(progressReports, p => p.PercentComplete == 100);
+    }
+
+    [Fact]
+    public async Task AnalyzeAllAsync_Returns_Counts_From_All_Methods()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "WALMART TX1", "WALMART TX2");
+        SetupRulesWithCategories(ruleRepo, categoryRepo, ("Test Rule", "TEST", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "WALMART TX1", "WALMART TX2");
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRuleAsync(It.IsAny<Guid>(), It.IsAny<SuggestionType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        suggestionRepo
+            .Setup(r => r.ExistsPendingForRulesAsync(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<SuggestionType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, "{\"suggestions\": []}", null, 100, TimeSpan.FromSeconds(1)));
+
+        // Act
+        var result = await service.AnalyzeAllAsync();
+
+        // Assert
+        Assert.Equal(2, result.UncategorizedTransactionsAnalyzed);
+        Assert.Equal(1, result.RulesAnalyzed);
+    }
+
+    #endregion
+
+    #region AcceptSuggestionAsync Extended Tests
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_For_OptimizationSuggestion_Updates_Rule_Pattern()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, _, suggestionRepo) = CreateService();
+        var targetRuleId = Guid.NewGuid();
+        var rule = CreateCategorizationRule("Amazon Rule", "AMAZON\\.COM|AMZN", targetRuleId);
+        var suggestion = RuleSuggestion.CreateOptimizationSuggestion(
+            title: "Simplify Amazon Rule",
+            description: "Simplify the pattern",
+            reasoning: "Pattern can be simplified",
+            confidence: 0.9m,
+            targetRuleId: targetRuleId,
+            optimizedPattern: "AMAZON");
+
+        suggestionRepo
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+        ruleRepo
+            .Setup(r => r.GetByIdAsync(targetRuleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rule);
+
+        // Act
+        var result = await service.AcceptSuggestionAsync(suggestion.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("AMAZON", result.Pattern);
+        Assert.Equal(SuggestionStatus.Accepted, suggestion.Status);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_For_UnusedRuleSuggestion_Deactivates_Rule()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, _, suggestionRepo) = CreateService();
+        var targetRuleId = Guid.NewGuid();
+        var rule = CreateCategorizationRule("Unused Rule", "NONEXISTENT", targetRuleId);
+        var suggestion = RuleSuggestion.CreateUnusedRuleSuggestion(
+            title: "Remove unused rule",
+            description: "This rule never matches",
+            reasoning: "Rule has 0 matches",
+            targetRuleId: targetRuleId);
+
+        suggestionRepo
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+        ruleRepo
+            .Setup(r => r.GetByIdAsync(targetRuleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rule);
+
+        // Act
+        var result = await service.AcceptSuggestionAsync(suggestion.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsActive);
+        Assert.Equal(SuggestionStatus.Accepted, suggestion.Status);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_Throws_For_ConflictSuggestion()
+    {
+        // Arrange
+        var (service, _, _, _, _, suggestionRepo) = CreateService();
+        var suggestion = RuleSuggestion.CreateConflictSuggestion(
+            title: "Conflicting rules",
+            description: "Rules conflict",
+            reasoning: "Same pattern different categories",
+            conflictingRuleIds: new List<Guid> { Guid.NewGuid(), Guid.NewGuid() });
+
+        suggestionRepo
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DomainException>(() => service.AcceptSuggestionAsync(suggestion.Id));
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private static (
@@ -571,6 +1126,93 @@ public class RuleSuggestionServiceTests
             suggestedCategoryId: GroceryCategoryId,
             affectedTransactionCount: 5,
             sampleDescriptions: new List<string> { $"{pattern} STORE #123" });
+    }
+
+    private static Guid SetupRulesWithCategories(
+        Mock<ICategorizationRuleRepository> ruleRepo,
+        Mock<IBudgetCategoryRepository> categoryRepo,
+        params (string Name, string Pattern, Guid CategoryId)[] rules)
+    {
+        var ruleList = new List<CategorizationRule>();
+        Guid firstRuleId = Guid.Empty;
+
+        foreach (var (name, pattern, categoryId) in rules)
+        {
+            var rule = CategorizationRule.Create(name, RuleMatchType.Contains, pattern, categoryId);
+            ruleList.Add(rule);
+            if (firstRuleId == Guid.Empty)
+            {
+                firstRuleId = rule.Id;
+            }
+        }
+
+        ruleRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ruleList);
+
+        var categoryIds = rules.Select(r => r.CategoryId).Distinct();
+        var categoryList = categoryIds.Select(id =>
+        {
+            var category = BudgetCategory.Create($"Category_{id}", CategoryType.Expense);
+            typeof(BudgetCategory).GetProperty("Id")!.SetValue(category, id);
+            return category;
+        }).ToList();
+
+        categoryRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(categoryList);
+
+        return firstRuleId;
+    }
+
+    private static IReadOnlyList<Guid> SetupMultipleRulesWithCategories(
+        Mock<ICategorizationRuleRepository> ruleRepo,
+        Mock<IBudgetCategoryRepository> categoryRepo,
+        params (string Name, string Pattern, Guid CategoryId)[] rules)
+    {
+        var ruleList = new List<CategorizationRule>();
+        var ruleIds = new List<Guid>();
+
+        foreach (var (name, pattern, categoryId) in rules)
+        {
+            var rule = CategorizationRule.Create(name, RuleMatchType.Contains, pattern, categoryId);
+            ruleList.Add(rule);
+            ruleIds.Add(rule.Id);
+        }
+
+        ruleRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ruleList);
+
+        var categoryIds = rules.Select(r => r.CategoryId).Distinct();
+        var categoryList = categoryIds.Select(id =>
+        {
+            var category = BudgetCategory.Create($"Category_{id}", CategoryType.Expense);
+            typeof(BudgetCategory).GetProperty("Id")!.SetValue(category, id);
+            return category;
+        }).ToList();
+
+        categoryRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(categoryList);
+
+        return ruleIds;
+    }
+
+    private static void SetupAllTransactions(
+        Mock<ITransactionRepository> repo,
+        params string[] descriptions)
+    {
+        var accountId = Guid.NewGuid();
+        var transactions = descriptions.Select(d =>
+            Transaction.Create(accountId, MoneyValue.Create("USD", -50.00m), DateOnly.FromDateTime(DateTime.UtcNow), d))
+            .ToList();
+
+        repo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(descriptions.ToList());
+    }
+
+    private static CategorizationRule CreateCategorizationRule(string name, string pattern, Guid ruleId)
+    {
+        var rule = CategorizationRule.Create(name, RuleMatchType.Contains, pattern, GroceryCategoryId);
+        typeof(CategorizationRule).GetProperty("Id")!.SetValue(rule, ruleId);
+        return rule;
     }
 
     #endregion

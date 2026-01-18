@@ -719,16 +719,16 @@ Refs: #025"
 
 ---
 
-### Phase 5: Application Service - Optimization & Conflict Detection
+### Phase 5: Application Service - Optimization & Conflict Detection ✅
 
 **Objective:** Implement optimization analysis and conflict detection
 
 **Tasks:**
-- [ ] Implement `SuggestOptimizationsAsync` method
-- [ ] Implement `DetectConflictsAsync` method
-- [ ] Implement `AnalyzeAllAsync` with progress reporting
-- [ ] Implement suggestion acceptance (creates/updates rules)
-- [ ] Write unit tests for all analysis paths
+- [x] Implement `SuggestOptimizationsAsync` method
+- [x] Implement `DetectConflictsAsync` method
+- [x] Implement `AnalyzeAllAsync` with progress reporting
+- [x] Implement suggestion acceptance (creates/updates rules)
+- [x] Write unit tests for all analysis paths
 
 **Commit:**
 ```bash
@@ -885,18 +885,18 @@ Refs: #025"
 
 ### Unit Tests
 
-- [ ] `RuleSuggestion.CreateNewRuleSuggestion()` validation
-- [ ] `RuleSuggestion.Accept()` and `Dismiss()` state transitions
-- [ ] `OllamaAiService` response parsing (mocked HTTP)
-- [ ] `RuleSuggestionService.SuggestNewRulesAsync()` prompt construction
-- [ ] `RuleSuggestionService.SuggestOptimizationsAsync()` analysis logic
-- [ ] `RuleSuggestionService.DetectConflictsAsync()` conflict identification
-- [ ] AI response JSON parsing edge cases
-- [ ] Handling of invalid/malformed AI responses
+- [x] `RuleSuggestion.CreateNewRuleSuggestion()` validation
+- [x] `RuleSuggestion.Accept()` and `Dismiss()` state transitions
+- [x] `OllamaAiService` response parsing (mocked HTTP)
+- [x] `RuleSuggestionService.SuggestNewRulesAsync()` prompt construction
+- [x] `RuleSuggestionService.SuggestOptimizationsAsync()` analysis logic
+- [x] `RuleSuggestionService.DetectConflictsAsync()` conflict identification
+- [x] AI response JSON parsing edge cases
+- [x] Handling of invalid/malformed AI responses
 
 ### Integration Tests
 
-- [ ] Repository CRUD operations for suggestions
+- [x] Repository CRUD operations for suggestions
 - [ ] AI service connection and model listing (requires Ollama)
 - [ ] Full flow: analyze → generate suggestion → accept → verify rule created
 - [ ] API endpoint authorization

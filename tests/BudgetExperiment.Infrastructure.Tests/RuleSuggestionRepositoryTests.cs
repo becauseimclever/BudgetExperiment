@@ -358,6 +358,131 @@ public class RuleSuggestionRepositoryTests
         Assert.Equal(3, count);
     }
 
+    [Fact]
+    public async Task ExistsPendingForRuleAsync_Returns_True_When_Exists()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new RuleSuggestionRepository(context);
+
+        var targetRuleId = Guid.NewGuid();
+        var suggestion = RuleSuggestion.CreateUnusedRuleSuggestion(
+            title: "Unused rule",
+            description: "Rule never matches",
+            reasoning: "0 matches",
+            targetRuleId: targetRuleId);
+
+        await repository.AddAsync(suggestion);
+        await context.SaveChangesAsync();
+
+        // Act
+        var exists = await repository.ExistsPendingForRuleAsync(targetRuleId, SuggestionType.UnusedRule);
+
+        // Assert
+        Assert.True(exists);
+    }
+
+    [Fact]
+    public async Task ExistsPendingForRuleAsync_Returns_False_When_Not_Exists()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new RuleSuggestionRepository(context);
+
+        // Act
+        var exists = await repository.ExistsPendingForRuleAsync(Guid.NewGuid(), SuggestionType.UnusedRule);
+
+        // Assert
+        Assert.False(exists);
+    }
+
+    [Fact]
+    public async Task ExistsPendingForRuleAsync_Returns_False_For_Different_Type()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new RuleSuggestionRepository(context);
+
+        var targetRuleId = Guid.NewGuid();
+        var suggestion = RuleSuggestion.CreateUnusedRuleSuggestion(
+            title: "Unused rule",
+            description: "Rule never matches",
+            reasoning: "0 matches",
+            targetRuleId: targetRuleId);
+
+        await repository.AddAsync(suggestion);
+        await context.SaveChangesAsync();
+
+        // Act - query for different type
+        var exists = await repository.ExistsPendingForRuleAsync(targetRuleId, SuggestionType.PatternOptimization);
+
+        // Assert
+        Assert.False(exists);
+    }
+
+    [Fact]
+    public async Task ExistsPendingForRulesAsync_Returns_True_When_Same_Rules_Exist()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new RuleSuggestionRepository(context);
+
+        var ruleIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+        var suggestion = RuleSuggestion.CreateConflictSuggestion(
+            title: "Conflicting rules",
+            description: "Rules conflict",
+            reasoning: "Same pattern different categories",
+            conflictingRuleIds: ruleIds);
+
+        await repository.AddAsync(suggestion);
+        await context.SaveChangesAsync();
+
+        // Act
+        var exists = await repository.ExistsPendingForRulesAsync(ruleIds, SuggestionType.RuleConflict);
+
+        // Assert
+        Assert.True(exists);
+    }
+
+    [Fact]
+    public async Task ExistsPendingForRulesAsync_Returns_False_When_Different_Rules()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new RuleSuggestionRepository(context);
+
+        var ruleIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+        var suggestion = RuleSuggestion.CreateConflictSuggestion(
+            title: "Conflicting rules",
+            description: "Rules conflict",
+            reasoning: "Same pattern different categories",
+            conflictingRuleIds: ruleIds);
+
+        await repository.AddAsync(suggestion);
+        await context.SaveChangesAsync();
+
+        // Act - different set of rule IDs
+        var differentRuleIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+        var exists = await repository.ExistsPendingForRulesAsync(differentRuleIds, SuggestionType.RuleConflict);
+
+        // Assert
+        Assert.False(exists);
+    }
+
+    [Fact]
+    public async Task ExistsPendingForRulesAsync_Returns_False_For_Empty_List()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new RuleSuggestionRepository(context);
+
+        // Act
+        var exists = await repository.ExistsPendingForRulesAsync(new List<Guid>(), SuggestionType.RuleConflict);
+
+        // Assert
+        Assert.False(exists);
+    }
+
     private static RuleSuggestion CreateTestSuggestion(string pattern, string title)
     {
         return RuleSuggestion.CreateNewRuleSuggestion(
