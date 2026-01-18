@@ -1,7 +1,12 @@
 @* NavMenu.razor - Collapsible side navigation menu *@
 
+@using Microsoft.AspNetCore.Components.Authorization
+
 @inject IBudgetApiService ApiService
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+@implements IDisposable
 
 <nav class="nav-menu @(IsCollapsed ? "collapsed" : "expanded")">
     <ScopeSwitcher IsCollapsed="@IsCollapsed" />
@@ -106,11 +111,40 @@
     public bool IsCollapsed { get; set; }
 
     private List<AccountDto> accounts = new();
+    private bool isAuthenticated;
 
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
-        await LoadAccountsAsync();
+        AuthStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+
+        if (isAuthenticated)
+        {
+            await LoadAccountsAsync();
+        }
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> authStateTask)
+    {
+        var authState = await authStateTask;
+        var wasAuthenticated = isAuthenticated;
+        isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+
+        // Reload accounts when user becomes authenticated
+        if (isAuthenticated && !wasAuthenticated)
+        {
+            await LoadAccountsAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+        else if (!isAuthenticated && wasAuthenticated)
+        {
+            // Clear accounts when user logs out
+            accounts = new List<AccountDto>();
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task LoadAccountsAsync()
@@ -125,6 +159,12 @@
             // Silently fail - nav will just show without account links
             accounts = new List<AccountDto>();
         }
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        AuthStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 
     private static string TruncateName(string name)

@@ -1,6 +1,7 @@
 @page "/settings"
 
 @inject IBudgetApiService ApiService
+@inject VersionService VersionService
 
 <PageTitle>Settings - Budget Experiment</PageTitle>
 
@@ -58,6 +59,19 @@
                     </div>
                 </div>
             </section>
+
+            <section class="settings-section">
+                <h3 class="settings-section-title">About</h3>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <label class="setting-label">Version</label>
+                        <p class="setting-description">
+                            Budget Experiment v@(VersionService.CurrentVersion)
+                        </p>
+                    </div>
+                </div>
+            </section>
         </div>
     }
 </div>
@@ -71,6 +85,7 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        await VersionService.LoadVersionAsync();
         await LoadSettingsAsync();
     }
 

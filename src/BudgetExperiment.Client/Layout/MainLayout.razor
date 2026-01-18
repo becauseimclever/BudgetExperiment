@@ -4,41 +4,48 @@
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
 @using BudgetExperiment.Client.Services
-@inject VersionService VersionService
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
 
-<div class="app-shell">
-    <header class="app-top-header">
-        <button class="app-menu-toggle" @onclick="ToggleNavigation" title="@(navCollapsed ? "Expand menu" : "Collapse menu")">
-            <Icon Name="menu" Size="24" />
-        </button>
-        <a href="/" class="app-brand">Budget Experiment</a>
-        <div class="app-header-spacer"></div>
-        <ThemeToggle />
-        <UserProfile />
-    </header>
+<AuthorizeView>
+    <Authorized>
+        <div class="app-shell">
+            <header class="app-top-header">
+                <button class="app-menu-toggle" @onclick="ToggleNavigation" title="@(navCollapsed ? "Expand menu" : "Collapse menu")">
+                    <Icon Name="menu" Size="24" />
+                </button>
+                <a href="/" class="app-brand">Budget Experiment</a>
+                <div class="app-header-spacer"></div>
+                <ThemeToggle />
+                <UserProfile />
+            </header>
 
-    <div class="app-content-wrapper">
-        <aside class="app-sidebar @(navCollapsed ? "collapsed" : "expanded")">
-            <NavMenu IsCollapsed="@navCollapsed" />
-        </aside>
+            <div class="app-content-wrapper">
+                <aside class="app-sidebar @(navCollapsed ? "collapsed" : "expanded")">
+                    <NavMenu IsCollapsed="@navCollapsed" />
+                </aside>
 
-        <main class="app-main-content">
-            @Body
-        </main>
-    </div>
-
-    <footer class="app-footer">
-        <span class="app-version">v@(VersionService.CurrentVersion)</span>
-    </footer>
-</div>
+                <main class="app-main-content">
+                    @Body
+                </main>
+            </div>
+        </div>
+    </Authorized>
+    <Authorizing>
+        @* Minimal loading state while checking auth - no API calls *@
+        <div class="auth-loading-container">
+            <div class="auth-loading-spinner"></div>
+            <p>Checking authentication...</p>
+        </div>
+    </Authorizing>
+    <NotAuthorized>
+        @* This shouldn't normally show - AuthorizeRouteView handles redirect *@
+        @Body
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private bool navCollapsed = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await VersionService.LoadVersionAsync();
-    }
 
     private void ToggleNavigation()
     {
