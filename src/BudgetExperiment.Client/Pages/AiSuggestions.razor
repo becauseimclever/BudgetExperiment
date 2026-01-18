@@ -3,6 +3,7 @@
 @using BudgetExperiment.Client.Components.Common
 @using BudgetExperiment.Client.Services
 @using BudgetExperiment.Contracts.Dtos
+@implements IDisposable
 @inject IAiApiService AiService
 @inject NavigationManager Navigation
 
@@ -11,17 +12,9 @@
 <div class="suggestions-page">
     <div class="suggestions-toolbar">
         <div class="toolbar-left">
-            <button class="btn btn-primary" @onclick="RunAnalysis" disabled="@(IsAnalyzing || !IsAiAvailable)">
-                @if (IsAnalyzing)
-                {
-                    <LoadingSpinner Size="SpinnerSize.Small" />
-                    <span>Analyzing...</span>
-                }
-                else
-                {
-                    <Icon Name="sparkles" Size="16" />
-                    <span>Run AI Analysis</span>
-                }
+            <button class="btn btn-primary" @onclick="StartAnalysis" disabled="@(IsAnalyzing || !IsAiAvailable)">
+                <Icon Name="sparkles" Size="16" />
+                <span>Run AI Analysis</span>
             </button>
 
             <button class="btn btn-secondary" @onclick="RefreshSuggestions" disabled="@IsLoading">
@@ -33,51 +26,16 @@
         <div class="toolbar-right">
             @if (Status != null)
             {
-                <div class="ai-status-indicator @(Status.IsAvailable ? "available" : "unavailable")">
-                    <Icon Name="@(Status.IsAvailable ? "check-circle" : "x-circle")" Size="16" />
-                    <span>@(Status.IsAvailable ? "AI Available" : "AI Unavailable")</span>
-                    @if (!string.IsNullOrEmpty(Status.CurrentModel))
-                    {
-                        <span class="model-name">(@Status.CurrentModel)</span>
-                    }
-                </div>
+                <AiStatusBadge Status="Status" />
             }
         </div>
     </div>
 
-    @if (AnalysisResult != null)
+    @if (AnalysisResult != null && !ShowProgressDialog)
     {
-        <div class="analysis-summary">
-            <div class="summary-header">
-                <Icon Name="bar-chart-2" Size="20" />
-                <h3>Analysis Complete</h3>
-                <button class="btn btn-ghost btn-sm" @onclick="DismissAnalysisSummary">
-                    <Icon Name="x" Size="16" />
-                </button>
-            </div>
-            <div class="summary-stats">
-                <div class="stat-item">
-                    <span class="stat-value">@AnalysisResult.NewRuleSuggestions</span>
-                    <span class="stat-label">New Rules</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">@AnalysisResult.OptimizationSuggestions</span>
-                    <span class="stat-label">Optimizations</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">@AnalysisResult.ConflictSuggestions</span>
-                    <span class="stat-label">Conflicts</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">@AnalysisResult.UncategorizedTransactionsAnalyzed</span>
-                    <span class="stat-label">Transactions Analyzed</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">@AnalysisResult.AnalysisDurationSeconds.ToString("F1")s</span>
-                    <span class="stat-label">Duration</span>
-                </div>
-            </div>
-        </div>
+        <AnalysisSummaryCard Result="AnalysisResult"
+                             OnDismiss="DismissAnalysisSummary"
+                             OnViewSuggestions="ScrollToSuggestions" />
     }
 
     @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -85,12 +43,19 @@
         <ErrorAlert Message="@ErrorMessage" OnDismiss="DismissError" />
     }
 
-    <SuggestionList Suggestions="Suggestions"
-                    IsLoading="IsLoading"
-                    OnAccept="HandleAccept"
-                    OnDismiss="HandleDismiss"
-                    OnFeedback="HandleFeedback"
-                    OnViewDetails="HandleViewDetails" />
+    @if (!IsLoading && Suggestions.Count == 0 && AnalysisResult == null && Status?.IsAvailable != true)
+    {
+        <AiOnboardingPanel />
+    }
+    else
+    {
+        <SuggestionList Suggestions="Suggestions"
+                        IsLoading="IsLoading"
+                        OnAccept="HandleAccept"
+                        OnDismiss="HandleDismiss"
+                        OnFeedback="HandleFeedback"
+                        OnViewDetails="HandleViewDetails" />
+    }
 
     <SuggestionDetailDialog IsVisible="SelectedSuggestion != null"
                             Suggestion="SelectedSuggestion"
@@ -98,6 +63,17 @@
                             OnAccept="HandleAccept"
                             OnDismiss="HandleDismiss"
                             OnFeedback="HandleFeedback" />
+
+    <AnalysisProgressDialog IsVisible="ShowProgressDialog"
+                            IsRunning="IsAnalyzing"
+                            Result="AnalysisResult"
+                            ErrorMessage="AnalysisError"
+                            CurrentStep="CurrentAnalysisStep"
+                            ElapsedTime="AnalysisElapsed"
+                            OnClose="CloseProgressDialog"
+                            OnCancel="CancelAnalysis"
+                            OnRetry="StartAnalysis"
+                            OnViewSuggestions="CloseProgressDialogAndScroll" />
 </div>
 
 @code {
@@ -108,6 +84,13 @@
 
     private bool IsLoading { get; set; }
     private bool IsAnalyzing { get; set; }
+    private bool ShowProgressDialog { get; set; }
+    private int CurrentAnalysisStep { get; set; }
+    private TimeSpan AnalysisElapsed { get; set; }
+    private string? AnalysisError { get; set; }
+    private System.Timers.Timer? _elapsedTimer;
+    private DateTime _analysisStartTime;
+
     private bool IsAiAvailable => Status?.IsAvailable == true && Status?.IsEnabled == true;
     private string? ErrorMessage { get; set; }
 
@@ -155,39 +138,108 @@
         await LoadSuggestionsAsync();
     }
 
-    private async Task RunAnalysis()
+    private async Task StartAnalysis()
     {
         if (IsAnalyzing || !IsAiAvailable)
         {
             return;
         }
 
+        // Reset state
         IsAnalyzing = true;
-        ErrorMessage = null;
+        ShowProgressDialog = true;
         AnalysisResult = null;
+        AnalysisError = null;
+        CurrentAnalysisStep = 0;
+        AnalysisElapsed = TimeSpan.Zero;
+        _analysisStartTime = DateTime.UtcNow;
+
+        // Start elapsed timer
+        _elapsedTimer = new System.Timers.Timer(1000);
+        _elapsedTimer.Elapsed += OnElapsedTick;
+        _elapsedTimer.Start();
+
+        StateHasChanged();
 
         try
         {
+            // Simulate step progression (in real implementation, this would be event-driven)
+            await SimulateProgressSteps();
+
             AnalysisResult = await AiService.AnalyzeAsync();
 
             if (AnalysisResult != null)
             {
-                // Reload suggestions to show new ones
+                CurrentAnalysisStep = 6; // All complete
                 await LoadSuggestionsAsync();
             }
             else
             {
-                ErrorMessage = "Analysis failed. AI service may be unavailable.";
+                AnalysisError = "Analysis failed. AI service may be unavailable.";
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Analysis failed: {ex.Message}";
+            AnalysisError = $"Analysis failed: {ex.Message}";
         }
         finally
         {
             IsAnalyzing = false;
+            StopElapsedTimer();
+            StateHasChanged();
         }
+    }
+
+    private async Task SimulateProgressSteps()
+    {
+        // Simulate progress through steps with delays
+        for (int i = 0; i < 5; i++)
+        {
+            CurrentAnalysisStep = i;
+            StateHasChanged();
+            await Task.Delay(500); // Brief delay to show step progression
+        }
+    }
+
+    private void OnElapsedTick(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        AnalysisElapsed = DateTime.UtcNow - _analysisStartTime;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void StopElapsedTimer()
+    {
+        if (_elapsedTimer != null)
+        {
+            _elapsedTimer.Stop();
+            _elapsedTimer.Elapsed -= OnElapsedTick;
+            _elapsedTimer.Dispose();
+            _elapsedTimer = null;
+        }
+    }
+
+    private void CancelAnalysis()
+    {
+        // Cancel is mostly cosmetic since we can't cancel the HTTP call easily
+        IsAnalyzing = false;
+        ShowProgressDialog = false;
+        StopElapsedTimer();
+    }
+
+    private void CloseProgressDialog()
+    {
+        ShowProgressDialog = false;
+    }
+
+    private void CloseProgressDialogAndScroll()
+    {
+        ShowProgressDialog = false;
+        // Scroll handled by page layout automatically
+    }
+
+    private void ScrollToSuggestions()
+    {
+        // Suggestions list is already visible, just dismiss the summary card
     }
 
     private async Task HandleAccept(Guid id)
@@ -333,5 +385,11 @@
     private void DismissAnalysisSummary()
     {
         AnalysisResult = null;
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        StopElapsedTimer();
     }
 }

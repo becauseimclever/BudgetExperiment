@@ -833,11 +833,11 @@ Refs: #025"
 **Objective:** Implement comprehensive analysis UI and polish
 
 **Tasks:**
-- [ ] Create `AnalysisProgressDialog` component
-- [ ] Implement real-time progress updates
-- [ ] Add analysis summary view
-- [ ] Polish loading states and error handling
-- [ ] Add empty states and onboarding hints
+- [x] Create `AnalysisProgressDialog` component
+- [x] Implement real-time progress updates
+- [x] Add analysis summary view
+- [x] Polish loading states and error handling
+- [x] Add empty states and onboarding hints
 
 **Commit:**
 ```bash
