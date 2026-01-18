@@ -4,9 +4,32 @@
 
 using BudgetExperiment.Application.Services;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace BudgetExperiment.Infrastructure.Tests;
+
+/// <summary>
+/// Fake AI settings provider for testing.
+/// </summary>
+internal sealed class FakeAiSettingsProvider : IAiSettingsProvider
+{
+    private AiSettingsData _settings;
+
+    public FakeAiSettingsProvider(AiSettingsData settings)
+    {
+        _settings = settings;
+    }
+
+    public Task<AiSettingsData> GetSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_settings);
+    }
+
+    public Task<AiSettingsData> UpdateSettingsAsync(AiSettingsData settings, CancellationToken cancellationToken = default)
+    {
+        _settings = settings;
+        return Task.FromResult(_settings);
+    }
+}
 
 /// <summary>
 /// Integration tests for OllamaAiService.
@@ -16,7 +39,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
 {
     private readonly HttpClient _httpClient;
     private readonly OllamaAiService _service;
-    private readonly AiSettings _settings;
+    private readonly AiSettingsData _settings;
     private bool _ollamaAvailable;
 
     /// <summary>
@@ -24,25 +47,22 @@ public class OllamaAiServiceTests : IAsyncLifetime
     /// </summary>
     public OllamaAiServiceTests()
     {
-        _settings = new AiSettings
-        {
-            OllamaEndpoint = "http://localhost:11434",
-            ModelName = "llama3.2",
-            Temperature = 0.3m,
-            MaxTokens = 100,
-            TimeoutSeconds = 60,
-            IsEnabled = true,
-        };
+        _settings = new AiSettingsData(
+            OllamaEndpoint: "http://localhost:11434",
+            ModelName: "llama3.2",
+            Temperature: 0.3m,
+            MaxTokens: 100,
+            TimeoutSeconds: 60,
+            IsEnabled: true);
 
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(_settings.OllamaEndpoint),
             Timeout = TimeSpan.FromSeconds(_settings.TimeoutSeconds + 10),
         };
 
         _service = new OllamaAiService(
             _httpClient,
-            Options.Create(_settings),
+            new FakeAiSettingsProvider(_settings),
             NullLogger<OllamaAiService>.Instance);
     }
 
@@ -52,7 +72,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
         // Check if Ollama is available
         try
         {
-            var response = await _httpClient.GetAsync("api/version");
+            var response = await _httpClient.GetAsync($"{_settings.OllamaEndpoint}/api/version");
             _ollamaAvailable = response.IsSuccessStatusCode;
         }
         catch
@@ -72,10 +92,17 @@ public class OllamaAiServiceTests : IAsyncLifetime
     public async Task GetStatusAsync_When_Disabled_Returns_Unavailable()
     {
         // Arrange
-        var disabledSettings = new AiSettings { IsEnabled = false };
+        var disabledSettings = new AiSettingsData(
+            OllamaEndpoint: "http://localhost:11434",
+            ModelName: "llama3.2",
+            Temperature: 0.3m,
+            MaxTokens: 100,
+            TimeoutSeconds: 60,
+            IsEnabled: false);
+
         var service = new OllamaAiService(
             _httpClient,
-            Options.Create(disabledSettings),
+            new FakeAiSettingsProvider(disabledSettings),
             NullLogger<OllamaAiService>.Instance);
 
         // Act
@@ -125,10 +152,17 @@ public class OllamaAiServiceTests : IAsyncLifetime
     public async Task GetAvailableModelsAsync_When_Disabled_Returns_Empty()
     {
         // Arrange
-        var disabledSettings = new AiSettings { IsEnabled = false };
+        var disabledSettings = new AiSettingsData(
+            OllamaEndpoint: "http://localhost:11434",
+            ModelName: "llama3.2",
+            Temperature: 0.3m,
+            MaxTokens: 100,
+            TimeoutSeconds: 60,
+            IsEnabled: false);
+
         var service = new OllamaAiService(
             _httpClient,
-            Options.Create(disabledSettings),
+            new FakeAiSettingsProvider(disabledSettings),
             NullLogger<OllamaAiService>.Instance);
 
         // Act
@@ -142,10 +176,17 @@ public class OllamaAiServiceTests : IAsyncLifetime
     public async Task CompleteAsync_When_Disabled_Returns_Error()
     {
         // Arrange
-        var disabledSettings = new AiSettings { IsEnabled = false };
+        var disabledSettings = new AiSettingsData(
+            OllamaEndpoint: "http://localhost:11434",
+            ModelName: "llama3.2",
+            Temperature: 0.3m,
+            MaxTokens: 100,
+            TimeoutSeconds: 60,
+            IsEnabled: false);
+
         var service = new OllamaAiService(
             _httpClient,
-            Options.Create(disabledSettings),
+            new FakeAiSettingsProvider(disabledSettings),
             NullLogger<OllamaAiService>.Instance);
 
         var prompt = new AiPrompt("You are a helpful assistant.", "Say hello.");
@@ -194,22 +235,22 @@ public class OllamaAiServiceTests : IAsyncLifetime
     public async Task CompleteAsync_With_Unreachable_Endpoint_Returns_Error()
     {
         // Arrange - use a valid but unreachable endpoint
-        var invalidSettings = new AiSettings
-        {
-            OllamaEndpoint = "http://192.0.2.1:11434", // TEST-NET-1 (RFC 5737) - guaranteed unreachable
-            IsEnabled = true,
-            TimeoutSeconds = 2,
-        };
+        var invalidSettings = new AiSettingsData(
+            OllamaEndpoint: "http://192.0.2.1:11434", // TEST-NET-1 (RFC 5737) - guaranteed unreachable
+            ModelName: "llama3.2",
+            Temperature: 0.3m,
+            MaxTokens: 100,
+            TimeoutSeconds: 2,
+            IsEnabled: true);
 
         var httpClient = new HttpClient
         {
-            BaseAddress = new Uri(invalidSettings.OllamaEndpoint),
             Timeout = TimeSpan.FromSeconds(5),
         };
 
         var service = new OllamaAiService(
             httpClient,
-            Options.Create(invalidSettings),
+            new FakeAiSettingsProvider(invalidSettings),
             NullLogger<OllamaAiService>.Instance);
 
         var prompt = new AiPrompt("System", "User");

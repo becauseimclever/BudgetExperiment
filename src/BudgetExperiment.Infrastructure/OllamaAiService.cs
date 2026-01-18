@@ -8,7 +8,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BudgetExperiment.Application.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace BudgetExperiment.Infrastructure;
 
@@ -18,7 +17,7 @@ namespace BudgetExperiment.Infrastructure;
 public sealed class OllamaAiService : IAiService
 {
     private readonly HttpClient _httpClient;
-    private readonly IOptions<AiSettings> _settings;
+    private readonly IAiSettingsProvider _settingsProvider;
     private readonly ILogger<OllamaAiService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -32,22 +31,22 @@ public sealed class OllamaAiService : IAiService
     /// Initializes a new instance of the <see cref="OllamaAiService"/> class.
     /// </summary>
     /// <param name="httpClient">The HTTP client.</param>
-    /// <param name="settings">The AI settings.</param>
+    /// <param name="settingsProvider">The AI settings provider.</param>
     /// <param name="logger">The logger.</param>
     public OllamaAiService(
         HttpClient httpClient,
-        IOptions<AiSettings> settings,
+        IAiSettingsProvider settingsProvider,
         ILogger<OllamaAiService> logger)
     {
         _httpClient = httpClient;
-        _settings = settings;
+        _settingsProvider = settingsProvider;
         _logger = logger;
     }
 
     /// <inheritdoc/>
     public async Task<AiServiceStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        var settings = _settings.Value;
+        var settings = await _settingsProvider.GetSettingsAsync(cancellationToken);
 
         if (!settings.IsEnabled)
         {
@@ -56,7 +55,8 @@ public sealed class OllamaAiService : IAiService
 
         try
         {
-            var response = await _httpClient.GetAsync("api/version", cancellationToken);
+            var baseUri = settings.OllamaEndpoint.TrimEnd('/');
+            var response = await _httpClient.GetAsync($"{baseUri}/api/version", cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
@@ -80,7 +80,7 @@ public sealed class OllamaAiService : IAiService
     /// <inheritdoc/>
     public async Task<IReadOnlyList<AiModelInfo>> GetAvailableModelsAsync(CancellationToken cancellationToken = default)
     {
-        var settings = _settings.Value;
+        var settings = await _settingsProvider.GetSettingsAsync(cancellationToken);
 
         if (!settings.IsEnabled)
         {
@@ -89,7 +89,8 @@ public sealed class OllamaAiService : IAiService
 
         try
         {
-            var response = await _httpClient.GetAsync("api/tags", cancellationToken);
+            var baseUri = settings.OllamaEndpoint.TrimEnd('/');
+            var response = await _httpClient.GetAsync($"{baseUri}/api/tags", cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var tagsResponse = await response.Content.ReadFromJsonAsync<OllamaTagsResponse>(JsonOptions, cancellationToken);
@@ -116,7 +117,7 @@ public sealed class OllamaAiService : IAiService
     /// <inheritdoc/>
     public async Task<AiResponse> CompleteAsync(AiPrompt prompt, CancellationToken cancellationToken = default)
     {
-        var settings = _settings.Value;
+        var settings = await _settingsProvider.GetSettingsAsync(cancellationToken);
         var stopwatch = Stopwatch.StartNew();
 
         if (!settings.IsEnabled)
@@ -150,7 +151,8 @@ public sealed class OllamaAiService : IAiService
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(settings.TimeoutSeconds));
 
-            var response = await _httpClient.PostAsJsonAsync("api/chat", request, JsonOptions, cts.Token);
+            var baseUri = settings.OllamaEndpoint.TrimEnd('/');
+            var response = await _httpClient.PostAsJsonAsync($"{baseUri}/api/chat", request, JsonOptions, cts.Token);
 
             if (!response.IsSuccessStatusCode)
             {

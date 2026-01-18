@@ -134,8 +134,10 @@
     private async Task RefreshStatus()
     {
         isLoadingStatus = true;
+        StateHasChanged();
         status = await AiService.GetStatusAsync();
         isLoadingStatus = false;
+        StateHasChanged();
     }
 
     private async Task LoadModels()
@@ -145,11 +147,11 @@
         isLoadingModels = false;
     }
 
-    private void OnSettingsSaved(AiSettingsDto saved)
+    private async void OnSettingsSaved(AiSettingsDto saved)
     {
         successMessage = "Settings saved successfully!";
         errorMessage = null;
-        _ = RefreshStatus();
+        await RefreshStatus();
     }
 
     private void OnSettingsError(string error)

@@ -4,10 +4,8 @@
 
 using BudgetExperiment.Application.Services;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace BudgetExperiment.Api.Controllers;
 
@@ -22,22 +20,22 @@ public sealed class AiController : ControllerBase
 {
     private readonly IAiService _aiService;
     private readonly IRuleSuggestionService _suggestionService;
-    private readonly IOptionsMonitor<AiSettings> _settings;
+    private readonly IAiSettingsProvider _settingsProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiController"/> class.
     /// </summary>
     /// <param name="aiService">The AI service.</param>
     /// <param name="suggestionService">The rule suggestion service.</param>
-    /// <param name="settings">The AI settings.</param>
+    /// <param name="settingsProvider">The AI settings provider.</param>
     public AiController(
         IAiService aiService,
         IRuleSuggestionService suggestionService,
-        IOptionsMonitor<AiSettings> settings)
+        IAiSettingsProvider settingsProvider)
     {
         this._aiService = aiService;
         this._suggestionService = suggestionService;
-        this._settings = settings;
+        this._settingsProvider = settingsProvider;
     }
 
     /// <summary>
@@ -50,7 +48,7 @@ public sealed class AiController : ControllerBase
     public async Task<IActionResult> GetStatusAsync(CancellationToken cancellationToken)
     {
         var status = await this._aiService.GetStatusAsync(cancellationToken);
-        var settings = this._settings.CurrentValue;
+        var settings = await this._settingsProvider.GetSettingsAsync(cancellationToken);
 
         return this.Ok(new AiStatusDto
         {
@@ -86,12 +84,13 @@ public sealed class AiController : ControllerBase
     /// <summary>
     /// Gets the current AI settings.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The current AI settings.</returns>
     [HttpGet("settings")]
     [ProducesResponseType<AiSettingsDto>(StatusCodes.Status200OK)]
-    public IActionResult GetSettings()
+    public async Task<IActionResult> GetSettingsAsync(CancellationToken cancellationToken)
     {
-        var settings = this._settings.CurrentValue;
+        var settings = await this._settingsProvider.GetSettingsAsync(cancellationToken);
 
         return this.Ok(new AiSettingsDto
         {
@@ -107,20 +106,26 @@ public sealed class AiController : ControllerBase
     /// <summary>
     /// Updates AI settings.
     /// </summary>
-    /// <remarks>
-    /// Note: Settings changes are applied at runtime but not persisted.
-    /// For persistent changes, update the configuration file or environment variables.
-    /// </remarks>
     /// <param name="request">The new settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated settings.</returns>
     [HttpPut("settings")]
     [ProducesResponseType<AiSettingsDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IActionResult UpdateSettings([FromBody] AiSettingsDto request)
+    public async Task<IActionResult> UpdateSettingsAsync(
+        [FromBody] AiSettingsDto request,
+        CancellationToken cancellationToken)
     {
-        // Note: This endpoint returns the requested settings but actual configuration
-        // changes require updating appsettings.json or environment variables.
-        // A more complete implementation would persist to a database or config store.
+        var settingsData = new AiSettingsData(
+            request.OllamaEndpoint,
+            request.ModelName,
+            request.Temperature,
+            request.MaxTokens,
+            request.TimeoutSeconds,
+            request.IsEnabled);
+
+        await this._settingsProvider.UpdateSettingsAsync(settingsData, cancellationToken);
+
         return this.Ok(request);
     }
 

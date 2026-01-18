@@ -44,14 +44,11 @@ public static class DependencyInjection
         services.AddScoped<ICategorizationRuleRepository, CategorizationRuleRepository>();
         services.AddScoped<IRuleSuggestionRepository, RuleSuggestionRepository>();
 
-        // AI Service
-        services.Configure<AiSettings>(configuration.GetSection(AiSettings.SectionName));
-        var aiSettings = configuration.GetSection(AiSettings.SectionName).Get<AiSettings>() ?? new AiSettings();
-        services.AddHttpClient<IAiService, OllamaAiService>(client =>
-        {
-            client.BaseAddress = new Uri(aiSettings.OllamaEndpoint);
-            client.Timeout = TimeSpan.FromSeconds(aiSettings.TimeoutSeconds + 10); // Add buffer for HTTP overhead
-        });
+        // AI Settings Provider (database-backed)
+        services.AddScoped<IAiSettingsProvider, AiSettingsProvider>();
+
+        // AI Service - HttpClient configured dynamically from database settings
+        services.AddHttpClient<IAiService, OllamaAiService>();
 
         return services;
     }

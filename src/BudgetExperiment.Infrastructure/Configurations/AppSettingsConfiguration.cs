@@ -35,6 +35,34 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
         builder.Property(s => s.UpdatedAtUtc)
             .IsRequired();
 
+        // AI Settings
+        builder.Property(s => s.AiOllamaEndpoint)
+            .HasMaxLength(500)
+            .HasDefaultValue("http://localhost:11434")
+            .IsRequired();
+
+        builder.Property(s => s.AiModelName)
+            .HasMaxLength(100)
+            .HasDefaultValue("llama3.2")
+            .IsRequired();
+
+        builder.Property(s => s.AiTemperature)
+            .HasPrecision(3, 2)
+            .HasDefaultValue(0.3m)
+            .IsRequired();
+
+        builder.Property(s => s.AiMaxTokens)
+            .HasDefaultValue(2000)
+            .IsRequired();
+
+        builder.Property(s => s.AiTimeoutSeconds)
+            .HasDefaultValue(120)
+            .IsRequired();
+
+        builder.Property(s => s.AiIsEnabled)
+            .HasDefaultValue(true)
+            .IsRequired();
+
         // Seed the singleton settings record
         builder.HasData(CreateSeedData());
     }
@@ -60,6 +88,20 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
             .SetValue(settings, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         typeof(AppSettings).GetProperty(nameof(AppSettings.UpdatedAtUtc))!
             .SetValue(settings, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
+        // AI Settings defaults
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiOllamaEndpoint))!
+            .SetValue(settings, "http://localhost:11434");
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiModelName))!
+            .SetValue(settings, "llama3.2");
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiTemperature))!
+            .SetValue(settings, 0.3m);
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiMaxTokens))!
+            .SetValue(settings, 2000);
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiTimeoutSeconds))!
+            .SetValue(settings, 120);
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiIsEnabled))!
+            .SetValue(settings, true);
 
         return settings!;
     }

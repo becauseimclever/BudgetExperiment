@@ -370,17 +370,45 @@ public sealed record AnalysisProgress
 
 ### AI Configuration Settings
 
+AI settings are stored in the database as part of the `AppSettings` singleton entity, not in configuration files.
+This allows users to modify settings at runtime without restarting the application.
+
 ```csharp
-// Extension to existing AppSettings or new AiSettings entity
-public sealed class AiSettings
+// AI settings are properties on the AppSettings domain entity
+public sealed class AppSettings
 {
-    public string OllamaEndpoint { get; set; } = "http://localhost:11434";
-    public string ModelName { get; set; } = "llama3.2";
-    public decimal Temperature { get; set; } = 0.3m;
-    public int MaxTokens { get; set; } = 2000;
-    public int TimeoutSeconds { get; set; } = 120;
-    public bool IsEnabled { get; set; } = true;
+    // ... other settings ...
+
+    public string AiOllamaEndpoint { get; private set; } = "http://localhost:11434";
+    public string AiModelName { get; private set; } = "llama3.2";
+    public decimal AiTemperature { get; private set; } = 0.3m;
+    public int AiMaxTokens { get; private set; } = 2000;
+    public int AiTimeoutSeconds { get; private set; } = 120;
+    public bool AiIsEnabled { get; private set; } = true;
+
+    public void UpdateAiSettings(
+        string ollamaEndpoint,
+        string modelName,
+        decimal temperature,
+        int maxTokens,
+        int timeoutSeconds,
+        bool isEnabled);
 }
+
+// IAiSettingsProvider abstracts reading/writing AI settings from the database
+public interface IAiSettingsProvider
+{
+    Task<AiSettingsData> GetSettingsAsync(CancellationToken cancellationToken = default);
+    Task<AiSettingsData> UpdateSettingsAsync(AiSettingsData settings, CancellationToken cancellationToken = default);
+}
+
+public sealed record AiSettingsData(
+    string OllamaEndpoint,
+    string ModelName,
+    decimal Temperature,
+    int MaxTokens,
+    int TimeoutSeconds,
+    bool IsEnabled);
 ```
 
 ### Prompt Engineering
@@ -1005,3 +1033,4 @@ For acceptable AI inference performance:
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-15 | Initial draft | @copilot |
+| 2026-01-18 | Move AI settings from config file to database (AppSettings entity) | @copilot |
