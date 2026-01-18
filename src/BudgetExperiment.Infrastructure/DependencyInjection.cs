@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<IBudgetGoalRepository, BudgetGoalRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
         services.AddScoped<ICategorizationRuleRepository, CategorizationRuleRepository>();
+        services.AddScoped<IRuleSuggestionRepository, RuleSuggestionRepository>();
 
         // AI Service
         services.Configure<AiSettings>(configuration.GetSection(AiSettings.SectionName));
