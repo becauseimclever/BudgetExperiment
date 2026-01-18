@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BudgetExperiment.Infrastructure.Configurations;
@@ -61,22 +62,34 @@ internal sealed class RuleSuggestionConfiguration : IEntityTypeConfiguration<Rul
         builder.Property(s => s.OptimizedPattern)
             .HasMaxLength(RuleSuggestion.MaxPatternLength);
 
-        // Store list of Guids as JSON
+        // Store list of Guids as JSON with value comparer
+        var guidListComparer = new ValueComparer<IReadOnlyList<Guid>>(
+            (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c.ToList());
+
         builder.Property(s => s.ConflictingRuleIds)
             .HasColumnType("jsonb")
             .HasConversion(
                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>());
+                v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+            .Metadata.SetValueComparer(guidListComparer);
 
         builder.Property(s => s.AffectedTransactionCount)
             .IsRequired();
 
-        // Store list of strings as JSON
+        // Store list of strings as JSON with value comparer
+        var stringListComparer = new ValueComparer<IReadOnlyList<string>>(
+            (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c.ToList());
+
         builder.Property(s => s.SampleDescriptions)
             .HasColumnType("jsonb")
             .HasConversion(
                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>());
+                v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>())
+            .Metadata.SetValueComparer(stringListComparer);
 
         builder.Property(s => s.CreatedAtUtc)
             .IsRequired();
