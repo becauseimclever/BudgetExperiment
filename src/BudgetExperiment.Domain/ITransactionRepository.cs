@@ -86,4 +86,18 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
         int year,
         int month,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all transactions that do not have a category assigned.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A collection of uncategorized transactions.</returns>
+    Task<IReadOnlyList<Transaction>> GetUncategorizedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all unique transaction descriptions for pattern analysis.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A collection of unique descriptions.</returns>
+    Task<IReadOnlyList<string>> GetAllDescriptionsAsync(CancellationToken cancellationToken = default);
 }

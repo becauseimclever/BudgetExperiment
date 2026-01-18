@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IBudgetGoalService, BudgetGoalService>();
         services.AddScoped<IBudgetProgressService, BudgetProgressService>();
         services.AddScoped<IUserSettingsService, UserSettingsService>();
+        services.AddScoped<ICategorizationEngine, CategorizationEngine>();
         return services;
     }
 }

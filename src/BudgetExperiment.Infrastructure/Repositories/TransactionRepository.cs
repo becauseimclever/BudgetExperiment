@@ -195,6 +195,26 @@ internal sealed class TransactionRepository : ITransactionRepository
         return MoneyValue.Create("USD", totalSpending);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetUncategorizedAsync(CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(this._context.Transactions)
+            .Where(t => t.CategoryId == null)
+            .OrderByDescending(t => t.Date)
+            .ThenByDescending(t => t.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> GetAllDescriptionsAsync(CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(this._context.Transactions)
+            .Select(t => t.Description)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToListAsync(cancellationToken);
+    }
+
     private IQueryable<Transaction> ApplyScopeFilter(IQueryable<Transaction> query)
     {
         var userId = this._userContext.UserIdAsGuid;
