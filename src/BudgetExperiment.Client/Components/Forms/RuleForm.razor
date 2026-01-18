@@ -1,0 +1,205 @@
+@* RuleForm.razor - Reusable categorization rule create/edit form *@
+
+<form @onsubmit="HandleSubmit">
+    <div class="form-group">
+        <label for="ruleName" class="form-label">Rule Name:</label>
+        <input id="ruleName" 
+               type="text"
+               class="form-control"
+               @bind="Model.Name" 
+               @bind:event="oninput"
+               placeholder="e.g., Grocery Stores"
+               required />
+    </div>
+
+    <div class="form-group">
+        <label for="rulePattern" class="form-label">Pattern:</label>
+        <input id="rulePattern" 
+               type="text"
+               class="form-control"
+               @bind="Model.Pattern" 
+               @bind:event="oninput"
+               placeholder="Text to match in transaction description"
+               required />
+        <small class="text-secondary">The text pattern to match against transaction descriptions</small>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-group-half">
+            <label for="matchType" class="form-label">Match Type:</label>
+            <select id="matchType" class="form-control" @bind="Model.MatchType" required>
+                <option value="Contains">Contains</option>
+                <option value="Exact">Exact Match</option>
+                <option value="StartsWith">Starts With</option>
+                <option value="EndsWith">Ends With</option>
+                <option value="Regex">Regular Expression</option>
+            </select>
+        </div>
+
+        <div class="form-group form-group-half">
+            <label class="form-label">&nbsp;</label>
+            <div class="form-check">
+                <input type="checkbox" 
+                       id="caseSensitive" 
+                       class="form-check-input"
+                       @bind="Model.CaseSensitive" />
+                <label for="caseSensitive" class="form-check-label">Case Sensitive</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="categoryId" class="form-label">Target Category:</label>
+        <select id="categoryId" class="form-control" @bind="SelectedCategoryId" required>
+            <option value="">-- Select a category --</option>
+            @foreach (var category in Categories.OrderBy(c => c.Type).ThenBy(c => c.Name))
+            {
+                <option value="@category.Id">@category.Name (@category.Type)</option>
+            }
+        </select>
+        <small class="text-secondary">The category to assign when this rule matches</small>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Pattern) && OnTestPattern.HasDelegate)
+    {
+        <div class="form-group">
+            <button type="button" class="btn btn-secondary btn-sm" @onclick="TestPattern" disabled="@IsTesting">
+                @if (IsTesting)
+                {
+                    <span>Testing...</span>
+                }
+                else
+                {
+                    <span>🔍 Test Pattern</span>
+                }
+            </button>
+            @if (TestResult != null)
+            {
+                <div class="test-results mt-2">
+                    <small class="text-secondary">
+                        Found <strong>@TestResult.MatchCount</strong> matching transaction(s)
+                    </small>
+                    @if (TestResult.MatchingDescriptions.Count > 0)
+                    {
+                        <ul class="test-matches">
+                            @foreach (var desc in TestResult.MatchingDescriptions.Take(5))
+                            {
+                                <li>@desc</li>
+                            }
+                            @if (TestResult.MatchCount > 5)
+                            {
+                                <li class="text-secondary">...and @(TestResult.MatchCount - 5) more</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>@SubmitButtonText</span>
+            }
+        </button>
+        <button type="button" class="btn btn-secondary" @onclick="OnCancel" disabled="@IsSubmitting">
+            Cancel
+        </button>
+    </div>
+</form>
+
+@code {
+    /// <summary>
+    /// Gets or sets the form model for create operations.
+    /// </summary>
+    [Parameter]
+    public CategorizationRuleCreateDto Model { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the available categories.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<BudgetCategoryDto> Categories { get; set; } = Array.Empty<BudgetCategoryDto>();
+
+    /// <summary>
+    /// Gets or sets the submit callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the cancel callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the test pattern callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TestPatternRequest> OnTestPattern { get; set; }
+
+    /// <summary>
+    /// Gets or sets the submit button text.
+    /// </summary>
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Create Rule";
+
+    /// <summary>
+    /// Gets or sets whether the form is currently submitting.
+    /// </summary>
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether a pattern test is in progress.
+    /// </summary>
+    [Parameter]
+    public bool IsTesting { get; set; }
+
+    /// <summary>
+    /// Gets or sets the test pattern result.
+    /// </summary>
+    [Parameter]
+    public TestPatternResponse? TestResult { get; set; }
+
+    private string SelectedCategoryId
+    {
+        get => Model.CategoryId == Guid.Empty ? string.Empty : Model.CategoryId.ToString();
+        set => Model.CategoryId = Guid.TryParse(value, out var id) ? id : Guid.Empty;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Model.CategoryId == Guid.Empty)
+        {
+            return;
+        }
+
+        await OnSubmit.InvokeAsync();
+    }
+
+    private async Task TestPattern()
+    {
+        if (string.IsNullOrWhiteSpace(Model.Pattern))
+        {
+            return;
+        }
+
+        var request = new TestPatternRequest
+        {
+            Pattern = Model.Pattern,
+            MatchType = Model.MatchType,
+            CaseSensitive = Model.CaseSensitive,
+            Limit = 10,
+        };
+
+        await OnTestPattern.InvokeAsync(request);
+    }
+}

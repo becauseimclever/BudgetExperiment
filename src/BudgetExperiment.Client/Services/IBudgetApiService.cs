@@ -487,4 +487,77 @@ public interface IBudgetApiService
     /// <param name="month">The month (1-12).</param>
     /// <returns>The budget progress for the category.</returns>
     Task<BudgetProgressDto?> GetCategoryProgressAsync(Guid categoryId, int year, int month);
+
+    // Categorization Rule Operations
+
+    /// <summary>
+    /// Gets all categorization rules.
+    /// </summary>
+    /// <param name="activeOnly">If true, returns only active rules.</param>
+    /// <returns>List of categorization rules ordered by priority.</returns>
+    Task<IReadOnlyList<CategorizationRuleDto>> GetCategorizationRulesAsync(bool activeOnly = false);
+
+    /// <summary>
+    /// Gets a categorization rule by ID.
+    /// </summary>
+    /// <param name="id">The rule ID.</param>
+    /// <returns>The rule or null if not found.</returns>
+    Task<CategorizationRuleDto?> GetCategorizationRuleAsync(Guid id);
+
+    /// <summary>
+    /// Creates a new categorization rule.
+    /// </summary>
+    /// <param name="model">The rule creation data.</param>
+    /// <returns>The created rule.</returns>
+    Task<CategorizationRuleDto?> CreateCategorizationRuleAsync(CategorizationRuleCreateDto model);
+
+    /// <summary>
+    /// Updates an existing categorization rule.
+    /// </summary>
+    /// <param name="id">The rule ID.</param>
+    /// <param name="model">The rule update data.</param>
+    /// <returns>The updated rule.</returns>
+    Task<CategorizationRuleDto?> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model);
+
+    /// <summary>
+    /// Deletes a categorization rule.
+    /// </summary>
+    /// <param name="id">The rule ID.</param>
+    /// <returns>True if deleted successfully.</returns>
+    Task<bool> DeleteCategorizationRuleAsync(Guid id);
+
+    /// <summary>
+    /// Activates a categorization rule.
+    /// </summary>
+    /// <param name="id">The rule ID.</param>
+    /// <returns>True if activated successfully.</returns>
+    Task<bool> ActivateCategorizationRuleAsync(Guid id);
+
+    /// <summary>
+    /// Deactivates a categorization rule.
+    /// </summary>
+    /// <param name="id">The rule ID.</param>
+    /// <returns>True if deactivated successfully.</returns>
+    Task<bool> DeactivateCategorizationRuleAsync(Guid id);
+
+    /// <summary>
+    /// Tests a pattern against existing transactions.
+    /// </summary>
+    /// <param name="request">The test pattern request.</param>
+    /// <returns>The test results showing matching transactions.</returns>
+    Task<TestPatternResponse?> TestPatternAsync(TestPatternRequest request);
+
+    /// <summary>
+    /// Applies categorization rules to transactions.
+    /// </summary>
+    /// <param name="request">The apply rules request.</param>
+    /// <returns>The result showing how many transactions were categorized.</returns>
+    Task<ApplyRulesResponse?> ApplyCategorizationRulesAsync(ApplyRulesRequest request);
+
+    /// <summary>
+    /// Reorders categorization rules.
+    /// </summary>
+    /// <param name="ruleIds">The ordered list of rule IDs. The index becomes the new priority.</param>
+    /// <returns>True if reordered successfully.</returns>
+    Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds);
 }

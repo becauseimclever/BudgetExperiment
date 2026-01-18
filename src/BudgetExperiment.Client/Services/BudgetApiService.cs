@@ -828,4 +828,106 @@ public sealed class BudgetApiService : IBudgetApiService
             return null;
         }
     }
+
+    // Categorization Rule Operations
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CategorizationRuleDto>> GetCategorizationRulesAsync(bool activeOnly = false)
+    {
+        var url = activeOnly ? "api/v1/categorizationrules?activeOnly=true" : "api/v1/categorizationrules";
+        var result = await this._httpClient.GetFromJsonAsync<List<CategorizationRuleDto>>(url, JsonOptions);
+        return result ?? new List<CategorizationRuleDto>();
+    }
+
+    /// <inheritdoc />
+    public async Task<CategorizationRuleDto?> GetCategorizationRuleAsync(Guid id)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<CategorizationRuleDto>(
+                $"api/v1/categorizationrules/{id}",
+                JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<CategorizationRuleDto?> CreateCategorizationRuleAsync(CategorizationRuleCreateDto model)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/categorizationrules", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<CategorizationRuleDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<CategorizationRuleDto?> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model)
+    {
+        var response = await this._httpClient.PutAsJsonAsync($"api/v1/categorizationrules/{id}", model, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<CategorizationRuleDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteCategorizationRuleAsync(Guid id)
+    {
+        var response = await this._httpClient.DeleteAsync($"api/v1/categorizationrules/{id}");
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ActivateCategorizationRuleAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/categorizationrules/{id}/activate", null);
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeactivateCategorizationRuleAsync(Guid id)
+    {
+        var response = await this._httpClient.PostAsync($"api/v1/categorizationrules/{id}/deactivate", null);
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<TestPatternResponse?> TestPatternAsync(TestPatternRequest request)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/categorizationrules/test", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<TestPatternResponse>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<ApplyRulesResponse?> ApplyCategorizationRulesAsync(ApplyRulesRequest request)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/categorizationrules/apply", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<ApplyRulesResponse>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds)
+    {
+        var request = new ReorderRulesRequest { RuleIds = ruleIds };
+        var response = await this._httpClient.PutAsJsonAsync("api/v1/categorizationrules/reorder", request, JsonOptions);
+        return response.IsSuccessStatusCode;
+    }
 }

@@ -1,0 +1,100 @@
+@* RuleCard.razor - Display card for a categorization rule *@
+
+<div class="card @(Rule.IsActive ? "" : "card-inactive")">
+    <div class="card-body">
+        <div class="rule-header">
+            <div class="rule-priority">
+                <span class="badge badge-secondary" title="Priority (lower = evaluated first)">#@Rule.Priority</span>
+            </div>
+            <div class="rule-info">
+                <h3 class="card-title">@Rule.Name</h3>
+                <div class="rule-details">
+                    <code class="rule-pattern">@Rule.Pattern</code>
+                    <span class="badge @GetMatchTypeBadgeClass()">@Rule.MatchType</span>
+                    @if (Rule.CaseSensitive)
+                    {
+                        <span class="badge badge-secondary" title="Case sensitive">Aa</span>
+                    }
+                </div>
+                <div class="rule-target mt-1">
+                    <span class="text-secondary">→ </span>
+                    <span class="category-name">@(Rule.CategoryName ?? "Unknown Category")</span>
+                </div>
+            </div>
+        </div>
+        @if (!Rule.IsActive)
+        {
+            <span class="badge badge-warning mt-2">Inactive</span>
+        }
+    </div>
+    <div class="card-footer d-flex gap-2">
+        <button class="btn btn-sm btn-secondary" @onclick="HandleEdit" title="Edit rule">
+            <Icon Name="edit" Size="16" />
+        </button>
+        @if (Rule.IsActive)
+        {
+            <button class="btn btn-sm btn-warning" @onclick="HandleDeactivate" title="Deactivate rule">
+                <Icon Name="pause" Size="16" />
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-sm btn-success" @onclick="HandleActivate" title="Activate rule">
+                <Icon Name="play" Size="16" />
+            </button>
+        }
+        <button class="btn btn-sm btn-danger" @onclick="HandleDelete" title="Delete rule">
+            <Icon Name="trash" Size="16" />
+        </button>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the rule to display.
+    /// </summary>
+    [Parameter]
+    public CategorizationRuleDto Rule { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the callback when edit is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnEdit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when delete is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnDelete { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when activate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnActivate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when deactivate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnDeactivate { get; set; }
+
+    private async Task HandleEdit() => await OnEdit.InvokeAsync(Rule);
+    private async Task HandleDelete() => await OnDelete.InvokeAsync(Rule);
+    private async Task HandleActivate() => await OnActivate.InvokeAsync(Rule);
+    private async Task HandleDeactivate() => await OnDeactivate.InvokeAsync(Rule);
+
+    private string GetMatchTypeBadgeClass()
+    {
+        return Rule.MatchType switch
+        {
+            "Exact" => "badge-primary",
+            "Contains" => "badge-info",
+            "StartsWith" => "badge-info",
+            "EndsWith" => "badge-info",
+            "Regex" => "badge-warning",
+            _ => "badge-secondary",
+        };
+    }
+}

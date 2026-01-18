@@ -1,0 +1,388 @@
+@page "/rules"
+
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+@inject ScopeService ScopeService
+
+<PageTitle>Categorization Rules - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Categorization Rules">
+        <Actions>
+            <button class="btn btn-success" @onclick="ShowAddRule">+ Add Rule</button>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading rules..." />
+    }
+    else if (rules.Count == 0 && errorMessage == null)
+    {
+        <div class="empty-state">
+            <p class="empty-message">No categorization rules yet.</p>
+            <p class="text-secondary">
+                Create rules to automatically assign categories to transactions based on their descriptions.
+            </p>
+            <button class="btn btn-primary mt-2" @onclick="ShowAddRule">Create Your First Rule</button>
+        </div>
+    }
+    else if (errorMessage == null)
+    {
+        <div class="rules-info mb-3">
+            <small class="text-secondary">
+                Rules are evaluated in priority order (lowest number first). 
+                The first matching rule assigns the category.
+            </small>
+        </div>
+
+        <div class="rules-list">
+            @foreach (var rule in rules.OrderBy(r => r.Priority))
+            {
+                <RuleCard Rule="@rule"
+                          OnEdit="ShowEditRule"
+                          OnDelete="ConfirmDeleteRule"
+                          OnActivate="ActivateRule"
+                          OnDeactivate="DeactivateRule" />
+            }
+        </div>
+    }
+
+    <Modal IsVisible="@showAddRule" Title="Add Categorization Rule" OnClose="HideAddRule">
+        <RuleForm Model="@newRule"
+                  Categories="@categories"
+                  OnSubmit="CreateRule"
+                  OnCancel="HideAddRule"
+                  OnTestPattern="TestPattern"
+                  IsSubmitting="@isSubmitting"
+                  IsTesting="@isTesting"
+                  TestResult="@testResult" />
+    </Modal>
+
+    <Modal IsVisible="@showEditRule" Title="Edit Categorization Rule" OnClose="HideEditRule">
+        <RuleForm Model="@editRule"
+                  Categories="@categories"
+                  OnSubmit="UpdateRule"
+                  OnCancel="HideEditRule"
+                  OnTestPattern="TestPattern"
+                  SubmitButtonText="Save Changes"
+                  IsSubmitting="@isSubmitting"
+                  IsTesting="@isTesting"
+                  TestResult="@testResult" />
+    </Modal>
+
+    <ConfirmDialog IsVisible="@showDeleteConfirm"
+                   Title="Delete Rule"
+                   Message="@($"Are you sure you want to delete the rule '{deletingRule?.Name}'? This action cannot be undone.")"
+                   ConfirmText="Delete"
+                   IsProcessing="@isDeleting"
+                   OnConfirm="DeleteRule"
+                   OnCancel="CancelDelete" />
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool isRetrying;
+    private bool isSubmitting;
+    private bool isDeleting;
+    private bool isTesting;
+    private string? errorMessage;
+    private List<CategorizationRuleDto> rules = new();
+    private List<BudgetCategoryDto> categories = new();
+
+    // Add state
+    private bool showAddRule;
+    private CategorizationRuleCreateDto newRule = new() { MatchType = "Contains" };
+    private TestPatternResponse? testResult;
+
+    // Edit state
+    private bool showEditRule;
+    private CategorizationRuleCreateDto editRule = new();
+    private Guid? editingRuleId;
+
+    // Delete confirmation state
+    private bool showDeleteConfirm;
+    private CategorizationRuleDto? deletingRule;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ScopeService.ScopeChanged += OnScopeChanged;
+        await LoadDataAsync();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await LoadDataAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var rulesTask = ApiService.GetCategorizationRulesAsync();
+            var categoriesTask = ApiService.GetCategoriesAsync(activeOnly: true);
+
+            await Task.WhenAll(rulesTask, categoriesTask);
+
+            rules = (await rulesTask).ToList();
+            categories = (await categoriesTask).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        await LoadDataAsync();
+        isRetrying = false;
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    // Add Rule
+    private void ShowAddRule()
+    {
+        newRule = new CategorizationRuleCreateDto { MatchType = "Contains" };
+        testResult = null;
+        showAddRule = true;
+    }
+
+    private void HideAddRule()
+    {
+        showAddRule = false;
+        testResult = null;
+    }
+
+    private async Task CreateRule()
+    {
+        isSubmitting = true;
+        try
+        {
+            var created = await ApiService.CreateCategorizationRuleAsync(newRule);
+            if (created != null)
+            {
+                rules.Add(created);
+                HideAddRule();
+            }
+            else
+            {
+                errorMessage = "Failed to create rule.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create rule: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    // Edit Rule
+    private void ShowEditRule(CategorizationRuleDto rule)
+    {
+        editingRuleId = rule.Id;
+        editRule = new CategorizationRuleCreateDto
+        {
+            Name = rule.Name,
+            Pattern = rule.Pattern,
+            MatchType = rule.MatchType,
+            CaseSensitive = rule.CaseSensitive,
+            CategoryId = rule.CategoryId,
+        };
+        testResult = null;
+        showEditRule = true;
+    }
+
+    private void HideEditRule()
+    {
+        showEditRule = false;
+        editingRuleId = null;
+        testResult = null;
+    }
+
+    private async Task UpdateRule()
+    {
+        if (editingRuleId == null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            var updateDto = new CategorizationRuleUpdateDto
+            {
+                Name = editRule.Name,
+                Pattern = editRule.Pattern,
+                MatchType = editRule.MatchType,
+                CaseSensitive = editRule.CaseSensitive,
+                CategoryId = editRule.CategoryId,
+            };
+
+            var updated = await ApiService.UpdateCategorizationRuleAsync(editingRuleId.Value, updateDto);
+            if (updated != null)
+            {
+                var index = rules.FindIndex(r => r.Id == editingRuleId.Value);
+                if (index >= 0)
+                {
+                    rules[index] = updated;
+                }
+
+                HideEditRule();
+            }
+            else
+            {
+                errorMessage = "Failed to update rule.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to update rule: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    // Delete Rule
+    private void ConfirmDeleteRule(CategorizationRuleDto rule)
+    {
+        deletingRule = rule;
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+        deletingRule = null;
+    }
+
+    private async Task DeleteRule()
+    {
+        if (deletingRule == null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        try
+        {
+            var success = await ApiService.DeleteCategorizationRuleAsync(deletingRule.Id);
+            if (success)
+            {
+                rules.RemoveAll(r => r.Id == deletingRule.Id);
+                showDeleteConfirm = false;
+                deletingRule = null;
+            }
+            else
+            {
+                errorMessage = "Failed to delete rule.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete rule: {ex.Message}";
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    // Activate/Deactivate
+    private async Task ActivateRule(CategorizationRuleDto rule)
+    {
+        try
+        {
+            var success = await ApiService.ActivateCategorizationRuleAsync(rule.Id);
+            if (success)
+            {
+                var index = rules.FindIndex(r => r.Id == rule.Id);
+                if (index >= 0)
+                {
+                    rules[index].IsActive = true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to activate rule: {ex.Message}";
+        }
+    }
+
+    private async Task DeactivateRule(CategorizationRuleDto rule)
+    {
+        try
+        {
+            var success = await ApiService.DeactivateCategorizationRuleAsync(rule.Id);
+            if (success)
+            {
+                var index = rules.FindIndex(r => r.Id == rule.Id);
+                if (index >= 0)
+                {
+                    rules[index].IsActive = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to deactivate rule: {ex.Message}";
+        }
+    }
+
+    // Test Pattern
+    private async Task TestPattern(TestPatternRequest request)
+    {
+        isTesting = true;
+        testResult = null;
+        StateHasChanged();
+
+        try
+        {
+            testResult = await ApiService.TestPatternAsync(request);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to test pattern: {ex.Message}";
+        }
+        finally
+        {
+            isTesting = false;
+        }
+    }
+}
