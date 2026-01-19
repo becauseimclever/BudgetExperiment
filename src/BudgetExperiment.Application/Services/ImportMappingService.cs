@@ -14,16 +14,19 @@ public sealed class ImportMappingService : IImportMappingService
 {
     private readonly IImportMappingRepository _repository;
     private readonly IUserContext _userContext;
+    private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportMappingService"/> class.
     /// </summary>
     /// <param name="repository">The import mapping repository.</param>
     /// <param name="userContext">The user context.</param>
-    public ImportMappingService(IImportMappingRepository repository, IUserContext userContext)
+    /// <param name="unitOfWork">The unit of work.</param>
+    public ImportMappingService(IImportMappingRepository repository, IUserContext userContext, IUnitOfWork unitOfWork)
     {
         this._repository = repository;
         this._userContext = userContext;
+        this._unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
@@ -88,6 +91,7 @@ public sealed class ImportMappingService : IImportMappingService
         }
 
         await this._repository.AddAsync(mapping, cancellationToken);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(mapping);
     }
 
@@ -135,6 +139,7 @@ public sealed class ImportMappingService : IImportMappingService
             mapping.SetDuplicateSettings(ToDomain(request.DuplicateSettings));
         }
 
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(mapping);
     }
 
@@ -150,6 +155,7 @@ public sealed class ImportMappingService : IImportMappingService
         }
 
         await this._repository.RemoveAsync(mapping, cancellationToken);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 

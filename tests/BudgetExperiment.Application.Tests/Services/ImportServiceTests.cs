@@ -19,7 +19,10 @@ public class ImportServiceTests
     private readonly Mock<ICategorizationRuleRepository> _ruleRepoMock;
     private readonly Mock<IBudgetCategoryRepository> _categoryRepoMock;
     private readonly Mock<IImportBatchRepository> _batchRepoMock;
+    private readonly Mock<IImportMappingRepository> _mappingRepoMock;
+    private readonly Mock<IAccountRepository> _accountRepoMock;
     private readonly Mock<IUserContext> _userContextMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly ImportService _service;
 
     public ImportServiceTests()
@@ -28,7 +31,10 @@ public class ImportServiceTests
         this._ruleRepoMock = new Mock<ICategorizationRuleRepository>();
         this._categoryRepoMock = new Mock<IBudgetCategoryRepository>();
         this._batchRepoMock = new Mock<IImportBatchRepository>();
+        this._mappingRepoMock = new Mock<IImportMappingRepository>();
+        this._accountRepoMock = new Mock<IAccountRepository>();
         this._userContextMock = new Mock<IUserContext>();
+        this._unitOfWorkMock = new Mock<IUnitOfWork>();
 
         this._ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
@@ -47,7 +53,10 @@ public class ImportServiceTests
             this._ruleRepoMock.Object,
             this._categoryRepoMock.Object,
             this._batchRepoMock.Object,
-            this._userContextMock.Object);
+            this._mappingRepoMock.Object,
+            this._accountRepoMock.Object,
+            this._userContextMock.Object,
+            this._unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -555,6 +564,364 @@ public class ImportServiceTests
         Assert.Equal(ImportRowStatus.Valid, result.Rows[0].Status);
     }
 
+    #region ExecuteAsync Tests
+
+    [Fact]
+    public async Task ExecuteAsync_WithNoUser_ThrowsDomainException()
+    {
+        // Arrange
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns((Guid?)null);
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = Guid.NewGuid(),
+            FileName = "test.csv",
+            Transactions = [],
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DomainException>(() => this._service.ExecuteAsync(request));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithEmptyTransactions_ReturnsEmptyBatchId()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var account = CreateAccount(accountId, "Test Account", userId);
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = accountId,
+            FileName = "test.csv",
+            Transactions = [],
+        };
+
+        // Act
+        var result = await this._service.ExecuteAsync(request);
+
+        // Assert
+        Assert.Equal(Guid.Empty, result.BatchId);
+        Assert.Equal(0, result.ImportedCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithInvalidAccountId_ThrowsDomainException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Account?)null);
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = accountId,
+            FileName = "test.csv",
+            Transactions =
+            [
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Test", Amount = -50m },
+            ],
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DomainException>(() => this._service.ExecuteAsync(request));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreatesTransactionsAndBatch()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var account = CreateAccount(accountId, "Test Account", userId);
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        ImportBatch? savedBatch = null;
+        this._batchRepoMock.Setup(r => r.AddAsync(It.IsAny<ImportBatch>(), It.IsAny<CancellationToken>()))
+            .Callback<ImportBatch, CancellationToken>((b, _) => savedBatch = b)
+            .Returns(Task.CompletedTask);
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = accountId,
+            FileName = "test.csv",
+            Transactions =
+            [
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Transaction 1", Amount = -50m, CategorySource = CategorySource.None },
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 16), Description = "Transaction 2", Amount = -25m, CategorySource = CategorySource.AutoRule },
+            ],
+        };
+
+        // Act
+        var result = await this._service.ExecuteAsync(request);
+
+        // Assert
+        Assert.Equal(2, result.ImportedCount);
+        Assert.Equal(2, result.CreatedTransactionIds.Count);
+        Assert.Equal(1, result.AutoCategorizedCount);
+        Assert.Equal(1, result.UncategorizedCount);
+        Assert.NotNull(savedBatch);
+        Assert.Equal(ImportBatchStatus.Completed, savedBatch.Status);
+        this._transactionRepoMock.Verify(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_TracksCategorySourceStatistics()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var account = CreateAccount(accountId, "Test Account", userId);
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = accountId,
+            FileName = "test.csv",
+            Transactions =
+            [
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Tx1", Amount = -10m, CategorySource = CategorySource.AutoRule },
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Tx2", Amount = -20m, CategorySource = CategorySource.AutoRule },
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Tx3", Amount = -30m, CategorySource = CategorySource.CsvColumn },
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Tx4", Amount = -40m, CategorySource = CategorySource.None },
+            ],
+        };
+
+        // Act
+        var result = await this._service.ExecuteAsync(request);
+
+        // Assert
+        Assert.Equal(4, result.ImportedCount);
+        Assert.Equal(2, result.AutoCategorizedCount);
+        Assert.Equal(1, result.CsvCategorizedCount);
+        Assert.Equal(1, result.UncategorizedCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SetsImportBatchOnTransactions()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var account = CreateAccount(accountId, "Test Account", userId);
+        var reference = "REF123";
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        Transaction? savedTransaction = null;
+        this._transactionRepoMock.Setup(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()))
+            .Callback<Transaction, CancellationToken>((t, _) => savedTransaction = t)
+            .Returns(Task.CompletedTask);
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = accountId,
+            FileName = "test.csv",
+            Transactions =
+            [
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Test", Amount = -50m, Reference = reference },
+            ],
+        };
+
+        // Act
+        var result = await this._service.ExecuteAsync(request);
+
+        // Assert
+        Assert.NotNull(savedTransaction);
+        Assert.NotNull(savedTransaction.ImportBatchId);
+        Assert.Equal(reference, savedTransaction.ExternalReference);
+    }
+
+    #endregion
+
+    #region GetImportHistoryAsync Tests
+
+    [Fact]
+    public async Task GetImportHistoryAsync_WithNoUser_ThrowsDomainException()
+    {
+        // Arrange
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns((Guid?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DomainException>(() => this._service.GetImportHistoryAsync());
+    }
+
+    [Fact]
+    public async Task GetImportHistoryAsync_ReturnsEmptyList_WhenNoBatches()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._batchRepoMock.Setup(r => r.GetByUserAsync(userId, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ImportBatch>());
+
+        // Act
+        var result = await this._service.GetImportHistoryAsync();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetImportHistoryAsync_ReturnsBatchesWithAccountAndMappingNames()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var mappingId = Guid.NewGuid();
+
+        var batch = ImportBatch.Create(userId, accountId, "test.csv", 10, mappingId);
+        batch.Complete(8, 2, 0);
+
+        var account = CreateAccount(accountId, "Checking Account", userId);
+        var mapping = ImportMapping.Create(userId, "Bank CSV", [new ColumnMapping { ColumnIndex = 0, TargetField = ImportField.Date }]);
+
+        // Use reflection to set mapping ID
+        typeof(ImportMapping).GetProperty("Id")!.SetValue(mapping, mappingId);
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._batchRepoMock.Setup(r => r.GetByUserAsync(userId, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ImportBatch> { batch });
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+        this._mappingRepoMock.Setup(r => r.GetByIdAsync(mappingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mapping);
+
+        // Act
+        var result = await this._service.GetImportHistoryAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("test.csv", result[0].FileName);
+        Assert.Equal("Checking Account", result[0].AccountName);
+        Assert.Equal("Bank CSV", result[0].MappingName);
+        Assert.Equal(8, result[0].TransactionCount);
+    }
+
+    [Fact]
+    public async Task GetImportHistoryAsync_ReturnsUnknownForMissingAccount()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+
+        var batch = ImportBatch.Create(userId, accountId, "test.csv", 10, null);
+        batch.Complete(10, 0, 0);
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._batchRepoMock.Setup(r => r.GetByUserAsync(userId, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ImportBatch> { batch });
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Account?)null);
+
+        // Act
+        var result = await this._service.GetImportHistoryAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("Unknown", result[0].AccountName);
+        Assert.Null(result[0].MappingName);
+    }
+
+    #endregion
+
+    #region DeleteImportBatchAsync Tests
+
+    [Fact]
+    public async Task DeleteImportBatchAsync_WithNoUser_ThrowsDomainException()
+    {
+        // Arrange
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns((Guid?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DomainException>(() => this._service.DeleteImportBatchAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task DeleteImportBatchAsync_WithNonExistentBatch_ReturnsZero()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var batchId = Guid.NewGuid();
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._batchRepoMock.Setup(r => r.GetByIdAsync(batchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ImportBatch?)null);
+
+        // Act
+        var result = await this._service.DeleteImportBatchAsync(batchId);
+
+        // Assert
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public async Task DeleteImportBatchAsync_WithOtherUsersBatch_ThrowsDomainException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var batchId = Guid.NewGuid();
+
+        var batch = ImportBatch.Create(otherUserId, accountId, "test.csv", 10, null);
+        typeof(ImportBatch).GetProperty("Id")!.SetValue(batch, batchId);
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._batchRepoMock.Setup(r => r.GetByIdAsync(batchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(batch);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<DomainException>(() => this._service.DeleteImportBatchAsync(batchId));
+    }
+
+    [Fact]
+    public async Task DeleteImportBatchAsync_DeletesTransactionsAndMarksBatchDeleted()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var batchId = Guid.NewGuid();
+
+        var batch = ImportBatch.Create(userId, accountId, "test.csv", 5, null);
+        typeof(ImportBatch).GetProperty("Id")!.SetValue(batch, batchId);
+
+        var account = CreateAccount(accountId, "Test Account", userId);
+        var tx1 = account.AddTransaction(MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 15), "Tx1");
+        var tx2 = account.AddTransaction(MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 15), "Tx2");
+        var tx3 = account.AddTransaction(MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 15), "Tx3");
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._batchRepoMock.Setup(r => r.GetByIdAsync(batchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(batch);
+        this._transactionRepoMock.Setup(r => r.GetByImportBatchAsync(batchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction> { tx1, tx2, tx3 });
+
+        // Act
+        var result = await this._service.DeleteImportBatchAsync(batchId);
+
+        // Assert
+        Assert.Equal(3, result);
+        Assert.Equal(ImportBatchStatus.Deleted, batch.Status);
+        this._transactionRepoMock.Verify(r => r.RemoveAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+    }
+
+    #endregion
+
     private static BudgetCategory CreateCategory(Guid id, string name)
     {
         // Use reflection to create the entity since constructor is private
@@ -567,5 +934,12 @@ public class ImportServiceTests
     private static CategorizationRule CreateCategorizationRule(string name, RuleMatchType matchType, string pattern, Guid categoryId)
     {
         return CategorizationRule.Create(name, matchType, pattern, categoryId);
+    }
+
+    private static Account CreateAccount(Guid id, string name, Guid userId)
+    {
+        var account = Account.CreatePersonal(name, AccountType.Checking, userId);
+        typeof(Account).GetProperty("Id")!.SetValue(account, id);
+        return account;
     }
 }

@@ -17,6 +17,7 @@ public class ImportMappingServiceTests
 {
     private readonly Mock<IImportMappingRepository> _repositoryMock;
     private readonly Mock<IUserContext> _userContextMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly ImportMappingService _service;
     private readonly Guid _testUserId = Guid.NewGuid();
 
@@ -24,12 +25,14 @@ public class ImportMappingServiceTests
     {
         this._repositoryMock = new Mock<IImportMappingRepository>();
         this._userContextMock = new Mock<IUserContext>();
+        this._unitOfWorkMock = new Mock<IUnitOfWork>();
 
         this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(this._testUserId);
 
         this._service = new ImportMappingService(
             this._repositoryMock.Object,
-            this._userContextMock.Object);
+            this._userContextMock.Object,
+            this._unitOfWorkMock.Object);
     }
 
     [Fact]

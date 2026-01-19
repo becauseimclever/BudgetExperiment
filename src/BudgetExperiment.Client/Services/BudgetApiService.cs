@@ -182,6 +182,26 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<TransactionDto?> UpdateTransactionAsync(Guid id, TransactionUpdateDto model)
+    {
+        try
+        {
+            var response = await this._httpClient.PutAsJsonAsync($"api/v1/transactions/{id}", model, JsonOptions);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null)
     {
         try

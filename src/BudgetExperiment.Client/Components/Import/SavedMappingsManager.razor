@@ -1,0 +1,288 @@
+@using BudgetExperiment.Domain
+
+<div class="saved-mappings-manager">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Saved Column Mappings</h5>
+        @if (Mappings.Count > 0)
+        {
+            <button class="btn btn-sm btn-outline-secondary" @onclick="RefreshMappings">
+                <Icon Name="refresh" Size="14" /> Refresh
+            </button>
+        }
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-secondary small mt-2">Loading saved mappings...</p>
+        </div>
+    }
+    else if (Mappings.Count == 0)
+    {
+        <div class="empty-state text-center py-4">
+            <Icon Name="save" Size="32" Class="text-secondary mb-2" />
+            <p class="text-secondary mb-0">No saved mappings yet.</p>
+            <p class="text-secondary small">Save a column mapping during import to reuse it later.</p>
+        </div>
+    }
+    else
+    {
+        <div class="mappings-list">
+            @foreach (var mapping in Mappings.OrderByDescending(m => m.CreatedAtUtc))
+            {
+                <div class="mapping-card card mb-2">
+                    <div class="card-body py-2 px-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="mapping-info flex-grow-1">
+                                <h6 class="mb-1">@mapping.Name</h6>
+                                <div class="d-flex flex-wrap gap-2 text-secondary small">
+                                    <span>
+                                        <Icon Name="file" Size="12" />
+                                        @mapping.ColumnMappings.Count columns
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(mapping.DateFormat))
+                                    {
+                                        <span>
+                                            <Icon Name="calendar" Size="12" />
+                                            @mapping.DateFormat
+                                        </span>
+                                    }
+                                    @if (mapping.AmountMode.HasValue)
+                                    {
+                                        <span>
+                                            <Icon Name="money" Size="12" />
+                                            @GetAmountModeLabel(mapping.AmountMode.Value)
+                                        </span>
+                                    }
+                                </div>
+                                <small class="text-secondary">
+                                    Created @mapping.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")
+                                </small>
+                            </div>
+                            <div class="mapping-actions d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        title="Edit mapping name"
+                                        @onclick="() => StartEditing(mapping)">
+                                    <Icon Name="pencil" Size="14" />
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        title="Delete mapping"
+                                        disabled="@(deletingMappingId == mapping.Id)"
+                                        @onclick="() => ConfirmDelete(mapping)">
+                                    @if (deletingMappingId == mapping.Id)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    }
+                                    else
+                                    {
+                                        <Icon Name="trash" Size="14" />
+                                    }
+                                </button>
+                            </div>
+                        </div>
+
+                        @if (expandedMappingId == mapping.Id)
+                        {
+                            <div class="mapping-details mt-3 pt-3 border-top">
+                                <h6 class="small text-secondary mb-2">Column Mappings</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var col in mapping.ColumnMappings.Where(c => c.TargetField != ImportField.Ignore))
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            @col.ColumnHeader → @col.TargetField
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <button class="btn btn-sm btn-link p-0 mt-2"
+                                @onclick="() => ToggleExpand(mapping.Id)">
+                            @if (expandedMappingId == mapping.Id)
+                            {
+                                <Icon Name="chevron-up" Size="14" />
+                                <text>Hide details</text>
+                            }
+                            else
+                            {
+                                <Icon Name="chevron-down" Size="14" />
+                                <text>Show details</text>
+                            }
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Edit Mapping Dialog -->
+    <Modal IsVisible="@(editingMapping != null)" Title="Edit Mapping" OnClose="CancelEdit">
+        @if (editingMapping != null)
+        {
+            <div class="form-group">
+                <label class="form-label">Mapping Name</label>
+                <input type="text" class="form-control" @bind="editMappingName" placeholder="Enter mapping name" />
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                <button class="btn btn-primary"
+                        disabled="@(string.IsNullOrWhiteSpace(editMappingName) || isSaving)"
+                        @onclick="SaveEdit">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    }
+                    Save
+                </button>
+            </div>
+        }
+    </Modal>
+
+    <!-- Delete Confirmation Dialog -->
+    <Modal IsVisible="@(mappingToDelete != null)" Title="Delete Mapping" OnClose="CancelDeleteMapping">
+        @if (mappingToDelete != null)
+        {
+            <p>Are you sure you want to delete the mapping <strong>"@mappingToDelete.Name"</strong>?</p>
+            <p class="text-secondary small">
+                This will not affect any previously imported transactions.
+            </p>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-secondary" @onclick="CancelDeleteMapping">Cancel</button>
+                <button class="btn btn-danger" @onclick="ExecuteDeleteMapping" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    }
+                    Delete
+                </button>
+            </div>
+        }
+    </Modal>
+</div>
+
+<style>
+    .saved-mappings-manager .empty-state {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+    }
+
+    .saved-mappings-manager .mapping-card {
+        transition: box-shadow 0.2s ease;
+    }
+
+    .saved-mappings-manager .mapping-card:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .saved-mappings-manager .mappings-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<ImportMappingDto> Mappings { get; set; } = [];
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback OnRefresh { get; set; }
+
+    [Parameter]
+    public EventCallback<ImportMappingDto> OnUpdateMapping { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDeleteMapping { get; set; }
+
+    private Guid? expandedMappingId;
+    private Guid? deletingMappingId;
+    private ImportMappingDto? mappingToDelete;
+    private ImportMappingDto? editingMapping;
+    private string editMappingName = string.Empty;
+    private bool isDeleting = false;
+    private bool isSaving = false;
+
+    private async Task RefreshMappings()
+    {
+        await OnRefresh.InvokeAsync();
+    }
+
+    private void ToggleExpand(Guid mappingId)
+    {
+        expandedMappingId = expandedMappingId == mappingId ? null : mappingId;
+    }
+
+    private void StartEditing(ImportMappingDto mapping)
+    {
+        editingMapping = mapping;
+        editMappingName = mapping.Name;
+    }
+
+    private void CancelEdit()
+    {
+        editingMapping = null;
+        editMappingName = string.Empty;
+    }
+
+    private async Task SaveEdit()
+    {
+        if (editingMapping == null || string.IsNullOrWhiteSpace(editMappingName)) return;
+
+        isSaving = true;
+
+        try
+        {
+            // Create updated mapping DTO
+            var updatedMapping = editingMapping with { Name = editMappingName };
+            await OnUpdateMapping.InvokeAsync(updatedMapping);
+            editingMapping = null;
+            editMappingName = string.Empty;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ConfirmDelete(ImportMappingDto mapping)
+    {
+        mappingToDelete = mapping;
+    }
+
+    private void CancelDeleteMapping()
+    {
+        mappingToDelete = null;
+    }
+
+    private async Task ExecuteDeleteMapping()
+    {
+        if (mappingToDelete == null) return;
+
+        isDeleting = true;
+        deletingMappingId = mappingToDelete.Id;
+
+        try
+        {
+            await OnDeleteMapping.InvokeAsync(mappingToDelete.Id);
+            mappingToDelete = null;
+        }
+        finally
+        {
+            isDeleting = false;
+            deletingMappingId = null;
+        }
+    }
+
+    private static string GetAmountModeLabel(AmountParseMode mode) => mode switch
+    {
+        AmountParseMode.NegativeIsExpense => "Negative = expense",
+        AmountParseMode.PositiveIsExpense => "Positive = expense",
+        AmountParseMode.SeparateColumns => "Split columns",
+        _ => mode.ToString(),
+    };
+}

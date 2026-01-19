@@ -35,7 +35,10 @@ public sealed class ImportService : IImportService
     private readonly ICategorizationRuleRepository _ruleRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly IImportBatchRepository _batchRepository;
+    private readonly IImportMappingRepository _mappingRepository;
+    private readonly IAccountRepository _accountRepository;
     private readonly IUserContext _userContext;
+    private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportService"/> class.
@@ -44,19 +47,28 @@ public sealed class ImportService : IImportService
     /// <param name="ruleRepository">Categorization rule repository.</param>
     /// <param name="categoryRepository">Budget category repository.</param>
     /// <param name="batchRepository">Import batch repository.</param>
+    /// <param name="mappingRepository">Import mapping repository.</param>
+    /// <param name="accountRepository">Account repository.</param>
     /// <param name="userContext">User context.</param>
+    /// <param name="unitOfWork">Unit of work.</param>
     public ImportService(
         ITransactionRepository transactionRepository,
         ICategorizationRuleRepository ruleRepository,
         IBudgetCategoryRepository categoryRepository,
         IImportBatchRepository batchRepository,
-        IUserContext userContext)
+        IImportMappingRepository mappingRepository,
+        IAccountRepository accountRepository,
+        IUserContext userContext,
+        IUnitOfWork unitOfWork)
     {
         this._transactionRepository = transactionRepository;
         this._ruleRepository = ruleRepository;
         this._categoryRepository = categoryRepository;
         this._batchRepository = batchRepository;
+        this._mappingRepository = mappingRepository;
+        this._accountRepository = accountRepository;
         this._userContext = userContext;
+        this._unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
@@ -71,8 +83,11 @@ public sealed class ImportService : IImportService
         var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
 
         // Load categories for name matching (when CSV has category column)
+        // Use first match for duplicate names (prefer shared categories)
         var categories = await this._categoryRepository.GetAllAsync(cancellationToken);
-        var categoryByName = categories.ToDictionary(c => c.Name, c => c, StringComparer.OrdinalIgnoreCase);
+        var categoryByName = categories
+            .GroupBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
         // Load existing transactions for duplicate detection
         IReadOnlyList<Transaction> existingTransactions = [];
@@ -126,24 +141,180 @@ public sealed class ImportService : IImportService
     }
 
     /// <inheritdoc />
-    public Task<ImportResult> ExecuteAsync(ImportExecuteRequest request, CancellationToken cancellationToken = default)
+    public async Task<ImportResult> ExecuteAsync(ImportExecuteRequest request, CancellationToken cancellationToken = default)
     {
-        // Phase 4 implementation
-        throw new NotImplementedException("Import execution will be implemented in Phase 4.");
+        var userId = this.GetRequiredUserId();
+
+        // Validate account exists
+        var account = await this._accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
+        if (account is null)
+        {
+            throw new DomainException($"Account with ID '{request.AccountId}' not found.");
+        }
+
+        if (request.Transactions.Count == 0)
+        {
+            return new ImportResult
+            {
+                BatchId = Guid.Empty,
+                ImportedCount = 0,
+            };
+        }
+
+        // Create import batch
+        var batch = ImportBatch.Create(
+            userId,
+            request.AccountId,
+            request.FileName,
+            request.Transactions.Count,
+            request.MappingId);
+
+        await this._batchRepository.AddAsync(batch, cancellationToken);
+
+        // If a mapping was used, mark it as recently used
+        if (request.MappingId.HasValue)
+        {
+            var mapping = await this._mappingRepository.GetByIdAsync(request.MappingId.Value, cancellationToken);
+            mapping?.MarkUsed();
+        }
+
+        // Create transactions
+        var createdIds = new List<Guid>();
+        int autoCategorized = 0;
+        int csvCategorized = 0;
+        int uncategorized = 0;
+        int skipped = 0;
+
+        foreach (var txData in request.Transactions)
+        {
+            try
+            {
+                var amount = MoneyValue.Create("USD", txData.Amount);
+
+                // Use Account.AddTransaction to properly set scope
+                var transaction = account.AddTransaction(
+                    amount,
+                    txData.Date,
+                    txData.Description,
+                    txData.CategoryId);
+
+                // Set import batch reference
+                transaction.SetImportBatch(batch.Id, txData.Reference);
+
+                await this._transactionRepository.AddAsync(transaction, cancellationToken);
+                createdIds.Add(transaction.Id);
+
+                // Track categorization statistics
+                switch (txData.CategorySource)
+                {
+                    case CategorySource.AutoRule:
+                        autoCategorized++;
+                        break;
+                    case CategorySource.CsvColumn:
+                        csvCategorized++;
+                        break;
+                    case CategorySource.None:
+                        uncategorized++;
+                        break;
+                }
+            }
+            catch (DomainException)
+            {
+                skipped++;
+            }
+        }
+
+        // Update batch with actual count and mark complete
+        batch.Complete(createdIds.Count, skipped, errors: 0);
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new ImportResult
+        {
+            BatchId = batch.Id,
+            ImportedCount = createdIds.Count,
+            SkippedCount = skipped,
+            ErrorCount = 0,
+            CreatedTransactionIds = createdIds,
+            AutoCategorizedCount = autoCategorized,
+            CsvCategorizedCount = csvCategorized,
+            UncategorizedCount = uncategorized,
+        };
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<ImportBatchDto>> GetImportHistoryAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ImportBatchDto>> GetImportHistoryAsync(CancellationToken cancellationToken = default)
     {
-        // Phase 4 implementation
-        throw new NotImplementedException("Import history will be implemented in Phase 4.");
+        var userId = this.GetRequiredUserId();
+        var batches = await this._batchRepository.GetByUserAsync(userId, cancellationToken: cancellationToken);
+
+        var result = new List<ImportBatchDto>();
+        foreach (var batch in batches.OrderByDescending(b => b.ImportedAtUtc))
+        {
+            string? mappingName = null;
+            if (batch.MappingId.HasValue)
+            {
+                var mapping = await this._mappingRepository.GetByIdAsync(batch.MappingId.Value, cancellationToken);
+                mappingName = mapping?.Name;
+            }
+
+            var account = await this._accountRepository.GetByIdAsync(batch.AccountId, cancellationToken);
+
+            result.Add(new ImportBatchDto
+            {
+                Id = batch.Id,
+                AccountId = batch.AccountId,
+                AccountName = account?.Name ?? "Unknown",
+                FileName = batch.FileName,
+                TransactionCount = batch.ImportedCount,
+                Status = batch.Status,
+                ImportedAtUtc = batch.ImportedAtUtc,
+                MappingId = batch.MappingId,
+                MappingName = mappingName,
+            });
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
-    public Task<int> DeleteImportBatchAsync(Guid batchId, CancellationToken cancellationToken = default)
+    public async Task<int> DeleteImportBatchAsync(Guid batchId, CancellationToken cancellationToken = default)
     {
-        // Phase 4 implementation
-        throw new NotImplementedException("Batch deletion will be implemented in Phase 4.");
+        var userId = this.GetRequiredUserId();
+
+        // Verify batch exists and belongs to user
+        var batch = await this._batchRepository.GetByIdAsync(batchId, cancellationToken);
+        if (batch is null)
+        {
+            return 0;
+        }
+
+        if (batch.UserId != userId)
+        {
+            throw new DomainException("Cannot delete import batch owned by another user.");
+        }
+
+        // Get and delete all transactions from this batch
+        var transactions = await this._transactionRepository.GetByImportBatchAsync(batchId, cancellationToken);
+        var count = transactions.Count;
+
+        foreach (var transaction in transactions)
+        {
+            await this._transactionRepository.RemoveAsync(transaction, cancellationToken);
+        }
+
+        // Mark batch as deleted
+        batch.MarkDeleted();
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return count;
+    }
+
+    private Guid GetRequiredUserId()
+    {
+        return this._userContext.UserIdAsGuid
+            ?? throw new DomainException("User ID is required for import operations.");
     }
 
     private static ImportPreviewRow ProcessRow(

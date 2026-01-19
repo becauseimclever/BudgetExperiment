@@ -436,7 +436,8 @@ public class DescriptionMatchModeTests
     [Theory]
     [InlineData(DescriptionMatchMode.Exact, 0)]
     [InlineData(DescriptionMatchMode.Contains, 1)]
-    [InlineData(DescriptionMatchMode.Fuzzy, 2)]
+    [InlineData(DescriptionMatchMode.StartsWith, 2)]
+    [InlineData(DescriptionMatchMode.Fuzzy, 3)]
     public void DescriptionMatchMode_Has_Expected_Values(DescriptionMatchMode mode, int expectedValue)
     {
         Assert.Equal(expectedValue, (int)mode);
