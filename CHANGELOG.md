@@ -4,8 +4,25 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-01-19
+
 ### Features
 
+- **import:** Intelligent CSV import system for bank transaction data (Feature 027)
+- **import:** User-defined column mappings with source presets
+- **import:** Support for multiple date and amount formats
+- **import:** Import preview with validation and duplicate detection
+- **import:** Saved mapping configurations per import source
+- **import:** Integration with auto-categorization rules engine
+
+## [3.2.0] - 2026-01-18
+
+### Features
+
+- **ai:** AI-powered rule suggestions using local Ollama models (Feature 025)
+- **ai:** Pattern analysis for uncategorized transactions
+- **ai:** Rule optimization recommendations
+- **ai:** Configurable Ollama endpoint and model selection
 - **e2e:** Playwright end-to-end test framework (Feature 024.4)
 - **e2e:** Page object model for maintainable UI tests
 - **e2e:** Smoke tests for application accessibility
