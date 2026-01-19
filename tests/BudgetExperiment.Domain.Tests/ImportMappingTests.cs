@@ -219,18 +219,18 @@ public class ImportMappingTests
 
         var newSettings = new DuplicateDetectionSettings
         {
-            DateWindowDays = 3,
-            AmountTolerancePercent = 1.0m,
-            DescriptionMode = DescriptionMatchMode.Exact,
+            Enabled = true,
+            LookbackDays = 30,
+            DescriptionMatch = DescriptionMatchMode.Exact,
         };
 
         // Act
         importMapping.UpdateDuplicateSettings(newSettings);
 
         // Assert
-        Assert.Equal(3, importMapping.DuplicateSettings.DateWindowDays);
-        Assert.Equal(1.0m, importMapping.DuplicateSettings.AmountTolerancePercent);
-        Assert.Equal(DescriptionMatchMode.Exact, importMapping.DuplicateSettings.DescriptionMode);
+        Assert.True(importMapping.DuplicateSettings.Enabled);
+        Assert.Equal(30, importMapping.DuplicateSettings.LookbackDays);
+        Assert.Equal(DescriptionMatchMode.Exact, importMapping.DuplicateSettings.DescriptionMatch);
         Assert.True(importMapping.UpdatedAtUtc >= originalUpdatedAt);
     }
 
@@ -357,9 +357,9 @@ public class DuplicateDetectionSettingsTests
         var settings = new DuplicateDetectionSettings();
 
         // Assert
-        Assert.Equal(1, settings.DateWindowDays);
-        Assert.Equal(0m, settings.AmountTolerancePercent);
-        Assert.Equal(DescriptionMatchMode.Fuzzy, settings.DescriptionMode);
+        Assert.True(settings.Enabled);
+        Assert.Equal(30, settings.LookbackDays);
+        Assert.Equal(DescriptionMatchMode.Exact, settings.DescriptionMatch);
     }
 
     [Fact]
@@ -368,24 +368,24 @@ public class DuplicateDetectionSettingsTests
         // Arrange & Act
         var settings = new DuplicateDetectionSettings
         {
-            DateWindowDays = 5,
-            AmountTolerancePercent = 2.5m,
-            DescriptionMode = DescriptionMatchMode.Contains,
+            Enabled = false,
+            LookbackDays = 60,
+            DescriptionMatch = DescriptionMatchMode.Contains,
         };
 
         // Assert
-        Assert.Equal(5, settings.DateWindowDays);
-        Assert.Equal(2.5m, settings.AmountTolerancePercent);
-        Assert.Equal(DescriptionMatchMode.Contains, settings.DescriptionMode);
+        Assert.False(settings.Enabled);
+        Assert.Equal(60, settings.LookbackDays);
+        Assert.Equal(DescriptionMatchMode.Contains, settings.DescriptionMatch);
     }
 
     [Fact]
     public void DuplicateDetectionSettings_Equality()
     {
         // Arrange
-        var settings1 = new DuplicateDetectionSettings { DateWindowDays = 1, AmountTolerancePercent = 0m, DescriptionMode = DescriptionMatchMode.Fuzzy };
-        var settings2 = new DuplicateDetectionSettings { DateWindowDays = 1, AmountTolerancePercent = 0m, DescriptionMode = DescriptionMatchMode.Fuzzy };
-        var settings3 = new DuplicateDetectionSettings { DateWindowDays = 3, AmountTolerancePercent = 0m, DescriptionMode = DescriptionMatchMode.Fuzzy };
+        var settings1 = new DuplicateDetectionSettings { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
+        var settings2 = new DuplicateDetectionSettings { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
+        var settings3 = new DuplicateDetectionSettings { Enabled = true, LookbackDays = 60, DescriptionMatch = DescriptionMatchMode.Exact };
 
         // Assert
         Assert.Equal(settings1, settings2);

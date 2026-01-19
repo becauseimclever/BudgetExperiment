@@ -23,4 +23,14 @@ public enum AmountParseMode
     /// Separate debit and credit columns are used for expenses and income.
     /// </summary>
     SeparateColumns = 2,
+
+    /// <summary>
+    /// Treat all values as expenses (make negative regardless of sign).
+    /// </summary>
+    AbsoluteExpense = 3,
+
+    /// <summary>
+    /// Treat all values as income (make positive regardless of sign).
+    /// </summary>
+    AbsoluteIncome = 4,
 }

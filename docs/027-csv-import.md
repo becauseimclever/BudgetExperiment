@@ -826,21 +826,30 @@ The import leverages all existing categorization rule types:
 
 ---
 
-### Phase 3: Import Service - Preview & Validation
+### Phase 3: Import Service - Preview & Validation ✅
 
 **Objective:** Implement preview and validation logic
 
+**Status:** Completed (2026-01-18)
+
 **Tasks:**
-- [ ] Implement `IImportMappingService`
-- [ ] Implement `IImportService.PreviewAsync`
-- [ ] Date parsing with multiple formats
-- [ ] Amount parsing with various formats
-- [ ] Duplicate detection logic
-- [ ] Category matching by name (from CSV column)
-- [ ] Integrate `ICategorizationRuleService` for auto-categorization
-- [ ] Apply categorization rules to preview rows (without saving)
-- [ ] Track category source (CSV, Rule, None) for each row
-- [ ] Write unit tests for categorization integration
+- [x] Implement `IImportMappingService`
+- [x] Implement `IImportService.PreviewAsync`
+- [x] Date parsing with multiple formats
+- [x] Amount parsing with various formats
+- [x] Duplicate detection logic
+- [x] Category matching by name (from CSV column)
+- [x] Integrate `ICategorizationRuleRepository` for auto-categorization
+- [x] Apply categorization rules to preview rows (without saving)
+- [x] Track category source (CSV, Rule, None) for each row
+- [x] Write unit tests for categorization integration
+
+**Deliverables:**
+- Domain: `CategorySource`, `ImportRowStatus` enums; added `StartsWith` to `DescriptionMatchMode`; added `AbsoluteExpense`/`AbsoluteIncome` to `AmountParseMode`
+- Contracts: `ImportDtos.cs` (ImportPreviewRequest, ImportPreviewResult, ImportPreviewRow, ImportExecuteRequest, etc.)
+- Application: `IImportMappingService`, `ImportMappingService`, `IImportService`, `ImportService`
+- Infrastructure: Added `GetForDuplicateDetectionAsync`, `GetByImportBatchAsync` to `ITransactionRepository`
+- Tests: 33 new unit tests for import services (all passing)
 
 ---
 

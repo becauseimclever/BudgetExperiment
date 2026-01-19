@@ -10,21 +10,19 @@ namespace BudgetExperiment.Domain;
 public sealed record DuplicateDetectionSettings
 {
     /// <summary>
-    /// Gets the number of days before and after to search for duplicates.
-    /// Default is 1 (±1 day from transaction date).
+    /// Gets a value indicating whether duplicate detection is enabled.
     /// </summary>
-    public int DateWindowDays { get; init; } = 1;
+    public bool Enabled { get; init; } = true;
 
     /// <summary>
-    /// Gets the percentage tolerance for amount matching.
-    /// 0 means exact match, 1 means ±1% tolerance.
-    /// Default is 0 (exact match).
+    /// Gets the number of days to look back for duplicates.
+    /// Default is 30 days.
     /// </summary>
-    public decimal AmountTolerancePercent { get; init; } = 0m;
+    public int LookbackDays { get; init; } = 30;
 
     /// <summary>
     /// Gets the mode for matching transaction descriptions.
-    /// Default is fuzzy matching.
+    /// Default is exact matching.
     /// </summary>
-    public DescriptionMatchMode DescriptionMode { get; init; } = DescriptionMatchMode.Fuzzy;
+    public DescriptionMatchMode DescriptionMatch { get; init; } = DescriptionMatchMode.Exact;
 }

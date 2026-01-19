@@ -20,7 +20,12 @@ public enum DescriptionMatchMode
     Contains = 1,
 
     /// <summary>
+    /// One description must start with the other.
+    /// </summary>
+    StartsWith = 2,
+
+    /// <summary>
     /// Fuzzy matching allowing minor differences.
     /// </summary>
-    Fuzzy = 2,
+    Fuzzy = 3,
 }

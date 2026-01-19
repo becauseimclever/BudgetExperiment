@@ -179,4 +179,83 @@ public sealed class ImportMapping
     {
         this.LastUsedAtUtc = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Renames the mapping.
+    /// </summary>
+    /// <param name="name">The new name.</param>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public void Rename(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new DomainException("Name is required.");
+        }
+
+        var trimmedName = name.Trim();
+        if (trimmedName.Length > MaxNameLength)
+        {
+            throw new DomainException($"Name cannot exceed {MaxNameLength} characters.");
+        }
+
+        this.Name = trimmedName;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the column mappings.
+    /// </summary>
+    /// <param name="mappings">The new column mappings.</param>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public void UpdateMappings(IReadOnlyList<ColumnMapping> mappings)
+    {
+        if (mappings is null || mappings.Count == 0)
+        {
+            throw new DomainException("At least one column mapping is required.");
+        }
+
+        this._columnMappings = mappings.ToList();
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the date format for parsing dates.
+    /// </summary>
+    /// <param name="dateFormat">The date format string.</param>
+    public void SetDateFormat(string dateFormat)
+    {
+        if (string.IsNullOrWhiteSpace(dateFormat))
+        {
+            dateFormat = "MM/dd/yyyy";
+        }
+
+        this.DateFormat = dateFormat.Trim();
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the amount parse mode.
+    /// </summary>
+    /// <param name="mode">The amount parse mode.</param>
+    public void SetAmountMode(AmountParseMode mode)
+    {
+        this.AmountMode = mode;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the duplicate detection settings.
+    /// </summary>
+    /// <param name="settings">The duplicate detection settings.</param>
+    /// <exception cref="DomainException">Thrown when settings is null.</exception>
+    public void SetDuplicateSettings(DuplicateDetectionSettings settings)
+    {
+        if (settings is null)
+        {
+            throw new DomainException("Duplicate detection settings are required.");
+        }
+
+        this.DuplicateSettings = settings;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
 }

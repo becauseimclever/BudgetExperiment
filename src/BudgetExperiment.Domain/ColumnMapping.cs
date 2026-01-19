@@ -29,4 +29,10 @@ public sealed record ColumnMapping
     /// Future use for combining or transforming column values.
     /// </summary>
     public string? TransformExpression { get; init; }
+
+    /// <summary>
+    /// Gets an optional date format override for this specific column.
+    /// If not specified, the mapping's default date format is used.
+    /// </summary>
+    public string? DateFormat { get; init; }
 }

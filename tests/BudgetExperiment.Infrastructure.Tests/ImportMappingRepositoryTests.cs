@@ -256,9 +256,9 @@ public class ImportMappingRepositoryTests
         var importMapping = ImportMapping.Create(userId, "Settings Test", mappings);
         importMapping.UpdateDuplicateSettings(new DuplicateDetectionSettings
         {
-            DateWindowDays = 5,
-            AmountTolerancePercent = 1.5m,
-            DescriptionMode = DescriptionMatchMode.Exact,
+            Enabled = false,
+            LookbackDays = 60,
+            DescriptionMatch = DescriptionMatchMode.Fuzzy,
         });
 
         await repository.AddAsync(importMapping);
@@ -272,9 +272,9 @@ public class ImportMappingRepositoryTests
         // Assert
         Assert.NotNull(retrieved);
         Assert.NotNull(retrieved.DuplicateSettings);
-        Assert.Equal(5, retrieved.DuplicateSettings.DateWindowDays);
-        Assert.Equal(1.5m, retrieved.DuplicateSettings.AmountTolerancePercent);
-        Assert.Equal(DescriptionMatchMode.Exact, retrieved.DuplicateSettings.DescriptionMode);
+        Assert.False(retrieved.DuplicateSettings.Enabled);
+        Assert.Equal(60, retrieved.DuplicateSettings.LookbackDays);
+        Assert.Equal(DescriptionMatchMode.Fuzzy, retrieved.DuplicateSettings.DescriptionMatch);
     }
 
     [Fact]
