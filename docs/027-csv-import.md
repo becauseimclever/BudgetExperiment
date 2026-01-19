@@ -802,18 +802,27 @@ The import leverages all existing categorization rule types:
 
 ---
 
-### Phase 2: Infrastructure - Repositories & Migrations
+### Phase 2: Infrastructure - Repositories & Migrations ✅
 
 **Objective:** Implement persistence layer
 
+**Status:** Completed (2026-01-18)
+
 **Tasks:**
-- [ ] Create EF Core configuration for `ImportMapping`
-- [ ] Create EF Core configuration for `ImportBatch`
-- [ ] Update `Transaction` configuration for new columns
-- [ ] Add database migration
-- [ ] Implement `IImportMappingRepository`
-- [ ] Implement `IImportBatchRepository`
-- [ ] Write integration tests
+- [x] Create EF Core configuration for `ImportMapping`
+- [x] Create EF Core configuration for `ImportBatch`
+- [x] Update `Transaction` configuration for new columns
+- [x] Add database migration
+- [x] Implement `IImportMappingRepository`
+- [x] Implement `IImportBatchRepository`
+- [x] Write integration tests
+
+**Deliverables:**
+- Infrastructure: `ImportMappingConfiguration`, `ImportBatchConfiguration`
+- Repository Interfaces: `IImportMappingRepository`, `IImportBatchRepository`
+- Repository Implementations: `ImportMappingRepository`, `ImportBatchRepository`
+- Migration: `AddCsvImportSupport` (ImportMappings, ImportBatches tables + Transaction columns)
+- Tests: 20 integration tests (all passing)
 
 ---
 

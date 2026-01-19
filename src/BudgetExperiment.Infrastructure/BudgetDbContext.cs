@@ -77,6 +77,16 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<RuleSuggestion> RuleSuggestions => this.Set<RuleSuggestion>();
 
+    /// <summary>
+    /// Gets the import mappings.
+    /// </summary>
+    public DbSet<ImportMapping> ImportMappings => this.Set<ImportMapping>();
+
+    /// <summary>
+    /// Gets the import batches.
+    /// </summary>
+    public DbSet<ImportBatch> ImportBatches => this.Set<ImportBatch>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
