@@ -100,4 +100,29 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of unique descriptions.</returns>
     Task<IReadOnlyList<string>> GetAllDescriptionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Finds potential duplicate transactions based on date, amount, and description.
+    /// Used during import preview to detect existing transactions.
+    /// </summary>
+    /// <param name="accountId">The account to search in.</param>
+    /// <param name="startDate">Start of date range.</param>
+    /// <param name="endDate">End of date range.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Transactions in the date range for duplicate matching.</returns>
+    Task<IReadOnlyList<Transaction>> GetForDuplicateDetectionAsync(
+        Guid accountId,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all transactions from a specific import batch.
+    /// </summary>
+    /// <param name="batchId">The import batch ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Transactions from the batch.</returns>
+    Task<IReadOnlyList<Transaction>> GetByImportBatchAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default);
 }

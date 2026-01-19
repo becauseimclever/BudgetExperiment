@@ -71,6 +71,14 @@ public interface IBudgetApiService
     Task<TransactionDto?> CreateTransactionAsync(TransactionCreateDto model);
 
     /// <summary>
+    /// Updates an existing transaction.
+    /// </summary>
+    /// <param name="id">The transaction ID.</param>
+    /// <param name="model">The transaction update data.</param>
+    /// <returns>The updated transaction.</returns>
+    Task<TransactionDto?> UpdateTransactionAsync(Guid id, TransactionUpdateDto model);
+
+    /// <summary>
     /// Gets a complete calendar grid with all data pre-computed.
     /// </summary>
     /// <param name="year">The year.</param>

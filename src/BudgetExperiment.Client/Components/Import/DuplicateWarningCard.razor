@@ -1,0 +1,150 @@
+@using BudgetExperiment.Domain
+
+<div class="duplicate-warning-card alert alert-info">
+    <div class="d-flex align-items-start gap-3">
+        <div class="warning-icon">
+            <Icon Name="copy" Size="24" Class="text-info" />
+        </div>
+        <div class="flex-grow-1">
+            <h6 class="alert-heading mb-2">
+                <Icon Name="alert-triangle" Size="16" />
+                @DuplicateCount Potential Duplicate@(DuplicateCount != 1 ? "s" : "") Found
+            </h6>
+            <p class="mb-2 small">
+                These transactions appear to match existing transactions in your account.
+                Duplicates are <strong>deselected by default</strong> but you can choose to import them if needed.
+            </p>
+
+            @if (ShowDetails && DuplicateRows.Any())
+            {
+                <div class="duplicate-details mt-3">
+                    <table class="table table-sm table-borderless mb-0">
+                        <thead>
+                            <tr>
+                                <th>Row</th>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in DuplicateRows.Take(5))
+                            {
+                                <tr>
+                                    <td class="text-secondary">@row.RowIndex</td>
+                                    <td>@row.Date?.ToString("MMM d")</td>
+                                    <td class="description-cell" title="@row.Description">
+                                        @TruncateText(row.Description, 30)
+                                    </td>
+                                    <td class="text-end">@row.Amount?.ToString("C")</td>
+                                    <td class="text-secondary small">@row.StatusMessage</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (DuplicateRows.Count() > 5)
+                    {
+                        <small class="text-secondary">
+                            And @(DuplicateRows.Count() - 5) more...
+                        </small>
+                    }
+                </div>
+            }
+
+            <div class="mt-3 d-flex gap-2 align-items-center">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ToggleDetails">
+                    @if (ShowDetails)
+                    {
+                        <Icon Name="chevron-up" Size="14" />
+                        <text>Hide Details</text>
+                    }
+                    else
+                    {
+                        <Icon Name="chevron-down" Size="14" />
+                        <text>Show Details</text>
+                    }
+                </button>
+
+                <button class="btn btn-sm btn-outline-info" @onclick="SelectAllDuplicates">
+                    Include All Duplicates
+                </button>
+
+                <button class="btn btn-sm btn-outline-secondary" @onclick="DeselectAllDuplicates">
+                    Exclude All Duplicates
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .duplicate-warning-card {
+        border-left: 4px solid var(--info);
+    }
+
+    .duplicate-warning-card .warning-icon {
+        flex-shrink: 0;
+    }
+
+    .duplicate-warning-card .duplicate-details {
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        padding: 0.75rem;
+    }
+
+    .duplicate-warning-card .description-cell {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int DuplicateCount { get; set; }
+
+    [Parameter]
+    public IEnumerable<ImportPreviewRow> DuplicateRows { get; set; } = [];
+
+    [Parameter]
+    public HashSet<int> SelectedIndices { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<HashSet<int>> SelectedIndicesChanged { get; set; }
+
+    private bool ShowDetails { get; set; } = false;
+
+    private void ToggleDetails()
+    {
+        ShowDetails = !ShowDetails;
+    }
+
+    private async Task SelectAllDuplicates()
+    {
+        foreach (var row in DuplicateRows)
+        {
+            SelectedIndices.Add(row.RowIndex);
+        }
+
+        await SelectedIndicesChanged.InvokeAsync(SelectedIndices);
+    }
+
+    private async Task DeselectAllDuplicates()
+    {
+        foreach (var row in DuplicateRows)
+        {
+            SelectedIndices.Remove(row.RowIndex);
+        }
+
+        await SelectedIndicesChanged.InvokeAsync(SelectedIndices);
+    }
+
+    private static string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        if (text.Length <= maxLength) return text;
+        return text[..maxLength] + "...";
+    }
+}

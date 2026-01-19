@@ -1,0 +1,152 @@
+<div class="import-summary-card">
+    <div class="text-center mb-4">
+        @if (Result.ErrorCount == 0)
+        {
+            <div class="success-icon mb-3">
+                <Icon Name="check-circle" Size="64" Class="text-success" />
+            </div>
+            <h3 class="text-success">Import Successful!</h3>
+        }
+        else
+        {
+            <div class="warning-icon mb-3">
+                <Icon Name="alert-triangle" Size="64" Class="text-warning" />
+            </div>
+            <h3 class="text-warning">Import Completed with Issues</h3>
+        }
+    </div>
+
+    <div class="summary-stats row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card text-center p-3 rounded bg-success-subtle">
+                <div class="stat-value h3 mb-1 text-success">@Result.ImportedCount</div>
+                <div class="stat-label small text-secondary">Imported</div>
+            </div>
+        </div>
+        @if (Result.SkippedCount > 0)
+        {
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-center p-3 rounded bg-warning-subtle">
+                    <div class="stat-value h3 mb-1 text-warning">@Result.SkippedCount</div>
+                    <div class="stat-label small text-secondary">Skipped</div>
+                </div>
+            </div>
+        }
+        @if (Result.ErrorCount > 0)
+        {
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-center p-3 rounded bg-danger-subtle">
+                    <div class="stat-value h3 mb-1 text-danger">@Result.ErrorCount</div>
+                    <div class="stat-label small text-secondary">Errors</div>
+                </div>
+            </div>
+        }
+        <div class="col-6 col-md-3">
+            <div class="stat-card text-center p-3 rounded bg-info-subtle">
+                <div class="stat-value h3 mb-1 text-info">@Result.AutoCategorizedCount</div>
+                <div class="stat-label small text-secondary">Auto-Categorized</div>
+            </div>
+        </div>
+    </div>
+
+    @if (Result.ImportedCount > 0)
+    {
+        <div class="categorization-breakdown mb-4">
+            <h6 class="mb-3">Categorization Summary</h6>
+            <div class="d-flex flex-wrap gap-3">
+                @if (Result.AutoCategorizedCount > 0)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <Icon Name="sparkles" Size="16" Class="text-primary" />
+                        <span><strong>@Result.AutoCategorizedCount</strong> by rules</span>
+                    </div>
+                }
+                @if (Result.CsvCategorizedCount > 0)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <Icon Name="file" Size="16" Class="text-secondary" />
+                        <span><strong>@Result.CsvCategorizedCount</strong> from CSV</span>
+                    </div>
+                }
+                @if (Result.UncategorizedCount > 0)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <Icon Name="help-circle" Size="16" Class="text-warning" />
+                        <span><strong>@Result.UncategorizedCount</strong> uncategorized</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="import-actions d-flex flex-wrap justify-content-center gap-3">
+        <a href="@($"accounts/{AccountId}/transactions")" class="btn btn-primary">
+            <Icon Name="eye" Size="16" /> View Transactions
+        </a>
+        <button class="btn btn-outline-secondary" @onclick="OnStartNewImport">
+            <Icon Name="upload" Size="16" /> Import Another File
+        </button>
+    </div>
+
+    @if (Result.BatchId != Guid.Empty)
+    {
+        <div class="batch-info mt-4 text-center">
+            <small class="text-secondary">
+                Import Batch ID: <code>@Result.BatchId.ToString()[..8]...</code>
+            </small>
+        </div>
+    }
+</div>
+
+<style>
+    .import-summary-card {
+        padding: 2rem;
+    }
+
+    .import-summary-card .success-icon,
+    .import-summary-card .warning-icon {
+        animation: pop-in 0.3s ease-out;
+    }
+
+    @@keyframes pop-in {
+        0% {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .import-summary-card .stat-card {
+        border: 1px solid var(--border-color);
+    }
+
+    .import-summary-card .bg-success-subtle {
+        background: color-mix(in srgb, var(--success) 15%, transparent);
+    }
+
+    .import-summary-card .bg-warning-subtle {
+        background: color-mix(in srgb, var(--warning) 15%, transparent);
+    }
+
+    .import-summary-card .bg-danger-subtle {
+        background: color-mix(in srgb, var(--danger) 15%, transparent);
+    }
+
+    .import-summary-card .bg-info-subtle {
+        background: color-mix(in srgb, var(--info) 15%, transparent);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public ImportResult Result { get; set; } = new();
+
+    [Parameter]
+    public Guid AccountId { get; set; }
+
+    [Parameter]
+    public EventCallback OnStartNewImport { get; set; }
+}

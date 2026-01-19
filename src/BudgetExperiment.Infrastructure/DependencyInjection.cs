@@ -43,6 +43,8 @@ public static class DependencyInjection
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
         services.AddScoped<ICategorizationRuleRepository, CategorizationRuleRepository>();
         services.AddScoped<IRuleSuggestionRepository, RuleSuggestionRepository>();
+        services.AddScoped<IImportMappingRepository, ImportMappingRepository>();
+        services.AddScoped<IImportBatchRepository, ImportBatchRepository>();
 
         // AI Settings Provider (database-backed)
         services.AddScoped<IAiSettingsProvider, AiSettingsProvider>();

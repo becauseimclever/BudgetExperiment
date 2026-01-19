@@ -1,0 +1,223 @@
+@using BudgetExperiment.Domain
+
+<div class="column-mapping-editor">
+    <h5 class="mb-3">Column Mappings</h5>
+    <p class="text-secondary mb-3">
+        Map each CSV column to a transaction field. Required fields are marked with <span class="text-danger">*</span>
+    </p>
+
+    <div class="mapping-grid">
+        <div class="mapping-header">
+            <span>CSV Column</span>
+            <span>Sample Values</span>
+            <span>Map To Field</span>
+        </div>
+
+        @foreach (var mapping in Mappings)
+        {
+            <div class="mapping-row">
+                <div class="column-name">
+                    <strong>@mapping.ColumnHeader</strong>
+                    <span class="text-secondary small d-block">Column @(mapping.ColumnIndex + 1)</span>
+                </div>
+                <div class="sample-values">
+                    @foreach (var sample in mapping.SampleValues.Take(2))
+                    {
+                        <span class="sample-value" title="@sample">@TruncateValue(sample)</span>
+                    }
+                </div>
+                <div class="field-select">
+                    <select class="form-control form-control-sm"
+                            value="@GetFieldValue(mapping.TargetField)"
+                            @onchange="e => HandleFieldChange(mapping, e)">
+                        <option value="">(Skip this column)</option>
+                        <optgroup label="Required">
+                            <option value="@ImportField.Date" disabled="@IsFieldUsed(ImportField.Date, mapping)">
+                                Date *
+                            </option>
+                            <option value="@ImportField.Description" disabled="@IsFieldUsed(ImportField.Description, mapping)">
+                                Description *
+                            </option>
+                            <option value="@ImportField.Amount" disabled="@IsFieldUsed(ImportField.Amount, mapping)">
+                                Amount (single column) *
+                            </option>
+                        </optgroup>
+                        <optgroup label="Split Amount">
+                            <option value="@ImportField.DebitAmount" disabled="@IsFieldUsed(ImportField.DebitAmount, mapping)">
+                                Debit Amount (expense)
+                            </option>
+                            <option value="@ImportField.CreditAmount" disabled="@IsFieldUsed(ImportField.CreditAmount, mapping)">
+                                Credit Amount (income)
+                            </option>
+                        </optgroup>
+                        <optgroup label="Optional">
+                            <option value="@ImportField.Category" disabled="@IsFieldUsed(ImportField.Category, mapping)">
+                                Category
+                            </option>
+                            <option value="@ImportField.Reference" disabled="@IsFieldUsed(ImportField.Reference, mapping)">
+                                Reference / Check #
+                            </option>
+                        </optgroup>
+                    </select>
+
+                    @if (mapping.TargetField.HasValue)
+                    {
+                        <span class="mapped-indicator text-success">
+                            <Icon Name="check" Size="14" />
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="mapping-summary mt-3">
+        @{
+            var requiredStatus = GetRequiredFieldsStatus();
+        }
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge @(requiredStatus.hasDate ? "badge-success" : "badge-warning")">
+                Date: @(requiredStatus.hasDate ? "✓" : "Required")
+            </span>
+            <span class="badge @(requiredStatus.hasDescription ? "badge-success" : "badge-warning")">
+                Description: @(requiredStatus.hasDescription ? "✓" : "Required")
+            </span>
+            <span class="badge @(requiredStatus.hasAmount ? "badge-success" : "badge-warning")">
+                Amount: @(requiredStatus.hasAmount ? "✓" : "Required")
+            </span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .mapping-grid {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .mapping-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.5fr;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        background: var(--bg-secondary);
+        font-weight: 600;
+        font-size: 0.875rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .mapping-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.5fr;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        align-items: center;
+    }
+
+    .mapping-row:last-child {
+        border-bottom: none;
+    }
+
+    .mapping-row:hover {
+        background: var(--bg-hover);
+    }
+
+    .sample-values {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .sample-value {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        background: var(--bg-secondary);
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .field-select {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .field-select select {
+        flex: 1;
+    }
+
+    .mapped-indicator {
+        flex-shrink: 0;
+    }
+
+    .badge-success {
+        background: var(--success);
+        color: white;
+    }
+
+    .badge-warning {
+        background: var(--warning);
+        color: var(--text-primary);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<ColumnMappingState> Mappings { get; set; } = [];
+
+    [Parameter]
+    public EventCallback OnMappingChanged { get; set; }
+
+    private static string TruncateValue(string value, int maxLength = 30)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "(empty)";
+        if (value.Length <= maxLength) return value;
+        return value[..maxLength] + "...";
+    }
+
+    private static string GetFieldValue(ImportField? field)
+    {
+        return field?.ToString() ?? string.Empty;
+    }
+
+    private async Task HandleFieldChange(ColumnMappingState mapping, ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+
+        if (string.IsNullOrEmpty(value))
+        {
+            mapping.TargetField = null;
+        }
+        else if (Enum.TryParse<ImportField>(value, out var field))
+        {
+            mapping.TargetField = field;
+        }
+
+        await OnMappingChanged.InvokeAsync();
+    }
+
+    private bool IsFieldUsed(ImportField field, ColumnMappingState currentMapping)
+    {
+        return Mappings.Any(m => m != currentMapping && m.TargetField == field);
+    }
+
+    private (bool hasDate, bool hasDescription, bool hasAmount) GetRequiredFieldsStatus()
+    {
+        var fields = Mappings.Where(m => m.TargetField.HasValue).Select(m => m.TargetField!.Value).ToHashSet();
+
+        var hasDate = fields.Contains(ImportField.Date);
+        var hasDescription = fields.Contains(ImportField.Description);
+        var hasAmount = fields.Contains(ImportField.Amount) ||
+                        (fields.Contains(ImportField.DebitAmount) && fields.Contains(ImportField.CreditAmount));
+
+        return (hasDate, hasDescription, hasAmount);
+    }
+}

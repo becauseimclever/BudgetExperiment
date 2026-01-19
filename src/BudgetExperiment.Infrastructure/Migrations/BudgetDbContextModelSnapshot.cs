@@ -305,6 +305,115 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.ToTable("CategorizationRules", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetExperiment.Domain.ImportBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ErrorCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("ImportedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ImportedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("MappingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("TotalRows")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("IX_ImportBatches_AccountId");
+
+                    b.HasIndex("ImportedAtUtc")
+                        .HasDatabaseName("IX_ImportBatches_ImportedAtUtc");
+
+                    b.HasIndex("MappingId")
+                        .HasDatabaseName("IX_ImportBatches_MappingId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ImportBatches_UserId");
+
+                    b.ToTable("ImportBatches", (string)null);
+                });
+
+            modelBuilder.Entity("BudgetExperiment.Domain.ImportMapping", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AmountMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ColumnMappings")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("ColumnMappingsJson");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DateFormat")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("DuplicateSettings")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("DuplicateSettingsJson");
+
+                    b.Property<DateTime?>("LastUsedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ImportMappings_UserId");
+
+                    b.HasIndex("UserId", "Name")
+                        .HasDatabaseName("IX_ImportMappings_UserId_Name");
+
+                    b.ToTable("ImportMappings", (string)null);
+                });
+
             modelBuilder.Entity("BudgetExperiment.Domain.RecurringTransaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -626,6 +735,13 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("ExternalReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("ImportBatchId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("OwnerUserId")
                         .HasColumnType("uuid");
 
@@ -662,6 +778,9 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("Date");
+
+                    b.HasIndex("ImportBatchId")
+                        .HasDatabaseName("IX_Transactions_ImportBatchId");
 
                     b.HasIndex("OwnerUserId");
 
@@ -798,6 +917,20 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("BudgetExperiment.Domain.ImportBatch", b =>
+                {
+                    b.HasOne("BudgetExperiment.Domain.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BudgetExperiment.Domain.ImportMapping", null)
+                        .WithMany()
+                        .HasForeignKey("MappingId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("BudgetExperiment.Domain.RecurringTransaction", b =>
@@ -1042,6 +1175,11 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.HasOne("BudgetExperiment.Domain.BudgetCategory", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BudgetExperiment.Domain.ImportBatch", null)
+                        .WithMany()
+                        .HasForeignKey("ImportBatchId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("BudgetExperiment.Domain.RecurringTransaction", null)

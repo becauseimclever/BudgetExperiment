@@ -1,0 +1,47 @@
+@using BudgetExperiment.Domain
+
+<div class="amount-mode-selector">
+    <label class="form-label">Amount Format</label>
+    <select class="form-control" value="@((int)Value)" @onchange="HandleChange">
+        <option value="@((int)AmountParseMode.NegativeIsExpense)">
+            Single column (negative = expense)
+        </option>
+        <option value="@((int)AmountParseMode.SeparateColumns)">
+            Separate debit/credit columns
+        </option>
+        <option value="@((int)AmountParseMode.PositiveIsExpense)">
+            Single column (positive = expense)
+        </option>
+    </select>
+    <small class="text-secondary">
+        @switch (Value)
+        {
+            case AmountParseMode.NegativeIsExpense:
+                <text>Negative amounts are expenses, positive amounts are income (most common)</text>
+                break;
+            case AmountParseMode.SeparateColumns:
+                <text>Use when your CSV has separate Debit and Credit amount columns</text>
+                break;
+            case AmountParseMode.PositiveIsExpense:
+                <text>Positive amounts are expenses, negative amounts are income (inverted)</text>
+                break;
+        }
+    </small>
+</div>
+
+@code {
+    [Parameter]
+    public AmountParseMode Value { get; set; } = AmountParseMode.NegativeIsExpense;
+
+    [Parameter]
+    public EventCallback<AmountParseMode> ValueChanged { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var intValue))
+        {
+            var newValue = (AmountParseMode)intValue;
+            await ValueChanged.InvokeAsync(newValue);
+        }
+    }
+}

@@ -1,0 +1,63 @@
+<div class="saved-mapping-selector mb-4">
+    <label class="form-label">Use Saved Mapping</label>
+    <div class="d-flex gap-2">
+        <select class="form-control" value="@GetSelectedValue()" @onchange="HandleChange">
+            <option value="">(Start fresh)</option>
+            @foreach (var mapping in Mappings)
+            {
+                <option value="@mapping.Id">@mapping.Name</option>
+            }
+        </select>
+        @if (SelectedMappingId.HasValue)
+        {
+            <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ClearSelection" title="Clear selection">
+                <Icon Name="x" Size="16" />
+            </button>
+        }
+    </div>
+    @if (SelectedMappingId.HasValue)
+    {
+        var selected = Mappings.FirstOrDefault(m => m.Id == SelectedMappingId.Value);
+        if (selected != null)
+        {
+            <small class="text-secondary d-block mt-1">
+                @selected.ColumnMappings.Count columns mapped • Created @selected.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")
+            </small>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<ImportMappingDto> Mappings { get; set; } = [];
+
+    [Parameter]
+    public Guid? SelectedMappingId { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid?> OnMappingSelected { get; set; }
+
+    private string GetSelectedValue()
+    {
+        return SelectedMappingId?.ToString() ?? string.Empty;
+    }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+
+        if (string.IsNullOrEmpty(value))
+        {
+            await OnMappingSelected.InvokeAsync(null);
+        }
+        else if (Guid.TryParse(value, out var id))
+        {
+            await OnMappingSelected.InvokeAsync(id);
+        }
+    }
+
+    private async Task ClearSelection()
+    {
+        await OnMappingSelected.InvokeAsync(null);
+    }
+}

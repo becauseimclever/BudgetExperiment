@@ -1,0 +1,255 @@
+@using BudgetExperiment.Domain
+
+<div class="import-history-list">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Import History</h5>
+        @if (Batches.Count > 0)
+        {
+            <button class="btn btn-sm btn-outline-secondary" @onclick="RefreshHistory">
+                <Icon Name="refresh" Size="14" /> Refresh
+            </button>
+        }
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-secondary small mt-2">Loading import history...</p>
+        </div>
+    }
+    else if (Batches.Count == 0)
+    {
+        <div class="empty-state text-center py-4">
+            <Icon Name="file" Size="32" Class="text-secondary mb-2" />
+            <p class="text-secondary mb-0">No import history yet.</p>
+            <p class="text-secondary small">Imported transactions will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="history-table-container">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>File</th>
+                        <th>Account</th>
+                        <th class="text-center">Transactions</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var batch in Batches.OrderByDescending(b => b.ImportedAtUtc))
+                    {
+                        <tr class="@(batch.Status == ImportBatchStatus.Deleted ? "text-muted" : "")">
+                            <td>
+                                <span title="@batch.ImportedAtUtc.ToLocalTime().ToString("f")">
+                                    @batch.ImportedAtUtc.ToLocalTime().ToString("MMM d, yyyy")
+                                </span>
+                                <small class="d-block text-secondary">
+                                    @batch.ImportedAtUtc.ToLocalTime().ToString("h:mm tt")
+                                </small>
+                            </td>
+                            <td class="file-cell" title="@batch.FileName">
+                                @TruncateFileName(batch.FileName, 25)
+                            </td>
+                            <td>@batch.AccountName</td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">@batch.TransactionCount</span>
+                            </td>
+                            <td>
+                                @switch (batch.Status)
+                                {
+                                    case ImportBatchStatus.Completed:
+                                        <span class="badge badge-success">
+                                            <Icon Name="check" Size="12" /> Completed
+                                        </span>
+                                        break;
+                                    case ImportBatchStatus.PartiallyCompleted:
+                                        <span class="badge badge-warning">
+                                            <Icon Name="alert-triangle" Size="12" /> Partial
+                                        </span>
+                                        break;
+                                    case ImportBatchStatus.Deleted:
+                                        <span class="badge badge-secondary">
+                                            <Icon Name="trash" Size="12" /> Deleted
+                                        </span>
+                                        break;
+                                    default:
+                                        <span class="badge badge-info">
+                                            <Icon Name="spinner" Size="12" /> Pending
+                                        </span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (batch.Status != ImportBatchStatus.Deleted)
+                                {
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            title="Delete this import batch (undo)"
+                                            disabled="@(deletingBatchId == batch.Id)"
+                                            @onclick="() => ConfirmDelete(batch)">
+                                        @if (deletingBatchId == batch.Id)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        }
+                                        else
+                                        {
+                                            <Icon Name="trash" Size="14" />
+                                        }
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <!-- Delete Confirmation Dialog -->
+    <Modal IsVisible="@(batchToDelete != null)" Title="Delete Import Batch" OnClose="CancelDelete">
+        @if (batchToDelete != null)
+        {
+            <div class="alert alert-warning mb-3">
+                <Icon Name="alert-triangle" Size="16" />
+                <strong>Warning:</strong> This will delete all @batchToDelete.TransactionCount transactions
+                from this import and cannot be undone.
+            </div>
+            <p>
+                Are you sure you want to delete the import batch from
+                <strong>@batchToDelete.FileName</strong>?
+            </p>
+            <div class="d-flex gap-2">
+                <div class="flex-grow-1">
+                    <small class="text-secondary">
+                        Imported on @batchToDelete.ImportedAtUtc.ToLocalTime().ToString("MMM d, yyyy 'at' h:mm tt")
+                    </small>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                <button class="btn btn-danger" @onclick="ExecuteDelete" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    }
+                    Delete @batchToDelete.TransactionCount Transactions
+                </button>
+            </div>
+        }
+    </Modal>
+</div>
+
+<style>
+    .import-history-list .history-table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .import-history-list .table {
+        font-size: 0.875rem;
+    }
+
+    .import-history-list .file-cell {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .import-history-list .badge-success {
+        background: var(--success);
+        color: white;
+    }
+
+    .import-history-list .badge-warning {
+        background: var(--warning);
+        color: var(--text-primary);
+    }
+
+    .import-history-list .badge-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+    }
+
+    .import-history-list .badge-info {
+        background: var(--info);
+        color: white;
+    }
+
+    .import-history-list .empty-state {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<ImportBatchDto> Batches { get; set; } = [];
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback OnRefresh { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDeleteBatch { get; set; }
+
+    private ImportBatchDto? batchToDelete;
+    private Guid? deletingBatchId;
+    private bool isDeleting = false;
+
+    private async Task RefreshHistory()
+    {
+        await OnRefresh.InvokeAsync();
+    }
+
+    private void ConfirmDelete(ImportBatchDto batch)
+    {
+        batchToDelete = batch;
+    }
+
+    private void CancelDelete()
+    {
+        batchToDelete = null;
+    }
+
+    private async Task ExecuteDelete()
+    {
+        if (batchToDelete == null) return;
+
+        isDeleting = true;
+        deletingBatchId = batchToDelete.Id;
+
+        try
+        {
+            await OnDeleteBatch.InvokeAsync(batchToDelete.Id);
+            batchToDelete = null;
+        }
+        finally
+        {
+            isDeleting = false;
+            deletingBatchId = null;
+        }
+    }
+
+    private static string TruncateFileName(string fileName, int maxLength)
+    {
+        if (string.IsNullOrEmpty(fileName)) return string.Empty;
+        if (fileName.Length <= maxLength) return fileName;
+
+        var extension = Path.GetExtension(fileName);
+        var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+        var availableLength = maxLength - extension.Length - 3; // 3 for "..."
+
+        if (availableLength < 5) return fileName[..maxLength] + "...";
+
+        return nameWithoutExt[..availableLength] + "..." + extension;
+    }
+}

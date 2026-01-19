@@ -10,4 +10,8 @@
     <PackageReference Update="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BudgetExperiment.Domain\BudgetExperiment.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

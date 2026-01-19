@@ -1,0 +1,360 @@
+@using BudgetExperiment.Domain
+
+<div class="import-preview-table">
+    <div class="preview-header d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="mb-0">Preview Results</h5>
+            <small class="text-secondary">
+                @PreviewResult.Rows.Count rows found •
+                <span class="text-success">@PreviewResult.ValidCount valid</span>
+                @if (PreviewResult.WarningCount > 0)
+                {
+                    <span> • <span class="text-warning">@PreviewResult.WarningCount warnings</span></span>
+                }
+                @if (PreviewResult.ErrorCount > 0)
+                {
+                    <span> • <span class="text-danger">@PreviewResult.ErrorCount errors</span></span>
+                }
+                @if (PreviewResult.DuplicateCount > 0)
+                {
+                    <span> • <span class="text-info">@PreviewResult.DuplicateCount duplicates</span></span>
+                }
+            </small>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" @onclick="SelectAll" title="Select all valid rows">
+                Select All
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" @onclick="DeselectAll" title="Deselect all rows">
+                Deselect All
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th class="select-col">
+                        <input type="checkbox"
+                               checked="@IsAllSelected"
+                               @onchange="ToggleAll"
+                               title="Toggle all" />
+                    </th>
+                    <th class="row-col">#</th>
+                    <th class="status-col">Status</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th class="amount-col text-end">Amount</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in PreviewResult.Rows)
+                {
+                    <tr class="@GetRowClass(row)">
+                        <td class="select-col">
+                            <input type="checkbox"
+                                   checked="@IsRowSelected(row.RowIndex)"
+                                   disabled="@(row.Status == ImportRowStatus.Error)"
+                                   @onchange="() => ToggleRow(row.RowIndex)" />
+                        </td>
+                        <td class="row-col text-secondary">@row.RowIndex</td>
+                        <td class="status-col">
+                            @switch (row.Status)
+                            {
+                                case ImportRowStatus.Valid:
+                                    <span class="badge badge-success" title="Ready to import">
+                                        <Icon Name="check" Size="12" /> Valid
+                                    </span>
+                                    break;
+                                case ImportRowStatus.Warning:
+                                    <span class="badge badge-warning" title="@row.StatusMessage">
+                                        <Icon Name="alert-triangle" Size="12" /> Warning
+                                    </span>
+                                    break;
+                                case ImportRowStatus.Error:
+                                    <span class="badge badge-danger" title="@row.StatusMessage">
+                                        <Icon Name="x" Size="12" /> Error
+                                    </span>
+                                    break;
+                                case ImportRowStatus.Duplicate:
+                                    <span class="badge badge-info" title="@row.StatusMessage">
+                                        <Icon Name="copy" Size="12" /> Duplicate
+                                    </span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @if (row.Date.HasValue)
+                            {
+                                @row.Date.Value.ToString("MMM d, yyyy")
+                            }
+                            else
+                            {
+                                <span class="text-danger">Invalid</span>
+                            }
+                        </td>
+                        <td class="description-col" title="@row.Description">
+                            @TruncateText(row.Description, 40)
+                        </td>
+                        <td class="amount-col text-end @(row.Amount < 0 ? "text-danger" : "text-success")">
+                            @if (row.Amount.HasValue)
+                            {
+                                @row.Amount.Value.ToString("C")
+                            }
+                            else
+                            {
+                                <span class="text-danger">Invalid</span>
+                            }
+                        </td>
+                        <td class="category-col">
+                            @if (!string.IsNullOrEmpty(row.Category))
+                            {
+                                <span class="badge @GetCategoryBadgeClass(row.CategorySource)" title="@GetCategoryTooltip(row)">
+                                    @row.Category
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Uncategorized</span>
+                            }
+                        </td>
+                    </tr>
+                    @if (!string.IsNullOrEmpty(row.StatusMessage) && row.Status != ImportRowStatus.Valid)
+                    {
+                        <tr class="status-message-row">
+                            <td colspan="7" class="ps-5 py-1">
+                                <small class="@GetStatusMessageClass(row.Status)">
+                                    <Icon Name="@GetStatusIcon(row.Status)" Size="12" />
+                                    @row.StatusMessage
+                                </small>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="preview-footer mt-3 d-flex justify-content-between align-items-center">
+        <div class="selection-summary">
+            <strong>@SelectedIndices.Count</strong> of @PreviewResult.Rows.Count(r => r.Status != ImportRowStatus.Error) rows selected
+            @if (SelectedAmount != 0)
+            {
+                <span class="ms-2">
+                    Total: <strong class="@(SelectedAmount < 0 ? "text-danger" : "text-success")">@SelectedAmount.ToString("C")</strong>
+                </span>
+            }
+        </div>
+        @if (PreviewResult.AutoCategorizedCount > 0)
+        {
+            <div class="text-secondary">
+                <Icon Name="sparkles" Size="14" />
+                @PreviewResult.AutoCategorizedCount rows auto-categorized by rules
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .import-preview-table .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .import-preview-table .table {
+        font-size: 0.875rem;
+    }
+
+    .import-preview-table .select-col {
+        width: 40px;
+        text-align: center;
+    }
+
+    .import-preview-table .row-col {
+        width: 50px;
+    }
+
+    .import-preview-table .status-col {
+        width: 100px;
+    }
+
+    .import-preview-table .amount-col {
+        width: 120px;
+        white-space: nowrap;
+    }
+
+    .import-preview-table .description-col {
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .import-preview-table .category-col {
+        max-width: 150px;
+    }
+
+    .import-preview-table .badge-success {
+        background: var(--success);
+        color: white;
+    }
+
+    .import-preview-table .badge-warning {
+        background: var(--warning);
+        color: var(--text-primary);
+    }
+
+    .import-preview-table .badge-danger {
+        background: var(--danger);
+        color: white;
+    }
+
+    .import-preview-table .badge-info {
+        background: var(--info);
+        color: white;
+    }
+
+    .import-preview-table .badge-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+    }
+
+    .import-preview-table .badge-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .import-preview-table tr.row-error {
+        background: color-mix(in srgb, var(--danger) 10%, transparent);
+    }
+
+    .import-preview-table tr.row-warning {
+        background: color-mix(in srgb, var(--warning) 10%, transparent);
+    }
+
+    .import-preview-table tr.row-duplicate {
+        background: color-mix(in srgb, var(--info) 10%, transparent);
+    }
+
+    .import-preview-table .status-message-row {
+        background: var(--bg-secondary);
+    }
+
+    .import-preview-table .status-message-row td {
+        border-top: none;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public ImportPreviewResult PreviewResult { get; set; } = new();
+
+    [Parameter]
+    public HashSet<int> SelectedIndices { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<HashSet<int>> SelectedIndicesChanged { get; set; }
+
+    private bool IsAllSelected =>
+        PreviewResult.Rows
+            .Where(r => r.Status != ImportRowStatus.Error)
+            .All(r => SelectedIndices.Contains(r.RowIndex));
+
+    private decimal SelectedAmount =>
+        PreviewResult.Rows
+            .Where(r => SelectedIndices.Contains(r.RowIndex) && r.Amount.HasValue)
+            .Sum(r => r.Amount!.Value);
+
+    private bool IsRowSelected(int rowIndex) => SelectedIndices.Contains(rowIndex);
+
+    private async Task ToggleRow(int rowIndex)
+    {
+        if (SelectedIndices.Contains(rowIndex))
+        {
+            SelectedIndices.Remove(rowIndex);
+        }
+        else
+        {
+            SelectedIndices.Add(rowIndex);
+        }
+
+        await SelectedIndicesChanged.InvokeAsync(SelectedIndices);
+    }
+
+    private async Task ToggleAll()
+    {
+        if (IsAllSelected)
+        {
+            await DeselectAll();
+        }
+        else
+        {
+            await SelectAll();
+        }
+    }
+
+    private async Task SelectAll()
+    {
+        SelectedIndices = PreviewResult.Rows
+            .Where(r => r.Status != ImportRowStatus.Error)
+            .Select(r => r.RowIndex)
+            .ToHashSet();
+
+        await SelectedIndicesChanged.InvokeAsync(SelectedIndices);
+    }
+
+    private async Task DeselectAll()
+    {
+        SelectedIndices.Clear();
+        await SelectedIndicesChanged.InvokeAsync(SelectedIndices);
+    }
+
+    private static string GetRowClass(ImportPreviewRow row) => row.Status switch
+    {
+        ImportRowStatus.Error => "row-error",
+        ImportRowStatus.Warning => "row-warning",
+        ImportRowStatus.Duplicate => "row-duplicate",
+        _ => string.Empty,
+    };
+
+    private static string GetCategoryBadgeClass(CategorySource source) => source switch
+    {
+        CategorySource.CsvColumn => "badge-secondary",
+        CategorySource.AutoRule => "badge-primary",
+        CategorySource.UserOverride => "badge-success",
+        _ => "badge-secondary",
+    };
+
+    private static string GetCategoryTooltip(ImportPreviewRow row) => row.CategorySource switch
+    {
+        CategorySource.CsvColumn => "From CSV column",
+        CategorySource.AutoRule => $"Auto-categorized by rule: {row.MatchedRuleName ?? "Unknown"}",
+        CategorySource.UserOverride => "User override",
+        _ => string.Empty,
+    };
+
+    private static string GetStatusMessageClass(ImportRowStatus status) => status switch
+    {
+        ImportRowStatus.Error => "text-danger",
+        ImportRowStatus.Warning => "text-warning",
+        ImportRowStatus.Duplicate => "text-info",
+        _ => "text-secondary",
+    };
+
+    private static string GetStatusIcon(ImportRowStatus status) => status switch
+    {
+        ImportRowStatus.Error => "alert-circle",
+        ImportRowStatus.Warning => "alert-triangle",
+        ImportRowStatus.Duplicate => "info",
+        _ => "info",
+    };
+
+    private static string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        if (text.Length <= maxLength) return text;
+        return text[..maxLength] + "...";
+    }
+}

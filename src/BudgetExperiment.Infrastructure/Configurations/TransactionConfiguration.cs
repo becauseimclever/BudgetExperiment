@@ -110,5 +110,19 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         // Indexes for scope filtering
         builder.HasIndex(t => t.Scope);
         builder.HasIndex(t => t.OwnerUserId);
+
+        // Import batch link (nullable FK)
+        builder.Property(t => t.ImportBatchId);
+
+        builder.Property(t => t.ExternalReference)
+            .HasMaxLength(Transaction.MaxExternalReferenceLength);
+
+        builder.HasOne<ImportBatch>()
+            .WithMany()
+            .HasForeignKey(t => t.ImportBatchId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(t => t.ImportBatchId)
+            .HasDatabaseName("IX_Transactions_ImportBatchId");
     }
 }

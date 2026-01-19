@@ -222,6 +222,32 @@ internal sealed class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetForDuplicateDetectionAsync(
+        Guid accountId,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(this._context.Transactions)
+            .Where(t => t.AccountId == accountId
+                && t.Date >= startDate
+                && t.Date <= endDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetByImportBatchAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(this._context.Transactions)
+            .Where(t => t.ImportBatchId == batchId)
+            .OrderBy(t => t.Date)
+            .ThenBy(t => t.Description)
+            .ToListAsync(cancellationToken);
+    }
+
     private IQueryable<Transaction> ApplyScopeFilter(IQueryable<Transaction> query)
     {
         var userId = this._userContext.UserIdAsGuid;

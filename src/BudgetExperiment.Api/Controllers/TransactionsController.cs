@@ -91,4 +91,27 @@ public sealed class TransactionsController : ControllerBase
         var transaction = await this._service.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = transaction.Id }, transaction);
     }
+
+    /// <summary>
+    /// Updates an existing transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The transaction update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction.</returns>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType<TransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] TransactionUpdateDto dto, CancellationToken cancellationToken)
+    {
+        var transaction = await this._service.UpdateAsync(id, dto, cancellationToken);
+        if (transaction is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(transaction);
+    }
 }
+

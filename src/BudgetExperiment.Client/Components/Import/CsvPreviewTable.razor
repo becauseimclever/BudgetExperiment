@@ -1,0 +1,71 @@
+<div class="csv-preview">
+    <h5 class="mb-3">Preview (showing first @Math.Min(Rows.Count, MaxRows) of @Rows.Count rows)</h5>
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th class="row-number">#</th>
+                    @foreach (var header in Headers)
+                    {
+                        <th>@header</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var (row, index) in Rows.Take(MaxRows).Select((r, i) => (r, i)))
+                {
+                    <tr>
+                        <td class="row-number text-secondary">@(index + 1)</td>
+                        @foreach (var cell in row)
+                        {
+                            <td class="@(string.IsNullOrWhiteSpace(cell) ? "text-secondary" : "")">
+                                @(string.IsNullOrWhiteSpace(cell) ? "(empty)" : TruncateCell(cell))
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .csv-preview .table-responsive {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .csv-preview .table {
+        font-size: 0.875rem;
+    }
+
+    .csv-preview th,
+    .csv-preview td {
+        white-space: nowrap;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .csv-preview .row-number {
+        width: 40px;
+        text-align: center;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string> Headers { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<IReadOnlyList<string>> Rows { get; set; } = [];
+
+    [Parameter]
+    public int MaxRows { get; set; } = 5;
+
+    private static string TruncateCell(string value, int maxLength = 50)
+    {
+        if (value.Length <= maxLength) return value;
+        return value[..maxLength] + "...";
+    }
+}

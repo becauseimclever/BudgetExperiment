@@ -357,8 +357,26 @@
 
         try
         {
-            // TODO: Support updating transactions when API supports it
-            var result = await ApiService.CreateTransactionAsync(transaction);
+            TransactionDto? result;
+
+            if (editingTransaction != null)
+            {
+                // Update existing transaction
+                var updateDto = new TransactionUpdateDto
+                {
+                    Amount = transaction.Amount,
+                    Date = transaction.Date,
+                    Description = transaction.Description,
+                    CategoryId = transaction.CategoryId,
+                };
+                result = await ApiService.UpdateTransactionAsync(editingTransaction.Id, updateDto);
+            }
+            else
+            {
+                // Create new transaction
+                result = await ApiService.CreateTransactionAsync(transaction);
+            }
+
             if (result != null)
             {
                 showAddTransaction = false;

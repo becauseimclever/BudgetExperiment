@@ -90,4 +90,30 @@ public sealed class TransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return DomainToDtoMapper.ToDto(transaction);
     }
+
+    /// <summary>
+    /// Updates an existing transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The transaction update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction DTO, or null if not found.</returns>
+    public async Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, CancellationToken cancellationToken = default)
+    {
+        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
+        transaction.UpdateAmount(amount);
+        transaction.UpdateDate(dto.Date);
+        transaction.UpdateDescription(dto.Description);
+        transaction.UpdateCategory(dto.CategoryId);
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        return DomainToDtoMapper.ToDto(transaction);
+    }
 }
+

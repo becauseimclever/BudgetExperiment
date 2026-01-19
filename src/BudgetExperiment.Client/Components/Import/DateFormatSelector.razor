@@ -1,0 +1,29 @@
+<div class="date-format-selector">
+    <label class="form-label">Date Format</label>
+    <select class="form-control" value="@Value" @onchange="HandleChange">
+        <option value="MM/dd/yyyy">MM/dd/yyyy (US: 01/31/2025)</option>
+        <option value="dd/MM/yyyy">dd/MM/yyyy (EU: 31/01/2025)</option>
+        <option value="yyyy-MM-dd">yyyy-MM-dd (ISO: 2025-01-31)</option>
+        <option value="M/d/yyyy">M/d/yyyy (US short: 1/31/2025)</option>
+        <option value="d/M/yyyy">d/M/yyyy (EU short: 31/1/2025)</option>
+        <option value="MM-dd-yyyy">MM-dd-yyyy (01-31-2025)</option>
+        <option value="yyyy/MM/dd">yyyy/MM/dd (2025/01/31)</option>
+        <option value="MMM dd, yyyy">MMM dd, yyyy (Jan 31, 2025)</option>
+        <option value="dd MMM yyyy">dd MMM yyyy (31 Jan 2025)</option>
+    </select>
+    <small class="text-secondary">Choose the format that matches your CSV file's date column</small>
+</div>
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = "MM/dd/yyyy";
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString() ?? "MM/dd/yyyy";
+        await ValueChanged.InvokeAsync(newValue);
+    }
+}

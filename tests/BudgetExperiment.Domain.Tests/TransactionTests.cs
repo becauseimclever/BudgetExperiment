@@ -593,4 +593,108 @@ public class TransactionTests
         Assert.Null(transaction.OwnerUserId);
         Assert.Equal(Guid.Empty, transaction.CreatedByUserId);
     }
+
+    [Fact]
+    public void SetImportBatch_Sets_ImportBatchId()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Imported transaction");
+        var importBatchId = Guid.NewGuid();
+
+        // Act
+        transaction.SetImportBatch(importBatchId);
+
+        // Assert
+        Assert.Equal(importBatchId, transaction.ImportBatchId);
+        Assert.Null(transaction.ExternalReference);
+        Assert.True(transaction.IsFromImport);
+    }
+
+    [Fact]
+    public void SetImportBatch_With_ExternalReference_Sets_Both()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Imported transaction");
+        var importBatchId = Guid.NewGuid();
+        var externalRef = "TXN-12345";
+
+        // Act
+        transaction.SetImportBatch(importBatchId, externalRef);
+
+        // Assert
+        Assert.Equal(importBatchId, transaction.ImportBatchId);
+        Assert.Equal(externalRef, transaction.ExternalReference);
+    }
+
+    [Fact]
+    public void SetImportBatch_Trims_ExternalReference()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Imported transaction");
+
+        // Act
+        transaction.SetImportBatch(Guid.NewGuid(), "  REF-123  ");
+
+        // Assert
+        Assert.Equal("REF-123", transaction.ExternalReference);
+    }
+
+    [Fact]
+    public void SetImportBatch_With_Empty_BatchId_Throws()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Test");
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => transaction.SetImportBatch(Guid.Empty));
+        Assert.Contains("batch", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Create_Transaction_Has_Null_ImportBatchId()
+    {
+        // Arrange & Act
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Regular transaction");
+
+        // Assert
+        Assert.Null(transaction.ImportBatchId);
+        Assert.Null(transaction.ExternalReference);
+        Assert.False(transaction.IsFromImport);
+    }
+
+    [Fact]
+    public void SetImportBatch_ExternalReference_Exceeds_MaxLength_Throws()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 10),
+            "Test");
+        var longReference = new string('A', 101); // Max is 100
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => transaction.SetImportBatch(Guid.NewGuid(), longReference));
+        Assert.Contains("100", ex.Message);
+    }
 }
