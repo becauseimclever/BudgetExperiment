@@ -127,6 +127,26 @@ public sealed class Transaction
     public Guid CreatedByUserId { get; private set; }
 
     /// <summary>
+    /// Gets the identifier of the import batch this transaction was created from (null for manual transactions).
+    /// </summary>
+    public Guid? ImportBatchId { get; private set; }
+
+    /// <summary>
+    /// Gets the external reference/ID from the imported CSV (null if not from import or not mapped).
+    /// </summary>
+    public string? ExternalReference { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether this transaction was created via CSV import.
+    /// </summary>
+    public bool IsFromImport => this.ImportBatchId.HasValue;
+
+    /// <summary>
+    /// Maximum length for external reference.
+    /// </summary>
+    public const int MaxExternalReferenceLength = 100;
+
+    /// <summary>
     /// Creates a new transaction.
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
@@ -337,5 +357,33 @@ public sealed class Transaction
         this.Scope = scope;
         this.OwnerUserId = ownerUserId;
         this.CreatedByUserId = createdByUserId;
+    }
+
+    /// <summary>
+    /// Associates this transaction with an import batch.
+    /// </summary>
+    /// <param name="batchId">The import batch identifier.</param>
+    /// <param name="externalReference">Optional external reference from the CSV.</param>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public void SetImportBatch(Guid batchId, string? externalReference = null)
+    {
+        if (batchId == Guid.Empty)
+        {
+            throw new DomainException("Import batch ID is required.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(externalReference))
+        {
+            var trimmedRef = externalReference.Trim();
+            if (trimmedRef.Length > MaxExternalReferenceLength)
+            {
+                throw new DomainException($"External reference cannot exceed {MaxExternalReferenceLength} characters.");
+            }
+
+            this.ExternalReference = trimmedRef;
+        }
+
+        this.ImportBatchId = batchId;
+        this.UpdatedAt = DateTime.UtcNow;
     }
 }

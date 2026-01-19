@@ -40,10 +40,15 @@ Currently, creating transactions, transfers, and recurring items requires naviga
 **So that** I can quickly add entries without navigating away
 
 **Acceptance Criteria:**
-- [ ] Chat button/icon visible in main layout
-- [ ] Panel slides in from side or opens as modal
-- [ ] Keyboard shortcut (Ctrl+K or Cmd+K) opens chat
-- [ ] Chat persists state when minimized
+- [ ] Chat toggle button visible in bottom-right corner when panel is closed
+- [ ] Panel slides in from the **right side** of the screen (VS Code Copilot Chat style)
+- [ ] Panel is fixed width (~400px) and full height
+- [ ] Main content area shrinks to accommodate panel (not overlay)
+- [ ] Keyboard shortcut (Ctrl+K or Cmd+K) toggles chat panel
+- [ ] Panel has header with title "AI Assistant", minimize, and close buttons
+- [ ] Chat state (open/closed, history) persists across page navigation
+- [ ] On mobile/narrow screens, panel becomes full-width overlay with backdrop
+- [ ] Smooth slide-in/out animation (200-300ms)
 
 #### US-026-002: Send Natural Language Command
 **As a** user  
@@ -686,20 +691,213 @@ Index: `IX_ChatMessages_ActionStatus` (ActionStatus) WHERE ActionStatus = Pendin
 
 ### UI Components
 
+#### Panel Layout Design (VS Code Copilot Chat Style)
+
+The chat panel is designed to match the look and feel of GitHub Copilot Chat in VS Code:
+
+**Position & Behavior:**
+- Fixed to the **right side** of the screen
+- Slides in/out horizontally from the right edge
+- Default width: `400px` (adjustable via drag handle)
+- Full height of the viewport (below the header/navbar)
+- Does NOT overlay the main content - main content area shrinks when panel opens
+- Panel state (open/closed) persists across page navigation and sessions
+
+**Visual Design:**
+```
+┌─────────────────────────────────────────────┬────────────────────────┐
+│                                             │ 💬 AI Assistant    ─ × │
+│                                             ├────────────────────────┤
+│                                             │ ┌──────────────────┐   │
+│                                             │ │ 🤖 How can I     │   │
+│                                             │ │ help you today?  │   │
+│          Main Application Content           │ └──────────────────┘   │
+│          (shrinks when panel open)          │                        │
+│                                             │ ┌──────────────────┐   │
+│                                             │ │ 👤 Add $50 at   │   │
+│                                             │ │ Walmart          │   │
+│                                             │ └──────────────────┘   │
+│                                             │                        │
+│                                             │ ┌──────────────────┐   │
+│                                             │ │ 🤖 Preview:      │   │
+│                                             │ │ ┌──────────────┐ │   │
+│                                             │ │ │ Transaction  │ │   │
+│                                             │ │ │ $50.00       │ │   │
+│                                             │ │ │ Walmart      │ │   │
+│                                             │ │ │ Today        │ │   │
+│                                             │ │ └──────────────┘ │   │
+│                                             │ │ [Confirm] [Edit] │   │
+│                                             │ └──────────────────┘   │
+│                                             ├────────────────────────┤
+│                                             │ ┌──────────────────┐   │
+│                                             │ │ Type a message...│ ⏎ │
+│                                             │ └──────────────────┘   │
+└─────────────────────────────────────────────┴────────────────────────┘
+```
+
+**Panel Header:**
+- Title: "AI Assistant" with chat icon (💬)
+- Minimize button (─) - collapses to thin strip with just the toggle icon
+- Close button (×) - hides panel completely
+- Subtle border/shadow separating from main content
+
+**Message Area:**
+- Scrollable conversation history
+- Messages aligned: user messages right, AI messages left
+- User messages: subtle background (e.g., `var(--accent-light)`)
+- AI messages: no background or very light card style
+- Timestamps shown subtly (hover or inline)
+- Avatar/icon for each role (🤖 AI, 👤 User)
+
+**Action Preview Cards:**
+- Inline within AI messages when action is proposed
+- Card-style with subtle border and shadow
+- Shows extracted fields in clear layout
+- Confirmation buttons at bottom of card
+- Editable fields (click to modify)
+
+**Input Area:**
+- Fixed at bottom of panel
+- Full-width text input
+- Placeholder: "Type a message..." or "Ask me to add a transaction..."
+- Send button (or Enter to send)
+- Subtle top border separating from messages
+
+**Animation & Transitions:**
+- Smooth slide-in/out animation (200-300ms ease)
+- Content area width transitions smoothly
+- No jarring reflows
+
+**Responsive Behavior:**
+- On narrow screens (<768px): panel becomes full-width overlay with backdrop
+- On very wide screens (>1600px): panel can be wider (up to 500px)
+- Touch-friendly on tablets
+
 #### New Components
 
-- `ChatPanel.razor` - Main chat interface (slide-out panel)
-- `ChatToggleButton.razor` - Button to open/close chat
-- `ChatMessageBubble.razor` - Individual message display
-- `ChatActionPreview.razor` - Preview card for pending actions
-- `ClarificationOptions.razor` - Buttons/options for clarification
-- `ChatInput.razor` - Text input with send button
+| Component | Description |
+|-----------|-------------|
+| `ChatPanel.razor` | Main chat interface - right-side panel with header, messages, and input |
+| `ChatPanelHeader.razor` | Panel header with title, minimize, and close buttons |
+| `ChatToggleButton.razor` | Floating button (bottom-right) to open chat when closed |
+| `ChatMessageList.razor` | Scrollable container for chat message history |
+| `ChatMessageBubble.razor` | Individual message display with role-based styling |
+| `ChatActionPreview.razor` | Preview card for pending actions (embedded in AI message) |
+| `ChatActionFields.razor` | Editable field display within action preview |
+| `ClarificationOptions.razor` | Button group for clarification choices |
+| `ChatInput.razor` | Text input with send button, fixed at panel bottom |
+
+#### Layout Integration
+
+The main layout (`MainLayout.razor`) must be updated to accommodate the chat panel:
+
+```razor
+@* MainLayout.razor structure *@
+<div class="app-container @(IsChatOpen ? "chat-open" : "")">
+    <header class="app-header">
+        @* Header content *@
+    </header>
+    
+    <div class="app-body">
+        <nav class="app-sidebar">
+            @* Navigation menu *@
+        </nav>
+        
+        <main class="app-main">
+            @Body
+        </main>
+        
+        @if (IsChatOpen)
+        {
+            <aside class="chat-panel">
+                <ChatPanel OnClose="CloseChat" />
+            </aside>
+        }
+    </div>
+    
+    @if (!IsChatOpen)
+    {
+        <ChatToggleButton OnClick="OpenChat" />
+    }
+</div>
+```
+
+```css
+/* Layout CSS */
+.app-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.app-main {
+    flex: 1;
+    overflow: auto;
+    transition: margin-right 0.25s ease;
+}
+
+.chat-open .app-main {
+    margin-right: 0; /* Panel is part of flex, not overlay */
+}
+
+.chat-panel {
+    width: 400px;
+    min-width: 320px;
+    max-width: 500px;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-color);
+    animation: slideInRight 0.25s ease;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Responsive: overlay on mobile */
+@media (max-width: 768px) {
+    .chat-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 100%;
+        z-index: 1000;
+    }
+    
+    .chat-panel::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+}
+```
 
 #### Keyboard Shortcuts
 
-- `Ctrl+K` / `Cmd+K` - Toggle chat panel
-- `Escape` - Close chat panel
-- `Enter` - Send message
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+K` / `Cmd+K` | Toggle chat panel open/closed |
+| `Escape` | Close chat panel (when focused) |
+| `Enter` | Send message |
+| `Shift+Enter` | New line in message input |
+| `Up Arrow` | Edit last message (when input empty) |
+
+#### Accessibility
+
+- Panel announced to screen readers when opened
+- Focus trapped within panel when open
+- Keyboard navigation through messages
+- ARIA labels for all interactive elements
+- High contrast support for message bubbles
 
 ---
 

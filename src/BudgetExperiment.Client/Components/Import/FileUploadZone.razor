@@ -1,0 +1,138 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="file-upload-zone @(isDragging ? "dragging" : "") @(IsUploading ? "uploading" : "")"
+     @ondragenter="HandleDragEnter"
+     @ondragleave="HandleDragLeave"
+     @ondragover:preventDefault
+     @ondrop:preventDefault
+     @ondrop="HandleDrop">
+
+    <InputFile @ref="inputFile"
+               OnChange="HandleFileChange"
+               accept="@AcceptedFormats"
+               class="file-input"
+               id="@inputId"
+               disabled="@IsUploading" />
+
+    @if (IsUploading)
+    {
+        <div class="upload-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Uploading...</span>
+            </div>
+            <p class="mb-0">Uploading and parsing file...</p>
+        </div>
+    }
+    else
+    {
+        <label for="@inputId" class="upload-content">
+            <Icon Name="upload-cloud" Size="48" Class="mb-3 text-secondary" />
+            <p class="mb-1">
+                <strong>Drag and drop</strong> your CSV file here, or <span class="text-primary">click to browse</span>
+            </p>
+            <p class="text-secondary small mb-0">
+                Accepted formats: @AcceptedFormats • Max size: @MaxFileSizeMb MB
+            </p>
+        </label>
+    }
+</div>
+
+<style>
+    .file-upload-zone {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 3rem 2rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        background: var(--bg-secondary);
+        position: relative;
+        cursor: pointer;
+    }
+
+    .file-upload-zone:hover:not(.uploading) {
+        border-color: var(--primary);
+        background: var(--bg-hover);
+    }
+
+    .file-upload-zone.dragging {
+        border-color: var(--primary);
+        background: color-mix(in srgb, var(--primary) 10%, transparent);
+        border-style: solid;
+    }
+
+    .file-upload-zone.uploading {
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+
+    .file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-input:disabled {
+        cursor: not-allowed;
+    }
+
+    .upload-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: inherit;
+        margin: 0;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public EventCallback<IBrowserFile> OnFileSelected { get; set; }
+
+    [Parameter]
+    public bool IsUploading { get; set; }
+
+    [Parameter]
+    public string AcceptedFormats { get; set; } = ".csv";
+
+    [Parameter]
+    public int MaxFileSizeMb { get; set; } = 10;
+
+    private InputFile? inputFile;
+    private bool isDragging = false;
+    private string inputId = Guid.NewGuid().ToString("N");
+
+    private void HandleDragEnter()
+    {
+        isDragging = true;
+    }
+
+    private void HandleDragLeave()
+    {
+        isDragging = false;
+    }
+
+    private async Task HandleDrop(DragEventArgs e)
+    {
+        isDragging = false;
+        // Note: Blazor's drag-drop doesn't give us direct file access
+        // The InputFile component handles the actual file selection
+    }
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        // Validate file size
+        if (file.Size > MaxFileSizeMb * 1024 * 1024)
+        {
+            // Could add error callback here
+            return;
+        }
+
+        await OnFileSelected.InvokeAsync(file);
+    }
+}

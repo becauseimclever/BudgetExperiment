@@ -1,0 +1,898 @@
+@page "/import"
+
+@using BudgetExperiment.Domain
+
+@inject IImportApiService ImportApi
+@inject IBudgetApiService BudgetApi
+@inject NavigationManager Navigation
+
+<PageTitle>Import Transactions - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Import Transactions">
+        <Actions>
+            @if (activeTab == "wizard" && wizardState.CurrentStep > 1)
+            {
+                <button class="btn btn-secondary" @onclick="ResetWizard">Start Over</button>
+            }
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLastAction"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "wizard" ? "active" : "")"
+                    @onclick="@(() => activeTab = "wizard")">
+                <Icon Name="upload" Size="16" /> New Import
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "history" ? "active" : "")"
+                    @onclick="SwitchToHistoryTab">
+                <Icon Name="calendar" Size="16" /> Import History
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "mappings" ? "active" : "")"
+                    @onclick="SwitchToMappingsTab">
+                <Icon Name="save" Size="16" /> Saved Mappings
+            </button>
+        </li>
+    </ul>
+
+    @if (activeTab == "wizard")
+    {
+    <!-- Wizard Progress -->
+    <div class="wizard-progress mb-4">
+        <div class="wizard-steps">
+            <div class="wizard-step @(wizardState.CurrentStep >= 1 ? "active" : "") @(wizardState.CurrentStep > 1 ? "completed" : "")">
+                <div class="step-number">1</div>
+                <div class="step-label">Upload File</div>
+            </div>
+            <div class="wizard-step @(wizardState.CurrentStep >= 2 ? "active" : "") @(wizardState.CurrentStep > 2 ? "completed" : "")">
+                <div class="step-number">2</div>
+                <div class="step-label">Map Columns</div>
+            </div>
+            <div class="wizard-step @(wizardState.CurrentStep >= 3 ? "active" : "") @(wizardState.CurrentStep > 3 ? "completed" : "")">
+                <div class="step-number">3</div>
+                <div class="step-label">Preview</div>
+            </div>
+            <div class="wizard-step @(wizardState.CurrentStep >= 4 ? "active" : "")">
+                <div class="step-number">4</div>
+                <div class="step-label">Import</div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="@loadingMessage" />
+    }
+    else
+    {
+        <!-- Step 1: Upload File -->
+        @if (wizardState.CurrentStep == 1)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Upload CSV File</h3>
+
+                    <FileUploadZone OnFileSelected="HandleFileSelected"
+                                    IsUploading="@isUploading"
+                                    AcceptedFormats=".csv,.txt"
+                                    MaxFileSizeMb="10" />
+
+                    @if (wizardState.ParseResult != null)
+                    {
+                        <div class="mt-4">
+                            <div class="alert alert-success">
+                                <Icon Name="check-circle" Size="16" />
+                                <span class="ml-2">
+                                    Parsed <strong>@wizardState.ParseResult.RowCount</strong> rows with
+                                    <strong>@wizardState.ParseResult.Headers.Count</strong> columns
+                                </span>
+                            </div>
+
+                            <CsvPreviewTable Headers="@wizardState.ParseResult.Headers"
+                                             Rows="@wizardState.ParseResult.Rows"
+                                             MaxRows="5" />
+
+                            <div class="form-group mt-4">
+                                <label class="form-label">Select Target Account</label>
+                                <select class="form-control" @bind="wizardState.SelectedAccountId">
+                                    <option value="">-- Select Account --</option>
+                                    @foreach (var account in accounts)
+                                    {
+                                        <option value="@account.Id">@account.Name (@account.Type)</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button class="btn btn-primary"
+                                        disabled="@(!wizardState.SelectedAccountId.HasValue)"
+                                        @onclick="GoToStep2">
+                                    Continue to Mapping <Icon Name="arrow-right" Size="16" />
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Step 2: Map Columns -->
+        @if (wizardState.CurrentStep == 2)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Map CSV Columns</h3>
+
+                    @if (savedMappings.Count > 0)
+                    {
+                        <SavedMappingSelector Mappings="@savedMappings"
+                                              SelectedMappingId="@wizardState.SavedMappingId"
+                                              OnMappingSelected="ApplySavedMapping" />
+                    }
+
+                    <ColumnMappingEditor Mappings="@wizardState.ColumnMappings"
+                                         OnMappingChanged="HandleMappingChanged" />
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <DateFormatSelector @bind-Value="wizardState.DateFormat" />
+                        </div>
+                        <div class="col-md-6">
+                            <AmountModeSelector @bind-Value="wizardState.AmountMode" />
+                        </div>
+                    </div>
+
+                    @if (!wizardState.HasRequiredMappings)
+                    {
+                        <div class="alert alert-warning mt-4">
+                            <Icon Name="alert-triangle" Size="16" />
+                            <span class="ml-2">Please map all required fields: Date, Description, and Amount (or Debit/Credit)</span>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button class="btn btn-secondary" @onclick="GoToStep1">
+                            <Icon Name="arrow-left" Size="16" /> Back
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary" @onclick="ShowSaveMappingDialog">
+                                <Icon Name="save" Size="16" /> Save Mapping
+                            </button>
+                            <button class="btn btn-primary"
+                                    disabled="@(!wizardState.HasRequiredMappings)"
+                                    @onclick="GoToStep3">
+                                Preview Import <Icon Name="arrow-right" Size="16" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Step 3: Preview -->
+        @if (wizardState.CurrentStep == 3 && wizardState.PreviewResult != null)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Preview Import</h3>
+
+                    @if (wizardState.PreviewResult.DuplicateCount > 0)
+                    {
+                        <DuplicateWarningCard DuplicateCount="@wizardState.PreviewResult.DuplicateCount"
+                                              DuplicateRows="@wizardState.PreviewResult.Rows.Where(r => r.Status == ImportRowStatus.Duplicate)"
+                                              SelectedIndices="@wizardState.SelectedRowIndices"
+                                              SelectedIndicesChanged="HandleSelectionChanged" />
+                    }
+
+                    <ImportPreviewTable PreviewResult="@wizardState.PreviewResult"
+                                        SelectedIndices="@wizardState.SelectedRowIndices"
+                                        SelectedIndicesChanged="HandleSelectionChanged" />
+
+                    @if (wizardState.PreviewResult.ErrorCount > 0)
+                    {
+                        <div class="alert alert-warning mt-3">
+                            <Icon Name="alert-triangle" Size="16" />
+                            <strong>@wizardState.PreviewResult.ErrorCount</strong> rows have errors and cannot be imported.
+                            Check the date and amount columns for invalid values.
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button class="btn btn-secondary" @onclick="GoToStep2">
+                            <Icon Name="arrow-left" Size="16" /> Back to Mapping
+                        </button>
+                        <button class="btn btn-success"
+                                disabled="@(wizardState.SelectedRowIndices.Count == 0 || isImporting)"
+                                @onclick="ExecuteImport">
+                            @if (isImporting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <text>Importing...</text>
+                            }
+                            else
+                            {
+                                <Icon Name="check" Size="16" />
+                                <text>Import @wizardState.SelectedRowIndices.Count Transactions</text>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Step 4: Import Complete -->
+        @if (wizardState.CurrentStep == 4 && importResult != null)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <ImportSummaryCard Result="@importResult"
+                                       AccountId="@wizardState.SelectedAccountId!.Value"
+                                       OnStartNewImport="ResetWizard" />
+                </div>
+            </div>
+        }
+    }
+    }
+
+    @if (activeTab == "history")
+    {
+        <div class="card">
+            <div class="card-body">
+                <ImportHistoryList Batches="@importBatches"
+                                   IsLoading="@isLoadingHistory"
+                                   OnRefresh="RefreshHistory"
+                                   OnDeleteBatch="DeleteImportBatch" />
+            </div>
+        </div>
+    }
+
+    @if (activeTab == "mappings")
+    {
+        <div class="card">
+            <div class="card-body">
+                <SavedMappingsManager Mappings="@savedMappings"
+                                      IsLoading="@isLoadingMappings"
+                                      OnRefresh="RefreshMappings"
+                                      OnUpdateMapping="UpdateMapping"
+                                      OnDeleteMapping="DeleteMapping" />
+            </div>
+        </div>
+    }
+
+    <!-- Save Mapping Dialog -->
+    <Modal IsVisible="@showSaveMappingDialog" Title="Save Column Mapping" OnClose="HideSaveMappingDialog">
+        <div class="form-group">
+            <label class="form-label">Mapping Name</label>
+            <input type="text" class="form-control" @bind="newMappingName" placeholder="e.g., Chase Bank CSV" />
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <button class="btn btn-secondary" @onclick="HideSaveMappingDialog">Cancel</button>
+            <button class="btn btn-primary"
+                    disabled="@(string.IsNullOrWhiteSpace(newMappingName) || isSavingMapping)"
+                    @onclick="SaveMapping">
+                @if (isSavingMapping)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                }
+                Save Mapping
+            </button>
+        </div>
+    </Modal>
+</div>
+
+<style>
+    .wizard-progress {
+        padding: 1rem 0;
+    }
+
+    .wizard-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .wizard-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: var(--border-color);
+        z-index: 0;
+    }
+
+    .wizard-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        flex: 1;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .wizard-step.active .step-number {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .wizard-step.completed .step-number {
+        background: var(--success);
+        border-color: var(--success);
+        color: white;
+    }
+
+    .step-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+
+    .wizard-step.active .step-label {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .nav-tabs {
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-secondary);
+        padding: 0.75rem 1rem;
+        margin-bottom: -2px;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--text-primary);
+        border-bottom-color: var(--border-color);
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    private ImportWizardState wizardState = new();
+    private List<AccountDto> accounts = [];
+    private List<ImportMappingDto> savedMappings = [];
+    private List<ImportBatchDto> importBatches = [];
+    private ImportResult? importResult;
+
+    private string activeTab = "wizard";
+    private bool isLoading = true;
+    private bool isUploading = false;
+    private bool isRetrying = false;
+    private bool isSavingMapping = false;
+    private bool isImporting = false;
+    private bool isLoadingHistory = false;
+    private bool isLoadingMappings = false;
+    private string? errorMessage;
+    private string loadingMessage = "Loading...";
+
+    private bool showSaveMappingDialog = false;
+    private string newMappingName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInitialDataAsync();
+    }
+
+    private async Task LoadInitialDataAsync()
+    {
+        isLoading = true;
+        loadingMessage = "Loading accounts...";
+
+        try
+        {
+            accounts = (await BudgetApi.GetAccountsAsync()).ToList();
+            savedMappings = (await ImportApi.GetMappingsAsync()).ToList();
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleFileSelected(IBrowserFile file)
+    {
+        isUploading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Max 10MB
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            var result = await ImportApi.ParseCsvAsync(memoryStream, file.Name);
+            if (result != null)
+            {
+                wizardState.ParseResult = result;
+                wizardState.FileName = file.Name;
+                InitializeColumnMappings();
+
+                // Try to suggest a saved mapping
+                var suggestedMapping = await ImportApi.SuggestMappingAsync(result.Headers);
+                if (suggestedMapping != null)
+                {
+                    ApplySavedMapping(suggestedMapping.Id);
+                }
+            }
+            else
+            {
+                errorMessage = "Failed to parse the CSV file. Please ensure it's a valid CSV format.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error uploading file: {ex.Message}";
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+    private void InitializeColumnMappings()
+    {
+        if (wizardState.ParseResult == null) return;
+
+        wizardState.ColumnMappings = wizardState.ParseResult.Headers
+            .Select((header, index) => new ColumnMappingState
+            {
+                ColumnIndex = index,
+                ColumnHeader = header,
+                TargetField = GuessFieldFromHeader(header),
+                SampleValues = wizardState.ParseResult.Rows
+                    .Take(3)
+                    .Select(r => index < r.Count ? r[index] : string.Empty)
+                    .ToList(),
+            })
+            .ToList();
+    }
+
+    private static ImportField? GuessFieldFromHeader(string header)
+    {
+        var lower = header.ToLowerInvariant();
+
+        if (lower.Contains("date") || lower.Contains("posted"))
+            return ImportField.Date;
+
+        if (lower.Contains("description") || lower.Contains("memo") || lower.Contains("payee") || lower.Contains("name"))
+            return ImportField.Description;
+
+        if (lower == "amount" || lower == "value" || lower == "total")
+            return ImportField.Amount;
+
+        if (lower.Contains("debit") || lower.Contains("withdrawal") || lower.Contains("expense"))
+            return ImportField.DebitAmount;
+
+        if (lower.Contains("credit") || lower.Contains("deposit") || lower.Contains("income"))
+            return ImportField.CreditAmount;
+
+        if (lower.Contains("category") || lower.Contains("type"))
+            return ImportField.Category;
+
+        if (lower.Contains("reference") || lower.Contains("id") || lower.Contains("check"))
+            return ImportField.Reference;
+
+        return null;
+    }
+
+    private void ApplySavedMapping(Guid? mappingId)
+    {
+        if (!mappingId.HasValue) return;
+
+        var mapping = savedMappings.FirstOrDefault(m => m.Id == mappingId.Value);
+        if (mapping == null) return;
+
+        wizardState.SavedMappingId = mappingId;
+
+        // Apply column mappings
+        foreach (var savedCol in mapping.ColumnMappings)
+        {
+            // Find matching column by header name or index
+            var stateCol = wizardState.ColumnMappings
+                .FirstOrDefault(c => c.ColumnHeader.Equals(savedCol.ColumnHeader, StringComparison.OrdinalIgnoreCase))
+                ?? wizardState.ColumnMappings.FirstOrDefault(c => c.ColumnIndex == savedCol.ColumnIndex);
+
+            if (stateCol != null)
+            {
+                stateCol.TargetField = savedCol.TargetField;
+            }
+        }
+
+        // Apply other settings
+        if (!string.IsNullOrEmpty(mapping.DateFormat))
+        {
+            wizardState.DateFormat = mapping.DateFormat;
+        }
+
+        if (mapping.AmountMode.HasValue)
+        {
+            wizardState.AmountMode = mapping.AmountMode.Value;
+        }
+
+        if (mapping.DuplicateSettings != null)
+        {
+            wizardState.DuplicateSettings = mapping.DuplicateSettings;
+        }
+
+        StateHasChanged();
+    }
+
+    private void HandleMappingChanged()
+    {
+        // Clear saved mapping when user manually changes mappings
+        wizardState.SavedMappingId = null;
+        StateHasChanged();
+    }
+
+    private void GoToStep1() => wizardState.CurrentStep = 1;
+    private void GoToStep2() => wizardState.CurrentStep = 2;
+
+    private async Task GoToStep3()
+    {
+        isLoading = true;
+        loadingMessage = "Generating preview...";
+
+        try
+        {
+            var mappings = wizardState.ColumnMappings
+                .Select(m => m.ToDto())
+                .Where(m => m != null)
+                .Cast<ColumnMappingDto>()
+                .ToList();
+
+            var request = new ImportPreviewRequest
+            {
+                AccountId = wizardState.SelectedAccountId!.Value,
+                Rows = wizardState.ParseResult!.Rows,
+                Mappings = mappings,
+                DateFormat = wizardState.DateFormat,
+                AmountMode = wizardState.AmountMode,
+                DuplicateSettings = wizardState.DuplicateSettings,
+            };
+
+            var result = await ImportApi.PreviewAsync(request);
+            if (result != null)
+            {
+                wizardState.PreviewResult = result;
+
+                // Select all valid rows by default
+                wizardState.SelectedRowIndices = result.Rows
+                    .Where(r => r.Status == ImportRowStatus.Valid)
+                    .Select(r => r.RowIndex)
+                    .ToHashSet();
+
+                wizardState.CurrentStep = 3;
+            }
+            else
+            {
+                errorMessage = "Failed to generate preview. Please check your mappings.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error generating preview: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ResetWizard()
+    {
+        wizardState.Reset();
+        errorMessage = null;
+    }
+
+    private void ShowSaveMappingDialog()
+    {
+        newMappingName = string.Empty;
+        showSaveMappingDialog = true;
+    }
+
+    private void HideSaveMappingDialog()
+    {
+        showSaveMappingDialog = false;
+    }
+
+    private async Task SaveMapping()
+    {
+        if (string.IsNullOrWhiteSpace(newMappingName)) return;
+
+        isSavingMapping = true;
+
+        try
+        {
+            var mappings = wizardState.ColumnMappings
+                .Select(m => m.ToDto())
+                .Where(m => m != null)
+                .Cast<ColumnMappingDto>()
+                .ToList();
+
+            var request = new CreateImportMappingRequest
+            {
+                Name = newMappingName,
+                ColumnMappings = mappings,
+                DateFormat = wizardState.DateFormat,
+                AmountMode = wizardState.AmountMode,
+                DuplicateSettings = wizardState.DuplicateSettings,
+            };
+
+            var result = await ImportApi.CreateMappingAsync(request);
+            if (result != null)
+            {
+                savedMappings.Add(result);
+                wizardState.SavedMappingId = result.Id;
+                showSaveMappingDialog = false;
+            }
+            else
+            {
+                errorMessage = "Failed to save mapping.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving mapping: {ex.Message}";
+        }
+        finally
+        {
+            isSavingMapping = false;
+        }
+    }
+
+    private async Task RetryLastAction()
+    {
+        isRetrying = true;
+        await LoadInitialDataAsync();
+        isRetrying = false;
+    }
+
+    private void DismissError() => errorMessage = null;
+
+    private void HandleSelectionChanged(HashSet<int> newSelection)
+    {
+        wizardState.SelectedRowIndices = newSelection;
+        StateHasChanged();
+    }
+
+    private async Task ExecuteImport()
+    {
+        if (wizardState.PreviewResult == null || wizardState.SelectedAccountId == null)
+        {
+            return;
+        }
+
+        isImporting = true;
+        errorMessage = null;
+
+        try
+        {
+            // Build the list of transactions to import from selected preview rows
+            var selectedRows = wizardState.PreviewResult.Rows
+                .Where(r => wizardState.SelectedRowIndices.Contains(r.RowIndex))
+                .Where(r => r.Date.HasValue && r.Amount.HasValue)
+                .ToList();
+
+            var transactions = selectedRows.Select(r => new ImportTransactionData
+            {
+                Date = r.Date!.Value,
+                Description = r.Description,
+                Amount = r.Amount!.Value,
+                CategoryId = r.CategoryId,
+                Reference = r.Reference,
+            }).ToList();
+
+            var request = new ImportExecuteRequest
+            {
+                AccountId = wizardState.SelectedAccountId.Value,
+                MappingId = wizardState.SavedMappingId,
+                FileName = wizardState.FileName,
+                Transactions = transactions,
+            };
+
+            var result = await ImportApi.ExecuteAsync(request);
+            if (result != null)
+            {
+                importResult = result;
+                wizardState.CurrentStep = 4;
+            }
+            else
+            {
+                errorMessage = "Import failed. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error executing import: {ex.Message}";
+        }
+        finally
+        {
+            isImporting = false;
+        }
+    }
+
+    private async Task SwitchToHistoryTab()
+    {
+        activeTab = "history";
+        if (importBatches.Count == 0)
+        {
+            await RefreshHistory();
+        }
+    }
+
+    private async Task SwitchToMappingsTab()
+    {
+        activeTab = "mappings";
+        if (savedMappings.Count == 0 && !isLoadingMappings)
+        {
+            await RefreshMappings();
+        }
+    }
+
+    private async Task RefreshHistory()
+    {
+        isLoadingHistory = true;
+        errorMessage = null;
+
+        try
+        {
+            importBatches = (await ImportApi.GetHistoryAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load import history: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingHistory = false;
+        }
+    }
+
+    private async Task RefreshMappings()
+    {
+        isLoadingMappings = true;
+        errorMessage = null;
+
+        try
+        {
+            savedMappings = (await ImportApi.GetMappingsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load mappings: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingMappings = false;
+        }
+    }
+
+    private async Task DeleteImportBatch(Guid batchId)
+    {
+        errorMessage = null;
+
+        try
+        {
+            var deletedCount = await ImportApi.DeleteBatchAsync(batchId);
+            if (deletedCount.HasValue)
+            {
+                // Remove the batch from the list or mark as deleted
+                var batch = importBatches.FirstOrDefault(b => b.Id == batchId);
+                if (batch != null)
+                {
+                    importBatches.Remove(batch);
+                }
+
+                await RefreshHistory();
+            }
+            else
+            {
+                errorMessage = "Failed to delete import batch.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete import batch: {ex.Message}";
+        }
+    }
+
+    private async Task UpdateMapping(ImportMappingDto mapping)
+    {
+        errorMessage = null;
+
+        try
+        {
+            var request = new UpdateImportMappingRequest
+            {
+                Name = mapping.Name,
+            };
+
+            var updatedMapping = await ImportApi.UpdateMappingAsync(mapping.Id, request);
+            if (updatedMapping != null)
+            {
+                // Replace in the list
+                var index = savedMappings.FindIndex(m => m.Id == mapping.Id);
+                if (index >= 0)
+                {
+                    savedMappings[index] = updatedMapping;
+                }
+            }
+            else
+            {
+                errorMessage = "Failed to update mapping.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to update mapping: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteMapping(Guid mappingId)
+    {
+        errorMessage = null;
+
+        try
+        {
+            var result = await ImportApi.DeleteMappingAsync(mappingId);
+            if (result)
+            {
+                savedMappings.RemoveAll(m => m.Id == mappingId);
+            }
+            else
+            {
+                errorMessage = "Failed to delete mapping.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete mapping: {ex.Message}";
+        }
+    }
+}
