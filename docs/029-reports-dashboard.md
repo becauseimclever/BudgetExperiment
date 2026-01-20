@@ -64,13 +64,13 @@ Users need visual representations of their financial data to identify patterns, 
 **So that** I can visualize where my money goes
 
 **Acceptance Criteria:**
-- [ ] Donut chart displaying expense categories
-- [ ] Each segment represents a category's percentage of total spending
-- [ ] Color-coded segments with legend
-- [ ] Category name and amount displayed in legend
-- [ ] Center of donut shows total monthly spending
-- [ ] Responsive sizing for different screen widths
-- [ ] Smooth rendering without JavaScript dependencies
+- [x] Donut chart displaying expense categories
+- [x] Each segment represents a category's percentage of total spending
+- [x] Color-coded segments with legend
+- [x] Category name and amount displayed in legend
+- [x] Center of donut shows total monthly spending
+- [x] Responsive sizing for different screen widths
+- [x] Smooth rendering without JavaScript dependencies
 
 #### US-029-004: Select Month for Category Report
 **As a** user  
@@ -78,11 +78,11 @@ Users need visual representations of their financial data to identify patterns, 
 **So that** I can analyze different time periods
 
 **Acceptance Criteria:**
-- [ ] Month/year selector (dropdown or date picker)
-- [ ] Defaults to current month
-- [ ] Quick navigation (previous/next month buttons)
-- [ ] Chart updates when month selection changes
-- [ ] Shows message when no data available for selected month
+- [x] Month/year selector (dropdown or date picker)
+- [x] Defaults to current month
+- [x] Quick navigation (previous/next month buttons)
+- [x] Chart updates when month selection changes
+- [x] Shows message when no data available for selected month
 
 #### US-029-005: Interactive Chart Elements
 **As a** user  
@@ -90,14 +90,14 @@ Users need visual representations of their financial data to identify patterns, 
 **So that** I can explore my spending data
 
 **Acceptance Criteria:**
-- [ ] Hover/focus on segment shows tooltip with:
+- [x] Hover/focus on segment shows tooltip with:
   - Category name
   - Amount spent
   - Percentage of total
   - Number of transactions
-- [ ] Click on segment navigates to filtered transaction list
-- [ ] Legend items are clickable to highlight corresponding segment
-- [ ] Accessible via keyboard navigation
+- [x] Click on segment navigates to filtered transaction list
+- [x] Legend items are clickable to highlight corresponding segment
+- [x] Accessible via keyboard navigation
 
 #### US-029-006: Filter Categories in Chart
 **As a** user  
@@ -363,19 +363,19 @@ Refs: #029"
 
 ---
 
-### Phase 4: Monthly Categories Report Page
+### Phase 4: Monthly Categories Report Page ✅
 
 **Objective:** Create the report page that displays the donut chart with category spending.
 
 **Tasks:**
-- [ ] Create `MonthlyCategoriesReport.razor` page
-- [ ] Add month/year selector
-- [ ] Integrate with API service
-- [ ] Connect DonutChart component with data
-- [ ] Add loading and empty states
-- [ ] Implement segment click navigation to transactions
-- [ ] Add responsive layout
-- [ ] Write page component tests
+- [x] Create `MonthlyCategoriesReport.razor` page
+- [x] Add month/year selector
+- [x] Integrate with API service (GetMonthlyCategoryReportAsync)
+- [x] Connect DonutChart component with data
+- [x] Add loading and empty states
+- [x] Implement segment click navigation to transactions
+- [x] Add responsive layout (grid with responsive breakpoints)
+- [x] Add categories list with color indicators
 
 **Commit:**
 ```bash

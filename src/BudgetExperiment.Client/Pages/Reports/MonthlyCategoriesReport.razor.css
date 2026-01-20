@@ -1,0 +1,166 @@
+.report-content {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-6);
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .report-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Chart Section */
+.chart-section {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+}
+
+/* Summary Section */
+.summary-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.summary-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: var(--space-4);
+}
+
+.summary-card h3 {
+    margin: 0 0 var(--space-3) 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-4);
+}
+
+.summary-stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.stat-value {
+    font-size: var(--text-xl);
+    font-weight: 600;
+}
+
+.text-expense {
+    color: var(--color-expense);
+}
+
+.text-income {
+    color: var(--color-income);
+}
+
+/* Categories List */
+.categories-list {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: var(--space-4);
+}
+
+.categories-list h3 {
+    margin: 0 0 var(--space-3) 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.category-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.category-row:hover {
+    background: var(--color-surface-hover);
+}
+
+.category-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.category-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.category-count {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.category-percentage {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    min-width: 50px;
+    text-align: right;
+}
+
+.category-amount {
+    font-weight: 600;
+    min-width: 100px;
+    text-align: right;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-8);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+.empty-state-hint {
+    font-size: var(--text-sm);
+    opacity: 0.8;
+}
+
+/* Month Navigation */
+.month-navigation {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.current-month {
+    min-width: 140px;
+    text-align: center;
+    font-weight: 500;
+}
