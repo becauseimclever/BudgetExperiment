@@ -92,9 +92,16 @@ public sealed class ChatService : IChatService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ChatMessage>> GetSessionMessagesAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ChatMessage>?> GetMessagesAsync(Guid sessionId, int limit = 50, CancellationToken cancellationToken = default)
     {
-        return await this._messageRepository.GetBySessionAsync(sessionId, cancellationToken: cancellationToken);
+        // Check if session exists
+        var session = await this._sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        if (session is null)
+        {
+            return null;
+        }
+
+        return await this._messageRepository.GetBySessionAsync(sessionId, limit, cancellationToken);
     }
 
     /// <inheritdoc />

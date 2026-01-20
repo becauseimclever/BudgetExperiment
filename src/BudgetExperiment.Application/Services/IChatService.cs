@@ -39,9 +39,10 @@ public interface IChatService
     /// Gets all messages for a chat session.
     /// </summary>
     /// <param name="sessionId">The session identifier.</param>
+    /// <param name="limit">Maximum number of messages to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of messages ordered by timestamp.</returns>
-    Task<IReadOnlyList<ChatMessage>> GetSessionMessagesAsync(Guid sessionId, CancellationToken cancellationToken = default);
+    /// <returns>A list of messages ordered by timestamp, or null if session not found.</returns>
+    Task<IReadOnlyList<ChatMessage>?> GetMessagesAsync(Guid sessionId, int limit = 50, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sends a user message and gets an AI response.
