@@ -1,5 +1,10 @@
 /* Reconciliation Page Styles */
 
+/* Settings Panel */
+.settings-panel-wrapper {
+    margin-bottom: 1.5rem;
+}
+
 .filter-bar {
     display: flex;
     flex-wrap: wrap;

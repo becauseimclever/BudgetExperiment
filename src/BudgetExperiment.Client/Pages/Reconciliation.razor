@@ -15,6 +15,9 @@
 <div class="page-container">
     <PageHeader Title="Reconciliation">
         <Actions>
+            <button class="btn btn-secondary" @onclick="ToggleSettings" disabled="@isLoading">
+                <Icon Name="settings" Size="16" /> Settings
+            </button>
             <button class="btn btn-secondary" @onclick="RefreshData" disabled="@isLoading">
                 <Icon Name="refresh" Size="16" /> Refresh
             </button>
@@ -26,6 +29,14 @@
                 IsRetrying="@isRetrying"
                 OnRetry="RetryLoad"
                 OnDismiss="DismissError" />
+
+    @* Settings Panel (collapsible) *@
+    @if (showSettings)
+    {
+        <div class="settings-panel-wrapper">
+            <ToleranceSettingsPanel />
+        </div>
+    }
 
     @* Period Selector and Filters *@
     <div class="filter-bar">
@@ -214,6 +225,7 @@
     private bool isRetrying;
     private string? errorMessage;
 
+    private bool showSettings;
     private bool showMatchReviewModal;
     private ReconciliationMatchDto? selectedMatch;
 
@@ -268,6 +280,11 @@
     public void Dispose()
     {
         ScopeService.ScopeChanged -= OnScopeChanged;
+    }
+
+    private void ToggleSettings()
+    {
+        showSettings = !showSettings;
     }
 
     private async void OnScopeChanged(BudgetScope? scope)
