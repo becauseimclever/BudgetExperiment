@@ -170,6 +170,16 @@ public sealed record RecurringInstanceStatusDto
     public string Description { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the account identifier.
+    /// </summary>
+    public Guid AccountId { get; init; }
+
+    /// <summary>
+    /// Gets the account name.
+    /// </summary>
+    public string AccountName { get; init; } = string.Empty;
+
+    /// <summary>
     /// Gets the instance date.
     /// </summary>
     public DateOnly InstanceDate { get; init; }
@@ -283,4 +293,20 @@ public sealed record BulkMatchActionRequest
     /// Gets or sets the match IDs to process.
     /// </summary>
     public IReadOnlyList<Guid> MatchIds { get; init; } = [];
+}
+
+/// <summary>
+/// Result of a bulk match action.
+/// </summary>
+public sealed record BulkMatchActionResult
+{
+    /// <summary>
+    /// Gets the number of matches successfully accepted.
+    /// </summary>
+    public int AcceptedCount { get; init; }
+
+    /// <summary>
+    /// Gets the number of matches that failed.
+    /// </summary>
+    public int FailedCount { get; init; }
 }

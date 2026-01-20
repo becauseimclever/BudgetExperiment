@@ -41,6 +41,7 @@ builder.Services.AddScoped<IAiApiService, AiApiService>();
 builder.Services.AddScoped<IChatApiService, ChatApiService>();
 builder.Services.AddScoped<IChatContextService, ChatContextService>();
 builder.Services.AddScoped<IImportApiService, ImportApiService>();
+builder.Services.AddScoped<IReconciliationApiService, ReconciliationApiService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<VersionService>();
 
