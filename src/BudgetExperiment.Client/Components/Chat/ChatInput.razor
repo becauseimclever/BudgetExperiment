@@ -1,0 +1,64 @@
+@* ChatInput.razor - Chat message input component *@
+
+<div class="chat-input-container">
+    <form @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
+        <div class="chat-input-wrapper">
+            <input type="text"
+                   class="chat-input"
+                   @bind="inputValue"
+                   @bind:event="oninput"
+                   @onkeydown="HandleKeyDown"
+                   placeholder="@Placeholder"
+                   disabled="@IsDisabled"
+                   autocomplete="off" />
+            <button type="submit"
+                    class="btn btn-primary chat-send-button"
+                    disabled="@(IsDisabled || string.IsNullOrWhiteSpace(inputValue))"
+                    title="Send message">
+                <Icon Name="send" Size="18" />
+            </button>
+        </div>
+    </form>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the callback when a message is sent.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnSend { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the input is disabled.
+    /// </summary>
+    [Parameter]
+    public bool IsDisabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the placeholder text.
+    /// </summary>
+    [Parameter]
+    public string Placeholder { get; set; } = "Type a message...";
+
+    private string inputValue = string.Empty;
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(inputValue) || IsDisabled)
+        {
+            return;
+        }
+
+        var message = inputValue.Trim();
+        inputValue = string.Empty;
+        await OnSend.InvokeAsync(message);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await HandleSubmit();
+        }
+    }
+}

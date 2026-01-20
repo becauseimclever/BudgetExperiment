@@ -10,6 +10,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
+@inject IChatContextService ChatContext
 
 <PageTitle>@(accountName ?? "Account") Transactions - Budget Experiment</PageTitle>
 
@@ -200,6 +201,7 @@
     protected override void OnInitialized()
     {
         ScopeService.ScopeChanged += OnScopeChanged;
+        ChatContext.SetPageType("transactions");
     }
 
     protected override async Task OnParametersSetAsync()
@@ -211,6 +213,9 @@
             await LoadData();
             await LoadCategories();
             await LoadPastDueItems();
+
+            // Update chat context with current account
+            ChatContext.SetAccountContext(AccountId, accountName);
         }
     }
 
@@ -229,6 +234,7 @@
     public void Dispose()
     {
         ScopeService.ScopeChanged -= OnScopeChanged;
+        ChatContext.ClearContext();
     }
 
     private async Task LoadCategories()

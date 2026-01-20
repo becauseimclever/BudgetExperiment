@@ -1,0 +1,322 @@
+@* ChatPanel.razor - Main chat assistant panel component (VS Code-style side panel) *@
+
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+@using BudgetExperiment.Domain
+
+@inject IChatApiService ChatApi
+@inject IChatContextService ChatContext
+
+@implements IDisposable
+
+<aside class="chat-panel @(IsOpen ? "chat-panel-open" : "chat-panel-closed")">
+    <div class="chat-header">
+        <div class="chat-header-title">
+            <Icon Name="sparkles" Size="18" />
+            <span>AI Assistant</span>
+        </div>
+        <div class="chat-header-actions">
+            @if (Session is not null)
+            {
+                <button class="btn btn-ghost btn-sm" @onclick="HandleNewSession" title="New conversation">
+                    <Icon Name="plus" Size="16" />
+                </button>
+            }
+            <button class="btn btn-ghost btn-sm" @onclick="HandleToggle" title="Close panel">
+                <Icon Name="x" Size="16" />
+            </button>
+        </div>
+    </div>
+
+    <div class="chat-body">
+        @if (!IsOpen)
+        {
+            @* Panel is closed, nothing to show *@
+        }
+        else if (IsLoading)
+        {
+            <div class="chat-loading">
+                <LoadingSpinner Message="Initializing chat..." />
+            </div>
+        }
+        else if (Session is null)
+        {
+            <div class="chat-error">
+                <Icon Name="alert-circle" Size="32" />
+                <p>Unable to start chat session</p>
+                <button class="btn btn-primary btn-sm" @onclick="InitializeSession">
+                    Try Again
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="chat-messages" @ref="messagesContainer">
+                @if (Messages.Count == 0)
+                {
+                    <div class="chat-welcome">
+                        <Icon Name="sparkles" Size="48" Class="welcome-icon" />
+                        <h3>Hi! I'm your budget assistant.</h3>
+                        <p>Try saying things like:</p>
+                        <ul class="chat-examples">
+                            <li>"Add $50 grocery purchase at Walmart"</li>
+                            <li>"Transfer $200 from checking to savings"</li>
+                            <li>"I spent $30 on gas yesterday"</li>
+                        </ul>
+                        @if (!string.IsNullOrEmpty(contextSummary))
+                        {
+                            <div class="chat-context-hint">
+                                <Icon Name="info" Size="14" />
+                                <span>@contextSummary</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in Messages)
+                    {
+                        <ChatMessageBubble
+                            Message="message"
+                            OnConfirm="HandleConfirmAction"
+                            OnCancel="HandleCancelAction"
+                            OnOptionSelected="HandleOptionSelected"
+                            IsProcessing="processingMessageId == message.Id" />
+                    }
+
+                    @if (IsSending)
+                    {
+                        <div class="chat-typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <ChatInput
+                OnSend="HandleSendMessage"
+                IsDisabled="IsSending"
+                Placeholder="Type a message..." />
+        }
+    </div>
+</aside>
+
+@code {
+    /// <summary>
+    /// Gets or sets whether the chat panel is open.
+    /// </summary>
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    /// <summary>
+    /// Event callback when the panel toggle is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnToggle { get; set; }
+
+    /// <summary>
+    /// Event callback when an action is confirmed and creates an entity.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnEntityCreated { get; set; }
+
+    private bool IsLoading { get; set; }
+    private bool IsSending { get; set; }
+    private ChatSessionDto? Session { get; set; }
+    private List<ChatMessageDto> Messages { get; set; } = [];
+    private ElementReference messagesContainer;
+    private Guid? processingMessageId;
+    private string? contextSummary;
+    private bool wasOpen;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        ChatContext.ContextChanged += OnContextChanged;
+        UpdateContextSummary();
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        // Initialize session when panel opens
+        if (IsOpen && !wasOpen && Session is null)
+        {
+            await InitializeSession();
+        }
+
+        wasOpen = IsOpen;
+    }
+
+    private void OnContextChanged(object? sender, EventArgs e)
+    {
+        UpdateContextSummary();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateContextSummary()
+    {
+        contextSummary = ChatContext.CurrentContext.GetContextSummary();
+    }
+
+    private async Task HandleToggle()
+    {
+        await OnToggle.InvokeAsync();
+    }
+
+    private async Task InitializeSession()
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            Session = await ChatApi.GetOrCreateSessionAsync();
+            if (Session is not null)
+            {
+                var messages = await ChatApi.GetMessagesAsync(Session.Id);
+                Messages = messages.ToList();
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleNewSession()
+    {
+        if (Session is not null)
+        {
+            await ChatApi.CloseSessionAsync(Session.Id);
+        }
+
+        Messages.Clear();
+        Session = null;
+        await InitializeSession();
+    }
+
+    private async Task HandleSendMessage(string content)
+    {
+        if (Session is null || string.IsNullOrWhiteSpace(content))
+        {
+            return;
+        }
+
+        IsSending = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await ChatApi.SendMessageAsync(Session.Id, content);
+            if (response is not null)
+            {
+                if (response.UserMessage is not null)
+                {
+                    Messages.Add(response.UserMessage);
+                }
+
+                if (response.AssistantMessage is not null)
+                {
+                    Messages.Add(response.AssistantMessage);
+                }
+
+                await ScrollToBottom();
+            }
+        }
+        finally
+        {
+            IsSending = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleConfirmAction(Guid messageId)
+    {
+        processingMessageId = messageId;
+        StateHasChanged();
+
+        try
+        {
+            var response = await ChatApi.ConfirmActionAsync(messageId);
+            if (response is not null && response.Success)
+            {
+                // Update the message status
+                var message = Messages.FirstOrDefault(m => m.Id == messageId);
+                if (message is not null)
+                {
+                    message.ActionStatus = ChatActionStatus.Confirmed;
+                }
+
+                // Notify parent if entity was created
+                if (response.CreatedEntityId.HasValue)
+                {
+                    await OnEntityCreated.InvokeAsync(response.CreatedEntityId.Value);
+                }
+
+                // Add confirmation message
+                Messages.Add(new ChatMessageDto
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = Session!.Id,
+                    Role = ChatRole.Assistant,
+                    Content = response.Message ?? "Action completed successfully!",
+                    CreatedAtUtc = DateTime.UtcNow,
+                    ActionStatus = ChatActionStatus.None,
+                });
+
+                await ScrollToBottom();
+            }
+        }
+        finally
+        {
+            processingMessageId = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleCancelAction(Guid messageId)
+    {
+        processingMessageId = messageId;
+        StateHasChanged();
+
+        try
+        {
+            var success = await ChatApi.CancelActionAsync(messageId);
+            if (success)
+            {
+                var message = Messages.FirstOrDefault(m => m.Id == messageId);
+                if (message is not null)
+                {
+                    message.ActionStatus = ChatActionStatus.Cancelled;
+                }
+            }
+        }
+        finally
+        {
+            processingMessageId = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleOptionSelected(string optionValue)
+    {
+        // When user clicks a clarification option, send it as a message
+        await HandleSendMessage(optionValue);
+    }
+
+    private async Task ScrollToBottom()
+    {
+        await Task.Delay(50); // Allow DOM to update
+        // Note: Actual scroll would need JS interop
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ChatContext.ContextChanged -= OnContextChanged;
+    }
+}

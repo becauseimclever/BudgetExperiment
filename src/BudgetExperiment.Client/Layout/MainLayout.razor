@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 @using BudgetExperiment.Client.Components.Auth
+@using BudgetExperiment.Client.Components.Chat
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
 @using BudgetExperiment.Client.Services
@@ -9,13 +10,20 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="app-shell">
+        <div class="app-shell @(chatOpen ? "chat-open" : "")">
             <header class="app-top-header">
                 <button class="app-menu-toggle" @onclick="ToggleNavigation" title="@(navCollapsed ? "Expand menu" : "Collapse menu")">
                     <Icon Name="menu" Size="24" />
                 </button>
                 <a href="/" class="app-brand">Budget Experiment</a>
                 <div class="app-header-spacer"></div>
+                <button class="btn btn-ghost chat-toggle-btn" @onclick="ToggleChat" title="@(chatOpen ? "Close chat" : "Open AI Assistant")">
+                    <Icon Name="message-circle" Size="20" />
+                    @if (!chatOpen)
+                    {
+                        <span class="chat-toggle-label">AI Assistant</span>
+                    }
+                </button>
                 <ThemeToggle />
                 <UserProfile />
             </header>
@@ -28,6 +36,8 @@
                 <main class="app-main-content">
                     @Body
                 </main>
+
+                <ChatPanel IsOpen="@chatOpen" OnToggle="ToggleChat" />
             </div>
         </div>
     </Authorized>
@@ -46,9 +56,15 @@
 
 @code {
     private bool navCollapsed = false;
+    private bool chatOpen = false;
 
     private void ToggleNavigation()
     {
         navCollapsed = !navCollapsed;
+    }
+
+    private void ToggleChat()
+    {
+        chatOpen = !chatOpen;
     }
 }

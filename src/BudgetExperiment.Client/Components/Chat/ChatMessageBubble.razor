@@ -1,0 +1,232 @@
+@* ChatMessageBubble.razor - Individual chat message display component *@
+
+@using BudgetExperiment.Contracts.Dtos
+@using BudgetExperiment.Domain
+
+<div class="chat-message @GetMessageClass()">
+    <div class="message-bubble">
+        <div class="message-content">
+            @Message.Content
+        </div>
+
+        @if (Message.Action is not null && Message.ActionStatus == ChatActionStatus.Pending)
+        {
+            <div class="action-preview">
+                @if (Message.Action.Type == ChatActionType.ClarificationNeeded)
+                {
+                    <div class="clarification-options">
+                        @if (Message.Action.Options is not null)
+                        {
+                            @foreach (var option in Message.Action.Options)
+                            {
+                                <button class="btn btn-outline btn-sm option-button"
+                                        @onclick="() => HandleOptionClick(option.Value)"
+                                        disabled="@IsProcessing">
+                                    @option.Label
+                                </button>
+                            }
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="action-card">
+                        <div class="action-type-badge">
+                            <Icon Name="@GetActionIcon()" Size="14" />
+                            <span>@GetActionTypeLabel()</span>
+                        </div>
+
+                        <div class="action-summary">
+                            @Message.Action.PreviewSummary
+                        </div>
+
+                        <div class="action-details">
+                            @if (Message.Action.Amount.HasValue)
+                            {
+                                <div class="detail-row">
+                                    <span class="detail-label">Amount:</span>
+                                    <span class="detail-value amount">@Message.Action.Amount.Value.ToString("C")</span>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Message.Action.AccountName))
+                            {
+                                <div class="detail-row">
+                                    <span class="detail-label">Account:</span>
+                                    <span class="detail-value">@Message.Action.AccountName</span>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Message.Action.FromAccountName) && !string.IsNullOrEmpty(Message.Action.ToAccountName))
+                            {
+                                <div class="detail-row">
+                                    <span class="detail-label">From:</span>
+                                    <span class="detail-value">@Message.Action.FromAccountName</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">To:</span>
+                                    <span class="detail-value">@Message.Action.ToAccountName</span>
+                                </div>
+                            }
+
+                            @if (Message.Action.Date.HasValue)
+                            {
+                                <div class="detail-row">
+                                    <span class="detail-label">Date:</span>
+                                    <span class="detail-value">@Message.Action.Date.Value.ToString("MMM d, yyyy")</span>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Message.Action.Description))
+                            {
+                                <div class="detail-row">
+                                    <span class="detail-label">Description:</span>
+                                    <span class="detail-value">@Message.Action.Description</span>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Message.Action.CategoryName))
+                            {
+                                <div class="detail-row">
+                                    <span class="detail-label">Category:</span>
+                                    <span class="detail-value">@Message.Action.CategoryName</span>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm"
+                                    @onclick="HandleConfirm"
+                                    disabled="@IsProcessing">
+                                @if (IsProcessing)
+                                {
+                                    <LoadingSpinner Size="SpinnerSize.Small" />
+                                }
+                                else
+                                {
+                                    <Icon Name="check" Size="14" />
+                                }
+                                <span>Confirm</span>
+                            </button>
+                            <button class="btn btn-secondary btn-sm"
+                                    @onclick="HandleCancel"
+                                    disabled="@IsProcessing">
+                                <Icon Name="x" Size="14" />
+                                <span>Cancel</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Message.ActionStatus == ChatActionStatus.Confirmed)
+        {
+            <div class="action-status action-status-success">
+                <Icon Name="check-circle" Size="14" />
+                <span>Action completed</span>
+            </div>
+        }
+
+        @if (Message.ActionStatus == ChatActionStatus.Cancelled)
+        {
+            <div class="action-status action-status-cancelled">
+                <Icon Name="x-circle" Size="14" />
+                <span>Cancelled</span>
+            </div>
+        }
+
+        @if (Message.ActionStatus == ChatActionStatus.Failed)
+        {
+            <div class="action-status action-status-failed">
+                <Icon Name="alert-circle" Size="14" />
+                <span>Failed</span>
+            </div>
+        }
+    </div>
+
+    <div class="message-time">
+        @Message.CreatedAtUtc.ToLocalTime().ToString("h:mm tt")
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the message to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public ChatMessageDto Message { get; set; } = default!;
+
+    /// <summary>
+    /// Gets or sets the callback when an action is confirmed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnConfirm { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when an action is cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a clarification option is selected.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnOptionSelected { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this message is being processed.
+    /// </summary>
+    [Parameter]
+    public bool IsProcessing { get; set; }
+
+    private string GetMessageClass()
+    {
+        return Message.Role switch
+        {
+            ChatRole.User => "message-user",
+            ChatRole.Assistant => "message-assistant",
+            _ => "message-system"
+        };
+    }
+
+    private string GetActionIcon()
+    {
+        return Message.Action?.Type switch
+        {
+            ChatActionType.CreateTransaction => "dollar-sign",
+            ChatActionType.CreateTransfer => "arrow-right-left",
+            ChatActionType.CreateRecurringTransaction => "repeat",
+            ChatActionType.CreateRecurringTransfer => "repeat",
+            _ => "help-circle"
+        };
+    }
+
+    private string GetActionTypeLabel()
+    {
+        return Message.Action?.Type switch
+        {
+            ChatActionType.CreateTransaction => "Transaction",
+            ChatActionType.CreateTransfer => "Transfer",
+            ChatActionType.CreateRecurringTransaction => "Recurring Transaction",
+            ChatActionType.CreateRecurringTransfer => "Recurring Transfer",
+            _ => "Action"
+        };
+    }
+
+    private async Task HandleConfirm()
+    {
+        await OnConfirm.InvokeAsync(Message.Id);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync(Message.Id);
+    }
+
+    private async Task HandleOptionClick(string value)
+    {
+        await OnOptionSelected.InvokeAsync(value);
+    }
+}

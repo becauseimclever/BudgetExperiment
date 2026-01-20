@@ -4,6 +4,15 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Features
+
+- **chat:** AI Chat Assistant for natural language transaction entry (Feature 026)
+- **chat:** Create transactions, transfers, and recurring items via conversational commands
+- **chat:** VS Code-style side panel that shrinks main content when open
+- **chat:** Page context awareness - automatically detects current account/page
+- **chat:** Action preview cards with confirm/cancel before execution
+- **chat:** Persisted chat sessions with history
+
 ## [3.3.0] - 2026-01-19
 
 ### Features

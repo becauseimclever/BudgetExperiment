@@ -16,10 +16,13 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<AccountService>();
-        services.AddScoped<TransactionService>();
+        services.AddScoped<ITransactionService, TransactionService>();
+        services.AddScoped<TransactionService>(); // Also register concrete for backward compatibility
         services.AddScoped<CalendarService>();
-        services.AddScoped<RecurringTransactionService>();
-        services.AddScoped<RecurringTransferService>();
+        services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
+        services.AddScoped<RecurringTransactionService>(); // Also register concrete for backward compatibility
+        services.AddScoped<IRecurringTransferService, RecurringTransferService>();
+        services.AddScoped<RecurringTransferService>(); // Also register concrete for backward compatibility
         services.AddScoped<ITransferService, TransferService>();
         services.AddScoped<ICalendarGridService, CalendarGridService>();
         services.AddScoped<IDayDetailService, DayDetailService>();
@@ -45,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<ICsvParserService, CsvParserService>();
         services.AddScoped<IImportMappingService, ImportMappingService>();
         services.AddScoped<IImportService, ImportService>();
+        services.AddScoped<INaturalLanguageParser, NaturalLanguageParser>();
+        services.AddScoped<IChatService, ChatService>();
         return services;
     }
 }

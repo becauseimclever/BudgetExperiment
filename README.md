@@ -15,6 +15,7 @@ Budget Experiment helps you manage your finances by:
 - **Budget categories & goals**: Set spending targets and monitor progress
 - **Paycheck allocation planning**: Distribute bill amounts across pay periods to ensure timely payments
 - **Recurring transactions**: Automate regular income and expenses with flexible scheduling
+- **AI Chat Assistant**: Create transactions via natural language - "Add $50 for groceries at Walmart"
 - **AI-powered categorization**: Get intelligent rule suggestions using local AI (via Ollama)
 - **CSV import**: Import transactions from Bank of America, Capital One, and UHCU with duplicate detection
 - **Calendar view**: Visualize daily transaction summaries and navigate spending history
@@ -207,6 +208,7 @@ Key endpoints:
 - **Budgets**: `/api/v1/budgets` - Budget goals and progress tracking
 - **Calendar**: `/api/v1/calendar` - Calendar view data with daily summaries
 - **Allocations**: `/api/v1/allocations` - Paycheck allocation planning
+- **Chat**: `/api/v1/chat` - AI Chat Assistant for natural language commands
 - **AI**: `/api/v1/ai` - AI-powered rule suggestions (requires Ollama)
 - **Settings**: `/api/v1/settings` - Application settings
 - **User**: `/api/v1/user` - Current user info
@@ -249,7 +251,42 @@ Budget Experiment includes AI-powered categorization rule suggestions using a lo
 
 All AI processing happens locally on your machine. Your financial data is never sent to external services. The AI runs entirely through your local Ollama instance.
 
-## 📖 Documentation
+## � AI Chat Assistant
+
+A natural language interface for managing your finances through conversation.
+
+### Features
+
+- **Natural Language Entry**: Create transactions by typing "Add $50 for groceries at Walmart"
+- **Transfers**: Move money between accounts with "Transfer $500 from Checking to Savings"
+- **Recurring Items**: Set up recurring transactions via chat
+- **Context Awareness**: Automatically detects your current page context (account, category)
+- **Action Preview**: Review actions before confirming with preview cards
+- **VS Code-style Panel**: Side panel that smoothly slides in without covering content
+
+### Example Commands
+
+```
+"Add $45.67 for dining out at Chipotle"
+"Spent $120 on groceries yesterday"
+"Transfer $200 from checking to savings"
+"Got paid $2500 today"
+"Add monthly rent expense of $1500"
+```
+
+### Usage
+
+1. Click the **AI Assistant** button in the header (or use the chat icon)
+2. Type your command in natural language
+3. Review the parsed action in the preview card
+4. Click **Confirm** to execute or **Cancel** to discard
+5. The assistant maintains conversation history during your session
+
+### Privacy
+
+Like the AI Rule Suggestions, all chat processing happens locally via Ollama. Your conversation and financial data stay on your machine.
+
+## �📖 Documentation
 
 - [Copilot Instructions](.github/copilot-instructions.md) - Comprehensive engineering guide
 - [CHANGELOG.md](CHANGELOG.md) - Version history and release notes

@@ -11,7 +11,7 @@ namespace BudgetExperiment.Application.Services;
 /// <summary>
 /// Application service for transaction use cases.
 /// </summary>
-public sealed class TransactionService
+public sealed class TransactionService : ITransactionService
 {
     private readonly ITransactionRepository _repository;
     private readonly IAccountRepository _accountRepository;

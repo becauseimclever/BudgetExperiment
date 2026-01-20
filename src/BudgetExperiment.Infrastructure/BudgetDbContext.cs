@@ -87,6 +87,16 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<ImportBatch> ImportBatches => this.Set<ImportBatch>();
 
+    /// <summary>
+    /// Gets the chat sessions.
+    /// </summary>
+    public DbSet<ChatSession> ChatSessions => this.Set<ChatSession>();
+
+    /// <summary>
+    /// Gets the chat messages.
+    /// </summary>
+    public DbSet<ChatMessage> ChatMessages => this.Set<ChatMessage>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
