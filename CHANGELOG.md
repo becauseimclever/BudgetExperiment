@@ -4,6 +4,8 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-01-19
+
 ### Features
 
 - **chat:** AI Chat Assistant for natural language transaction entry (Feature 026)
