@@ -4,6 +4,22 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.5.0] - 2026-01-20
+
+### Features
+
+- **reconciliation:** Recurring Transaction Reconciliation system (Feature 028)
+- **reconciliation:** Automatic matching of imported transactions to recurring instances
+- **reconciliation:** Confidence scoring with High/Medium/Low match quality levels
+- **reconciliation:** Reconciliation dashboard showing matched, pending, and missing instances
+- **reconciliation:** Match review modal with accept/reject actions
+- **reconciliation:** Manual match dialog for linking unlinked transactions
+- **reconciliation:** Tolerance settings panel with strict/moderate/loose presets
+- **reconciliation:** Import preview enhancement showing recurring match suggestions
+- **reconciliation:** Variance tracking for amount differences between expected and actual
+- **api:** Reconciliation REST endpoints for matches, status, and tolerances
+- **infra:** Persistence layer for reconciliation matches and settings
+
 ## [3.4.0] - 2026-01-19
 
 ### Features
