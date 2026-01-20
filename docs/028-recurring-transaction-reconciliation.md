@@ -511,16 +511,16 @@ Refs: #028"
 
 ---
 
-### Phase 8: Import Preview Enhancement
+### Phase 8: Import Preview Enhancement ✅
 
 **Objective:** Show match suggestions in import preview UI
 
 **Tasks:**
-- [ ] Update ImportPreview component with match column
-- [ ] Add RecurringMatchBadge component
-- [ ] Add inline accept/reject buttons
-- [ ] Show match confidence indicator
-- [ ] Handle no-match cases gracefully
+- [x] Update ImportPreview component with match column
+- [x] Add RecurringMatchBadge component (inline in ImportPreviewTable)
+- [x] Show match confidence indicator
+- [x] Handle no-match cases gracefully
+- [ ] Add inline accept/reject buttons (deferred - matches auto-apply on import)
 - [ ] Write bUnit tests for enhanced preview
 
 **Commit:**
