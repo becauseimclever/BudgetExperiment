@@ -4,6 +4,17 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-01-20
+
+### Features
+
+- **reports:** Reports Dashboard with monthly category spending analysis (Feature 029)
+- **reports:** Pure SVG DonutChart component with interactive segments and hover tooltips
+- **reports:** Monthly Categories Report page with spending breakdown and navigation
+- **reports:** Reports landing page with cards for available and upcoming reports
+- **reports:** Collapsible Reports section in navigation menu
+- **api:** GET /api/v1/reports/categories/monthly endpoint for category spending data
+
 ## [3.5.0] - 2026-01-20
 
 ### Features
