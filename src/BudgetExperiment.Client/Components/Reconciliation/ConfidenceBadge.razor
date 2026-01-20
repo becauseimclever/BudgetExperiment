@@ -1,0 +1,61 @@
+@* ConfidenceBadge.razor - Reusable component for displaying match confidence *@
+
+<span class="confidence-badge @LevelClass @SizeClass" title="@TooltipText">
+    @if (ShowScore)
+    {
+        <span class="score">@Score.ToString("P0")</span>
+    }
+    @if (ShowLevel)
+    {
+        <span class="level">@Level</span>
+    }
+</span>
+
+@code {
+    /// <summary>
+    /// Gets or sets the confidence score (0.0 to 1.0).
+    /// </summary>
+    [Parameter]
+    public decimal Score { get; set; }
+
+    /// <summary>
+    /// Gets or sets the confidence level (High, Medium, Low).
+    /// </summary>
+    [Parameter]
+    public string Level { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the score percentage.
+    /// </summary>
+    [Parameter]
+    public bool ShowScore { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the level text.
+    /// </summary>
+    [Parameter]
+    public bool ShowLevel { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the badge size (small, medium, large).
+    /// </summary>
+    [Parameter]
+    public string Size { get; set; } = "medium";
+
+    private string LevelClass => Level?.ToLowerInvariant() switch
+    {
+        "high" => "high",
+        "medium" => "medium",
+        "low" => "low",
+        _ => string.Empty,
+    };
+
+    private string SizeClass => Size?.ToLowerInvariant() switch
+    {
+        "small" => "badge-sm",
+        "large" => "badge-lg",
+        _ => string.Empty,
+    };
+
+    private string TooltipText => $"Confidence: {Score:P0} ({Level})";
+}

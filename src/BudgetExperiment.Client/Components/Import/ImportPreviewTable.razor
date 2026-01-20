@@ -47,6 +47,7 @@
                     <th>Description</th>
                     <th class="amount-col text-end">Amount</th>
                     <th>Category</th>
+                    <th class="match-col">Recurring Match</th>
                 </tr>
             </thead>
             <tbody>
@@ -120,11 +121,31 @@
                                 <span class="text-secondary">Uncategorized</span>
                             }
                         </td>
+                        <td class="match-col">
+                            @if (row.RecurringMatch != null)
+                            {
+                                <div class="recurring-match-preview @GetMatchConfidenceClass(row.RecurringMatch.ConfidenceLevel)">
+                                    <span class="match-icon" title="@GetMatchTooltip(row.RecurringMatch)">
+                                        <Icon Name="link" Size="12" />
+                                    </span>
+                                    <span class="match-info" title="@row.RecurringMatch.RecurringDescription">
+                                        @TruncateText(row.RecurringMatch.RecurringDescription, 20)
+                                    </span>
+                                    <span class="confidence-badge-sm @GetMatchConfidenceClass(row.RecurringMatch.ConfidenceLevel)">
+                                        @row.RecurringMatch.ConfidenceLevel[0]
+                                    </span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">—</span>
+                            }
+                        </td>
                     </tr>
                     @if (!string.IsNullOrEmpty(row.StatusMessage) && row.Status != ImportRowStatus.Valid)
                     {
                         <tr class="status-message-row">
-                            <td colspan="7" class="ps-5 py-1">
+                            <td colspan="8" class="ps-5 py-1">
                                 <small class="@GetStatusMessageClass(row.Status)">
                                     <Icon Name="@GetStatusIcon(row.Status)" Size="12" />
                                     @row.StatusMessage
@@ -245,6 +266,71 @@
     .import-preview-table .status-message-row td {
         border-top: none;
     }
+
+    /* Recurring Match Column */
+    .import-preview-table .match-col {
+        width: 160px;
+    }
+
+    .import-preview-table .recurring-match-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        max-width: 100%;
+    }
+
+    .import-preview-table .recurring-match-preview.match-high {
+        background: color-mix(in srgb, var(--success) 15%, transparent);
+    }
+
+    .import-preview-table .recurring-match-preview.match-medium {
+        background: color-mix(in srgb, var(--warning) 15%, transparent);
+    }
+
+    .import-preview-table .recurring-match-preview.match-low {
+        background: color-mix(in srgb, var(--danger) 15%, transparent);
+    }
+
+    .import-preview-table .match-icon {
+        flex-shrink: 0;
+        color: var(--text-secondary);
+    }
+
+    .import-preview-table .match-info {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text-primary);
+    }
+
+    .import-preview-table .confidence-badge-sm {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.625rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .import-preview-table .confidence-badge-sm.match-high {
+        background: var(--success);
+    }
+
+    .import-preview-table .confidence-badge-sm.match-medium {
+        background: var(--warning);
+        color: var(--text-primary);
+    }
+
+    .import-preview-table .confidence-badge-sm.match-low {
+        background: var(--danger);
+    }
 </style>
 
 @code {
@@ -356,5 +442,19 @@
         if (string.IsNullOrEmpty(text)) return string.Empty;
         if (text.Length <= maxLength) return text;
         return text[..maxLength] + "...";
+    }
+
+    private static string GetMatchConfidenceClass(string confidenceLevel) => confidenceLevel switch
+    {
+        "High" => "match-high",
+        "Medium" => "match-medium",
+        "Low" => "match-low",
+        _ => string.Empty,
+    };
+
+    private static string GetMatchTooltip(ImportRecurringMatchPreview match)
+    {
+        var variance = match.ExpectedAmount - match.ExpectedAmount; // Will show actual variance when available
+        return $"Match: {match.RecurringDescription}\nExpected: {match.ExpectedAmount:C}\nConfidence: {match.ConfidenceScore:P0}";
     }
 }
