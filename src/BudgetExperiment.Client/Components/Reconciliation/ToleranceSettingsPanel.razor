@@ -1,0 +1,382 @@
+@* ToleranceSettingsPanel.razor - Panel for configuring reconciliation matching tolerances *@
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IReconciliationApiService ReconciliationApi
+
+<div class="tolerance-settings-panel">
+    <h4>Matching Tolerances</h4>
+    <p class="help-text">Configure how strictly transactions are matched to recurring instances.</p>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading tolerances..." />
+    }
+    else if (model != null)
+    {
+        <div class="preset-buttons">
+            <span class="preset-label">Presets:</span>
+            <button class="btn btn-outline-secondary btn-sm @(IsPreset("strict") ? "active" : "")"
+                    @onclick='() => ApplyPreset("strict")' disabled="@isSaving">
+                Strict
+            </button>
+            <button class="btn btn-outline-secondary btn-sm @(IsPreset("moderate") ? "active" : "")"
+                    @onclick='() => ApplyPreset("moderate")' disabled="@isSaving">
+                Moderate
+            </button>
+            <button class="btn btn-outline-secondary btn-sm @(IsPreset("loose") ? "active" : "")"
+                    @onclick='() => ApplyPreset("loose")' disabled="@isSaving">
+                Loose
+            </button>
+        </div>
+
+        <div class="settings-form">
+            <div class="setting-row">
+                <div class="setting-info">
+                    <label>Date Tolerance (days)</label>
+                    <span class="setting-description">How many days before/after the scheduled date to consider a match.</span>
+                </div>
+                <div class="setting-input">
+                    <input type="number"
+                           min="0"
+                           max="30"
+                           @bind="model.DateToleranceDays"
+                           @bind:after="CheckForChanges"
+                           disabled="@isSaving"
+                           class="form-control" />
+                    <span class="input-suffix">days</span>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <label>Amount Tolerance (%)</label>
+                    <span class="setting-description">Maximum percentage variance in amount to consider a match.</span>
+                </div>
+                <div class="setting-input">
+                    <input type="number"
+                           min="0"
+                           max="100"
+                           step="1"
+                           @bind="model.AmountTolerancePercentDisplay"
+                           @bind:after="CheckForChanges"
+                           disabled="@isSaving"
+                           class="form-control" />
+                    <span class="input-suffix">%</span>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <label>Amount Tolerance (absolute)</label>
+                    <span class="setting-description">Maximum dollar variance to consider a match (whichever is greater).</span>
+                </div>
+                <div class="setting-input">
+                    <span class="input-prefix">$</span>
+                    <input type="number"
+                           min="0"
+                           max="1000"
+                           step="0.01"
+                           @bind="model.AmountToleranceAbsolute"
+                           @bind:after="CheckForChanges"
+                           disabled="@isSaving"
+                           class="form-control" />
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <label>Description Similarity</label>
+                    <span class="setting-description">Minimum description similarity score required (0-100%).</span>
+                </div>
+                <div class="setting-input">
+                    <input type="range"
+                           min="0"
+                           max="100"
+                           step="5"
+                           @bind="model.DescriptionSimilarityDisplay"
+                           @bind:after="CheckForChanges"
+                           disabled="@isSaving"
+                           class="form-range" />
+                    <span class="range-value">@model.DescriptionSimilarityDisplay%</span>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <label>Auto-Match Threshold</label>
+                    <span class="setting-description">Minimum confidence for automatic matching without review.</span>
+                </div>
+                <div class="setting-input">
+                    <input type="range"
+                           min="50"
+                           max="100"
+                           step="5"
+                           @bind="model.AutoMatchThresholdDisplay"
+                           @bind:after="CheckForChanges"
+                           disabled="@isSaving"
+                           class="form-range" />
+                    <span class="range-value">@model.AutoMatchThresholdDisplay%</span>
+                </div>
+            </div>
+        </div>
+
+        @if (hasChanges)
+        {
+            <div class="action-bar">
+                <button class="btn btn-secondary" @onclick="ResetChanges" disabled="@isSaving">
+                    Reset
+                </button>
+                <button class="btn btn-primary" @onclick="SaveChanges" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <LoadingSpinner Size="SpinnerSize.Small" />
+                    }
+                    Save Changes
+                </button>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="success-message">@successMessage</div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-message">@errorMessage</div>
+        }
+    }
+</div>
+
+@code {
+    private ToleranceFormModel? model;
+    private ToleranceFormModel? originalModel;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool hasChanges;
+    private string? successMessage;
+    private string? errorMessage;
+
+    /// <summary>
+    /// Mutable form model for editing tolerances.
+    /// </summary>
+    private sealed class ToleranceFormModel
+    {
+        public int DateToleranceDays { get; set; }
+        public decimal AmountTolerancePercent { get; set; }
+        public decimal AmountToleranceAbsolute { get; set; }
+        public decimal DescriptionSimilarityThreshold { get; set; }
+        public decimal AutoMatchThreshold { get; set; }
+
+        /// <summary>
+        /// Gets or sets the amount tolerance percentage as a display value (0-100).
+        /// </summary>
+        public int AmountTolerancePercentDisplay
+        {
+            get => (int)(AmountTolerancePercent * 100);
+            set => AmountTolerancePercent = value / 100m;
+        }
+
+        /// <summary>
+        /// Gets or sets the description similarity threshold as a display value (0-100).
+        /// </summary>
+        public int DescriptionSimilarityDisplay
+        {
+            get => (int)(DescriptionSimilarityThreshold * 100);
+            set => DescriptionSimilarityThreshold = value / 100m;
+        }
+
+        /// <summary>
+        /// Gets or sets the auto-match threshold as a display value (0-100).
+        /// </summary>
+        public int AutoMatchThresholdDisplay
+        {
+            get => (int)(AutoMatchThreshold * 100);
+            set => AutoMatchThreshold = value / 100m;
+        }
+
+        public static ToleranceFormModel FromDto(MatchingTolerancesDto dto) => new()
+        {
+            DateToleranceDays = dto.DateToleranceDays,
+            AmountTolerancePercent = dto.AmountTolerancePercent,
+            AmountToleranceAbsolute = dto.AmountToleranceAbsolute,
+            DescriptionSimilarityThreshold = dto.DescriptionSimilarityThreshold,
+            AutoMatchThreshold = dto.AutoMatchThreshold,
+        };
+
+        public MatchingTolerancesDto ToDto() => new()
+        {
+            DateToleranceDays = DateToleranceDays,
+            AmountTolerancePercent = AmountTolerancePercent,
+            AmountToleranceAbsolute = AmountToleranceAbsolute,
+            DescriptionSimilarityThreshold = DescriptionSimilarityThreshold,
+            AutoMatchThreshold = AutoMatchThreshold,
+        };
+
+        public ToleranceFormModel Clone() => new()
+        {
+            DateToleranceDays = DateToleranceDays,
+            AmountTolerancePercent = AmountTolerancePercent,
+            AmountToleranceAbsolute = AmountToleranceAbsolute,
+            DescriptionSimilarityThreshold = DescriptionSimilarityThreshold,
+            AutoMatchThreshold = AutoMatchThreshold,
+        };
+
+        public bool Equals(ToleranceFormModel? other)
+        {
+            if (other is null)
+            {
+                return false;
+            }
+
+            return DateToleranceDays == other.DateToleranceDays &&
+                   AmountTolerancePercent == other.AmountTolerancePercent &&
+                   AmountToleranceAbsolute == other.AmountToleranceAbsolute &&
+                   DescriptionSimilarityThreshold == other.DescriptionSimilarityThreshold &&
+                   AutoMatchThreshold == other.AutoMatchThreshold;
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTolerancesAsync();
+    }
+
+    private async Task LoadTolerancesAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var dto = await ReconciliationApi.GetTolerancesAsync() ?? GetDefaultDto();
+            model = ToleranceFormModel.FromDto(dto);
+            originalModel = model.Clone();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load tolerances: {ex.Message}";
+            model = ToleranceFormModel.FromDto(GetDefaultDto());
+            originalModel = model.Clone();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static MatchingTolerancesDto GetDefaultDto() => new()
+    {
+        DateToleranceDays = 7,
+        AmountTolerancePercent = 0.10m,
+        AmountToleranceAbsolute = 10.00m,
+        DescriptionSimilarityThreshold = 0.60m,
+        AutoMatchThreshold = 0.85m,
+    };
+
+    private void ApplyPreset(string preset)
+    {
+        if (model == null)
+        {
+            return;
+        }
+
+        var presetDto = preset switch
+        {
+            "strict" => new MatchingTolerancesDto
+            {
+                DateToleranceDays = 3,
+                AmountTolerancePercent = 0.02m,
+                AmountToleranceAbsolute = 2.00m,
+                DescriptionSimilarityThreshold = 0.80m,
+                AutoMatchThreshold = 0.95m,
+            },
+            "loose" => new MatchingTolerancesDto
+            {
+                DateToleranceDays = 14,
+                AmountTolerancePercent = 0.25m,
+                AmountToleranceAbsolute = 50.00m,
+                DescriptionSimilarityThreshold = 0.40m,
+                AutoMatchThreshold = 0.70m,
+            },
+            _ => GetDefaultDto(),
+        };
+
+        model = ToleranceFormModel.FromDto(presetDto);
+        CheckForChanges();
+    }
+
+    private bool IsPreset(string preset)
+    {
+        if (model == null)
+        {
+            return false;
+        }
+
+        return preset switch
+        {
+            "strict" => model.DateToleranceDays == 3 &&
+                        model.AmountTolerancePercent == 0.02m &&
+                        model.AutoMatchThreshold == 0.95m,
+            "moderate" => model.DateToleranceDays == 7 &&
+                          model.AmountTolerancePercent == 0.10m &&
+                          model.AutoMatchThreshold == 0.85m,
+            "loose" => model.DateToleranceDays == 14 &&
+                       model.AmountTolerancePercent == 0.25m &&
+                       model.AutoMatchThreshold == 0.70m,
+            _ => false,
+        };
+    }
+
+    private void CheckForChanges()
+    {
+        hasChanges = model != null && originalModel != null && !model.Equals(originalModel);
+        successMessage = null;
+    }
+
+    private void ResetChanges()
+    {
+        if (originalModel != null)
+        {
+            model = originalModel.Clone();
+            hasChanges = false;
+            successMessage = null;
+            errorMessage = null;
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        if (model == null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            if (await ReconciliationApi.UpdateTolerancesAsync(model.ToDto()))
+            {
+                originalModel = model.Clone();
+                hasChanges = false;
+                successMessage = "Tolerances saved successfully.";
+            }
+            else
+            {
+                errorMessage = "Failed to save tolerances. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}
