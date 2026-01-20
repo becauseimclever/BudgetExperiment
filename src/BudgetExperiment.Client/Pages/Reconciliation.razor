@@ -1,0 +1,454 @@
+@page "/reconciliation"
+
+@using BudgetExperiment.Contracts.Dtos
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
+@inject IReconciliationApiService ReconciliationApi
+@inject IBudgetApiService BudgetApi
+@inject NavigationManager Navigation
+@inject ScopeService ScopeService
+
+<PageTitle>Reconciliation - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Reconciliation">
+        <Actions>
+            <button class="btn btn-secondary" @onclick="RefreshData" disabled="@isLoading">
+                <Icon Name="refresh" Size="16" /> Refresh
+            </button>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                IsDismissible="true"
+                IsRetrying="@isRetrying"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError" />
+
+    @* Period Selector and Filters *@
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>Period:</label>
+            <select @bind="selectedMonth" class="form-select">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    var month = m;
+                    <option value="@month">@(new DateTime(2000, month, 1).ToString("MMMM"))</option>
+                }
+            </select>
+            <select @bind="selectedYear" class="form-select">
+                @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                {
+                    <option value="@y">@y</option>
+                }
+            </select>
+            <button class="btn btn-primary btn-sm" @onclick="LoadDataAsync">Apply</button>
+        </div>
+
+        <div class="filter-group">
+            <label>Account:</label>
+            <select @bind="selectedAccountId" @bind:after="OnAccountChanged" class="form-select">
+                <option value="">All Accounts</option>
+                @foreach (var account in accounts)
+                {
+                    <option value="@account.Id">@account.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Status:</label>
+            <select @bind="selectedStatus" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="Matched">Matched</option>
+                <option value="Pending">Pending Review</option>
+                <option value="Missing">Missing</option>
+                <option value="Skipped">Skipped</option>
+            </select>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading reconciliation data..." />
+    }
+    else if (status != null)
+    {
+        @* Summary Cards *@
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-value">@status.TotalExpectedInstances</div>
+                <div class="summary-label">Total Expected</div>
+            </div>
+            <div class="summary-card success">
+                <div class="summary-value">@status.MatchedCount</div>
+                <div class="summary-label">Matched</div>
+            </div>
+            <div class="summary-card warning">
+                <div class="summary-value">@status.PendingCount</div>
+                <div class="summary-label">Pending Review</div>
+            </div>
+            <div class="summary-card danger">
+                <div class="summary-value">@status.MissingCount</div>
+                <div class="summary-label">Missing</div>
+            </div>
+        </div>
+
+        @* Pending Matches Section *@
+        @if (pendingMatches.Count > 0)
+        {
+            <div class="section">
+                <div class="section-header">
+                    <h3>Pending Matches (@pendingMatches.Count)</h3>
+                    @if (pendingMatches.Count > 1)
+                    {
+                        <button class="btn btn-success btn-sm" @onclick="AcceptAllHighConfidence" disabled="@isProcessing">
+                            Accept All High Confidence
+                        </button>
+                    }
+                </div>
+
+                <div class="match-list">
+                    @foreach (var match in FilteredPendingMatches)
+                    {
+                        <div class="match-card @GetConfidenceClass(match.ConfidenceLevel)">
+                            <div class="match-header">
+                                <span class="confidence-badge @GetConfidenceClass(match.ConfidenceLevel)">
+                                    @match.ConfidenceLevel (@match.ConfidenceScore.ToString("P0"))
+                                </span>
+                                <span class="match-date">@match.RecurringInstanceDate.ToString("MMM d, yyyy")</span>
+                            </div>
+                            <div class="match-body">
+                                <div class="match-recurring">
+                                    <div class="label">Expected (Recurring)</div>
+                                    <div class="description">@match.RecurringTransactionDescription</div>
+                                    <div class="amount">@FormatMoney(match.ExpectedAmount)</div>
+                                </div>
+                                <div class="match-arrow">
+                                    <Icon Name="arrow-right" Size="24" />
+                                </div>
+                                <div class="match-transaction">
+                                    <div class="label">Actual (Imported)</div>
+                                    <div class="description">@match.ImportedTransaction?.Description</div>
+                                    <div class="amount">@FormatMoney(match.ImportedTransaction?.Amount)</div>
+                                </div>
+                            </div>
+                            @if (match.AmountVariance != 0)
+                            {
+                                <div class="match-variance @(match.AmountVariance > 0 ? "positive" : "negative")">
+                                    Variance: @FormatVariance(match.AmountVariance)
+                                </div>
+                            }
+                            <div class="match-actions">
+                                <button class="btn btn-link btn-sm" @onclick="() => ShowMatchDetails(match)" disabled="@isProcessing">
+                                    Details
+                                </button>
+                                <button class="btn btn-success btn-sm" @onclick="() => AcceptMatch(match.Id)" disabled="@isProcessing">
+                                    Accept
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="() => RejectMatch(match.Id)" disabled="@isProcessing">
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @* Recurring Instances Status *@
+        <div class="section">
+            <h3>Recurring Transaction Status</h3>
+            <div class="instance-list">
+                @foreach (var instance in FilteredInstances)
+                {
+                    <div class="instance-row @GetStatusClass(instance.Status)">
+                        <div class="instance-info">
+                            <div class="instance-description">@instance.Description</div>
+                            <div class="instance-meta">
+                                <span class="instance-account">@instance.AccountName</span>
+                                <span class="instance-date">@instance.InstanceDate.ToString("MMM d")</span>
+                            </div>
+                        </div>
+                        <div class="instance-amount">
+                            @FormatMoney(instance.ExpectedAmount)
+                        </div>
+                        <div class="instance-status">
+                            <span class="status-badge @GetStatusClass(instance.Status)">@instance.Status</span>
+                        </div>
+                        @if (instance.Status == "Matched")
+                        {
+                            <div class="instance-actual">
+                                Actual: @FormatMoney(instance.ActualAmount)
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (errorMessage == null)
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><Icon Name="check-circle" Size="48" /></div>
+            <h3 class="empty-state-title">No Reconciliation Data</h3>
+            <p class="empty-state-description">
+                Select a period and account to view reconciliation status.
+            </p>
+        </div>
+    }
+</div>
+
+@* Match Review Modal *@
+<MatchReviewModal IsVisible="@showMatchReviewModal"
+                  Match="@selectedMatch"
+                  OnAccept="HandleMatchAccepted"
+                  OnReject="HandleMatchRejected"
+                  OnCancel="HideMatchReviewModal" />
+
+@code {
+    private bool isLoading = true;
+    private bool isProcessing;
+    private bool isRetrying;
+    private string? errorMessage;
+
+    private bool showMatchReviewModal;
+    private ReconciliationMatchDto? selectedMatch;
+
+    private int selectedMonth = DateTime.Now.Month;
+    private int selectedYear = DateTime.Now.Year;
+    private string? selectedAccountId;
+    private string selectedStatus = "";
+
+    private List<AccountDto> accounts = [];
+    private ReconciliationStatusDto? status;
+    private List<ReconciliationMatchDto> pendingMatches = [];
+
+    private Guid? SelectedAccountGuid => string.IsNullOrEmpty(selectedAccountId) ? null : Guid.Parse(selectedAccountId);
+
+    private IEnumerable<ReconciliationMatchDto> FilteredPendingMatches =>
+        pendingMatches;
+
+    private IEnumerable<RecurringInstanceStatusDto> FilteredInstances
+    {
+        get
+        {
+            if (status?.Instances == null)
+            {
+                return [];
+            }
+
+            var result = status.Instances.AsEnumerable();
+
+            if (SelectedAccountGuid.HasValue)
+            {
+                result = result.Where(i => i.AccountId == SelectedAccountGuid.Value);
+            }
+
+            if (!string.IsNullOrEmpty(selectedStatus))
+            {
+                result = result.Where(i => i.Status == selectedStatus);
+            }
+
+            return result.OrderBy(i => i.InstanceDate);
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        ScopeService.ScopeChanged += OnScopeChanged;
+        await LoadAccountsAsync();
+        await LoadDataAsync();
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
+    }
+
+    private async void OnScopeChanged(BudgetScope? scope)
+    {
+        await LoadAccountsAsync();
+        await LoadDataAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnAccountChanged()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadAccountsAsync()
+    {
+        try
+        {
+            accounts = (await BudgetApi.GetAccountsAsync()).ToList();
+        }
+        catch
+        {
+            accounts = [];
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var startDate = new DateOnly(selectedYear, selectedMonth, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            status = await ReconciliationApi.GetStatusAsync(startDate, endDate, SelectedAccountGuid);
+            pendingMatches = (await ReconciliationApi.GetPendingMatchesAsync(SelectedAccountGuid)).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load reconciliation data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        await LoadDataAsync();
+        isRetrying = false;
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private async Task AcceptMatch(Guid matchId)
+    {
+        isProcessing = true;
+        try
+        {
+            if (await ReconciliationApi.AcceptMatchAsync(matchId))
+            {
+                pendingMatches.RemoveAll(m => m.Id == matchId);
+                await LoadDataAsync();
+            }
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task RejectMatch(Guid matchId)
+    {
+        isProcessing = true;
+        try
+        {
+            if (await ReconciliationApi.RejectMatchAsync(matchId))
+            {
+                pendingMatches.RemoveAll(m => m.Id == matchId);
+                await LoadDataAsync();
+            }
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task AcceptAllHighConfidence()
+    {
+        isProcessing = true;
+        try
+        {
+            var highConfidenceIds = pendingMatches
+                .Where(m => m.ConfidenceLevel == "High")
+                .Select(m => m.Id)
+                .ToList();
+
+            if (highConfidenceIds.Count > 0)
+            {
+                await ReconciliationApi.BulkAcceptMatchesAsync(highConfidenceIds);
+                await LoadDataAsync();
+            }
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void ShowMatchDetails(ReconciliationMatchDto match)
+    {
+        selectedMatch = match;
+        showMatchReviewModal = true;
+    }
+
+    private void HideMatchReviewModal()
+    {
+        showMatchReviewModal = false;
+        selectedMatch = null;
+    }
+
+    private async Task HandleMatchAccepted(Guid matchId)
+    {
+        if (await ReconciliationApi.AcceptMatchAsync(matchId))
+        {
+            pendingMatches.RemoveAll(m => m.Id == matchId);
+            HideMatchReviewModal();
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task HandleMatchRejected(Guid matchId)
+    {
+        if (await ReconciliationApi.RejectMatchAsync(matchId))
+        {
+            pendingMatches.RemoveAll(m => m.Id == matchId);
+            HideMatchReviewModal();
+            await LoadDataAsync();
+        }
+    }
+
+    private static string GetConfidenceClass(string confidence) => confidence switch
+    {
+        "High" => "high",
+        "Medium" => "medium",
+        "Low" => "low",
+        _ => "",
+    };
+
+    private static string GetStatusClass(string status) => status switch
+    {
+        "Matched" => "matched",
+        "Pending" => "pending",
+        "Missing" => "missing",
+        "Skipped" => "skipped",
+        _ => "",
+    };
+
+    private static string FormatMoney(MoneyDto? amount)
+    {
+        return amount?.Amount.ToString("C2") ?? "$0.00";
+    }
+
+    private static string FormatVariance(decimal variance)
+    {
+        var sign = variance > 0 ? "+" : "";
+        return $"{sign}{variance:C2}";
+    }
+}

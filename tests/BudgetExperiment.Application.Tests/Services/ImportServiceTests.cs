@@ -23,6 +23,10 @@ public class ImportServiceTests
     private readonly Mock<IAccountRepository> _accountRepoMock;
     private readonly Mock<IUserContext> _userContextMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<IRecurringTransactionRepository> _recurringRepoMock;
+    private readonly Mock<IRecurringInstanceProjector> _projectorMock;
+    private readonly Mock<ITransactionMatcher> _matcherMock;
+    private readonly Mock<IReconciliationService> _reconciliationServiceMock;
     private readonly ImportService _service;
 
     public ImportServiceTests()
@@ -35,6 +39,10 @@ public class ImportServiceTests
         this._accountRepoMock = new Mock<IAccountRepository>();
         this._userContextMock = new Mock<IUserContext>();
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
+        this._recurringRepoMock = new Mock<IRecurringTransactionRepository>();
+        this._projectorMock = new Mock<IRecurringInstanceProjector>();
+        this._matcherMock = new Mock<ITransactionMatcher>();
+        this._reconciliationServiceMock = new Mock<IReconciliationService>();
 
         this._ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
@@ -48,6 +56,11 @@ public class ImportServiceTests
             .Setup(r => r.GetForDuplicateDetectionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Transaction>());
 
+        // Setup default empty returns for recurring transaction matching
+        this._recurringRepoMock
+            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
         this._service = new ImportService(
             this._transactionRepoMock.Object,
             this._ruleRepoMock.Object,
@@ -55,6 +68,10 @@ public class ImportServiceTests
             this._batchRepoMock.Object,
             this._mappingRepoMock.Object,
             this._accountRepoMock.Object,
+            this._recurringRepoMock.Object,
+            this._projectorMock.Object,
+            this._matcherMock.Object,
+            this._reconciliationServiceMock.Object,
             this._userContextMock.Object,
             this._unitOfWorkMock.Object);
     }
@@ -918,6 +935,97 @@ public class ImportServiceTests
         Assert.Equal(3, result);
         Assert.Equal(ImportBatchStatus.Deleted, batch.Status);
         this._transactionRepoMock.Verify(r => r.RemoveAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+    }
+
+    #endregion
+
+    #region Reconciliation Integration Tests
+
+    [Fact]
+    public async Task ExecuteAsync_WithRunReconciliationTrue_CallsReconciliationService()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateAccount(accountId, "Test Account", userId));
+
+        var txIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+        var txIdIndex = 0;
+        this._transactionRepoMock.Setup(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()))
+            .Callback<Transaction, CancellationToken>((tx, _) =>
+            {
+                typeof(Transaction).GetProperty("Id")!.SetValue(tx, txIds[txIdIndex++]);
+            })
+            .Returns(Task.CompletedTask);
+
+        var reconciliationResult = new FindMatchesResult
+        {
+            TotalMatchesFound = 2,
+            HighConfidenceCount = 1,
+            MatchesByTransaction = new Dictionary<Guid, IReadOnlyList<ReconciliationMatchDto>>(),
+        };
+        this._reconciliationServiceMock
+            .Setup(r => r.FindMatchesAsync(It.IsAny<FindMatchesRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reconciliationResult);
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = accountId,
+            FileName = "test.csv",
+            RunReconciliation = true,
+            Transactions =
+            [
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Netflix", Amount = -15m },
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 16), Description = "Spotify", Amount = -10m },
+            ],
+        };
+
+        // Act
+        var result = await this._service.ExecuteAsync(request);
+
+        // Assert
+        Assert.Equal(2, result.ReconciliationMatchCount);
+        Assert.Equal(1, result.AutoMatchedCount);
+        Assert.Equal(1, result.PendingMatchCount);
+        this._reconciliationServiceMock.Verify(r => r.FindMatchesAsync(
+            It.Is<FindMatchesRequest>(req => req.TransactionIds.Count == 2),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithRunReconciliationFalse_SkipsReconciliation()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+
+        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateAccount(accountId, "Test Account", userId));
+
+        var request = new ImportExecuteRequest
+        {
+            AccountId = accountId,
+            FileName = "test.csv",
+            RunReconciliation = false,
+            Transactions =
+            [
+                new ImportTransactionData { Date = new DateOnly(2026, 1, 15), Description = "Netflix", Amount = -15m },
+            ],
+        };
+
+        // Act
+        var result = await this._service.ExecuteAsync(request);
+
+        // Assert
+        Assert.Equal(0, result.ReconciliationMatchCount);
+        this._reconciliationServiceMock.Verify(
+            r => r.FindMatchesAsync(It.IsAny<FindMatchesRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     #endregion

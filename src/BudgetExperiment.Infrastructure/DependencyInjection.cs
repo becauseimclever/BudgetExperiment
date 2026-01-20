@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IImportBatchRepository, ImportBatchRepository>();
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+        services.AddScoped<IReconciliationMatchRepository, ReconciliationMatchRepository>();
 
         // AI Settings Provider (database-backed)
         services.AddScoped<IAiSettingsProvider, AiSettingsProvider>();

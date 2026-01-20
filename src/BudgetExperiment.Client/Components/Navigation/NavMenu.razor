@@ -36,6 +36,14 @@
             }
         </NavLink>
 
+        <NavLink class="nav-item" href="reconciliation" title="Reconciliation">
+            <span class="nav-icon"><Icon Name="check-circle" Size="20" /></span>
+            @if (!IsCollapsed)
+            {
+                <span class="nav-text">Reconciliation</span>
+            }
+        </NavLink>
+
         <NavLink class="nav-item" href="transfers" title="Transfers">
             <span class="nav-icon"><Icon Name="arrows-horizontal" Size="20" /></span>
             @if (!IsCollapsed)

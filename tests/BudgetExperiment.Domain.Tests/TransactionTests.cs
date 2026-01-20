@@ -697,4 +697,87 @@ public class TransactionTests
         var ex = Assert.Throws<DomainException>(() => transaction.SetImportBatch(Guid.NewGuid(), longReference));
         Assert.Contains("100", ex.Message);
     }
+
+    [Fact]
+    public void LinkToRecurringInstance_Sets_RecurringTransaction_Properties()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 15),
+            "Netflix");
+        var recurringTransactionId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 1, 15);
+        var originalUpdatedAt = transaction.UpdatedAt;
+
+        // Act
+        transaction.LinkToRecurringInstance(recurringTransactionId, instanceDate);
+
+        // Assert
+        Assert.Equal(recurringTransactionId, transaction.RecurringTransactionId);
+        Assert.Equal(instanceDate, transaction.RecurringInstanceDate);
+        Assert.True(transaction.IsFromRecurringTransaction);
+        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void LinkToRecurringInstance_With_Empty_RecurringTransactionId_Throws()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 15),
+            "Netflix");
+        var instanceDate = new DateOnly(2026, 1, 15);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            transaction.LinkToRecurringInstance(Guid.Empty, instanceDate));
+        Assert.Contains("recurring transaction", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void LinkToRecurringInstance_When_Already_Linked_Throws()
+    {
+        // Arrange - Create a transaction that is already linked (via CreateFromRecurring)
+        var existingRecurringId = Guid.NewGuid();
+        var transaction = Transaction.CreateFromRecurring(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 100m),
+            new DateOnly(2026, 1, 15),
+            "Netflix",
+            existingRecurringId,
+            new DateOnly(2026, 1, 15));
+
+        // Act & Assert - Try to link to a different recurring transaction
+        var ex = Assert.Throws<DomainException>(() =>
+            transaction.LinkToRecurringInstance(Guid.NewGuid(), new DateOnly(2026, 2, 15)));
+        Assert.Contains("already linked", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void LinkToRecurringInstance_For_Imported_Transaction_Works()
+    {
+        // Arrange - Transaction from import (common reconciliation scenario)
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 14.99m),
+            new DateOnly(2026, 1, 16),
+            "NETFLIX.COM");
+        transaction.SetImportBatch(Guid.NewGuid(), "TXN-12345");
+
+        var recurringTransactionId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 1, 15);
+
+        // Act
+        transaction.LinkToRecurringInstance(recurringTransactionId, instanceDate);
+
+        // Assert
+        Assert.Equal(recurringTransactionId, transaction.RecurringTransactionId);
+        Assert.Equal(instanceDate, transaction.RecurringInstanceDate);
+        Assert.True(transaction.IsFromRecurringTransaction);
+        Assert.True(transaction.IsFromImport); // Still marked as import
+    }
 }

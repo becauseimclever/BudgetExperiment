@@ -50,6 +50,8 @@ public static class DependencyInjection
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<INaturalLanguageParser, NaturalLanguageParser>();
         services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<ITransactionMatcher, TransactionMatcher>();
+        services.AddScoped<IReconciliationService, ReconciliationService>();
         return services;
     }
 }

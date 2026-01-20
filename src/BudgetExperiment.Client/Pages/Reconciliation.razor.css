@@ -1,0 +1,338 @@
+/* Reconciliation Page Styles */
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.filter-group .form-select {
+    min-width: 120px;
+}
+
+/* Summary Cards */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-card {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.summary-card.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.summary-card.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.summary-card.danger {
+    border-left: 4px solid var(--danger-color);
+}
+
+.summary-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* Section */
+.section {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section h3 {
+    margin: 0 0 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header h3 {
+    margin: 0;
+}
+
+/* Match Cards */
+.match-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.match-card {
+    background: var(--background-secondary);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.match-card.high {
+    border-left: 4px solid var(--success-color);
+}
+
+.match-card.medium {
+    border-left: 4px solid var(--warning-color);
+}
+
+.match-card.low {
+    border-left: 4px solid var(--text-secondary);
+}
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.confidence-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.confidence-badge.high {
+    background: var(--success-background);
+    color: var(--success-color);
+}
+
+.confidence-badge.medium {
+    background: var(--warning-background);
+    color: var(--warning-color);
+}
+
+.confidence-badge.low {
+    background: var(--background-tertiary);
+    color: var(--text-secondary);
+}
+
+.match-date {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.match-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.match-recurring,
+.match-transaction {
+    flex: 1;
+    padding: 0.75rem;
+    background: var(--background-primary);
+    border-radius: var(--border-radius);
+}
+
+.match-recurring .label,
+.match-transaction .label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.match-recurring .description,
+.match-transaction .description {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.match-recurring .amount,
+.match-transaction .amount {
+    font-weight: 600;
+    color: var(--danger-color);
+}
+
+.match-arrow {
+    color: var(--text-secondary);
+}
+
+.match-variance {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.match-variance.positive {
+    background: var(--success-background);
+    color: var(--success-color);
+}
+
+.match-variance.negative {
+    background: var(--danger-background);
+    color: var(--danger-color);
+}
+
+.match-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+/* Instance List */
+.instance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.instance-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--background-secondary);
+    border-radius: var(--border-radius);
+    border-left: 3px solid transparent;
+}
+
+.instance-row.matched {
+    border-left-color: var(--success-color);
+}
+
+.instance-row.pending {
+    border-left-color: var(--warning-color);
+}
+
+.instance-row.missing {
+    border-left-color: var(--danger-color);
+}
+
+.instance-row.skipped {
+    border-left-color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.instance-info {
+    flex: 1;
+}
+
+.instance-description {
+    font-weight: 500;
+}
+
+.instance-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.instance-amount {
+    font-weight: 600;
+    color: var(--danger-color);
+    min-width: 80px;
+    text-align: right;
+}
+
+.instance-status {
+    min-width: 100px;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.matched {
+    background: var(--success-background);
+    color: var(--success-color);
+}
+
+.status-badge.pending {
+    background: var(--warning-background);
+    color: var(--warning-color);
+}
+
+.status-badge.missing {
+    background: var(--danger-background);
+    color: var(--danger-color);
+}
+
+.status-badge.skipped {
+    background: var(--background-tertiary);
+    color: var(--text-secondary);
+}
+
+.instance-actual {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    min-width: 120px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        flex-wrap: wrap;
+    }
+
+    .match-body {
+        flex-direction: column;
+    }
+
+    .match-arrow {
+        transform: rotate(90deg);
+    }
+
+    .instance-row {
+        flex-wrap: wrap;
+    }
+
+    .instance-info {
+        width: 100%;
+    }
+}

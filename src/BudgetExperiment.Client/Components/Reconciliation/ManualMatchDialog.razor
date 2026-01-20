@@ -1,0 +1,265 @@
+@* ManualMatchDialog.razor - Dialog for manually matching a transaction to a recurring instance *@
+@using BudgetExperiment.Contracts.Dtos
+@inject IBudgetApiService BudgetApi
+@inject IReconciliationApiService ReconciliationApi
+
+<Modal IsVisible="@IsVisible" Title="Manual Match" Size="ModalSize.Large" OnClose="@HandleCancel">
+    <ChildContent>
+        <div class="manual-match-dialog">
+            @* Transaction Info *@
+            @if (Transaction != null)
+            {
+                <div class="transaction-card">
+                    <h4>Transaction to Match</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Description</span>
+                        <span class="detail-value">@Transaction.Description</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date</span>
+                        <span class="detail-value">@Transaction.Date.ToString("MMM d, yyyy")</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount</span>
+                        <span class="detail-value amount">@FormatMoney(Transaction.Amount)</span>
+                    </div>
+                </div>
+            }
+
+            @* Recurring Transaction Selection *@
+            <div class="selection-section">
+                <h4>Select Recurring Transaction</h4>
+
+                @if (isLoadingRecurring)
+                {
+                    <div class="loading-state">
+                        <LoadingSpinner />
+                        <span>Loading recurring transactions...</span>
+                    </div>
+                }
+                else if (recurringTransfers.Count == 0)
+                {
+                    <div class="empty-state">
+                        <span>No active recurring transactions found.</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="recurring-list">
+                        @foreach (var recurring in recurringTransfers)
+                        {
+                            <div class="recurring-option @(selectedRecurringId == recurring.Id ? "selected" : "")"
+                                 @onclick="() => SelectRecurring(recurring)">
+                                <div class="recurring-info">
+                                    <span class="recurring-description">@recurring.Description</span>
+                                    <span class="recurring-meta">
+                                        @recurring.SourceAccountName → @recurring.DestinationAccountName
+                                    </span>
+                                </div>
+                                <div class="recurring-amount">@FormatMoney(recurring.Amount)</div>
+                                <div class="recurring-frequency">@recurring.Frequency</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* Instance Date Selection *@
+            @if (selectedRecurringId.HasValue)
+            {
+                <div class="instance-section">
+                    <h4>Select Instance Date</h4>
+                    <p class="helper-text">Choose the recurring instance date this transaction matches:</p>
+
+                    <div class="date-input">
+                        <label for="instanceDate">Instance Date</label>
+                        <input type="date"
+                               id="instanceDate"
+                               @bind="selectedInstanceDate"
+                               @bind:format="yyyy-MM-dd" />
+                    </div>
+
+                    @if (Transaction != null)
+                    {
+                        <div class="date-suggestions">
+                            <span class="suggestion-label">Suggestions:</span>
+                            <button class="btn btn-sm btn-outline" @onclick="() => SetInstanceDate(Transaction.Date)">
+                                Transaction Date (@Transaction.Date.ToString("MMM d"))
+                            </button>
+                            @if (selectedRecurring?.NextOccurrence != null)
+                            {
+                                <button class="btn btn-sm btn-outline" @onclick="() => SetInstanceDate(selectedRecurring.NextOccurrence)">
+                                    Next Scheduled (@selectedRecurring.NextOccurrence.ToString("MMM d"))
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @* Error/Success Messages *@
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="error-message">@errorMessage</div>
+            }
+        </div>
+    </ChildContent>
+    <FooterContent>
+        <button class="btn btn-secondary" @onclick="HandleCancel" disabled="@isProcessing">
+            Cancel
+        </button>
+        <button class="btn btn-primary"
+                @onclick="HandleSubmit"
+                disabled="@(!CanSubmit || isProcessing)">
+            @if (isProcessing)
+            {
+                <LoadingSpinner Size="SpinnerSize.Small" />
+            }
+            Create Match
+        </button>
+    </FooterContent>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the dialog is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the transaction to match.
+    /// </summary>
+    [Parameter]
+    public TransactionDto? Transaction { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a match is created.
+    /// </summary>
+    [Parameter]
+    public EventCallback<ReconciliationMatchDto> OnMatchCreated { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the dialog is cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private List<RecurringTransferDto> recurringTransfers = [];
+    private RecurringTransferDto? selectedRecurring;
+    private Guid? selectedRecurringId;
+    private DateOnly selectedInstanceDate = DateOnly.FromDateTime(DateTime.Today);
+
+    private bool isLoadingRecurring;
+    private bool isProcessing;
+    private string? errorMessage;
+
+    private bool CanSubmit => selectedRecurringId.HasValue && Transaction != null;
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && recurringTransfers.Count == 0)
+        {
+            await LoadRecurringTransfersAsync();
+        }
+
+        if (IsVisible && Transaction != null)
+        {
+            selectedInstanceDate = Transaction.Date;
+        }
+    }
+
+    private async Task LoadRecurringTransfersAsync()
+    {
+        isLoadingRecurring = true;
+        errorMessage = null;
+
+        try
+        {
+            var transfers = await BudgetApi.GetRecurringTransfersAsync();
+            recurringTransfers = transfers.Where(r => r.IsActive).OrderBy(r => r.Description).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load recurring transactions: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingRecurring = false;
+        }
+    }
+
+    private void SelectRecurring(RecurringTransferDto recurring)
+    {
+        selectedRecurring = recurring;
+        selectedRecurringId = recurring.Id;
+        errorMessage = null;
+    }
+
+    private void SetInstanceDate(DateOnly date)
+    {
+        selectedInstanceDate = date;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!CanSubmit || Transaction == null || !selectedRecurringId.HasValue)
+        {
+            return;
+        }
+
+        isProcessing = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var request = new ManualMatchRequest
+            {
+                TransactionId = Transaction.Id,
+                RecurringTransactionId = selectedRecurringId.Value,
+                InstanceDate = selectedInstanceDate,
+            };
+
+            var match = await ReconciliationApi.CreateManualMatchAsync(request);
+            if (match != null)
+            {
+                await OnMatchCreated.InvokeAsync(match);
+                ResetDialog();
+            }
+            else
+            {
+                errorMessage = "Failed to create match. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create match: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        ResetDialog();
+        await OnCancel.InvokeAsync();
+    }
+
+    private void ResetDialog()
+    {
+        selectedRecurring = null;
+        selectedRecurringId = null;
+        selectedInstanceDate = DateOnly.FromDateTime(DateTime.Today);
+        errorMessage = null;
+    }
+
+    private static string FormatMoney(MoneyDto? amount)
+    {
+        return amount?.Amount.ToString("C2") ?? "$0.00";
+    }
+}

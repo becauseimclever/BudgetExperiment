@@ -97,6 +97,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<ChatMessage> ChatMessages => this.Set<ChatMessage>();
 
+    /// <summary>
+    /// Gets the reconciliation matches.
+    /// </summary>
+    public DbSet<ReconciliationMatch> ReconciliationMatches => this.Set<ReconciliationMatch>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
