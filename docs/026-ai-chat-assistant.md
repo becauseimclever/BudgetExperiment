@@ -1038,13 +1038,32 @@ The main layout (`MainLayout.razor`) must be updated to accommodate the chat pan
 
 ---
 
+### Phase 8: Side Panel & Context Awareness ✅
+
+**Objective:** Convert to VS Code-style side panel and add page context
+
+**Tasks:**
+- [x] Convert `ChatPanel` from floating bottom panel to right side panel
+- [x] Create `IChatContextService` to track current page context
+- [x] Add chat toggle button in header bar
+- [x] Update `MainLayout` to shrink main content when chat is open
+- [x] Update `AccountTransactions`, `Transfers`, `Recurring`, `Categories` pages to set context
+- [x] Show context hint in chat welcome message
+
+**Components:**
+- `ChatContextService.cs` - Tracks current account, category, and page type
+- Updated `MainLayout.razor` - Chat toggle button, CSS class for open state
+- Updated `ChatPanel.razor.css` - Full-height side panel with 380px width
+
+**Commit:** `feat(client): add VS Code-style side panel and page context awareness`
+
+---
+
 ### Future Enhancements (Not Implemented)
 
 The following features from the original plan were deferred for future iterations:
 
 - **Keyboard shortcut (Ctrl+K)** - Toggle chat panel via keyboard
-- **Side panel layout** - Chat slides in from right, shrinking main content (VS Code style)
-- **Page context awareness** - Auto-detect current account/category from page
 - **Inline field editing** - Edit parsed values before confirming
 - **Clarification response handling** - Click-to-select for ambiguous items
 - **SignalR real-time updates** - Streaming AI responses
@@ -1151,5 +1170,6 @@ None - this is a new feature that does not modify existing behavior.
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-01-19 | Add side panel layout and page context awareness (Phase 8) | @copilot |
 | 2026-01-19 | Feature implementation complete (Phases 1-7) | @copilot |
 | 2026-01-15 | Initial draft | @copilot |
