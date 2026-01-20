@@ -7,6 +7,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
+@inject IChatContextService ChatContext
 
 <PageTitle>Budget Categories - Budget Experiment</PageTitle>
 
@@ -155,6 +156,7 @@
     protected override async Task OnInitializedAsync()
     {
         ScopeService.ScopeChanged += OnScopeChanged;
+        ChatContext.SetPageType("categories");
         await LoadCategories();
     }
 
@@ -170,6 +172,7 @@
     public void Dispose()
     {
         ScopeService.ScopeChanged -= OnScopeChanged;
+        ChatContext.ClearContext();
     }
 
     private async Task LoadCategories()

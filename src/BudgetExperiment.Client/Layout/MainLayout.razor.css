@@ -95,3 +95,29 @@ main {
         transform: rotate(360deg);
     }
 }
+
+/* Chat toggle button in header */
+.chat-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-header-text, white);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: background-color 0.15s;
+}
+
+.chat-toggle-btn:hover {
+    background: var(--color-header-hover, rgba(255, 255, 255, 0.1));
+}
+
+.chat-toggle-label {
+    font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    .chat-toggle-label {
+        display: none;
+    }
+}

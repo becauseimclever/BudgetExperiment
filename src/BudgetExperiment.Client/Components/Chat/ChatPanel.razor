@@ -1,103 +1,120 @@
-@* ChatPanel.razor - Main chat assistant panel component *@
+@* ChatPanel.razor - Main chat assistant panel component (VS Code-style side panel) *@
 
 @using BudgetExperiment.Client.Services
 @using BudgetExperiment.Contracts.Dtos
 @using BudgetExperiment.Domain
 
 @inject IChatApiService ChatApi
+@inject IChatContextService ChatContext
 
-<div class="chat-panel @(IsOpen ? "chat-panel-open" : "chat-panel-closed")">
-    <div class="chat-header" @onclick="TogglePanel">
+@implements IDisposable
+
+<aside class="chat-panel @(IsOpen ? "chat-panel-open" : "chat-panel-closed")">
+    <div class="chat-header">
         <div class="chat-header-title">
-            <Icon Name="message-circle" Size="20" />
+            <Icon Name="sparkles" Size="18" />
             <span>AI Assistant</span>
         </div>
         <div class="chat-header-actions">
-            @if (IsOpen && Session is not null)
+            @if (Session is not null)
             {
-                <button class="btn btn-ghost btn-sm" @onclick="HandleNewSession" @onclick:stopPropagation="true" title="Start new session">
+                <button class="btn btn-ghost btn-sm" @onclick="HandleNewSession" title="New conversation">
                     <Icon Name="plus" Size="16" />
                 </button>
             }
-            <button class="btn btn-ghost btn-sm" title="@(IsOpen ? "Minimize" : "Open chat")">
-                <Icon Name="@(IsOpen ? "chevron-down" : "chevron-up")" Size="16" />
+            <button class="btn btn-ghost btn-sm" @onclick="HandleToggle" title="Close panel">
+                <Icon Name="x" Size="16" />
             </button>
         </div>
     </div>
 
-    @if (IsOpen)
-    {
-        <div class="chat-body">
-            @if (IsLoading)
-            {
-                <div class="chat-loading">
-                    <LoadingSpinner Message="Initializing chat..." />
-                </div>
-            }
-            else if (Session is null)
-            {
-                <div class="chat-error">
-                    <Icon Name="alert-circle" Size="32" />
-                    <p>Unable to start chat session</p>
-                    <button class="btn btn-primary btn-sm" @onclick="InitializeSession">
-                        Try Again
-                    </button>
-                </div>
-            }
-            else
-            {
-                <div class="chat-messages" @ref="messagesContainer">
-                    @if (Messages.Count == 0)
-                    {
-                        <div class="chat-welcome">
-                            <Icon Name="sparkles" Size="48" Class="welcome-icon" />
-                            <h3>Hi! I'm your budget assistant.</h3>
-                            <p>Try saying things like:</p>
-                            <ul class="chat-examples">
-                                <li>"Add $50 grocery purchase at Walmart"</li>
-                                <li>"Transfer $200 from checking to savings"</li>
-                                <li>"I spent $30 on gas yesterday"</li>
-                            </ul>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var message in Messages)
+    <div class="chat-body">
+        @if (!IsOpen)
+        {
+            @* Panel is closed, nothing to show *@
+        }
+        else if (IsLoading)
+        {
+            <div class="chat-loading">
+                <LoadingSpinner Message="Initializing chat..." />
+            </div>
+        }
+        else if (Session is null)
+        {
+            <div class="chat-error">
+                <Icon Name="alert-circle" Size="32" />
+                <p>Unable to start chat session</p>
+                <button class="btn btn-primary btn-sm" @onclick="InitializeSession">
+                    Try Again
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="chat-messages" @ref="messagesContainer">
+                @if (Messages.Count == 0)
+                {
+                    <div class="chat-welcome">
+                        <Icon Name="sparkles" Size="48" Class="welcome-icon" />
+                        <h3>Hi! I'm your budget assistant.</h3>
+                        <p>Try saying things like:</p>
+                        <ul class="chat-examples">
+                            <li>"Add $50 grocery purchase at Walmart"</li>
+                            <li>"Transfer $200 from checking to savings"</li>
+                            <li>"I spent $30 on gas yesterday"</li>
+                        </ul>
+                        @if (!string.IsNullOrEmpty(contextSummary))
                         {
-                            <ChatMessageBubble
-                                Message="message"
-                                OnConfirm="HandleConfirmAction"
-                                OnCancel="HandleCancelAction"
-                                OnOptionSelected="HandleOptionSelected"
-                                IsProcessing="processingMessageId == message.Id" />
-                        }
-
-                        @if (IsSending)
-                        {
-                            <div class="chat-typing-indicator">
-                                <div class="typing-dot"></div>
-                                <div class="typing-dot"></div>
-                                <div class="typing-dot"></div>
+                            <div class="chat-context-hint">
+                                <Icon Name="info" Size="14" />
+                                <span>@contextSummary</span>
                             </div>
                         }
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in Messages)
+                    {
+                        <ChatMessageBubble
+                            Message="message"
+                            OnConfirm="HandleConfirmAction"
+                            OnCancel="HandleCancelAction"
+                            OnOptionSelected="HandleOptionSelected"
+                            IsProcessing="processingMessageId == message.Id" />
                     }
-                </div>
 
-                <ChatInput
-                    OnSend="HandleSendMessage"
-                    IsDisabled="IsSending"
-                    Placeholder="Type a message..." />
-            }
-        </div>
-    }
-</div>
+                    @if (IsSending)
+                    {
+                        <div class="chat-typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <ChatInput
+                OnSend="HandleSendMessage"
+                IsDisabled="IsSending"
+                Placeholder="Type a message..." />
+        }
+    </div>
+</aside>
 
 @code {
     /// <summary>
-    /// Gets or sets whether the chat panel is initially open.
+    /// Gets or sets whether the chat panel is open.
     /// </summary>
     [Parameter]
-    public bool InitiallyOpen { get; set; }
+    public bool IsOpen { get; set; }
+
+    /// <summary>
+    /// Event callback when the panel toggle is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnToggle { get; set; }
 
     /// <summary>
     /// Event callback when an action is confirmed and creates an entity.
@@ -105,31 +122,48 @@
     [Parameter]
     public EventCallback<Guid> OnEntityCreated { get; set; }
 
-    private bool IsOpen { get; set; }
     private bool IsLoading { get; set; }
     private bool IsSending { get; set; }
     private ChatSessionDto? Session { get; set; }
     private List<ChatMessageDto> Messages { get; set; } = [];
     private ElementReference messagesContainer;
     private Guid? processingMessageId;
+    private string? contextSummary;
+    private bool wasOpen;
 
     /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        IsOpen = InitiallyOpen;
-        if (IsOpen)
-        {
-            await InitializeSession();
-        }
+        ChatContext.ContextChanged += OnContextChanged;
+        UpdateContextSummary();
     }
 
-    private async Task TogglePanel()
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
     {
-        IsOpen = !IsOpen;
-        if (IsOpen && Session is null)
+        // Initialize session when panel opens
+        if (IsOpen && !wasOpen && Session is null)
         {
             await InitializeSession();
         }
+
+        wasOpen = IsOpen;
+    }
+
+    private void OnContextChanged(object? sender, EventArgs e)
+    {
+        UpdateContextSummary();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateContextSummary()
+    {
+        contextSummary = ChatContext.CurrentContext.GetContextSummary();
+    }
+
+    private async Task HandleToggle()
+    {
+        await OnToggle.InvokeAsync();
     }
 
     private async Task InitializeSession()
@@ -278,5 +312,11 @@
     {
         await Task.Delay(50); // Allow DOM to update
         // Note: Actual scroll would need JS interop
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ChatContext.ContextChanged -= OnContextChanged;
     }
 }

@@ -7,6 +7,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
+@inject IChatContextService ChatContext
 
 <PageTitle>Transfers - Budget Experiment</PageTitle>
 
@@ -147,6 +148,7 @@
     protected override async Task OnInitializedAsync()
     {
         ScopeService.ScopeChanged += OnScopeChanged;
+        ChatContext.SetPageType("transfers");
         await LoadDataAsync();
     }
 
@@ -163,6 +165,7 @@
     public void Dispose()
     {
         ScopeService.ScopeChanged -= OnScopeChanged;
+        ChatContext.ClearContext();
     }
 
     private async Task LoadDataAsync()

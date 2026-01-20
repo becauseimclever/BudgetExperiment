@@ -7,6 +7,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
+@inject IChatContextService ChatContext
 
 <PageTitle>Recurring Transactions - Budget Experiment</PageTitle>
 
@@ -159,6 +160,7 @@
     protected override async Task OnInitializedAsync()
     {
         ScopeService.ScopeChanged += OnScopeChanged;
+        ChatContext.SetPageType("recurring transactions");
         await LoadRecurringTransactions();
         await LoadCategories();
     }
@@ -176,6 +178,7 @@
     public void Dispose()
     {
         ScopeService.ScopeChanged -= OnScopeChanged;
+        ChatContext.ClearContext();
     }
 
     private async Task LoadCategories()
