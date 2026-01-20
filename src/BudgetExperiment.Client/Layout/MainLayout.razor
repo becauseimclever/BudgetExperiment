@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 @using BudgetExperiment.Client.Components.Auth
+@using BudgetExperiment.Client.Components.Chat
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
 @using BudgetExperiment.Client.Services
@@ -29,6 +30,8 @@
                     @Body
                 </main>
             </div>
+
+            <ChatPanel />
         </div>
     </Authorized>
     <Authorizing>
