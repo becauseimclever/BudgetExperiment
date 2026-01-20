@@ -386,4 +386,27 @@ public sealed class Transaction
         this.ImportBatchId = batchId;
         this.UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Links this transaction to a recurring transaction instance during reconciliation.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+    /// <param name="instanceDate">The scheduled date this transaction corresponds to.</param>
+    /// <exception cref="DomainException">Thrown when transaction is already linked or validation fails.</exception>
+    public void LinkToRecurringInstance(Guid recurringTransactionId, DateOnly instanceDate)
+    {
+        if (recurringTransactionId == Guid.Empty)
+        {
+            throw new DomainException("Recurring transaction ID is required.");
+        }
+
+        if (this.RecurringTransactionId.HasValue)
+        {
+            throw new DomainException("Transaction is already linked to a recurring transaction.");
+        }
+
+        this.RecurringTransactionId = recurringTransactionId;
+        this.RecurringInstanceDate = instanceDate;
+        this.UpdatedAt = DateTime.UtcNow;
+    }
 }
