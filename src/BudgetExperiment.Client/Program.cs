@@ -38,6 +38,7 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 
 builder.Services.AddScoped<IBudgetApiService, BudgetApiService>();
 builder.Services.AddScoped<IAiApiService, AiApiService>();
+builder.Services.AddScoped<IChatApiService, ChatApiService>();
 builder.Services.AddScoped<IImportApiService, ImportApiService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<VersionService>();

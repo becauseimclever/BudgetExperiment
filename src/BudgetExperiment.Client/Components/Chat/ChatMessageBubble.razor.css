@@ -1,0 +1,170 @@
+/* ChatMessageBubble.razor.css - Styles for chat message bubbles */
+
+/* Message Container */
+.chat-message {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+}
+
+.message-user {
+    align-self: flex-end;
+}
+
+.message-assistant {
+    align-self: flex-start;
+}
+
+.message-system {
+    align-self: center;
+    max-width: 100%;
+}
+
+/* Message Bubble */
+.message-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    word-wrap: break-word;
+}
+
+.message-user .message-bubble {
+    background: var(--primary-color, #3b82f6);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message-assistant .message-bubble {
+    background: var(--surface-secondary, #f3f4f6);
+    color: var(--text-color, #1f2937);
+    border-bottom-left-radius: 4px;
+}
+
+.message-system .message-bubble {
+    background: transparent;
+    color: var(--text-muted, #6b7280);
+    font-size: 0.85rem;
+    padding: 8px;
+}
+
+/* Message Content */
+.message-content {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Message Time */
+.message-time {
+    font-size: 0.7rem;
+    color: var(--text-muted, #6b7280);
+    margin-top: 4px;
+    padding: 0 4px;
+}
+
+.message-user .message-time {
+    text-align: right;
+}
+
+/* Action Preview */
+.action-preview {
+    margin-top: 12px;
+}
+
+/* Action Card */
+.action-card {
+    background: var(--surface-color, #fff);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.action-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--primary-light, #dbeafe);
+    color: var(--primary-color, #3b82f6);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.action-summary {
+    font-weight: 500;
+    margin-bottom: 10px;
+    color: var(--text-color, #1f2937);
+}
+
+.action-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.detail-label {
+    color: var(--text-muted, #6b7280);
+}
+
+.detail-value {
+    font-weight: 500;
+    color: var(--text-color, #1f2937);
+}
+
+.detail-value.amount {
+    color: var(--success-color, #10b981);
+    font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* Clarification Options */
+.clarification-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.option-button {
+    flex: 0 0 auto;
+}
+
+/* Action Status Badges */
+.action-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+.action-status-success {
+    background: var(--success-light, #d1fae5);
+    color: var(--success-color, #10b981);
+}
+
+.action-status-cancelled {
+    background: var(--surface-secondary, #f3f4f6);
+    color: var(--text-muted, #6b7280);
+}
+
+.action-status-failed {
+    background: var(--danger-light, #fee2e2);
+    color: var(--danger-color, #ef4444);
+}
