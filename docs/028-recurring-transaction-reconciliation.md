@@ -39,11 +39,11 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** I don't have to manually reconcile bank data with my budget plan
 
 **Acceptance Criteria:**
-- [ ] During import, system evaluates each transaction against pending recurring instances
-- [ ] Matching considers: description similarity, amount tolerance, date proximity
-- [ ] High-confidence matches are auto-linked
-- [ ] Lower-confidence matches are flagged for user review
-- [ ] Unmatched imports proceed normally (no recurring link)
+- [x] During import, system evaluates each transaction against pending recurring instances
+- [x] Matching considers: description similarity, amount tolerance, date proximity
+- [x] High-confidence matches are auto-linked
+- [x] Lower-confidence matches are flagged for user review
+- [x] Unmatched imports proceed normally (no recurring link)
 
 #### US-028-002: Configure Matching Tolerances
 **As a** user  
@@ -51,11 +51,11 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** I can account for variable bills (utilities, credit cards)
 
 **Acceptance Criteria:**
-- [ ] Amount tolerance: percentage or absolute value (e.g., ±10% or ±$20)
-- [ ] Date tolerance: days before/after scheduled date (e.g., ±5 days)
-- [ ] Description match sensitivity (strict, moderate, loose)
-- [ ] Tolerances configurable globally or per-recurring transaction
-- [ ] Default tolerances provided (sensible out-of-box behavior)
+- [x] Amount tolerance: percentage or absolute value (e.g., ±10% or ±$20)
+- [x] Date tolerance: days before/after scheduled date (e.g., ±5 days)
+- [x] Description match sensitivity (strict, moderate, loose)
+- [x] Tolerances configurable globally (per-recurring deferred)
+- [x] Default tolerances provided (sensible out-of-box behavior)
 
 #### US-028-003: Review Suggested Matches
 **As a** user  
@@ -63,11 +63,11 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** I maintain control over my transaction data
 
 **Acceptance Criteria:**
-- [ ] Import preview shows suggested recurring matches
-- [ ] Each match shows confidence score and matching criteria
-- [ ] User can accept, reject, or modify suggested match
-- [ ] Rejected matches import as standalone transactions
-- [ ] Bulk accept/reject for multiple matches
+- [x] Import preview shows suggested recurring matches
+- [x] Each match shows confidence score and matching criteria
+- [x] User can accept, reject, or modify suggested match
+- [x] Rejected matches import as standalone transactions
+- [x] Bulk accept/reject for multiple matches
 
 ### Reconciliation Dashboard
 
@@ -77,11 +77,11 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** I can identify missing or unexpected transactions
 
 **Acceptance Criteria:**
-- [ ] Dashboard shows all recurring instances for selected period (month/week)
-- [ ] Status indicators: Matched, Pending, Missing, Skipped
-- [ ] Filter by status, category, account
-- [ ] Shows expected vs actual amount for matched instances
-- [ ] Click through to view linked transaction details
+- [x] Dashboard shows all recurring instances for selected period (month/week)
+- [x] Status indicators: Matched, Pending, Missing, Skipped
+- [x] Filter by status, category, account
+- [x] Shows expected vs actual amount for matched instances
+- [x] Click through to view linked transaction details
 
 #### US-028-005: Identify Missing Recurring Transactions
 **As a** user  
@@ -89,10 +89,10 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** I can investigate (missed payment, subscription cancelled, etc.)
 
 **Acceptance Criteria:**
-- [ ] "Missing" status when date window passed without match
-- [ ] Optional notification for missing recurring transactions
-- [ ] Quick actions: Mark as skipped, manually match, or ignore
-- [ ] History of missing/skipped instances preserved
+- [x] "Missing" status when date window passed without match
+- [ ] Optional notification for missing recurring transactions (future enhancement)
+- [x] Quick actions: Mark as skipped, manually match, or ignore
+- [x] History of missing/skipped instances preserved
 
 #### US-028-006: Manually Match Import to Recurring
 **As a** user  
@@ -100,10 +100,10 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** I can reconcile edge cases the auto-matcher missed
 
 **Acceptance Criteria:**
-- [ ] Select any unlinked transaction
-- [ ] Show list of unmatched recurring instances (within date range)
-- [ ] Confirm link with optional notes
-- [ ] Transaction updates with recurring transaction reference
+- [x] Select any unlinked transaction
+- [x] Show list of unmatched recurring instances (within date range)
+- [x] Confirm link with optional notes
+- [x] Transaction updates with recurring transaction reference
 
 ### Variance Tracking
 
@@ -113,10 +113,10 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** I can identify billing changes or errors
 
 **Acceptance Criteria:**
-- [ ] Display variance (expected - actual) for matched transactions
-- [ ] Highlight significant variances (beyond tolerance threshold)
-- [ ] Aggregate variance report per recurring transaction over time
-- [ ] Option to update recurring amount based on actual
+- [x] Display variance (expected - actual) for matched transactions
+- [x] Highlight significant variances (beyond tolerance threshold)
+- [ ] Aggregate variance report per recurring transaction over time (future enhancement)
+- [ ] Option to update recurring amount based on actual (future enhancement)
 
 #### US-028-008: Update Recurring Amount from Actual
 **As a** user  
@@ -124,10 +124,10 @@ Users define recurring transactions to track expected expenses (rent, subscripti
 **So that** future projections are more accurate
 
 **Acceptance Criteria:**
-- [ ] "Update amount" action on matched transaction
-- [ ] Can set new recurring amount to match actual
-- [ ] Optionally average last N occurrences for variable bills
-- [ ] Change recorded in recurring transaction history
+- [ ] "Update amount" action on matched transaction (future enhancement)
+- [ ] Can set new recurring amount to match actual (future enhancement)
+- [ ] Optionally average last N occurrences for variable bills (future enhancement)
+- [ ] Change recorded in recurring transaction history (future enhancement)
 
 ---
 
@@ -538,44 +538,43 @@ Refs: #028"
 
 ---
 
-### Phase 9: Tolerance Settings UI
+### Phase 9: Tolerance Settings UI ✅
 
 **Objective:** Allow users to configure matching behavior
 
 **Tasks:**
-- [ ] Create ToleranceSettingsPage component
-- [ ] Add global tolerance configuration
-- [ ] Add per-recurring tolerance overrides
-- [ ] Add preset options (strict, moderate, loose)
-- [ ] Validate tolerance values
-- [ ] Write bUnit tests for settings
+- [x] Create ToleranceSettingsPanel component (integrated into Reconciliation page)
+- [x] Add global tolerance configuration
+- [ ] Add per-recurring tolerance overrides (deferred - global settings sufficient for MVP)
+- [x] Add preset options (strict, moderate, loose)
+- [x] Validate tolerance values
+- [ ] Write bUnit tests for settings (deferred)
 
 **Commit:**
 ```bash
 git add .
-git commit -m "feat(client): add tolerance settings ui
+git commit -m "feat(client): add tolerance settings panel with presets
 
-- Add settings page for matching tolerances
-- Support global and per-recurring overrides
-- Add preset tolerance options
-- Input validation
+- Add settings panel for matching tolerances
+- Add preset tolerance options (strict/moderate/loose)
+- Input validation with save/reset
 
 Refs: #028"
 ```
 
 ---
 
-### Phase 10: Documentation & Cleanup
+### Phase 10: Documentation & Cleanup ✅
 
 **Objective:** Final polish, documentation updates, and cleanup
 
 **Tasks:**
-- [ ] Update API documentation / OpenAPI specs
-- [ ] Add/update XML comments for public APIs
-- [ ] Update README if needed
-- [ ] Remove any TODO comments
-- [ ] Final code review
-- [ ] Add user-facing help text
+- [x] Update API documentation / OpenAPI specs (auto-generated via attributes)
+- [x] Add/update XML comments for public APIs
+- [x] Update feature doc with completion status
+- [x] Remove any TODO comments
+- [x] Final code review
+- [ ] Add user-facing help text (deferred to future enhancement)
 
 **Commit:**
 ```bash
