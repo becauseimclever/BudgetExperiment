@@ -1,0 +1,137 @@
+/* DonutChart.razor.css - Scoped styles for the donut chart component */
+
+.donut-chart-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.donut-chart-container.compact {
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.donut-chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 280px;
+    aspect-ratio: 1;
+}
+
+.compact .donut-chart-wrapper {
+    max-width: 160px;
+    flex-shrink: 0;
+}
+
+.donut-chart {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.donut-segment {
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.donut-segment:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.donut-segment.hovered {
+    filter: brightness(1.1);
+}
+
+.donut-center-value {
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--text-primary);
+}
+
+.donut-center-label {
+    font-size: 8px;
+    fill: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Tooltip */
+.donut-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.donut-tooltip[style*="opacity: 1"] {
+    opacity: 1;
+}
+
+.tooltip-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.tooltip-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.tooltip-details {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.tooltip-percentage {
+    font-weight: 500;
+}
+
+/* Empty state */
+.donut-chart-container.empty {
+    opacity: 0.5;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .donut-chart-container:not(.compact) {
+        flex-direction: row;
+        justify-content: center;
+        gap: 2rem;
+    }
+    
+    .donut-chart-wrapper {
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .donut-chart-wrapper {
+        max-width: 220px;
+    }
+    
+    .donut-center-value {
+        font-size: 12px;
+    }
+    
+    .donut-center-label {
+        font-size: 7px;
+    }
+}

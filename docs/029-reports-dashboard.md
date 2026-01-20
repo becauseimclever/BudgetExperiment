@@ -306,19 +306,19 @@ Refs: #029"
 
 ---
 
-### Phase 2: Donut Chart Component
+### Phase 2: Donut Chart Component ✅
 
 **Objective:** Build a reusable, pure-Blazor SVG donut chart component.
 
 **Tasks:**
-- [ ] Create `DonutChart.razor` component with SVG rendering
-- [ ] Create `DonutChartSegment.razor` for individual segments
-- [ ] Implement SVG arc path calculations (stroke-dasharray approach)
-- [ ] Add hover state handling (CSS + Blazor events)
-- [ ] Create `ChartLegend.razor` component
-- [ ] Add responsive sizing
-- [ ] Write component unit tests (bUnit)
-- [ ] Add CSS styling in scoped stylesheet
+- [x] Create `DonutChart.razor` component with SVG rendering
+- [x] Create `DonutChartSegment.razor` for individual segments
+- [x] Implement SVG arc path calculations (stroke-dasharray approach)
+- [x] Add hover state handling (CSS + Blazor events)
+- [x] Create `ChartLegend.razor` component
+- [x] Add responsive sizing
+- [x] Write component unit tests (bUnit)
+- [x] Add CSS styling in scoped stylesheet
 
 **Commit:**
 ```bash
