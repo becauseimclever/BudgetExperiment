@@ -95,3 +95,30 @@
 .collapsed .nav-icon {
     margin: 0;
 }
+
+/* Section toggle button */
+::deep .nav-section-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+}
+
+::deep .nav-section-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+/* Chevron indicator */
+.nav-chevron {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    transition: transform var(--transition-fast);
+}
+
+.nav-chevron.expanded {
+    transform: rotate(180deg);
+}

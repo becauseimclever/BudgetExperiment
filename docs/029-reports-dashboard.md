@@ -38,12 +38,12 @@ Users need visual representations of their financial data to identify patterns, 
 **So that** I can view visualizations of my financial data
 
 **Acceptance Criteria:**
-- [ ] Reports menu item in navigation sidebar
-- [ ] Collapsible submenu containing report options
-- [ ] Initially collapsed state by default
-- [ ] Expand/collapse toggle with visual indicator (chevron)
-- [ ] Maintains collapse state during session
-- [ ] Works correctly in both expanded and collapsed sidebar states
+- [x] Reports menu item in navigation sidebar
+- [x] Collapsible submenu containing report options
+- [x] Initially collapsed state by default
+- [x] Expand/collapse toggle with visual indicator (chevron)
+- [x] Maintains collapse state during session
+- [x] Works correctly in both expanded and collapsed sidebar states
 
 #### US-029-002: Navigate to Specific Reports
 **As a** user  
@@ -51,10 +51,10 @@ Users need visual representations of their financial data to identify patterns, 
 **So that** I can quickly access the visualization I need
 
 **Acceptance Criteria:**
-- [ ] Submenu items for each report type
+- [x] Submenu items for each report type
 - [ ] Active state indicator for current report
-- [ ] Keyboard accessible navigation
-- [ ] Clean URL routes (e.g., `/reports/categories`, `/reports/trends`)
+- [x] Keyboard accessible navigation
+- [x] Clean URL routes (e.g., `/reports/categories`, `/reports/trends`)
 
 ### Monthly Category Donut Chart
 
@@ -335,18 +335,18 @@ Refs: #029"
 
 ---
 
-### Phase 3: Navigation Menu Update
+### Phase 3: Navigation Menu Update ✅
 
 **Objective:** Add collapsible Reports section to navigation.
 
 **Tasks:**
-- [ ] Add Reports section to NavMenu.razor
-- [ ] Implement expand/collapse toggle
-- [ ] Set initially collapsed state
-- [ ] Add chevron icon indicator
-- [ ] Style collapsible section
-- [ ] Test in both sidebar states (expanded/collapsed)
-- [ ] Ensure keyboard accessibility
+- [x] Add Reports section to NavMenu.razor
+- [x] Implement expand/collapse toggle
+- [x] Set initially collapsed state
+- [x] Add chevron icon indicator
+- [x] Style collapsible section
+- [x] Test in both sidebar states (expanded/collapsed)
+- [x] Ensure keyboard accessibility (focus-visible outline)
 
 **Commit:**
 ```bash
