@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<ICsvParserService, CsvParserService>();
         services.AddScoped<IImportMappingService, ImportMappingService>();
         services.AddScoped<IImportService, ImportService>();
+        services.AddScoped<INaturalLanguageParser, NaturalLanguageParser>();
         return services;
     }
 }
