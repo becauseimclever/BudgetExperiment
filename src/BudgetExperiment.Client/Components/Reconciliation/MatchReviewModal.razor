@@ -1,0 +1,231 @@
+@* MatchReviewModal.razor - Modal for reviewing and accepting/rejecting a reconciliation match *@
+@using BudgetExperiment.Contracts.Dtos
+
+<Modal IsVisible="@IsVisible" Title="Review Match" Size="ModalSize.Large" OnClose="@OnCancel">
+    <ChildContent>
+        @if (Match != null)
+        {
+            <div class="match-review">
+                @* Confidence Score *@
+                <div class="confidence-section">
+                    <div class="confidence-header">
+                        <span class="confidence-label">Match Confidence</span>
+                        <span class="confidence-badge @GetConfidenceClass(Match.ConfidenceLevel)">
+                            @Match.ConfidenceLevel
+                        </span>
+                    </div>
+                    <div class="confidence-bar-container">
+                        <div class="confidence-bar @GetConfidenceClass(Match.ConfidenceLevel)"
+                             style="width: @(Match.ConfidenceScore * 100)%">
+                        </div>
+                    </div>
+                    <div class="confidence-score">@Match.ConfidenceScore.ToString("P0")</div>
+                </div>
+
+                @* Comparison Section *@
+                <div class="comparison-section">
+                    <div class="comparison-card expected">
+                        <h4>Expected (Recurring)</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">Description</span>
+                            <span class="detail-value">@Match.RecurringTransactionDescription</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Scheduled Date</span>
+                            <span class="detail-value">@Match.RecurringInstanceDate.ToString("MMM d, yyyy")</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected Amount</span>
+                            <span class="detail-value amount">@FormatMoney(Match.ExpectedAmount)</span>
+                        </div>
+                    </div>
+
+                    <div class="comparison-arrow">
+                        <Icon Name="arrow-right" Size="32" />
+                    </div>
+
+                    <div class="comparison-card actual">
+                        <h4>Actual (Imported)</h4>
+                        @if (Match.ImportedTransaction != null)
+                        {
+                            <div class="detail-row">
+                                <span class="detail-label">Description</span>
+                                <span class="detail-value">@Match.ImportedTransaction.Description</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Transaction Date</span>
+                                <span class="detail-value">@Match.ImportedTransaction.Date.ToString("MMM d, yyyy")</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Actual Amount</span>
+                                <span class="detail-value amount">@FormatMoney(Match.ImportedTransaction.Amount)</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="no-data">Transaction details not available</div>
+                        }
+                    </div>
+                </div>
+
+                @* Variance Information *@
+                @if (Match.AmountVariance != 0 || Match.DateOffsetDays != 0)
+                {
+                    <div class="variance-section">
+                        <h4>Variances</h4>
+                        @if (Match.AmountVariance != 0)
+                        {
+                            <div class="variance-row @(Match.AmountVariance > 0 ? "positive" : "negative")">
+                                <span class="variance-label">Amount Difference</span>
+                                <span class="variance-value">@FormatVariance(Match.AmountVariance)</span>
+                            </div>
+                        }
+                        @if (Match.DateOffsetDays != 0)
+                        {
+                            <div class="variance-row">
+                                <span class="variance-label">Date Offset</span>
+                                <span class="variance-value">
+                                    @Math.Abs(Match.DateOffsetDays) day(s) @(Match.DateOffsetDays > 0 ? "late" : "early")
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @* Error Message *@
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="error-message">@errorMessage</div>
+                }
+            </div>
+        }
+    </ChildContent>
+    <FooterContent>
+        <button class="btn btn-secondary" @onclick="OnCancel" disabled="@isProcessing">
+            Cancel
+        </button>
+        <button class="btn btn-danger" @onclick="HandleReject" disabled="@isProcessing">
+            @if (isProcessing && isRejecting)
+            {
+                <LoadingSpinner Size="SpinnerSize.Small" />
+            }
+            Reject Match
+        </button>
+        <button class="btn btn-success" @onclick="HandleAccept" disabled="@isProcessing">
+            @if (isProcessing && !isRejecting)
+            {
+                <LoadingSpinner Size="SpinnerSize.Small" />
+            }
+            Accept Match
+        </button>
+    </FooterContent>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the modal is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the match to review.
+    /// </summary>
+    [Parameter]
+    public ReconciliationMatchDto? Match { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the match is accepted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnAccept { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the match is rejected.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnReject { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the modal is cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private bool isProcessing;
+    private bool isRejecting;
+    private string? errorMessage;
+
+    private async Task HandleAccept()
+    {
+        if (Match == null)
+        {
+            return;
+        }
+
+        isProcessing = true;
+        isRejecting = false;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await OnAccept.InvokeAsync(Match.Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to accept match: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleReject()
+    {
+        if (Match == null)
+        {
+            return;
+        }
+
+        isProcessing = true;
+        isRejecting = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await OnReject.InvokeAsync(Match.Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to reject match: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string GetConfidenceClass(string confidence) => confidence switch
+    {
+        "High" => "high",
+        "Medium" => "medium",
+        "Low" => "low",
+        _ => string.Empty,
+    };
+
+    private static string FormatMoney(MoneyDto? amount)
+    {
+        return amount?.Amount.ToString("C2") ?? "$0.00";
+    }
+
+    private static string FormatVariance(decimal variance)
+    {
+        var sign = variance > 0 ? "+" : string.Empty;
+        return $"{sign}{variance:C2}";
+    }
+}

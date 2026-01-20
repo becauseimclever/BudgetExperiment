@@ -142,6 +142,9 @@
                                 </div>
                             }
                             <div class="match-actions">
+                                <button class="btn btn-link btn-sm" @onclick="() => ShowMatchDetails(match)" disabled="@isProcessing">
+                                    Details
+                                </button>
                                 <button class="btn btn-success btn-sm" @onclick="() => AcceptMatch(match.Id)" disabled="@isProcessing">
                                     Accept
                                 </button>
@@ -198,11 +201,21 @@
     }
 </div>
 
+@* Match Review Modal *@
+<MatchReviewModal IsVisible="@showMatchReviewModal"
+                  Match="@selectedMatch"
+                  OnAccept="HandleMatchAccepted"
+                  OnReject="HandleMatchRejected"
+                  OnCancel="HideMatchReviewModal" />
+
 @code {
     private bool isLoading = true;
     private bool isProcessing;
     private bool isRetrying;
     private string? errorMessage;
+
+    private bool showMatchReviewModal;
+    private ReconciliationMatchDto? selectedMatch;
 
     private int selectedMonth = DateTime.Now.Month;
     private int selectedYear = DateTime.Now.Year;
@@ -376,6 +389,38 @@
         finally
         {
             isProcessing = false;
+        }
+    }
+
+    private void ShowMatchDetails(ReconciliationMatchDto match)
+    {
+        selectedMatch = match;
+        showMatchReviewModal = true;
+    }
+
+    private void HideMatchReviewModal()
+    {
+        showMatchReviewModal = false;
+        selectedMatch = null;
+    }
+
+    private async Task HandleMatchAccepted(Guid matchId)
+    {
+        if (await ReconciliationApi.AcceptMatchAsync(matchId))
+        {
+            pendingMatches.RemoveAll(m => m.Id == matchId);
+            HideMatchReviewModal();
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task HandleMatchRejected(Guid matchId)
+    {
+        if (await ReconciliationApi.RejectMatchAsync(matchId))
+        {
+            pendingMatches.RemoveAll(m => m.Id == matchId);
+            HideMatchReviewModal();
+            await LoadDataAsync();
         }
     }
 
