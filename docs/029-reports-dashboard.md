@@ -279,17 +279,17 @@ Add collapsible Reports section to NavMenu:
 
 ## Implementation Plan
 
-### Phase 1: API Endpoint for Category Report
+### Phase 1: API Endpoint for Category Report ✅
 
 **Objective:** Create the backend endpoint that aggregates transaction data by category for a given month.
 
 **Tasks:**
-- [ ] Create `MonthlyCategoryReportDto` and `CategorySpendingDto` in Contracts
-- [ ] Add `IReportService` interface in Application layer
-- [ ] Implement `ReportService.GetMonthlyCategoryReportAsync()` 
-- [ ] Create `ReportsController` with GET endpoint
-- [ ] Write unit tests for aggregation logic
-- [ ] Write integration tests for endpoint
+- [x] Create `MonthlyCategoryReportDto` and `CategorySpendingDto` in Contracts
+- [x] Add `IReportService` interface in Application layer
+- [x] Implement `ReportService.GetMonthlyCategoryReportAsync()` 
+- [x] Create `ReportsController` with GET endpoint
+- [x] Write unit tests for aggregation logic
+- [x] Write integration tests for endpoint
 
 **Commit:**
 ```bash
