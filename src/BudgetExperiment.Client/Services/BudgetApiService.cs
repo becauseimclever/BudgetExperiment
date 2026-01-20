@@ -950,4 +950,24 @@ public sealed class BudgetApiService : IBudgetApiService
         var response = await this._httpClient.PutAsJsonAsync("api/v1/categorizationrules/reorder", request, JsonOptions);
         return response.IsSuccessStatusCode;
     }
+
+    /// <inheritdoc />
+    public async Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<MonthlyCategoryReportDto>(
+                $"api/v1/reports/categories/monthly?year={year}&month={month}",
+                JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
 }

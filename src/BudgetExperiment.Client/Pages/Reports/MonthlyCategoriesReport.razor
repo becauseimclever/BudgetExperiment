@@ -1,0 +1,227 @@
+@page "/reports/categories"
+
+@using BudgetExperiment.Client.Components.Charts
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+@inject ScopeService ScopeService
+
+<PageTitle>Category Spending - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Category Spending">
+        <Actions>
+            <div class="month-navigation">
+                <button class="btn btn-secondary btn-sm" @onclick="PreviousMonth" title="Previous month">
+                    <Icon Name="chevron-left" Size="16" />
+                </button>
+                <span class="current-month">@currentDate.ToString("MMMM yyyy")</span>
+                <button class="btn btn-secondary btn-sm" @onclick="NextMonth" title="Next month">
+                    <Icon Name="chevron-right" Size="16" />
+                </button>
+            </div>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading category report..." />
+    }
+    else if (report == null && errorMessage == null)
+    {
+        <div class="empty-state">
+            <Icon Name="pie-chart" Size="48" />
+            <p>No spending data for @currentDate.ToString("MMMM yyyy").</p>
+            <p class="empty-state-hint">Transactions will appear here once you have spending in categories.</p>
+        </div>
+    }
+    else if (errorMessage == null && report != null)
+    {
+        <div class="report-content">
+            <div class="chart-section">
+                <DonutChart Segments="@chartSegments"
+                            CenterValue="@report.TotalSpending.Amount"
+                            CenterLabel="Total"
+                            Size="320"
+                            StrokeWidth="50"
+                            OnSegmentClick="HandleSegmentClick"
+                            ShowLegend="true" />
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-card">
+                    <h3>Summary</h3>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <span class="stat-label">Total Spending</span>
+                            <span class="stat-value text-expense">
+                                <MoneyDisplay Amount="@report.TotalSpending.Amount" CurrencyCode="@report.TotalSpending.Currency" />
+                            </span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">Total Income</span>
+                            <span class="stat-value text-income">
+                                <MoneyDisplay Amount="@report.TotalIncome.Amount" CurrencyCode="@report.TotalIncome.Currency" />
+                            </span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">Net</span>
+                            <span class="stat-value @(report.TotalIncome.Amount - report.TotalSpending.Amount >= 0 ? "text-income" : "text-expense")">
+                                <MoneyDisplay Amount="@(report.TotalIncome.Amount - report.TotalSpending.Amount)" CurrencyCode="@report.TotalSpending.Currency" />
+                            </span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">Categories</span>
+                            <span class="stat-value">@report.Categories.Count</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="categories-list">
+                    <h3>Categories</h3>
+                    @foreach (var category in report.Categories.OrderByDescending(c => c.Amount.Amount))
+                    {
+                        <div class="category-row" @onclick="() => NavigateToCategory(category.CategoryId)">
+                            <span class="category-color" style="background-color: @(category.CategoryColor ?? "#999")"></span>
+                            <span class="category-name">@category.CategoryName</span>
+                            <span class="category-count">@category.TransactionCount txns</span>
+                            <span class="category-percentage">@category.Percentage.ToString("F1")%</span>
+                            <span class="category-amount text-expense">
+                                <MoneyDisplay Amount="@category.Amount.Amount" CurrencyCode="@category.Amount.Currency" />
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private MonthlyCategoryReportDto? report;
+    private List<DonutSegmentData> chartSegments = new();
+    private DateOnly currentDate = DateOnly.FromDateTime(DateTime.Today);
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isRetrying;
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        ScopeService.ScopeChanged += HandleScopeChanged;
+        await LoadReportAsync();
+    }
+
+    private async void HandleScopeChanged(BudgetScope? scope)
+    {
+        await LoadReportAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadReportAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            report = await ApiService.GetMonthlyCategoryReportAsync(currentDate.Year, currentDate.Month);
+            if (report != null)
+            {
+                BuildChartSegments();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load report: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void BuildChartSegments()
+    {
+        if (report == null)
+        {
+            chartSegments = new List<DonutSegmentData>();
+            return;
+        }
+
+        chartSegments = report.Categories
+            .Where(c => c.Amount.Amount > 0)
+            .OrderByDescending(c => c.Amount.Amount)
+            .Select(c => new DonutSegmentData
+            {
+                Id = c.CategoryId?.ToString() ?? "uncategorized",
+                Label = c.CategoryName,
+                Value = c.Amount.Amount,
+                Percentage = c.Percentage,
+                Color = c.CategoryColor ?? "#999999",
+                TransactionCount = c.TransactionCount,
+                Data = c,
+            })
+            .ToList();
+    }
+
+    private void HandleSegmentClick(DonutSegmentData segment)
+    {
+        if (segment.Data is CategorySpendingDto category && category.CategoryId.HasValue)
+        {
+            NavigateToCategory(category.CategoryId);
+        }
+    }
+
+    private void NavigateToCategory(Guid? categoryId)
+    {
+        if (categoryId.HasValue)
+        {
+            // Navigate to transactions filtered by category and date range
+            var startDate = new DateOnly(currentDate.Year, currentDate.Month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+            Navigation.NavigateTo($"/accounts?categoryId={categoryId}&startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
+        }
+    }
+
+    private async Task PreviousMonth()
+    {
+        currentDate = currentDate.AddMonths(-1);
+        await LoadReportAsync();
+    }
+
+    private async Task NextMonth()
+    {
+        currentDate = currentDate.AddMonths(1);
+        await LoadReportAsync();
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+        await LoadReportAsync();
+        isRetrying = false;
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= HandleScopeChanged;
+    }
+}

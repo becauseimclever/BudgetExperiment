@@ -568,4 +568,12 @@ public interface IBudgetApiService
     /// <param name="ruleIds">The ordered list of rule IDs. The index becomes the new priority.</param>
     /// <returns>True if reordered successfully.</returns>
     Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds);
+
+    /// <summary>
+    /// Gets the monthly category spending report.
+    /// </summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <returns>The monthly category report.</returns>
+    Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month);
 }

@@ -1,0 +1,245 @@
+@* DonutChart.razor - Pure SVG donut chart rendered by Blazor *@
+
+@using System.Globalization
+
+<div class="donut-chart-container @(Compact ? "compact" : "")">
+    <div class="donut-chart-wrapper">
+        <svg viewBox="0 0 @ViewBoxSize @ViewBoxSize" 
+             class="donut-chart"
+             role="img"
+             aria-label="@AriaLabel">
+            <title>@AriaLabel</title>
+            
+            @* Background circle (shows when no data) *@
+            @if (!Segments.Any())
+            {
+                <circle cx="@Center" 
+                        cy="@Center" 
+                        r="@Radius" 
+                        fill="none" 
+                        stroke="var(--chart-empty-color, #e5e7eb)" 
+                        stroke-width="@StrokeWidth" />
+            }
+            else
+            {
+                @* Render each segment *@
+                @foreach (var segment in CalculatedSegments)
+                {
+                    <DonutChartSegment Segment="segment"
+                                       Center="@Center"
+                                       Radius="@Radius"
+                                       StrokeWidth="@StrokeWidth"
+                                       IsHovered="@(hoveredSegmentId == segment.Id)"
+                                       OnClick="@HandleSegmentClick"
+                                       OnHover="@HandleSegmentHover"
+                                       OnHoverEnd="@HandleSegmentHoverEnd" />
+                }
+            }
+            
+            @* Center text *@
+            <text x="@Center" 
+                  y="@(Center - 8)" 
+                  class="donut-center-value"
+                  text-anchor="middle" 
+                  dominant-baseline="middle">
+                @FormatCenterValue()
+            </text>
+            <text x="@Center" 
+                  y="@(Center + 12)" 
+                  class="donut-center-label"
+                  text-anchor="middle" 
+                  dominant-baseline="middle">
+                @CenterLabel
+            </text>
+        </svg>
+    </div>
+    
+    @if (ShowLegend)
+    {
+        <ChartLegend Segments="@Segments"
+                     HoveredSegmentId="@hoveredSegmentId"
+                     OnItemClick="@HandleLegendClick"
+                     OnItemHover="@HandleLegendHover"
+                     OnItemHoverEnd="@HandleLegendHoverEnd" />
+    }
+    
+    @* Tooltip *@
+    @if (hoveredSegment is not null)
+    {
+        <div class="donut-tooltip" style="@GetTooltipStyle()">
+            <div class="tooltip-label">@hoveredSegment.Label</div>
+            <div class="tooltip-value">@FormatMoney(hoveredSegment.Value)</div>
+            <div class="tooltip-details">
+                <span class="tooltip-percentage">@hoveredSegment.Percentage.ToString("N1")%</span>
+                <span class="tooltip-count">@hoveredSegment.TransactionCount transactions</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The segments to display in the donut chart.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<DonutSegmentData> Segments { get; set; } = [];
+
+    /// <summary>
+    /// The value to display in the center of the donut.
+    /// </summary>
+    [Parameter]
+    public decimal CenterValue { get; set; }
+
+    /// <summary>
+    /// The label to display below the center value.
+    /// </summary>
+    [Parameter]
+    public string CenterLabel { get; set; } = "Total";
+
+    /// <summary>
+    /// The currency code for formatting.
+    /// </summary>
+    [Parameter]
+    public string Currency { get; set; } = "USD";
+
+    /// <summary>
+    /// The overall size of the chart in pixels.
+    /// </summary>
+    [Parameter]
+    public int Size { get; set; } = 200;
+
+    /// <summary>
+    /// The width of the donut ring.
+    /// </summary>
+    [Parameter]
+    public int StrokeWidth { get; set; } = 32;
+
+    /// <summary>
+    /// Whether to show the legend.
+    /// </summary>
+    [Parameter]
+    public bool ShowLegend { get; set; } = true;
+
+    /// <summary>
+    /// Whether to use compact layout.
+    /// </summary>
+    [Parameter]
+    public bool Compact { get; set; } = false;
+
+    /// <summary>
+    /// Accessibility label for the chart.
+    /// </summary>
+    [Parameter]
+    public string AriaLabel { get; set; } = "Spending by category";
+
+    /// <summary>
+    /// Event callback when a segment is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DonutSegmentData> OnSegmentClick { get; set; }
+
+    private string? hoveredSegmentId;
+    private DonutSegmentData? hoveredSegment;
+    
+    private int ViewBoxSize => 100;
+    private int Center => ViewBoxSize / 2;
+    private int Radius => (ViewBoxSize - StrokeWidth) / 2 - 2;
+    private double Circumference => 2 * Math.PI * Radius;
+
+    private List<CalculatedSegment> CalculatedSegments => CalculateSegments();
+
+    private List<CalculatedSegment> CalculateSegments()
+    {
+        var result = new List<CalculatedSegment>();
+        var totalPercentage = Segments.Sum(s => s.Percentage);
+        
+        if (totalPercentage <= 0)
+        {
+            return result;
+        }
+
+        double cumulativeOffset = 0;
+        
+        foreach (var segment in Segments)
+        {
+            var normalizedPercentage = (double)(segment.Percentage / totalPercentage * 100);
+            var dashLength = Circumference * normalizedPercentage / 100;
+            var dashGap = Circumference - dashLength;
+            
+            result.Add(new CalculatedSegment
+            {
+                Id = segment.Id ?? Guid.NewGuid().ToString(),
+                Data = segment,
+                DashArray = $"{dashLength.ToString(CultureInfo.InvariantCulture)} {dashGap.ToString(CultureInfo.InvariantCulture)}",
+                DashOffset = (-cumulativeOffset + Circumference * 0.25).ToString(CultureInfo.InvariantCulture),
+            });
+            
+            cumulativeOffset += dashLength;
+        }
+        
+        return result;
+    }
+
+    private string FormatCenterValue()
+    {
+        return CenterValue.ToString("C0", CultureInfo.CurrentCulture);
+    }
+
+    private string FormatMoney(decimal value)
+    {
+        return value.ToString("C2", CultureInfo.CurrentCulture);
+    }
+
+    private void HandleSegmentClick(DonutSegmentData segment)
+    {
+        if (OnSegmentClick.HasDelegate)
+        {
+            OnSegmentClick.InvokeAsync(segment);
+        }
+    }
+
+    private void HandleSegmentHover(CalculatedSegment segment)
+    {
+        hoveredSegmentId = segment.Id;
+        hoveredSegment = segment.Data;
+    }
+
+    private void HandleSegmentHoverEnd()
+    {
+        hoveredSegmentId = null;
+        hoveredSegment = null;
+    }
+
+    private void HandleLegendClick(DonutSegmentData segment)
+    {
+        HandleSegmentClick(segment);
+    }
+
+    private void HandleLegendHover(DonutSegmentData segment)
+    {
+        hoveredSegmentId = segment.Id ?? Segments.ToList().IndexOf(segment).ToString();
+        hoveredSegment = segment;
+    }
+
+    private void HandleLegendHoverEnd()
+    {
+        HandleSegmentHoverEnd();
+    }
+
+    private string GetTooltipStyle()
+    {
+        // Position tooltip near the chart - could be enhanced with mouse position
+        return "opacity: 1;";
+    }
+
+    /// <summary>
+    /// Represents a calculated segment with rendering information.
+    /// </summary>
+    public class CalculatedSegment
+    {
+        public string Id { get; set; } = string.Empty;
+        public DonutSegmentData Data { get; set; } = null!;
+        public string DashArray { get; set; } = string.Empty;
+        public string DashOffset { get; set; } = string.Empty;
+    }
+}

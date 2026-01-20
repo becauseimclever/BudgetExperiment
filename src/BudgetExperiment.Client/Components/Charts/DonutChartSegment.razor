@@ -1,0 +1,112 @@
+@* DonutChartSegment.razor - Individual segment for the donut chart *@
+
+@using System.Globalization
+
+<circle cx="@Center" 
+        cy="@Center" 
+        r="@Radius" 
+        fill="none" 
+        stroke="@Segment.Data.Color"
+        stroke-width="@GetStrokeWidth()"
+        stroke-dasharray="@Segment.DashArray"
+        stroke-dashoffset="@Segment.DashOffset"
+        class="donut-segment @(IsHovered ? "hovered" : "")"
+        style="@GetStyle()"
+        @onclick="HandleClick"
+        @onmouseenter="HandleMouseEnter"
+        @onmouseleave="HandleMouseLeave"
+        @onfocus="HandleMouseEnter"
+        @onblur="HandleMouseLeave"
+        tabindex="0"
+        role="button"
+        aria-label="@GetAriaLabel()" />
+
+@code {
+    /// <summary>
+    /// The calculated segment data.
+    /// </summary>
+    [Parameter]
+    public DonutChart.CalculatedSegment Segment { get; set; } = null!;
+
+    /// <summary>
+    /// The center point of the chart.
+    /// </summary>
+    [Parameter]
+    public int Center { get; set; }
+
+    /// <summary>
+    /// The radius of the donut.
+    /// </summary>
+    [Parameter]
+    public int Radius { get; set; }
+
+    /// <summary>
+    /// The stroke width of the donut.
+    /// </summary>
+    [Parameter]
+    public int StrokeWidth { get; set; }
+
+    /// <summary>
+    /// Whether this segment is currently hovered.
+    /// </summary>
+    [Parameter]
+    public bool IsHovered { get; set; }
+
+    /// <summary>
+    /// Event callback when the segment is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DonutSegmentData> OnClick { get; set; }
+
+    /// <summary>
+    /// Event callback when the segment is hovered.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DonutChart.CalculatedSegment> OnHover { get; set; }
+
+    /// <summary>
+    /// Event callback when hover ends.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnHoverEnd { get; set; }
+
+    private int GetStrokeWidth()
+    {
+        return IsHovered ? StrokeWidth + 4 : StrokeWidth;
+    }
+
+    private string GetStyle()
+    {
+        var transform = IsHovered ? "transform: scale(1.02); transform-origin: center;" : string.Empty;
+        return $"cursor: pointer; transition: all 0.2s ease; {transform}";
+    }
+
+    private string GetAriaLabel()
+    {
+        return $"{Segment.Data.Label}: {Segment.Data.Value:C2}, {Segment.Data.Percentage:N1}% of total";
+    }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(Segment.Data);
+        }
+    }
+
+    private async Task HandleMouseEnter()
+    {
+        if (OnHover.HasDelegate)
+        {
+            await OnHover.InvokeAsync(Segment);
+        }
+    }
+
+    private async Task HandleMouseLeave()
+    {
+        if (OnHoverEnd.HasDelegate)
+        {
+            await OnHoverEnd.InvokeAsync();
+        }
+    }
+}

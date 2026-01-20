@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<ITransactionMatcher, TransactionMatcher>();
         services.AddScoped<IReconciliationService, ReconciliationService>();
+        services.AddScoped<IReportService, ReportService>();
         return services;
     }
 }

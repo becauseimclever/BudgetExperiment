@@ -1,0 +1,86 @@
+@* ChartLegend.razor - Legend component for charts *@
+
+@using System.Globalization
+
+<div class="chart-legend">
+    @foreach (var segment in Segments)
+    {
+        var segmentId = segment.Id ?? Segments.ToList().IndexOf(segment).ToString();
+        var isHovered = HoveredSegmentId == segmentId;
+        
+        <button class="legend-item @(isHovered ? "hovered" : "")"
+                @onclick="() => HandleClick(segment)"
+                @onmouseenter="() => HandleMouseEnter(segment)"
+                @onmouseleave="HandleMouseLeave"
+                @onfocus="() => HandleMouseEnter(segment)"
+                @onblur="HandleMouseLeave"
+                type="button"
+                aria-label="@segment.Label: @segment.Value.ToString("C2", CultureInfo.CurrentCulture)">
+            <span class="legend-color" style="background-color: @segment.Color;"></span>
+            <span class="legend-label">@segment.Label</span>
+            <span class="legend-value">@FormatValue(segment.Value)</span>
+            <span class="legend-percentage">@segment.Percentage.ToString("N1")%</span>
+        </button>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The segments to display in the legend.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<DonutSegmentData> Segments { get; set; } = [];
+
+    /// <summary>
+    /// The ID of the currently hovered segment.
+    /// </summary>
+    [Parameter]
+    public string? HoveredSegmentId { get; set; }
+
+    /// <summary>
+    /// Event callback when a legend item is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DonutSegmentData> OnItemClick { get; set; }
+
+    /// <summary>
+    /// Event callback when a legend item is hovered.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DonutSegmentData> OnItemHover { get; set; }
+
+    /// <summary>
+    /// Event callback when hover ends.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnItemHoverEnd { get; set; }
+
+    private string FormatValue(decimal value)
+    {
+        return value.ToString("C0", CultureInfo.CurrentCulture);
+    }
+
+    private async Task HandleClick(DonutSegmentData segment)
+    {
+        if (OnItemClick.HasDelegate)
+        {
+            await OnItemClick.InvokeAsync(segment);
+        }
+    }
+
+    private async Task HandleMouseEnter(DonutSegmentData segment)
+    {
+        if (OnItemHover.HasDelegate)
+        {
+            await OnItemHover.InvokeAsync(segment);
+        }
+    }
+
+    private async Task HandleMouseLeave()
+    {
+        if (OnItemHoverEnd.HasDelegate)
+        {
+            await OnItemHoverEnd.InvokeAsync();
+        }
+    }
+}
