@@ -11,7 +11,7 @@ namespace BudgetExperiment.Application.Services;
 /// <summary>
 /// Application service for recurring transaction use cases.
 /// </summary>
-public sealed class RecurringTransactionService
+public sealed class RecurringTransactionService : IRecurringTransactionService
 {
     private readonly IRecurringTransactionRepository _repository;
     private readonly IAccountRepository _accountRepository;
