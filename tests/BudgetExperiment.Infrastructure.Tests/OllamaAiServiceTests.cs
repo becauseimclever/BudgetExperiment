@@ -3,32 +3,43 @@
 // </copyright>
 
 using BudgetExperiment.Application.Services;
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Infrastructure.ExternalServices.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BudgetExperiment.Infrastructure.Tests;
 
 /// <summary>
-/// Fake AI settings provider for testing.
+/// Fake app settings service for testing AI settings functionality.
 /// </summary>
-internal sealed class FakeAiSettingsProvider : IAiSettingsProvider
+internal sealed class FakeAppSettingsService : IAppSettingsService
 {
-    private AiSettingsData _settings;
+    private AiSettingsData _aiSettings;
 
-    public FakeAiSettingsProvider(AiSettingsData settings)
+    public FakeAppSettingsService(AiSettingsData aiSettings)
     {
-        _settings = settings;
+        _aiSettings = aiSettings;
     }
 
-    public Task<AiSettingsData> GetSettingsAsync(CancellationToken cancellationToken = default)
+    public Task<AppSettingsDto> GetSettingsAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_settings);
+        return Task.FromResult(new AppSettingsDto());
     }
 
-    public Task<AiSettingsData> UpdateSettingsAsync(AiSettingsData settings, CancellationToken cancellationToken = default)
+    public Task<AppSettingsDto> UpdateSettingsAsync(AppSettingsUpdateDto dto, CancellationToken cancellationToken = default)
     {
-        _settings = settings;
-        return Task.FromResult(_settings);
+        return Task.FromResult(new AppSettingsDto());
+    }
+
+    public Task<AiSettingsData> GetAiSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_aiSettings);
+    }
+
+    public Task<AiSettingsData> UpdateAiSettingsAsync(AiSettingsData settings, CancellationToken cancellationToken = default)
+    {
+        _aiSettings = settings;
+        return Task.FromResult(_aiSettings);
     }
 }
 
@@ -63,7 +74,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
 
         _service = new OllamaAiService(
             _httpClient,
-            new FakeAiSettingsProvider(_settings),
+            new FakeAppSettingsService(_settings),
             NullLogger<OllamaAiService>.Instance);
     }
 
@@ -103,7 +114,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
 
         var service = new OllamaAiService(
             _httpClient,
-            new FakeAiSettingsProvider(disabledSettings),
+            new FakeAppSettingsService(disabledSettings),
             NullLogger<OllamaAiService>.Instance);
 
         // Act
@@ -163,7 +174,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
 
         var service = new OllamaAiService(
             _httpClient,
-            new FakeAiSettingsProvider(disabledSettings),
+            new FakeAppSettingsService(disabledSettings),
             NullLogger<OllamaAiService>.Instance);
 
         // Act
@@ -187,7 +198,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
 
         var service = new OllamaAiService(
             _httpClient,
-            new FakeAiSettingsProvider(disabledSettings),
+            new FakeAppSettingsService(disabledSettings),
             NullLogger<OllamaAiService>.Instance);
 
         var prompt = new AiPrompt("You are a helpful assistant.", "Say hello.");
@@ -251,7 +262,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
 
         var service = new OllamaAiService(
             httpClient,
-            new FakeAiSettingsProvider(invalidSettings),
+            new FakeAppSettingsService(invalidSettings),
             NullLogger<OllamaAiService>.Instance);
 
         var prompt = new AiPrompt("System", "User");

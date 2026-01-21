@@ -51,9 +51,6 @@ public static class DependencyInjection
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
         services.AddScoped<IReconciliationMatchRepository, ReconciliationMatchRepository>();
 
-        // AI Settings Provider (database-backed)
-        services.AddScoped<IAiSettingsProvider, AiSettingsProvider>();
-
         // AI Service - HttpClient configured dynamically from database settings
         services.AddHttpClient<IAiService, OllamaAiService>();
 

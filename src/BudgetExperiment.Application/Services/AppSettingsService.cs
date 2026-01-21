@@ -62,4 +62,43 @@ public sealed class AppSettingsService : IAppSettingsService
             PastDueLookbackDays = settings.PastDueLookbackDays,
         };
     }
+
+    /// <inheritdoc />
+    public async Task<AiSettingsData> GetAiSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await _repository.GetAsync(cancellationToken);
+        return new AiSettingsData(
+            OllamaEndpoint: settings.AiOllamaEndpoint,
+            ModelName: settings.AiModelName,
+            Temperature: settings.AiTemperature,
+            MaxTokens: settings.AiMaxTokens,
+            TimeoutSeconds: settings.AiTimeoutSeconds,
+            IsEnabled: settings.AiIsEnabled);
+    }
+
+    /// <inheritdoc />
+    public async Task<AiSettingsData> UpdateAiSettingsAsync(
+        AiSettingsData newSettings,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await _repository.GetAsync(cancellationToken);
+
+        settings.UpdateAiSettings(
+            ollamaEndpoint: newSettings.OllamaEndpoint,
+            modelName: newSettings.ModelName,
+            temperature: newSettings.Temperature,
+            maxTokens: newSettings.MaxTokens,
+            timeoutSeconds: newSettings.TimeoutSeconds,
+            isEnabled: newSettings.IsEnabled);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new AiSettingsData(
+            OllamaEndpoint: settings.AiOllamaEndpoint,
+            ModelName: settings.AiModelName,
+            Temperature: settings.AiTemperature,
+            MaxTokens: settings.AiMaxTokens,
+            TimeoutSeconds: settings.AiTimeoutSeconds,
+            IsEnabled: settings.AiIsEnabled);
+    }
 }

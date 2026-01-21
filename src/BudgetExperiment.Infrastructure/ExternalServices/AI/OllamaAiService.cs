@@ -17,7 +17,7 @@ namespace BudgetExperiment.Infrastructure.ExternalServices.AI;
 public sealed class OllamaAiService : IAiService
 {
     private readonly HttpClient _httpClient;
-    private readonly IAiSettingsProvider _settingsProvider;
+    private readonly IAppSettingsService _settingsService;
     private readonly ILogger<OllamaAiService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -31,22 +31,22 @@ public sealed class OllamaAiService : IAiService
     /// Initializes a new instance of the <see cref="OllamaAiService"/> class.
     /// </summary>
     /// <param name="httpClient">The HTTP client.</param>
-    /// <param name="settingsProvider">The AI settings provider.</param>
+    /// <param name="settingsService">The application settings service.</param>
     /// <param name="logger">The logger.</param>
     public OllamaAiService(
         HttpClient httpClient,
-        IAiSettingsProvider settingsProvider,
+        IAppSettingsService settingsService,
         ILogger<OllamaAiService> logger)
     {
         _httpClient = httpClient;
-        _settingsProvider = settingsProvider;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
     /// <inheritdoc/>
     public async Task<AiServiceStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        var settings = await _settingsProvider.GetSettingsAsync(cancellationToken);
+        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
 
         if (!settings.IsEnabled)
         {
@@ -80,7 +80,7 @@ public sealed class OllamaAiService : IAiService
     /// <inheritdoc/>
     public async Task<IReadOnlyList<AiModelInfo>> GetAvailableModelsAsync(CancellationToken cancellationToken = default)
     {
-        var settings = await _settingsProvider.GetSettingsAsync(cancellationToken);
+        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
 
         if (!settings.IsEnabled)
         {
@@ -117,7 +117,7 @@ public sealed class OllamaAiService : IAiService
     /// <inheritdoc/>
     public async Task<AiResponse> CompleteAsync(AiPrompt prompt, CancellationToken cancellationToken = default)
     {
-        var settings = await _settingsProvider.GetSettingsAsync(cancellationToken);
+        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
         var stopwatch = Stopwatch.StartNew();
 
         if (!settings.IsEnabled)
