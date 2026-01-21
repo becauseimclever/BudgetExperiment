@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<ICategorizationEngine, CategorizationEngine>();
         services.AddScoped<ICategorizationRuleService, CategorizationRuleService>();
         services.AddScoped<IRuleSuggestionService, RuleSuggestionService>();
+        services.AddScoped<IMerchantMappingService, MerchantMappingService>();
         services.AddScoped<ICsvParserService, CsvParserService>();
         services.AddScoped<IImportMappingService, ImportMappingService>();
         services.AddScoped<IImportService, ImportService>();

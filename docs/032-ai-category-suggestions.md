@@ -452,26 +452,27 @@ Refs: #032"
 
 ---
 
-### Phase 2: Merchant Knowledge Base
+### Phase 2: Merchant Knowledge Base ✅
 
 **Objective:** Implement the default merchant-to-category mapping system
 
 **Tasks:**
-- [ ] Create `MerchantKnowledgeBase` static class with default mappings
-- [ ] Create `IMerchantMappingService` interface
-- [ ] Implement service that combines default + learned mappings
-- [ ] Write unit tests for merchant matching logic
-- [ ] Implement fuzzy matching for merchant names
-- [ ] Add case-insensitive and partial matching
+- [x] Create `MerchantKnowledgeBase` static class with 100+ default mappings
+- [x] Create `IMerchantMappingService` interface
+- [x] Implement `MerchantMappingService` that combines default + learned mappings
+- [x] Write unit tests for merchant matching logic (31 tests)
+- [x] Implement partial matching for merchant names
+- [x] Add case-insensitive matching
+- [x] Register service in DependencyInjection
 
 **Commit:**
 ```bash
 git add .
 git commit -m "feat(app): implement merchant knowledge base
 
-- Default mappings for 60+ common merchants
+- Default mappings for 100+ common merchants
 - Category type inference from merchant
-- Fuzzy matching for partial merchant names
+- Partial matching for merchant names
 - Combined default + learned mapping service
 
 Refs: #032"
