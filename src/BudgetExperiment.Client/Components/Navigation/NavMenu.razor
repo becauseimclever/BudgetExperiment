@@ -5,6 +5,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
 
 @implements IDisposable
 
@@ -20,19 +21,19 @@
             }
         </NavLink>
 
-        <NavLink class="nav-item" href="recurring" title="Recurring Transactions">
+        <NavLink class="nav-item" href="recurring" title="Recurring Bills">
             <span class="nav-icon"><Icon Name="refresh" Size="20" /></span>
             @if (!IsCollapsed)
             {
-                <span class="nav-text">Recurring</span>
+                <span class="nav-text">Recurring Bills</span>
             }
         </NavLink>
 
-        <NavLink class="nav-item" href="recurring-transfers" title="Recurring Transfers">
+        <NavLink class="nav-item" href="recurring-transfers" title="Auto-Transfers">
             <span class="nav-icon"><Icon Name="repeat" Size="20" /></span>
             @if (!IsCollapsed)
             {
-                <span class="nav-text">Recurring Transfers</span>
+                <span class="nav-text">Auto-Transfers</span>
             }
         </NavLink>
 
@@ -68,11 +69,11 @@
             }
         </NavLink>
 
-        <NavLink class="nav-item" href="rules" title="Categorization Rules">
+        <NavLink class="nav-item" href="rules" title="Auto-Categorize">
             <span class="nav-icon"><Icon Name="filter" Size="20" /></span>
             @if (!IsCollapsed)
             {
-                <span class="nav-text">Rules</span>
+                <span class="nav-text">Auto-Categorize</span>
             }
         </NavLink>
 
@@ -112,17 +113,24 @@
         </div>
 
         <div class="nav-section">
-            <NavLink class="nav-item" href="accounts" title="Accounts">
+            <button class="nav-item nav-section-toggle" @onclick="ToggleAccountsSection" title="Accounts">
                 <span class="nav-icon"><Icon Name="bank" Size="20" /></span>
                 @if (!IsCollapsed)
                 {
                     <span class="nav-text">Accounts</span>
+                    <span class="nav-chevron @(accountsExpanded ? "expanded" : "")">
+                        <Icon Name="chevron-down" Size="16" />
+                    </span>
                 }
-            </NavLink>
+            </button>
 
-            @if (!IsCollapsed && accounts.Count > 0)
+            @if (!IsCollapsed && accountsExpanded)
             {
                 <div class="nav-subitems">
+                    <NavLink class="nav-item nav-subitem" href="accounts" Match="NavLinkMatch.All" title="All Accounts">
+                        <span class="nav-icon"><Icon Name="list" Size="16" /></span>
+                        <span class="nav-text">All Accounts</span>
+                    </NavLink>
                     @foreach (var account in accounts)
                     {
                         <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name">
@@ -144,19 +152,11 @@
     </div>
 
     <div class="nav-footer">
-        <NavLink class="nav-item" href="ai/suggestions" title="AI Suggestions">
+        <NavLink class="nav-item" href="ai/suggestions" title="Smart Insights">
             <span class="nav-icon"><Icon Name="lightbulb" Size="20" /></span>
             @if (!IsCollapsed)
             {
-                <span class="nav-text">AI Suggestions</span>
-            }
-        </NavLink>
-
-        <NavLink class="nav-item" href="ai/settings" title="AI Settings">
-            <span class="nav-icon"><Icon Name="sparkles" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">AI Settings</span>
+                <span class="nav-text">Smart Insights</span>
             }
         </NavLink>
 
@@ -177,13 +177,37 @@
     [Parameter]
     public bool IsCollapsed { get; set; }
 
+    private const string ReportsExpandedStorageKey = "budget-experiment-reports-expanded";
+    private const string AccountsExpandedStorageKey = "budget-experiment-accounts-expanded";
+
     private List<AccountDto> accounts = new();
     private bool isAuthenticated;
     private bool reportsExpanded;
+    private bool accountsExpanded = true;
+    private bool hasLoadedState;
 
-    private void ToggleReportsSection()
+    private async Task ToggleReportsSection()
     {
         reportsExpanded = !reportsExpanded;
+        await SaveExpandedStateAsync(ReportsExpandedStorageKey, reportsExpanded);
+    }
+
+    private async Task ToggleAccountsSection()
+    {
+        accountsExpanded = !accountsExpanded;
+        await SaveExpandedStateAsync(AccountsExpandedStorageKey, accountsExpanded);
+    }
+
+    private async Task SaveExpandedStateAsync(string key, bool value)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", key, value.ToString().ToLowerInvariant());
+        }
+        catch
+        {
+            // Ignore storage errors
+        }
     }
 
     /// <inheritdoc/>
@@ -197,6 +221,35 @@
         if (isAuthenticated)
         {
             await LoadAccountsAsync();
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasLoadedState)
+        {
+            hasLoadedState = true;
+            try
+            {
+                var reportsState = await JSRuntime.InvokeAsync<string?>("sessionStorage.getItem", ReportsExpandedStorageKey);
+                if (bool.TryParse(reportsState, out var reports))
+                {
+                    reportsExpanded = reports;
+                }
+
+                var accountsState = await JSRuntime.InvokeAsync<string?>("sessionStorage.getItem", AccountsExpandedStorageKey);
+                if (bool.TryParse(accountsState, out var accts))
+                {
+                    accountsExpanded = accts;
+                }
+
+                StateHasChanged();
+            }
+            catch
+            {
+                // Ignore storage errors - use default state
+            }
         }
     }
 

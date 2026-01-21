@@ -6,6 +6,8 @@ using BudgetExperiment.Api.HealthChecks;
 using BudgetExperiment.Application;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure;
+using BudgetExperiment.Infrastructure.Persistence;
+using BudgetExperiment.Infrastructure.Seeding;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;

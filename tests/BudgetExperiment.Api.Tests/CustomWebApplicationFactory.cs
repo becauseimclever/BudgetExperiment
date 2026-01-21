@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 
 using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure;
+using BudgetExperiment.Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;

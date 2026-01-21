@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Services;
+
 using BudgetExperiment.Contracts.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,22 +20,22 @@ public sealed class AiController : ControllerBase
 {
     private readonly IAiService _aiService;
     private readonly IRuleSuggestionService _suggestionService;
-    private readonly IAiSettingsProvider _settingsProvider;
+    private readonly IAppSettingsService _settingsService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiController"/> class.
     /// </summary>
     /// <param name="aiService">The AI service.</param>
     /// <param name="suggestionService">The rule suggestion service.</param>
-    /// <param name="settingsProvider">The AI settings provider.</param>
+    /// <param name="settingsService">The application settings service.</param>
     public AiController(
         IAiService aiService,
         IRuleSuggestionService suggestionService,
-        IAiSettingsProvider settingsProvider)
+        IAppSettingsService settingsService)
     {
         this._aiService = aiService;
         this._suggestionService = suggestionService;
-        this._settingsProvider = settingsProvider;
+        this._settingsService = settingsService;
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public sealed class AiController : ControllerBase
     public async Task<IActionResult> GetStatusAsync(CancellationToken cancellationToken)
     {
         var status = await this._aiService.GetStatusAsync(cancellationToken);
-        var settings = await this._settingsProvider.GetSettingsAsync(cancellationToken);
+        var settings = await this._settingsService.GetAiSettingsAsync(cancellationToken);
 
         return this.Ok(new AiStatusDto
         {
@@ -90,7 +90,7 @@ public sealed class AiController : ControllerBase
     [ProducesResponseType<AiSettingsDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSettingsAsync(CancellationToken cancellationToken)
     {
-        var settings = await this._settingsProvider.GetSettingsAsync(cancellationToken);
+        var settings = await this._settingsService.GetAiSettingsAsync(cancellationToken);
 
         return this.Ok(new AiSettingsDto
         {
@@ -124,7 +124,7 @@ public sealed class AiController : ControllerBase
             request.TimeoutSeconds,
             request.IsEnabled);
 
-        await this._settingsProvider.UpdateSettingsAsync(settingsData, cancellationToken);
+        await this._settingsService.UpdateAiSettingsAsync(settingsData, cancellationToken);
 
         return this.Ok(request);
     }

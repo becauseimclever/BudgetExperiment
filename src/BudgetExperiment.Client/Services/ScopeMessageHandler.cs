@@ -33,8 +33,8 @@ public sealed class ScopeMessageHandler : DelegatingHandler
         var scope = this._scopeService.CurrentScope;
         var headerValue = scope switch
         {
-            Domain.BudgetScope.Shared => "Shared",
-            Domain.BudgetScope.Personal => "Personal",
+            BudgetScope.Shared => "Shared",
+            BudgetScope.Personal => "Personal",
             _ => "All",
         };
 

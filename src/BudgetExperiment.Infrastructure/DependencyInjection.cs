@@ -1,6 +1,8 @@
-using BudgetExperiment.Application.Services;
 using BudgetExperiment.Domain;
-using BudgetExperiment.Infrastructure.Repositories;
+using BudgetExperiment.Infrastructure.ExternalServices.AI;
+using BudgetExperiment.Infrastructure.Persistence;
+using BudgetExperiment.Infrastructure.Persistence.Repositories;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,9 +50,6 @@ public static class DependencyInjection
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
         services.AddScoped<IReconciliationMatchRepository, ReconciliationMatchRepository>();
-
-        // AI Settings Provider (database-backed)
-        services.AddScoped<IAiSettingsProvider, AiSettingsProvider>();
 
         // AI Service - HttpClient configured dynamically from database settings
         services.AddHttpClient<IAiService, OllamaAiService>();

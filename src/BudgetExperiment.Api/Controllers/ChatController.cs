@@ -2,8 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
-using BudgetExperiment.Application.Services;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -46,7 +44,7 @@ public sealed class ChatController : ControllerBase
     {
         var userId = this._userContext.UserId;
         var session = await this._chatService.GetOrCreateSessionAsync(userId, cancellationToken);
-        return this.Ok(DomainToDtoMapper.ToDto(session));
+        return this.Ok(ChatMapper.ToDto(session));
     }
 
     /// <summary>
@@ -66,7 +64,7 @@ public sealed class ChatController : ControllerBase
             return this.NotFound();
         }
 
-        return this.Ok(DomainToDtoMapper.ToDto(session));
+        return this.Ok(ChatMapper.ToDto(session));
     }
 
     /// <summary>
@@ -90,7 +88,7 @@ public sealed class ChatController : ControllerBase
             return this.NotFound();
         }
 
-        return this.Ok(messages.Select(DomainToDtoMapper.ToDto).ToList());
+        return this.Ok(messages.Select(ChatMapper.ToDto).ToList());
     }
 
     /// <summary>
@@ -119,8 +117,8 @@ public sealed class ChatController : ControllerBase
         var response = new SendMessageResponse
         {
             Success = result.Success,
-            UserMessage = result.UserMessage != null ? DomainToDtoMapper.ToDto(result.UserMessage) : null,
-            AssistantMessage = result.AssistantMessage != null ? DomainToDtoMapper.ToDto(result.AssistantMessage) : null,
+            UserMessage = result.UserMessage != null ? ChatMapper.ToDto(result.UserMessage) : null,
+            AssistantMessage = result.AssistantMessage != null ? ChatMapper.ToDto(result.AssistantMessage) : null,
             ErrorMessage = result.ErrorMessage,
         };
 

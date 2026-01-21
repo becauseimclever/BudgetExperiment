@@ -1,6 +1,8 @@
 @page "/settings"
+@page "/ai/settings"
 
 @inject IBudgetApiService ApiService
+@inject IAiApiService AiService
 @inject VersionService VersionService
 
 <PageTitle>Settings - Budget Experiment</PageTitle>
@@ -11,65 +13,184 @@
     <ErrorAlert Message="@errorMessage"
                 OnDismiss="DismissError" />
 
-    @if (isLoading)
+    @if (successMessage != null)
     {
-        <LoadingSpinner Message="Loading settings..." />
+        <div class="alert alert-success alert-dismissible">
+            <span>@successMessage</span>
+            <button type="button" class="btn-close" @onclick="DismissSuccess">×</button>
+        </div>
     }
-    else if (settings != null)
+
+    <div class="settings-tabs">
+        <button class="settings-tab @(activeTab == "general" ? "active" : "")" @onclick='() => SetActiveTab("general")'>
+            General
+        </button>
+        <button class="settings-tab @(activeTab == "ai" ? "active" : "")" @onclick='() => SetActiveTab("ai")'>
+            AI / Smart Features
+        </button>
+    </div>
+
+    @if (activeTab == "general")
     {
-        <div class="settings-page">
+        @if (isLoading)
+        {
+            <LoadingSpinner Message="Loading settings..." />
+        }
+        else if (settings != null)
+        {
+            <div class="settings-page">
+                <section class="settings-section">
+                    <h3 class="settings-section-title">Recurring Items</h3>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label class="setting-label">Auto-realize past-due items</label>
+                            <p class="setting-description">
+                                When enabled, recurring items past their scheduled date will be
+                                automatically converted to transactions without requiring manual
+                                confirmation.
+                            </p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox"
+                                       checked="@settings.AutoRealizePastDueItems"
+                                       @onchange="OnAutoRealizeChanged"
+                                       disabled="@isSaving" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label class="setting-label">Past-due lookback days</label>
+                            <p class="setting-description">
+                                How many days back to check for past-due recurring items (1-365).
+                            </p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number"
+                                   min="1"
+                                   max="365"
+                                   value="@settings.PastDueLookbackDays"
+                                   @onchange="OnLookbackDaysChanged"
+                                   disabled="@isSaving"
+                                   class="form-control settings-number-input" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3 class="settings-section-title">About</h3>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label class="setting-label">Version</label>
+                            <p class="setting-description">
+                                Budget Experiment v@(VersionService.CurrentVersion)
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        }
+    }
+    else if (activeTab == "ai")
+    {
+        <div class="ai-settings-page">
             <section class="settings-section">
-                <h3 class="settings-section-title">Recurring Items</h3>
-
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <label class="setting-label">Auto-realize past-due items</label>
-                        <p class="setting-description">
-                            When enabled, recurring items past their scheduled date will be
-                            automatically converted to transactions without requiring manual
-                            confirmation.
-                        </p>
-                    </div>
-                    <div class="setting-control">
-                        <label class="toggle-switch">
-                            <input type="checkbox"
-                                   checked="@settings.AutoRealizePastDueItems"
-                                   @onchange="OnAutoRealizeChanged"
-                                   disabled="@isSaving" />
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <label class="setting-label">Past-due lookback days</label>
-                        <p class="setting-description">
-                            How many days back to check for past-due recurring items (1-365).
-                        </p>
-                    </div>
-                    <div class="setting-control">
-                        <input type="number"
-                               min="1"
-                               max="365"
-                               value="@settings.PastDueLookbackDays"
-                               @onchange="OnLookbackDaysChanged"
-                               disabled="@isSaving"
-                               class="form-control settings-number-input" />
-                    </div>
+                <h3 class="settings-section-title">Connection Status</h3>
+                <div class="status-panel">
+                    @if (isLoadingAiStatus)
+                    {
+                        <LoadingSpinner Message="Checking connection..." />
+                    }
+                    else if (aiStatus != null)
+                    {
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="status-label">Status:</span>
+                                <span class="status-value @(aiStatus.IsAvailable ? "text-success" : "text-warning")">
+                                    @(aiStatus.IsAvailable ? "✅ Connected" : "⚠️ Not Connected")
+                                </span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Enabled:</span>
+                                <span class="status-value">@(aiStatus.IsEnabled ? "Yes" : "No")</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Endpoint:</span>
+                                <span class="status-value">@aiStatus.Endpoint</span>
+                            </div>
+                            @if (aiStatus.CurrentModel != null)
+                            {
+                                <div class="status-item">
+                                    <span class="status-label">Model:</span>
+                                    <span class="status-value">@aiStatus.CurrentModel</span>
+                                </div>
+                            }
+                            @if (aiStatus.ErrorMessage != null)
+                            {
+                                <div class="status-item status-error">
+                                    <span class="status-label">Error:</span>
+                                    <span class="status-value">@aiStatus.ErrorMessage</span>
+                                </div>
+                            }
+                        </div>
+                        <button class="btn btn-secondary btn-sm mt-2" @onclick="RefreshAiStatus">
+                            🔄 Refresh Status
+                        </button>
+                    }
                 </div>
             </section>
 
             <section class="settings-section">
-                <h3 class="settings-section-title">About</h3>
+                <h3 class="settings-section-title">Configuration</h3>
+                <AiSettingsForm OnSave="OnAiSettingsSaved" OnError="OnAiSettingsError" />
+            </section>
 
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <label class="setting-label">Version</label>
-                        <p class="setting-description">
-                            Budget Experiment v@(VersionService.CurrentVersion)
-                        </p>
+            <section class="settings-section">
+                <h3 class="settings-section-title">Available Models</h3>
+                @if (isLoadingModels)
+                {
+                    <LoadingSpinner Message="Loading models..." />
+                }
+                else if (aiModels.Count > 0)
+                {
+                    <div class="model-list">
+                        @foreach (var model in aiModels)
+                        {
+                            <div class="model-card">
+                                <div class="model-name">@model.Name</div>
+                                <div class="model-details">
+                                    <span class="model-size">@FormatSize(model.SizeBytes)</span>
+                                    <span class="model-modified">Modified: @model.ModifiedAt.ToString("g")</span>
+                                </div>
+                            </div>
+                        }
                     </div>
+                }
+                else
+                {
+                    <p class="text-secondary">
+                        No models found. Make sure Ollama is running and has models installed.
+                    </p>
+                }
+            </section>
+
+            <section class="settings-section">
+                <h3 class="settings-section-title">About Local AI</h3>
+                <div class="info-panel">
+                    <p>
+                        Budget Experiment uses <strong>Ollama</strong> for local AI processing.
+                        All your financial data stays on your machine — nothing is ever sent to external services.
+                    </p>
+                    <ul>
+                        <li>Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a></li>
+                        <li>Run <code>ollama pull llama3.2</code> to download a model</li>
+                        <li>Start Ollama with <code>ollama serve</code></li>
+                    </ul>
                 </div>
             </section>
         </div>
@@ -81,12 +202,38 @@
     private bool isLoading = true;
     private bool isSaving = false;
     private string? errorMessage;
+    private string? successMessage;
+    private string activeTab = "general";
+
+    // AI-specific state
+    private AiStatusDto? aiStatus;
+    private IReadOnlyList<AiModelDto> aiModels = Array.Empty<AiModelDto>();
+    private bool isLoadingAiStatus = true;
+    private bool isLoadingModels = true;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        // Check if we're on the /ai/settings route and switch to AI tab
+        var uri = new Uri(NavigationManager.Uri);
+        if (uri.AbsolutePath.EndsWith("/ai/settings", StringComparison.OrdinalIgnoreCase))
+        {
+            activeTab = "ai";
+        }
+
         await VersionService.LoadVersionAsync();
         await LoadSettingsAsync();
+
+        // Pre-load AI data if on AI tab
+        if (activeTab == "ai")
+        {
+            await Task.WhenAll(
+                RefreshAiStatus(),
+                LoadAiModels());
+        }
     }
 
     private async Task LoadSettingsAsync()
@@ -105,6 +252,18 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task SetActiveTab(string tab)
+    {
+        activeTab = tab;
+
+        if (tab == "ai" && aiStatus == null)
+        {
+            await Task.WhenAll(
+                RefreshAiStatus(),
+                LoadAiModels());
         }
     }
 
@@ -145,8 +304,58 @@
         }
     }
 
+    private async Task RefreshAiStatus()
+    {
+        isLoadingAiStatus = true;
+        StateHasChanged();
+        aiStatus = await AiService.GetStatusAsync();
+        isLoadingAiStatus = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadAiModels()
+    {
+        isLoadingModels = true;
+        aiModels = await AiService.GetModelsAsync();
+        isLoadingModels = false;
+    }
+
+    private async void OnAiSettingsSaved(AiSettingsDto saved)
+    {
+        successMessage = "AI settings saved successfully!";
+        errorMessage = null;
+        StateHasChanged();
+        await RefreshAiStatus();
+    }
+
+    private void OnAiSettingsError(string error)
+    {
+        errorMessage = error;
+        successMessage = null;
+    }
+
     private void DismissError()
     {
         errorMessage = null;
+    }
+
+    private void DismissSuccess()
+    {
+        successMessage = null;
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes >= 1_073_741_824)
+        {
+            return $"{bytes / 1_073_741_824.0:F1} GB";
+        }
+
+        if (bytes >= 1_048_576)
+        {
+            return $"{bytes / 1_048_576.0:F1} MB";
+        }
+
+        return $"{bytes / 1024.0:F1} KB";
     }
 }

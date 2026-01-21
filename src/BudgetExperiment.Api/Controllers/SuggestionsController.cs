@@ -2,8 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
-using BudgetExperiment.Application.Services;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -159,7 +157,7 @@ public sealed class SuggestionsController : ControllerBase
         try
         {
             var rule = await this._suggestionService.AcceptSuggestionAsync(id, cancellationToken);
-            return this.Ok(DomainToDtoMapper.ToDto(rule));
+            return this.Ok(CategorizationMapper.ToDto(rule));
         }
         catch (DomainException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
         {
@@ -244,7 +242,7 @@ public sealed class SuggestionsController : ControllerBase
         var rules = await this._ruleRepository.ListAsync(0, int.MaxValue, cancellationToken);
         var ruleLookup = rules.ToDictionary(r => r.Id, r => r.Name);
 
-        return suggestions.Select(s => DomainToDtoMapper.ToDto(
+        return suggestions.Select(s => CategorizationMapper.ToDto(
             s,
             s.SuggestedCategoryId.HasValue ? categoryLookup.GetValueOrDefault(s.SuggestedCategoryId.Value) : null,
             s.TargetRuleId.HasValue ? ruleLookup.GetValueOrDefault(s.TargetRuleId.Value) : null))
@@ -270,6 +268,6 @@ public sealed class SuggestionsController : ControllerBase
             ruleName = rule?.Name;
         }
 
-        return DomainToDtoMapper.ToDto(suggestion, categoryName, ruleName);
+        return CategorizationMapper.ToDto(suggestion, categoryName, ruleName);
     }
 }

@@ -24,19 +24,30 @@ The existing navigation implementation has several UX limitations:
 
 | Current Name | Route | Observations |
 |--------------|-------|--------------|
-| Calendar | `/` | Clear, but could be "Dashboard" or "Calendar View" |
+| Calendar | `/` | Clear - main landing page |
 | Recurring | `/recurring` | Shortened from "Recurring Transactions" - may confuse |
 | Recurring Transfers | `/recurring-transfers` | Long, verbose |
+| Reconciliation | `/reconciliation` | Clear - matches recurring transactions to actual imports |
 | Transfers | `/transfers` | Clear |
 | Paycheck Planner | `/paycheck-planner` | Clear, descriptive |
 | Categories | `/categories` | Could be "Budget Categories" for clarity |
 | Rules | `/rules` | Unclear - "Auto-Rules" or "Categorization" better |
 | Budget | `/budget` | Clear |
-| Accounts | `/accounts` | Clear - parent for sub-items |
+| Reports | `/reports` | Collapsible section (already implemented) with Overview and Categories sub-items |
+| Accounts | `/accounts` | Clear - parent for sub-items, **NOT collapsible** (needs implementation) |
 | Import | `/import` | Clear |
 | AI Suggestions | `/ai/suggestions` | Clear |
 | AI Settings | `/ai/settings` | **Remove** - move to Settings page as a tab/section |
 | Settings | `/settings` | Clear - will include AI Settings |
+
+### Existing State (as of 2026-01-20)
+
+- ✅ **Reports section is already collapsible** with `reportsExpanded` toggle
+- ❌ **Accounts section is NOT collapsible** - sub-items always visible when sidebar expanded
+- ✅ **Sidebar collapse/expand works** with `IsCollapsed` parameter
+- ❌ **Sidebar collapsed state does NOT persist** - no localStorage integration
+- ❌ **No tooltips in collapsed mode** - icons lack hover tooltips
+- ✅ **Reconciliation nav item exists** (added in feature 028)
 
 ### Target State
 
@@ -60,10 +71,10 @@ After implementation:
 **So that** I can always access navigation links without scrolling back to the top
 
 **Acceptance Criteria:**
-- [ ] Sidebar remains fixed to viewport height
-- [ ] Main content area scrolls independently
-- [ ] Navigation items scroll within sidebar if they exceed viewport height
-- [ ] Works correctly on desktop and tablet views
+- [x] Sidebar remains fixed to viewport height
+- [x] Main content area scrolls independently
+- [x] Navigation items scroll within sidebar if they exceed viewport height
+- [x] Works correctly on desktop and tablet views
 
 #### US-031-002: Collapsible Accounts Section
 **As a** user with multiple accounts  
@@ -71,11 +82,11 @@ After implementation:
 **So that** I can reduce clutter in the navigation
 
 **Acceptance Criteria:**
-- [ ] Account section has expand/collapse toggle
-- [ ] Toggle shows visual indicator (chevron/arrow)
-- [ ] Collapsed state hides account sub-items
-- [ ] State persists across page navigations (session storage)
-- [ ] Works in both expanded and collapsed sidebar modes
+- [x] Account section has expand/collapse toggle
+- [x] Toggle shows visual indicator (chevron/arrow)
+- [x] Collapsed state hides account sub-items
+- [x] State persists across page navigations (session storage)
+- [x] Works in both expanded and collapsed sidebar modes
 
 #### US-031-003: Collapsible Sidebar to Icons
 **As a** user  
@@ -83,11 +94,11 @@ After implementation:
 **So that** I have more screen space for main content
 
 **Acceptance Criteria:**
-- [ ] Toggle button collapses/expands sidebar smoothly
-- [ ] Icons remain visible and clickable in collapsed state
-- [ ] Tooltips appear on hover in collapsed state
-- [ ] Transition animation is smooth (300ms)
-- [ ] Collapsed state persists across page loads (local storage)
+- [x] Toggle button collapses/expands sidebar smoothly
+- [x] Icons remain visible and clickable in collapsed state
+- [x] Tooltips appear on hover in collapsed state
+- [x] Transition animation is smooth (300ms)
+- [x] Collapsed state persists across page loads (local storage)
 
 #### US-031-004: Intuitive Link Naming
 **As a** user  
@@ -95,10 +106,10 @@ After implementation:
 **So that** I can quickly find what I'm looking for
 
 **Acceptance Criteria:**
-- [ ] All link names reviewed for clarity
-- [ ] Consistent naming convention applied
-- [ ] Title attributes match visible text (for accessibility)
-- [ ] No jargon or technical terms in user-facing labels
+- [x] All link names reviewed for clarity
+- [x] Consistent naming convention applied
+- [x] Title attributes match visible text (for accessibility)
+- [x] No jargon or technical terms in user-facing labels
 
 ---
 
@@ -111,12 +122,14 @@ After implementation:
 | Calendar | Calendar | Keep - clear and recognizable |
 | Recurring | Recurring Bills | Clarifies these are recurring expenses/bills |
 | Recurring Transfers | Auto-Transfers | Shorter, implies automation |
+| Reconciliation | Reconciliation | Keep - clear and descriptive |
 | Transfers | Transfers | Keep - clear |
 | Paycheck Planner | Paycheck Planner | Keep - descriptive |
 | Categories | Categories | Keep - understood in budget context |
 | Rules | Auto-Categorize | Describes the action, not the object |
 | Budget | Budget | Keep - clear |
-| Accounts | Accounts | Keep - parent section |
+| Reports | Reports | Keep - collapsible section already works |
+| Accounts | Accounts | Keep - parent section (will add collapsible behavior) |
 | Import | Import | Keep - clear |
 | AI Suggestions | Smart Insights | More user-friendly than "AI" |
 | AI Settings | *(removed)* | Moved to Settings page as "AI" tab/section |
@@ -124,12 +137,12 @@ After implementation:
 
 ### Architecture Changes
 
-No new components needed. Modifications to:
+Existing collapsible pattern can be reused from Reports section. Modifications to:
 
-1. **MainLayout.razor** - Adjust layout structure for fixed sidebar
-2. **NavMenu.razor** - Add collapsible accounts section, update link names
-3. **NavMenu.razor.css** - Styles for collapsible section, scrolling
-4. **layout.css** - Fix sidebar positioning, main content scrolling
+1. **MainLayout.razor** - Add localStorage persistence for sidebar collapsed state
+2. **NavMenu.razor** - Add collapsible accounts section (mirroring Reports pattern), update link names
+3. **NavMenu.razor.css** - Ensure nav-items scrolls within fixed sidebar, tooltip styles
+4. **layout.css** - Ensure fixed sidebar positioning (may already be correct)
 
 ### CSS Layout Changes
 
@@ -159,28 +172,32 @@ No new components needed. Modifications to:
 
 ### Component Changes
 
-#### NavMenu.razor - Collapsible Accounts
+#### NavMenu.razor - Collapsible Accounts (matches Reports section pattern)
 
 ```razor
-@* Accounts section with collapsible sub-items *@
+@* Accounts section with collapsible sub-items - mirrors existing Reports section *@
 <div class="nav-section">
-    <button class="nav-section-toggle" @onclick="ToggleAccountsExpanded">
+    <button class="nav-item nav-section-toggle" @onclick="ToggleAccountsSection" title="Accounts">
         <span class="nav-icon"><Icon Name="bank" Size="20" /></span>
         @if (!IsCollapsed)
         {
             <span class="nav-text">Accounts</span>
-            <span class="nav-chevron">
-                <Icon Name="@(accountsExpanded ? "chevron-down" : "chevron-right")" Size="16" />
+            <span class="nav-chevron @(accountsExpanded ? "expanded" : "")">
+                <Icon Name="chevron-down" Size="16" />
             </span>
         }
     </button>
-    
+
     @if (!IsCollapsed && accountsExpanded && accounts.Count > 0)
     {
         <div class="nav-subitems">
+            <NavLink class="nav-item nav-subitem" href="accounts" Match="NavLinkMatch.All" title="All Accounts">
+                <span class="nav-icon"><Icon Name="list" Size="16" /></span>
+                <span class="nav-text">All Accounts</span>
+            </NavLink>
             @foreach (var account in accounts)
             {
-                <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")">
+                <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name">
                     <span class="nav-icon"><Icon Name="credit-card" Size="16" /></span>
                     <span class="nav-text">@TruncateName(account.Name)</span>
                 </NavLink>
@@ -213,12 +230,12 @@ No new components needed. Modifications to:
 **Objective:** Make the sidebar fixed to viewport height with independent content scrolling
 
 **Tasks:**
-- [ ] Update `layout.css` `.app-content-wrapper` to use fixed height calculation
-- [ ] Update `.app-sidebar` positioning and overflow
-- [ ] Update `.app-main-content` to scroll independently
-- [ ] Update `NavMenu.razor.css` `.nav-items` for internal scrolling
-- [ ] Test on various viewport sizes
-- [ ] Verify mobile responsive behavior
+- [x] Update `layout.css` `.app-content-wrapper` to use fixed height calculation
+- [x] Update `.app-sidebar` positioning and overflow
+- [x] Update `.app-main-content` to scroll independently
+- [x] Update `NavMenu.razor.css` `.nav-items` for internal scrolling
+- [x] Test on various viewport sizes
+- [x] Verify mobile responsive behavior
 
 **Commit:**
 ```bash
@@ -237,15 +254,15 @@ Refs: #031"
 
 ### Phase 2: Collapsible Accounts Section
 
-**Objective:** Add expand/collapse functionality to the accounts section
+**Objective:** Add expand/collapse functionality to the accounts section (matching existing Reports pattern)
 
 **Tasks:**
-- [ ] Add `accountsExpanded` state to NavMenu.razor
-- [ ] Add toggle button/header for accounts section
-- [ ] Add chevron icon indicator
-- [ ] Implement `sessionStorage` persistence for expanded state
-- [ ] Style collapsible section with transition
-- [ ] Ensure works when sidebar is collapsed (icon only)
+- [x] Add `accountsExpanded` state to NavMenu.razor (mirrors `reportsExpanded`)
+- [x] Convert Accounts section to use toggle button like Reports
+- [x] Add chevron icon indicator
+- [x] Implement `sessionStorage` persistence for expanded state
+- [x] Add "All Accounts" link as first sub-item when expanded
+- [x] Ensure works when sidebar is collapsed (icon only, still navigates to /accounts)
 
 **Commit:**
 ```bash
@@ -267,12 +284,13 @@ Refs: #031"
 **Objective:** Update navigation link names for clarity and consistency
 
 **Tasks:**
-- [ ] Update "Recurring" → "Recurring Bills"
-- [ ] Update "Recurring Transfers" → "Auto-Transfers"
-- [ ] Update "Rules" → "Auto-Categorize"
-- [ ] Update "AI Suggestions" → "Smart Insights"
-- [ ] Update title attributes to match
-- [ ] Verify icon choices still appropriate
+- [x] Update "Recurring" → "Recurring Bills"
+- [x] Update "Recurring Transfers" → "Auto-Transfers"
+- [x] Update "Rules" → "Auto-Categorize"
+- [x] Update "AI Suggestions" → "Smart Insights"
+- [x] Keep "Reconciliation" as is (clear and descriptive)
+- [x] Update title attributes to match visible text
+- [x] Verify icon choices still appropriate
 
 **Commit:**
 ```bash
@@ -293,11 +311,11 @@ Refs: #031"
 **Objective:** Move AI Settings from separate nav item into the Settings page
 
 **Tasks:**
-- [ ] Remove AI Settings nav link from NavMenu.razor
-- [ ] Add "AI" tab or section to Settings page
-- [ ] Move AI settings content into Settings page component
-- [ ] Update routing if needed (redirect `/ai/settings` → `/settings?tab=ai`)
-- [ ] Remove orphaned AI Settings page component if applicable
+- [x] Remove AI Settings nav link from NavMenu.razor
+- [x] Add "AI" tab or section to Settings page
+- [x] Move AI settings content into Settings page component
+- [x] Update routing if needed (redirect `/ai/settings` → `/settings?tab=ai`)
+- [x] Remove orphaned AI Settings page component if applicable
 
 **Commit:**
 ```bash
@@ -318,11 +336,11 @@ Refs: #031"
 **Objective:** Improve the collapsed sidebar experience
 
 **Tasks:**
-- [ ] Add/verify tooltips on all nav items in collapsed mode
-- [ ] Ensure smooth width transition (already exists, verify timing)
-- [ ] Add `localStorage` persistence for collapsed state
-- [ ] Test keyboard navigation in collapsed mode
-- [ ] Verify touch targets are adequate size
+- [x] Add/verify tooltips on all nav items in collapsed mode
+- [x] Ensure smooth width transition (already exists, verify timing)
+- [x] Add `localStorage` persistence for collapsed state
+- [x] Test keyboard navigation in collapsed mode
+- [x] Verify touch targets are adequate size
 
 **Commit:**
 ```bash
@@ -344,11 +362,11 @@ Refs: #031"
 **Objective:** Ensure all changes work together smoothly
 
 **Tasks:**
-- [ ] End-to-end testing of navigation flows
-- [ ] Test state persistence (refresh, navigate away/back)
-- [ ] Test responsive breakpoints
-- [ ] Verify accessibility (keyboard nav, screen reader)
-- [ ] Fix any visual glitches or edge cases
+- [x] End-to-end testing of navigation flows
+- [x] Test state persistence (refresh, navigate away/back)
+- [x] Test responsive breakpoints
+- [x] Verify accessibility (keyboard nav, screen reader)
+- [x] Fix any visual glitches or edge cases
 
 **Commit:**
 ```bash
@@ -370,10 +388,10 @@ Refs: #031"
 **Objective:** Final polish and documentation
 
 **Tasks:**
-- [ ] Update any relevant component documentation
-- [ ] Remove TODO comments
-- [ ] Final code review
-- [ ] Update CHANGELOG if needed
+- [x] Update any relevant component documentation
+- [x] Remove TODO comments
+- [x] Final code review
+- [x] Update CHANGELOG if needed
 
 **Commit:**
 ```bash
@@ -443,7 +461,10 @@ No security implications - this is a UI/UX enhancement only.
 
 - [MainLayout.razor](../src/BudgetExperiment.Client/Layout/MainLayout.razor)
 - [NavMenu.razor](../src/BudgetExperiment.Client/Components/Navigation/NavMenu.razor)
+- [NavMenu.razor.css](../src/BudgetExperiment.Client/Components/Navigation/NavMenu.razor.css)
 - [layout.css](../src/BudgetExperiment.Client/wwwroot/css/design-system/layout.css)
+- [settings.css](../src/BudgetExperiment.Client/wwwroot/css/design-system/components/settings.css)
+- [Settings.razor](../src/BudgetExperiment.Client/Pages/Settings.razor)
 
 ---
 
@@ -452,3 +473,5 @@ No security implications - this is a UI/UX enhancement only.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-19 | Initial draft | Copilot |
+| 2026-01-20 | Updated after reviewing codebase: added Reconciliation link, noted Reports section already collapsible, updated references, corrected component example to match existing pattern | Copilot |
+| 2026-01-20 | **Implementation complete**: Fixed sidebar, collapsible accounts, link naming, AI settings consolidation, tooltips, localStorage persistence. All tests passing. | Copilot |

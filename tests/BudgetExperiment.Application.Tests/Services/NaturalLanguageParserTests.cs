@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Services;
+
 using BudgetExperiment.Domain;
 using Shouldly;
 using Xunit;
