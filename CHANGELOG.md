@@ -4,8 +4,18 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.7.0] - 2026-01-21
+
 ### Features
 
+- **navigation:** Navigation Reorganization & UX Improvements (Feature 031)
+- **navigation:** SessionStorage persistence for Reports/Accounts expand/collapse states
+- **navigation:** Collapsible Accounts section with chevron indicator
+- **navigation:** Improved link naming (Recurring Bills, Auto-Transfers, Auto-Categorize, Smart Insights)
+- **navigation:** AI Settings consolidated into Settings page as AI tab
+- **navigation:** Fixed sidebar layout with independent content scrolling
+- **navigation:** LocalStorage persistence for sidebar collapsed state
+- **navigation:** Tooltips on nav items in collapsed mode
 - **import:** CSV Import Enhancements - Skip Rows & Debit/Credit Indicators (Feature 030)
 - **import:** Skip rows setting to handle bank metadata rows before transaction data
 - **import:** Debit/Credit indicator column support with configurable indicator values
