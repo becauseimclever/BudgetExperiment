@@ -1,0 +1,33 @@
+<div class="skip-rows-input">
+    <label class="form-label">Skip Rows After Header</label>
+    <div class="input-group" style="max-width: 200px;">
+        <input type="number"
+               class="form-control"
+               min="0"
+               max="100"
+               value="@Value"
+               @onchange="HandleChange" />
+        <span class="input-group-text">rows</span>
+    </div>
+    <small class="text-secondary">
+        Number of data rows to skip at the beginning (for bank-specific summary rows)
+    </small>
+</div>
+
+@code {
+    [Parameter]
+    public int Value { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ValueChanged { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var intValue))
+        {
+            // Clamp to valid range
+            intValue = Math.Max(0, Math.Min(100, intValue));
+            await ValueChanged.InvokeAsync(intValue);
+        }
+    }
+}

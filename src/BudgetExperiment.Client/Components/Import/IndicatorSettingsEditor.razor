@@ -1,0 +1,112 @@
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="indicator-settings-editor card p-3 mt-3 bg-light">
+    <h6 class="mb-3">
+        <Icon Name="settings" Size="16" />
+        Debit/Credit Indicator Settings
+    </h6>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Debit Values (expenses)</label>
+            <input type="text"
+                   class="form-control"
+                   placeholder="e.g., DR, Debit, D"
+                   value="@debitValuesText"
+                   @onchange="HandleDebitChange" />
+            <small class="text-secondary">
+                Comma-separated values that indicate a debit (expense)
+            </small>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Credit Values (income)</label>
+            <input type="text"
+                   class="form-control"
+                   placeholder="e.g., CR, Credit, C"
+                   value="@creditValuesText"
+                   @onchange="HandleCreditChange" />
+            <small class="text-secondary">
+                Comma-separated values that indicate a credit (income)
+            </small>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ValidationMessage))
+    {
+        <div class="alert alert-warning mt-3 mb-0">
+            <Icon Name="alert-triangle" Size="16" />
+            @ValidationMessage
+        </div>
+    }
+</div>
+
+@code {
+    private string debitValuesText = "DR, Debit";
+    private string creditValuesText = "CR, Credit";
+
+    [Parameter]
+    public DebitCreditIndicatorSettingsDto? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<DebitCreditIndicatorSettingsDto?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? ValidationMessage { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Value != null)
+        {
+            debitValuesText = Value.DebitIndicators;
+            creditValuesText = Value.CreditIndicators;
+        }
+    }
+
+    private async Task HandleDebitChange(ChangeEventArgs e)
+    {
+        debitValuesText = e.Value?.ToString() ?? string.Empty;
+        await UpdateSettings();
+    }
+
+    private async Task HandleCreditChange(ChangeEventArgs e)
+    {
+        creditValuesText = e.Value?.ToString() ?? string.Empty;
+        await UpdateSettings();
+    }
+
+    private async Task UpdateSettings()
+    {
+        var debitValues = NormalizeValues(debitValuesText);
+        var creditValues = NormalizeValues(creditValuesText);
+
+        if (!string.IsNullOrWhiteSpace(debitValues) || !string.IsNullOrWhiteSpace(creditValues))
+        {
+            var settings = new DebitCreditIndicatorSettingsDto
+            {
+                DebitIndicators = debitValues,
+                CreditIndicators = creditValues,
+            };
+            await ValueChanged.InvokeAsync(settings);
+        }
+        else
+        {
+            await ValueChanged.InvokeAsync(null);
+        }
+    }
+
+    private static string NormalizeValues(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+
+        // Parse and rejoin to normalize spacing
+        var values = input
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .ToList();
+
+        return string.Join(",", values);
+    }
+}

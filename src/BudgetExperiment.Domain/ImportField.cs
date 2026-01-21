@@ -48,4 +48,9 @@ public enum ImportField
     /// Map to external reference/ID.
     /// </summary>
     Reference = 7,
+
+    /// <summary>
+    /// Column indicating whether transaction is debit or credit.
+    /// </summary>
+    DebitCreditIndicator = 8,
 }

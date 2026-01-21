@@ -4,6 +4,16 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Features
+
+- **import:** CSV Import Enhancements - Skip Rows & Debit/Credit Indicators (Feature 030)
+- **import:** Skip rows setting to handle bank metadata rows before transaction data
+- **import:** Debit/Credit indicator column support with configurable indicator values
+- **import:** New AmountParseMode.IndicatorColumn for single amount with separate indicator
+- **import:** SkipRowsSettings and DebitCreditIndicatorSettings domain value objects
+- **import:** SkipRowsInput and IndicatorSettingsEditor UI components
+- **import:** Saved mapping templates now include skip rows and indicator settings
+
 ## [3.6.0] - 2026-01-20
 
 ### Features

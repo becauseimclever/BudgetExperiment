@@ -1030,6 +1030,248 @@ public class ImportServiceTests
 
     #endregion
 
+    #region Skip Rows Tests
+
+    [Fact]
+    public async Task PreviewAsync_WithSkipRows_SkipsFirstNRows()
+    {
+        // Arrange
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows =
+            [
+                ["Account: 12345", "", ""],  // Metadata row 1 (should be skipped)
+                ["Date Range: 01/01/2026", "", ""],  // Metadata row 2 (should be skipped)
+                ["01/15/2026", "Actual Transaction", "-50.00"],  // Real data row
+            ],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            RowsToSkip = 2,
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert
+        Assert.Single(result.Rows);
+        Assert.Equal("Actual Transaction", result.Rows[0].Description);
+        Assert.Equal(-50.00m, result.Rows[0].Amount);
+        Assert.Equal(3, result.Rows[0].RowIndex); // Row index accounts for skipped rows (1-based)
+    }
+
+    [Fact]
+    public async Task PreviewAsync_WithSkipRowsExceedingTotal_ReturnsEmptyResult()
+    {
+        // Arrange
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows =
+            [
+                ["01/15/2026", "Transaction", "-50.00"],
+            ],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            RowsToSkip = 5, // Skip more rows than available
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert
+        Assert.Empty(result.Rows);
+    }
+
+    [Fact]
+    public async Task PreviewAsync_WithZeroSkipRows_ProcessesAllRows()
+    {
+        // Arrange
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows =
+            [
+                ["01/15/2026", "Transaction 1", "-50.00"],
+                ["01/16/2026", "Transaction 2", "-25.00"],
+            ],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            RowsToSkip = 0,
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert
+        Assert.Equal(2, result.Rows.Count);
+    }
+
+    #endregion
+
+    #region Indicator Column Tests
+
+    [Fact]
+    public async Task PreviewAsync_WithIndicatorColumn_AppliesDebitSign()
+    {
+        // Arrange
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows = [["01/15/2026", "Coffee Shop", "5.00", "Debit"]],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+                new ColumnMappingDto { ColumnIndex = 3, TargetField = ImportField.DebitCreditIndicator },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            AmountMode = AmountParseMode.IndicatorColumn,
+            IndicatorSettings = new DebitCreditIndicatorSettingsDto
+            {
+                ColumnIndex = 3,
+                DebitIndicators = "Debit,DR",
+                CreditIndicators = "Credit,CR",
+                CaseSensitive = false,
+            },
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert
+        Assert.Single(result.Rows);
+        Assert.Equal(-5.00m, result.Rows[0].Amount); // Debit = negative
+    }
+
+    [Fact]
+    public async Task PreviewAsync_WithIndicatorColumn_AppliesCreditSign()
+    {
+        // Arrange
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows = [["01/15/2026", "Salary", "1000.00", "Credit"]],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+                new ColumnMappingDto { ColumnIndex = 3, TargetField = ImportField.DebitCreditIndicator },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            AmountMode = AmountParseMode.IndicatorColumn,
+            IndicatorSettings = new DebitCreditIndicatorSettingsDto
+            {
+                ColumnIndex = 3,
+                DebitIndicators = "Debit,DR",
+                CreditIndicators = "Credit,CR",
+                CaseSensitive = false,
+            },
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert
+        Assert.Single(result.Rows);
+        Assert.Equal(1000.00m, result.Rows[0].Amount); // Credit = positive
+    }
+
+    [Fact]
+    public async Task PreviewAsync_WithIndicatorColumn_CaseInsensitiveMatch()
+    {
+        // Arrange
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows = [["01/15/2026", "Coffee Shop", "5.00", "DEBIT"]],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+                new ColumnMappingDto { ColumnIndex = 3, TargetField = ImportField.DebitCreditIndicator },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            AmountMode = AmountParseMode.IndicatorColumn,
+            IndicatorSettings = new DebitCreditIndicatorSettingsDto
+            {
+                ColumnIndex = 3,
+                DebitIndicators = "debit",
+                CreditIndicators = "credit",
+                CaseSensitive = false,
+            },
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert
+        Assert.Single(result.Rows);
+        Assert.Equal(-5.00m, result.Rows[0].Amount);
+    }
+
+    [Fact]
+    public async Task PreviewAsync_WithIndicatorColumn_UnrecognizedIndicator_AddsWarning()
+    {
+        // Arrange
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows = [["01/15/2026", "Coffee Shop", "5.00", "Unknown"]],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+                new ColumnMappingDto { ColumnIndex = 3, TargetField = ImportField.DebitCreditIndicator },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            AmountMode = AmountParseMode.IndicatorColumn,
+            IndicatorSettings = new DebitCreditIndicatorSettingsDto
+            {
+                ColumnIndex = 3,
+                DebitIndicators = "Debit",
+                CreditIndicators = "Credit",
+                CaseSensitive = false,
+            },
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert
+        Assert.Single(result.Rows);
+        Assert.Equal(ImportRowStatus.Warning, result.Rows[0].Status);
+        Assert.Contains("Unrecognized indicator", result.Rows[0].StatusMessage);
+    }
+
+    #endregion
+
     private static BudgetCategory CreateCategory(Guid id, string name)
     {
         // Use reflection to create the entity since constructor is private

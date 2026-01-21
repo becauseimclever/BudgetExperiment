@@ -144,19 +144,28 @@
                                          OnMappingChanged="HandleMappingChanged" />
 
                     <div class="row mt-4">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <DateFormatSelector @bind-Value="wizardState.DateFormat" />
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <AmountModeSelector @bind-Value="wizardState.AmountMode" />
                         </div>
+                        <div class="col-md-4">
+                            <SkipRowsInput @bind-Value="wizardState.RowsToSkip" />
+                        </div>
                     </div>
+
+                    @if (wizardState.AmountMode == AmountParseMode.IndicatorColumn)
+                    {
+                        <IndicatorSettingsEditor @bind-Value="wizardState.IndicatorSettings"
+                                                 ValidationMessage="@GetIndicatorValidationMessage()" />
+                    }
 
                     @if (!wizardState.HasRequiredMappings)
                     {
                         <div class="alert alert-warning mt-4">
                             <Icon Name="alert-triangle" Size="16" />
-                            <span class="ml-2">Please map all required fields: Date, Description, and Amount (or Debit/Credit)</span>
+                            <span class="ml-2">@GetMissingMappingsMessage()</span>
                         </div>
                     }
 
@@ -518,6 +527,11 @@
         if (lower.Contains("reference") || lower.Contains("id") || lower.Contains("check"))
             return ImportField.Reference;
 
+        // Detect indicator columns
+        if (lower == "dr/cr" || lower == "indicator" || lower == "dc" || lower == "sign" ||
+            lower.Contains("debit/credit") || lower.Contains("dr cr"))
+            return ImportField.DebitCreditIndicator;
+
         return null;
     }
 
@@ -560,6 +574,14 @@
             wizardState.DuplicateSettings = mapping.DuplicateSettings;
         }
 
+        // RowsToSkip is always present on ImportMappingDto (defaults to 0)
+        wizardState.RowsToSkip = mapping.RowsToSkip;
+
+        if (mapping.IndicatorSettings != null)
+        {
+            wizardState.IndicatorSettings = mapping.IndicatorSettings;
+        }
+
         StateHasChanged();
     }
 
@@ -586,6 +608,18 @@
                 .Cast<ColumnMappingDto>()
                 .ToList();
 
+            // Build indicator settings with the column index from mappings
+            DebitCreditIndicatorSettingsDto? indicatorSettings = null;
+            if (wizardState.AmountMode == AmountParseMode.IndicatorColumn && wizardState.IndicatorSettings != null)
+            {
+                var indicatorMapping = wizardState.ColumnMappings
+                    .FirstOrDefault(m => m.TargetField == ImportField.DebitCreditIndicator);
+                indicatorSettings = wizardState.IndicatorSettings with
+                {
+                    ColumnIndex = indicatorMapping?.ColumnIndex ?? -1,
+                };
+            }
+
             var request = new ImportPreviewRequest
             {
                 AccountId = wizardState.SelectedAccountId!.Value,
@@ -594,6 +628,8 @@
                 DateFormat = wizardState.DateFormat,
                 AmountMode = wizardState.AmountMode,
                 DuplicateSettings = wizardState.DuplicateSettings,
+                RowsToSkip = wizardState.RowsToSkip,
+                IndicatorSettings = indicatorSettings,
             };
 
             var result = await ImportApi.PreviewAsync(request);
@@ -894,5 +930,86 @@
         {
             errorMessage = $"Failed to delete mapping: {ex.Message}";
         }
+    }
+
+    private string GetMissingMappingsMessage()
+    {
+        var missing = new List<string>();
+
+        if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.Date))
+        {
+            missing.Add("Date");
+        }
+
+        if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.Description))
+        {
+            missing.Add("Description");
+        }
+
+        if (wizardState.AmountMode == AmountParseMode.IndicatorColumn)
+        {
+            if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.Amount))
+            {
+                missing.Add("Amount");
+            }
+
+            if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.DebitCreditIndicator))
+            {
+                missing.Add("Debit/Credit Indicator");
+            }
+
+            if (wizardState.IndicatorSettings == null)
+            {
+                missing.Add("Indicator Settings");
+            }
+        }
+        else if (wizardState.AmountMode == AmountParseMode.SeparateColumns)
+        {
+            if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.DebitAmount))
+            {
+                missing.Add("Debit Amount");
+            }
+
+            if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.CreditAmount))
+            {
+                missing.Add("Credit Amount");
+            }
+        }
+        else
+        {
+            if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.Amount))
+            {
+                missing.Add("Amount");
+            }
+        }
+
+        if (missing.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return $"Please map the required fields: {string.Join(", ", missing)}";
+    }
+
+    private string? GetIndicatorValidationMessage()
+    {
+        if (wizardState.AmountMode != AmountParseMode.IndicatorColumn)
+        {
+            return null;
+        }
+
+        if (!wizardState.ColumnMappings.Any(m => m.TargetField == ImportField.DebitCreditIndicator))
+        {
+            return "Map a column as 'Debit/Credit Indicator' above to use this mode.";
+        }
+
+        if (wizardState.IndicatorSettings == null ||
+            (string.IsNullOrWhiteSpace(wizardState.IndicatorSettings.DebitIndicators) &&
+             string.IsNullOrWhiteSpace(wizardState.IndicatorSettings.CreditIndicators)))
+        {
+            return "Specify at least one debit or credit indicator value.";
+        }
+
+        return null;
     }
 }

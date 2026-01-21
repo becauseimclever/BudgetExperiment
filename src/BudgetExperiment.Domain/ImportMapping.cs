@@ -75,6 +75,16 @@ public sealed class ImportMapping
     public DuplicateDetectionSettings DuplicateSettings { get; private set; } = new();
 
     /// <summary>
+    /// Gets the skip rows settings for this mapping.
+    /// </summary>
+    public SkipRowsSettings SkipRowsSettings { get; private set; } = SkipRowsSettings.Default;
+
+    /// <summary>
+    /// Gets the debit/credit indicator settings for this mapping.
+    /// </summary>
+    public DebitCreditIndicatorSettings IndicatorSettings { get; private set; } = DebitCreditIndicatorSettings.Disabled;
+
+    /// <summary>
     /// Creates a new import mapping configuration.
     /// </summary>
     /// <param name="userId">The user identifier.</param>
@@ -256,6 +266,38 @@ public sealed class ImportMapping
         }
 
         this.DuplicateSettings = settings;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the skip rows settings.
+    /// </summary>
+    /// <param name="settings">The new skip rows settings.</param>
+    /// <exception cref="ArgumentNullException">Thrown when settings is null.</exception>
+    public void UpdateSkipRowsSettings(SkipRowsSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        this.SkipRowsSettings = settings;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the debit/credit indicator settings.
+    /// </summary>
+    /// <param name="settings">The new indicator settings.</param>
+    /// <exception cref="ArgumentNullException">Thrown when settings is null.</exception>
+    /// <exception cref="DomainException">Thrown when indicator settings are enabled but AmountMode is not IndicatorColumn.</exception>
+    public void UpdateIndicatorSettings(DebitCreditIndicatorSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        // Validate compatibility with AmountMode
+        if (settings.IsEnabled && this.AmountMode != AmountParseMode.IndicatorColumn)
+        {
+            throw new DomainException("Amount mode must be IndicatorColumn when indicator settings are enabled.");
+        }
+
+        this.IndicatorSettings = settings;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 }
