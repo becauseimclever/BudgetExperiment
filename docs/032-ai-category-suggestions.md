@@ -544,10 +544,10 @@ Refs: #032"
 **Objective:** Integrate with existing categorization rules engine
 
 **Tasks:**
-- [ ] Extend `ICategorizationRuleService` for bulk creation
-- [ ] Implement `SuggestedRule` generation from merchant patterns
-- [ ] Create endpoint for creating rules from suggestion
-- [ ] Add rule conflict detection
+- [x] Extend `ICategorizationRuleService` for bulk creation
+- [x] Implement `SuggestedRule` generation from merchant patterns
+- [x] Create endpoint for creating rules from suggestion
+- [x] Add rule conflict detection
 - [ ] Write integration tests with rules engine
 
 **Commit:**

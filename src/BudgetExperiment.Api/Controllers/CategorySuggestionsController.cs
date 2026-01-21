@@ -20,14 +20,19 @@ namespace BudgetExperiment.Api.Controllers;
 public sealed class CategorySuggestionsController : ControllerBase
 {
     private readonly ICategorySuggestionService _suggestionService;
+    private readonly ICategorizationRuleService _ruleService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorySuggestionsController"/> class.
     /// </summary>
     /// <param name="suggestionService">The category suggestion service.</param>
-    public CategorySuggestionsController(ICategorySuggestionService suggestionService)
+    /// <param name="ruleService">The categorization rule service.</param>
+    public CategorySuggestionsController(
+        ICategorySuggestionService suggestionService,
+        ICategorizationRuleService ruleService)
     {
         _suggestionService = suggestionService;
+        _ruleService = ruleService;
     }
 
     /// <summary>
@@ -202,6 +207,62 @@ public sealed class CategorySuggestionsController : ControllerBase
         }).ToList();
 
         return Ok(dtos);
+    }
+
+    /// <summary>
+    /// Creates categorization rules from a category suggestion's patterns.
+    /// </summary>
+    /// <param name="id">The suggestion identifier.</param>
+    /// <param name="request">The create rules request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The result with created rules.</returns>
+    [HttpPost("{id:guid}/create-rules")]
+    [ProducesResponseType<CreateRulesFromSuggestionResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateRulesAsync(
+        Guid id,
+        [FromBody] CreateRulesFromSuggestionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var suggestion = await _suggestionService.GetSuggestionAsync(id, cancellationToken);
+        if (suggestion is null)
+        {
+            return NotFound(new CreateRulesFromSuggestionResult
+            {
+                Success = false,
+                ErrorMessage = "Suggestion not found.",
+            });
+        }
+
+        // Determine which patterns to use
+        var patterns = request.Patterns?.Count > 0
+            ? request.Patterns
+            : suggestion.MerchantPatterns;
+
+        // Check for conflicts
+        var allConflicts = new List<CategorizationRuleDto>();
+        foreach (var pattern in patterns)
+        {
+            var conflicts = await _ruleService.CheckConflictsAsync(pattern, "Contains", null, cancellationToken);
+            allConflicts.AddRange(conflicts);
+        }
+
+        // Dedupe conflicts
+        allConflicts = allConflicts.GroupBy(c => c.Id).Select(g => g.First()).ToList();
+
+        // Create the rules
+        var createdRules = await _ruleService.CreateBulkFromPatternsAsync(
+            request.CategoryId,
+            patterns,
+            cancellationToken);
+
+        return Ok(new CreateRulesFromSuggestionResult
+        {
+            Success = true,
+            CreatedRules = createdRules,
+            ConflictingRules = allConflicts.Count > 0 ? allConflicts : null,
+        });
     }
 
     private static CategorySuggestionDto MapToDto(CategorySuggestion suggestion)
