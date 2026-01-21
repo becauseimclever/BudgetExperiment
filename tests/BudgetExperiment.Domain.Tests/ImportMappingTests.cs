@@ -289,6 +289,161 @@ public class ImportMappingTests
         // Assert
         Assert.True(importMapping.LastUsedAtUtc >= firstUsedAt);
     }
+
+    [Fact]
+    public void Create_Has_Default_SkipRowsSettings()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+
+        // Act
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+
+        // Assert
+        Assert.NotNull(importMapping.SkipRowsSettings);
+        Assert.Equal(0, importMapping.SkipRowsSettings.RowsToSkip);
+    }
+
+    [Fact]
+    public void Create_Has_Disabled_IndicatorSettings()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+
+        // Act
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+
+        // Assert
+        Assert.NotNull(importMapping.IndicatorSettings);
+        Assert.False(importMapping.IndicatorSettings.IsEnabled);
+    }
+
+    [Fact]
+    public void UpdateSkipRowsSettings_Updates_Settings()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+        var originalUpdatedAt = importMapping.UpdatedAtUtc;
+        var skipRowsSettings = SkipRowsSettings.Create(5);
+
+        // Act
+        importMapping.UpdateSkipRowsSettings(skipRowsSettings);
+
+        // Assert
+        Assert.Equal(5, importMapping.SkipRowsSettings.RowsToSkip);
+        Assert.True(importMapping.UpdatedAtUtc >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void UpdateSkipRowsSettings_With_Null_Throws_ArgumentNullException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => importMapping.UpdateSkipRowsSettings(null!));
+    }
+
+    [Fact]
+    public void UpdateIndicatorSettings_With_IndicatorColumnMode_Updates_Settings()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+            new() { ColumnIndex = 1, ColumnHeader = "Amount", TargetField = ImportField.Amount },
+            new() { ColumnIndex = 2, ColumnHeader = "Type", TargetField = ImportField.DebitCreditIndicator },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+        importMapping.SetAmountMode(AmountParseMode.IndicatorColumn);
+
+        var indicatorSettings = DebitCreditIndicatorSettings.Create(
+            2,
+            new List<string> { "Debit" },
+            new List<string> { "Credit" });
+
+        // Act
+        importMapping.UpdateIndicatorSettings(indicatorSettings);
+
+        // Assert
+        Assert.True(importMapping.IndicatorSettings.IsEnabled);
+        Assert.Equal(2, importMapping.IndicatorSettings.IndicatorColumnIndex);
+    }
+
+    [Fact]
+    public void UpdateIndicatorSettings_Without_IndicatorColumnMode_Throws_DomainException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+        // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
+
+        var indicatorSettings = DebitCreditIndicatorSettings.Create(
+            2,
+            new List<string> { "Debit" },
+            new List<string> { "Credit" });
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => importMapping.UpdateIndicatorSettings(indicatorSettings));
+        Assert.Contains("IndicatorColumn", ex.Message);
+    }
+
+    [Fact]
+    public void UpdateIndicatorSettings_With_Disabled_Settings_Succeeds_For_Any_AmountMode()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+        // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
+
+        // Act
+        importMapping.UpdateIndicatorSettings(DebitCreditIndicatorSettings.Disabled);
+
+        // Assert
+        Assert.False(importMapping.IndicatorSettings.IsEnabled);
+    }
+
+    [Fact]
+    public void UpdateIndicatorSettings_With_Null_Throws_ArgumentNullException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test", mappings);
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => importMapping.UpdateIndicatorSettings(null!));
+    }
 }
 
 /// <summary>
@@ -407,6 +562,7 @@ public class ImportFieldTests
     [InlineData(ImportField.CreditAmount, 5)]
     [InlineData(ImportField.Category, 6)]
     [InlineData(ImportField.Reference, 7)]
+    [InlineData(ImportField.DebitCreditIndicator, 8)]
     public void ImportField_Has_Expected_Values(ImportField field, int expectedValue)
     {
         Assert.Equal(expectedValue, (int)field);
@@ -422,6 +578,9 @@ public class AmountParseModeTests
     [InlineData(AmountParseMode.NegativeIsExpense, 0)]
     [InlineData(AmountParseMode.PositiveIsExpense, 1)]
     [InlineData(AmountParseMode.SeparateColumns, 2)]
+    [InlineData(AmountParseMode.AbsoluteExpense, 3)]
+    [InlineData(AmountParseMode.AbsoluteIncome, 4)]
+    [InlineData(AmountParseMode.IndicatorColumn, 5)]
     public void AmountParseMode_Has_Expected_Values(AmountParseMode mode, int expectedValue)
     {
         Assert.Equal(expectedValue, (int)mode);

@@ -1,5 +1,9 @@
 # Feature 030: CSV Import Enhancements - Skip Rows & Debit/Credit Indicators
 
+> **Status:** 🚧 In Progress  
+> **Branch:** `feature/030-csv-import-enhancements`  
+> **Started:** 2026-01-20
+
 ## Overview
 
 Enhance the existing CSV import functionality (Feature 027) to handle two common bank export variations:
@@ -808,4 +812,5 @@ None. All new settings have safe defaults that maintain existing behavior:
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-01-20 | Started implementation - Phase 1 | @copilot |
 | 2026-01-19 | Initial draft | @copilot |

@@ -33,4 +33,10 @@ public enum AmountParseMode
     /// Treat all values as income (make positive regardless of sign).
     /// </summary>
     AbsoluteIncome = 4,
+
+    /// <summary>
+    /// Use a separate indicator column to determine if amount is debit or credit.
+    /// Amount column contains absolute values; sign determined by indicator.
+    /// </summary>
+    IndicatorColumn = 5,
 }
