@@ -570,14 +570,14 @@ Refs: #032"
 **Objective:** Build the user interface for category suggestions
 
 **Tasks:**
-- [ ] Create `CategorySuggestionsPage.razor`
-- [ ] Create `CategorySuggestionCard.razor` component
-- [ ] Create `AcceptCategoryModal.razor` with customization
-- [ ] Create `SuggestedRulesPanel.razor`
-- [ ] Add navigation link to suggestions page
-- [ ] Implement suggestion refresh functionality
-- [ ] Add loading and empty states
-- [ ] Write component tests
+- [x] Create `CategorySuggestionsPage.razor`
+- [x] Create `CategorySuggestionCard.razor` component
+- [x] Create accept category modal with customization
+- [x] Create rules preview modal
+- [x] Add navigation link to suggestions page
+- [x] Implement suggestion refresh functionality
+- [x] Add loading and empty states
+- [x] Create `ICategorySuggestionApiService` and implementation
 
 **Commit:**
 ```bash

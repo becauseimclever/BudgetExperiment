@@ -1,0 +1,488 @@
+@page "/category-suggestions"
+@using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+@implements IDisposable
+@inject ICategorySuggestionApiService SuggestionService
+@inject NavigationManager Navigation
+
+<PageTitle>Category Suggestions - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Category Suggestions" Subtitle="AI-powered suggestions for new budget categories based on your transactions">
+        <Actions>
+            <button class="btn btn-primary" @onclick="AnalyzeTransactions" disabled="@IsAnalyzing">
+                @if (IsAnalyzing)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Analyzing...</span>
+                }
+                else
+                {
+                    <Icon Name="sparkles" Size="16" />
+                    <span>Analyze Transactions</span>
+                }
+            </button>
+            <button class="btn btn-secondary" @onclick="RefreshSuggestions" disabled="@(IsLoading || IsAnalyzing)">
+                <Icon Name="refresh-cw" Size="16" />
+                <span>Refresh</span>
+            </button>
+            @if (SelectedSuggestions.Count > 0)
+            {
+                <button class="btn btn-success" @onclick="AcceptSelected" disabled="@IsProcessing">
+                    <Icon Name="check-circle" Size="16" />
+                    <span>Accept Selected (@SelectedSuggestions.Count)</span>
+                </button>
+            }
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@ErrorMessage" OnDismiss="DismissError" />
+
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @SuccessMessage
+            <button type="button" class="btn-close" @onclick="DismissSuccess" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (IsLoading)
+    {
+        <LoadingSpinner Message="Loading suggestions..." />
+    }
+    else if (Suggestions.Count == 0)
+    {
+        <div class="empty-state">
+            <Icon Name="lightbulb" Size="64" />
+            <h3>No Category Suggestions</h3>
+            <p>Click "Analyze Transactions" to have AI analyze your uncategorized transactions and suggest new categories.</p>
+        </div>
+    }
+    else
+    {
+        <div class="suggestions-list">
+            @foreach (var suggestion in Suggestions)
+            {
+                <CategorySuggestionCard Suggestion="@suggestion"
+                                         IsSelected="@SelectedSuggestions.Contains(suggestion.Id)"
+                                         OnSelect="@(() => ToggleSelection(suggestion.Id))"
+                                         OnAccept="@(() => ShowAcceptDialog(suggestion))"
+                                         OnDismiss="@(() => DismissSuggestion(suggestion.Id))"
+                                         OnPreviewRules="@(() => ShowRulesPreview(suggestion))" />
+            }
+        </div>
+    }
+
+    @* Accept Category Dialog *@
+    <Modal IsVisible="@ShowAcceptModal" Title="Accept Category Suggestion" OnClose="CloseAcceptModal">
+        @if (AcceptingSuggestion != null)
+        {
+            <div class="accept-category-form">
+                <div class="form-group">
+                    <label for="categoryName">Category Name</label>
+                    <input type="text" id="categoryName" class="form-control" @bind="AcceptCategoryName" />
+                    <small class="form-text text-muted">Suggested: @AcceptingSuggestion.SuggestedName</small>
+                </div>
+
+                <div class="suggestion-details">
+                    <p><strong>Confidence:</strong> @AcceptingSuggestion.Confidence.ToString("P0")</p>
+                    <p><strong>Matched Transactions:</strong> @AcceptingSuggestion.MatchingTransactionCount</p>
+                    @if (AcceptingSuggestion.MerchantPatterns.Count > 0)
+                    {
+                        <p><strong>Merchant Patterns:</strong></p>
+                        <ul class="pattern-list">
+                            @foreach (var pattern in AcceptingSuggestion.MerchantPatterns.Take(5))
+                            {
+                                <li>@pattern</li>
+                            }
+                            @if (AcceptingSuggestion.MerchantPatterns.Count > 5)
+                            {
+                                <li class="text-muted">...and @(AcceptingSuggestion.MerchantPatterns.Count - 5) more</li>
+                            }
+                        </ul>
+                    }
+                </div>
+
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="createRules" @bind="CreateRulesOnAccept" />
+                    <label class="form-check-label" for="createRules">Create categorization rules for merchant patterns</label>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" @onclick="CloseAcceptModal">Cancel</button>
+                    <button class="btn btn-success" @onclick="ConfirmAccept" disabled="@IsProcessing">
+                        @if (IsProcessing)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        }
+                        Accept Category
+                    </button>
+                </div>
+            </div>
+        }
+    </Modal>
+
+    @* Rules Preview Dialog *@
+    <Modal IsVisible="@ShowRulesModal" Title="Suggested Categorization Rules" OnClose="CloseRulesModal">
+        @if (PreviewRules != null && PreviewRules.Count > 0)
+        {
+            <div class="rules-preview">
+                <p class="text-muted">These rules will automatically categorize matching transactions:</p>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Match Type</th>
+                            <th>Matching Transactions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rule in PreviewRules)
+                        {
+                            <tr>
+                                <td>@rule.Pattern</td>
+                                <td>@rule.MatchType</td>
+                                <td>@rule.MatchingTransactionCount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else if (IsLoadingRules)
+        {
+            <LoadingSpinner Message="Loading rules preview..." />
+        }
+        else
+        {
+            <p class="text-muted">No rules available for this suggestion.</p>
+        }
+        <div class="modal-actions">
+            <button class="btn btn-secondary" @onclick="CloseRulesModal">Close</button>
+        </div>
+    </Modal>
+</div>
+
+@code {
+    private IReadOnlyList<CategorySuggestionDto> Suggestions { get; set; } = Array.Empty<CategorySuggestionDto>();
+    private IReadOnlyList<SuggestedCategoryRuleDto> PreviewRules { get; set; } = Array.Empty<SuggestedCategoryRuleDto>();
+    private HashSet<Guid> SelectedSuggestions { get; } = new();
+    private CategorySuggestionDto? AcceptingSuggestion { get; set; }
+
+    private bool IsLoading { get; set; }
+    private bool IsAnalyzing { get; set; }
+    private bool IsProcessing { get; set; }
+    private bool IsLoadingRules { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    private bool ShowAcceptModal { get; set; }
+    private bool ShowRulesModal { get; set; }
+    private string AcceptCategoryName { get; set; } = string.Empty;
+    private bool CreateRulesOnAccept { get; set; } = true;
+
+    private CancellationTokenSource? _cts;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSuggestionsAsync();
+    }
+
+    private async Task LoadSuggestionsAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            _cts = new CancellationTokenSource();
+            Suggestions = await SuggestionService.GetPendingAsync(_cts.Token);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load suggestions: {ex.Message}";
+            Suggestions = Array.Empty<CategorySuggestionDto>();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task RefreshSuggestions()
+    {
+        SelectedSuggestions.Clear();
+        await LoadSuggestionsAsync();
+    }
+
+    private async Task AnalyzeTransactions()
+    {
+        if (IsAnalyzing)
+        {
+            return;
+        }
+
+        IsAnalyzing = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            _cts = new CancellationTokenSource();
+            var newSuggestions = await SuggestionService.AnalyzeAsync(_cts.Token);
+
+            if (newSuggestions.Count > 0)
+            {
+                SuccessMessage = $"Analysis complete! Found {newSuggestions.Count} new category suggestion(s).";
+                await LoadSuggestionsAsync();
+            }
+            else
+            {
+                SuccessMessage = "Analysis complete. No new category suggestions found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Analysis failed: {ex.Message}";
+        }
+        finally
+        {
+            IsAnalyzing = false;
+        }
+    }
+
+    private void ToggleSelection(Guid id)
+    {
+        if (!SelectedSuggestions.Remove(id))
+        {
+            SelectedSuggestions.Add(id);
+        }
+    }
+
+    private void ShowAcceptDialog(CategorySuggestionDto suggestion)
+    {
+        AcceptingSuggestion = suggestion;
+        AcceptCategoryName = suggestion.SuggestedName;
+        CreateRulesOnAccept = true;
+        ShowAcceptModal = true;
+    }
+
+    private void CloseAcceptModal()
+    {
+        ShowAcceptModal = false;
+        AcceptingSuggestion = null;
+    }
+
+    private async Task ConfirmAccept()
+    {
+        if (AcceptingSuggestion == null || IsProcessing)
+        {
+            return;
+        }
+
+        IsProcessing = true;
+
+        try
+        {
+            var request = new AcceptCategorySuggestionRequest
+            {
+                CustomName = string.IsNullOrWhiteSpace(AcceptCategoryName) ? null : AcceptCategoryName,
+            };
+
+            var result = await SuggestionService.AcceptAsync(AcceptingSuggestion.Id, request);
+
+            if (result.Success)
+            {
+                if (CreateRulesOnAccept)
+                {
+                    // Create rules from the suggestion
+                    var rulesRequest = new CreateRulesFromSuggestionRequest
+                    {
+                        CategoryId = result.CategoryId!.Value,
+                        Patterns = AcceptingSuggestion.MerchantPatterns.ToList(),
+                    };
+                    await SuggestionService.CreateRulesAsync(AcceptingSuggestion.Id, rulesRequest);
+                }
+
+                SuccessMessage = $"Category '{result.CategoryName}' created successfully!";
+                CloseAcceptModal();
+                await LoadSuggestionsAsync();
+            }
+            else
+            {
+                ErrorMessage = "Failed to accept suggestion.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to accept suggestion: {ex.Message}";
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    private async Task DismissSuggestion(Guid id)
+    {
+        try
+        {
+            var success = await SuggestionService.DismissAsync(id);
+            if (success)
+            {
+                Suggestions = Suggestions.Where(s => s.Id != id).ToList();
+                SelectedSuggestions.Remove(id);
+            }
+            else
+            {
+                ErrorMessage = "Failed to dismiss suggestion.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
+        }
+    }
+
+    private async Task AcceptSelected()
+    {
+        if (SelectedSuggestions.Count == 0 || IsProcessing)
+        {
+            return;
+        }
+
+        IsProcessing = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var results = await SuggestionService.BulkAcceptAsync(SelectedSuggestions);
+            var successCount = results.Count(r => r.Success);
+
+            if (successCount > 0)
+            {
+                SuccessMessage = $"Successfully created {successCount} category/categories!";
+                SelectedSuggestions.Clear();
+                await LoadSuggestionsAsync();
+            }
+            else
+            {
+                ErrorMessage = "Failed to accept selected suggestions.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to accept suggestions: {ex.Message}";
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    private async Task ShowRulesPreview(CategorySuggestionDto suggestion)
+    {
+        ShowRulesModal = true;
+        IsLoadingRules = true;
+        PreviewRules = Array.Empty<SuggestedCategoryRuleDto>();
+
+        try
+        {
+            _cts = new CancellationTokenSource();
+            PreviewRules = await SuggestionService.PreviewRulesAsync(suggestion.Id, _cts.Token);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load rules preview: {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingRules = false;
+        }
+    }
+
+    private void CloseRulesModal()
+    {
+        ShowRulesModal = false;
+        PreviewRules = Array.Empty<SuggestedCategoryRuleDto>();
+    }
+
+    private void DismissError()
+    {
+        ErrorMessage = null;
+    }
+
+    private void DismissSuccess()
+    {
+        SuccessMessage = null;
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}
+
+<style>
+    .page-container {
+        padding: 1rem;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .empty-state h3 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .suggestions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .accept-category-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .suggestion-details {
+        background: var(--bg-tertiary);
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .pattern-list {
+        margin: 0.5rem 0 0 1rem;
+        padding: 0;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .rules-preview {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .table-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+</style>

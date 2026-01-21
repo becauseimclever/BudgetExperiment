@@ -1,0 +1,294 @@
+@* CategorySuggestionCard.razor - Display card for a category suggestion *@
+
+@using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="category-suggestion-card @(IsSelected ? "selected" : "")">
+    <div class="card-header">
+        <div class="selection-checkbox">
+            <input type="checkbox" checked="@IsSelected" @onchange="HandleSelect" />
+        </div>
+        <div class="suggestion-info">
+            <h4 class="suggested-name">@Suggestion.SuggestedName</h4>
+            <span class="status-badge @GetStatusClass()">@Suggestion.Status</span>
+        </div>
+        <div class="confidence-badge" title="AI Confidence Score">
+            <Icon Name="gauge" Size="14" />
+            <span>@Suggestion.Confidence.ToString("P0")</span>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="stats">
+            <div class="stat">
+                <Icon Name="layers" Size="14" />
+                <span>@Suggestion.MatchingTransactionCount transactions</span>
+            </div>
+            <div class="stat">
+                <Icon Name="tag" Size="14" />
+                <span>@Suggestion.MerchantPatterns.Count pattern(s)</span>
+            </div>
+        </div>
+
+        @if (Suggestion.MerchantPatterns.Count > 0)
+        {
+            <div class="patterns-preview">
+                <span class="patterns-label">Matched merchants:</span>
+                <div class="pattern-chips">
+                    @foreach (var pattern in Suggestion.MerchantPatterns.Take(3))
+                    {
+                        <span class="pattern-chip">@pattern</span>
+                    }
+                    @if (Suggestion.MerchantPatterns.Count > 3)
+                    {
+                        <span class="pattern-chip more">+@(Suggestion.MerchantPatterns.Count - 3) more</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card-actions">
+        <button class="btn btn-success btn-sm" @onclick="HandleAccept" title="Accept and create category">
+            <Icon Name="check" Size="14" />
+            <span>Accept</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" @onclick="HandleDismiss" title="Dismiss suggestion">
+            <Icon Name="x" Size="14" />
+            <span>Dismiss</span>
+        </button>
+        <button class="btn btn-ghost btn-sm" @onclick="HandlePreviewRules" title="Preview categorization rules">
+            <Icon Name="list" Size="14" />
+            <span>Preview Rules</span>
+        </button>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the suggestion to display.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public CategorySuggestionDto Suggestion { get; set; } = default!;
+
+    /// <summary>
+    /// Gets or sets whether this suggestion is selected.
+    /// </summary>
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback for when selection changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSelect { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback for accepting the suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnAccept { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback for dismissing the suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback for previewing rules.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnPreviewRules { get; set; }
+
+    private async Task HandleSelect()
+    {
+        await OnSelect.InvokeAsync();
+    }
+
+    private async Task HandleAccept()
+    {
+        await OnAccept.InvokeAsync();
+    }
+
+    private async Task HandleDismiss()
+    {
+        await OnDismiss.InvokeAsync();
+    }
+
+    private async Task HandlePreviewRules()
+    {
+        await OnPreviewRules.InvokeAsync();
+    }
+
+    private string GetStatusClass()
+    {
+        return Suggestion.Status switch
+        {
+            "Pending" => "status-pending",
+            "Accepted" => "status-accepted",
+            "Dismissed" => "status-dismissed",
+            _ => "status-pending",
+        };
+    }
+}
+
+<style>
+    .category-suggestion-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .category-suggestion-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-suggestion-card.selected {
+        border-color: var(--primary);
+        background: var(--bg-primary-subtle);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .selection-checkbox {
+        flex-shrink: 0;
+    }
+
+    .selection-checkbox input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .suggestion-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .suggested-name {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .status-badge {
+        padding: 0.125rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-pending {
+        background: var(--warning-bg);
+        color: var(--warning);
+    }
+
+    .status-accepted {
+        background: var(--success-bg);
+        color: var(--success);
+    }
+
+    .status-dismissed {
+        background: var(--secondary-bg);
+        color: var(--text-secondary);
+    }
+
+    .confidence-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        background: var(--bg-tertiary);
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .card-body {
+        margin-bottom: 0.75rem;
+    }
+
+    .reason {
+        color: var(--text-secondary);
+        margin: 0 0 0.75rem 0;
+        font-size: 0.9rem;
+    }
+
+    .stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .patterns-preview {
+        background: var(--bg-tertiary);
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+    }
+
+    .patterns-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .pattern-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+    }
+
+    .pattern-chip {
+        padding: 0.125rem 0.5rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        font-family: monospace;
+    }
+
+    .pattern-chip.more {
+        color: var(--text-secondary);
+        font-style: italic;
+        font-family: inherit;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-ghost {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+    }
+
+    .btn-ghost:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+</style>
