@@ -3,7 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
-using BudgetExperiment.Infrastructure.Repositories;
+using BudgetExperiment.Infrastructure.Persistence.Repositories;
 
 namespace BudgetExperiment.Infrastructure.Tests;
 

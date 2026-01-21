@@ -1,6 +1,8 @@
 using BudgetExperiment.Application.Services;
 using BudgetExperiment.Domain;
-using BudgetExperiment.Infrastructure.Repositories;
+using BudgetExperiment.Infrastructure.ExternalServices.AI;
+using BudgetExperiment.Infrastructure.Persistence;
+using BudgetExperiment.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

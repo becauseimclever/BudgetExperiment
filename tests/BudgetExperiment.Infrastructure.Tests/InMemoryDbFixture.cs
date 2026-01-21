@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 

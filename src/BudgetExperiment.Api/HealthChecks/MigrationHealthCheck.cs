@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Infrastructure;
+using BudgetExperiment.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
