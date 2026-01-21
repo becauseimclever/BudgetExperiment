@@ -90,6 +90,17 @@ public sealed class ImportMappingService : IImportMappingService
             mapping.SetDuplicateSettings(duplicateSettings);
         }
 
+        if (request.RowsToSkip > 0)
+        {
+            mapping.UpdateSkipRowsSettings(SkipRowsSettings.Create(request.RowsToSkip));
+        }
+
+        if (request.IndicatorSettings is not null && request.IndicatorSettings.ColumnIndex >= 0)
+        {
+            var indicatorSettings = ToDomain(request.IndicatorSettings);
+            mapping.UpdateIndicatorSettings(indicatorSettings);
+        }
+
         await this._repository.AddAsync(mapping, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(mapping);
@@ -137,6 +148,17 @@ public sealed class ImportMappingService : IImportMappingService
         if (request.DuplicateSettings is not null)
         {
             mapping.SetDuplicateSettings(ToDomain(request.DuplicateSettings));
+        }
+
+        if (request.RowsToSkip.HasValue)
+        {
+            mapping.UpdateSkipRowsSettings(SkipRowsSettings.Create(request.RowsToSkip.Value));
+        }
+
+        if (request.IndicatorSettings is not null)
+        {
+            var indicatorSettings = ToDomain(request.IndicatorSettings);
+            mapping.UpdateIndicatorSettings(indicatorSettings);
         }
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
@@ -212,6 +234,10 @@ public sealed class ImportMappingService : IImportMappingService
             DuplicateSettings = mapping.DuplicateSettings is not null
                 ? ToDto(mapping.DuplicateSettings)
                 : null,
+            RowsToSkip = mapping.SkipRowsSettings.RowsToSkip,
+            IndicatorSettings = mapping.IndicatorSettings.IsEnabled
+                ? ToDto(mapping.IndicatorSettings)
+                : null,
             CreatedAtUtc = mapping.CreatedAtUtc,
             UpdatedAtUtc = mapping.UpdatedAtUtc,
         };
@@ -257,6 +283,44 @@ public sealed class ImportMappingService : IImportMappingService
             LookbackDays = dto.LookbackDays,
             DescriptionMatch = dto.DescriptionMatch,
         };
+    }
+
+    private static DebitCreditIndicatorSettingsDto ToDto(DebitCreditIndicatorSettings settings)
+    {
+        return new DebitCreditIndicatorSettingsDto
+        {
+            ColumnIndex = settings.IndicatorColumnIndex,
+            DebitIndicators = string.Join(",", settings.DebitIndicators),
+            CreditIndicators = string.Join(",", settings.CreditIndicators),
+            CaseSensitive = settings.CaseSensitive,
+        };
+    }
+
+    private static DebitCreditIndicatorSettings ToDomain(DebitCreditIndicatorSettingsDto dto)
+    {
+        if (dto.ColumnIndex < 0)
+        {
+            return DebitCreditIndicatorSettings.Disabled;
+        }
+
+        var debitIndicators = dto.DebitIndicators
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        var creditIndicators = dto.CreditIndicators
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        if (debitIndicators.Count == 0 || creditIndicators.Count == 0)
+        {
+            return DebitCreditIndicatorSettings.Disabled;
+        }
+
+        return DebitCreditIndicatorSettings.Create(
+            dto.ColumnIndex,
+            debitIndicators,
+            creditIndicators,
+            dto.CaseSensitive);
     }
 
     private Guid GetRequiredUserId()

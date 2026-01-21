@@ -45,6 +45,16 @@ public sealed record ImportPreviewRequest
     /// Gets a value indicating whether to check for recurring transaction matches.
     /// </summary>
     public bool CheckRecurringMatches { get; init; } = true;
+
+    /// <summary>
+    /// Gets the number of rows to skip at the beginning of the file.
+    /// </summary>
+    public int RowsToSkip { get; init; }
+
+    /// <summary>
+    /// Gets the debit/credit indicator settings.
+    /// </summary>
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
 }
 
 /// <summary>
@@ -92,6 +102,32 @@ public sealed record DuplicateDetectionSettingsDto
     /// Gets how descriptions should be matched for duplicate detection.
     /// </summary>
     public DescriptionMatchMode DescriptionMatch { get; init; } = DescriptionMatchMode.Exact;
+}
+
+/// <summary>
+/// DTO for debit/credit indicator settings.
+/// </summary>
+public sealed record DebitCreditIndicatorSettingsDto
+{
+    /// <summary>
+    /// Gets the column index of the indicator (-1 if disabled).
+    /// </summary>
+    public int ColumnIndex { get; init; } = -1;
+
+    /// <summary>
+    /// Gets the comma-separated debit indicator values.
+    /// </summary>
+    public string DebitIndicators { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Gets the comma-separated credit indicator values.
+    /// </summary>
+    public string CreditIndicators { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Gets a value indicating whether matching is case-sensitive.
+    /// </summary>
+    public bool CaseSensitive { get; init; }
 }
 
 /// <summary>
@@ -483,6 +519,16 @@ public sealed record ImportMappingDto
     public DuplicateDetectionSettingsDto? DuplicateSettings { get; init; }
 
     /// <summary>
+    /// Gets the number of rows to skip at the beginning of the file.
+    /// </summary>
+    public int RowsToSkip { get; init; }
+
+    /// <summary>
+    /// Gets the debit/credit indicator settings.
+    /// </summary>
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
+
+    /// <summary>
     /// Gets when the mapping was created.
     /// </summary>
     public DateTime CreatedAtUtc { get; init; }
@@ -522,6 +568,16 @@ public sealed record CreateImportMappingRequest
     /// Gets the optional duplicate detection settings.
     /// </summary>
     public DuplicateDetectionSettingsDto? DuplicateSettings { get; init; }
+
+    /// <summary>
+    /// Gets the number of rows to skip at the beginning of the file.
+    /// </summary>
+    public int RowsToSkip { get; init; }
+
+    /// <summary>
+    /// Gets the optional debit/credit indicator settings.
+    /// </summary>
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
 }
 
 /// <summary>
@@ -553,4 +609,14 @@ public sealed record UpdateImportMappingRequest
     /// Gets the new duplicate detection settings (if changing).
     /// </summary>
     public DuplicateDetectionSettingsDto? DuplicateSettings { get; init; }
+
+    /// <summary>
+    /// Gets the number of rows to skip at the beginning of the file (if changing).
+    /// </summary>
+    public int? RowsToSkip { get; init; }
+
+    /// <summary>
+    /// Gets the new debit/credit indicator settings (if changing).
+    /// </summary>
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
 }
