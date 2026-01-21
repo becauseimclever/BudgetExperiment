@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Services;
+
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Infrastructure.ExternalServices.AI;
 using Microsoft.Extensions.Logging.Abstractions;

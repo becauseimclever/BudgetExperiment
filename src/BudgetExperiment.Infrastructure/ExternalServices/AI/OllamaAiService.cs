@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using BudgetExperiment.Application.Services;
+
 using Microsoft.Extensions.Logging;
 
 namespace BudgetExperiment.Infrastructure.ExternalServices.AI;
