@@ -230,12 +230,12 @@ Existing collapsible pattern can be reused from Reports section. Modifications t
 **Objective:** Make the sidebar fixed to viewport height with independent content scrolling
 
 **Tasks:**
-- [ ] Update `layout.css` `.app-content-wrapper` to use fixed height calculation
-- [ ] Update `.app-sidebar` positioning and overflow
-- [ ] Update `.app-main-content` to scroll independently
-- [ ] Update `NavMenu.razor.css` `.nav-items` for internal scrolling
-- [ ] Test on various viewport sizes
-- [ ] Verify mobile responsive behavior
+- [x] Update `layout.css` `.app-content-wrapper` to use fixed height calculation
+- [x] Update `.app-sidebar` positioning and overflow
+- [x] Update `.app-main-content` to scroll independently
+- [x] Update `NavMenu.razor.css` `.nav-items` for internal scrolling
+- [x] Test on various viewport sizes
+- [x] Verify mobile responsive behavior
 
 **Commit:**
 ```bash
@@ -257,12 +257,12 @@ Refs: #031"
 **Objective:** Add expand/collapse functionality to the accounts section (matching existing Reports pattern)
 
 **Tasks:**
-- [ ] Add `accountsExpanded` state to NavMenu.razor (mirrors `reportsExpanded`)
-- [ ] Convert Accounts section to use toggle button like Reports
-- [ ] Add chevron icon indicator
+- [x] Add `accountsExpanded` state to NavMenu.razor (mirrors `reportsExpanded`)
+- [x] Convert Accounts section to use toggle button like Reports
+- [x] Add chevron icon indicator
 - [ ] Implement `sessionStorage` persistence for expanded state
-- [ ] Add "All Accounts" link as first sub-item when expanded
-- [ ] Ensure works when sidebar is collapsed (icon only, still navigates to /accounts)
+- [x] Add "All Accounts" link as first sub-item when expanded
+- [x] Ensure works when sidebar is collapsed (icon only, still navigates to /accounts)
 
 **Commit:**
 ```bash
@@ -284,13 +284,13 @@ Refs: #031"
 **Objective:** Update navigation link names for clarity and consistency
 
 **Tasks:**
-- [ ] Update "Recurring" → "Recurring Bills"
-- [ ] Update "Recurring Transfers" → "Auto-Transfers"
-- [ ] Update "Rules" → "Auto-Categorize"
-- [ ] Update "AI Suggestions" → "Smart Insights"
-- [ ] Keep "Reconciliation" as is (clear and descriptive)
-- [ ] Update title attributes to match visible text
-- [ ] Verify icon choices still appropriate
+- [x] Update "Recurring" → "Recurring Bills"
+- [x] Update "Recurring Transfers" → "Auto-Transfers"
+- [x] Update "Rules" → "Auto-Categorize"
+- [x] Update "AI Suggestions" → "Smart Insights"
+- [x] Keep "Reconciliation" as is (clear and descriptive)
+- [x] Update title attributes to match visible text
+- [x] Verify icon choices still appropriate
 
 **Commit:**
 ```bash
@@ -311,11 +311,11 @@ Refs: #031"
 **Objective:** Move AI Settings from separate nav item into the Settings page
 
 **Tasks:**
-- [ ] Remove AI Settings nav link from NavMenu.razor
-- [ ] Add "AI" tab or section to Settings page
-- [ ] Move AI settings content into Settings page component
-- [ ] Update routing if needed (redirect `/ai/settings` → `/settings?tab=ai`)
-- [ ] Remove orphaned AI Settings page component if applicable
+- [x] Remove AI Settings nav link from NavMenu.razor
+- [x] Add "AI" tab or section to Settings page
+- [x] Move AI settings content into Settings page component
+- [x] Update routing if needed (redirect `/ai/settings` → `/settings?tab=ai`)
+- [x] Remove orphaned AI Settings page component if applicable
 
 **Commit:**
 ```bash
@@ -336,11 +336,11 @@ Refs: #031"
 **Objective:** Improve the collapsed sidebar experience
 
 **Tasks:**
-- [ ] Add/verify tooltips on all nav items in collapsed mode
-- [ ] Ensure smooth width transition (already exists, verify timing)
-- [ ] Add `localStorage` persistence for collapsed state
-- [ ] Test keyboard navigation in collapsed mode
-- [ ] Verify touch targets are adequate size
+- [x] Add/verify tooltips on all nav items in collapsed mode
+- [x] Ensure smooth width transition (already exists, verify timing)
+- [x] Add `localStorage` persistence for collapsed state
+- [x] Test keyboard navigation in collapsed mode
+- [x] Verify touch targets are adequate size
 
 **Commit:**
 ```bash
@@ -362,11 +362,11 @@ Refs: #031"
 **Objective:** Ensure all changes work together smoothly
 
 **Tasks:**
-- [ ] End-to-end testing of navigation flows
-- [ ] Test state persistence (refresh, navigate away/back)
-- [ ] Test responsive breakpoints
-- [ ] Verify accessibility (keyboard nav, screen reader)
-- [ ] Fix any visual glitches or edge cases
+- [x] End-to-end testing of navigation flows
+- [x] Test state persistence (refresh, navigate away/back)
+- [x] Test responsive breakpoints
+- [x] Verify accessibility (keyboard nav, screen reader)
+- [x] Fix any visual glitches or edge cases
 
 **Commit:**
 ```bash
@@ -388,10 +388,10 @@ Refs: #031"
 **Objective:** Final polish and documentation
 
 **Tasks:**
-- [ ] Update any relevant component documentation
-- [ ] Remove TODO comments
-- [ ] Final code review
-- [ ] Update CHANGELOG if needed
+- [x] Update any relevant component documentation
+- [x] Remove TODO comments
+- [x] Final code review
+- [x] Update CHANGELOG if needed
 
 **Commit:**
 ```bash
