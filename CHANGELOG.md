@@ -4,6 +4,8 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.8.0] - 2026-01-21
+
 ### Features
 
 - **suggestions:** AI-Powered Category Suggestions system (Feature 032)
