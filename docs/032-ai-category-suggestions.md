@@ -419,20 +419,22 @@ CREATE TABLE dismissed_suggestion_patterns (
 
 ## Implementation Plan
 
-### Phase 1: Domain Model & Repository
+### Phase 1: Domain Model & Repository ✅
 
 **Objective:** Establish domain entities and persistence for category suggestions
 
 **Tasks:**
-- [ ] Create `CategorySuggestion` entity with factory methods
-- [ ] Create `SuggestionStatus` enum
-- [ ] Create `LearnedMerchantMapping` entity
-- [ ] Create `DismissedSuggestionPattern` entity
-- [ ] Create `ICategorySuggestionRepository` interface
-- [ ] Write unit tests for domain entities
-- [ ] Implement `CategorySuggestionRepository` in Infrastructure
-- [ ] Add EF Core configurations
-- [ ] Create database migration
+- [x] Create `CategorySuggestion` entity with factory methods
+- [x] Reuse existing `SuggestionStatus` enum from Categorization namespace
+- [x] Create `LearnedMerchantMapping` entity
+- [x] Create `DismissedSuggestionPattern` entity
+- [x] Create `ICategorySuggestionRepository` interface
+- [x] Create `ILearnedMerchantMappingRepository` interface
+- [x] Create `IDismissedSuggestionPatternRepository` interface
+- [x] Write unit tests for domain entities (24 tests)
+- [x] Implement repositories in Infrastructure
+- [x] Add EF Core configurations
+- [x] Create database migration
 
 **Commit:**
 ```bash
@@ -442,7 +444,7 @@ git commit -m "feat(domain): add category suggestion entities
 - CategorySuggestion entity with status tracking
 - LearnedMerchantMapping for user-trained mappings
 - DismissedSuggestionPattern to prevent re-suggestions
-- Repository interface and implementation
+- Repository interfaces and implementations
 - Database migration
 
 Refs: #032"

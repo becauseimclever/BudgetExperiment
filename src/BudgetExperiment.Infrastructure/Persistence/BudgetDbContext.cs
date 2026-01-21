@@ -102,6 +102,21 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<ReconciliationMatch> ReconciliationMatches => this.Set<ReconciliationMatch>();
 
+    /// <summary>
+    /// Gets the AI-generated category suggestions.
+    /// </summary>
+    public DbSet<CategorySuggestion> CategorySuggestions => this.Set<CategorySuggestion>();
+
+    /// <summary>
+    /// Gets the learned merchant mappings.
+    /// </summary>
+    public DbSet<LearnedMerchantMapping> LearnedMerchantMappings => this.Set<LearnedMerchantMapping>();
+
+    /// <summary>
+    /// Gets the dismissed suggestion patterns.
+    /// </summary>
+    public DbSet<DismissedSuggestionPattern> DismissedSuggestionPatterns => this.Set<DismissedSuggestionPattern>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
