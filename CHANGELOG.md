@@ -4,6 +4,19 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Features
+
+- **suggestions:** AI-Powered Category Suggestions system (Feature 032)
+- **suggestions:** Analyze uncategorized transactions to suggest new budget categories
+- **suggestions:** Merchant knowledge base with 100+ default merchant-to-category mappings
+- **suggestions:** Accept/dismiss suggestions with optional category customization
+- **suggestions:** Bulk accept multiple category suggestions at once
+- **suggestions:** Auto-create categorization rules when accepting suggestions
+- **suggestions:** Learning system records manual categorizations for future suggestions
+- **suggestions:** CategorySuggestionsPage with card layout and modal dialogs
+- **api:** Category suggestion REST endpoints (analyze, accept, dismiss, bulk-accept, preview-rules)
+- **api:** Merchant mappings endpoints for managing learned patterns
+
 ## [3.7.0] - 2026-01-21
 
 ### Features
