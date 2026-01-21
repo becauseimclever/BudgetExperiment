@@ -18,7 +18,7 @@ public interface IRecurringTransferRealizationService
     /// <param name="request">The realization request with optional overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created transfer response DTO.</returns>
-    /// <exception cref="BudgetExperiment.Domain.DomainException">Thrown when the recurring transfer is not found or already realized.</exception>
+    /// <exception cref="BudgetExperiment.Domain.Common.DomainException">Thrown when the recurring transfer is not found or already realized.</exception>
     Task<TransferResponse> RealizeInstanceAsync(
         Guid recurringTransferId,
         RealizeRecurringTransferRequest request,

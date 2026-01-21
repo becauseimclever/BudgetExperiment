@@ -18,7 +18,7 @@ public interface IRecurringTransactionRealizationService
     /// <param name="request">The realization request with optional overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created transaction DTO.</returns>
-    /// <exception cref="BudgetExperiment.Domain.DomainException">Thrown when the recurring transaction is not found or already realized.</exception>
+    /// <exception cref="BudgetExperiment.Domain.Common.DomainException">Thrown when the recurring transaction is not found or already realized.</exception>
     Task<TransactionDto> RealizeInstanceAsync(
         Guid recurringTransactionId,
         RealizeRecurringTransactionRequest request,
