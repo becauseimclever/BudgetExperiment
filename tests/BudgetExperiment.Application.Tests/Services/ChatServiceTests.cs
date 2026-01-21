@@ -468,6 +468,12 @@ public class ChatServiceTests
         public Task<IReadOnlyList<BudgetCategory>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories);
 
+        public Task<IReadOnlyList<BudgetCategory>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            var idList = ids.ToList();
+            return Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories.Where(c => idList.Contains(c.Id)).ToList());
+        }
+
         public Task<IReadOnlyList<BudgetCategory>> ListAsync(int skip, int take, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories.Skip(skip).Take(take).ToList());
 

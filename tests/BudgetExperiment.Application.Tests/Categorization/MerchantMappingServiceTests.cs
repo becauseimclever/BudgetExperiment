@@ -13,13 +13,17 @@ namespace BudgetExperiment.Application.Tests.Categorization;
 public class MerchantMappingServiceTests
 {
     private readonly FakeLearnedMerchantMappingRepository _fakeRepository;
+    private readonly FakeBudgetCategoryRepository _fakeCategoryRepository;
+    private readonly FakeUnitOfWork _fakeUnitOfWork;
     private readonly MerchantMappingService _service;
     private const string TestOwnerId = "user-123";
 
     public MerchantMappingServiceTests()
     {
         _fakeRepository = new FakeLearnedMerchantMappingRepository();
-        _service = new MerchantMappingService(_fakeRepository);
+        _fakeCategoryRepository = new FakeBudgetCategoryRepository();
+        _fakeUnitOfWork = new FakeUnitOfWork();
+        _service = new MerchantMappingService(_fakeRepository, _fakeCategoryRepository, _fakeUnitOfWork);
     }
 
     #region GetMappingAsync Tests
@@ -147,6 +151,112 @@ public class MerchantMappingServiceTests
 
     #endregion
 
+    #region LearnFromCategorizationAsync Tests
+
+    [Fact]
+    public async Task LearnFromCategorizationAsync_Creates_New_Mapping()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var description = "STARBUCKS COFFEE #123";
+
+        // Act
+        await _service.LearnFromCategorizationAsync(TestOwnerId, description, categoryId, CancellationToken.None);
+
+        // Assert
+        var mappings = await _fakeRepository.GetByOwnerAsync(TestOwnerId, CancellationToken.None);
+        Assert.Single(mappings);
+        Assert.Equal(categoryId, mappings[0].CategoryId);
+        Assert.Equal(1, _fakeUnitOfWork.SaveCount);
+    }
+
+    [Fact]
+    public async Task LearnFromCategorizationAsync_Increments_Count_For_Existing_Mapping()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var existingMapping = LearnedMerchantMapping.Create("STARBUCKS COFFEE", categoryId, TestOwnerId);
+        _fakeRepository.AddMapping(existingMapping);
+
+        // Act - Same pattern should increment count
+        await _service.LearnFromCategorizationAsync(TestOwnerId, "STARBUCKS COFFEE #456", categoryId, CancellationToken.None);
+
+        // Assert
+        var mappings = await _fakeRepository.GetByOwnerAsync(TestOwnerId, CancellationToken.None);
+        Assert.Single(mappings);
+        Assert.Equal(2, mappings[0].LearnCount);
+    }
+
+    [Fact]
+    public async Task LearnFromCategorizationAsync_Skips_Empty_Description()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+
+        // Act
+        await _service.LearnFromCategorizationAsync(TestOwnerId, "", categoryId, CancellationToken.None);
+        await _service.LearnFromCategorizationAsync(TestOwnerId, "  ", categoryId, CancellationToken.None);
+
+        // Assert
+        var mappings = await _fakeRepository.GetByOwnerAsync(TestOwnerId, CancellationToken.None);
+        Assert.Empty(mappings);
+    }
+
+    #endregion
+
+    #region GetLearnedMappingsAsync Tests
+
+    [Fact]
+    public async Task GetLearnedMappingsAsync_Returns_All_User_Mappings()
+    {
+        // Arrange
+        var category1Id = Guid.NewGuid();
+        var category2Id = Guid.NewGuid();
+        _fakeRepository.AddMapping(LearnedMerchantMapping.Create("STARBUCKS", category1Id, TestOwnerId));
+        _fakeRepository.AddMapping(LearnedMerchantMapping.Create("MCDONALDS", category2Id, TestOwnerId));
+        _fakeCategoryRepository.AddCategoryWithId(category1Id, "Dining");
+        _fakeCategoryRepository.AddCategoryWithId(category2Id, "Fast Food");
+
+        // Act
+        var result = await _service.GetLearnedMappingsAsync(TestOwnerId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+    }
+
+    #endregion
+
+    #region DeleteLearnedMappingAsync Tests
+
+    [Fact]
+    public async Task DeleteLearnedMappingAsync_Removes_Mapping()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var mapping = LearnedMerchantMapping.Create("STARBUCKS", categoryId, TestOwnerId);
+        _fakeRepository.AddMapping(mapping);
+
+        // Act
+        var result = await _service.DeleteLearnedMappingAsync(TestOwnerId, mapping.Id, CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        var mappings = await _fakeRepository.GetByOwnerAsync(TestOwnerId, CancellationToken.None);
+        Assert.Empty(mappings);
+    }
+
+    [Fact]
+    public async Task DeleteLearnedMappingAsync_Returns_False_For_Not_Found()
+    {
+        // Act
+        var result = await _service.DeleteLearnedMappingAsync(TestOwnerId, Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    #endregion
+
     private sealed class FakeLearnedMerchantMappingRepository : ILearnedMerchantMappingRepository
     {
         private readonly List<LearnedMerchantMapping> _mappings = new();
@@ -210,6 +320,111 @@ public class MerchantMappingServiceTests
         {
             _mappings.Remove(entity);
             return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakeBudgetCategoryRepository : IBudgetCategoryRepository
+    {
+        private readonly List<(Guid Id, string Name)> _categoryEntries = new();
+
+        public void AddCategoryWithId(Guid id, string name)
+        {
+            _categoryEntries.Add((id, name));
+        }
+
+        public Task<BudgetCategory?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var entry = _categoryEntries.FirstOrDefault(c => c.Id == id);
+            if (entry == default)
+            {
+                return Task.FromResult<BudgetCategory?>(null);
+            }
+
+            return Task.FromResult<BudgetCategory?>(CreateCategoryStub(entry.Id, entry.Name));
+        }
+
+        public Task<BudgetCategory?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+        {
+            var entry = _categoryEntries.FirstOrDefault(c => c.Name == name);
+            if (entry == default)
+            {
+                return Task.FromResult<BudgetCategory?>(null);
+            }
+
+            return Task.FromResult<BudgetCategory?>(CreateCategoryStub(entry.Id, entry.Name));
+        }
+
+        public Task<IReadOnlyList<BudgetCategory>> GetActiveAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<BudgetCategory>>(
+                _categoryEntries.Select(e => CreateCategoryStub(e.Id, e.Name)).ToList());
+        }
+
+        public Task<IReadOnlyList<BudgetCategory>> GetByTypeAsync(CategoryType type, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<BudgetCategory>>(
+                _categoryEntries.Select(e => CreateCategoryStub(e.Id, e.Name)).ToList());
+        }
+
+        public Task<IReadOnlyList<BudgetCategory>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<BudgetCategory>>(
+                _categoryEntries.Select(e => CreateCategoryStub(e.Id, e.Name)).ToList());
+        }
+
+        public Task<IReadOnlyList<BudgetCategory>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        {
+            var idList = ids.ToList();
+            return Task.FromResult<IReadOnlyList<BudgetCategory>>(
+                _categoryEntries.Where(e => idList.Contains(e.Id))
+                    .Select(e => CreateCategoryStub(e.Id, e.Name)).ToList());
+        }
+
+        public Task<IReadOnlyList<BudgetCategory>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<BudgetCategory>>(
+                _categoryEntries.Skip(skip).Take(take)
+                    .Select(e => CreateCategoryStub(e.Id, e.Name)).ToList());
+        }
+
+        public Task<long> CountAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult((long)_categoryEntries.Count);
+        }
+
+        public Task AddAsync(BudgetCategory entity, CancellationToken cancellationToken = default)
+        {
+            _categoryEntries.Add((entity.Id, entity.Name));
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveAsync(BudgetCategory entity, CancellationToken cancellationToken = default)
+        {
+            _categoryEntries.RemoveAll(e => e.Id == entity.Id);
+            return Task.CompletedTask;
+        }
+
+        private static BudgetCategory CreateCategoryStub(Guid id, string name)
+        {
+            // Use reflection to create a BudgetCategory with a specific ID for testing
+            var category = BudgetCategory.Create(name, CategoryType.Expense);
+
+            // Use reflection to set the Id field
+            var idProperty = typeof(BudgetCategory).GetProperty("Id");
+            idProperty?.SetValue(category, id);
+
+            return category;
+        }
+    }
+
+    private sealed class FakeUnitOfWork : IUnitOfWork
+    {
+        public int SaveCount { get; private set; }
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            SaveCount++;
+            return Task.FromResult(1);
         }
     }
 }

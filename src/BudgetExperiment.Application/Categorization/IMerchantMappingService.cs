@@ -31,6 +31,42 @@ public interface IMerchantMappingService
         string ownerId,
         IEnumerable<string> descriptions,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Learns a merchant-to-category mapping from a manual categorization.
+    /// </summary>
+    /// <param name="ownerId">The user ID.</param>
+    /// <param name="description">The transaction description.</param>
+    /// <param name="categoryId">The category ID the user assigned.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task LearnFromCategorizationAsync(
+        string ownerId,
+        string description,
+        Guid categoryId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all learned mappings for a user.
+    /// </summary>
+    /// <param name="ownerId">The user ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The learned mappings.</returns>
+    Task<IReadOnlyList<LearnedMerchantMappingInfo>> GetLearnedMappingsAsync(
+        string ownerId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a learned mapping.
+    /// </summary>
+    /// <param name="ownerId">The user ID.</param>
+    /// <param name="mappingId">The mapping ID to delete.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if deleted, false if not found.</returns>
+    Task<bool> DeleteLearnedMappingAsync(
+        string ownerId,
+        Guid mappingId,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -98,4 +134,45 @@ public sealed class PatternMatch
     /// Gets a value indicating whether this is from a learned mapping.
     /// </summary>
     public bool IsLearned { get; init; }
+}
+
+/// <summary>
+/// Information about a learned merchant mapping.
+/// </summary>
+public sealed record LearnedMerchantMappingInfo
+{
+    /// <summary>
+    /// Gets the mapping ID.
+    /// </summary>
+    public required Guid Id { get; init; }
+
+    /// <summary>
+    /// Gets the merchant pattern.
+    /// </summary>
+    public required string MerchantPattern { get; init; }
+
+    /// <summary>
+    /// Gets the category ID.
+    /// </summary>
+    public required Guid CategoryId { get; init; }
+
+    /// <summary>
+    /// Gets the category name.
+    /// </summary>
+    public required string CategoryName { get; init; }
+
+    /// <summary>
+    /// Gets the number of times this mapping has been learned.
+    /// </summary>
+    public required int LearnCount { get; init; }
+
+    /// <summary>
+    /// Gets the creation timestamp.
+    /// </summary>
+    public required DateTime CreatedAtUtc { get; init; }
+
+    /// <summary>
+    /// Gets the last update timestamp.
+    /// </summary>
+    public required DateTime UpdatedAtUtc { get; init; }
 }

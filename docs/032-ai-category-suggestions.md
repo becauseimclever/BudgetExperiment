@@ -600,11 +600,13 @@ Refs: #032"
 **Objective:** Implement the learning-from-user-actions system
 
 **Tasks:**
-- [ ] Track manual categorizations in `LearnedMerchantMapping`
-- [ ] Update suggestion service to use learned mappings
-- [ ] Implement mapping priority (learned > default)
-- [ ] Add merchant mappings settings page
-- [ ] Write integration tests for learning flow
+- [x] Add `LearnFromCategorizationAsync` to `IMerchantMappingService`
+- [x] Implement pattern extraction from transaction descriptions
+- [x] Add `GetLearnedMappingsAsync` to retrieve user's learned mappings
+- [x] Add `DeleteLearnedMappingAsync` to remove mappings
+- [x] Add `GetByIdsAsync` to `IBudgetCategoryRepository`
+- [x] Create `MerchantMappingsController` with API endpoints
+- [x] Write unit tests for learning flow
 
 **Commit:**
 ```bash

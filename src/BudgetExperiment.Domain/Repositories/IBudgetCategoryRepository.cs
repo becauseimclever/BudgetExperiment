@@ -38,4 +38,12 @@ public interface IBudgetCategoryRepository : IReadRepository<BudgetCategory>, IW
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of all categories ordered by sort order then name.</returns>
     Task<IReadOnlyList<BudgetCategory>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets categories by their IDs.
+    /// </summary>
+    /// <param name="ids">The category IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of categories matching the IDs.</returns>
+    Task<IReadOnlyList<BudgetCategory>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
 }

@@ -70,6 +70,15 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<BudgetCategory>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var idList = ids.ToList();
+        return await this.ApplyScopeFilter(this._context.BudgetCategories)
+            .Where(c => idList.Contains(c.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<BudgetCategory>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.BudgetCategories)
