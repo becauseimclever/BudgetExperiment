@@ -1,8 +1,9 @@
 # Feature 030: CSV Import Enhancements - Skip Rows & Debit/Credit Indicators
 
-> **Status:** 🚧 In Progress  
+> **Status:** ✅ Complete  
 > **Branch:** `feature/030-csv-import-enhancements`  
-> **Started:** 2026-01-20
+> **Started:** 2026-01-20  
+> **Completed:** 2026-01-20
 
 ## Overview
 
@@ -42,11 +43,11 @@ These enhancements improve import compatibility with a wider variety of bank exp
 **So that** I can import files that have metadata rows before the actual data
 
 **Acceptance Criteria:**
-- [ ] Numeric input field to specify rows to skip (0-100, default 0)
-- [ ] Preview updates to show data starting from the specified row
+- [x] Numeric input field to specify rows to skip (0-100, default 0)
+- [x] Preview updates to show data starting from the specified row
 - [ ] Skipped rows are displayed separately (collapsible) for reference
-- [ ] Setting is saved with the import mapping template
-- [ ] Handles files where skip rows exceed total rows gracefully
+- [x] Setting is saved with the import mapping template
+- [x] Handles files where skip rows exceed total rows gracefully
 
 #### US-030-002: Auto-Detect Skippable Rows
 **As a** user  
@@ -60,6 +61,8 @@ These enhancements improve import compatibility with a wider variety of bank exp
 - [ ] User can accept suggestion or override
 - [ ] Auto-detection runs on file upload before mapping
 
+> **Note:** Auto-detection deferred to future enhancement. Manual configuration implemented.
+
 ### Debit/Credit Indicator Column
 
 #### US-030-003: Map Debit/Credit Indicator Column
@@ -68,11 +71,11 @@ These enhancements improve import compatibility with a wider variety of bank exp
 **So that** I can correctly import amounts from banks that use this format
 
 **Acceptance Criteria:**
-- [ ] New target field option: "Debit/Credit Indicator"
-- [ ] When selected, prompts for indicator value configuration
-- [ ] Works with a single Amount column (required when using indicator)
-- [ ] Shows warning if indicator mapped without Amount column
-- [ ] Shows warning if Amount not mapped when indicator is used
+- [x] New target field option: "Debit/Credit Indicator"
+- [x] When selected, prompts for indicator value configuration
+- [x] Works with a single Amount column (required when using indicator)
+- [x] Shows warning if indicator mapped without Amount column
+- [x] Shows warning if Amount not mapped when indicator is used
 
 #### US-030-004: Configure Indicator Values
 **As a** user  
@@ -80,12 +83,12 @@ These enhancements improve import compatibility with a wider variety of bank exp
 **So that** amounts are correctly signed during import
 
 **Acceptance Criteria:**
-- [ ] Text input for debit indicator values (comma-separated, e.g., "Debit,DR,D")
-- [ ] Text input for credit indicator values (comma-separated, e.g., "Credit,CR,C")
-- [ ] Case-insensitive matching by default with toggle for case-sensitive
+- [x] Text input for debit indicator values (comma-separated, e.g., "Debit,DR,D")
+- [x] Text input for credit indicator values (comma-separated, e.g., "Credit,CR,C")
+- [x] Case-insensitive matching by default with toggle for case-sensitive
 - [ ] Preview shows sample indicator values from data for reference
-- [ ] Error if a row's indicator doesn't match configured values
-- [ ] Settings saved with import mapping template
+- [x] Error if a row's indicator doesn't match configured values
+- [x] Settings saved with import mapping template
 
 #### US-030-005: Preview Indicator-Based Amounts
 **As a** user  
@@ -93,9 +96,9 @@ These enhancements improve import compatibility with a wider variety of bank exp
 **So that** I can verify the configuration is correct before importing
 
 **Acceptance Criteria:**
-- [ ] Preview shows original amount, indicator value, and resulting signed amount
-- [ ] Expenses shown as negative, income as positive
-- [ ] Rows with unrecognized indicators highlighted as warnings
+- [x] Preview shows original amount, indicator value, and resulting signed amount
+- [x] Expenses shown as negative, income as positive
+- [x] Rows with unrecognized indicators highlighted as warnings
 - [ ] Total debit/credit summary shown
 
 ---
