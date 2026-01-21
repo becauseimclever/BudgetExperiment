@@ -112,17 +112,24 @@
         </div>
 
         <div class="nav-section">
-            <NavLink class="nav-item" href="accounts" title="Accounts">
+            <button class="nav-item nav-section-toggle" @onclick="ToggleAccountsSection" title="Accounts">
                 <span class="nav-icon"><Icon Name="bank" Size="20" /></span>
                 @if (!IsCollapsed)
                 {
                     <span class="nav-text">Accounts</span>
+                    <span class="nav-chevron @(accountsExpanded ? "expanded" : "")">
+                        <Icon Name="chevron-down" Size="16" />
+                    </span>
                 }
-            </NavLink>
+            </button>
 
-            @if (!IsCollapsed && accounts.Count > 0)
+            @if (!IsCollapsed && accountsExpanded)
             {
                 <div class="nav-subitems">
+                    <NavLink class="nav-item nav-subitem" href="accounts" Match="NavLinkMatch.All" title="All Accounts">
+                        <span class="nav-icon"><Icon Name="list" Size="16" /></span>
+                        <span class="nav-text">All Accounts</span>
+                    </NavLink>
                     @foreach (var account in accounts)
                     {
                         <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name">
@@ -180,10 +187,16 @@
     private List<AccountDto> accounts = new();
     private bool isAuthenticated;
     private bool reportsExpanded;
+    private bool accountsExpanded = true;
 
     private void ToggleReportsSection()
     {
         reportsExpanded = !reportsExpanded;
+    }
+
+    private void ToggleAccountsSection()
+    {
+        accountsExpanded = !accountsExpanded;
     }
 
     /// <inheritdoc/>
