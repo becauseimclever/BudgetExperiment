@@ -514,14 +514,14 @@ Refs: #032"
 **Objective:** Expose suggestion functionality via REST API
 
 **Tasks:**
-- [ ] Create `CategorySuggestionsController`
-- [ ] Implement analyze endpoint
-- [ ] Implement CRUD endpoints for suggestions
-- [ ] Implement bulk accept endpoint
-- [ ] Implement rule preview endpoint
-- [ ] Create request/response DTOs
-- [ ] Add OpenAPI documentation
-- [ ] Write API integration tests
+- [x] Create `CategorySuggestionsController`
+- [x] Implement analyze endpoint
+- [x] Implement CRUD endpoints for suggestions
+- [x] Implement bulk accept endpoint
+- [x] Implement rule preview endpoint
+- [x] Create request/response DTOs
+- [x] Add OpenAPI documentation
+- [x] Write API integration tests
 
 **Commit:**
 ```bash

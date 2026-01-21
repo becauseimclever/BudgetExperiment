@@ -105,8 +105,14 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
     /// <inheritdoc />
     public async Task DeletePendingByOwnerAsync(string ownerId, CancellationToken cancellationToken = default)
     {
-        await _context.CategorySuggestions
+        // ExecuteDeleteAsync is not supported by the InMemory provider, so we use RemoveRange instead
+        var pendingSuggestions = await _context.CategorySuggestions
             .Where(s => s.OwnerId == ownerId && s.Status == SuggestionStatus.Pending)
-            .ExecuteDeleteAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        if (pendingSuggestions.Count > 0)
+        {
+            _context.CategorySuggestions.RemoveRange(pendingSuggestions);
+        }
     }
 }
