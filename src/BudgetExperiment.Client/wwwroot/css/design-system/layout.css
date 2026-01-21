@@ -501,12 +501,14 @@
 .app-content-wrapper {
   display: flex;
   flex: 1;
+  height: calc(100vh - 56px); /* Viewport minus header height */
   overflow: hidden;
 }
 
 /* Sidebar */
 .app-sidebar {
   flex-shrink: 0;
+  height: 100%;
   transition: width var(--transition-normal);
   overflow: hidden;
   background: var(--color-sidebar-bg);
