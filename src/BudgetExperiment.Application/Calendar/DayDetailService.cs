@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -82,7 +81,7 @@ public sealed class DayDetailService : IDayDetailService
                 Id = txn.Id,
                 Type = "transaction",
                 Description = txn.Description,
-                Amount = DomainToDtoMapper.ToDto(txn.Amount),
+                Amount = CommonMapper.ToDto(txn.Amount),
                 CategoryId = txn.CategoryId,
                 AccountName = accountMap.GetValueOrDefault(txn.AccountId, string.Empty),
                 AccountId = txn.AccountId,

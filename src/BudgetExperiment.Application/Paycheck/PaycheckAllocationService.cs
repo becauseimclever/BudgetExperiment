@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -56,6 +55,6 @@ public sealed class PaycheckAllocationService : IPaycheckAllocationService
             paycheckMoney);
 
         // Map to DTO and return
-        return DomainToDtoMapper.ToDto(summary);
+        return PaycheckMapper.ToDto(summary);
     }
 }

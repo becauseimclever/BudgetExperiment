@@ -3,7 +3,6 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Calendar;
@@ -39,6 +38,6 @@ public sealed class CalendarService
         CancellationToken cancellationToken = default)
     {
         var dailyTotals = await this._repository.GetDailyTotalsAsync(year, month, accountId, cancellationToken);
-        return dailyTotals.Select(DomainToDtoMapper.ToDto).ToList();
+        return dailyTotals.Select(AccountMapper.ToDto).ToList();
     }
 }

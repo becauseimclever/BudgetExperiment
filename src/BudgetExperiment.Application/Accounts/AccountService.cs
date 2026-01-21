@@ -3,7 +3,6 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Accounts;
@@ -39,7 +38,7 @@ public sealed class AccountService
     public async Task<AccountDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var account = await this._repository.GetByIdWithTransactionsAsync(id, cancellationToken);
-        return account is null ? null : DomainToDtoMapper.ToDto(account);
+        return account is null ? null : AccountMapper.ToDto(account);
     }
 
     /// <summary>
@@ -50,7 +49,7 @@ public sealed class AccountService
     public async Task<IReadOnlyList<AccountDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var accounts = await this._repository.GetAllAsync(cancellationToken);
-        return accounts.Select(DomainToDtoMapper.ToDto).ToList();
+        return accounts.Select(AccountMapper.ToDto).ToList();
     }
 
     /// <summary>
@@ -87,7 +86,7 @@ public sealed class AccountService
 
         await this._repository.AddAsync(account, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return DomainToDtoMapper.ToDto(account);
+        return AccountMapper.ToDto(account);
     }
 
     /// <summary>
@@ -133,7 +132,7 @@ public sealed class AccountService
         }
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return DomainToDtoMapper.ToDto(account);
+        return AccountMapper.ToDto(account);
     }
 
     /// <summary>

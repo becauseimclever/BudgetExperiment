@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -80,7 +79,7 @@ public sealed class TransactionListService : ITransactionListService
                 Type = "transaction",
                 Date = txn.Date,
                 Description = txn.Description,
-                Amount = DomainToDtoMapper.ToDto(txn.Amount),
+                Amount = CommonMapper.ToDto(txn.Amount),
                 CategoryId = txn.CategoryId,
                 CategoryName = txn.Category?.Name,
                 CreatedAt = txn.CreatedAt,

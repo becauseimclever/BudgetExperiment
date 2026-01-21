@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -63,7 +62,7 @@ public sealed class RecurringTransactionInstanceService : IRecurringTransactionI
             exceptionMap.TryGetValue(date, out var exception);
             generatedMap.TryGetValue(date, out var transactionId);
 
-            var instance = DomainToDtoMapper.ToInstanceDto(
+            var instance = RecurringMapper.ToInstanceDto(
                 recurring,
                 date,
                 exception,
@@ -110,7 +109,7 @@ public sealed class RecurringTransactionInstanceService : IRecurringTransactionI
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return DomainToDtoMapper.ToInstanceDto(recurring, instanceDate, exception);
+        return RecurringMapper.ToInstanceDto(recurring, instanceDate, exception);
     }
 
     /// <inheritdoc/>

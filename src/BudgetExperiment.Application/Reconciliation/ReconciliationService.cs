@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -51,7 +50,7 @@ public sealed class ReconciliationService : IReconciliationService
         CancellationToken cancellationToken = default)
     {
         var tolerances = request.Tolerances != null
-            ? DomainToDtoMapper.ToDomain(request.Tolerances)
+            ? ReconciliationMapper.ToDomain(request.Tolerances)
             : MatchingTolerances.Default;
 
         var matchesByTransaction = new Dictionary<Guid, IReadOnlyList<ReconciliationMatchDto>>();
@@ -126,7 +125,7 @@ public sealed class ReconciliationService : IReconciliationService
 
                 await this._matchRepository.AddAsync(match, cancellationToken);
 
-                matches.Add(DomainToDtoMapper.ToDto(
+                matches.Add(ReconciliationMapper.ToDto(
                     match,
                     transaction,
                     recurring.Description,
@@ -200,7 +199,7 @@ public sealed class ReconciliationService : IReconciliationService
             match.RecurringTransactionId,
             cancellationToken);
 
-        return DomainToDtoMapper.ToDto(
+        return ReconciliationMapper.ToDto(
             match,
             transaction,
             recurring?.Description,
@@ -221,7 +220,7 @@ public sealed class ReconciliationService : IReconciliationService
         match.Reject();
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return DomainToDtoMapper.ToDto(match);
+        return ReconciliationMapper.ToDto(match);
     }
 
     /// <inheritdoc />
@@ -308,7 +307,7 @@ public sealed class ReconciliationService : IReconciliationService
                         cancellationToken);
                     if (transaction != null)
                     {
-                        actualAmount = DomainToDtoMapper.ToDto(transaction.Amount);
+                        actualAmount = CommonMapper.ToDto(transaction.Amount);
                     }
                 }
                 else if (pendingMatch != null)
@@ -328,7 +327,7 @@ public sealed class ReconciliationService : IReconciliationService
                     RecurringTransactionId = instance.RecurringTransactionId,
                     Description = instance.Description,
                     InstanceDate = instance.InstanceDate,
-                    ExpectedAmount = DomainToDtoMapper.ToDto(instance.Amount),
+                    ExpectedAmount = CommonMapper.ToDto(instance.Amount),
                     Status = status,
                     MatchedTransactionId = matchedTransactionId,
                     ActualAmount = actualAmount,
@@ -389,7 +388,7 @@ public sealed class ReconciliationService : IReconciliationService
 
             if (existing != null)
             {
-                return DomainToDtoMapper.ToDto(existing, transaction, recurring.Description, recurring.Amount);
+                return ReconciliationMapper.ToDto(existing, transaction, recurring.Description, recurring.Amount);
             }
         }
 
@@ -417,7 +416,7 @@ public sealed class ReconciliationService : IReconciliationService
         await this._matchRepository.AddAsync(match, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return DomainToDtoMapper.ToDto(match, transaction, recurring.Description, recurring.Amount);
+        return ReconciliationMapper.ToDto(match, transaction, recurring.Description, recurring.Amount);
     }
 
     private async Task<IReadOnlyList<ReconciliationMatchDto>> EnrichMatchesWithDetailsAsync(
@@ -435,7 +434,7 @@ public sealed class ReconciliationService : IReconciliationService
                 match.RecurringTransactionId,
                 cancellationToken);
 
-            result.Add(DomainToDtoMapper.ToDto(
+            result.Add(ReconciliationMapper.ToDto(
                 match,
                 transaction,
                 recurring?.Description,

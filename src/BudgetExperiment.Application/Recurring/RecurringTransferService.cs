@@ -3,7 +3,6 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Recurring;
@@ -52,7 +51,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         }
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
     }
 
     /// <summary>
@@ -67,7 +66,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
         return recurring
-            .Select(r => DomainToDtoMapper.ToDto(
+            .Select(r => RecurringMapper.ToDto(
                 r,
                 accountMap.GetValueOrDefault(r.SourceAccountId, string.Empty),
                 accountMap.GetValueOrDefault(r.DestinationAccountId, string.Empty)))
@@ -87,7 +86,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
         return recurring
-            .Select(r => DomainToDtoMapper.ToDto(
+            .Select(r => RecurringMapper.ToDto(
                 r,
                 accountMap.GetValueOrDefault(r.SourceAccountId, string.Empty),
                 accountMap.GetValueOrDefault(r.DestinationAccountId, string.Empty)))
@@ -106,7 +105,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
         return recurring
-            .Select(r => DomainToDtoMapper.ToDto(
+            .Select(r => RecurringMapper.ToDto(
                 r,
                 accountMap.GetValueOrDefault(r.SourceAccountId, string.Empty),
                 accountMap.GetValueOrDefault(r.DestinationAccountId, string.Empty)))
@@ -149,7 +148,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._repository.AddAsync(recurring, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return DomainToDtoMapper.ToDto(recurring, sourceAccount.Name, destAccount.Name);
+        return RecurringMapper.ToDto(recurring, sourceAccount.Name, destAccount.Name);
     }
 
     /// <summary>
@@ -174,7 +173,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
     }
 
     /// <summary>
@@ -214,7 +213,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
     }
 
     /// <summary>
@@ -235,7 +234,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
     }
 
     /// <summary>
@@ -261,7 +260,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
     }
 
     /// <summary>
@@ -295,7 +294,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
     }
 
     private async Task<(string sourceName, string destName)> GetAccountNamesAsync(

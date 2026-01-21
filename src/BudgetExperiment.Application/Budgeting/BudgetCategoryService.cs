@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -37,21 +36,21 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
     public async Task<BudgetCategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var category = await this._repository.GetByIdAsync(id, cancellationToken);
-        return category is null ? null : DomainToDtoMapper.ToDto(category);
+        return category is null ? null : BudgetMapper.ToDto(category);
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetCategoryDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var categories = await this._repository.GetAllAsync(cancellationToken);
-        return categories.Select(DomainToDtoMapper.ToDto).ToList();
+        return categories.Select(BudgetMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetCategoryDto>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
         var categories = await this._repository.GetActiveAsync(cancellationToken);
-        return categories.Select(DomainToDtoMapper.ToDto).ToList();
+        return categories.Select(BudgetMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
@@ -75,7 +74,7 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
         }
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return DomainToDtoMapper.ToDto(category);
+        return BudgetMapper.ToDto(category);
     }
 
     /// <inheritdoc/>
@@ -94,7 +93,7 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
             dto.SortOrder ?? category.SortOrder);
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return DomainToDtoMapper.ToDto(category);
+        return BudgetMapper.ToDto(category);
     }
 
     /// <inheritdoc/>

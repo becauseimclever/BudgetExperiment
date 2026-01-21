@@ -3,7 +3,6 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Recurring;
@@ -52,7 +51,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         }
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
     /// <summary>
@@ -67,7 +66,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
         return recurring
-            .Select(r => DomainToDtoMapper.ToDto(r, accountMap.GetValueOrDefault(r.AccountId, string.Empty)))
+            .Select(r => RecurringMapper.ToDto(r, accountMap.GetValueOrDefault(r.AccountId, string.Empty)))
             .ToList();
     }
 
@@ -84,7 +83,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         var accountName = account?.Name ?? string.Empty;
 
         return recurring
-            .Select(r => DomainToDtoMapper.ToDto(r, accountName))
+            .Select(r => RecurringMapper.ToDto(r, accountName))
             .ToList();
     }
 
@@ -117,7 +116,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._repository.AddAsync(recurring, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return DomainToDtoMapper.ToDto(recurring, account.Name);
+        return RecurringMapper.ToDto(recurring, account.Name);
     }
 
     /// <summary>
@@ -142,7 +141,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
     /// <summary>
@@ -182,7 +181,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
     /// <summary>
@@ -203,7 +202,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
     /// <summary>
@@ -229,7 +228,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
     /// <summary>
@@ -263,7 +262,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return DomainToDtoMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
     private static RecurrencePattern CreateRecurrencePattern(

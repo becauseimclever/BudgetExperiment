@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -57,7 +56,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
             goal.TargetAmount,
             spent,
             transactionCount: 0);
-        return DomainToDtoMapper.ToDto(progress);
+        return BudgetMapper.ToDto(progress);
     }
 
     /// <inheritdoc/>
@@ -103,7 +102,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
                     transactionCount: 0);
             }
 
-            categoryProgress.Add(DomainToDtoMapper.ToDto(progress));
+            categoryProgress.Add(BudgetMapper.ToDto(progress));
             totalSpent = MoneyValue.Create(totalSpent.Currency, totalSpent.Amount + spent.Amount);
         }
 
@@ -118,9 +117,9 @@ public sealed class BudgetProgressService : IBudgetProgressService
             Year = year,
             Month = month,
             CategoryProgress = categoryProgress,
-            TotalBudgeted = DomainToDtoMapper.ToDto(totalBudgeted),
-            TotalSpent = DomainToDtoMapper.ToDto(totalSpent),
-            TotalRemaining = DomainToDtoMapper.ToDto(MoneyValue.Create(totalBudgeted.Currency, totalBudgeted.Amount - totalSpent.Amount)),
+            TotalBudgeted = CommonMapper.ToDto(totalBudgeted),
+            TotalSpent = CommonMapper.ToDto(totalSpent),
+            TotalRemaining = CommonMapper.ToDto(MoneyValue.Create(totalBudgeted.Currency, totalBudgeted.Amount - totalSpent.Amount)),
             CategoriesOnTrack = categoriesOnTrack,
             CategoriesWarning = categoriesWarning,
             CategoriesOverBudget = categoriesOverBudget,

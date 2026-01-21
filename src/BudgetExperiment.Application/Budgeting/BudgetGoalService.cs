@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -34,21 +33,21 @@ public sealed class BudgetGoalService : IBudgetGoalService
     public async Task<BudgetGoalDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var goal = await this._repository.GetByIdAsync(id, cancellationToken);
-        return goal is null ? null : DomainToDtoMapper.ToDto(goal);
+        return goal is null ? null : BudgetMapper.ToDto(goal);
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetGoalDto>> GetByMonthAsync(int year, int month, CancellationToken cancellationToken = default)
     {
         var goals = await this._repository.GetByMonthAsync(year, month, cancellationToken);
-        return goals.Select(DomainToDtoMapper.ToDto).ToList();
+        return goals.Select(BudgetMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetGoalDto>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
         var goals = await this._repository.GetByCategoryAsync(categoryId, cancellationToken);
-        return goals.Select(DomainToDtoMapper.ToDto).ToList();
+        return goals.Select(BudgetMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
@@ -67,13 +66,13 @@ public sealed class BudgetGoalService : IBudgetGoalService
         {
             existingGoal.UpdateTarget(targetAmount);
             await this._unitOfWork.SaveChangesAsync(cancellationToken);
-            return DomainToDtoMapper.ToDto(existingGoal);
+            return BudgetMapper.ToDto(existingGoal);
         }
 
         var goal = BudgetGoal.Create(categoryId, dto.Year, dto.Month, targetAmount);
         await this._repository.AddAsync(goal, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return DomainToDtoMapper.ToDto(goal);
+        return BudgetMapper.ToDto(goal);
     }
 
     /// <inheritdoc/>

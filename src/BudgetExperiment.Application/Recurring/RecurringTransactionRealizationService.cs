@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -76,6 +75,6 @@ public sealed class RecurringTransactionRealizationService : IRecurringTransacti
         await _transactionRepository.AddAsync(transaction, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return DomainToDtoMapper.ToDto(transaction);
+        return AccountMapper.ToDto(transaction);
     }
 }

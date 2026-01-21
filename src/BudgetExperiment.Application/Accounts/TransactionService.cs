@@ -3,7 +3,6 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Accounts;
@@ -46,7 +45,7 @@ public sealed class TransactionService : ITransactionService
     public async Task<TransactionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
-        return transaction is null ? null : DomainToDtoMapper.ToDto(transaction);
+        return transaction is null ? null : AccountMapper.ToDto(transaction);
     }
 
     /// <summary>
@@ -60,7 +59,7 @@ public sealed class TransactionService : ITransactionService
     public async Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default)
     {
         var transactions = await this._repository.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
-        return transactions.Select(DomainToDtoMapper.ToDto).ToList();
+        return transactions.Select(AccountMapper.ToDto).ToList();
     }
 
     /// <summary>
@@ -88,7 +87,7 @@ public sealed class TransactionService : ITransactionService
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
         var transaction = account.AddTransaction(amount, dto.Date, dto.Description, categoryId);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return DomainToDtoMapper.ToDto(transaction);
+        return AccountMapper.ToDto(transaction);
     }
 
     /// <summary>
@@ -113,7 +112,7 @@ public sealed class TransactionService : ITransactionService
         transaction.UpdateCategory(dto.CategoryId);
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return DomainToDtoMapper.ToDto(transaction);
+        return AccountMapper.ToDto(transaction);
     }
 }
 

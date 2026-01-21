@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -46,14 +45,14 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
             rules = await this._repository.ListAsync(0, int.MaxValue, cancellationToken);
         }
 
-        return rules.Select(DomainToDtoMapper.ToDto).ToList();
+        return rules.Select(CategorizationMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
     public async Task<CategorizationRuleDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var rule = await this._repository.GetByIdAsync(id, cancellationToken);
-        return rule is null ? null : DomainToDtoMapper.ToDto(rule);
+        return rule is null ? null : CategorizationMapper.ToDto(rule);
     }
 
     /// <inheritdoc/>
@@ -79,7 +78,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         // Re-fetch to include category navigation property
         var created = await this._repository.GetByIdAsync(rule.Id, cancellationToken);
-        return DomainToDtoMapper.ToDto(created!);
+        return CategorizationMapper.ToDto(created!);
     }
 
     /// <inheritdoc/>
@@ -101,7 +100,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         // Re-fetch to include category navigation property
         var updated = await this._repository.GetByIdAsync(rule.Id, cancellationToken);
-        return DomainToDtoMapper.ToDto(updated!);
+        return CategorizationMapper.ToDto(updated!);
     }
 
     /// <inheritdoc/>

@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Application.Mapping;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -75,7 +74,7 @@ public sealed class RecurringTransferInstanceService : IRecurringTransferInstanc
             sourceMap.TryGetValue(date, out var sourceTransactionId);
             destMap.TryGetValue(date, out var destTransactionId);
 
-            var instance = DomainToDtoMapper.ToTransferInstanceDto(
+            var instance = RecurringMapper.ToTransferInstanceDto(
                 recurring,
                 date,
                 accounts.SourceName,
@@ -126,7 +125,7 @@ public sealed class RecurringTransferInstanceService : IRecurringTransferInstanc
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return DomainToDtoMapper.ToTransferInstanceDto(recurring, instanceDate, accounts.SourceName, accounts.DestName, exception);
+        return RecurringMapper.ToTransferInstanceDto(recurring, instanceDate, accounts.SourceName, accounts.DestName, exception);
     }
 
     /// <inheritdoc/>
