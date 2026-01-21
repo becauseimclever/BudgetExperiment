@@ -50,6 +50,11 @@
                                 Credit Amount (income)
                             </option>
                         </optgroup>
+                        <optgroup label="Indicator Mode">
+                            <option value="@ImportField.DebitCreditIndicator" disabled="@IsFieldUsed(ImportField.DebitCreditIndicator, mapping)">
+                                Debit/Credit Indicator (DR/CR)
+                            </option>
+                        </optgroup>
                         <optgroup label="Optional">
                             <option value="@ImportField.Category" disabled="@IsFieldUsed(ImportField.Category, mapping)">
                                 Category

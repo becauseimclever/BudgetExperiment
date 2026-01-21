@@ -12,6 +12,9 @@
         <option value="@((int)AmountParseMode.PositiveIsExpense)">
             Single column (positive = expense)
         </option>
+        <option value="@((int)AmountParseMode.IndicatorColumn)">
+            Single amount with indicator column
+        </option>
     </select>
     <small class="text-secondary">
         @switch (Value)
@@ -24,6 +27,9 @@
                 break;
             case AmountParseMode.PositiveIsExpense:
                 <text>Positive amounts are expenses, negative amounts are income (inverted)</text>
+                break;
+            case AmountParseMode.IndicatorColumn:
+                <text>Use when amounts are positive and a separate column indicates debit or credit (e.g., "DR"/"CR")</text>
                 break;
         }
     </small>

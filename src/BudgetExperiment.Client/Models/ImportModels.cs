@@ -135,6 +135,16 @@ public sealed class ImportWizardState
     public DuplicateDetectionSettingsDto DuplicateSettings { get; set; } = new();
 
     /// <summary>
+    /// Gets or sets the number of data rows to skip after the header.
+    /// </summary>
+    public int RowsToSkip { get; set; }
+
+    /// <summary>
+    /// Gets or sets the debit/credit indicator settings.
+    /// </summary>
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; set; }
+
+    /// <summary>
     /// Gets or sets the preview result.
     /// </summary>
     public ImportPreviewResult? PreviewResult { get; set; }
@@ -157,12 +167,22 @@ public sealed class ImportWizardState
     /// <summary>
     /// Gets a value indicating whether required fields are mapped.
     /// </summary>
-    public bool HasRequiredMappings =>
-        this.ColumnMappings.Any(m => m.TargetField == ImportField.Date) &&
-        this.ColumnMappings.Any(m => m.TargetField == ImportField.Description) &&
-        (this.ColumnMappings.Any(m => m.TargetField == ImportField.Amount) ||
-         (this.ColumnMappings.Any(m => m.TargetField == ImportField.DebitAmount) &&
-          this.ColumnMappings.Any(m => m.TargetField == ImportField.CreditAmount)));
+    public bool HasRequiredMappings
+    {
+        get
+        {
+            var hasDate = this.ColumnMappings.Any(m => m.TargetField == ImportField.Date);
+            var hasDescription = this.ColumnMappings.Any(m => m.TargetField == ImportField.Description);
+            var hasAmount = this.ColumnMappings.Any(m => m.TargetField == ImportField.Amount);
+            var hasDebitCredit = this.ColumnMappings.Any(m => m.TargetField == ImportField.DebitAmount) &&
+                                  this.ColumnMappings.Any(m => m.TargetField == ImportField.CreditAmount);
+            var hasIndicator = this.AmountMode == AmountParseMode.IndicatorColumn &&
+                                this.ColumnMappings.Any(m => m.TargetField == ImportField.DebitCreditIndicator) &&
+                                this.IndicatorSettings != null;
+
+            return hasDate && hasDescription && (hasAmount || hasDebitCredit || hasIndicator);
+        }
+    }
 
     /// <summary>
     /// Resets the wizard state.
@@ -176,6 +196,8 @@ public sealed class ImportWizardState
         this.DateFormat = "MM/dd/yyyy";
         this.AmountMode = AmountParseMode.NegativeIsExpense;
         this.DuplicateSettings = new();
+        this.RowsToSkip = 0;
+        this.IndicatorSettings = null;
         this.PreviewResult = null;
         this.SelectedRowIndices = [];
         this.FileName = string.Empty;
