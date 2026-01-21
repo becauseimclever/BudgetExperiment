@@ -24,19 +24,30 @@ The existing navigation implementation has several UX limitations:
 
 | Current Name | Route | Observations |
 |--------------|-------|--------------|
-| Calendar | `/` | Clear, but could be "Dashboard" or "Calendar View" |
+| Calendar | `/` | Clear - main landing page |
 | Recurring | `/recurring` | Shortened from "Recurring Transactions" - may confuse |
 | Recurring Transfers | `/recurring-transfers` | Long, verbose |
+| Reconciliation | `/reconciliation` | Clear - matches recurring transactions to actual imports |
 | Transfers | `/transfers` | Clear |
 | Paycheck Planner | `/paycheck-planner` | Clear, descriptive |
 | Categories | `/categories` | Could be "Budget Categories" for clarity |
 | Rules | `/rules` | Unclear - "Auto-Rules" or "Categorization" better |
 | Budget | `/budget` | Clear |
-| Accounts | `/accounts` | Clear - parent for sub-items |
+| Reports | `/reports` | Collapsible section (already implemented) with Overview and Categories sub-items |
+| Accounts | `/accounts` | Clear - parent for sub-items, **NOT collapsible** (needs implementation) |
 | Import | `/import` | Clear |
 | AI Suggestions | `/ai/suggestions` | Clear |
 | AI Settings | `/ai/settings` | **Remove** - move to Settings page as a tab/section |
 | Settings | `/settings` | Clear - will include AI Settings |
+
+### Existing State (as of 2026-01-20)
+
+- ✅ **Reports section is already collapsible** with `reportsExpanded` toggle
+- ❌ **Accounts section is NOT collapsible** - sub-items always visible when sidebar expanded
+- ✅ **Sidebar collapse/expand works** with `IsCollapsed` parameter
+- ❌ **Sidebar collapsed state does NOT persist** - no localStorage integration
+- ❌ **No tooltips in collapsed mode** - icons lack hover tooltips
+- ✅ **Reconciliation nav item exists** (added in feature 028)
 
 ### Target State
 
@@ -111,12 +122,14 @@ After implementation:
 | Calendar | Calendar | Keep - clear and recognizable |
 | Recurring | Recurring Bills | Clarifies these are recurring expenses/bills |
 | Recurring Transfers | Auto-Transfers | Shorter, implies automation |
+| Reconciliation | Reconciliation | Keep - clear and descriptive |
 | Transfers | Transfers | Keep - clear |
 | Paycheck Planner | Paycheck Planner | Keep - descriptive |
 | Categories | Categories | Keep - understood in budget context |
 | Rules | Auto-Categorize | Describes the action, not the object |
 | Budget | Budget | Keep - clear |
-| Accounts | Accounts | Keep - parent section |
+| Reports | Reports | Keep - collapsible section already works |
+| Accounts | Accounts | Keep - parent section (will add collapsible behavior) |
 | Import | Import | Keep - clear |
 | AI Suggestions | Smart Insights | More user-friendly than "AI" |
 | AI Settings | *(removed)* | Moved to Settings page as "AI" tab/section |
@@ -124,12 +137,12 @@ After implementation:
 
 ### Architecture Changes
 
-No new components needed. Modifications to:
+Existing collapsible pattern can be reused from Reports section. Modifications to:
 
-1. **MainLayout.razor** - Adjust layout structure for fixed sidebar
-2. **NavMenu.razor** - Add collapsible accounts section, update link names
-3. **NavMenu.razor.css** - Styles for collapsible section, scrolling
-4. **layout.css** - Fix sidebar positioning, main content scrolling
+1. **MainLayout.razor** - Add localStorage persistence for sidebar collapsed state
+2. **NavMenu.razor** - Add collapsible accounts section (mirroring Reports pattern), update link names
+3. **NavMenu.razor.css** - Ensure nav-items scrolls within fixed sidebar, tooltip styles
+4. **layout.css** - Ensure fixed sidebar positioning (may already be correct)
 
 ### CSS Layout Changes
 
@@ -159,28 +172,32 @@ No new components needed. Modifications to:
 
 ### Component Changes
 
-#### NavMenu.razor - Collapsible Accounts
+#### NavMenu.razor - Collapsible Accounts (matches Reports section pattern)
 
 ```razor
-@* Accounts section with collapsible sub-items *@
+@* Accounts section with collapsible sub-items - mirrors existing Reports section *@
 <div class="nav-section">
-    <button class="nav-section-toggle" @onclick="ToggleAccountsExpanded">
+    <button class="nav-item nav-section-toggle" @onclick="ToggleAccountsSection" title="Accounts">
         <span class="nav-icon"><Icon Name="bank" Size="20" /></span>
         @if (!IsCollapsed)
         {
             <span class="nav-text">Accounts</span>
-            <span class="nav-chevron">
-                <Icon Name="@(accountsExpanded ? "chevron-down" : "chevron-right")" Size="16" />
+            <span class="nav-chevron @(accountsExpanded ? "expanded" : "")">
+                <Icon Name="chevron-down" Size="16" />
             </span>
         }
     </button>
-    
+
     @if (!IsCollapsed && accountsExpanded && accounts.Count > 0)
     {
         <div class="nav-subitems">
+            <NavLink class="nav-item nav-subitem" href="accounts" Match="NavLinkMatch.All" title="All Accounts">
+                <span class="nav-icon"><Icon Name="list" Size="16" /></span>
+                <span class="nav-text">All Accounts</span>
+            </NavLink>
             @foreach (var account in accounts)
             {
-                <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")">
+                <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name">
                     <span class="nav-icon"><Icon Name="credit-card" Size="16" /></span>
                     <span class="nav-text">@TruncateName(account.Name)</span>
                 </NavLink>
@@ -237,15 +254,15 @@ Refs: #031"
 
 ### Phase 2: Collapsible Accounts Section
 
-**Objective:** Add expand/collapse functionality to the accounts section
+**Objective:** Add expand/collapse functionality to the accounts section (matching existing Reports pattern)
 
 **Tasks:**
-- [ ] Add `accountsExpanded` state to NavMenu.razor
-- [ ] Add toggle button/header for accounts section
+- [ ] Add `accountsExpanded` state to NavMenu.razor (mirrors `reportsExpanded`)
+- [ ] Convert Accounts section to use toggle button like Reports
 - [ ] Add chevron icon indicator
 - [ ] Implement `sessionStorage` persistence for expanded state
-- [ ] Style collapsible section with transition
-- [ ] Ensure works when sidebar is collapsed (icon only)
+- [ ] Add "All Accounts" link as first sub-item when expanded
+- [ ] Ensure works when sidebar is collapsed (icon only, still navigates to /accounts)
 
 **Commit:**
 ```bash
@@ -271,7 +288,8 @@ Refs: #031"
 - [ ] Update "Recurring Transfers" → "Auto-Transfers"
 - [ ] Update "Rules" → "Auto-Categorize"
 - [ ] Update "AI Suggestions" → "Smart Insights"
-- [ ] Update title attributes to match
+- [ ] Keep "Reconciliation" as is (clear and descriptive)
+- [ ] Update title attributes to match visible text
 - [ ] Verify icon choices still appropriate
 
 **Commit:**
@@ -443,7 +461,10 @@ No security implications - this is a UI/UX enhancement only.
 
 - [MainLayout.razor](../src/BudgetExperiment.Client/Layout/MainLayout.razor)
 - [NavMenu.razor](../src/BudgetExperiment.Client/Components/Navigation/NavMenu.razor)
+- [NavMenu.razor.css](../src/BudgetExperiment.Client/Components/Navigation/NavMenu.razor.css)
 - [layout.css](../src/BudgetExperiment.Client/wwwroot/css/design-system/layout.css)
+- [Settings.razor](../src/BudgetExperiment.Client/Pages/Settings.razor)
+- [AiSettings.razor](../src/BudgetExperiment.Client/Pages/AiSettings.razor)
 
 ---
 
@@ -452,3 +473,4 @@ No security implications - this is a UI/UX enhancement only.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-19 | Initial draft | Copilot |
+| 2026-01-20 | Updated after reviewing codebase: added Reconciliation link, noted Reports section already collapsible, updated references, corrected component example to match existing pattern | Copilot |
