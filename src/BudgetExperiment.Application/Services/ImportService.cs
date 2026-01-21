@@ -95,6 +95,20 @@ public sealed class ImportService : IImportService
             return new ImportPreviewResult();
         }
 
+        // Apply skip rows - skip the first N data rows (metadata rows)
+        var rowsToProcess = request.Rows;
+        var skippedRows = new List<IReadOnlyList<string>>();
+        if (request.RowsToSkip > 0 && request.RowsToSkip < request.Rows.Count)
+        {
+            skippedRows = request.Rows.Take(request.RowsToSkip).ToList();
+            rowsToProcess = request.Rows.Skip(request.RowsToSkip).ToList();
+        }
+        else if (request.RowsToSkip >= request.Rows.Count)
+        {
+            // All rows are skipped - nothing to process
+            return new ImportPreviewResult();
+        }
+
         // Load active categorization rules
         var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
 
@@ -109,7 +123,7 @@ public sealed class ImportService : IImportService
         IReadOnlyList<Transaction> existingTransactions = [];
         if (request.DuplicateSettings.Enabled)
         {
-            var dates = ExtractDatesFromRows(request.Rows, request.Mappings, request.DateFormat);
+            var dates = ExtractDatesFromRows(rowsToProcess, request.Mappings, request.DateFormat);
             if (dates.Count > 0)
             {
                 var minDate = dates.Min().AddDays(-request.DuplicateSettings.LookbackDays);
@@ -119,17 +133,18 @@ public sealed class ImportService : IImportService
             }
         }
 
-        // Process each row
+        // Process each row (using filtered rows after skip)
         var previewRows = new List<ImportPreviewRow>();
-        for (int i = 0; i < request.Rows.Count; i++)
+        for (int i = 0; i < rowsToProcess.Count; i++)
         {
-            var row = request.Rows[i];
+            var row = rowsToProcess[i];
             var previewRow = ProcessRow(
-                i + 1, // 1-based row index for display
+                request.RowsToSkip + i + 1, // Row index accounts for skipped rows + 1-based display
                 row,
                 request.Mappings,
                 request.DateFormat,
                 request.AmountMode,
+                request.IndicatorSettings,
                 rules,
                 categoryByName,
                 existingTransactions,
@@ -504,6 +519,7 @@ public sealed class ImportService : IImportService
         IReadOnlyList<ColumnMappingDto> mappings,
         string dateFormat,
         AmountParseMode amountMode,
+        DebitCreditIndicatorSettingsDto? indicatorSettings,
         IReadOnlyList<CategorizationRule> rules,
         Dictionary<string, BudgetCategory> categoryByName,
         IReadOnlyList<Transaction> existingTransactions,
@@ -520,6 +536,7 @@ public sealed class ImportService : IImportService
         string? creditStr = null;
         string? categoryName = null;
         string? reference = null;
+        string? indicatorValue = null;
 
         foreach (var mapping in mappings)
         {
@@ -557,6 +574,9 @@ public sealed class ImportService : IImportService
                 case ImportField.Reference:
                     reference = value;
                     break;
+                case ImportField.DebitCreditIndicator:
+                    indicatorValue = value;
+                    break;
             }
         }
 
@@ -577,7 +597,37 @@ public sealed class ImportService : IImportService
 
         // Parse amount
         decimal? amount = null;
-        if (!string.IsNullOrEmpty(amountStr))
+        if (amountMode == AmountParseMode.IndicatorColumn && indicatorSettings != null && indicatorSettings.ColumnIndex >= 0)
+        {
+            // Use indicator column to determine sign
+            if (!string.IsNullOrEmpty(amountStr))
+            {
+                var rawAmount = ParseAmountValue(amountStr);
+                if (rawAmount.HasValue)
+                {
+                    var signMultiplier = GetIndicatorSignMultiplier(indicatorValue, indicatorSettings);
+                    if (signMultiplier.HasValue)
+                    {
+                        amount = Math.Abs(rawAmount.Value) * signMultiplier.Value;
+                    }
+                    else
+                    {
+                        // Unrecognized indicator - use the amount as-is but add warning
+                        amount = rawAmount.Value;
+                        warnings.Add($"Unrecognized indicator value: '{indicatorValue}'");
+                    }
+                }
+                else
+                {
+                    errors.Add($"Could not parse amount: '{amountStr}'");
+                }
+            }
+            else
+            {
+                errors.Add("Amount is required when using indicator column mode");
+            }
+        }
+        else if (!string.IsNullOrEmpty(amountStr))
         {
             amount = ParseAmount(amountStr, amountMode);
             if (!amount.HasValue)
@@ -794,6 +844,37 @@ public sealed class ImportService : IImportService
         }
 
         return null;
+    }
+
+    private static int? GetIndicatorSignMultiplier(string? indicatorValue, DebitCreditIndicatorSettingsDto settings)
+    {
+        if (string.IsNullOrWhiteSpace(indicatorValue))
+        {
+            return null;
+        }
+
+        var trimmedValue = indicatorValue.Trim();
+        var comparison = settings.CaseSensitive
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
+
+        // Parse comma-separated indicator values
+        var debitIndicators = settings.DebitIndicators
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var creditIndicators = settings.CreditIndicators
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (debitIndicators.Any(d => string.Equals(d, trimmedValue, comparison)))
+        {
+            return -1; // Debit = expense = negative
+        }
+
+        if (creditIndicators.Any(c => string.Equals(c, trimmedValue, comparison)))
+        {
+            return 1; // Credit = income = positive
+        }
+
+        return null; // Unrecognized indicator
     }
 
     private static Guid? FindDuplicate(
