@@ -5,6 +5,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
 
 @implements IDisposable
 
@@ -176,19 +177,37 @@
     [Parameter]
     public bool IsCollapsed { get; set; }
 
+    private const string ReportsExpandedStorageKey = "budget-experiment-reports-expanded";
+    private const string AccountsExpandedStorageKey = "budget-experiment-accounts-expanded";
+
     private List<AccountDto> accounts = new();
     private bool isAuthenticated;
     private bool reportsExpanded;
     private bool accountsExpanded = true;
+    private bool hasLoadedState;
 
-    private void ToggleReportsSection()
+    private async Task ToggleReportsSection()
     {
         reportsExpanded = !reportsExpanded;
+        await SaveExpandedStateAsync(ReportsExpandedStorageKey, reportsExpanded);
     }
 
-    private void ToggleAccountsSection()
+    private async Task ToggleAccountsSection()
     {
         accountsExpanded = !accountsExpanded;
+        await SaveExpandedStateAsync(AccountsExpandedStorageKey, accountsExpanded);
+    }
+
+    private async Task SaveExpandedStateAsync(string key, bool value)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", key, value.ToString().ToLowerInvariant());
+        }
+        catch
+        {
+            // Ignore storage errors
+        }
     }
 
     /// <inheritdoc/>
@@ -202,6 +221,35 @@
         if (isAuthenticated)
         {
             await LoadAccountsAsync();
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasLoadedState)
+        {
+            hasLoadedState = true;
+            try
+            {
+                var reportsState = await JSRuntime.InvokeAsync<string?>("sessionStorage.getItem", ReportsExpandedStorageKey);
+                if (bool.TryParse(reportsState, out var reports))
+                {
+                    reportsExpanded = reports;
+                }
+
+                var accountsState = await JSRuntime.InvokeAsync<string?>("sessionStorage.getItem", AccountsExpandedStorageKey);
+                if (bool.TryParse(accountsState, out var accts))
+                {
+                    accountsExpanded = accts;
+                }
+
+                StateHasChanged();
+            }
+            catch
+            {
+                // Ignore storage errors - use default state
+            }
         }
     }
 

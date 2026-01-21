@@ -85,7 +85,7 @@ After implementation:
 - [x] Account section has expand/collapse toggle
 - [x] Toggle shows visual indicator (chevron/arrow)
 - [x] Collapsed state hides account sub-items
-- [ ] State persists across page navigations (session storage)
+- [x] State persists across page navigations (session storage)
 - [x] Works in both expanded and collapsed sidebar modes
 
 #### US-031-003: Collapsible Sidebar to Icons
@@ -260,7 +260,7 @@ Refs: #031"
 - [x] Add `accountsExpanded` state to NavMenu.razor (mirrors `reportsExpanded`)
 - [x] Convert Accounts section to use toggle button like Reports
 - [x] Add chevron icon indicator
-- [ ] Implement `sessionStorage` persistence for expanded state
+- [x] Implement `sessionStorage` persistence for expanded state
 - [x] Add "All Accounts" link as first sub-item when expanded
 - [x] Ensure works when sidebar is collapsed (icon only, still navigates to /accounts)
 
