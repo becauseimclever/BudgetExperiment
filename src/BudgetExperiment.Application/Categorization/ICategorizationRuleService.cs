@@ -36,6 +36,32 @@ public interface ICategorizationRuleService
     Task<CategorizationRuleDto> CreateAsync(CategorizationRuleCreateDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates multiple categorization rules from a category suggestion.
+    /// </summary>
+    /// <param name="categoryId">The category to assign the rules to.</param>
+    /// <param name="patterns">The patterns to create rules for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created rules.</returns>
+    Task<IReadOnlyList<CategorizationRuleDto>> CreateBulkFromPatternsAsync(
+        Guid categoryId,
+        IEnumerable<string> patterns,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks for conflicts between a pattern and existing rules.
+    /// </summary>
+    /// <param name="pattern">The pattern to check.</param>
+    /// <param name="matchType">The match type.</param>
+    /// <param name="excludeRuleId">Optional rule ID to exclude from conflict check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of conflicting rules.</returns>
+    Task<IReadOnlyList<CategorizationRuleDto>> CheckConflictsAsync(
+        string pattern,
+        string matchType,
+        Guid? excludeRuleId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates an existing categorization rule.
     /// </summary>
     /// <param name="id">The rule identifier.</param>

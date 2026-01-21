@@ -104,6 +104,113 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     }
 
     /// <inheritdoc/>
+    public async Task<IReadOnlyList<CategorizationRuleDto>> CreateBulkFromPatternsAsync(
+        Guid categoryId,
+        IEnumerable<string> patterns,
+        CancellationToken cancellationToken = default)
+    {
+        var createdRules = new List<CategorizationRuleDto>();
+        var currentPriority = await this._repository.GetNextPriorityAsync(cancellationToken);
+
+        foreach (var pattern in patterns)
+        {
+            var ruleName = GenerateRuleName(pattern);
+            var rule = CategorizationRule.Create(
+                ruleName,
+                RuleMatchType.Contains,
+                pattern,
+                categoryId,
+                currentPriority++,
+                caseSensitive: false);
+
+            await this._repository.AddAsync(rule, cancellationToken);
+        }
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Re-fetch all rules to get the complete list with navigation properties
+        var allRules = await this._repository.ListAsync(0, int.MaxValue, cancellationToken);
+        var patternSet = new HashSet<string>(patterns, StringComparer.OrdinalIgnoreCase);
+        var matchingRules = allRules.Where(r => patternSet.Contains(r.Pattern)).ToList();
+
+        return matchingRules.Select(CategorizationMapper.ToDto).ToList();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<CategorizationRuleDto>> CheckConflictsAsync(
+        string pattern,
+        string matchType,
+        Guid? excludeRuleId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var allRules = await this._repository.GetActiveByPriorityAsync(cancellationToken);
+
+        // Find rules with overlapping patterns
+        var conflicts = new List<CategorizationRuleDto>();
+
+        foreach (var rule in allRules)
+        {
+            if (excludeRuleId.HasValue && rule.Id == excludeRuleId.Value)
+            {
+                continue;
+            }
+
+            // Check if patterns overlap (simple heuristic - more sophisticated matching could be added)
+            var patternsOverlap = PatternsMightOverlap(pattern, rule.Pattern, matchType, rule.MatchType.ToString());
+            if (patternsOverlap)
+            {
+                conflicts.Add(CategorizationMapper.ToDto(rule));
+            }
+        }
+
+        return conflicts;
+    }
+
+    /// <summary>
+    /// Generates a human-readable rule name from a pattern.
+    /// </summary>
+    private static string GenerateRuleName(string pattern)
+    {
+        // Capitalize and clean up the pattern for a rule name
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return "New Rule";
+        }
+
+        var name = pattern.Trim();
+        if (name.Length > 0)
+        {
+            name = char.ToUpperInvariant(name[0]) + name.Substring(1).ToLowerInvariant();
+        }
+
+        return $"Auto: {name}";
+    }
+
+    /// <summary>
+    /// Determines if two patterns might overlap in their matches.
+    /// </summary>
+    private static bool PatternsMightOverlap(string pattern1, string pattern2, string matchType1, string matchType2)
+    {
+        var p1 = pattern1.ToUpperInvariant();
+        var p2 = pattern2.ToUpperInvariant();
+
+        // If patterns are the same, they definitely overlap
+        if (p1 == p2)
+        {
+            return true;
+        }
+
+        // If one pattern contains the other, they might overlap
+        if (p1.Contains(p2, StringComparison.OrdinalIgnoreCase) ||
+            p2.Contains(p1, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <inheritdoc/>
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var rule = await this._repository.GetByIdAsync(id, cancellationToken);
