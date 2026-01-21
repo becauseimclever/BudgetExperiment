@@ -313,4 +313,108 @@ public class ImportMappingRepositoryTests
         Assert.Equal("yyyy-MM-dd", retrieved.DateFormat);
         Assert.Equal(AmountParseMode.PositiveIsExpense, retrieved.AmountMode);
     }
+
+    [Fact]
+    public async Task SkipRowsSettings_Are_Persisted_And_Retrieved()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new ImportMappingRepository(context);
+        var userId = Guid.NewGuid();
+
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+            new() { ColumnIndex = 1, ColumnHeader = "Amount", TargetField = ImportField.Amount },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test Mapping With Skip Rows", mappings);
+        importMapping.UpdateSkipRowsSettings(SkipRowsSettings.Create(5));
+
+        // Act
+        await repository.AddAsync(importMapping);
+        await context.SaveChangesAsync();
+
+        // Assert
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new ImportMappingRepository(verifyContext);
+        var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
+
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved.SkipRowsSettings);
+        Assert.Equal(5, retrieved.SkipRowsSettings.RowsToSkip);
+    }
+
+    [Fact]
+    public async Task IndicatorSettings_Are_Persisted_And_Retrieved()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new ImportMappingRepository(context);
+        var userId = Guid.NewGuid();
+
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+            new() { ColumnIndex = 1, ColumnHeader = "Amount", TargetField = ImportField.Amount },
+            new() { ColumnIndex = 2, ColumnHeader = "Type", TargetField = ImportField.DebitCreditIndicator },
+        };
+        var importMapping = ImportMapping.Create(userId, "Test Mapping With Indicator", mappings);
+        importMapping.SetAmountMode(AmountParseMode.IndicatorColumn);
+        importMapping.UpdateIndicatorSettings(DebitCreditIndicatorSettings.Create(
+            2,
+            new List<string> { "Debit", "DR" },
+            new List<string> { "Credit", "CR" },
+            caseSensitive: false));
+
+        // Act
+        await repository.AddAsync(importMapping);
+        await context.SaveChangesAsync();
+
+        // Assert
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new ImportMappingRepository(verifyContext);
+        var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
+
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved.IndicatorSettings);
+        Assert.True(retrieved.IndicatorSettings.IsEnabled);
+        Assert.Equal(2, retrieved.IndicatorSettings.IndicatorColumnIndex);
+        Assert.Equal(2, retrieved.IndicatorSettings.DebitIndicators.Count);
+        Assert.Contains("Debit", retrieved.IndicatorSettings.DebitIndicators);
+        Assert.Contains("DR", retrieved.IndicatorSettings.DebitIndicators);
+        Assert.Equal(2, retrieved.IndicatorSettings.CreditIndicators.Count);
+        Assert.Contains("Credit", retrieved.IndicatorSettings.CreditIndicators);
+        Assert.Contains("CR", retrieved.IndicatorSettings.CreditIndicators);
+        Assert.False(retrieved.IndicatorSettings.CaseSensitive);
+    }
+
+    [Fact]
+    public async Task Default_Settings_Are_Persisted_For_New_Mapping()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var repository = new ImportMappingRepository(context);
+        var userId = Guid.NewGuid();
+
+        var mappings = new List<ColumnMapping>
+        {
+            new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
+        };
+        var importMapping = ImportMapping.Create(userId, "Default Settings Test", mappings);
+
+        // Act
+        await repository.AddAsync(importMapping);
+        await context.SaveChangesAsync();
+
+        // Assert
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new ImportMappingRepository(verifyContext);
+        var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
+
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved.SkipRowsSettings);
+        Assert.Equal(0, retrieved.SkipRowsSettings.RowsToSkip);
+        Assert.NotNull(retrieved.IndicatorSettings);
+        Assert.False(retrieved.IndicatorSettings.IsEnabled);
+    }
 }

@@ -78,6 +78,30 @@ internal sealed class ImportMappingConfiguration : IEntityTypeConfiguration<Impo
                     s => JsonSerializer.Serialize(s, JsonOptions).GetHashCode(),
                     s => JsonSerializer.Deserialize<DuplicateDetectionSettings>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? new DuplicateDetectionSettings()));
 
+        // Store SkipRowsSettings as JSON
+        builder.Property(m => m.SkipRowsSettings)
+            .HasColumnName("SkipRowsSettingsJson")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, JsonOptions),
+                v => JsonSerializer.Deserialize<SkipRowsSettings>(v, JsonOptions) ?? SkipRowsSettings.Default,
+                new ValueComparer<SkipRowsSettings>(
+                    (s1, s2) => JsonSerializer.Serialize(s1, JsonOptions) == JsonSerializer.Serialize(s2, JsonOptions),
+                    s => JsonSerializer.Serialize(s, JsonOptions).GetHashCode(),
+                    s => JsonSerializer.Deserialize<SkipRowsSettings>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? SkipRowsSettings.Default));
+
+        // Store IndicatorSettings as JSON
+        builder.Property(m => m.IndicatorSettings)
+            .HasColumnName("IndicatorSettingsJson")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, JsonOptions),
+                v => JsonSerializer.Deserialize<DebitCreditIndicatorSettings>(v, JsonOptions) ?? DebitCreditIndicatorSettings.Disabled,
+                new ValueComparer<DebitCreditIndicatorSettings>(
+                    (s1, s2) => JsonSerializer.Serialize(s1, JsonOptions) == JsonSerializer.Serialize(s2, JsonOptions),
+                    s => JsonSerializer.Serialize(s, JsonOptions).GetHashCode(),
+                    s => JsonSerializer.Deserialize<DebitCreditIndicatorSettings>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? DebitCreditIndicatorSettings.Disabled));
+
         // Indexes
         builder.HasIndex(m => m.UserId)
             .HasDatabaseName("IX_ImportMappings_UserId");
