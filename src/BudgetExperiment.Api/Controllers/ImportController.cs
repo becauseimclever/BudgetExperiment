@@ -46,6 +46,7 @@ public sealed class ImportController : ControllerBase
     /// Parses an uploaded CSV file and returns headers and rows.
     /// </summary>
     /// <param name="file">The CSV file to parse.</param>
+    /// <param name="rowsToSkip">Number of rows to skip before the header row (e.g., for bank metadata). Defaults to 0.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The parsed CSV data.</returns>
     [HttpPost("parse")]
@@ -53,8 +54,21 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
     [RequestSizeLimit(MaxFileSizeBytes)]
-    public async Task<IActionResult> ParseAsync(IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> ParseAsync(
+        IFormFile file,
+        [FromQuery] int rowsToSkip = 0,
+        CancellationToken cancellationToken = default)
     {
+        if (rowsToSkip < 0)
+        {
+            return this.BadRequest(new ProblemDetails
+            {
+                Title = "Invalid Parameter",
+                Detail = "The rowsToSkip parameter cannot be negative.",
+                Status = StatusCodes.Status400BadRequest,
+            });
+        }
+
         if (file is null || file.Length == 0)
         {
             return this.BadRequest(new ProblemDetails
@@ -76,7 +90,7 @@ public sealed class ImportController : ControllerBase
         }
 
         using var stream = file.OpenReadStream();
-        var result = await this._csvParserService.ParseAsync(stream, file.FileName, cancellationToken);
+        var result = await this._csvParserService.ParseAsync(stream, file.FileName, rowsToSkip: rowsToSkip, ct: cancellationToken);
 
         if (!result.Success)
         {
@@ -95,6 +109,7 @@ public sealed class ImportController : ControllerBase
             DetectedDelimiter = result.DetectedDelimiter.ToString(),
             HasHeaderRow = result.HasHeaderRow,
             RowCount = result.RowCount,
+            RowsSkipped = result.RowsSkipped,
         });
     }
 
@@ -322,6 +337,11 @@ public sealed record CsvParseResultDto
     /// Gets the total row count.
     /// </summary>
     public int RowCount { get; init; }
+
+    /// <summary>
+    /// Gets the number of rows that were skipped before the header row.
+    /// </summary>
+    public int RowsSkipped { get; init; }
 }
 
 /// <summary>

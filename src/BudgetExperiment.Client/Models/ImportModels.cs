@@ -36,6 +36,11 @@ public sealed record CsvParseResultModel
     /// Gets the total row count.
     /// </summary>
     public int RowCount { get; init; }
+
+    /// <summary>
+    /// Gets the number of rows that were skipped before the header row.
+    /// </summary>
+    public int RowsSkipped { get; init; }
 }
 
 /// <summary>

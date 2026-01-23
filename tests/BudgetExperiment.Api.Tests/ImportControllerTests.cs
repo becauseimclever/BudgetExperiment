@@ -389,4 +389,131 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         Assert.NotNull(batches);
         Assert.Contains(batches, b => b.Id == importResult.BatchId);
     }
+
+    /// <summary>
+    /// POST /api/v1/import/parse accepts rowsToSkip query parameter and skips metadata rows.
+    /// </summary>
+    [Fact]
+    public async Task Parse_WithRowsToSkip_SkipsMetadataRows()
+    {
+        // Arrange - CSV with 2 metadata rows before actual header
+        var csv = """
+            Bank of America Statement
+            Account: ****1234
+            Date,Description,Amount
+            2025-01-15,Coffee Shop,12.50
+            2025-01-16,Grocery Store,45.00
+            """;
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+        content.Add(fileContent, "file", "bank_statement.csv");
+
+        // Act - skip 2 metadata rows
+        var response = await this._client.PostAsync("/api/v1/import/parse?rowsToSkip=2", content);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CsvParseResultDto>();
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Headers.Count);
+        Assert.Contains("Date", result.Headers);
+        Assert.Contains("Description", result.Headers);
+        Assert.Contains("Amount", result.Headers);
+        Assert.Equal(2, result.Rows.Count);
+        Assert.Equal(2, result.RowsSkipped);
+    }
+
+    /// <summary>
+    /// POST /api/v1/import/parse with zero rowsToSkip behaves like default.
+    /// </summary>
+    [Fact]
+    public async Task Parse_WithZeroRowsToSkip_ReturnsAllRows()
+    {
+        // Arrange
+        var csv = "Date,Description,Amount\n2025-01-15,Coffee Shop,12.50";
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+        content.Add(fileContent, "file", "transactions.csv");
+
+        // Act
+        var response = await this._client.PostAsync("/api/v1/import/parse?rowsToSkip=0", content);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CsvParseResultDto>();
+        Assert.NotNull(result);
+        Assert.Single(result.Rows);
+        Assert.Equal(0, result.RowsSkipped);
+    }
+
+    /// <summary>
+    /// POST /api/v1/import/parse with negative rowsToSkip returns 400 Bad Request.
+    /// </summary>
+    [Fact]
+    public async Task Parse_WithNegativeRowsToSkip_Returns400()
+    {
+        // Arrange
+        var csv = "Date,Description,Amount\n2025-01-15,Coffee Shop,12.50";
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+        content.Add(fileContent, "file", "transactions.csv");
+
+        // Act
+        var response = await this._client.PostAsync("/api/v1/import/parse?rowsToSkip=-1", content);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// POST /api/v1/import/parse with rowsToSkip exceeding file rows returns parse failure.
+    /// </summary>
+    [Fact]
+    public async Task Parse_WithRowsToSkipExceedingFileRows_Returns400()
+    {
+        // Arrange - only 2 lines total
+        var csv = "Date,Description,Amount\n2025-01-15,Coffee,12.50";
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+        content.Add(fileContent, "file", "transactions.csv");
+
+        // Act - try to skip more than available
+        var response = await this._client.PostAsync("/api/v1/import/parse?rowsToSkip=10", content);
+
+        // Assert - parser returns failure, controller returns 400
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// POST /api/v1/import/parse RowsSkipped property reflects actual rows skipped.
+    /// </summary>
+    [Fact]
+    public async Task Parse_RowsSkipped_ReflectsActualSkipCount()
+    {
+        // Arrange - CSV with metadata including an empty line
+        var csv = """
+            Bank Statement
+            
+            Date,Description,Amount
+            2025-01-15,Coffee,12.50
+            """;
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+        content.Add(fileContent, "file", "bank.csv");
+
+        // Act - skip 2 rows (metadata + empty line)
+        var response = await this._client.PostAsync("/api/v1/import/parse?rowsToSkip=2", content);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CsvParseResultDto>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result.RowsSkipped);
+        Assert.Contains("Date", result.Headers);
+    }
 }

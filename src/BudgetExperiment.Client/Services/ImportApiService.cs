@@ -35,7 +35,7 @@ public sealed class ImportApiService : IImportApiService
     }
 
     /// <inheritdoc />
-    public async Task<CsvParseResultModel?> ParseCsvAsync(Stream fileContent, string fileName)
+    public async Task<CsvParseResultModel?> ParseCsvAsync(Stream fileContent, string fileName, int rowsToSkip = 0)
     {
         try
         {
@@ -44,7 +44,8 @@ public sealed class ImportApiService : IImportApiService
             streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
             content.Add(streamContent, "file", fileName);
 
-            var response = await this._httpClient.PostAsync("api/v1/import/parse", content);
+            var url = $"api/v1/import/parse?rowsToSkip={rowsToSkip}";
+            var response = await this._httpClient.PostAsync(url, content);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<CsvParseResultModel>(JsonOptions);

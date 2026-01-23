@@ -14,9 +14,10 @@ public interface ICsvParserService
     /// </summary>
     /// <param name="fileStream">The file stream to parse.</param>
     /// <param name="fileName">The name of the file (for error messages).</param>
+    /// <param name="rowsToSkip">Number of rows to skip before the header row (default 0).</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The parse result containing headers and rows.</returns>
-    Task<CsvParseResult> ParseAsync(Stream fileStream, string fileName, CancellationToken ct = default);
+    Task<CsvParseResult> ParseAsync(Stream fileStream, string fileName, int rowsToSkip = 0, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -60,18 +61,25 @@ public sealed record CsvParseResult
     public int RowCount { get; init; }
 
     /// <summary>
+    /// Gets the number of rows that were skipped before the header row.
+    /// </summary>
+    public int RowsSkipped { get; init; }
+
+    /// <summary>
     /// Creates a successful parse result.
     /// </summary>
     /// <param name="headers">The column headers.</param>
     /// <param name="rows">The data rows.</param>
     /// <param name="delimiter">The detected delimiter.</param>
     /// <param name="hasHeaderRow">Whether the file has a header row.</param>
+    /// <param name="rowsSkipped">Number of rows that were skipped before the header.</param>
     /// <returns>A successful <see cref="CsvParseResult"/>.</returns>
     public static CsvParseResult CreateSuccess(
         IReadOnlyList<string> headers,
         IReadOnlyList<IReadOnlyList<string>> rows,
         char delimiter,
-        bool hasHeaderRow)
+        bool hasHeaderRow,
+        int rowsSkipped = 0)
     {
         return new CsvParseResult
         {
@@ -81,6 +89,7 @@ public sealed record CsvParseResult
             DetectedDelimiter = delimiter,
             HasHeaderRow = hasHeaderRow,
             RowCount = rows.Count,
+            RowsSkipped = rowsSkipped,
         };
     }
 
