@@ -151,7 +151,15 @@
                             <AmountModeSelector @bind-Value="wizardState.AmountMode" />
                         </div>
                         <div class="col-md-4">
-                            <SkipRowsInput @bind-Value="wizardState.RowsToSkip" />
+                            <SkipRowsInput @bind-Value="wizardState.RowsToSkip"
+                                           OnAfterValueChanged="HandleSkipRowsChanged" />
+                            @if (isReparsing)
+                            {
+                                <small class="text-primary">
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                    Re-parsing...
+                                </small>
+                            }
                         </div>
                     </div>
 
@@ -402,6 +410,10 @@
     private List<ImportBatchDto> importBatches = [];
     private ImportResult? importResult;
 
+    // Store uploaded file content for re-parsing when skip rows changes
+    private byte[]? uploadedFileContent;
+    private string? uploadedFileName;
+
     private string activeTab = "wizard";
     private bool isLoading = true;
     private bool isUploading = false;
@@ -410,6 +422,7 @@
     private bool isImporting = false;
     private bool isLoadingHistory = false;
     private bool isLoadingMappings = false;
+    private bool isReparsing = false;
     private string? errorMessage;
     private string loadingMessage = "Loading...";
 
@@ -449,13 +462,16 @@
 
         try
         {
-            // Max 10MB
+            // Max 10MB - read and store file content for potential re-parsing
             using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
-            memoryStream.Position = 0;
+            uploadedFileContent = memoryStream.ToArray();
+            uploadedFileName = file.Name;
 
-            var result = await ImportApi.ParseCsvAsync(memoryStream, file.Name);
+            // Parse with current skip rows value (usually 0 for initial parse)
+            memoryStream.Position = 0;
+            var result = await ImportApi.ParseCsvAsync(memoryStream, file.Name, wizardState.RowsToSkip);
             if (result != null)
             {
                 wizardState.ParseResult = result;
@@ -592,6 +608,48 @@
         StateHasChanged();
     }
 
+    private async Task HandleSkipRowsChanged(int newSkipRows)
+    {
+        // Re-parse the CSV with the new skip rows value
+        if (uploadedFileContent == null || string.IsNullOrEmpty(uploadedFileName))
+        {
+            return;
+        }
+
+        isReparsing = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            using var memoryStream = new MemoryStream(uploadedFileContent);
+            var result = await ImportApi.ParseCsvAsync(memoryStream, uploadedFileName, newSkipRows);
+
+            if (result != null)
+            {
+                wizardState.ParseResult = result;
+                wizardState.RowsToSkip = newSkipRows;
+                InitializeColumnMappings();
+
+                // Clear saved mapping since columns may have changed
+                wizardState.SavedMappingId = null;
+            }
+            else
+            {
+                errorMessage = "Failed to re-parse the CSV file with the new skip rows setting. The value may be too high.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error re-parsing file: {ex.Message}";
+        }
+        finally
+        {
+            isReparsing = false;
+            StateHasChanged();
+        }
+    }
+
     private void GoToStep1() => wizardState.CurrentStep = 1;
     private void GoToStep2() => wizardState.CurrentStep = 2;
 
@@ -663,6 +721,8 @@
     private void ResetWizard()
     {
         wizardState.Reset();
+        uploadedFileContent = null;
+        uploadedFileName = null;
         errorMessage = null;
     }
 

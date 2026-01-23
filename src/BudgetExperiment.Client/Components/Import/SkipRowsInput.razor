@@ -1,5 +1,5 @@
 <div class="skip-rows-input">
-    <label class="form-label">Skip Rows After Header</label>
+    <label class="form-label">Skip Metadata Rows</label>
     <div class="input-group" style="max-width: 200px;">
         <input type="number"
                class="form-control"
@@ -10,7 +10,7 @@
         <span class="input-group-text">rows</span>
     </div>
     <small class="text-secondary">
-        Number of data rows to skip at the beginning (for bank-specific summary rows)
+        Number of rows to skip before the column headers (for bank metadata/summary rows)
     </small>
 </div>
 
@@ -21,6 +21,13 @@
     [Parameter]
     public EventCallback<int> ValueChanged { get; set; }
 
+    /// <summary>
+    /// Optional callback invoked after the value has changed.
+    /// Use this to trigger actions like re-parsing the CSV.
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnAfterValueChanged { get; set; }
+
     private async Task HandleChange(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var intValue))
@@ -28,6 +35,12 @@
             // Clamp to valid range
             intValue = Math.Max(0, Math.Min(100, intValue));
             await ValueChanged.InvokeAsync(intValue);
+
+            // Invoke optional after-change callback for re-parsing
+            if (OnAfterValueChanged.HasDelegate)
+            {
+                await OnAfterValueChanged.InvokeAsync(intValue);
+            }
         }
     }
 }

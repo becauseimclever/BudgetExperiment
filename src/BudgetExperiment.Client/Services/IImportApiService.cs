@@ -17,8 +17,9 @@ public interface IImportApiService
     /// </summary>
     /// <param name="fileContent">The file content as a stream.</param>
     /// <param name="fileName">The file name.</param>
+    /// <param name="rowsToSkip">Number of rows to skip before the header row. Defaults to 0.</param>
     /// <returns>The parse result.</returns>
-    Task<CsvParseResultModel?> ParseCsvAsync(Stream fileContent, string fileName);
+    Task<CsvParseResultModel?> ParseCsvAsync(Stream fileContent, string fileName, int rowsToSkip = 0);
 
     /// <summary>
     /// Gets all saved import mappings for the current user.
