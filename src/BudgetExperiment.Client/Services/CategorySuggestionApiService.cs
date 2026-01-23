@@ -14,7 +14,7 @@ namespace BudgetExperiment.Client.Services;
 /// </summary>
 public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
 {
-    private const string BaseUrl = "api/v1/category-suggestions";
+    private const string BaseUrl = "api/v1/categorysuggestions";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
