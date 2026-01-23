@@ -439,27 +439,27 @@ public sealed record CsvParseResultModel
 3. [x] Implement skip rows logic in `CsvParserService`
 4. [x] Update `CsvParseResult` record with `RowsSkipped` property
 
-### Phase 2: API Layer (TDD)
-5. [ ] Write tests for parse endpoint with `rowsToSkip` query param
-6. [ ] Update `ImportController.ParseAsync` to accept `rowsToSkip`
-7. [ ] Update `CsvParseResultDto` with `RowsSkipped`
-8. [ ] Test error handling for invalid skip values
+### Phase 2: API Layer (TDD) ✅
+5. [x] Write tests for parse endpoint with `rowsToSkip` query param
+6. [x] Update `ImportController.ParseAsync` to accept `rowsToSkip`
+7. [x] Update `CsvParseResultDto` with `RowsSkipped`
+8. [x] Test error handling for invalid skip values
 
-### Phase 3: Client Layer
-9. [ ] Update `IImportApiService` interface
-10. [ ] Update `ImportApiService.ParseCsvAsync` with `rowsToSkip`
-11. [ ] Update `CsvParseResultModel` with `RowsSkipped`
-12. [ ] Store uploaded file content in `Import.razor` for re-parsing
-13. [ ] Implement `HandleSkipRowsChanged` to trigger re-parse
-14. [ ] Update `SkipRowsInput` component with new label and callback
-15. [ ] Test the complete flow
+### Phase 3: Client Layer ✅
+9. [x] Update `IImportApiService` interface
+10. [x] Update `ImportApiService.ParseCsvAsync` with `rowsToSkip`
+11. [x] Update `CsvParseResultModel` with `RowsSkipped`
+12. [x] Store uploaded file content in `Import.razor` for re-parsing
+13. [x] Implement `HandleSkipRowsChanged` to trigger re-parse
+14. [x] Update `SkipRowsInput` component with new label and callback
+15. [x] Test the complete flow
 
-### Phase 4: Integration Testing
-16. [ ] Test with Bank of America sample CSV (`sample data/boa.csv`)
-17. [ ] Test with Capital One sample CSV (no skip needed)
-18. [ ] Test with UHCU sample CSV (no skip needed)
-19. [ ] Test edge cases (skip all rows, skip more than file has)
-20. [ ] Update existing tests that may be affected
+### Phase 4: Integration Testing ✅
+16. [x] Test with Bank of America sample CSV (`sample data/boa.csv`)
+17. [x] Test with Capital One sample CSV (no skip needed)
+18. [x] Test with UHCU sample CSV (no skip needed)
+19. [x] Test edge cases (skip all rows, skip more than file has)
+20. [x] Update existing tests that may be affected
 
 ---
 

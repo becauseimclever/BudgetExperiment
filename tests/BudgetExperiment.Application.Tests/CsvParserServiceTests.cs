@@ -554,6 +554,59 @@ public class CsvParserServiceTests
         Assert.Equal(0, result.RowsSkipped);
     }
 
+    [Fact]
+    public async Task ParseAsync_BankOfAmerica_Format_With_Skip6_Succeeds()
+    {
+        // Arrange - simulate Bank of America CSV format
+        var csv = """
+            Description,,Summary Amt.
+            Beginning balance as of 10/01/2025,,"357.05"
+            Total credits,,"4,528.07"
+            Total debits,,"-4,882.79"
+            Ending balance as of 11/14/2025,,"2.33"
+
+            Date,Description,Amount,Running Bal.
+            10/01/2025,Beginning balance as of 10/01/2025,,"357.05"
+            10/01/2025,"Zelle payment from John Smith","100.00","457.05"
+            """;
+        using var stream = CreateStream(csv);
+
+        // Act - skip 6 rows (5 metadata + 1 empty)
+        var result = await this._sut.ParseAsync(stream, "boa.csv", rowsToSkip: 6);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal(6, result.RowsSkipped);
+        Assert.Equal(4, result.Headers.Count);
+        Assert.Equal("Date", result.Headers[0]);
+        Assert.Equal("Description", result.Headers[1]);
+        Assert.Equal("Amount", result.Headers[2]);
+        Assert.Equal("Running Bal.", result.Headers[3]);
+        Assert.Equal(2, result.Rows.Count);
+    }
+
+    [Fact]
+    public async Task ParseAsync_Standard_Csv_Without_Skip_Works()
+    {
+        // Arrange - standard CSV without metadata rows (like Capital One)
+        var csv = """
+            Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit
+            2025-01-15,2025-01-16,1234,WALMART,Shopping,45.99,
+            2025-01-16,2025-01-17,1234,AMAZON,Shopping,,29.99
+            """;
+        using var stream = CreateStream(csv);
+
+        // Act - no skip needed
+        var result = await this._sut.ParseAsync(stream, "capone.csv", rowsToSkip: 0);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal(0, result.RowsSkipped);
+        Assert.Equal(7, result.Headers.Count);
+        Assert.Equal("Transaction Date", result.Headers[0]);
+        Assert.Equal(2, result.Rows.Count);
+    }
+
     private static MemoryStream CreateStream(string content)
     {
         return new MemoryStream(Encoding.UTF8.GetBytes(content));
