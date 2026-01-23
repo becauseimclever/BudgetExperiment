@@ -76,7 +76,7 @@ public sealed class ImportController : ControllerBase
         }
 
         using var stream = file.OpenReadStream();
-        var result = await this._csvParserService.ParseAsync(stream, file.FileName, cancellationToken);
+        var result = await this._csvParserService.ParseAsync(stream, file.FileName, rowsToSkip: 0, ct: cancellationToken);
 
         if (!result.Success)
         {
@@ -95,6 +95,7 @@ public sealed class ImportController : ControllerBase
             DetectedDelimiter = result.DetectedDelimiter.ToString(),
             HasHeaderRow = result.HasHeaderRow,
             RowCount = result.RowCount,
+            RowsSkipped = result.RowsSkipped,
         });
     }
 
@@ -322,6 +323,11 @@ public sealed record CsvParseResultDto
     /// Gets the total row count.
     /// </summary>
     public int RowCount { get; init; }
+
+    /// <summary>
+    /// Gets the number of rows that were skipped before the header row.
+    /// </summary>
+    public int RowsSkipped { get; init; }
 }
 
 /// <summary>

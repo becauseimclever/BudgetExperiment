@@ -14,7 +14,7 @@ public class CsvParserService : ICsvParserService
     private static readonly char[] _supportedDelimiters = { ',', ';', '\t', '|' };
 
     /// <inheritdoc/>
-    public async Task<CsvParseResult> ParseAsync(Stream fileStream, string fileName, CancellationToken ct = default)
+    public async Task<CsvParseResult> ParseAsync(Stream fileStream, string fileName, int rowsToSkip = 0, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -43,23 +43,38 @@ public class CsvParserService : ICsvParserService
                 return CsvParseResult.CreateFailure("File is empty.");
             }
 
-            // Detect delimiter from first line
-            var delimiter = DetectDelimiter(lines[0]);
+            // Validate rowsToSkip doesn't exceed available lines
+            if (rowsToSkip >= lines.Count)
+            {
+                return CsvParseResult.CreateFailure(
+                    $"Cannot skip {rowsToSkip} rows - file only has {lines.Count} rows.");
+            }
+
+            // Skip metadata rows before header
+            var remainingLines = rowsToSkip > 0 ? lines.Skip(rowsToSkip).ToList() : lines;
+
+            if (remainingLines.Count == 0)
+            {
+                return CsvParseResult.CreateFailure("No rows remaining after skip.");
+            }
+
+            // Detect delimiter from actual header row (after skip)
+            var delimiter = DetectDelimiter(remainingLines[0]);
 
             // Parse header row
-            var headers = ParseCsvLine(lines[0], delimiter);
+            var headers = ParseCsvLine(remainingLines[0], delimiter);
             if (headers.Count == 0)
             {
                 return CsvParseResult.CreateFailure("No columns detected in header row.");
             }
 
-            // Parse data rows
+            // Parse data rows (skip the header)
             var rows = new List<IReadOnlyList<string>>();
-            for (int i = 1; i < lines.Count; i++)
+            for (int i = 1; i < remainingLines.Count; i++)
             {
                 ct.ThrowIfCancellationRequested();
 
-                var line = lines[i];
+                var line = remainingLines[i];
                 if (string.IsNullOrWhiteSpace(line))
                 {
                     continue; // Skip empty lines
@@ -69,7 +84,7 @@ public class CsvParserService : ICsvParserService
                 rows.Add(row);
             }
 
-            return CsvParseResult.CreateSuccess(headers, rows, delimiter, hasHeaderRow: true);
+            return CsvParseResult.CreateSuccess(headers, rows, delimiter, hasHeaderRow: true, rowsSkipped: rowsToSkip);
         }
         catch (OperationCanceledException)
         {
@@ -83,6 +98,7 @@ public class CsvParserService : ICsvParserService
 
     /// <summary>
     /// Splits CSV content into lines, respecting quoted fields that may contain newlines.
+    /// Preserves empty lines so skip count is accurate.
     /// </summary>
     private static List<string> SplitCsvLines(string content)
     {
@@ -101,12 +117,8 @@ public class CsvParserService : ICsvParserService
             }
             else if (c == '\n' && !inQuotes)
             {
-                var line = currentLine.ToString();
-                if (!string.IsNullOrEmpty(line))
-                {
-                    lines.Add(line);
-                }
-
+                // Add line even if empty - preserves line count for skip functionality
+                lines.Add(currentLine.ToString());
                 currentLine.Clear();
             }
             else
