@@ -1,10 +1,10 @@
 # Feature 033: CSV Import Skip Header Rows Bug Fix
 
-> **Status:** 🔴 Not Started  
+> **Status:** ✅ Complete  
 > **Type:** Bug Fix  
 > **Severity:** High  
 > **Started:** 2026-01-22  
-> **Completed:** TBD
+> **Completed:** 2026-01-23
 
 ## Overview
 
@@ -69,10 +69,10 @@ The `ICsvParserService.ParseAsync()` method does not accept a `rowsToSkip` param
 **So that** I can correctly import files that have metadata rows at the beginning
 
 **Acceptance Criteria:**
-- [ ] Parse endpoint accepts optional `rowsToSkip` query parameter
-- [ ] Parser skips specified number of rows before treating next row as header
-- [ ] Remaining rows after header are parsed as data rows
-- [ ] Returns correct column count based on actual header row
+- [x] Parse endpoint accepts optional `rowsToSkip` query parameter
+- [x] Parser skips specified number of rows before treating next row as header
+- [x] Remaining rows after header are parsed as data rows
+- [x] Returns correct column count based on actual header row
 
 ### US-033-002: Re-parse on Skip Rows Change
 **As a** user  
@@ -80,11 +80,11 @@ The `ICsvParserService.ParseAsync()` method does not accept a `rowsToSkip` param
 **So that** I can see the correct columns and sample values
 
 **Acceptance Criteria:**
-- [ ] Changing skip rows value triggers re-parse via API
-- [ ] Column mappings reset to auto-detected values for new headers
-- [ ] Sample values update to show actual transaction data
-- [ ] Preview reflects the new parse structure
-- [ ] Loading indicator shown during re-parse
+- [x] Changing skip rows value triggers re-parse via API
+- [x] Column mappings reset to auto-detected values for new headers
+- [x] Sample values update to show actual transaction data
+- [x] Preview reflects the new parse structure
+- [x] Loading indicator shown during re-parse
 
 ### US-033-003: Rename Skip Rows Label
 **As a** user  
@@ -92,8 +92,8 @@ The `ICsvParserService.ParseAsync()` method does not accept a `rowsToSkip` param
 **So that** I understand it skips rows before the header, not after
 
 **Acceptance Criteria:**
-- [ ] Label changed from "Skip Rows After Header" to "Rows Before Header" or "Skip Metadata Rows"
-- [ ] Helper text updated to explain: "Number of rows to skip before the column headers"
+- [x] Label changed from "Skip Rows After Header" to "Rows Before Header" or "Skip Metadata Rows"
+- [x] Helper text updated to explain: "Number of rows to skip before the column headers"
 
 ### US-033-004: Validate Skip Rows Doesn't Exceed Rows
 **As a** user  
@@ -101,9 +101,9 @@ The `ICsvParserService.ParseAsync()` method does not accept a `rowsToSkip` param
 **So that** I don't accidentally skip all data
 
 **Acceptance Criteria:**
-- [ ] Warning shown if skip rows >= total rows - 1 (need at least header + 1 data row)
-- [ ] Prevent re-parse if all rows would be skipped
-- [ ] Show remaining row count after skip
+- [x] Warning shown if skip rows >= total rows - 1 (need at least header + 1 data row)
+- [x] Prevent re-parse if all rows would be skipped
+- [x] Show remaining row count after skip
 
 ---
 
