@@ -90,13 +90,27 @@ public class PlaywrightFixture : IAsyncLifetime
 
     private async Task EnsureServerIsRunningAsync()
     {
-        // First, check if server is already running
+        // Skip local server startup for remote URLs (e.g., demo environment)
+        if (!BaseUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
+            !BaseUrl.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!await IsServerRunningAsync())
+            {
+                throw new InvalidOperationException(
+                    $"Remote server at {BaseUrl} is not reachable. " +
+                    "Verify the URL and network connectivity.");
+            }
+
+            return;
+        }
+
+        // First, check if local server is already running
         if (await IsServerRunningAsync())
         {
             return;
         }
 
-        // Start the server
+        // Start the local server
         await StartServerAsync();
 
         // Wait for server to be ready
