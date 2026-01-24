@@ -45,6 +45,32 @@ public partial class Program
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
 
+        // Request timeouts for long-running AI operations
+        builder.Services.AddRequestTimeouts(options =>
+        {
+            // Default timeout for most endpoints
+            options.DefaultPolicy = new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
+            {
+                Timeout = TimeSpan.FromSeconds(30),
+            };
+
+            // Extended timeout for AI endpoints (matches Ollama timeout + buffer)
+            options.AddPolicy("AiAnalysis", new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
+            {
+                Timeout = TimeSpan.FromMinutes(5),
+                WriteTimeoutResponse = async context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        message = "AI analysis request timed out.",
+                        suggestion = "The AI service took too long to respond. Try again or check AI settings.",
+                    });
+                },
+            });
+        });
+
         // Health checks: basic + database connectivity + migration status
         builder.Services.AddHealthChecks()
             .AddDbContextCheck<BudgetDbContext>("database")
@@ -74,6 +100,9 @@ public partial class Program
 
         app.UseHttpsRedirection();
         app.UseCors("dev");
+
+        // Request timeouts middleware - must be before endpoints
+        app.UseRequestTimeouts();
 
         // Serve Blazor WebAssembly client (static web assets from referenced Client project).
         app.UseBlazorFrameworkFiles();

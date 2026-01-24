@@ -196,13 +196,9 @@ public sealed class OllamaAiService : IAiService
         }
         catch (OperationCanceledException)
         {
+            // This is a timeout from our linked CancellationTokenSource - re-throw so callers can handle it
             _logger.LogWarning("Ollama request timed out after {Timeout} seconds", settings.TimeoutSeconds);
-            return new AiResponse(
-                false,
-                string.Empty,
-                $"Request timed out after {settings.TimeoutSeconds} seconds.",
-                0,
-                stopwatch.Elapsed);
+            throw new OperationCanceledException($"AI request timed out after {settings.TimeoutSeconds} seconds.");
         }
         catch (HttpRequestException ex)
         {

@@ -120,16 +120,32 @@ public sealed class AiApiService : IAiApiService
                 return await response.Content.ReadFromJsonAsync<AnalysisResponseDto>(JsonOptions);
             }
 
-            return null;
+            // Try to get error details from the response
+            var errorContent = await response.Content.ReadAsStringAsync();
+            var statusCode = (int)response.StatusCode;
+
+            // Provide specific messages for known error codes
+            var errorMessage = statusCode switch
+            {
+                504 => "AI analysis timed out. The AI service took too long to respond. Try increasing the timeout in AI Settings.",
+                503 => "AI service is unavailable. Please check that Ollama is running and configured correctly.",
+                _ => $"AI analysis failed with status {statusCode}. {errorContent}",
+            };
+
+            throw new InvalidOperationException(errorMessage);
         }
         catch (AccessTokenNotAvailableException ex)
         {
             ex.Redirect();
             return null;
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
-            return null;
+            throw new InvalidOperationException($"Failed to connect to the server: {ex.Message}", ex);
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            throw new InvalidOperationException("The request timed out. The AI service may be overloaded.", ex);
         }
     }
 

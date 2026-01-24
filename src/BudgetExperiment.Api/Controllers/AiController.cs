@@ -2,9 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetExperiment.Api.Controllers;
@@ -21,6 +21,7 @@ public sealed class AiController : ControllerBase
     private readonly IAiService _aiService;
     private readonly IRuleSuggestionService _suggestionService;
     private readonly IAppSettingsService _settingsService;
+    private readonly ILogger<AiController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiController"/> class.
@@ -28,14 +29,17 @@ public sealed class AiController : ControllerBase
     /// <param name="aiService">The AI service.</param>
     /// <param name="suggestionService">The rule suggestion service.</param>
     /// <param name="settingsService">The application settings service.</param>
+    /// <param name="logger">The logger.</param>
     public AiController(
         IAiService aiService,
         IRuleSuggestionService suggestionService,
-        IAppSettingsService settingsService)
+        IAppSettingsService settingsService,
+        ILogger<AiController> logger)
     {
         this._aiService = aiService;
         this._suggestionService = suggestionService;
         this._settingsService = settingsService;
+        this._logger = logger;
     }
 
     /// <summary>
@@ -135,28 +139,72 @@ public sealed class AiController : ControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Analysis results.</returns>
     [HttpPost("analyze")]
+    [RequestTimeout("AiAnalysis")]
     [ProducesResponseType<AnalysisResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
     public async Task<IActionResult> AnalyzeAsync(CancellationToken cancellationToken)
     {
+        this._logger.LogInformation("Starting AI analysis request");
+
         var status = await this._aiService.GetStatusAsync(cancellationToken);
         if (!status.IsAvailable)
         {
+            this._logger.LogWarning("AI service is not available: {ErrorMessage}", status.ErrorMessage);
             return this.StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
                 new { message = "AI service is not available", error = status.ErrorMessage });
         }
 
-        var analysis = await this._suggestionService.AnalyzeAllAsync(progress: null, ct: cancellationToken);
-
-        return this.Ok(new AnalysisResponseDto
+        try
         {
-            NewRuleSuggestions = analysis.NewRuleSuggestions.Count,
-            OptimizationSuggestions = analysis.OptimizationSuggestions.Count,
-            ConflictSuggestions = analysis.ConflictSuggestions.Count,
-            UncategorizedTransactionsAnalyzed = analysis.UncategorizedTransactionsAnalyzed,
-            RulesAnalyzed = analysis.RulesAnalyzed,
-            AnalysisDurationSeconds = analysis.AnalysisDuration.TotalSeconds,
-        });
+            this._logger.LogInformation("AI service is available, starting analysis...");
+            var analysis = await this._suggestionService.AnalyzeAllAsync(progress: null, ct: cancellationToken);
+
+            this._logger.LogInformation(
+                "AI analysis completed in {Duration:F2}s. Found {NewRules} new rule suggestions, {Optimizations} optimizations, {Conflicts} conflicts",
+                analysis.AnalysisDuration.TotalSeconds,
+                analysis.NewRuleSuggestions.Count,
+                analysis.OptimizationSuggestions.Count,
+                analysis.ConflictSuggestions.Count);
+
+            return this.Ok(new AnalysisResponseDto
+            {
+                NewRuleSuggestions = analysis.NewRuleSuggestions.Count,
+                OptimizationSuggestions = analysis.OptimizationSuggestions.Count,
+                ConflictSuggestions = analysis.ConflictSuggestions.Count,
+                UncategorizedTransactionsAnalyzed = analysis.UncategorizedTransactionsAnalyzed,
+                RulesAnalyzed = analysis.RulesAnalyzed,
+                AnalysisDurationSeconds = analysis.AnalysisDuration.TotalSeconds,
+            });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Client disconnected or cancelled - return 499 (Client Closed Request, nginx convention)
+            this._logger.LogInformation("AI analysis was cancelled by client");
+            return this.StatusCode(499, new { message = "Client cancelled the request" });
+        }
+        catch (OperationCanceledException ex)
+        {
+            this._logger.LogWarning(ex, "AI analysis timed out");
+            return this.StatusCode(
+                StatusCodes.Status504GatewayTimeout,
+                new
+                {
+                    message = "AI analysis timed out. The AI service took too long to respond.",
+                    suggestion = "Try increasing the timeout in AI Settings or ensure Ollama is running properly.",
+                });
+        }
+        catch (HttpRequestException ex)
+        {
+            this._logger.LogError(ex, "Failed to communicate with AI service during analysis");
+            return this.StatusCode(
+                StatusCodes.Status503ServiceUnavailable,
+                new
+                {
+                    message = "Failed to communicate with AI service",
+                    error = ex.Message,
+                });
+        }
     }
 }

@@ -40,9 +40,23 @@ public sealed class ExceptionHandlingMiddleware
 
     private async Task WriteProblemAsync(HttpContext context, Exception ex)
     {
+        // Don't process if response has already started (e.g., client disconnected)
+        if (context.Response.HasStarted)
+        {
+            this._logger.LogDebug("Response already started, cannot write problem details");
+            return;
+        }
+
         int status;
         string title;
-        if (ex is DomainException de && de.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        if (ex is OperationCanceledException or TaskCanceledException)
+        {
+            // Client disconnected or request was cancelled - this is not an error
+            this._logger.LogDebug("Request was cancelled");
+            status = 499; // Client Closed Request (nginx convention)
+            title = "Client Closed Request";
+        }
+        else if (ex is DomainException de && de.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
         {
             status = (int)HttpStatusCode.NotFound;
             title = "Not Found";
