@@ -4,6 +4,15 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.8.2] - 2026-01-23
+
+### Bug Fixes
+
+- **versioning:** Fix Docker builds showing 0.0.0-preview instead of actual version
+- **ci:** Add MinVer CLI to GitHub Actions workflow to calculate version before Docker build
+- **ci:** Fetch full git history in CI for accurate version calculation from tags
+- **docker:** Pass VERSION build argument to override MinVer during container builds
+
 ## [3.8.0] - 2026-01-21
 
 ### Features

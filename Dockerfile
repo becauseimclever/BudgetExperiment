@@ -5,6 +5,7 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
+ARG VERSION=0.0.0-docker
 WORKDIR /build
 
 # Copy project files for restore
@@ -24,11 +25,13 @@ RUN dotnet restore "src/BudgetExperiment.Api/BudgetExperiment.Api.csproj"
 COPY ["src/", "src/"]
 
 # Publish (combines build and publish in one step to avoid path issues)
+# Pass VERSION to override MinVer (which can't read .git in Docker)
 RUN dotnet publish "src/BudgetExperiment.Api/BudgetExperiment.Api.csproj" \
     -c ${BUILD_CONFIGURATION} \
     -o /app/publish \
     --no-restore \
-    /p:UseAppHost=false
+    /p:UseAppHost=false \
+    /p:MinVerVersionOverride=${VERSION}
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

@@ -24,6 +24,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for MinVer to calculate version
+
+      - name: Setup .NET for version calculation
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Calculate version using MinVer
+        id: version
+        run: |
+          # Install MinVer CLI tool
+          dotnet tool install --global minver-cli
+          # Calculate version (uses git tags)
+          VERSION=$(minver --tag-prefix v --default-pre-release-identifiers preview)
+          echo "Calculated version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -65,3 +82,4 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_CONFIGURATION=Release
+            VERSION=${{ steps.version.outputs.version }}
