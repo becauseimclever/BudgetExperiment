@@ -319,10 +319,7 @@
 
         try
         {
-            var startDate = new DateOnly(selectedYear, selectedMonth, 1);
-            var endDate = startDate.AddMonths(1).AddDays(-1);
-
-            status = await ReconciliationApi.GetStatusAsync(startDate, endDate, SelectedAccountGuid);
+            status = await ReconciliationApi.GetStatusAsync(selectedYear, selectedMonth, SelectedAccountGuid);
             pendingMatches = (await ReconciliationApi.GetPendingMatchesAsync(SelectedAccountGuid)).ToList();
         }
         catch (Exception ex)

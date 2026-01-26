@@ -12,13 +12,13 @@ namespace BudgetExperiment.Client.Services;
 public interface IReconciliationApiService
 {
     /// <summary>
-    /// Gets the reconciliation status for a date range.
+    /// Gets the reconciliation status for a specific year and month.
     /// </summary>
-    /// <param name="startDate">Start date.</param>
-    /// <param name="endDate">End date.</param>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
     /// <param name="accountId">Optional account filter.</param>
     /// <returns>Reconciliation status information.</returns>
-    Task<ReconciliationStatusDto?> GetStatusAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null);
+    Task<ReconciliationStatusDto?> GetStatusAsync(int year, int month, Guid? accountId = null);
 
     /// <summary>
     /// Gets pending matches awaiting review.

@@ -33,11 +33,11 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     }
 
     /// <inheritdoc />
-    public async Task<ReconciliationStatusDto?> GetStatusAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
+    public async Task<ReconciliationStatusDto?> GetStatusAsync(int year, int month, Guid? accountId = null)
     {
         try
         {
-            var url = $"api/v1/reconciliation/status?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            var url = $"api/v1/reconciliation/status?year={year}&month={month}";
             if (accountId.HasValue)
             {
                 url += $"&accountId={accountId.Value}";
