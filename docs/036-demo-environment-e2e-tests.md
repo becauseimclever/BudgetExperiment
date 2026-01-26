@@ -1,217 +1,348 @@
 # Feature 036: Demo Environment E2E Tests
 
-## Status: In Progress 🔄
+## Status: Planning 📋
 
 ## Overview
 
-Configure the existing Playwright E2E test suite to run against the demo environment at `budgetdemo.becauseimclever.com`. This enables continuous validation of the production-like demo deployment without affecting the local development workflow. Tests authenticate using dedicated test credentials (`test/demo123`) and verify critical user journeys on the live demo server.
+Create a Playwright-based E2E test suite that validates the Budget Experiment application against the demo environment at `budgetdemo.becauseimclever.com`. This enables continuous validation of the production-like demo deployment. Tests will authenticate using dedicated test credentials (`test/demo123`) and verify critical user journeys.
 
 ## Problem Statement
 
 ### Current State
 
-- Playwright E2E tests exist in `tests/BudgetExperiment.E2E.Tests` but are configured to run against localhost:5099
-- No automated validation of the demo environment exists
+- No E2E test project exists (previous implementation was removed)
+- No automated validation of the demo environment
 - Demo environment issues may go undetected until manual verification
-- The existing `AuthenticationHelper` already uses `test/demo123` credentials which work on the demo environment
+- Need a clean, well-structured E2E testing foundation
 
 ### Target State
 
-- E2E tests can run against `budgetdemo.becauseimclever.com` via environment variable
-- CI/CD can optionally run E2E tests against demo after deployments (future integration)
-- Demo environment health is continuously validated with existing test coverage
-- Clear documentation for running tests against demo vs. local
+- New Playwright E2E test project with proper architecture
+- Tests run against `budgetdemo.becauseimclever.com` by default
+- Option to run against localhost for local development testing
+- Demo environment health continuously validated
+- Clear test organization with categories for different test types
 
 ---
 
 ## User Stories
 
-### Configuration
+### Project Setup
 
-#### US-036-001: Environment Variable for Demo URL
+#### US-036-001: Create E2E Test Project
 **As a** developer  
-**I want to** run E2E tests against the demo environment using an environment variable  
-**So that** I can validate the demo deployment without code changes
+**I want** a new Playwright E2E test project  
+**So that** I can write and run browser-based integration tests
 
 **Acceptance Criteria:**
-- [x] `BUDGET_APP_URL` environment variable already supported in `PlaywrightFixture`
-- [ ] Set `BUDGET_APP_URL=https://budgetdemo.becauseimclever.com` to target demo
-- [ ] Tests connect successfully and authenticate with `test/demo123`
-- [ ] Documentation updated with demo test commands
+- [ ] New `BudgetExperiment.E2E.Tests` project created under `tests/`
+- [ ] Uses Playwright for .NET with xUnit
+- [ ] Follows project conventions (StyleCop, nullable reference types)
+- [ ] References necessary packages (Microsoft.Playwright, xUnit)
 
-#### US-036-002: Skip Server Startup for Remote Targets
+#### US-036-002: Test Fixture with Environment Configuration
 **As a** developer  
-**I want** the test fixture to skip local server startup when targeting remote URLs  
-**So that** tests run immediately against the demo without startup delays
+**I want** a configurable test fixture  
+**So that** tests can run against demo or local environments
 
 **Acceptance Criteria:**
-- [ ] `PlaywrightFixture` detects remote URLs (not localhost)
-- [ ] Skips `StartServerAsync` for remote targets
-- [ ] Still validates server is reachable before running tests
+- [ ] `BUDGET_APP_URL` environment variable configures target (default: demo URL)
+- [ ] `HEADED` environment variable enables visible browser mode
+- [ ] Fixture handles browser lifecycle (create/dispose)
+- [ ] Server reachability validated before test execution
 
-### Test Execution
+### Authentication
 
-#### US-036-003: Run Core Test Suites Against Demo
+#### US-036-003: Authentication Helper
 **As a** developer  
-**I want** to run existing navigation, smoke, accounts, and budget tests against demo  
-**So that** I can verify demo environment functionality
+**I want** an authentication helper that logs into the application  
+**So that** tests can access protected pages
 
 **Acceptance Criteria:**
-- [ ] `SmokeTests` pass against demo
-- [ ] `NavigationTests` pass against demo
-- [ ] `AccountsTests` pass against demo (read operations)
-- [ ] `BudgetTests` pass against demo
+- [ ] Helper logs in with `test/demo123` credentials
+- [ ] Handles Authentik OAuth flow
+- [ ] Waits for successful redirect to application
+- [ ] Reusable across all test classes
 
-#### US-036-004: Demo-Safe Test Execution
+### Test Suites
+
+#### US-036-004: Smoke Tests
 **As a** developer  
-**I want** tests to be safe for demo environment (no destructive operations on shared data)  
-**So that** demo data integrity is preserved
+**I want** basic smoke tests  
+**So that** I can quickly verify the application is functioning
 
 **Acceptance Criteria:**
-- [ ] Document which tests are safe for demo (read-only operations)
-- [ ] Consider test category/trait for "demo-safe" tests
-- [ ] CRUD tests that create/modify data should use unique identifiers
+- [ ] Test that home page loads
+- [ ] Test that login succeeds
+- [ ] Test that main navigation renders
+- [ ] Tests are fast and reliable
+
+#### US-036-005: Navigation Tests
+**As a** developer  
+**I want** navigation tests  
+**So that** I can verify all main pages are accessible
+
+**Acceptance Criteria:**
+- [ ] Test Dashboard page loads
+- [ ] Test Transactions page loads
+- [ ] Test Accounts page loads
+- [ ] Test Budget pages load
+- [ ] Test Settings page loads
+
+#### US-036-006: Demo-Safe Data Tests
+**As a** developer  
+**I want** read-only data verification tests  
+**So that** I can validate data displays correctly without modifying demo data
+
+**Acceptance Criteria:**
+- [ ] Tests read and verify existing data (accounts, transactions)
+- [ ] No tests create, update, or delete shared demo data
+- [ ] Tests marked with `[Trait("Category", "DemoSafe")]`
 
 ---
 
 ## Technical Design
 
-### Configuration Changes
+### Project Structure
 
-The existing `PlaywrightFixture` already supports `BUDGET_APP_URL` override. Minor enhancement needed to skip local server startup for remote URLs:
+```
+tests/
+└── BudgetExperiment.E2E.Tests/
+    ├── BudgetExperiment.E2E.Tests.csproj
+    ├── GlobalUsings.cs
+    ├── Fixtures/
+    │   └── PlaywrightFixture.cs
+    ├── Helpers/
+    │   └── AuthenticationHelper.cs
+    ├── Tests/
+    │   ├── SmokeTests.cs
+    │   ├── NavigationTests.cs
+    │   └── AccountsTests.cs
+    └── README.md
+```
+
+### PlaywrightFixture Design
 
 ```csharp
-// In PlaywrightFixture.EnsureServerIsRunningAsync()
-private async Task EnsureServerIsRunningAsync()
+public class PlaywrightFixture : IAsyncLifetime
 {
-    // Skip server startup for remote URLs
-    if (!BaseUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase) &&
-        !BaseUrl.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+    private IPlaywright? _playwright;
+    private IBrowser? _browser;
+    
+    public IBrowserContext Context { get; private set; } = null!;
+    public IPage Page { get; private set; } = null!;
+    
+    public string BaseUrl { get; } = Environment.GetEnvironmentVariable("BUDGET_APP_URL") 
+        ?? "https://budgetdemo.becauseimclever.com";
+    
+    public bool Headed { get; } = Environment.GetEnvironmentVariable("HEADED")
+        ?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false;
+
+    public async Task InitializeAsync()
     {
-        // Just verify remote server is reachable
-        if (!await IsServerRunningAsync())
-        {
-            throw new InvalidOperationException(
-                $"Remote server at {BaseUrl} is not reachable. Verify the URL and network connectivity.");
-        }
-        return;
+        _playwright = await Playwright.CreateAsync();
+        _browser = await _playwright.Chromium.LaunchAsync(new() { Headless = !Headed });
+        Context = await _browser.NewContextAsync();
+        Page = await Context.NewPageAsync();
+        
+        // Verify server is reachable
+        await ValidateServerAsync();
     }
 
-    // Existing local server startup logic...
+    public async Task DisposeAsync()
+    {
+        await Context.DisposeAsync();
+        await _browser!.DisposeAsync();
+        _playwright!.Dispose();
+    }
+    
+    private async Task ValidateServerAsync()
+    {
+        var response = await Page.GotoAsync(BaseUrl);
+        if (response?.Status >= 400)
+        {
+            throw new InvalidOperationException($"Server at {BaseUrl} returned {response.Status}");
+        }
+    }
 }
 ```
 
-### Test Credentials
+### AuthenticationHelper Design
 
-Already configured in `AuthenticationHelper`:
-- Username: `test`
-- Password: `demo123`
+```csharp
+public static class AuthenticationHelper
+{
+    private const string TestUsername = "test";
+    private const string TestPassword = "demo123";
 
-These credentials work for both local (Authentik) and demo environment authentication.
+    public static async Task LoginAsync(IPage page, string baseUrl)
+    {
+        await page.GotoAsync(baseUrl);
+        
+        // Click login button if present
+        var loginButton = page.GetByRole(AriaRole.Link, new() { Name = "Login" });
+        if (await loginButton.IsVisibleAsync())
+        {
+            await loginButton.ClickAsync();
+        }
+        
+        // Fill Authentik login form
+        await page.GetByLabel("Username or Email").FillAsync(TestUsername);
+        await page.GetByLabel("Password").FillAsync(TestPassword);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Log in" }).ClickAsync();
+        
+        // Wait for redirect back to app
+        await page.WaitForURLAsync(url => url.StartsWith(baseUrl) && !url.Contains("authentik"));
+    }
+}
+```
 
 ### Environment Variables
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `BUDGET_APP_URL` | Target application URL | `http://localhost:5099` |
+| `BUDGET_APP_URL` | Target application URL | `https://budgetdemo.becauseimclever.com` |
 | `HEADED` | Run with visible browser | `false` |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Update PlaywrightFixture for Remote URLs
+### Phase 1: Project Setup
 
-**Objective:** Skip local server startup when targeting remote URLs
+**Objective:** Create the E2E test project with proper structure
 
 **Tasks:**
-- [ ] Modify `EnsureServerIsRunningAsync` to detect remote URLs
-- [ ] Skip `StartServerAsync` for non-localhost targets
-- [ ] Add clear error message if remote server is unreachable
-- [ ] Test against demo environment manually
+- [ ] Create new xUnit test project
+- [ ] Add Playwright NuGet packages
+- [ ] Configure project settings (StyleCop, nullable)
+- [ ] Create `GlobalUsings.cs`
+- [ ] Create folder structure
 
 **Commit:**
-```bash
-git add .
-git commit -m "test(e2e): support remote URLs in PlaywrightFixture
+```
+feat(e2e): create Playwright E2E test project
 
-- Skip local server startup for non-localhost URLs
-- Add validation that remote server is reachable
-- Enables running tests against budgetdemo.becauseimclever.com
+- New BudgetExperiment.E2E.Tests project
+- Playwright for .NET integration
+- Project structure and configuration
 
-Refs: #036"
+Refs: #036
 ```
 
-### Phase 2: Add Demo Test Traits/Categories
+### Phase 2: Test Infrastructure
 
-**Objective:** Mark tests that are safe to run against demo (optional)
+**Objective:** Create fixture and authentication helper
 
 **Tasks:**
-- [ ] Create `[Trait("Category", "DemoSafe")]` for read-only tests
-- [ ] Document which tests modify data and should be skipped on demo
-- [ ] Update README with demo test filtering examples
+- [ ] Implement `PlaywrightFixture`
+- [ ] Implement `AuthenticationHelper`
+- [ ] Add Playwright browser installation script
+- [ ] Verify fixture works against demo
 
 **Commit:**
-```bash
-git add .
-git commit -m "test(e2e): add DemoSafe trait for demo-compatible tests
+```
+feat(e2e): add PlaywrightFixture and AuthenticationHelper
 
-- Mark read-only tests as DemoSafe
-- Document test categories for demo vs. local execution
+- Configurable fixture with environment variable support
+- Authentication helper for Authentik login flow
+- Browser lifecycle management
 
-Refs: #036"
+Refs: #036
 ```
 
-### Phase 3: Documentation
+### Phase 3: Smoke Tests
 
-**Objective:** Update documentation for demo environment testing
+**Objective:** Create initial smoke test suite
 
 **Tasks:**
-- [ ] Update E2E test project README
-- [ ] Add quick-start commands for demo testing
-- [ ] Document demo credentials and URL
+- [ ] Create `SmokeTests.cs`
+- [ ] Test home page loads
+- [ ] Test login succeeds
+- [ ] Test navigation renders
+
+**Commit:**
+```
+test(e2e): add smoke tests for basic app validation
+
+- Verify home page accessibility
+- Verify login flow works
+- Verify main navigation renders
+
+Refs: #036
+```
+
+### Phase 4: Navigation Tests
+
+**Objective:** Verify all main pages are accessible
+
+**Tasks:**
+- [ ] Create `NavigationTests.cs`
+- [ ] Test each main navigation item
+- [ ] Verify page content loads
+
+**Commit:**
+```
+test(e2e): add navigation tests for all main pages
+
+- Dashboard, Transactions, Accounts pages
+- Budget, Reports, Settings pages
+- Verify each page loads successfully
+
+Refs: #036
+```
+
+### Phase 5: Documentation
+
+**Objective:** Document how to run E2E tests
+
+**Tasks:**
+- [ ] Create project README
+- [ ] Add quick-start commands
+- [ ] Document environment variables
+- [ ] Add troubleshooting section
 
 ---
 
-## Running Tests Against Demo
+## Running Tests
 
 ### Prerequisites
 
 1. Ensure `budgetdemo.becauseimclever.com` is accessible
-2. Playwright browsers installed: `pwsh tests/BudgetExperiment.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install`
+2. Install Playwright browsers (first time only):
+   ```powershell
+   pwsh tests/BudgetExperiment.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install
+   ```
 
 ### Commands
 
 ```powershell
-# Run all E2E tests against demo environment
-$env:BUDGET_APP_URL = "https://budgetdemo.becauseimclever.com"
-dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj
+# Run all E2E tests against demo (default)
+dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests
 
 # Run with visible browser for debugging
-$env:BUDGET_APP_URL = "https://budgetdemo.becauseimclever.com"
 $env:HEADED = "true"
-dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj
+dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests
+
+# Run against local development server
+$env:BUDGET_APP_URL = "http://localhost:5099"
+dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests
 
 # Run only smoke tests
-$env:BUDGET_APP_URL = "https://budgetdemo.becauseimclever.com"
-dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj --filter "FullyQualifiedName~SmokeTests"
-
-# Run demo-safe tests only (after Phase 2)
-$env:BUDGET_APP_URL = "https://budgetdemo.becauseimclever.com"
-dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj --filter "Category=DemoSafe"
-
-# Single command (PowerShell)
-$env:BUDGET_APP_URL = "https://budgetdemo.becauseimclever.com"; dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj
+dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests --filter "FullyQualifiedName~SmokeTests"
 ```
 
 ### Linux/macOS/CI
 
 ```bash
-# Run all tests against demo
-BUDGET_APP_URL=https://budgetdemo.becauseimclever.com dotnet test tests/BudgetExperiment.E2E.Tests
+# Run tests against demo
+dotnet test tests/BudgetExperiment.E2E.Tests
 
 # With headed mode
-BUDGET_APP_URL=https://budgetdemo.becauseimclever.com HEADED=true dotnet test tests/BudgetExperiment.E2E.Tests
+HEADED=true dotnet test tests/BudgetExperiment.E2E.Tests
+
+# Against local
+BUDGET_APP_URL=http://localhost:5099 dotnet test tests/BudgetExperiment.E2E.Tests
 ```
 
 ---
@@ -223,30 +354,30 @@ BUDGET_APP_URL=https://budgetdemo.becauseimclever.com HEADED=true dotnet test te
 | URL | `https://budgetdemo.becauseimclever.com` |
 | Test Username | `test` |
 | Test Password | `demo123` |
-| Auth Provider | Authentik (same as production) |
+| Auth Provider | Authentik |
 
 ---
 
 ## Future Enhancements
 
-- **CI/CD Integration:** Add GitHub Actions workflow step to run E2E tests against demo after deployment
+- **CI/CD Integration:** Add GitHub Actions workflow to run E2E tests after deployment
 - **Scheduled Tests:** Nightly E2E run against demo to catch environment issues
-- **Test Reports:** Publish Playwright test reports to GitHub Pages or artifact storage
-- **Parallel Execution:** Configure test parallelization for faster demo validation
+- **Test Reports:** Publish Playwright test reports as artifacts
+- **Visual Regression:** Add screenshot comparison tests
+- **CRUD Tests:** Add data tests with unique identifiers for test isolation
 
 ---
 
 ## Notes
 
-- Demo environment uses the same Authentik instance for authentication
+- Demo environment uses Authentik for authentication
 - The `test` user is specifically created for automated testing
-- Avoid running data-destructive tests against demo without unique identifiers
-- Consider test data isolation strategies for future CRUD testing on demo
+- All tests should be demo-safe (read-only on shared data)
+- Consider test data isolation strategies for future CRUD testing
 
 ---
 
 ## References
 
-- [docs/archive/024.4-playwright-e2e-tests.md](archive/024.4-playwright-e2e-tests.md) - Original Playwright setup
 - [Playwright for .NET Documentation](https://playwright.dev/dotnet/)
-- [tests/BudgetExperiment.E2E.Tests](../tests/BudgetExperiment.E2E.Tests) - E2E test project
+- [xUnit Documentation](https://xunit.net/)
