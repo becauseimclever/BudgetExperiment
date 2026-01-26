@@ -4,6 +4,13 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.8.3] - 2026-01-25
+
+### Bug Fixes
+
+- **import:** Fix "Account ID is required" error during CSV import preview
+- **import:** CreatePreviewTransaction now uses valid GUID for temporary transaction matching
+
 ## [3.8.2] - 2026-01-23
 
 ### Bug Fixes

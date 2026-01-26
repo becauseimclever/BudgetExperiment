@@ -505,9 +505,9 @@ public sealed class ImportService : IImportService
     private static Transaction CreatePreviewTransaction(string description, decimal amount, DateOnly date)
     {
         // Create a temporary transaction for matching purposes
-        // Using a dummy account ID since it's only for comparison
+        // Using a new Guid since Guid.Empty fails domain validation
         return Transaction.Create(
-            Guid.Empty,
+            Guid.NewGuid(),
             MoneyValue.Create("USD", amount),
             date,
             description);
