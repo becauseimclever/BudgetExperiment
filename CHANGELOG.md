@@ -4,6 +4,12 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.8.4] - 2026-01-26
+
+### Bug Fixes
+
+- **reconciliation:** Align client status request parameters with API (year/month)
+
 ## [3.8.3] - 2026-01-25
 
 ### Bug Fixes
