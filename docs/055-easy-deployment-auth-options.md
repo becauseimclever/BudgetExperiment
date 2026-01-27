@@ -1,4 +1,5 @@
 # Easier Deployment for New Users: Optional Postgres, Auth Off, and Flexible Auth Providers
+> **Status:** 🗒️ Planning
 
 ## Problem
 

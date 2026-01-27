@@ -1,4 +1,5 @@
 # Calendar-First Budget Editing
+> **Status:** 🗒️ Planning
 
 ## Feature Overview
 

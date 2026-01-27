@@ -1,4 +1,5 @@
 # Feature 036: Demo Environment E2E Tests
+> **Status:** 🗒️ Planning
 
 ## Status: Planning 📋
 

@@ -1,4 +1,5 @@
 # AI Assistant Calendar Context
+> **Status:** 🗒️ Planning
 
 ## Feature Overview
 

@@ -1,4 +1,5 @@
 # Feature 043: Consolidate AI Features in UI
+> **Status:** 🗒️ Planning
 
 ## Overview
 

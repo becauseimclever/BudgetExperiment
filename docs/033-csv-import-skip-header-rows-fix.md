@@ -1,4 +1,5 @@
 # Feature 033: CSV Import Skip Header Rows Bug Fix
+> **Status:** ✅ Complete
 
 > **Status:** ✅ Complete  
 > **Type:** Bug Fix  

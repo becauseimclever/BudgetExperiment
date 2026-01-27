@@ -1,4 +1,5 @@
 # Feature 042: Optimize CI/CD Pipeline Speed
+> **Status:** 🗒️ Planning
 
 ## Overview
 

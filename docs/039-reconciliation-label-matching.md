@@ -1,4 +1,5 @@
 # Feature 039: Reconciliation label matching
+> **Status:** 🗒️ Planning
 
 ## Overview
 

@@ -1,4 +1,53 @@
+
 # Feature 032: AI-Powered Category Suggestions
+> **Status:** In Progress
+
+---
+## Implementation Status (2026-01-27)
+
+**UI:** Implemented (see Blazor client)
+
+
+
+**Backend/Integration Checklist:**
+
+- [x] CategorySuggestionService analyzes uncategorized transactions and integrates with MerchantKnowledgeBase
+- [x] Auto-creation of categorization rules after category acceptance (API and service logic present)
+- [~] Dismissed suggestions are persisted (restore/undismiss not yet implemented)
+- [x] System learns from user manual categorizations and updates merchant mappings
+- [~] Endpoints for suggesting, accepting, dismissing, and refreshing category suggestions (restore not implemented)
+- [x] Endpoints for merchant-category mapping management
+- [x] Unit and integration tests for new logic and endpoints (see tests for CategorySuggestionService, MerchantMappingService, and CategorySuggestionsController)
+- [x] OpenAPI docs and user documentation for new endpoints/features (see table below)
+
+
+All required UI elements and flows described in the feature spec are present. See `src/BudgetExperiment.Client/Pages/CategorySuggestions.razor` and `src/BudgetExperiment.Client/Components/AI/CategorySuggestionCard.razor` for details.
+
+---
+
+## API Endpoint Summary (OpenAPI)
+
+The following endpoints are available for AI category suggestions and merchant mapping. All endpoints are documented in the OpenAPI spec and available via the Scalar UI (`/scalar`).
+
+| Method | Endpoint | Description |
+|--------|----------------------------------------------------------|-----------------------------------------------|
+| POST   | `/api/v1/categorysuggestions/analyze`                    | Analyze uncategorized transactions and generate suggestions |
+| GET    | `/api/v1/categorysuggestions`                            | Get all pending category suggestions          |
+| GET    | `/api/v1/categorysuggestions/{id}`                       | Get a specific category suggestion by ID      |
+| POST   | `/api/v1/categorysuggestions/{id}/accept`                | Accept a suggestion and create the category   |
+| POST   | `/api/v1/categorysuggestions/{id}/dismiss`               | Dismiss a suggestion                         |
+| POST   | `/api/v1/categorysuggestions/bulk-accept`                | Accept multiple suggestions in bulk           |
+| GET    | `/api/v1/categorysuggestions/{id}/preview-rules`         | Preview rules that would be created for a suggestion |
+| POST   | `/api/v1/categorysuggestions/{id}/create-rules`          | Create categorization rules from suggestion patterns |
+| GET    | `/api/v1/merchantmappings`                               | Get all learned merchant mappings             |
+| POST   | `/api/v1/merchantmappings/learn`                         | Learn a merchant-to-category mapping from manual categorization |
+| DELETE | `/api/v1/merchantmappings/{id}`                          | Delete a learned merchant mapping             |
+
+See the OpenAPI/Swagger UI at `/scalar` for full request/response schemas and try-it-out functionality.
+
+This checklist will be updated as each backend/integration item is confirmed.
+
+----
 
 ## Overview
 

@@ -1,4 +1,5 @@
 # 053 - Reporting & Data Portability Overhaul
+> **Status:** 🗒️ Planning
 
 ## Goal
 Deliver a modern, accessible, and highly interactive reporting experience for budget data, with robust export options (CSV, Excel, PDF) and user-driven custom report composition.

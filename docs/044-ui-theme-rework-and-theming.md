@@ -1,4 +1,5 @@
 # Feature 044: UI Theme Rework and Theming Improvements
+> **Status:** 🗒️ Planning
 
 ## Overview
 

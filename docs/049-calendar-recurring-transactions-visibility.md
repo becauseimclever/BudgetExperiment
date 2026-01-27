@@ -1,4 +1,5 @@
 # Calendar Recurring Transactions Visibility
+> **Status:** 🗒️ Planning
 
 ## Feature Overview
 

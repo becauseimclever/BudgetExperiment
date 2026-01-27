@@ -1,4 +1,5 @@
 # Feature 037: Automated Demo Site Deployment
+> **Status:** 🗒️ Planning
 
 ## Status: Planning 📋
 

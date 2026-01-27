@@ -1,4 +1,5 @@
 # Calendar-Driven Reports & Analytics
+> **Status:** 🗒️ Planning
 
 ## Feature Overview
 

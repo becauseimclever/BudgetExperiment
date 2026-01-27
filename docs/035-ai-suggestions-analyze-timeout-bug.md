@@ -1,4 +1,5 @@
 # Feature 035: AI Suggestions Analyze Timeout Bug
+> **Status:** ✅ Complete
 
 > **Status:** ✅ Complete  
 > **Type:** Bug Fix  

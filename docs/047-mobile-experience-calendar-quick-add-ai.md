@@ -1,4 +1,5 @@
 # Mobile Experience: Calendar, Quick Add, and AI Assistant
+> **Status:** 🗒️ Planning
 
 ## Feature Overview
 

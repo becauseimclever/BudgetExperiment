@@ -1,4 +1,5 @@
 # Feature 041: Validate Starting Balance in Calendar (E2E)
+> **Status:** 🗒️ Planning
 
 ## Overview
 

@@ -1,4 +1,5 @@
 # Feature 045: UI Component Refactor and Library Preparation
+> **Status:** 🗒️ Planning
 
 ## Overview
 

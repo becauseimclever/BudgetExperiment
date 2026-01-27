@@ -1,4 +1,5 @@
 # Performance Optimization: Time to First Page & Page Load
+> **Status:** 🗒️ Planning
 
 ## Feature Overview
 

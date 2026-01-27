@@ -1,4 +1,5 @@
 # Feature XXX: [Feature Title]
+> **Status:** [Planning | In Progress | Complete]
 
 > **Instructions:** Copy this template for new features. Replace `XXX` with the next feature number. Delete this instruction block and all `<!-- comments -->` after filling in.
 

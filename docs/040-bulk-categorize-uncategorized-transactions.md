@@ -1,4 +1,5 @@
 # Feature 040: Bulk Categorize Uncategorized Transactions
+> **Status:** 🗒️ Planning
 
 ## Overview
 

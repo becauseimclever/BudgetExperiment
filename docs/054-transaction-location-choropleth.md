@@ -1,4 +1,5 @@
 # 054 - Transaction Location Data & Choropleth Reporting
+> **Status:** 🗒️ Planning
 
 ## Goal
 Enhance transaction records with location data (parsed or captured), and visualize spending patterns geographically using choropleth charts in reports.
