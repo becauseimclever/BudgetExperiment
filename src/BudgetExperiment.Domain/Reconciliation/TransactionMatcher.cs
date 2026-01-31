@@ -35,6 +35,11 @@ public sealed class TransactionMatcher : ITransactionMatcher
     /// </summary>
     private const decimal MediumConfidenceThreshold = 0.60m;
 
+    /// <summary>
+    /// High confidence score for import pattern matches.
+    /// </summary>
+    private const decimal PatternMatchConfidence = 0.98m;
+
     /// <inheritdoc/>
     public IReadOnlyList<TransactionMatchResult> FindMatches(
         Transaction transaction,
@@ -113,13 +118,16 @@ public sealed class TransactionMatcher : ITransactionMatcher
             return null;
         }
 
-        // Calculate description similarity
-        var descriptionSimilarity = this.CalculateDescriptionSimilarity(
-            transaction.Description,
-            candidate.Description);
+        // Check for import pattern match first (takes precedence over fuzzy matching)
+        var hasPatternMatch = this.MatchesImportPatterns(transaction.Description, candidate.ImportPatterns);
 
-        // Check description threshold
-        if (descriptionSimilarity < tolerances.DescriptionSimilarityThreshold)
+        // Calculate description similarity (for non-pattern matches or as secondary signal)
+        var descriptionSimilarity = hasPatternMatch
+            ? 1.0m  // Pattern match implies full description match
+            : this.CalculateDescriptionSimilarity(transaction.Description, candidate.Description);
+
+        // Check description threshold only if no pattern match
+        if (!hasPatternMatch && descriptionSimilarity < tolerances.DescriptionSimilarityThreshold)
         {
             return null;
         }
@@ -128,10 +136,19 @@ public sealed class TransactionMatcher : ITransactionMatcher
         var dateScore = this.CalculateDateScore(dateOffsetDays, tolerances.DateToleranceDays);
         var amountScore = this.CalculateAmountScore(actualAmount, expectedAmount, tolerances);
 
-        var confidenceScore =
-            (descriptionSimilarity * DescriptionWeight) +
-            (amountScore * AmountWeight) +
-            (dateScore * DateWeight);
+        decimal confidenceScore;
+        if (hasPatternMatch)
+        {
+            // Pattern matches get high confidence, with slight adjustment for date/amount
+            confidenceScore = PatternMatchConfidence * ((dateScore + amountScore) / 2 * 0.02m + 0.98m);
+        }
+        else
+        {
+            confidenceScore =
+                (descriptionSimilarity * DescriptionWeight) +
+                (amountScore * AmountWeight) +
+                (dateScore * DateWeight);
+        }
 
         var confidenceLevel = DetermineConfidenceLevel(confidenceScore);
 
@@ -158,6 +175,16 @@ public sealed class TransactionMatcher : ITransactionMatcher
         }
 
         return MatchConfidenceLevel.Low;
+    }
+
+    private bool MatchesImportPatterns(string transactionDescription, IReadOnlyCollection<ImportPattern>? patterns)
+    {
+        if (patterns is null || patterns.Count == 0)
+        {
+            return false;
+        }
+
+        return patterns.Any(p => p.Matches(transactionDescription));
     }
 
     private bool IsAmountWithinTolerance(

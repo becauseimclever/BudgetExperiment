@@ -105,6 +105,16 @@ public sealed class RecurringTransaction
     public Guid CreatedByUserId { get; private set; }
 
     /// <summary>
+    /// Gets the import patterns used to match imported transactions.
+    /// </summary>
+    public IReadOnlyCollection<ImportPattern> ImportPatterns => this._importPatterns.AsReadOnly();
+
+    /// <summary>
+    /// Backing field for import patterns.
+    /// </summary>
+    private readonly List<ImportPattern> _importPatterns = new();
+
+    /// <summary>
     /// Creates a new recurring transaction.
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
@@ -284,5 +294,56 @@ public sealed class RecurringTransaction
 
             current = this.RecurrencePattern.CalculateNextOccurrence(current);
         }
+    }
+
+    /// <summary>
+    /// Adds an import pattern to match imported transactions.
+    /// </summary>
+    /// <param name="pattern">The pattern to add.</param>
+    /// <exception cref="DomainException">Thrown when pattern is null or already exists.</exception>
+    public void AddImportPattern(ImportPattern pattern)
+    {
+        if (pattern is null)
+        {
+            throw new DomainException("Import pattern is required.");
+        }
+
+        if (this._importPatterns.Contains(pattern))
+        {
+            throw new DomainException("Import pattern already exists.");
+        }
+
+        this._importPatterns.Add(pattern);
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Removes an import pattern.
+    /// </summary>
+    /// <param name="pattern">The pattern to remove.</param>
+    /// <exception cref="DomainException">Thrown when pattern is not found.</exception>
+    public void RemoveImportPattern(ImportPattern pattern)
+    {
+        if (!this._importPatterns.Remove(pattern))
+        {
+            throw new DomainException("Import pattern not found.");
+        }
+
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Checks if the given transaction description matches any of this recurring transaction's import patterns.
+    /// </summary>
+    /// <param name="description">The transaction description to match.</param>
+    /// <returns>True if any pattern matches; otherwise, false.</returns>
+    public bool MatchesImportDescription(string description)
+    {
+        if (this._importPatterns.Count == 0)
+        {
+            return false;
+        }
+
+        return this._importPatterns.Any(p => p.Matches(description));
     }
 }

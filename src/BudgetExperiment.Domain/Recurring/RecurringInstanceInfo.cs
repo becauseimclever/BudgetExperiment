@@ -17,6 +17,7 @@ namespace BudgetExperiment.Domain.Recurring;
 /// <param name="CategoryName">The category name (null if uncategorized).</param>
 /// <param name="IsModified">Whether this instance has been modified via exception.</param>
 /// <param name="IsSkipped">Whether this instance has been skipped via exception.</param>
+/// <param name="ImportPatterns">Optional import patterns for pattern-based matching.</param>
 public sealed record RecurringInstanceInfo(
     Guid RecurringTransactionId,
     DateOnly InstanceDate,
@@ -27,4 +28,5 @@ public sealed record RecurringInstanceInfo(
     Guid? CategoryId,
     string? CategoryName,
     bool IsModified,
-    bool IsSkipped);
+    bool IsSkipped,
+    IReadOnlyCollection<ImportPattern>? ImportPatterns = null);

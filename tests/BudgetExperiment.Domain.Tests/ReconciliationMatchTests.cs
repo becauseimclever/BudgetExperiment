@@ -408,4 +408,207 @@ public class ReconciliationMatchTests
         // Assert
         Assert.Equal(-2, match.DateOffsetDays);
     }
+
+    [Fact]
+    public void Create_Sets_Source_To_Auto()
+    {
+        // Act
+        var match = ReconciliationMatch.Create(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            confidenceScore: 0.75m,
+            amountVariance: 0m,
+            dateOffsetDays: 0,
+            BudgetScope.Shared,
+            ownerUserId: null);
+
+        // Assert
+        Assert.Equal(MatchSource.Auto, match.Source);
+    }
+
+    [Fact]
+    public void CreateManualLink_Sets_Source_To_Manual()
+    {
+        // Act
+        var match = ReconciliationMatch.CreateManualLink(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            amountVariance: 5.00m,
+            dateOffsetDays: 2,
+            BudgetScope.Personal,
+            this._ownerUserId);
+
+        // Assert
+        Assert.Equal(MatchSource.Manual, match.Source);
+    }
+
+    [Fact]
+    public void CreateManualLink_Sets_Status_To_Accepted()
+    {
+        // Act
+        var match = ReconciliationMatch.CreateManualLink(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            amountVariance: 0m,
+            dateOffsetDays: 0,
+            BudgetScope.Shared,
+            ownerUserId: null);
+
+        // Assert
+        Assert.Equal(ReconciliationMatchStatus.Accepted, match.Status);
+        Assert.NotNull(match.ResolvedAtUtc);
+    }
+
+    [Fact]
+    public void CreateManualLink_Sets_ConfidenceScore_To_One()
+    {
+        // Act
+        var match = ReconciliationMatch.CreateManualLink(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            amountVariance: 0m,
+            dateOffsetDays: 0,
+            BudgetScope.Shared,
+            ownerUserId: null);
+
+        // Assert
+        Assert.Equal(1.0m, match.ConfidenceScore);
+        Assert.Equal(MatchConfidenceLevel.High, match.ConfidenceLevel);
+    }
+
+    [Fact]
+    public void CreateManualLink_With_Empty_ImportedTransactionId_Throws()
+    {
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            ReconciliationMatch.CreateManualLink(
+                Guid.Empty,
+                this._recurringTransactionId,
+                this._instanceDate,
+                amountVariance: 0m,
+                dateOffsetDays: 0,
+                BudgetScope.Shared,
+                ownerUserId: null));
+
+        Assert.Contains("imported transaction", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CreateManualLink_With_Empty_RecurringTransactionId_Throws()
+    {
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            ReconciliationMatch.CreateManualLink(
+                this._importedTransactionId,
+                Guid.Empty,
+                this._instanceDate,
+                amountVariance: 0m,
+                dateOffsetDays: 0,
+                BudgetScope.Shared,
+                ownerUserId: null));
+
+        Assert.Contains("recurring transaction", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CreateManualLink_With_Personal_Scope_Requires_OwnerUserId()
+    {
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            ReconciliationMatch.CreateManualLink(
+                this._importedTransactionId,
+                this._recurringTransactionId,
+                this._instanceDate,
+                amountVariance: 0m,
+                dateOffsetDays: 0,
+                BudgetScope.Personal,
+                ownerUserId: null));
+
+        Assert.Contains("owner", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Unlink_Sets_Status_To_Rejected()
+    {
+        // Arrange - Create an accepted match
+        var match = ReconciliationMatch.CreateManualLink(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            amountVariance: 0m,
+            dateOffsetDays: 0,
+            BudgetScope.Shared,
+            ownerUserId: null);
+
+        // Act
+        match.Unlink();
+
+        // Assert
+        Assert.Equal(ReconciliationMatchStatus.Rejected, match.Status);
+    }
+
+    [Fact]
+    public void Unlink_On_AutoMatched_Match_Sets_Status_To_Rejected()
+    {
+        // Arrange
+        var match = ReconciliationMatch.Create(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            confidenceScore: 0.90m,
+            amountVariance: 0m,
+            dateOffsetDays: 0,
+            BudgetScope.Shared,
+            ownerUserId: null);
+        match.AutoMatch();
+
+        // Act
+        match.Unlink();
+
+        // Assert
+        Assert.Equal(ReconciliationMatchStatus.Rejected, match.Status);
+    }
+
+    [Fact]
+    public void Unlink_On_Suggested_Match_Throws()
+    {
+        // Arrange - Create a suggested (not yet resolved) match
+        var match = ReconciliationMatch.Create(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            confidenceScore: 0.75m,
+            amountVariance: 0m,
+            dateOffsetDays: 0,
+            BudgetScope.Shared,
+            ownerUserId: null);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => match.Unlink());
+        Assert.Contains("not linked", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Unlink_On_Already_Rejected_Match_Throws()
+    {
+        // Arrange
+        var match = ReconciliationMatch.Create(
+            this._importedTransactionId,
+            this._recurringTransactionId,
+            this._instanceDate,
+            confidenceScore: 0.75m,
+            amountVariance: 0m,
+            dateOffsetDays: 0,
+            BudgetScope.Shared,
+            ownerUserId: null);
+        match.Reject();
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => match.Unlink());
+        Assert.Contains("not linked", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

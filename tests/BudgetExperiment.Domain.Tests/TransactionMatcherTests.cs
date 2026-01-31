@@ -390,5 +390,150 @@ public class TransactionMatcherTests
             IsSkipped: false);
     }
 
+    private RecurringInstanceInfo CreateCandidateWithPatterns(
+        string description,
+        decimal amount,
+        DateOnly instanceDate,
+        IReadOnlyCollection<ImportPattern> patterns)
+    {
+        return new RecurringInstanceInfo(
+            RecurringTransactionId: Guid.NewGuid(),
+            InstanceDate: instanceDate,
+            AccountId: this._accountId,
+            AccountName: "Test Account",
+            Description: description,
+            Amount: MoneyValue.Create("USD", amount),
+            CategoryId: null,
+            CategoryName: null,
+            IsModified: false,
+            IsSkipped: false,
+            ImportPatterns: patterns);
+    }
+
+    #endregion
+
+    #region Import Pattern Matching Tests
+
+    [Fact]
+    public void CalculateMatch_WithMatchingImportPattern_ReturnsHighConfidence()
+    {
+        // Arrange
+        var patterns = new[] { ImportPattern.Create("*ACME CORP PAYROLL*") };
+        var transaction = this.CreateTransaction("DIRECT DEP ACME CORP PAYROLL 01/15", 1500.00m, new DateOnly(2026, 1, 15));
+        var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
+
+        // Act
+        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+
+        // Assert - Pattern match should give high confidence even though description "Paycheck" != "DIRECT DEP..."
+        Assert.NotNull(result);
+        Assert.Equal(MatchConfidenceLevel.High, result.ConfidenceLevel);
+        Assert.True(result.ConfidenceScore >= 0.95m);
+    }
+
+    [Fact]
+    public void CalculateMatch_WithMatchingImportPattern_BypassesDescriptionThreshold()
+    {
+        // Arrange - Without pattern, these descriptions wouldn't match (too different)
+        var patterns = new[] { ImportPattern.Create("*NETFLIX*") };
+        var transaction = this.CreateTransaction("NETFLIX.COM 800-123-4567", 15.99m, new DateOnly(2026, 1, 15));
+        var candidate = this.CreateCandidateWithPatterns("Netflix Subscription Monthly", 15.99m, new DateOnly(2026, 1, 15), patterns);
+
+        // Act
+        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+
+        // Assert - Pattern match should work even though fuzzy matching might fail
+        Assert.NotNull(result);
+        Assert.True(result.ConfidenceScore >= 0.85m);
+    }
+
+    [Fact]
+    public void CalculateMatch_WithNonMatchingImportPattern_FallsBackToFuzzyMatching()
+    {
+        // Arrange - Pattern won't match, but descriptions are similar enough for fuzzy matching
+        var patterns = new[] { ImportPattern.Create("*OTHER COMPANY*") };
+        var transaction = this.CreateTransaction("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15));
+        var candidate = this.CreateCandidateWithPatterns("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15), patterns);
+
+        // Act
+        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+
+        // Assert - Should still match via fuzzy matching
+        Assert.NotNull(result);
+        Assert.Equal(1.0m, result.DescriptionSimilarity);
+    }
+
+    [Fact]
+    public void CalculateMatch_WithMultiplePatterns_MatchesIfAnyPatternMatches()
+    {
+        // Arrange
+        var patterns = new[]
+        {
+            ImportPattern.Create("*OTHER COMPANY*"),
+            ImportPattern.Create("*ACME CORP*"),
+        };
+        var transaction = this.CreateTransaction("DIRECT DEP ACME CORP PAYROLL", 1500.00m, new DateOnly(2026, 1, 15));
+        var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
+
+        // Act
+        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.ConfidenceScore >= 0.95m);
+    }
+
+    [Fact]
+    public void CalculateMatch_ImportPatternMatch_StillChecksDateTolerance()
+    {
+        // Arrange - Pattern matches but date is way out of tolerance
+        var patterns = new[] { ImportPattern.Create("*ACME CORP*") };
+        var transaction = this.CreateTransaction("DIRECT DEP ACME CORP", 1500.00m, new DateOnly(2026, 2, 15)); // 1 month later
+        var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
+
+        // Act
+        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+
+        // Assert - Should not match because date is outside tolerance
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void CalculateMatch_ImportPatternMatch_StillChecksAmountTolerance()
+    {
+        // Arrange - Pattern matches but amount is way off
+        var patterns = new[] { ImportPattern.Create("*ACME CORP*") };
+        var transaction = this.CreateTransaction("DIRECT DEP ACME CORP", 5000.00m, new DateOnly(2026, 1, 15));
+        var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
+
+        // Act
+        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+
+        // Assert - Should not match because amount is too far off
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void FindMatches_WithImportPatterns_PrioritizesPatternMatches()
+    {
+        // Arrange - Use loose tolerances so both candidates can match
+        var looseTolerances = MatchingTolerances.Create(7, 0.10m, 10.00m, 0.20m, 0.85m);
+        var patternsForPaycheck = new[] { ImportPattern.Create("*ACME CORP PAYROLL*") };
+        var transaction = this.CreateTransaction("DIRECT DEP ACME CORP PAYROLL", 1500.00m, new DateOnly(2026, 1, 15));
+
+        var candidates = new[]
+        {
+            this.CreateCandidate("Direct Deposit ACME", 1500.00m, new DateOnly(2026, 1, 15)),  // Similar description (can fuzzy match)
+            this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patternsForPaycheck),  // Has matching pattern
+        };
+
+        // Act
+        var results = this._matcher.FindMatches(transaction, candidates, looseTolerances);
+
+        // Assert - Pattern match should rank higher
+        Assert.Equal(2, results.Count);
+        Assert.True(results[0].ConfidenceScore >= results[1].ConfidenceScore);
+    }
+
     #endregion
 }
