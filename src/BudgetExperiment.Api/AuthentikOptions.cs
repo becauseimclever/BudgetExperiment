@@ -22,8 +22,15 @@ public sealed class AuthentikOptions
 
     /// <summary>
     /// Gets or sets the audience (typically the client ID or API identifier).
+    /// Used for API JWT token validation.
     /// </summary>
     public string Audience { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the client ID for the OIDC client (Blazor WASM).
+    /// If not specified, defaults to the Audience value.
+    /// </summary>
+    public string ClientId { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a value indicating whether HTTPS metadata is required.

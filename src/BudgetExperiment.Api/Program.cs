@@ -41,6 +41,9 @@ public partial class Program
         builder.Services.AddScoped<IUserContext, UserContext>();
         ConfigureAuthentication(builder.Services, builder.Configuration);
 
+        // Client configuration (exposed via /api/v1/config endpoint)
+        ConfigureClientConfig(builder.Services, builder.Configuration);
+
         // Application & Infrastructure
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
@@ -250,5 +253,38 @@ public partial class Program
         });
 
         services.AddAuthorization();
+    }
+
+    /// <summary>
+    /// Configures client configuration options for the /api/v1/config endpoint.
+    /// Maps Authentik settings to client-safe configuration.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The configuration root.</param>
+    private static void ConfigureClientConfig(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ClientConfigOptions>(options =>
+        {
+            var authentikSection = configuration.GetSection(AuthentikOptions.SectionName);
+
+            // Determine auth mode based on whether Authentik is enabled
+            var enabled = authentikSection.GetValue<bool?>("Enabled") ?? true;
+            options.AuthMode = enabled ? "oidc" : "none";
+
+            // OIDC settings from Authentik config
+            options.OidcAuthority = authentikSection.GetValue<string>("Authority") ?? string.Empty;
+
+            // ClientId can be explicitly set, or fall back to Audience (common in Authentik setups)
+            options.OidcClientId = authentikSection.GetValue<string>("ClientId")
+                ?? authentikSection.GetValue<string>("Audience")
+                ?? string.Empty;
+
+            // Apply any explicit ClientConfig overrides
+            var clientSection = configuration.GetSection(ClientConfigOptions.SectionName);
+            if (clientSection.Exists())
+            {
+                clientSection.Bind(options);
+            }
+        });
     }
 }
