@@ -127,6 +127,7 @@ Tests under `tests/` mirroring structure:
 ## 18. Style / Analyzers
 - Enable nullable reference types.
 - Treat warnings as errors (except explicitly documented suppressions).
+- **One top-level class/record/struct per file.** File name must match the type name (e.g., `BudgetService.cs` contains `public class BudgetService`). Nested types are allowed within their parent type's file.
 - StyleCop enforced via `StyleCop.Analyzers` NuGet (added centrally in `Directory.Build.props`).
 - Root `stylecop.json` + `.editorconfig` define rule set (ordering, documentation, spacing, usings placement outside namespace).
 - All analyzer warnings (including StyleCop) escalate to errors; no blanket suppressions. If a suppression is truly required: add scoped `#pragma warning disable <ID>` with a dated TODO + issue link directly above the line and re-enable immediately after.
