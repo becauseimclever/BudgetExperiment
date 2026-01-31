@@ -1,5 +1,5 @@
 # Feature 037: Automated Demo Site Deployment
-> **Status:** 🗒️ Planning
+> **Status:** ⏸️ On Hold (Depends on 036 - E2E tests disabled until auth is fixed)
 
 ## Overview
 
