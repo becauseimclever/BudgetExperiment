@@ -11,16 +11,18 @@ Currently, users must categorize uncategorized transactions one at a time, which
 
 ### Current State
 
-- Uncategorized transactions are not easily discoverable in bulk.
-- No filtering or bulk assignment UI exists.
-- Users must edit each transaction individually.
+- Uncategorized transactions are not easily discoverable in bulk
+- The `ITransactionRepository.GetUncategorizedAsync()` method exists but returns all uncategorized transactions without filtering or paging
+- No filtering or bulk assignment UI exists
+- Users must edit each transaction individually via the Calendar or Accounts pages
 
 ### Target State
 
-- Users can view all uncategorized transactions in a single view.
-- Filtering by date, amount, description, or other fields is supported.
-- Users can select multiple transactions and assign a category in bulk.
-- Bulk actions are validated and auditable.
+- Users can navigate to a dedicated "Uncategorized" page listing all transactions without a category
+- Filtering by date range, amount range, description (contains), and account is supported
+- Server-side paging prevents overwhelming response sizes
+- Users can select multiple transactions and assign a category in bulk
+- Bulk actions are validated and provide clear success/error feedback
 
 ---
 
@@ -29,32 +31,42 @@ Currently, users must categorize uncategorized transactions one at a time, which
 ### Bulk Categorization
 
 #### US-040-001: View uncategorized transactions
-**As a** user  
-**I want to** see all uncategorized transactions in one place  
+**As a** user
+**I want to** see all uncategorized transactions in one place
 **So that** I can quickly identify and categorize them
 
 **Acceptance Criteria:**
-- [ ] There is a view listing all uncategorized transactions
-- [ ] The view supports paging and sorting
+- [ ] There is a dedicated page at `/uncategorized` listing all uncategorized transactions
+- [ ] The view supports server-side paging (default 50 per page, configurable)
+- [ ] The view supports sorting by date (default: newest first), amount, or description
+- [ ] Each row shows: date, description, amount, account name
 
 #### US-040-002: Filter uncategorized transactions
-**As a** user  
-**I want to** filter uncategorized transactions by date, amount, or description  
+**As a** user
+**I want to** filter uncategorized transactions by date, amount, or description
 **So that** I can find related transactions to categorize together
 
 **Acceptance Criteria:**
-- [ ] Filtering by date range, amount, and description is supported
-- [ ] Filters can be combined
+- [ ] Filtering by date range (start date, end date) is supported
+- [ ] Filtering by amount range (min, max) is supported
+- [ ] Filtering by description (case-insensitive contains) is supported
+- [ ] Filtering by account is supported
+- [ ] Filters can be combined (AND logic)
+- [ ] Filter state persists during pagination
 
 #### US-040-003: Bulk assign categories
-**As a** user  
-**I want to** select multiple uncategorized transactions and assign a category in one action  
+**As a** user
+**I want to** select multiple uncategorized transactions and assign a category in one action
 **So that** I can efficiently categorize many transactions at once
 
 **Acceptance Criteria:**
-- [ ] Multiple transactions can be selected
-- [ ] A category can be assigned to all selected transactions in one action
-- [ ] Bulk assignment is validated and errors are surfaced
+- [ ] Checkbox selection allows selecting individual transactions
+- [ ] "Select All (on page)" and "Deselect All" actions are available
+- [ ] A dropdown or modal allows selecting the target category
+- [ ] Submitting the bulk action updates all selected transactions
+- [ ] Success message shows count of updated transactions
+- [ ] Errors are surfaced clearly (e.g., "Failed to update 2 of 15 transactions")
+- [ ] Page refreshes to show remaining uncategorized transactions after bulk action
 
 ---
 
@@ -62,77 +74,264 @@ Currently, users must categorize uncategorized transactions one at a time, which
 
 ### Architecture Changes
 
-- Add API endpoint to list uncategorized transactions with filtering and paging
-- Add API endpoint for bulk category assignment
-- Update client to provide uncategorized view, filtering, and bulk actions
+| Layer | Changes |
+|-------|---------|
+| Domain | Add `GetUncategorizedPagedAsync()` to `ITransactionRepository` with filter/page params |
+| Application | Add `IUncategorizedTransactionService` with list and bulk categorize methods |
+| Contracts | Add `UncategorizedTransactionFilterDto`, `BulkCategorizeRequest`, `BulkCategorizeResponse` DTOs |
+| API | Add `GET /api/v1/transactions/uncategorized` and `POST /api/v1/transactions/bulk-categorize` endpoints |
+| Client | Add `IUncategorizedApiService`, update navigation, create `Uncategorized.razor` page |
 
 ### Domain Model
 
-- No changes required; use existing transaction and category models
+No new entities required. Leverages existing:
+- `Transaction` entity (already has `CategoryId` nullable property)
+- `BudgetCategory` entity for category selection
+- `Account` entity for account filter dropdown
+
+### New Repository Method
+
+```csharp
+// ITransactionRepository.cs - add new method
+Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetUncategorizedPagedAsync(
+    DateOnly? startDate = null,
+    DateOnly? endDate = null,
+    decimal? minAmount = null,
+    decimal? maxAmount = null,
+    string? descriptionContains = null,
+    Guid? accountId = null,
+    string sortBy = "Date",
+    bool sortDescending = true,
+    int skip = 0,
+    int take = 50,
+    CancellationToken cancellationToken = default);
+```
+
+### New DTOs (Contracts)
+
+```csharp
+// UncategorizedTransactionDtos.cs
+
+/// <summary>
+/// Filter parameters for querying uncategorized transactions.
+/// </summary>
+public sealed class UncategorizedTransactionFilterDto
+{
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+    public decimal? MinAmount { get; set; }
+    public decimal? MaxAmount { get; set; }
+    public string? DescriptionContains { get; set; }
+    public Guid? AccountId { get; set; }
+    public string SortBy { get; set; } = "Date"; // Date, Amount, Description
+    public bool SortDescending { get; set; } = true;
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 50;
+}
+
+/// <summary>
+/// Paged response for uncategorized transactions.
+/// </summary>
+public sealed class UncategorizedTransactionPageDto
+{
+    public IReadOnlyList<TransactionDto> Items { get; set; } = [];
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+}
+
+/// <summary>
+/// Request to bulk categorize transactions.
+/// </summary>
+public sealed class BulkCategorizeRequest
+{
+    /// <summary>
+    /// Gets or sets the transaction IDs to categorize.
+    /// </summary>
+    public IReadOnlyList<Guid> TransactionIds { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the target category ID.
+    /// </summary>
+    public Guid CategoryId { get; set; }
+}
+
+/// <summary>
+/// Response from bulk categorize operation.
+/// </summary>
+public sealed class BulkCategorizeResponse
+{
+    public int TotalRequested { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailedCount { get; set; }
+    public IReadOnlyList<string> Errors { get; set; } = [];
+}
+```
 
 ### API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/v1/transactions/uncategorized | List uncategorized transactions with filters |
-| POST | /api/v1/transactions/bulk-categorize | Bulk assign category to transactions |
+| Method | Endpoint | Query/Body | Response | Description |
+|--------|----------|------------|----------|-------------|
+| GET | `/api/v1/transactions/uncategorized` | Query: filter params | `UncategorizedTransactionPageDto` | List uncategorized with filters and paging |
+| POST | `/api/v1/transactions/bulk-categorize` | Body: `BulkCategorizeRequest` | `BulkCategorizeResponse` | Assign category to multiple transactions |
 
-### Database Changes
+**GET Response Headers:**
+- `X-Pagination-TotalCount`: Total number of matching uncategorized transactions
 
-- Ensure index on category_id for efficient uncategorized queries
+### Database Considerations
+
+The existing index on `category_id` in the `transactions` table should support efficient queries for `WHERE category_id IS NULL`. Verify with query plan:
+
+```sql
+-- Verify index usage
+EXPLAIN ANALYZE
+SELECT * FROM transactions
+WHERE category_id IS NULL
+ORDER BY date DESC
+LIMIT 50 OFFSET 0;
+```
+
+If performance is poor, consider a partial index:
+```sql
+CREATE INDEX idx_transactions_uncategorized ON transactions (date DESC)
+WHERE category_id IS NULL;
+```
 
 ### UI Components
 
-- New page/view for uncategorized transactions
-- Filtering controls (date, amount, description)
-- Bulk select and assign category UI
+**New Page: `Uncategorized.razor`**
+- Route: `/uncategorized`
+- Filter bar with date range picker, amount inputs, description search, account dropdown
+- Table with checkbox selection, sortable columns
+- Pagination controls
+- Bulk action bar (visible when items selected): category dropdown + "Categorize Selected" button
+- Navigation link in sidebar under "Transactions" or near "Import"
+
+**Component Structure:**
+```
+Uncategorized.razor
+├── Filter bar (inline filters)
+├── Selection summary ("5 selected")
+├── Bulk action bar (category dropdown + button)
+├── Data table
+│   ├── Checkbox column
+│   ├── Date column (sortable)
+│   ├── Description column (sortable)
+│   ├── Amount column (sortable)
+│   └── Account column
+└── Pagination controls
+```
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: API endpoints and tests
+### Phase 1: Domain and Repository
 
-**Objective:** List and bulk categorize uncategorized transactions
+**Objective:** Add filtered/paged uncategorized query to repository
 
 **Tasks:**
-- [ ] Add GET endpoint for uncategorized transactions with filters
-- [ ] Add POST endpoint for bulk category assignment
-- [ ] Write unit and integration tests
-- [ ] Implement endpoints
+- [ ] Add `GetUncategorizedPagedAsync()` signature to `ITransactionRepository`
+- [ ] Implement in `TransactionRepository` with EF Core query
+- [ ] Write integration tests for filtering, sorting, and paging
+- [ ] Verify query performance with EXPLAIN ANALYZE
 
 **Commit:**
-- feat(api): uncategorized transaction listing and bulk categorize
+```
+feat(domain): add paged uncategorized transaction query to repository
+```
 
 ---
 
-### Phase 2: UI implementation
+### Phase 2: Application Service
 
-**Objective:** Provide uncategorized view and bulk actions
+**Objective:** Add service layer for uncategorized transactions
 
 **Tasks:**
-- [ ] Add uncategorized transactions page/view
-- [ ] Add filtering controls
-- [ ] Add bulk select and assign UI
-- [ ] Write client tests if needed
-- [ ] Implement UI
+- [ ] Create `IUncategorizedTransactionService` interface
+- [ ] Create `UncategorizedTransactionService` implementation
+- [ ] Add `GetPagedAsync()` method that maps to DTOs
+- [ ] Add `BulkCategorizeAsync()` method with transaction and validation
+- [ ] Write unit tests with mocked repository
 
 **Commit:**
-- feat(client): uncategorized view and bulk categorize
+```
+feat(application): add uncategorized transaction service with bulk categorize
+```
 
 ---
 
-### Phase 3: Documentation and cleanup
+### Phase 3: API Endpoints
 
-**Objective:** Update docs and verify behavior
+**Objective:** Expose uncategorized transaction operations via REST API
 
 **Tasks:**
-- [ ] Update API documentation and OpenAPI examples
-- [ ] Add release notes if needed
-- [ ] Final review and cleanup
+- [ ] Add DTOs to `BudgetExperiment.Contracts`
+- [ ] Add endpoints to `TransactionsController` or create dedicated controller
+- [ ] Add input validation (page bounds, valid category ID)
+- [ ] Return pagination header (`X-Pagination-TotalCount`)
+- [ ] Write API integration tests
 
 **Commit:**
-- docs: document bulk categorize uncategorized transactions
+```
+feat(api): add uncategorized transactions list and bulk categorize endpoints
+```
+
+---
+
+### Phase 4: Client Service
+
+**Objective:** Add client-side API service for uncategorized transactions
+
+**Tasks:**
+- [ ] Add `IUncategorizedApiService` interface
+- [ ] Implement `UncategorizedApiService` with HTTP calls
+- [ ] Register in DI
+- [ ] Write service unit tests
+
+**Commit:**
+```
+feat(client): add uncategorized transactions API service
+```
+
+---
+
+### Phase 5: UI Implementation
+
+**Objective:** Create the Uncategorized transactions page
+
+**Tasks:**
+- [ ] Create `Uncategorized.razor` page at route `/uncategorized`
+- [ ] Implement filter bar with all filter controls
+- [ ] Implement data table with checkbox selection
+- [ ] Implement pagination controls
+- [ ] Implement bulk categorize action bar
+- [ ] Add navigation link in `NavMenu.razor`
+- [ ] Style consistently with existing pages
+- [ ] Test responsiveness on mobile
+
+**Commit:**
+```
+feat(client): add uncategorized transactions page with bulk categorize
+```
+
+---
+
+### Phase 6: Polish and Documentation
+
+**Objective:** Finalize feature and update docs
+
+**Tasks:**
+- [ ] Add OpenAPI examples and descriptions
+- [ ] Test full end-to-end flow manually
+- [ ] Update feature doc status to Complete
+- [ ] Add to changelog/release notes if applicable
+
+**Commit:**
+```
+docs: complete feature 040 bulk categorize uncategorized transactions
+```
 
 ---
 
@@ -140,52 +339,90 @@ Currently, users must categorize uncategorized transactions one at a time, which
 
 ### Unit Tests
 
-- [ ] Filtering logic for uncategorized transactions
-- [ ] Bulk assignment validation
+- [ ] `TransactionRepository.GetUncategorizedPagedAsync()` - filtering logic for each parameter
+- [ ] `TransactionRepository.GetUncategorizedPagedAsync()` - sorting by each column
+- [ ] `TransactionRepository.GetUncategorizedPagedAsync()` - paging (skip/take, total count)
+- [ ] `UncategorizedTransactionService.BulkCategorizeAsync()` - success case
+- [ ] `UncategorizedTransactionService.BulkCategorizeAsync()` - partial failure handling
+- [ ] `UncategorizedTransactionService.BulkCategorizeAsync()` - invalid category ID
 
 ### Integration Tests
 
-- [ ] List uncategorized transactions with filters
-- [ ] Bulk assign category and verify update
+- [ ] GET `/api/v1/transactions/uncategorized` returns only uncategorized transactions
+- [ ] GET `/api/v1/transactions/uncategorized` with filters returns correct subset
+- [ ] GET `/api/v1/transactions/uncategorized` pagination works correctly
+- [ ] POST `/api/v1/transactions/bulk-categorize` updates transactions
+- [ ] POST `/api/v1/transactions/bulk-categorize` validates category exists
+- [ ] POST `/api/v1/transactions/bulk-categorize` handles non-existent transaction IDs gracefully
 
 ### Manual Testing Checklist
 
-- [ ] View uncategorized transactions
-- [ ] Filter and select transactions
-- [ ] Bulk assign category and verify
+- [ ] Navigate to `/uncategorized` page
+- [ ] Verify uncategorized transactions display correctly
+- [ ] Apply date filter and verify results
+- [ ] Apply amount filter and verify results
+- [ ] Apply description filter and verify results
+- [ ] Apply account filter and verify results
+- [ ] Combine multiple filters and verify results
+- [ ] Change page size and verify paging
+- [ ] Navigate between pages
+- [ ] Sort by each column
+- [ ] Select individual transactions
+- [ ] Use "Select All" button
+- [ ] Bulk categorize selected transactions
+- [ ] Verify success message and updated count
+- [ ] Verify categorized transactions no longer appear
+- [ ] Test with zero uncategorized transactions (empty state)
 
 ---
 
 ## Migration Notes
 
-- Ensure index on category_id for performance
+- No database migrations required (uses existing schema)
+- Optionally add partial index if performance testing shows need:
+  ```sql
+  CREATE INDEX idx_transactions_uncategorized ON transactions (date DESC)
+  WHERE category_id IS NULL;
+  ```
 
 ---
 
 ## Security Considerations
 
-- Validate user permissions for bulk actions
-- Ensure only user’s own transactions are affected
+- All endpoints require authentication (`[Authorize]` attribute)
+- Bulk categorize validates that category ID exists and is valid
+- Transaction IDs are validated to exist before update
+- No cross-user data access (future: add user-scoping if multi-tenant)
 
 ---
 
 ## Performance Considerations
 
-- Indexes for fast uncategorized queries and updates
-- Paging for large result sets
+- Server-side paging limits response size (max 100 per page)
+- Filtering happens at database level, not in-memory
+- Count query uses same filters for accurate pagination
+- Consider caching category list for dropdown (already loaded elsewhere)
+- Bulk categorize uses single transaction for atomicity
 
 ---
 
 ## Future Enhancements
 
-- Suggest categories for bulk selection
-- Undo/rollback for bulk actions
+- "Select All Matching" across all pages (not just current page)
+- AI-suggested categories for bulk selection
+- Undo/rollback for bulk actions (soft delete or audit log)
+- Keyboard shortcuts for power users
+- "Create Rule" option after bulk categorize (pattern from descriptions)
+- Export uncategorized transactions to CSV
 
 ---
 
 ## References
 
-- Related: auto-categorization, transaction management
+- Existing: `ITransactionRepository.GetUncategorizedAsync()` (returns all, no filtering)
+- Related: `ApplyRulesRequest` / `ApplyRulesResponse` pattern for bulk operations
+- Related: `TestPatternRequest` / `TestPatternResponse` for filtering patterns
+- Feature 028: Recurring Transaction Reconciliation (similar filter patterns)
 
 ---
 
@@ -194,3 +431,4 @@ Currently, users must categorize uncategorized transactions one at a time, which
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-26 | Initial draft | @github-copilot |
+| 2026-01-30 | Fleshed out technical design, DTOs, implementation plan | @copilot |

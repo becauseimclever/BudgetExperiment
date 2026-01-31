@@ -1,5 +1,5 @@
 # Feature 038: Reconciliation Status Endpoint Parameter Mismatch Bug
-> **Status:** In Progress
+> **Status:** Complete
 
 ## Overview
 
@@ -85,7 +85,7 @@ Fixes: #038"
 
 ### Unit Tests
 
-- [ ] Verify `ReconciliationApiService` builds correct URL with year/month params
+- [x] Verify `ReconciliationApiService` builds correct URL with year/month params
 
 ### Manual Testing Checklist
 
@@ -108,3 +108,4 @@ Fixes: #038"
 |------|--------|--------|
 | 2026-01-25 | Initial draft - bug identified and documented | @copilot |
 | 2026-01-26 | Implemented client API alignment fix | @copilot |
+| 2026-01-30 | Added unit tests for ReconciliationApiService URL building | @copilot |
