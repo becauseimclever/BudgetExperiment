@@ -8,15 +8,13 @@
     </div>
 
     <form @onsubmit="HandleSubmit">
-        <div class="form-group">
-            <label for="description" class="form-label">Description:</label>
+        <FormField Label="Description:" InputId="description" HelpText="Leave empty to use series default">
             <input id="description"
                    type="text"
                    class="form-control"
                    @bind="descriptionInput"
                    placeholder="@OriginalDescription" />
-            <span class="form-text">Leave empty to use series default</span>
-        </div>
+        </FormField>
 
         <div class="form-row">
             <div class="form-group">
@@ -36,29 +34,20 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="newDate" class="form-label">Reschedule to:</label>
+        <FormField Label="Reschedule to:" InputId="newDate" HelpText="Leave empty to keep original date">
             <input id="newDate"
                    type="date"
                    class="form-control"
                    @bind="newDateInput" />
-            <span class="form-text">Leave empty to keep original date</span>
-        </div>
+        </FormField>
 
         <div class="form-actions form-actions-right">
-            <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
                 Cancel
-            </button>
-            <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
-                @if (IsSubmitting)
-                {
-                    <span>Saving...</span>
-                }
-                else
-                {
-                    <span>Save This Occurrence</span>
-                }
-            </button>
+            </Button>
+            <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+                Save This Occurrence
+            </Button>
         </div>
     </form>
 </div>

@@ -44,19 +44,9 @@
 
             <div class="form-group form-group-button">
                 <label class="form-label">&nbsp;</label>
-                <button type="button" 
-                        class="btn btn-primary" 
-                        @onclick="RunTest" 
-                        disabled="@(isTesting || string.IsNullOrWhiteSpace(pattern))">
-                    @if (isTesting)
-                    {
-                        <span>Testing...</span>
-                    }
-                    else
-                    {
-                        <span>🔍 Test</span>
-                    }
-                </button>
+                <Button Variant="ButtonVariant.Primary" OnClick="RunTest" IsLoading="@isTesting" IsDisabled="@(isTesting || string.IsNullOrWhiteSpace(pattern))">
+                    🔍 Test
+                </Button>
             </div>
         </div>
     </div>
@@ -100,9 +90,9 @@
             @if (testResult.MatchCount > 0 && OnCreateRule.HasDelegate)
             {
                 <div class="test-actions mt-2">
-                    <button class="btn btn-success btn-sm" @onclick="CreateRuleFromPattern">
+                    <Button Variant="ButtonVariant.Success" Size="ButtonSize.Small" OnClick="CreateRuleFromPattern">
                         + Create Rule with this Pattern
-                    </button>
+                    </Button>
                 </div>
             }
         </div>

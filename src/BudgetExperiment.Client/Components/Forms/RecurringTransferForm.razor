@@ -3,37 +3,35 @@
 @inject IBudgetApiService ApiService
 
 <form @onsubmit="HandleSubmit">
-    <div class="form-group">
-        <label for="fromAccount">From Account:</label>
-        <select id="fromAccount" @bind="Model.SourceAccountId" required>
+    <FormField Label="From Account:" InputId="fromAccount">
+        <select id="fromAccount" class="form-control" @bind="Model.SourceAccountId" required>
             <option value="">Select source account...</option>
             @foreach (var account in accounts.Where(a => a.Id != Model.DestinationAccountId || Model.DestinationAccountId == Guid.Empty))
             {
                 <option value="@account.Id">@account.Name</option>
             }
         </select>
-    </div>
+    </FormField>
 
-    <div class="form-group">
-        <label for="toAccount">To Account:</label>
-        <select id="toAccount" @bind="Model.DestinationAccountId" required>
+    <FormField Label="To Account:" InputId="toAccount">
+        <select id="toAccount" class="form-control" @bind="Model.DestinationAccountId" required>
             <option value="">Select destination account...</option>
             @foreach (var account in accounts.Where(a => a.Id != Model.SourceAccountId || Model.SourceAccountId == Guid.Empty))
             {
                 <option value="@account.Id">@account.Name</option>
             }
         </select>
-    </div>
+    </FormField>
 
-    <div class="form-group">
-        <label for="description">Description:</label>
+    <FormField Label="Description:" InputId="description">
         <input id="description"
                type="text"
+               class="form-control"
                @bind="Model.Description"
                @bind:event="oninput"
                placeholder="Enter description (e.g., Monthly Savings)"
                required />
-    </div>
+    </FormField>
 
     <div class="form-row">
         <div class="form-group">
@@ -54,9 +52,8 @@
         </div>
     </div>
 
-    <div class="form-group">
-        <label for="frequency">Frequency:</label>
-        <select id="frequency" @bind="Model.Frequency" @bind:after="OnFrequencyChanged">
+    <FormField Label="Frequency:" InputId="frequency">
+        <select id="frequency" class="form-control" @bind="Model.Frequency" @bind:after="OnFrequencyChanged">
             <option value="Daily">Daily</option>
             <option value="Weekly">Weekly</option>
             <option value="BiWeekly">Bi-Weekly</option>
@@ -64,13 +61,12 @@
             <option value="Quarterly">Quarterly</option>
             <option value="Yearly">Yearly</option>
         </select>
-    </div>
+    </FormField>
 
     @if (Model.Frequency == "Weekly" || Model.Frequency == "BiWeekly")
     {
-        <div class="form-group">
-            <label for="dayOfWeek">Day of Week:</label>
-            <select id="dayOfWeek" @bind="Model.DayOfWeek">
+        <FormField Label="Day of Week:" InputId="dayOfWeek">
+            <select id="dayOfWeek" class="form-control" @bind="Model.DayOfWeek">
                 <option value="Monday">Monday</option>
                 <option value="Tuesday">Tuesday</option>
                 <option value="Wednesday">Wednesday</option>
@@ -79,21 +75,20 @@
                 <option value="Saturday">Saturday</option>
                 <option value="Sunday">Sunday</option>
             </select>
-        </div>
+        </FormField>
     }
 
     @if (Model.Frequency == "Monthly" || Model.Frequency == "Quarterly" || Model.Frequency == "Yearly")
     {
-        <div class="form-group">
-            <label for="dayOfMonth">Day of Month:</label>
+        <FormField Label="Day of Month:" InputId="dayOfMonth" HelpText="Leave empty to use start date day">
             <input id="dayOfMonth"
                    type="number"
+                   class="form-control"
                    min="1"
                    max="31"
                    @bind="Model.DayOfMonth"
                    placeholder="1-31" />
-            <small class="form-hint">Leave empty to use start date day</small>
-        </div>
+        </FormField>
     }
 
     <div class="form-row">
@@ -113,19 +108,12 @@
     </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
-            @if (IsSubmitting)
-            {
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>@SubmitButtonText</span>
-            }
-        </button>
-        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+        <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+            @SubmitButtonText
+        </Button>
+        <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
             Cancel
-        </button>
+        </Button>
     </div>
 </form>
 

@@ -27,8 +27,7 @@
         </p>
     </div>
 
-    <div class="form-group">
-        <label for="accountName" class="form-label">Account Name:</label>
+    <FormField Label="Account Name:" InputId="accountName">
         <input id="accountName" 
                type="text"
                class="form-control"
@@ -36,9 +35,8 @@
                @bind:event="oninput"
                placeholder="Enter account name"
                required />
-    </div>
-    <div class="form-group">
-        <label for="accountType" class="form-label">Account Type:</label>
+    </FormField>
+    <FormField Label="Account Type:" InputId="accountType">
         <select id="accountType" class="form-control" @bind="Model.Type" required>
             <option value="Checking">Checking</option>
             <option value="Savings">Savings</option>
@@ -46,7 +44,7 @@
             <option value="Cash">Cash</option>
             <option value="Other">Other</option>
         </select>
-    </div>
+    </FormField>
     
     <fieldset class="form-fieldset">
         <legend>Starting Balance</legend>
@@ -73,19 +71,12 @@
     </fieldset>
     
     <div class="form-actions form-actions-right">
-        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+        <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
             Cancel
-        </button>
-        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
-            @if (IsSubmitting)
-            {
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>@SubmitButtonText</span>
-            }
-        </button>
+        </Button>
+        <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+            @SubmitButtonText
+        </Button>
     </div>
 </form>
 

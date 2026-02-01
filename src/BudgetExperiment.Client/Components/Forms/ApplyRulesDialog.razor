@@ -38,19 +38,12 @@
             }
 
             <div class="form-actions mt-3">
-                <button class="btn btn-primary" @onclick="ApplyRules" disabled="@isProcessing">
-                    @if (isProcessing)
-                    {
-                        <span>Applying Rules...</span>
-                    }
-                    else
-                    {
-                        <span>Apply Rules</span>
-                    }
-                </button>
-                <button class="btn btn-secondary" @onclick="HandleClose" disabled="@isProcessing">
+                <Button Variant="ButtonVariant.Primary" OnClick="ApplyRules" IsLoading="@isProcessing" IsDisabled="@isProcessing">
+                    Apply Rules
+                </Button>
+                <Button Variant="ButtonVariant.Secondary" OnClick="HandleClose" IsDisabled="@isProcessing">
                     Cancel
-                </button>
+                </Button>
             </div>
         }
         else
@@ -99,9 +92,9 @@
                 }
 
                 <div class="form-actions mt-3">
-                    <button class="btn btn-primary" @onclick="HandleClose">
+                    <Button Variant="ButtonVariant.Primary" OnClick="HandleClose">
                         Done
-                    </button>
+                    </Button>
                 </div>
             </div>
         }

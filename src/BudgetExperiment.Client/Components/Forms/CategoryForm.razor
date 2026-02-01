@@ -1,8 +1,7 @@
 @* CategoryForm.razor - Reusable budget category create/edit form *@
 
 <form @onsubmit="HandleSubmit">
-    <div class="form-group">
-        <label for="categoryName" class="form-label">Category Name:</label>
+    <FormField Label="Category Name:" InputId="categoryName">
         <input id="categoryName" 
                type="text"
                class="form-control"
@@ -10,30 +9,15 @@
                @bind:event="oninput"
                placeholder="Enter category name"
                required />
-    </div>
+    </FormField>
     
-    <div class="form-group">
-        <label for="categoryType" class="form-label">Category Type:</label>
+    <FormField Label="Category Type:" InputId="categoryType" HelpText="@GetCategoryTypeHelpText()">
         <select id="categoryType" class="form-control" @bind="Model.Type" required>
             <option value="Expense">Expense</option>
             <option value="Income">Income</option>
             <option value="Transfer">Transfer</option>
         </select>
-        <small class="text-secondary">
-            @switch (Model.Type)
-            {
-                case "Expense":
-                    <span>Expense categories track spending (money going out)</span>
-                    break;
-                case "Income":
-                    <span>Income categories track money coming in</span>
-                    break;
-                case "Transfer":
-                    <span>Transfer categories are for internal account transfers</span>
-                    break;
-            }
-        </small>
-    </div>
+    </FormField>
     
     <div class="form-row">
         <div class="form-group form-group-half">
@@ -106,19 +90,12 @@
     }
     
     <div class="form-actions form-actions-right">
-        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+        <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
             Cancel
-        </button>
-        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
-            @if (IsSubmitting)
-            {
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>@SubmitButtonText</span>
-            }
-        </button>
+        </Button>
+        <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+            @SubmitButtonText
+        </Button>
     </div>
 </form>
 
@@ -201,5 +178,16 @@
     private async Task HandleCancel()
     {
         await OnCancel.InvokeAsync();
+    }
+
+    private string GetCategoryTypeHelpText()
+    {
+        return Model.Type switch
+        {
+            "Expense" => "Expense categories track spending (money going out)",
+            "Income" => "Income categories track money coming in",
+            "Transfer" => "Transfer categories are for internal account transfers",
+            _ => string.Empty,
+        };
     }
 }

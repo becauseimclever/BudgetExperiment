@@ -4,8 +4,7 @@
     <form @onsubmit="HandleSubmit">
         @if (!IsEdit)
         {
-            <div class="form-group">
-                <label for="fromAccount" class="form-label">From Account:</label>
+            <FormField Label="From Account:" InputId="fromAccount">
                 <select id="fromAccount" class="form-control" @bind="Model.SourceAccountId" required>
                     <option value="">Select source account</option>
                     @foreach (var account in Accounts.Where(a => a.Id != Model.DestinationAccountId || Model.DestinationAccountId == Guid.Empty))
@@ -13,10 +12,9 @@
                         <option value="@account.Id">@account.Name</option>
                     }
                 </select>
-            </div>
+            </FormField>
 
-            <div class="form-group">
-                <label for="toAccount" class="form-label">To Account:</label>
+            <FormField Label="To Account:" InputId="toAccount">
                 <select id="toAccount" class="form-control" @bind="Model.DestinationAccountId" required>
                     <option value="">Select destination account</option>
                     @foreach (var account in Accounts.Where(a => a.Id != Model.SourceAccountId || Model.SourceAccountId == Guid.Empty))
@@ -24,7 +22,7 @@
                         <option value="@account.Id">@account.Name</option>
                     }
                 </select>
-            </div>
+            </FormField>
         }
         else
         {
@@ -54,23 +52,21 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="date" class="form-label">Date:</label>
+        <FormField Label="Date:" InputId="date">
             <input id="date"
                    type="date"
                    class="form-control"
                    @bind="DateValue"
                    required />
-        </div>
+        </FormField>
 
-        <div class="form-group">
-            <label for="description" class="form-label">Description (optional):</label>
+        <FormField Label="Description (optional):" InputId="description">
             <input id="description"
                    type="text"
                    class="form-control"
                    @bind="Description"
                    placeholder="e.g., Move to savings" />
-        </div>
+        </FormField>
 
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
@@ -80,19 +76,12 @@
         }
 
         <div class="form-actions form-actions-right">
-            <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+            <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
                 Cancel
-            </button>
-            <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
-                @if (IsSubmitting)
-                {
-                    <span>Processing...</span>
-                }
-                else
-                {
-                    <span>@(IsEdit ? "Update Transfer" : "Transfer")</span>
-                }
-            </button>
+            </Button>
+            <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+                @(IsEdit ? "Update Transfer" : "Transfer")
+            </Button>
         </div>
     </form>
 </div>

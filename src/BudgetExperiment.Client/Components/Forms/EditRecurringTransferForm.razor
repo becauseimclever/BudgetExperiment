@@ -1,14 +1,14 @@
 @* EditRecurringTransferForm.razor - Form for editing existing recurring transfers *@
 
 <form @onsubmit="HandleSubmit">
-    <div class="form-group">
-        <label for="description">Description:</label>
+    <FormField Label="Description:" InputId="description">
         <input id="description"
                type="text"
+               class="form-control"
                @bind="Model.Description"
                @bind:event="oninput"
                placeholder="Enter description" />
-    </div>
+    </FormField>
 
     <div class="form-row">
         <div class="form-group">
@@ -28,9 +28,8 @@
         </div>
     </div>
 
-    <div class="form-group">
-        <label for="frequency">Frequency:</label>
-        <select id="frequency" @bind="Model.Frequency" @bind:after="OnFrequencyChanged">
+    <FormField Label="Frequency:" InputId="frequency">
+        <select id="frequency" class="form-control" @bind="Model.Frequency" @bind:after="OnFrequencyChanged">
             <option value="Daily">Daily</option>
             <option value="Weekly">Weekly</option>
             <option value="BiWeekly">Bi-Weekly</option>
@@ -38,13 +37,12 @@
             <option value="Quarterly">Quarterly</option>
             <option value="Yearly">Yearly</option>
         </select>
-    </div>
+    </FormField>
 
     @if (Model.Frequency == "Weekly" || Model.Frequency == "BiWeekly")
     {
-        <div class="form-group">
-            <label for="dayOfWeek">Day of Week:</label>
-            <select id="dayOfWeek" @bind="Model.DayOfWeek">
+        <FormField Label="Day of Week:" InputId="dayOfWeek">
+            <select id="dayOfWeek" class="form-control" @bind="Model.DayOfWeek">
                 <option value="Monday">Monday</option>
                 <option value="Tuesday">Tuesday</option>
                 <option value="Wednesday">Wednesday</option>
@@ -53,44 +51,36 @@
                 <option value="Saturday">Saturday</option>
                 <option value="Sunday">Sunday</option>
             </select>
-        </div>
+        </FormField>
     }
 
     @if (Model.Frequency == "Monthly" || Model.Frequency == "Quarterly" || Model.Frequency == "Yearly")
     {
-        <div class="form-group">
-            <label for="dayOfMonth">Day of Month:</label>
+        <FormField Label="Day of Month:" InputId="dayOfMonth">
             <input id="dayOfMonth"
                    type="number"
+                   class="form-control"
                    min="1"
                    max="31"
                    @bind="Model.DayOfMonth"
                    placeholder="1-31" />
-        </div>
+        </FormField>
     }
 
-    <div class="form-group">
-        <label for="endDate">End Date (optional):</label>
+    <FormField Label="End Date (optional):" InputId="endDate" HelpText="Leave empty for no end date">
         <input id="endDate"
                type="date"
+               class="form-control"
                @bind="endDateInput" />
-        <small class="form-hint">Leave empty for no end date</small>
-    </div>
+    </FormField>
 
     <div class="form-actions">
-        <button type="submit" class="btn-primary" disabled="@IsSubmitting">
-            @if (IsSubmitting)
-            {
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>Save Changes</span>
-            }
-        </button>
-        <button type="button" class="btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+        <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+            Save Changes
+        </Button>
+        <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
             Cancel
-        </button>
+        </Button>
     </div>
 </form>
 

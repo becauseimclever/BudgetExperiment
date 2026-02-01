@@ -1,15 +1,14 @@
 @* EditRecurringForm.razor - Form for editing existing recurring transactions *@
 
 <form @onsubmit="HandleSubmit">
-    <div class="form-group">
-        <label for="description" class="form-label">Description:</label>
+    <FormField Label="Description:" InputId="description">
         <input id="description"
                type="text"
                class="form-control"
                @bind="Model.Description"
                @bind:event="oninput"
                placeholder="Enter description" />
-    </div>
+    </FormField>
 
     <div class="form-row">
         <div class="form-group">
@@ -29,18 +28,14 @@
         </div>
     </div>
 
-    <div class="form-group">
-        <label for="endDate" class="form-label">End Date (optional):</label>
+    <FormField Label="End Date (optional):" InputId="endDate" HelpText="Leave empty for no end date">
         <input id="endDate"
                type="date"
                class="form-control"
                @bind="endDateInput" />
-        <span class="form-text">Leave empty for no end date</span>
-    </div>
+    </FormField>
 
-    @* Category selection *@
-    <div class="form-group">
-        <label for="editRecCategory" class="form-label">Category:</label>
+    <FormField Label="Category:" InputId="editRecCategory">
         <select id="editRecCategory" class="form-control" @bind="Model.CategoryId">
             <option value="">None</option>
             @foreach (var category in Categories.Where(c => c.IsActive))
@@ -48,22 +43,15 @@
                 <option value="@category.Id">@category.Name</option>
             }
         </select>
-    </div>
+    </FormField>
 
     <div class="form-actions form-actions-right">
-        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+        <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
             Cancel
-        </button>
-        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
-            @if (IsSubmitting)
-            {
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>Save Changes</span>
-            }
-        </button>
+        </Button>
+        <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+            Save Changes
+        </Button>
     </div>
 </form>
 

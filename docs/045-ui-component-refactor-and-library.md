@@ -378,19 +378,33 @@ Components/
 
 ---
 
-### Phase 5: Form Component Refactoring
+### Phase 5: Form Component Refactoring ✅
 
 **Objective:** Use `FormField` in domain form components
 
-**Tasks:**
-- [ ] Refactor `AccountForm.razor` to use `FormField`
-- [ ] Refactor `CategoryForm.razor` to use `FormField`
-- [ ] Refactor `TransactionForm.razor` to use `FormField`
-- [ ] Refactor `RuleForm.razor` to use `FormField`
-- [ ] Refactor remaining form components (9 more)
+**Form Components Migrated (13 total):**
+- [x] `AccountForm.razor` - FormField for name/type fields, Button for actions
+- [x] `CategoryForm.razor` - FormField for name/type, Button with helper method for type help text
+- [x] `TransactionForm.razor` - FormField for all 5 fields, Button for actions
+- [x] `RuleForm.razor` - FormField for name/pattern/category, Button with test pattern
+- [x] `RecurringTransactionForm.razor` - FormField for standalone fields, Button for actions
+- [x] `RecurringTransferForm.razor` - FormField for all standalone fields, Button for actions
+- [x] `EditRecurringForm.razor` - FormField for description/date/category, Button for actions
+- [x] `EditRecurringTransferForm.razor` - FormField for all editable fields, Button for actions
+- [x] `TransferDialog.razor` - FormField for accounts/date/description, Button for actions
+- [x] `EditInstanceDialog.razor` - FormField for description/date, Button for actions
+- [x] `ApplyRulesDialog.razor` - Button for apply/cancel/done
+- [x] `PastDueReviewModal.razor` - Button for cancel/skip/confirm
+- [x] `RuleTestPanel.razor` - Button for test/create rule
+
+**Benefits:**
+- Consistent label, input, and help text styling across all forms
+- Built-in validation message display support
+- IsLoading state on all submit buttons (no more manual Saving... text)
+- Standardized button variants (Primary, Secondary, Success, Outline)
 
 **Commit:**
-- refactor(client): use FormField in form components
+- refactor(client): use FormField and Button in form components
 
 ---
 

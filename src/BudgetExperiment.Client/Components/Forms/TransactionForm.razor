@@ -3,8 +3,7 @@
 <form @onsubmit="HandleSubmit">
     @if (ShowAccountSelector)
     {
-        <div class="form-group">
-            <label for="txnAccount" class="form-label">Account:</label>
+        <FormField Label="Account:" InputId="txnAccount">
             <select id="txnAccount" class="form-control" @bind="Model.AccountId" required>
                 <option value="">Select Account</option>
                 @foreach (var account in Accounts)
@@ -12,10 +11,9 @@
                     <option value="@account.Id">@account.Name</option>
                 }
             </select>
-        </div>
+        </FormField>
     }
-    <div class="form-group">
-        <label for="txnDescription" class="form-label">Description:</label>
+    <FormField Label="Description:" InputId="txnDescription">
         <input id="txnDescription" 
                type="text"
                class="form-control"
@@ -23,9 +21,8 @@
                @bind:event="oninput"
                placeholder="Enter description"
                required />
-    </div>
-    <div class="form-group">
-        <label for="txnAmount" class="form-label">Amount:</label>
+    </FormField>
+    <FormField Label="Amount:" InputId="txnAmount" HelpText="Positive for income, negative for expenses">
         <input id="txnAmount" 
                type="number"
                class="form-control"
@@ -33,11 +30,8 @@
                @bind="AmountValue" 
                placeholder="0.00"
                required />
-        <span class="form-text">Positive for income, negative for expenses</span>
-    </div>
-    @* Category selection will be added when budget categories feature is complete *@
-    <div class="form-group">
-        <label for="txnCategory" class="form-label">Category:</label>
+    </FormField>
+    <FormField Label="Category:" InputId="txnCategory">
         <select id="txnCategory" class="form-control" @bind="Model.CategoryId">
             <option value="">None</option>
             @foreach (var category in Categories.Where(c => c.IsActive))
@@ -45,15 +39,14 @@
                 <option value="@category.Id">@category.Name</option>
             }
         </select>
-    </div>
-    <div class="form-group">
-        <label for="txnDate" class="form-label">Date:</label>
+    </FormField>
+    <FormField Label="Date:" InputId="txnDate">
         <input id="txnDate" 
                type="date"
                class="form-control"
                @bind="DateValue" 
                required />
-    </div>
+    </FormField>
 
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {
@@ -64,19 +57,12 @@
     }
 
     <div class="form-actions form-actions-right">
-        <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@IsSubmitting">
+        <Button Variant="ButtonVariant.Secondary" OnClick="HandleCancel" IsDisabled="@IsSubmitting" type="button">
             Cancel
-        </button>
-        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
-            @if (IsSubmitting)
-            {
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>@SubmitButtonText</span>
-            }
-        </button>
+        </Button>
+        <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+            @SubmitButtonText
+        </Button>
     </div>
 </form>
 

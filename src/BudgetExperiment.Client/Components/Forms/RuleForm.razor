@@ -1,8 +1,7 @@
 @* RuleForm.razor - Reusable categorization rule create/edit form *@
 
 <form @onsubmit="HandleSubmit">
-    <div class="form-group">
-        <label for="ruleName" class="form-label">Rule Name:</label>
+    <FormField Label="Rule Name:" InputId="ruleName">
         <input id="ruleName" 
                type="text"
                class="form-control"
@@ -10,10 +9,9 @@
                @bind:event="oninput"
                placeholder="e.g., Grocery Stores"
                required />
-    </div>
+    </FormField>
 
-    <div class="form-group">
-        <label for="rulePattern" class="form-label">Pattern:</label>
+    <FormField Label="Pattern:" InputId="rulePattern" HelpText="The text pattern to match against transaction descriptions">
         <input id="rulePattern" 
                type="text"
                class="form-control"
@@ -21,8 +19,7 @@
                @bind:event="oninput"
                placeholder="Text to match in transaction description"
                required />
-        <small class="text-secondary">The text pattern to match against transaction descriptions</small>
-    </div>
+    </FormField>
 
     <div class="form-row">
         <div class="form-group form-group-half">
@@ -48,8 +45,7 @@
         </div>
     </div>
 
-    <div class="form-group">
-        <label for="categoryId" class="form-label">Target Category:</label>
+    <FormField Label="Target Category:" InputId="categoryId" HelpText="The category to assign when this rule matches">
         <select id="categoryId" class="form-control" @bind="SelectedCategoryId" required>
             <option value="">-- Select a category --</option>
             @foreach (var category in Categories.OrderBy(c => c.Type).ThenBy(c => c.Name))
@@ -57,22 +53,14 @@
                 <option value="@category.Id">@category.Name (@category.Type)</option>
             }
         </select>
-        <small class="text-secondary">The category to assign when this rule matches</small>
-    </div>
+    </FormField>
 
     @if (!string.IsNullOrEmpty(Model.Pattern) && OnTestPattern.HasDelegate)
     {
         <div class="form-group">
-            <button type="button" class="btn btn-secondary btn-sm" @onclick="TestPattern" disabled="@IsTesting">
-                @if (IsTesting)
-                {
-                    <span>Testing...</span>
-                }
-                else
-                {
-                    <span>🔍 Test Pattern</span>
-                }
-            </button>
+            <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="TestPattern" IsLoading="@IsTesting" IsDisabled="@IsTesting" type="button">
+                🔍 Test Pattern
+            </Button>
             @if (TestResult != null)
             {
                 <div class="test-results mt-2">
@@ -98,19 +86,12 @@
     }
 
     <div class="form-actions">
-        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
-            @if (IsSubmitting)
-            {
-                <span>Saving...</span>
-            }
-            else
-            {
-                <span>@SubmitButtonText</span>
-            }
-        </button>
-        <button type="button" class="btn btn-secondary" @onclick="OnCancel" disabled="@IsSubmitting">
+        <Button Variant="ButtonVariant.Primary" IsLoading="@IsSubmitting" IsDisabled="@IsSubmitting" type="submit">
+            @SubmitButtonText
+        </Button>
+        <Button Variant="ButtonVariant.Secondary" OnClick="OnCancel" IsDisabled="@IsSubmitting" type="button">
             Cancel
-        </button>
+        </Button>
     </div>
 </form>
 

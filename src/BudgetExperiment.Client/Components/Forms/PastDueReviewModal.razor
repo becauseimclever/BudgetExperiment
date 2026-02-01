@@ -76,20 +76,13 @@
             </div>
 
             <div class="past-due-actions">
-                <button class="btn btn-secondary" @onclick="HandleClose" disabled="@IsProcessing">Cancel</button>
-                <button class="btn btn-outline-secondary" @onclick="SkipSelected" disabled="@(IsProcessing || SelectedCount == 0)">
+                <Button Variant="ButtonVariant.Secondary" OnClick="HandleClose" IsDisabled="@IsProcessing">Cancel</Button>
+                <Button Variant="ButtonVariant.Outline" OnClick="SkipSelected" IsDisabled="@(IsProcessing || SelectedCount == 0)">
                     Skip Selected
-                </button>
-                <button class="btn btn-success" @onclick="ConfirmSelected" disabled="@(IsProcessing || SelectedCount == 0)">
-                    @if (IsProcessing)
-                    {
-                        <span>Processing...</span>
-                    }
-                    else
-                    {
-                        <span>Confirm Selected</span>
-                    }
-                </button>
+                </Button>
+                <Button Variant="ButtonVariant.Success" OnClick="ConfirmSelected" IsLoading="@IsProcessing" IsDisabled="@(IsProcessing || SelectedCount == 0)">
+                    Confirm Selected
+                </Button>
             </div>
 
             @if (!string.IsNullOrEmpty(ErrorMessage))
