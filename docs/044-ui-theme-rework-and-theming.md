@@ -1,41 +1,65 @@
 # Feature 044: UI Theme Rework and Theming Improvements
-> **Status:** 🗒️ Planning
+> **Status:** � Ready for Implementation
 
 ## Overview
 
-Revisit and improve the UI theme system. Ensure the Theme dropdown is always styled for visibility with the selected theme (fixing transparency/contrast issues). Refactor theming to make it easy to add new themes in the future. This feature does not include a UI theme builder, but should lay the groundwork for it.
+Polish and complete the existing theme system. The theming infrastructure is already well-structured with CSS variables and modular theme files. This feature focuses on:
+1. Code quality fixes (extract `ThemeOption` to its own file per style guide)
+2. Ensure theme meta-color includes all themes in `theme.js`
+3. Add new themes: Windows 95, macOS, GeoCities Retro
+4. Document the process for adding new themes
+5. Verify theme dropdown visibility across all themes
 
 ## Problem Statement
 
-The current Theme dropdown sometimes displays as transparent or unreadable in certain themes. Adding new themes is cumbersome and error-prone. The theming system should be robust, maintainable, and extensible for future enhancements.
+The theming system is mostly complete but needs polish and documentation. A few code quality issues exist, and there's no documentation for adding new themes.
 
-### Current State
+### Current State (Audit Completed 2026-02-01)
 
-- Theme dropdown may be transparent or have poor contrast in some themes
-- Theming is not modular; adding new themes is difficult
-- No clear structure for future theme expansion
+**✅ Already Working Well:**
+- CSS variable-based theming with `tokens.css` as foundation
+- 5 themes: system, light, dark, vscode-dark, monopoly
+- Individual theme files in `wwwroot/css/themes/`
+- `ThemeService` with localStorage persistence and event notifications
+- `ThemeToggle.razor` component with theme-aware styling
+- Theme dropdown has header-specific styling (`.top-header .theme-toggle-button`)
+- Design system well-organized in `design-system/` folder
+
+**⚠️ Issues to Fix:**
+1. `ThemeOption` record is defined at bottom of `ThemeService.cs` (violates one-class-per-file rule)
+2. `theme.js` meta theme-color missing monopoly theme color
+3. No documentation for adding new themes
+4. Need to verify dropdown visibility in all themes (especially monopoly)
+
+**🆕 New Themes to Add:**
+1. **Windows 95** - Classic Windows 95 aesthetic with greys, blues, beveled 3D look, system fonts
+2. **macOS** - Clean Apple aesthetic with subtle gradients, SF-style fonts, refined colors
+3. **GeoCities Retro** - Obnoxious 90s web style with bright colors, high contrast, nostalgic vibes
+4. **Crayon Box** - Bold Crayola-inspired primary colors, cheerful yellows and greens, playful aesthetic
 
 ### Target State
 
-- Theme dropdown is always visible and styled correctly for the selected theme
-- Theming system is modular and easy to extend
-- Adding new themes requires minimal effort and no duplication
-- Code is structured to support a future UI theme builder
+- Code follows style guide (one type per file)
+- All theme colors registered in `theme.js`
+- 9 themes available (system, light, dark, vscode-dark, monopoly, win95, macos, geocities, crayons)
+- Developer documentation for adding new themes
+- Verified dropdown visibility in all themes
 
 ---
 
 ## User Stories
 
-### Theme Dropdown and Theming
+### Theme System Polish
 
-#### US-044-001: Theme dropdown is always visible
+#### US-044-001: Theme dropdown is visible in all themes
 **As a** user  
 **I want to** see the Theme dropdown clearly in any theme  
 **So that** I can easily change themes without UI issues
 
 **Acceptance Criteria:**
-- [ ] Theme dropdown is styled for visibility and contrast in all themes
-- [ ] No transparency or unreadable text in any theme
+- [x] Theme dropdown has theme-aware styles (already done via CSS variables)
+- [ ] Verify dropdown visibility in monopoly theme (parchment background)
+- [ ] Verify dropdown visibility in all other themes
 
 #### US-044-002: Easy to add new themes
 **As a** developer  
@@ -43,101 +67,235 @@ The current Theme dropdown sometimes displays as transparent or unreadable in ce
 **So that** the app can support more customization in the future
 
 **Acceptance Criteria:**
-- [ ] Theming system is modular and supports new themes easily
-- [ ] Adding a theme does not require duplicating code or styles
-- [ ] Theme structure is documented for future UI theme builder
+- [x] Theming system is modular (already done - CSS files + ThemeService)
+- [ ] Document how to add a new theme (step-by-step guide)
+- [ ] Update `theme.js` with all theme colors
 
 ---
 
 ## Technical Design
 
-### Architecture Changes
+### Files to Modify
 
-- Refactor theme system to use modular, composable theme definitions (e.g., CSS variables, theme objects)
-- Ensure Theme dropdown uses theme-aware styles for background, border, and text
-- Document theme structure and extension points
-- Prepare codebase for future UI theme builder (but do not implement it yet)
+| File | Change |
+|------|--------|
+| `Services/ThemeService.cs` | Remove `ThemeOption` record, add 3 new themes to AvailableThemes |
+| `Services/ThemeOption.cs` | **NEW** - Extract record to its own file |
+| `wwwroot/js/theme.js` | Add all new theme colors to meta theme-color map |
+| `wwwroot/css/themes/win95.css` | **NEW** - Windows 95 theme |
+| `wwwroot/css/themes/macos.css` | **NEW** - macOS theme |
+| `wwwroot/css/themes/geocities.css` | **NEW** - GeoCities Retro theme |
+| `wwwroot/css/themes/crayons.css` | **NEW** - Crayon Box theme |
+| `wwwroot/css/app.css` | Import 4 new theme CSS files |
+| `wwwroot/css/design-system/components/theme-toggle.css` | Verify/fix dropdown styles if needed |
+| `docs/THEMING.md` | **NEW** - Documentation for adding themes |
 
-### Domain Model
+### New Theme Specifications
 
-- No changes required
+#### Windows 95 (`win95`)
+- **Aesthetic:** Classic Windows 95/98 look with beveled 3D elements
+- **Colors:** 
+  - Background: #c0c0c0 (classic gray)
+  - Header: #000080 (navy blue title bar)
+  - Surface: #ffffff
+  - Borders: #808080 / #dfdfdf (3D bevel effect)
+  - Brand: #000080 (navy)
+  - Text: #000000
+- **Font:** 'MS Sans Serif', 'Tahoma', system-ui
+- **Icon:** `monitor` or `window` (representing classic Windows)
 
-### API Endpoints
+#### macOS (`macos`)
+- **Aesthetic:** Clean Apple aesthetic, subtle gradients, refined
+- **Colors:**
+  - Background: #f5f5f7 (Apple gray)
+  - Header: linear gradient or #e8e8ed
+  - Surface: #ffffff
+  - Borders: #d2d2d7
+  - Brand: #007aff (Apple blue)
+  - Text: #1d1d1f
+- **Font:** -apple-system, BlinkMacSystemFont, 'SF Pro', system-ui
+- **Icon:** `apple` or `laptop`
 
-- No changes required
+#### GeoCities Retro (`geocities`)
+- **Aesthetic:** Obnoxious 90s web - loud, fun, nostalgic
+- **Colors:**
+  - Background: #000000 or #0000ff (black or blue)
+  - Header: #ff00ff (hot magenta) or #00ffff (cyan)
+  - Surface: #ffff00 (yellow) or bright contrasts
+  - Borders: #ff0000, #00ff00 (rainbow vibes)
+  - Brand: #ff00ff (magenta)
+  - Text: #00ff00 (green on black) or #ffffff
+- **Effects:** Consider high-contrast, maybe animated/gradient accents
+- **Font:** 'Comic Sans MS', 'Impact', cursive
+- **Icon:** `star` or `sparkles`
 
-### Database Changes
+#### Crayon Box (`crayons`)
+- **Aesthetic:** Bold, cheerful Crayola-inspired - playful, primary colors, kid-friendly
+- **Colors (Crayola classics):**
+  - Background: #fef9e7 (cream/paper white)
+  - Header: #ee204d (Red) or #1f75fe (Blue)
+  - Surface: #ffffff
+  - Borders: #1cac78 (Green)
+  - Brand: #1f75fe (Crayola Blue)
+  - Success: #1cac78 (Green)
+  - Warning: #fce883 (Yellow)
+  - Error: #ee204d (Red)
+  - Info: #1f75fe (Blue)
+  - Accent colors: #ff7538 (Orange), #926eae (Purple/Violet)
+- **Sidebar:** #fce883 (Yellow) - like the classic Crayola box
+- **Font:** 'Comic Neue', 'Nunito', 'Patrick Hand', system-ui (rounded, friendly)
+- **Icon:** `palette` or `pencil`
 
-- No changes required
+### No Changes Required
 
-### UI Components
-
-- Theme dropdown: ensure proper styling and theme awareness
-- Theme provider/context: refactor for modularity and extensibility
+- Domain Model
+- API Endpoints
+- Database
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Theme dropdown styling fix
+### Phase 1: Code Quality Fixes (TDD)
 
-**Objective:** Ensure Theme dropdown is always visible and styled correctly
+**Objective:** Follow style guide - one type per file
 
 **Tasks:**
-- [ ] Audit current dropdown styles in all themes
-- [ ] Fix background, border, and text color issues
-- [ ] Test in all supported themes
+- [ ] Create `ThemeOption.cs` with the `ThemeOption` record
+- [ ] Remove `ThemeOption` from `ThemeService.cs`
+- [ ] Verify existing tests still pass
 
 **Commit:**
-- fix(client): theme dropdown visibility and contrast
+- refactor(client): extract ThemeOption to its own file
 
 ---
 
-### Phase 2: Modular theming system
+### Phase 2: New Theme CSS Files
 
-**Objective:** Refactor theming for easy extension
+**Objective:** Create the 3 new theme CSS files
 
 **Tasks:**
-- [ ] Refactor theme definitions to be modular (e.g., CSS variables, theme objects)
-- [ ] Document how to add a new theme
-- [ ] Ensure all UI components use theme-aware styles
+- [ ] Create `wwwroot/css/themes/win95.css` with Windows 95 styling
+  - Classic gray (#c0c0c0) background
+  - Navy blue (#000080) header/brand
+  - 3D beveled borders (inset/outset shadows)
+  - System font stack
+- [ ] Create `wwwroot/css/themes/macos.css` with Apple styling
+  - Light gray (#f5f5f7) background
+  - Apple blue (#007aff) brand
+  - Subtle shadows and refined borders
+  - SF Pro / system font stack
+- [ ] Create `wwwroot/css/themes/geocities.css` with 90s web styling
+  - Black/blue background with neon accents
+  - Hot magenta/cyan/yellow highlights
+  - High contrast, loud colors
+  - Comic Sans or Impact fonts
+- [ ] Create `wwwroot/css/themes/crayons.css` with Crayola styling
+  - Cream paper background (#fef9e7)
+  - Yellow sidebar like the classic box (#fce883)
+  - Bold primary colors: Red, Blue, Green, Orange, Purple
+  - Friendly rounded font
+- [ ] Import all 4 themes in `app.css`
 
-**Commit:**
-- refactor(client): modular theming system
+**Commits:**
+- feat(client): add Windows 95 theme
+- feat(client): add macOS theme
+- feat(client): add GeoCities retro theme
+- feat(client): add Crayon Box theme
 
 ---
 
-### Phase 3: Documentation and cleanup
+### Phase 3: Theme Meta Color Fix
 
-**Objective:** Document theming structure and prepare for future builder
+**Objective:** Ensure mobile browser chrome matches all themes
 
 **Tasks:**
-- [ ] Update theming documentation
+- [ ] Add monopoly theme color (#c1e4da - header teal) to `theme.js`
+- [ ] Add win95 theme color (#000080 - navy) to `theme.js`
+- [ ] Add macos theme color (#e8e8ed - Apple gray) to `theme.js`
+- [ ] Add geocities theme color (#ff00ff - magenta) to `theme.js`
+- [ ] Add crayons theme color (#1f75fe - Crayola blue) to `theme.js`
+- [ ] Verify all themes update meta theme-color correctly
+
+**Commit:**
+- fix(client): add all theme colors to meta theme-color
+
+---
+
+### Phase 4: Register Themes in ThemeService
+
+**Objective:** Make new themes selectable in the UI
+
+**Tasks:**
+- [ ] Add `win95` theme to `AvailableThemes` list with icon "monitor"
+- [ ] Add `macos` theme to `AvailableThemes` list with icon "laptop"
+- [ ] Add `geocities` theme to `AvailableThemes` list with icon "sparkles"
+- [ ] Add `crayons` theme to `AvailableThemes` list with icon "palette"
+
+**Commit:**
+- feat(client): register new themes in ThemeService
+
+---
+
+### Phase 5: Visual Verification
+
+**Objective:** Ensure dropdown looks correct in all themes
+
+**Tasks:**
+- [ ] Run app and switch through all 9 themes
+- [ ] Verify dropdown button visibility in header
+- [ ] Verify dropdown menu visibility when open
+- [ ] Fix any contrast/visibility issues found
+
+**Commit (if changes needed):**
+- fix(client): theme dropdown visibility in [theme-name]
+
+---
+
+### Phase 6: Documentation
+
+**Objective:** Document how to add new themes
+
+**Tasks:**
+- [ ] Create `docs/THEMING.md` with:
+  - Overview of theming architecture
+  - Step-by-step: adding a new theme
+  - Required CSS variables list
+  - ThemeService registration
+  - theme.js meta color registration
 - [ ] Add notes for future UI theme builder
-- [ ] Final review and cleanup
 
 **Commit:**
-- docs: document theming improvements
+- docs: add theming guide
 
 ---
 
 ## Testing Strategy
 
-### Unit/Integration Tests
+### Automated Tests
 
-- [ ] Theme dropdown renders correctly in all themes
-- [ ] Adding a new theme works as documented
+- [ ] Existing `ThemeService` tests pass after refactor
+- [ ] bUnit test: ThemeToggle renders all 9 theme options
 
 ### Manual Testing Checklist
 
-- [ ] Switch between all themes and verify dropdown visibility
-- [ ] Add a new theme and verify it appears and works
+- [ ] Light theme: dropdown visible and readable
+- [ ] Dark theme: dropdown visible and readable
+- [ ] VS Code Dark theme: dropdown visible and readable
+- [ ] Monopoly theme: dropdown visible and readable (check teal header)
+- [ ] Windows 95 theme: dropdown visible (check navy header contrast)
+- [ ] macOS theme: dropdown visible and readable
+- [ ] GeoCities theme: dropdown visible (check wild color combos)
+- [ ] Crayon Box theme: dropdown visible (check yellow sidebar)
+- [ ] System theme: inherits from light/dark correctly
+- [ ] Theme persists on page reload
+- [ ] Mobile: meta theme-color updates for all 9 themes
 
 ---
 
 ## Migration Notes
 
-- None
+- None (purely additive/refactoring changes)
 
 ---
 
@@ -149,20 +307,23 @@ The current Theme dropdown sometimes displays as transparent or unreadable in ce
 
 ## Performance Considerations
 
-- No significant impact expected
+- No impact (minor file extraction)
 
 ---
 
 ## Future Enhancements
 
-- UI theme builder for custom themes
-- User-specific theme preferences
+- UI theme builder for custom themes (Feature TBD)
+- User-specific theme preferences stored in database
+- High contrast / accessibility themes
 
 ---
 
 ## References
 
-- Related: UI theming, dropdown styling
+- Current theme files: `src/BudgetExperiment.Client/wwwroot/css/themes/`
+- ThemeService: `src/BudgetExperiment.Client/Services/ThemeService.cs`
+- ThemeToggle: `src/BudgetExperiment.Client/Components/Common/ThemeToggle.razor`
 
 ---
 
@@ -171,3 +332,4 @@ The current Theme dropdown sometimes displays as transparent or unreadable in ce
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-26 | Initial draft | @github-copilot |
+| 2026-02-01 | Audit complete, updated with specific findings and actionable plan | @github-copilot |

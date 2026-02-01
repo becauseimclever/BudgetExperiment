@@ -4,6 +4,13 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.10.1] - 2026-02-01
+
+### Documentation
+
+- **license:** Add THIRD-PARTY-LICENSES.md with Lucide Icons ISC license attribution
+- **client:** Add license reference comments to Icon.razor component
+
 ## [3.10.0] - 2026-02-01
 
 ### Features
