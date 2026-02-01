@@ -4,6 +4,20 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Features
+
+- **client:** Calendar-first budget editing with inline goal management (Feature 048)
+- **client:** CalendarBudgetPanel component - collapsible month summary with category list
+- **client:** CalendarBudgetCategoryRow component - category row with progress bar and edit actions
+- **client:** BudgetGoalModal component - create/edit/delete budget goals
+- **api:** POST /api/v1/budgets/copy endpoint to copy goals between months
+
+### Testing
+
+- **client:** Add 35 bUnit tests for budget panel components
+- **api:** Add 7 integration tests for copy goals endpoint
+- **application:** Add 4 unit tests for CopyGoalsAsync service method
+
 ## [3.12.0] - 2026-02-01
 
 ### Features
