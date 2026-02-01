@@ -318,10 +318,9 @@ feat(api): add uncategorized transactions list and bulk categorize endpoints
 **Effort:** ~0.5 hours
 
 **Tasks:**
-- [ ] Add `IUncategorizedApiService` interface
-- [ ] Implement `UncategorizedApiService` with HTTP calls
-- [ ] Register in DI
-- [ ] Write service unit tests
+- [x] Add methods to `IBudgetApiService` interface (GetUncategorizedTransactionsAsync, BulkCategorizeTransactionsAsync)
+- [x] Implement methods in `BudgetApiService` with HTTP calls
+- [x] Write service unit tests (6 tests)
 
 **Commit:**
 ```

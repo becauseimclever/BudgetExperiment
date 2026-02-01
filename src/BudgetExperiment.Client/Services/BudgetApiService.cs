@@ -952,6 +952,106 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<UncategorizedTransactionPageDto> GetUncategorizedTransactionsAsync(UncategorizedTransactionFilterDto filter)
+    {
+        try
+        {
+            var queryParams = new List<string>();
+
+            if (filter.StartDate.HasValue)
+            {
+                queryParams.Add($"startDate={filter.StartDate.Value:yyyy-MM-dd}");
+            }
+
+            if (filter.EndDate.HasValue)
+            {
+                queryParams.Add($"endDate={filter.EndDate.Value:yyyy-MM-dd}");
+            }
+
+            if (filter.MinAmount.HasValue)
+            {
+                queryParams.Add($"minAmount={filter.MinAmount.Value}");
+            }
+
+            if (filter.MaxAmount.HasValue)
+            {
+                queryParams.Add($"maxAmount={filter.MaxAmount.Value}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.DescriptionContains))
+            {
+                queryParams.Add($"descriptionContains={Uri.EscapeDataString(filter.DescriptionContains)}");
+            }
+
+            if (filter.AccountId.HasValue)
+            {
+                queryParams.Add($"accountId={filter.AccountId.Value}");
+            }
+
+            queryParams.Add($"sortBy={filter.SortBy}");
+            queryParams.Add($"sortDescending={filter.SortDescending}");
+            queryParams.Add($"page={filter.Page}");
+            queryParams.Add($"pageSize={filter.PageSize}");
+
+            var queryString = string.Join("&", queryParams);
+            var result = await this._httpClient.GetFromJsonAsync<UncategorizedTransactionPageDto>(
+                $"api/v1/transactions/uncategorized?{queryString}",
+                JsonOptions);
+
+            return result ?? new UncategorizedTransactionPageDto();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new UncategorizedTransactionPageDto();
+        }
+        catch (HttpRequestException)
+        {
+            return new UncategorizedTransactionPageDto();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request)
+    {
+        try
+        {
+            var response = await this._httpClient.PostAsJsonAsync("api/v1/transactions/bulk-categorize", request, JsonOptions);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<BulkCategorizeResponse>(JsonOptions);
+                return result ?? new BulkCategorizeResponse { TotalRequested = request.TransactionIds.Count, FailedCount = request.TransactionIds.Count, Errors = ["Unexpected empty response"] };
+            }
+
+            return new BulkCategorizeResponse
+            {
+                TotalRequested = request.TransactionIds.Count,
+                FailedCount = request.TransactionIds.Count,
+                Errors = [$"Request failed with status {response.StatusCode}"],
+            };
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new BulkCategorizeResponse
+            {
+                TotalRequested = request.TransactionIds.Count,
+                FailedCount = request.TransactionIds.Count,
+                Errors = ["Authentication required"],
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            return new BulkCategorizeResponse
+            {
+                TotalRequested = request.TransactionIds.Count,
+                FailedCount = request.TransactionIds.Count,
+                Errors = [$"Network error: {ex.Message}"],
+            };
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month)
     {
         try

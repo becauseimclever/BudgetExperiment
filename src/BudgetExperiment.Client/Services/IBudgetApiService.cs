@@ -569,6 +569,22 @@ public interface IBudgetApiService
     /// <returns>True if reordered successfully.</returns>
     Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds);
 
+    // Uncategorized Transaction Operations
+
+    /// <summary>
+    /// Gets a paged list of uncategorized transactions with filtering.
+    /// </summary>
+    /// <param name="filter">The filter and paging parameters.</param>
+    /// <returns>A paged result of uncategorized transactions.</returns>
+    Task<UncategorizedTransactionPageDto> GetUncategorizedTransactionsAsync(UncategorizedTransactionFilterDto filter);
+
+    /// <summary>
+    /// Bulk categorizes multiple transactions.
+    /// </summary>
+    /// <param name="request">The request containing transaction IDs and target category.</param>
+    /// <returns>The result showing success/failure counts.</returns>
+    Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request);
+
     /// <summary>
     /// Gets the monthly category spending report.
     /// </summary>
