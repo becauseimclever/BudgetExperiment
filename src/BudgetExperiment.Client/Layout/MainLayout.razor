@@ -7,7 +7,10 @@
 @using BudgetExperiment.Client.Services
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IAiAvailabilityService AiAvailability
 @inject IJSRuntime JSRuntime
+
+@implements IDisposable
 
 <AuthorizeView>
     <Authorized>
@@ -18,13 +21,24 @@
                 </button>
                 <a href="/" class="app-brand">Budget Experiment</a>
                 <div class="app-header-spacer"></div>
-                <button class="btn btn-ghost chat-toggle-btn" @onclick="ToggleChat" title="@(chatOpen ? "Close chat" : "Open AI Assistant")">
-                    <Icon Name="message-circle" Size="20" />
-                    @if (!chatOpen)
-                    {
-                        <span class="chat-toggle-label">AI Assistant</span>
-                    }
-                </button>
+                @if (AiAvailability.IsEnabled)
+                {
+                    <button class="btn btn-ghost chat-toggle-btn @(AiAvailability.State == AiAvailabilityState.Unavailable ? "ai-unavailable" : "")"
+                            @onclick="ToggleChat"
+                            title="@GetChatButtonTooltip()">
+                        <Icon Name="message-circle" Size="20" />
+                        @if (AiAvailability.State == AiAvailabilityState.Unavailable)
+                        {
+                            <span class="ai-warning-badge">
+                                <Icon Name="alert-triangle" Size="12" />
+                            </span>
+                        }
+                        @if (!chatOpen)
+                        {
+                            <span class="chat-toggle-label">AI Assistant</span>
+                        }
+                    </button>
+                }
                 <ThemeToggle />
                 <UserProfile />
             </header>
@@ -38,7 +52,10 @@
                     @Body
                 </main>
 
-                <ChatPanel IsOpen="@chatOpen" OnToggle="ToggleChat" />
+                @if (AiAvailability.IsEnabled)
+                {
+                    <ChatPanel IsOpen="@chatOpen" OnToggle="ToggleChat" />
+                }
             </div>
         </div>
     </Authorized>
@@ -60,6 +77,12 @@
     private bool navCollapsed = false;
     private bool chatOpen = false;
     private bool hasLoadedState = false;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        AiAvailability.StatusChanged += OnAiStatusChanged;
+    }
 
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -100,5 +123,26 @@
     private void ToggleChat()
     {
         chatOpen = !chatOpen;
+    }
+
+    private void OnAiStatusChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetChatButtonTooltip()
+    {
+        if (AiAvailability.State == AiAvailabilityState.Unavailable)
+        {
+            return $"AI Assistant (unavailable: {AiAvailability.ErrorMessage})";
+        }
+
+        return chatOpen ? "Close chat" : "Open AI Assistant";
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        AiAvailability.StatusChanged -= OnAiStatusChanged;
     }
 }
