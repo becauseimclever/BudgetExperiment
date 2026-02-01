@@ -106,10 +106,25 @@ main {
     border-radius: 6px;
     font-size: 0.875rem;
     transition: background-color 0.15s;
+    position: relative;
 }
 
 .chat-toggle-btn:hover {
     background: var(--color-header-hover, rgba(255, 255, 255, 0.1));
+}
+
+.chat-toggle-btn.ai-unavailable {
+    opacity: 0.7;
+}
+
+.ai-warning-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    color: var(--color-warning, #f59e0b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .chat-toggle-label {

@@ -82,6 +82,7 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 
 builder.Services.AddScoped<IBudgetApiService, BudgetApiService>();
 builder.Services.AddScoped<IAiApiService, AiApiService>();
+builder.Services.AddScoped<IAiAvailabilityService, AiAvailabilityService>();
 builder.Services.AddScoped<ICategorySuggestionApiService, CategorySuggestionApiService>();
 builder.Services.AddScoped<IChatApiService, ChatApiService>();
 builder.Services.AddScoped<IChatContextService, ChatContextService>();

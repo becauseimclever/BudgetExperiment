@@ -1,8 +1,10 @@
 @* NavMenu.razor - Collapsible side navigation menu *@
 
+@using BudgetExperiment.Client.Services
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject IBudgetApiService ApiService
+@inject IAiAvailabilityService AiAvailability
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JSRuntime
@@ -152,21 +154,41 @@
     </div>
 
     <div class="nav-footer">
-        <NavLink class="nav-item" href="ai/suggestions" title="Smart Insights">
-            <span class="nav-icon"><Icon Name="lightbulb" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Smart Insights</span>
-            }
-        </NavLink>
+        @if (AiAvailability.IsEnabled)
+        {
+            <div class="nav-section @(AiAvailability.State == AiAvailabilityState.Unavailable ? "ai-unavailable" : "")">
+                <button class="nav-item nav-section-toggle" @onclick="ToggleAiToolsSection" title="@GetAiToolsTooltip()">
+                    <span class="nav-icon"><Icon Name="sparkles" Size="20" /></span>
+                    @if (!IsCollapsed)
+                    {
+                        <span class="nav-text">AI Tools</span>
+                        @if (AiAvailability.State == AiAvailabilityState.Unavailable)
+                        {
+                            <span class="nav-warning-icon" title="@AiAvailability.ErrorMessage">
+                                <Icon Name="alert-triangle" Size="14" />
+                            </span>
+                        }
+                        <span class="nav-chevron @(aiToolsExpanded ? "expanded" : "")">
+                            <Icon Name="chevron-down" Size="16" />
+                        </span>
+                    }
+                </button>
 
-        <NavLink class="nav-item" href="category-suggestions" title="Category Suggestions">
-            <span class="nav-icon"><Icon Name="sparkles" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Category Suggestions</span>
-            }
-        </NavLink>
+                @if (!IsCollapsed && aiToolsExpanded)
+                {
+                    <div class="nav-subitems">
+                        <NavLink class="nav-item nav-subitem" href="ai/suggestions" title="Smart Insights">
+                            <span class="nav-icon"><Icon Name="lightbulb" Size="16" /></span>
+                            <span class="nav-text">Smart Insights</span>
+                        </NavLink>
+                        <NavLink class="nav-item nav-subitem" href="category-suggestions" title="Category Suggestions">
+                            <span class="nav-icon"><Icon Name="tag" Size="16" /></span>
+                            <span class="nav-text">Category Suggestions</span>
+                        </NavLink>
+                    </div>
+                }
+            </div>
+        }
 
         <NavLink class="nav-item" href="settings" title="Settings">
             <span class="nav-icon"><Icon Name="settings" Size="20" /></span>
@@ -187,11 +209,13 @@
 
     private const string ReportsExpandedStorageKey = "budget-experiment-reports-expanded";
     private const string AccountsExpandedStorageKey = "budget-experiment-accounts-expanded";
+    private const string AiToolsExpandedStorageKey = "budget-experiment-ai-tools-expanded";
 
     private List<AccountDto> accounts = new();
     private bool isAuthenticated;
     private bool reportsExpanded;
     private bool accountsExpanded = true;
+    private bool aiToolsExpanded = true;
     private bool hasLoadedState;
 
     private async Task ToggleReportsSection()
@@ -204,6 +228,12 @@
     {
         accountsExpanded = !accountsExpanded;
         await SaveExpandedStateAsync(AccountsExpandedStorageKey, accountsExpanded);
+    }
+
+    private async Task ToggleAiToolsSection()
+    {
+        aiToolsExpanded = !aiToolsExpanded;
+        await SaveExpandedStateAsync(AiToolsExpandedStorageKey, aiToolsExpanded);
     }
 
     private async Task SaveExpandedStateAsync(string key, bool value)
@@ -222,6 +252,7 @@
     protected override async Task OnInitializedAsync()
     {
         AuthStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        AiAvailability.StatusChanged += OnAiStatusChanged;
 
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
@@ -229,6 +260,7 @@
         if (isAuthenticated)
         {
             await LoadAccountsAsync();
+            await AiAvailability.RefreshAsync();
         }
     }
 
@@ -250,6 +282,12 @@
                 if (bool.TryParse(accountsState, out var accts))
                 {
                     accountsExpanded = accts;
+                }
+
+                var aiToolsState = await JSRuntime.InvokeAsync<string?>("sessionStorage.getItem", AiToolsExpandedStorageKey);
+                if (bool.TryParse(aiToolsState, out var aiTools))
+                {
+                    aiToolsExpanded = aiTools;
                 }
 
                 StateHasChanged();
@@ -295,10 +333,25 @@
         }
     }
 
+    private void OnAiStatusChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetAiToolsTooltip()
+    {
+        return AiAvailability.State switch
+        {
+            AiAvailabilityState.Unavailable => $"AI Tools (unavailable: {AiAvailability.ErrorMessage})",
+            _ => "AI Tools",
+        };
+    }
+
     /// <inheritdoc/>
     public void Dispose()
     {
         AuthStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        AiAvailability.StatusChanged -= OnAiStatusChanged;
     }
 
     private static string TruncateName(string name)
