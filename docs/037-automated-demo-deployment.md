@@ -1,5 +1,7 @@
 # Feature 037: Automated Demo Site Deployment
-> **Status:** ⏸️ On Hold (Depends on 036 - E2E tests disabled until auth is fixed)
+> **Status:** ❌ Cancelled
+> **Cancelled:** 2026-02-01
+> **Reason:** Will revisit when ready to approach again
 
 ## Overview
 
