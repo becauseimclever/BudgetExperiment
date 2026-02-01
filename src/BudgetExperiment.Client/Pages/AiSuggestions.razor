@@ -12,15 +12,9 @@
 <div class="suggestions-page">
     <div class="suggestions-toolbar">
         <div class="toolbar-left">
-            <button class="btn btn-primary" @onclick="StartAnalysis" disabled="@(IsAnalyzing || !IsAiAvailable)">
-                <Icon Name="sparkles" Size="16" />
-                <span>Run AI Analysis</span>
-            </button>
+            <Button Variant="ButtonVariant.Primary" IconLeft="sparkles" IsDisabled="@(IsAnalyzing || !IsAiAvailable)" OnClick="StartAnalysis">Run AI Analysis</Button>
 
-            <button class="btn btn-secondary" @onclick="RefreshSuggestions" disabled="@IsLoading">
-                <Icon Name="refresh-cw" Size="16" />
-                <span>Refresh</span>
-            </button>
+            <Button Variant="ButtonVariant.Secondary" IconLeft="refresh-cw" IsDisabled="@IsLoading" OnClick="RefreshSuggestions">Refresh</Button>
         </div>
 
         <div class="toolbar-right">

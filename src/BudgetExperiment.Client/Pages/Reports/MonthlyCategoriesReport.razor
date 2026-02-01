@@ -15,13 +15,9 @@
     <PageHeader Title="Category Spending">
         <Actions>
             <div class="month-navigation">
-                <button class="btn btn-secondary btn-sm" @onclick="PreviousMonth" title="Previous month">
-                    <Icon Name="chevron-left" Size="16" />
-                </button>
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-left" OnClick="PreviousMonth" title="Previous month" />
                 <span class="current-month">@currentDate.ToString("MMMM yyyy")</span>
-                <button class="btn btn-secondary btn-sm" @onclick="NextMonth" title="Next month">
-                    <Icon Name="chevron-right" Size="16" />
-                </button>
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-right" OnClick="NextMonth" title="Next month" />
             </div>
         </Actions>
     </PageHeader>

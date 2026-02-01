@@ -14,13 +14,9 @@
     <PageHeader Title="Budget Overview">
         <Actions>
             <div class="month-navigation">
-                <button class="btn btn-secondary btn-sm" @onclick="PreviousMonth" title="Previous month">
-                    <Icon Name="chevron-left" Size="16" />
-                </button>
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-left" OnClick="PreviousMonth" title="Previous month" />
                 <span class="current-month">@currentDate.ToString("MMMM yyyy")</span>
-                <button class="btn btn-secondary btn-sm" @onclick="NextMonth" title="Next month">
-                    <Icon Name="chevron-right" Size="16" />
-                </button>
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-right" OnClick="NextMonth" title="Next month" />
             </div>
         </Actions>
     </PageHeader>
@@ -112,12 +108,10 @@
         }
         else
         {
-            <div class="empty-state">
-                <p>No budget goals set for @currentDate.ToString("MMMM yyyy").</p>
-                <button class="btn btn-primary" @onclick="NavigateToCategories">
-                    <Icon Name="tag" Size="16" /> Manage Categories
-                </button>
-            </div>
+            <EmptyState Title="No budget goals set"
+                       Description="@($"Set budget goals for {currentDate:MMMM yyyy} in Categories.")">
+                <Button Variant="ButtonVariant.Primary" IconLeft="tag" OnClick="NavigateToCategories">Manage Categories</Button>
+            </EmptyState>
         }
     }
 

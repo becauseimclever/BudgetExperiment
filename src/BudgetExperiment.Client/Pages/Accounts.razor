@@ -13,8 +13,8 @@
 <div class="page-container">
     <PageHeader Title="Accounts">
         <Actions>
-            <button class="btn btn-primary mr-2" @onclick="ShowTransfer"><Icon Name="arrows-horizontal" Size="16" /> Transfer</button>
-            <button class="btn btn-success" @onclick="ShowAddAccount">+ Add Account</button>
+            <Button Variant="ButtonVariant.Primary" IconLeft="arrows-horizontal" OnClick="ShowTransfer">Transfer</Button>
+            <Button Variant="ButtonVariant.Success" OnClick="ShowAddAccount">+ Add Account</Button>
         </Actions>
     </PageHeader>
 
@@ -52,10 +52,10 @@
                         </div>
                     </div>
                     <div class="card-footer d-flex gap-2">
-                        <button class="btn btn-sm btn-secondary" @onclick="() => ShowEditAccount(account)" title="Edit account"><Icon Name="edit" Size="16" /></button>
-                        <button class="btn btn-sm btn-primary" @onclick="() => ShowTransferFrom(account.Id)" title="Transfer from this account"><Icon Name="arrows-horizontal" Size="16" /></button>
-                        <button class="btn btn-sm btn-primary" @onclick="() => ViewAccount(account.Id)">Transactions</button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteAccount(account.Id)">Delete</button>
+                        <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="edit" OnClick="() => ShowEditAccount(account)" title="Edit account" />
+                        <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" IconLeft="arrows-horizontal" OnClick="() => ShowTransferFrom(account.Id)" title="Transfer from this account" />
+                        <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" OnClick="() => ViewAccount(account.Id)">Transactions</Button>
+                        <Button Variant="ButtonVariant.Danger" Size="ButtonSize.Small" OnClick="() => DeleteAccount(account.Id)">Delete</Button>
                     </div>
                 </div>
             }

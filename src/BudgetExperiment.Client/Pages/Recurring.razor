@@ -14,7 +14,7 @@
 <div class="page-container">
     <PageHeader Title="Recurring Transactions">
         <Actions>
-            <button class="btn btn-success" @onclick="ShowAddForm">+ Add Recurring</button>
+            <Button Variant="ButtonVariant.Success" OnClick="ShowAddForm">+ Add Recurring</Button>
         </Actions>
     </PageHeader>
 
@@ -34,12 +34,11 @@
     }
     else if (recurringTransactions.Count == 0)
     {
-        <div class="empty-state">
-            <div class="empty-state-icon"><Icon Name="refresh" Size="48" /></div>
-            <h3 class="empty-state-title">No Recurring Transactions</h3>
-            <p class="empty-state-description">Set up recurring transactions for bills, income, or regular expenses.</p>
-            <button class="btn btn-primary" @onclick="ShowAddForm">Create Your First Recurring Transaction</button>
-        </div>
+        <EmptyState Title="No Recurring Transactions"
+                   Description="Set up recurring transactions for bills, income, or regular expenses."
+                   Icon="refresh">
+            <Button Variant="ButtonVariant.Primary" OnClick="ShowAddForm">Create Your First Recurring Transaction</Button>
+        </EmptyState>
     }
     else
     {

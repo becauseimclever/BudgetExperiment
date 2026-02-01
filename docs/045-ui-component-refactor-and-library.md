@@ -345,18 +345,33 @@ Components/
 
 ---
 
-### Phase 4: Page Migration - Buttons
+### Phase 4: Page Migration - Buttons (In Progress)
 
 **Objective:** Replace raw `<button>` elements with `<Button>` component
 
-**Tasks:**
-- [ ] Migrate `Pages/Accounts.razor` buttons
-- [ ] Migrate `Pages/Categories.razor` buttons
-- [ ] Migrate `Pages/Recurring.razor` buttons
-- [ ] Migrate `Pages/Rules.razor` buttons
-- [ ] Migrate remaining pages
-- [ ] Migrate `Layout/MainLayout.razor` buttons
-- [ ] Migrate form component buttons
+**Pages Migrated:**
+- [x] `Pages/Accounts.razor` - Page header, card footer action buttons
+- [x] `Pages/Categories.razor` - Page header button
+- [x] `Pages/Recurring.razor` - Page header, empty state (using EmptyState component)
+- [x] `Pages/RecurringTransfers.razor` - Page header, empty state
+- [x] `Pages/Rules.razor` - Page header (3 buttons), empty state
+- [x] `Pages/Calendar.razor` - Month navigation buttons
+- [x] `Pages/Budget.razor` - Month navigation, empty state
+- [x] `Pages/Transfers.razor` - Page header, clear filters, table actions
+- [x] `Pages/AccountTransactions.razor` - Page header button
+- [x] `Pages/AiSuggestions.razor` - Toolbar buttons
+- [x] `Pages/CategorySuggestions.razor` - Page header, modal actions
+- [x] `Pages/Uncategorized.razor` - Clear filters, bulk actions, pagination
+- [x] `Pages/MonthlyCategoriesReport.razor` - Month navigation
+- [x] `Pages/Settings.razor` - Refresh status button
+- [x] `Pages/Import.razor` - Start over, step navigation, modal buttons
+
+**Remaining (btn-action specialized buttons):**
+- [ ] `Pages/Recurring.razor` - Card action buttons (btn-action)
+- [ ] `Pages/RecurringTransfers.razor` - Card action buttons (btn-action)
+- [ ] `Pages/Reconciliation.razor` - Various action buttons
+
+**Note:** `btn-action` buttons use specialized CSS for compact action UIs. These may remain as custom buttons or require a separate ActionButton component in a future phase.
 
 **Commit:**
 - refactor(client): migrate pages to Button component

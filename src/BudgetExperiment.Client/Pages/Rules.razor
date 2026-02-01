@@ -13,13 +13,9 @@
 <div class="page-container">
     <PageHeader Title="Categorization Rules">
         <Actions>
-            <button class="btn btn-outline" @onclick="NavigateToAiSuggestions" title="Get AI-powered rule suggestions">
-                <Icon Name="sparkles" Size="16" /> AI Suggestions
-            </button>
-            <button class="btn btn-secondary" @onclick="ShowApplyRules" disabled="@(rules.Count == 0)">
-                <Icon Name="play" Size="16" /> Apply Rules
-            </button>
-            <button class="btn btn-success" @onclick="ShowAddRule">+ Add Rule</button>
+            <Button Variant="ButtonVariant.Outline" IconLeft="sparkles" OnClick="NavigateToAiSuggestions" title="Get AI-powered rule suggestions">AI Suggestions</Button>
+            <Button Variant="ButtonVariant.Secondary" IconLeft="play" IsDisabled="@(rules.Count == 0)" OnClick="ShowApplyRules">Apply Rules</Button>
+            <Button Variant="ButtonVariant.Success" OnClick="ShowAddRule">+ Add Rule</Button>
         </Actions>
     </PageHeader>
 
@@ -34,13 +30,10 @@
     }
     else if (rules.Count == 0 && errorMessage == null)
     {
-        <div class="empty-state">
-            <p class="empty-message">No categorization rules yet.</p>
-            <p class="text-secondary">
-                Create rules to automatically assign categories to transactions based on their descriptions.
-            </p>
-            <button class="btn btn-primary mt-2" @onclick="ShowAddRule">Create Your First Rule</button>
-        </div>
+        <EmptyState Title="No categorization rules yet"
+                   Description="Create rules to automatically assign categories to transactions based on their descriptions.">
+            <Button Variant="ButtonVariant.Primary" OnClick="ShowAddRule">Create Your First Rule</Button>
+        </EmptyState>
     }
     else if (errorMessage == null)
     {

@@ -17,9 +17,9 @@
 
 <div class="page-container">
     <div class="split mb-4">
-        <button class="btn btn-primary" @onclick="PreviousMonth">&lt; Previous</button>
+        <Button Variant="ButtonVariant.Primary" OnClick="PreviousMonth">&lt; Previous</Button>
         <h2 class="text-secondary m-0">@currentDate.ToString("MMMM yyyy")</h2>
-        <button class="btn btn-primary" @onclick="NextMonth">Next &gt;</button>
+        <Button Variant="ButtonVariant.Primary" OnClick="NextMonth">Next &gt;</Button>
     </div>
 
     <div class="account-filter">

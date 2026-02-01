@@ -11,28 +11,13 @@
 <div class="page-container">
     <PageHeader Title="Category Suggestions" Subtitle="AI-powered suggestions for new budget categories based on your transactions">
         <Actions>
-            <button class="btn btn-primary" @onclick="AnalyzeTransactions" disabled="@IsAnalyzing">
-                @if (IsAnalyzing)
-                {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span>Analyzing...</span>
-                }
-                else
-                {
-                    <Icon Name="sparkles" Size="16" />
-                    <span>Analyze Transactions</span>
-                }
-            </button>
-            <button class="btn btn-secondary" @onclick="RefreshSuggestions" disabled="@(IsLoading || IsAnalyzing)">
-                <Icon Name="refresh-cw" Size="16" />
-                <span>Refresh</span>
-            </button>
+            <Button Variant="ButtonVariant.Primary" IconLeft="sparkles" IsLoading="@IsAnalyzing" IsDisabled="@IsAnalyzing" OnClick="AnalyzeTransactions">
+                @(IsAnalyzing ? "Analyzing..." : "Analyze Transactions")
+            </Button>
+            <Button Variant="ButtonVariant.Secondary" IconLeft="refresh-cw" IsDisabled="@(IsLoading || IsAnalyzing)" OnClick="RefreshSuggestions">Refresh</Button>
             @if (SelectedSuggestions.Count > 0)
             {
-                <button class="btn btn-success" @onclick="AcceptSelected" disabled="@IsProcessing">
-                    <Icon Name="check-circle" Size="16" />
-                    <span>Accept Selected (@SelectedSuggestions.Count)</span>
-                </button>
+                <Button Variant="ButtonVariant.Success" IconLeft="check-circle" IsDisabled="@IsProcessing" OnClick="AcceptSelected">Accept Selected (@SelectedSuggestions.Count)</Button>
             }
         </Actions>
     </PageHeader>
@@ -110,14 +95,8 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" @onclick="CloseAcceptModal">Cancel</button>
-                    <button class="btn btn-success" @onclick="ConfirmAccept" disabled="@IsProcessing">
-                        @if (IsProcessing)
-                        {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        }
-                        Accept Category
-                    </button>
+                    <Button Variant="ButtonVariant.Secondary" OnClick="CloseAcceptModal">Cancel</Button>
+                    <Button Variant="ButtonVariant.Success" IsLoading="@IsProcessing" IsDisabled="@IsProcessing" OnClick="ConfirmAccept">Accept Category</Button>
                 </div>
             </div>
         }
@@ -159,7 +138,7 @@
             <p class="text-muted">No rules available for this suggestion.</p>
         }
         <div class="modal-actions">
-            <button class="btn btn-secondary" @onclick="CloseRulesModal">Close</button>
+            <Button Variant="ButtonVariant.Secondary" OnClick="CloseRulesModal">Close</Button>
         </div>
     </Modal>
 </div>

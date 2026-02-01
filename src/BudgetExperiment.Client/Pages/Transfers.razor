@@ -14,7 +14,7 @@
 <div class="page-container-wide">
     <PageHeader Title="Transfers">
         <Actions>
-            <button class="btn btn-success" @onclick="ShowCreateTransfer">+ New Transfer</button>
+            <Button Variant="ButtonVariant.Success" OnClick="ShowCreateTransfer">+ New Transfer</Button>
         </Actions>
     </PageHeader>
 
@@ -37,7 +37,7 @@
             <label for="toDate">To:</label>
             <input type="date" id="toDate" @bind="toDate" @bind:after="ApplyFilters" />
         </div>
-        <button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
+        <Button Variant="ButtonVariant.Secondary" OnClick="ClearFilters">Clear Filters</Button>
     </div>
 
     @if (isLoading)
@@ -93,8 +93,8 @@
                             </td>
                             <td>@(string.IsNullOrWhiteSpace(transfer.Description) ? "-" : transfer.Description)</td>
                             <td class="text-center" style="white-space: nowrap;">
-                                <button class="btn btn-sm btn-primary" @onclick="() => ShowEditTransfer(transfer)">Edit</button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteTransfer(transfer.TransferId)">Delete</button>
+                                <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" OnClick="() => ShowEditTransfer(transfer)">Edit</Button>
+                                <Button Variant="ButtonVariant.Danger" Size="ButtonSize.Small" OnClick="() => DeleteTransfer(transfer.TransferId)">Delete</Button>
                             </td>
                         </tr>
                     }

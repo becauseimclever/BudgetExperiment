@@ -54,7 +54,7 @@
                    @bind="filter.MaxAmount"
                    @bind:after="ApplyFilters" />
         </div>
-        <button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
+        <Button Variant="ButtonVariant.Secondary" OnClick="ClearFilters">Clear Filters</Button>
     </div>
 
     @if (isLoading)
@@ -95,17 +95,8 @@
                             <option value="@category.Id">@category.Name</option>
                         }
                     </select>
-                    <button class="btn btn-success" @onclick="BulkCategorize" disabled="@(selectedCategoryId == Guid.Empty || isBulkProcessing)">
-                        @if (isBulkProcessing)
-                        {
-                            <span>Processing...</span>
-                        }
-                        else
-                        {
-                            <span>Apply Category</span>
-                        }
-                    </button>
-                    <button class="btn btn-secondary" @onclick="ClearSelection">Clear Selection</button>
+                    <Button Variant="ButtonVariant.Success" IsLoading="@isBulkProcessing" IsDisabled="@(selectedCategoryId == Guid.Empty || isBulkProcessing)" OnClick="BulkCategorize">Apply Category</Button>
+                    <Button Variant="ButtonVariant.Secondary" OnClick="ClearSelection">Clear Selection</Button>
                 </div>
             </div>
         }
@@ -163,19 +154,11 @@
         @if (pageData.TotalPages > 1)
         {
             <div class="pagination-controls">
-                <button class="btn btn-sm btn-secondary" @onclick="GoToFirstPage" disabled="@(filter.Page <= 1)">
-                    <Icon Name="chevrons-left" Size="14" />
-                </button>
-                <button class="btn btn-sm btn-secondary" @onclick="GoToPreviousPage" disabled="@(filter.Page <= 1)">
-                    <Icon Name="chevron-left" Size="14" />
-                </button>
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevrons-left" IsDisabled="@(filter.Page <= 1)" OnClick="GoToFirstPage" />
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-left" IsDisabled="@(filter.Page <= 1)" OnClick="GoToPreviousPage" />
                 <span class="pagination-info">Page @filter.Page of @pageData.TotalPages</span>
-                <button class="btn btn-sm btn-secondary" @onclick="GoToNextPage" disabled="@(filter.Page >= pageData.TotalPages)">
-                    <Icon Name="chevron-right" Size="14" />
-                </button>
-                <button class="btn btn-sm btn-secondary" @onclick="GoToLastPage" disabled="@(filter.Page >= pageData.TotalPages)">
-                    <Icon Name="chevrons-right" Size="14" />
-                </button>
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-right" IsDisabled="@(filter.Page >= pageData.TotalPages)" OnClick="GoToNextPage" />
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevrons-right" IsDisabled="@(filter.Page >= pageData.TotalPages)" OnClick="GoToLastPage" />
                 <select class="form-control page-size-select" @bind="filter.PageSize" @bind:after="ApplyFilters">
                     <option value="25">25 per page</option>
                     <option value="50">50 per page</option>

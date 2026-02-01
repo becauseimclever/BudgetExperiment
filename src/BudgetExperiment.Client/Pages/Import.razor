@@ -13,7 +13,7 @@
         <Actions>
             @if (activeTab == "wizard" && wizardState.CurrentStep > 1)
             {
-                <button class="btn btn-secondary" @onclick="ResetWizard">Start Over</button>
+                <Button Variant="ButtonVariant.Secondary" OnClick="ResetWizard">Start Over</Button>
             }
         </Actions>
     </PageHeader>
@@ -114,11 +114,7 @@
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">
-                                <button class="btn btn-primary"
-                                        disabled="@(!wizardState.SelectedAccountId.HasValue)"
-                                        @onclick="GoToStep2">
-                                    Continue to Mapping <Icon Name="arrow-right" Size="16" />
-                                </button>
+                                <Button Variant="ButtonVariant.Primary" IconRight="arrow-right" IsDisabled="@(!wizardState.SelectedAccountId.HasValue)" OnClick="GoToStep2">Continue to Mapping</Button>
                             </div>
                         </div>
                     }
@@ -178,18 +174,10 @@
                     }
 
                     <div class="d-flex justify-content-between mt-4">
-                        <button class="btn btn-secondary" @onclick="GoToStep1">
-                            <Icon Name="arrow-left" Size="16" /> Back
-                        </button>
+                        <Button Variant="ButtonVariant.Secondary" IconLeft="arrow-left" OnClick="GoToStep1">Back</Button>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-outline-primary" @onclick="ShowSaveMappingDialog">
-                                <Icon Name="save" Size="16" /> Save Mapping
-                            </button>
-                            <button class="btn btn-primary"
-                                    disabled="@(!wizardState.HasRequiredMappings)"
-                                    @onclick="GoToStep3">
-                                Preview Import <Icon Name="arrow-right" Size="16" />
-                            </button>
+                            <Button Variant="ButtonVariant.Outline" IconLeft="save" OnClick="ShowSaveMappingDialog">Save Mapping</Button>
+                            <Button Variant="ButtonVariant.Primary" IconRight="arrow-right" IsDisabled="@(!wizardState.HasRequiredMappings)" OnClick="GoToStep3">Preview Import</Button>
                         </div>
                     </div>
                 </div>
@@ -225,23 +213,10 @@
                     }
 
                     <div class="d-flex justify-content-between mt-4">
-                        <button class="btn btn-secondary" @onclick="GoToStep2">
-                            <Icon Name="arrow-left" Size="16" /> Back to Mapping
-                        </button>
-                        <button class="btn btn-success"
-                                disabled="@(wizardState.SelectedRowIndices.Count == 0 || isImporting)"
-                                @onclick="ExecuteImport">
-                            @if (isImporting)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <text>Importing...</text>
-                            }
-                            else
-                            {
-                                <Icon Name="check" Size="16" />
-                                <text>Import @wizardState.SelectedRowIndices.Count Transactions</text>
-                            }
-                        </button>
+                        <Button Variant="ButtonVariant.Secondary" IconLeft="arrow-left" OnClick="GoToStep2">Back to Mapping</Button>
+                        <Button Variant="ButtonVariant.Success" IconLeft="check" IsLoading="@isImporting" IsDisabled="@(wizardState.SelectedRowIndices.Count == 0 || isImporting)" OnClick="ExecuteImport">
+                            @(isImporting ? "Importing..." : $"Import {wizardState.SelectedRowIndices.Count} Transactions")
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -293,16 +268,8 @@
             <input type="text" class="form-control" @bind="newMappingName" placeholder="e.g., Chase Bank CSV" />
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4">
-            <button class="btn btn-secondary" @onclick="HideSaveMappingDialog">Cancel</button>
-            <button class="btn btn-primary"
-                    disabled="@(string.IsNullOrWhiteSpace(newMappingName) || isSavingMapping)"
-                    @onclick="SaveMapping">
-                @if (isSavingMapping)
-                {
-                    <span class="spinner-border spinner-border-sm" role="status"></span>
-                }
-                Save Mapping
-            </button>
+            <Button Variant="ButtonVariant.Secondary" OnClick="HideSaveMappingDialog">Cancel</Button>
+            <Button Variant="ButtonVariant.Primary" IsLoading="@isSavingMapping" IsDisabled="@(string.IsNullOrWhiteSpace(newMappingName) || isSavingMapping)" OnClick="SaveMapping">Save Mapping</Button>
         </div>
     </Modal>
 </div>
