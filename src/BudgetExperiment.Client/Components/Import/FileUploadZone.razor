@@ -115,7 +115,7 @@
         isDragging = false;
     }
 
-    private async Task HandleDrop(DragEventArgs e)
+    private void HandleDrop(DragEventArgs e)
     {
         isDragging = false;
         // Note: Blazor's drag-drop doesn't give us direct file access
