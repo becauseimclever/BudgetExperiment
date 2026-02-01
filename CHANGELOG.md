@@ -4,6 +4,17 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.10.0] - 2026-02-01
+
+### Features
+
+- **client:** Consolidate AI features in UI with centralized availability service (Feature 043)
+- **client:** Three-state AI availability model: Disabled, Unavailable, Available
+- **client:** Grouped AI navigation under expandable "AI Tools" section
+- **client:** Warning indicators when AI is enabled but Ollama unavailable
+- **client:** AI Assistant button conditional visibility with warning badge
+- **client:** AiAvailabilityService with cached status and StatusChanged events
+
 ### CI/CD
 
 - **ci:** Optimize CI/CD pipeline with parallel matrix Docker builds (Feature 042)
