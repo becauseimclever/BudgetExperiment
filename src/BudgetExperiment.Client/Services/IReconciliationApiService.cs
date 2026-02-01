@@ -74,4 +74,19 @@ public interface IReconciliationApiService
     /// <param name="tolerances">The new tolerances.</param>
     /// <returns>True if updated successfully.</returns>
     Task<bool> UpdateTolerancesAsync(MatchingTolerancesDto tolerances);
+
+    /// <summary>
+    /// Unlinks a matched transaction, returning it and the recurring instance to unmatched state.
+    /// </summary>
+    /// <param name="matchId">The match ID to unlink.</param>
+    /// <returns>True if unlinked successfully.</returns>
+    Task<bool> UnlinkMatchAsync(Guid matchId);
+
+    /// <summary>
+    /// Gets recurring instances that can be linked to a specific transaction.
+    /// Returns instances within ±30 days of the transaction date.
+    /// </summary>
+    /// <param name="transactionId">The transaction ID.</param>
+    /// <returns>List of linkable recurring instances.</returns>
+    Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(Guid transactionId);
 }

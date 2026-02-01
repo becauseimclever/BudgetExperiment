@@ -129,6 +129,10 @@
                                 <span class="confidence-badge @GetConfidenceClass(match.ConfidenceLevel)">
                                     @match.ConfidenceLevel (@match.ConfidenceScore.ToString("P0"))
                                 </span>
+                                @if (match.Source == "Manual")
+                                {
+                                    <span class="source-badge manual">Manual</span>
+                                }
                                 <span class="match-date">@match.RecurringInstanceDate.ToString("MMM d, yyyy")</span>
                             </div>
                             <div class="match-body">
@@ -188,6 +192,10 @@
                         </div>
                         <div class="instance-status">
                             <span class="status-badge @GetStatusClass(instance.Status)">@instance.Status</span>
+                            @if (instance.MatchSource == "Manual")
+                            {
+                                <span class="source-badge manual">Manual</span>
+                            }
                         </div>
                         @if (instance.Status == "Matched")
                         {
@@ -195,6 +203,20 @@
                                 Actual: @FormatMoney(instance.ActualAmount)
                             </div>
                         }
+                        <div class="instance-actions">
+                            @if (instance.Status == "Missing")
+                            {
+                                <button class="btn btn-link btn-sm" @onclick="() => ShowLinkDialog(instance)" disabled="@isProcessing">
+                                    <Icon Name="link" Size="14" /> Link Manually
+                                </button>
+                            }
+                            else if (instance.Status == "Matched" && instance.MatchId.HasValue)
+                            {
+                                <button class="btn btn-link btn-sm text-warning" @onclick="() => ShowUnlinkConfirm(instance)" disabled="@isProcessing">
+                                    <Icon Name="link-slash" Size="14" /> Unlink
+                                </button>
+                            }
+                        </div>
                     </div>
                 }
             </div>
@@ -219,15 +241,35 @@
                   OnReject="HandleMatchRejected"
                   OnCancel="HideMatchReviewModal" />
 
+@* Linkable Instances Dialog for manual linking *@
+<LinkableInstancesDialog IsVisible="@showLinkDialog"
+                         RecurringInstance="@selectedInstance"
+                         OnLinked="HandleManualLinkCreated"
+                         OnCancel="HideLinkDialog" />
+
+@* Unlink Confirmation Dialog *@
+<ConfirmDialog IsVisible="@showUnlinkConfirm"
+               Title="Unlink Match"
+               Message="@unlinkConfirmMessage"
+               ConfirmText="Unlink"
+               IsProcessing="@isUnlinking"
+               OnConfirm="HandleUnlinkConfirmed"
+               OnCancel="HideUnlinkConfirm" />
+
 @code {
     private bool isLoading = true;
     private bool isProcessing;
     private bool isRetrying;
+    private bool isUnlinking;
     private string? errorMessage;
 
     private bool showSettings;
     private bool showMatchReviewModal;
+    private bool showLinkDialog;
+    private bool showUnlinkConfirm;
     private ReconciliationMatchDto? selectedMatch;
+    private RecurringInstanceStatusDto? selectedInstance;
+    private string unlinkConfirmMessage = "Are you sure you want to unlink this match?";
 
     private int selectedMonth = DateTime.Now.Month;
     private int selectedYear = DateTime.Now.Year;
@@ -435,6 +477,62 @@
             pendingMatches.RemoveAll(m => m.Id == matchId);
             HideMatchReviewModal();
             await LoadDataAsync();
+        }
+    }
+
+    private void ShowLinkDialog(RecurringInstanceStatusDto instance)
+    {
+        selectedInstance = instance;
+        showLinkDialog = true;
+    }
+
+    private void HideLinkDialog()
+    {
+        showLinkDialog = false;
+        selectedInstance = null;
+    }
+
+    private async Task HandleManualLinkCreated(ReconciliationMatchDto match)
+    {
+        HideLinkDialog();
+        await LoadDataAsync();
+    }
+
+    private void ShowUnlinkConfirm(RecurringInstanceStatusDto instance)
+    {
+        selectedInstance = instance;
+        unlinkConfirmMessage = $"Are you sure you want to unlink the match for \"{instance.Description}\"? The transaction and recurring instance will both return to unmatched state.";
+        showUnlinkConfirm = true;
+    }
+
+    private void HideUnlinkConfirm()
+    {
+        showUnlinkConfirm = false;
+        selectedInstance = null;
+    }
+
+    private async Task HandleUnlinkConfirmed()
+    {
+        if (selectedInstance?.MatchId == null)
+        {
+            return;
+        }
+
+        isUnlinking = true;
+        StateHasChanged();
+
+        try
+        {
+            if (await ReconciliationApi.UnlinkMatchAsync(selectedInstance.MatchId.Value))
+            {
+                HideUnlinkConfirm();
+                await LoadDataAsync();
+            }
+        }
+        finally
+        {
+            isUnlinking = false;
+            StateHasChanged();
         }
     }
 

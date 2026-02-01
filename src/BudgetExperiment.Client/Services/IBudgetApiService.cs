@@ -576,4 +576,19 @@ public interface IBudgetApiService
     /// <param name="month">The month (1-12).</param>
     /// <returns>The monthly category report.</returns>
     Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month);
+
+    /// <summary>
+    /// Gets the import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction ID.</param>
+    /// <returns>The import patterns.</returns>
+    Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId);
+
+    /// <summary>
+    /// Updates the import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction ID.</param>
+    /// <param name="patterns">The patterns to set.</param>
+    /// <returns>The updated patterns.</returns>
+    Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns);
 }

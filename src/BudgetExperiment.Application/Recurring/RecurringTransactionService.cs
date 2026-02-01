@@ -303,4 +303,53 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
 
         return dow;
     }
+
+    /// <inheritdoc />
+    public async Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (recurring is null)
+        {
+            return null;
+        }
+
+        return new ImportPatternsDto
+        {
+            Patterns = recurring.ImportPatterns.Select(p => p.Pattern).ToList(),
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<ImportPatternsDto?> UpdateImportPatternsAsync(
+        Guid id,
+        ImportPatternsDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (recurring is null)
+        {
+            return null;
+        }
+
+        // Clear existing patterns
+        var existingPatterns = recurring.ImportPatterns.ToList();
+        foreach (var pattern in existingPatterns)
+        {
+            recurring.RemoveImportPattern(pattern);
+        }
+
+        // Add new patterns
+        foreach (var patternString in dto.Patterns)
+        {
+            var pattern = ImportPattern.Create(patternString);
+            recurring.AddImportPattern(pattern);
+        }
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new ImportPatternsDto
+        {
+            Patterns = recurring.ImportPatterns.Select(p => p.Pattern).ToList(),
+        };
+    }
 }

@@ -650,6 +650,138 @@ public class ReconciliationServiceTests
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task CreateManualMatchAsync_ValidRequest_SetsSourceToManual()
+    {
+        // Arrange
+        var transactionId = Guid.NewGuid();
+        var recurringId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 1, 15);
+
+        var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, instanceDate);
+        var recurring = CreateTestRecurringTransaction(recurringId, accountId, "Netflix", -15.99m, instanceDate);
+
+        _transactionRepository
+            .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transaction);
+        _recurringRepository
+            .Setup(r => r.GetByIdAsync(recurringId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(recurring);
+        _matchRepository
+            .Setup(r => r.ExistsAsync(transactionId, recurringId, instanceDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var service = CreateService();
+        var request = new ManualMatchRequest
+        {
+            TransactionId = transactionId,
+            RecurringTransactionId = recurringId,
+            InstanceDate = instanceDate,
+        };
+
+        // Act
+        await service.CreateManualMatchAsync(request);
+
+        // Assert
+        _matchRepository.Verify(r => r.AddAsync(
+            It.Is<ReconciliationMatch>(m => m.Source == MatchSource.Manual),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region UnlinkMatchAsync Tests
+
+    [Fact]
+    public async Task UnlinkMatchAsync_MatchNotFound_ReturnsNull()
+    {
+        // Arrange
+        var matchId = Guid.NewGuid();
+        _matchRepository
+            .Setup(r => r.GetByIdAsync(matchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ReconciliationMatch?)null);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.UnlinkMatchAsync(matchId);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task UnlinkMatchAsync_AcceptedMatch_SetsStatusToRejectedAndUnlinksTransaction()
+    {
+        // Arrange
+        var matchId = Guid.NewGuid();
+        var transactionId = Guid.NewGuid();
+        var recurringId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 1, 15);
+
+        var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, instanceDate);
+        transaction.LinkToRecurringInstance(recurringId, instanceDate);
+
+        var match = CreateTestMatch(matchId, transactionId, recurringId, instanceDate);
+        match.Accept();
+
+        _matchRepository
+            .Setup(r => r.GetByIdAsync(matchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+        _transactionRepository
+            .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transaction);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.UnlinkMatchAsync(matchId);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Status.ShouldBe("Rejected");
+        transaction.RecurringTransactionId.ShouldBeNull();
+        transaction.RecurringInstanceDate.ShouldBeNull();
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UnlinkMatchAsync_AutoMatchedMatch_SetsStatusToRejected()
+    {
+        // Arrange
+        var matchId = Guid.NewGuid();
+        var transactionId = Guid.NewGuid();
+        var recurringId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 1, 15);
+
+        var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, instanceDate);
+        transaction.LinkToRecurringInstance(recurringId, instanceDate);
+
+        var match = CreateTestMatch(matchId, transactionId, recurringId, instanceDate);
+        match.AutoMatch();
+
+        _matchRepository
+            .Setup(r => r.GetByIdAsync(matchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(match);
+        _transactionRepository
+            .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transaction);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.UnlinkMatchAsync(matchId);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Status.ShouldBe("Rejected");
+        transaction.RecurringTransactionId.ShouldBeNull();
+    }
+
     #endregion
 
     #region BulkAcceptMatchesAsync Tests
@@ -738,6 +870,105 @@ public class ReconciliationServiceTests
             null);
         typeof(ReconciliationMatch).GetProperty(nameof(ReconciliationMatch.Id))!.SetValue(match, id);
         return match;
+    }
+
+    #endregion
+
+    #region GetLinkableInstancesAsync Tests
+
+    [Fact]
+    public async Task GetLinkableInstancesAsync_TransactionNotFound_ReturnsEmptyList()
+    {
+        // Arrange
+        _transactionRepository
+            .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Transaction?)null);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetLinkableInstancesAsync(Guid.NewGuid());
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetLinkableInstancesAsync_ReturnsInstancesWithin30Days()
+    {
+        // Arrange
+        var transactionId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var recurringId = Guid.NewGuid();
+        var transactionDate = new DateOnly(2026, 1, 15);
+
+        var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, transactionDate);
+        var recurring = CreateTestRecurringTransaction(recurringId, accountId, "Netflix", -15.99m, transactionDate);
+
+        _transactionRepository
+            .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transaction);
+
+        _recurringRepository
+            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction> { recurring });
+
+        var instance = new RecurringInstanceInfo(
+            RecurringTransactionId: recurringId,
+            InstanceDate: transactionDate,
+            AccountId: accountId,
+            AccountName: "Test Account",
+            Description: "Netflix",
+            Amount: MoneyValue.Create("USD", -15.99m),
+            CategoryId: null,
+            CategoryName: null,
+            IsModified: false,
+            IsSkipped: false);
+
+        _instanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            {
+                { transactionDate, new List<RecurringInstanceInfo> { instance } },
+            });
+
+        _matchRepository
+            .Setup(r => r.IsInstanceMatchedAsync(recurringId, transactionDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        _transactionMatcher
+            .Setup(m => m.FindMatches(
+                transaction,
+                It.IsAny<IEnumerable<RecurringInstanceInfo>>(),
+                It.IsAny<MatchingTolerances>()))
+            .Returns(new List<TransactionMatchResult>
+            {
+                new TransactionMatchResult(
+                    RecurringTransactionId: recurringId,
+                    InstanceDate: transactionDate,
+                    ConfidenceScore: 0.95m,
+                    ConfidenceLevel: MatchConfidenceLevel.High,
+                    AmountVariance: 0m,
+                    DateOffsetDays: 0,
+                    DescriptionSimilarity: 1.0m),
+            });
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetLinkableInstancesAsync(transactionId);
+
+        // Assert
+        result.ShouldNotBeEmpty();
+        result.Count.ShouldBe(1);
+        result[0].RecurringTransactionId.ShouldBe(recurringId);
+        result[0].InstanceDate.ShouldBe(transactionDate);
+        result[0].IsAlreadyMatched.ShouldBeFalse();
+        result[0].SuggestedConfidence.ShouldBe(0.95m);
     }
 
     #endregion

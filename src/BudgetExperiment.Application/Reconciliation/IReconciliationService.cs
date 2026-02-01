@@ -83,4 +83,22 @@ public interface IReconciliationService
     Task<ReconciliationMatchDto?> CreateManualMatchAsync(
         ManualMatchRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Unlinks a matched transaction, returning it and the recurring instance to unmatched state.
+    /// </summary>
+    /// <param name="matchId">The match ID to unlink.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated match, or null if not found.</returns>
+    Task<ReconciliationMatchDto?> UnlinkMatchAsync(Guid matchId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets recurring instances that can be linked to a specific transaction.
+    /// </summary>
+    /// <param name="transactionId">The transaction to find linkable instances for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of linkable recurring instances within date range.</returns>
+    Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(
+        Guid transactionId,
+        CancellationToken cancellationToken = default);
 }

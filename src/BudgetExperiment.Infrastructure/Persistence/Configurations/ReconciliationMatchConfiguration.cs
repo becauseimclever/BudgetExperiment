@@ -62,6 +62,12 @@ internal sealed class ReconciliationMatchConfiguration : IEntityTypeConfiguratio
 
         builder.Property(m => m.OwnerUserId);
 
+        builder.Property(m => m.Source)
+            .HasConversion<string>()
+            .HasMaxLength(10)
+            .IsRequired()
+            .HasDefaultValue(MatchSource.Auto);
+
         // Foreign keys
         builder.HasOne<Transaction>()
             .WithMany()

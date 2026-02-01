@@ -970,4 +970,48 @@ public sealed class BudgetApiService : IBudgetApiService
             return null;
         }
     }
+
+    /// <inheritdoc />
+    public async Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<ImportPatternsDto>(
+                $"api/v1/recurring-transactions/{recurringTransactionId}/import-patterns",
+                JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns)
+    {
+        try
+        {
+            var response = await this._httpClient.PutAsJsonAsync(
+                $"api/v1/recurring-transactions/{recurringTransactionId}/import-patterns",
+                patterns,
+                JsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<ImportPatternsDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
 }

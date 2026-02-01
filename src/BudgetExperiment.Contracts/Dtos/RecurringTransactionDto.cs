@@ -189,3 +189,12 @@ public sealed class RecurringInstanceModifyDto
     /// <summary>Gets or sets the modified date for rescheduling (null = use original date).</summary>
     public DateOnly? Date { get; set; }
 }
+
+/// <summary>
+/// DTO for managing import patterns on a recurring transaction.
+/// </summary>
+public sealed record ImportPatternsDto
+{
+    /// <summary>Gets the list of import patterns.</summary>
+    public IReadOnlyList<string> Patterns { get; init; } = [];
+}

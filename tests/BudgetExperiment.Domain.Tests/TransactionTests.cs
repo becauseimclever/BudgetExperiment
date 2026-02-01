@@ -780,4 +780,41 @@ public class TransactionTests
         Assert.True(transaction.IsFromRecurringTransaction);
         Assert.True(transaction.IsFromImport); // Still marked as import
     }
+
+    [Fact]
+    public void UnlinkFromRecurring_Clears_RecurringTransaction_Properties()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", -15.99m),
+            new DateOnly(2026, 1, 15),
+            "NETFLIX");
+        var recurringTransactionId = Guid.NewGuid();
+        var instanceDate = new DateOnly(2026, 1, 15);
+        transaction.LinkToRecurringInstance(recurringTransactionId, instanceDate);
+
+        // Act
+        transaction.UnlinkFromRecurring();
+
+        // Assert
+        Assert.Null(transaction.RecurringTransactionId);
+        Assert.Null(transaction.RecurringInstanceDate);
+        Assert.False(transaction.IsFromRecurringTransaction);
+    }
+
+    [Fact]
+    public void UnlinkFromRecurring_When_Not_Linked_Throws()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", -15.99m),
+            new DateOnly(2026, 1, 15),
+            "NETFLIX");
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => transaction.UnlinkFromRecurring());
+        Assert.Contains("not linked", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }
