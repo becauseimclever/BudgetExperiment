@@ -44,8 +44,8 @@ public class ChatActionTests
         // Act
         var summary = action.GetPreviewSummary();
 
-        // Assert
-        Assert.Contains("$50.00", summary);
+        // Assert - check for amount value without currency symbol (culture-invariant)
+        Assert.Contains("50.00", summary);
         Assert.Contains("Groceries at Walmart", summary);
         Assert.Contains("Checking", summary);
     }
@@ -85,8 +85,8 @@ public class ChatActionTests
         // Act
         var summary = action.GetPreviewSummary();
 
-        // Assert
-        Assert.Contains("$500.00", summary);
+        // Assert - check for amount value without currency symbol (culture-invariant)
+        Assert.Contains("500.00", summary);
         Assert.Contains("Checking", summary);
         Assert.Contains("Savings", summary);
         Assert.Contains("Transfer", summary);
@@ -127,8 +127,8 @@ public class ChatActionTests
         // Act
         var summary = action.GetPreviewSummary();
 
-        // Assert
-        Assert.Contains("$1,800.00", summary);
+        // Assert - check for amount value without currency symbol (culture-invariant)
+        Assert.Contains("1,800.00", summary);
         Assert.Contains("Rent", summary);
         Assert.Contains("Recurring", summary);
     }
@@ -170,8 +170,8 @@ public class ChatActionTests
         // Act
         var summary = action.GetPreviewSummary();
 
-        // Assert
-        Assert.Contains("$200.00", summary);
+        // Assert - check for amount value without currency symbol (culture-invariant)
+        Assert.Contains("200.00", summary);
         Assert.Contains("Checking", summary);
         Assert.Contains("Savings", summary);
         Assert.Contains("Recurring", summary);
