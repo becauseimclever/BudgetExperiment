@@ -46,6 +46,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      - name: Calculate version using MinVer
+        id: version
+        run: |
+          # Install MinVer CLI tool
+          dotnet tool install --global minver-cli
+          # Calculate version (uses git tags)
+          VERSION=$(minver --tag-prefix v --default-pre-release-identifiers preview)
+          echo "Calculated version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Restore dependencies
         run: dotnet restore BudgetExperiment.sln
 
@@ -77,37 +87,57 @@ jobs:
           path: ./TestResults/*.trx
           reporter: dotnet-trx
 
-  docker:
-    name: Docker Build
+      # Publish application (framework-dependent, works on all architectures)
+      - name: Publish application
+        run: |
+          dotnet publish src/BudgetExperiment.Api/BudgetExperiment.Api.csproj \
+            --configuration Release \
+            --no-build \
+            --output ./publish \
+            /p:UseAppHost=false \
+            /p:MinVerVersionOverride=${{ steps.version.outputs.version }}
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-publish
+          path: ./publish
+          retention-days: 1
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+  # Matrix build for each architecture (parallel)
+  docker-build:
+    name: Docker Build (${{ matrix.platform }})
     runs-on: ubuntu-latest
     needs: build-and-test
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
+          # Easy to add more architectures:
+          # - platform: linux/arm/v7
+          #   suffix: armv7
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full history needed for MinVer to calculate version
 
-      - name: Setup .NET for version calculation
-        uses: actions/setup-dotnet@v4
+      - name: Download publish artifact
+        uses: actions/download-artifact@v4
         with:
-          dotnet-version: '10.0.x'
-
-      - name: Calculate version using MinVer
-        id: version
-        run: |
-          # Install MinVer CLI tool
-          dotnet tool install --global minver-cli
-          # Calculate version (uses git tags)
-          VERSION=$(minver --tag-prefix v --default-pre-release-identifiers preview)
-          echo "Calculated version: $VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          name: app-publish
+          path: ./publish
 
       - name: Set up QEMU
-        if: github.event_name != 'pull_request'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -121,32 +151,88 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # Build and push single-platform image
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.prebuilt
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
+
+      - name: Export digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.suffix }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Merge platform-specific images into multi-arch manifest
+  docker-merge:
+    name: Create Multi-Arch Manifest
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    needs: docker-build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
-      # PRs: Single-arch build (fast validation)
-      # Main/Tags: Multi-arch build for deployment
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            BUILD_CONFIGURATION=Release
-            VERSION=${{ steps.version.outputs.version }}
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
