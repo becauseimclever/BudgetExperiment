@@ -4,6 +4,16 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.8.5] - 2026-01-31
+
+### Bug Fixes
+
+- **calendar:** Fix initial balance not appearing when account starts within calendar grid (Feature 057)
+- **calendar:** Accounts with InitialBalanceDate on/after grid start now correctly show initial balance on their start date
+- **calendar:** Days before an account's InitialBalanceDate correctly show $0 for that account
+- **balance:** Add GetOpeningBalanceForDateAsync for calendar opening balance calculation
+- **balance:** Add GetInitialBalancesByDateRangeAsync to handle accounts starting within visible grid
+
 ## [3.8.4] - 2026-01-26
 
 ### Bug Fixes

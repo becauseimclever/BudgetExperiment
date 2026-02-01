@@ -90,13 +90,23 @@ public sealed class CalendarGridService : ICalendarGridService
         // Build grid days
         var days = BuildGridDays(gridStartDate, year, month, today, dailyTotals, recurringByDate, recurringTransfersByDate);
 
-        // Calculate starting balance and running balances
-        var startingBalance = await _balanceCalculationService.GetBalanceBeforeDateAsync(
+        // Calculate starting balance (opening balance for grid start date)
+        // This includes initial balances for accounts starting BEFORE grid start,
+        // plus transactions before grid start (but not on grid start itself)
+        var startingBalance = await _balanceCalculationService.GetOpeningBalanceForDateAsync(
             gridStartDate,
             accountId,
             cancellationToken);
 
-        CalculateRunningBalances(days, startingBalance.Amount);
+        // Get initial balances for accounts that start WITHIN the grid date range
+        // These need to be added to the running balance on their respective start dates
+        var initialBalancesInGrid = await _balanceCalculationService.GetInitialBalancesByDateRangeAsync(
+            gridStartDate,
+            gridEndDate,
+            accountId,
+            cancellationToken);
+
+        CalculateRunningBalances(days, startingBalance.Amount, initialBalancesInGrid);
 
         // Calculate month summary (only for current month days)
         var monthSummary = CalculateMonthSummary(days);
@@ -154,11 +164,20 @@ public sealed class CalendarGridService : ICalendarGridService
         return days;
     }
 
-    private static void CalculateRunningBalances(List<CalendarDaySummaryDto> days, decimal startingBalance)
+    private static void CalculateRunningBalances(
+        List<CalendarDaySummaryDto> days,
+        decimal startingBalance,
+        Dictionary<DateOnly, decimal> initialBalancesInGrid)
     {
         var runningBalance = startingBalance;
         foreach (var day in days)
         {
+            // Add any initial balances for accounts starting on this day
+            if (initialBalancesInGrid.TryGetValue(day.Date, out var initialBalanceOnDay))
+            {
+                runningBalance += initialBalanceOnDay;
+            }
+
             runningBalance += day.CombinedTotal.Amount;
             day.EndOfDayBalance = new MoneyDto { Currency = "USD", Amount = runningBalance };
             day.IsBalanceNegative = runningBalance < 0;

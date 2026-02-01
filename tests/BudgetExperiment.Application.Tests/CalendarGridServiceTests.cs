@@ -67,6 +67,21 @@ public class CalendarGridServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(MoneyValue.Zero("USD"));
 
+        _balanceService
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Zero("USD"));
+
+        _balanceService
+            .Setup(s => s.GetInitialBalancesByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, decimal>());
+
         // Default setup for projectors - return empty dictionaries/lists
         _recurringInstanceProjector
             .Setup(p => p.GetInstancesByDateRangeAsync(
@@ -307,7 +322,7 @@ public class CalendarGridServiceTests
         // Arrange
         var startingBalance = MoneyValue.Create("USD", 5000m);
         _balanceService
-            .Setup(s => s.GetBalanceBeforeDateAsync(
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
@@ -336,7 +351,7 @@ public class CalendarGridServiceTests
         // Arrange
         var startingBalance = MoneyValue.Create("USD", 1000m);
         _balanceService
-            .Setup(s => s.GetBalanceBeforeDateAsync(
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
@@ -364,7 +379,7 @@ public class CalendarGridServiceTests
         // Arrange - Starting balance of 1000, transaction of +500 on first day
         var startingBalance = MoneyValue.Create("USD", 1000m);
         _balanceService
-            .Setup(s => s.GetBalanceBeforeDateAsync(
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
@@ -408,7 +423,7 @@ public class CalendarGridServiceTests
         // Arrange - Starting balance of 1000, recurring transaction of -50 on Jan 15
         var startingBalance = MoneyValue.Create("USD", 1000m);
         _balanceService
-            .Setup(s => s.GetBalanceBeforeDateAsync(
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
@@ -472,7 +487,7 @@ public class CalendarGridServiceTests
         // Arrange - Starting balance of 100, transaction of -200 on first day
         var startingBalance = MoneyValue.Create("USD", 100m);
         _balanceService
-            .Setup(s => s.GetBalanceBeforeDateAsync(
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
@@ -507,7 +522,7 @@ public class CalendarGridServiceTests
         // Arrange
         var startingBalance = MoneyValue.Create("USD", 1000m);
         _balanceService
-            .Setup(s => s.GetBalanceBeforeDateAsync(
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
@@ -536,7 +551,7 @@ public class CalendarGridServiceTests
         // Arrange
         var accountId = Guid.NewGuid();
         _balanceService
-            .Setup(s => s.GetBalanceBeforeDateAsync(
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 accountId,
                 It.IsAny<CancellationToken>()))
@@ -556,7 +571,7 @@ public class CalendarGridServiceTests
 
         // Assert
         _balanceService.Verify(
-            s => s.GetBalanceBeforeDateAsync(
+            s => s.GetOpeningBalanceForDateAsync(
                 It.IsAny<DateOnly>(),
                 accountId,
                 It.IsAny<CancellationToken>()),

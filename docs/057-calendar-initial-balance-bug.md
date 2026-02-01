@@ -1,5 +1,5 @@
 # Feature 057: Calendar Initial Balance Bug Fix
-> **Status:** 🗒️ Planning
+> **Status:** ✅ Done
 
 ## Overview
 

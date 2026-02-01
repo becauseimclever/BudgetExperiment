@@ -62,6 +62,101 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
         return MoneyValue.Create("USD", initialBalanceSum + transactionSum);
     }
 
+    /// <inheritdoc/>
+    public async Task<MoneyValue> GetBalanceAsOfDateAsync(
+        DateOnly date,
+        Guid? accountId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var accounts = await GetAccountsAsync(accountId, cancellationToken);
+
+        if (accounts.Count == 0)
+        {
+            return MoneyValue.Zero("USD");
+        }
+
+        // Sum initial balances for accounts that started on or before the target date
+        var initialBalanceSum = accounts
+            .Where(a => a.InitialBalanceDate <= date)
+            .Sum(a => a.InitialBalance.Amount);
+
+        // Sum all transactions up to and including the date for each relevant account
+        var transactionSum = 0m;
+
+        foreach (var account in accounts.Where(a => a.InitialBalanceDate <= date))
+        {
+            var transactions = await _transactionRepository.GetByDateRangeAsync(
+                account.InitialBalanceDate,
+                date,
+                account.Id,
+                cancellationToken);
+
+            transactionSum += transactions.Sum(t => t.Amount.Amount);
+        }
+
+        return MoneyValue.Create("USD", initialBalanceSum + transactionSum);
+    }
+
+    /// <inheritdoc/>
+    public async Task<MoneyValue> GetOpeningBalanceForDateAsync(
+        DateOnly date,
+        Guid? accountId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var accounts = await GetAccountsAsync(accountId, cancellationToken);
+
+        if (accounts.Count == 0)
+        {
+            return MoneyValue.Zero("USD");
+        }
+
+        // Include initial balances for accounts that started BEFORE this date
+        // Accounts starting ON or AFTER this date are handled separately via GetInitialBalancesByDateRangeAsync
+        var relevantAccounts = accounts.Where(a => a.InitialBalanceDate < date).ToList();
+
+        var initialBalanceSum = relevantAccounts.Sum(a => a.InitialBalance.Amount);
+
+        // Sum all transactions BEFORE the date (not including transactions on the date itself)
+        var transactionSum = 0m;
+
+        foreach (var account in relevantAccounts)
+        {
+            var transactions = await _transactionRepository.GetByDateRangeAsync(
+                account.InitialBalanceDate,
+                date.AddDays(-1),
+                account.Id,
+                cancellationToken);
+
+            transactionSum += transactions.Sum(t => t.Amount.Amount);
+        }
+
+        return MoneyValue.Create("USD", initialBalanceSum + transactionSum);
+    }
+
+    /// <inheritdoc/>
+    public async Task<Dictionary<DateOnly, decimal>> GetInitialBalancesByDateRangeAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var accounts = await GetAccountsAsync(accountId, cancellationToken);
+
+        // Find accounts that start within the date range
+        var accountsStartingInRange = accounts
+            .Where(a => a.InitialBalanceDate >= startDate && a.InitialBalanceDate <= endDate)
+            .ToList();
+
+        // Group by InitialBalanceDate and sum the initial balances
+        var result = accountsStartingInRange
+            .GroupBy(a => a.InitialBalanceDate)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Sum(a => a.InitialBalance.Amount));
+
+        return result;
+    }
+
     private async Task<IReadOnlyList<Account>> GetAccountsAsync(
         Guid? accountId,
         CancellationToken cancellationToken)
