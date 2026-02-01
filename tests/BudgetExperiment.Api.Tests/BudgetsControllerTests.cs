@@ -403,4 +403,174 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         Assert.Equal(100.00m, progress.RemainingAmount.Amount);
         Assert.Equal(0m, progress.PercentUsed);
     }
+
+    /// <summary>
+    /// POST /api/v1/budgets/copy copies goals from source to target month.
+    /// </summary>
+    [Fact]
+    public async Task CopyGoals_Copies_Goals_Returns_200()
+    {
+        // Arrange - create a category with a goal in source month
+        var categoryDto = new BudgetCategoryCreateDto { Name = "Copy Test Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var goalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 3,
+            TargetAmount = new MoneyDto { Amount = 750.00m, Currency = "USD" },
+        };
+        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+
+        var copyRequest = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 3,
+            TargetYear = 2026,
+            TargetMonth = 4,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CopyBudgetGoalsResult>();
+        Assert.NotNull(result);
+        Assert.True(result.SourceGoalsCount >= 1);
+        Assert.True(result.GoalsCreated >= 1);
+
+        // Verify the goal was actually copied
+        var targetGoals = await this._client.GetAsync("/api/v1/budgets?year=2026&month=4");
+        var goals = await targetGoals.Content.ReadFromJsonAsync<List<BudgetGoalDto>>();
+        Assert.Contains(goals!, g => g.CategoryId == category.Id && g.TargetAmount.Amount == 750.00m);
+    }
+
+    /// <summary>
+    /// POST /api/v1/budgets/copy returns 400 for invalid source month.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(13)]
+    public async Task CopyGoals_Returns_400_ForInvalidSourceMonth(int sourceMonth)
+    {
+        // Arrange
+        var copyRequest = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = sourceMonth,
+            TargetYear = 2026,
+            TargetMonth = 2,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// POST /api/v1/budgets/copy returns 400 for invalid target month.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(13)]
+    public async Task CopyGoals_Returns_400_ForInvalidTargetMonth(int targetMonth)
+    {
+        // Arrange
+        var copyRequest = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 1,
+            TargetYear = 2026,
+            TargetMonth = targetMonth,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// POST /api/v1/budgets/copy returns 400 when source and target are the same.
+    /// </summary>
+    [Fact]
+    public async Task CopyGoals_Returns_400_WhenSourceAndTargetAreSame()
+    {
+        // Arrange
+        var copyRequest = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 1,
+            TargetYear = 2026,
+            TargetMonth = 1,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// POST /api/v1/budgets/copy with OverwriteExisting=false skips existing goals.
+    /// </summary>
+    [Fact]
+    public async Task CopyGoals_SkipsExistingGoals_WhenOverwriteExistingIsFalse()
+    {
+        // Arrange - create a category with goals in both source and target months
+        var categoryDto = new BudgetCategoryCreateDto { Name = "Skip Test Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        // Create source goal
+        var sourceGoalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 5,
+            TargetAmount = new MoneyDto { Amount = 500.00m, Currency = "USD" },
+        };
+        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", sourceGoalDto);
+
+        // Create existing target goal with different amount
+        var targetGoalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 6,
+            TargetAmount = new MoneyDto { Amount = 300.00m, Currency = "USD" },
+        };
+        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", targetGoalDto);
+
+        var copyRequest = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 5,
+            TargetYear = 2026,
+            TargetMonth = 6,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<CopyBudgetGoalsResult>();
+        Assert.NotNull(result);
+        Assert.True(result.GoalsSkipped >= 1);
+
+        // Verify the original target goal amount was NOT overwritten
+        var progressResponse = await this._client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=6");
+        var progress = await progressResponse.Content.ReadFromJsonAsync<BudgetProgressDto>();
+        Assert.Equal(300.00m, progress!.TargetAmount.Amount);
+    }
 }

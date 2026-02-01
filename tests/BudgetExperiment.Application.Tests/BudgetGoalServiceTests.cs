@@ -229,4 +229,157 @@ public class BudgetGoalServiceTests
         // Assert
         Assert.Equal(2, result.Count);
     }
+
+    [Fact]
+    public async Task CopyGoalsAsync_Copies_Goals_To_Target_Month()
+    {
+        // Arrange
+        var categoryId1 = Guid.NewGuid();
+        var categoryId2 = Guid.NewGuid();
+        var sourceGoals = new List<BudgetGoal>
+        {
+            BudgetGoal.Create(categoryId1, 2026, 1, MoneyValue.Create("USD", 500m)),
+            BudgetGoal.Create(categoryId2, 2026, 1, MoneyValue.Create("USD", 300m)),
+        };
+        var repo = new Mock<IBudgetGoalRepository>();
+        repo.Setup(r => r.GetByMonthAsync(2026, 1, default)).ReturnsAsync(sourceGoals);
+        repo.Setup(r => r.GetByMonthAsync(2026, 2, default)).ReturnsAsync(new List<BudgetGoal>());
+        repo.Setup(r => r.AddAsync(It.IsAny<BudgetGoal>(), default)).Returns(Task.CompletedTask);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new BudgetGoalService(repo.Object, categoryRepo.Object, uow.Object);
+        var request = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 1,
+            TargetYear = 2026,
+            TargetMonth = 2,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var result = await service.CopyGoalsAsync(request);
+
+        // Assert
+        Assert.Equal(2, result.SourceGoalsCount);
+        Assert.Equal(2, result.GoalsCreated);
+        Assert.Equal(0, result.GoalsUpdated);
+        Assert.Equal(0, result.GoalsSkipped);
+        repo.Verify(r => r.AddAsync(It.IsAny<BudgetGoal>(), default), Times.Exactly(2));
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CopyGoalsAsync_Skips_Existing_Goals_When_OverwriteExisting_Is_False()
+    {
+        // Arrange
+        var categoryId1 = Guid.NewGuid();
+        var categoryId2 = Guid.NewGuid();
+        var sourceGoals = new List<BudgetGoal>
+        {
+            BudgetGoal.Create(categoryId1, 2026, 1, MoneyValue.Create("USD", 500m)),
+            BudgetGoal.Create(categoryId2, 2026, 1, MoneyValue.Create("USD", 300m)),
+        };
+        var existingTargetGoals = new List<BudgetGoal>
+        {
+            BudgetGoal.Create(categoryId1, 2026, 2, MoneyValue.Create("USD", 400m)),
+        };
+        var repo = new Mock<IBudgetGoalRepository>();
+        repo.Setup(r => r.GetByMonthAsync(2026, 1, default)).ReturnsAsync(sourceGoals);
+        repo.Setup(r => r.GetByMonthAsync(2026, 2, default)).ReturnsAsync(existingTargetGoals);
+        repo.Setup(r => r.AddAsync(It.IsAny<BudgetGoal>(), default)).Returns(Task.CompletedTask);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new BudgetGoalService(repo.Object, categoryRepo.Object, uow.Object);
+        var request = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 1,
+            TargetYear = 2026,
+            TargetMonth = 2,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var result = await service.CopyGoalsAsync(request);
+
+        // Assert
+        Assert.Equal(2, result.SourceGoalsCount);
+        Assert.Equal(1, result.GoalsCreated);
+        Assert.Equal(0, result.GoalsUpdated);
+        Assert.Equal(1, result.GoalsSkipped);
+        repo.Verify(r => r.AddAsync(It.IsAny<BudgetGoal>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CopyGoalsAsync_Updates_Existing_Goals_When_OverwriteExisting_Is_True()
+    {
+        // Arrange
+        var categoryId1 = Guid.NewGuid();
+        var categoryId2 = Guid.NewGuid();
+        var sourceGoals = new List<BudgetGoal>
+        {
+            BudgetGoal.Create(categoryId1, 2026, 1, MoneyValue.Create("USD", 500m)),
+            BudgetGoal.Create(categoryId2, 2026, 1, MoneyValue.Create("USD", 300m)),
+        };
+        var existingTargetGoal = BudgetGoal.Create(categoryId1, 2026, 2, MoneyValue.Create("USD", 400m));
+        var existingTargetGoals = new List<BudgetGoal> { existingTargetGoal };
+        var repo = new Mock<IBudgetGoalRepository>();
+        repo.Setup(r => r.GetByMonthAsync(2026, 1, default)).ReturnsAsync(sourceGoals);
+        repo.Setup(r => r.GetByMonthAsync(2026, 2, default)).ReturnsAsync(existingTargetGoals);
+        repo.Setup(r => r.AddAsync(It.IsAny<BudgetGoal>(), default)).Returns(Task.CompletedTask);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new BudgetGoalService(repo.Object, categoryRepo.Object, uow.Object);
+        var request = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 1,
+            TargetYear = 2026,
+            TargetMonth = 2,
+            OverwriteExisting = true,
+        };
+
+        // Act
+        var result = await service.CopyGoalsAsync(request);
+
+        // Assert
+        Assert.Equal(2, result.SourceGoalsCount);
+        Assert.Equal(1, result.GoalsCreated);
+        Assert.Equal(1, result.GoalsUpdated);
+        Assert.Equal(0, result.GoalsSkipped);
+        Assert.Equal(500m, existingTargetGoal.TargetAmount.Amount);
+    }
+
+    [Fact]
+    public async Task CopyGoalsAsync_Returns_Empty_Result_When_No_Source_Goals()
+    {
+        // Arrange
+        var repo = new Mock<IBudgetGoalRepository>();
+        repo.Setup(r => r.GetByMonthAsync(2026, 1, default)).ReturnsAsync(new List<BudgetGoal>());
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        var service = new BudgetGoalService(repo.Object, categoryRepo.Object, uow.Object);
+        var request = new CopyBudgetGoalsRequest
+        {
+            SourceYear = 2026,
+            SourceMonth = 1,
+            TargetYear = 2026,
+            TargetMonth = 2,
+            OverwriteExisting = false,
+        };
+
+        // Act
+        var result = await service.CopyGoalsAsync(request);
+
+        // Assert
+        Assert.Equal(0, result.SourceGoalsCount);
+        Assert.Equal(0, result.GoalsCreated);
+        Assert.Equal(0, result.GoalsUpdated);
+        Assert.Equal(0, result.GoalsSkipped);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
+    }
 }

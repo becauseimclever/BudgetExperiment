@@ -88,4 +88,56 @@ public sealed class BudgetGoalService : IBudgetGoalService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    /// <inheritdoc/>
+    public async Task<CopyBudgetGoalsResult> CopyGoalsAsync(CopyBudgetGoalsRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = new CopyBudgetGoalsResult();
+
+        // Get all goals from the source month
+        var sourceGoals = await this._repository.GetByMonthAsync(request.SourceYear, request.SourceMonth, cancellationToken);
+        result.SourceGoalsCount = sourceGoals.Count;
+
+        if (sourceGoals.Count == 0)
+        {
+            return result;
+        }
+
+        // Get existing goals in the target month
+        var targetGoals = await this._repository.GetByMonthAsync(request.TargetYear, request.TargetMonth, cancellationToken);
+        var targetGoalsByCategoryId = targetGoals.ToDictionary(g => g.CategoryId);
+
+        foreach (var sourceGoal in sourceGoals)
+        {
+            if (targetGoalsByCategoryId.TryGetValue(sourceGoal.CategoryId, out var existingGoal))
+            {
+                if (request.OverwriteExisting)
+                {
+                    // Create a fresh MoneyValue to avoid EF Core tracking issues with owned entities
+                    var targetAmount = MoneyValue.Create(sourceGoal.TargetAmount.Currency, sourceGoal.TargetAmount.Amount);
+                    existingGoal.UpdateTarget(targetAmount);
+                    result.GoalsUpdated++;
+                }
+                else
+                {
+                    result.GoalsSkipped++;
+                }
+            }
+            else
+            {
+                // Create a fresh MoneyValue to avoid EF Core tracking issues with owned entities
+                var targetAmount = MoneyValue.Create(sourceGoal.TargetAmount.Currency, sourceGoal.TargetAmount.Amount);
+                var newGoal = BudgetGoal.Create(
+                    sourceGoal.CategoryId,
+                    request.TargetYear,
+                    request.TargetMonth,
+                    targetAmount);
+                await this._repository.AddAsync(newGoal, cancellationToken);
+                result.GoalsCreated++;
+            }
+        }
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        return result;
+    }
 }

@@ -817,6 +817,18 @@ public sealed class BudgetApiService : IBudgetApiService
         return response.IsSuccessStatusCode;
     }
 
+    /// <inheritdoc />
+    public async Task<CopyBudgetGoalsResult?> CopyBudgetGoalsAsync(CopyBudgetGoalsRequest request)
+    {
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/budgets/copy", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<CopyBudgetGoalsResult>(JsonOptions);
+        }
+
+        return null;
+    }
+
     // Budget Progress Operations
 
     /// <inheritdoc />

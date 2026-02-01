@@ -1,0 +1,142 @@
+@* CalendarBudgetCategoryRow.razor - Individual category row with progress and edit actions *@
+
+<div class="category-row @GetStatusClass()">
+    <div class="category-info">
+        @if (!string.IsNullOrEmpty(Progress.CategoryIcon))
+        {
+            <span class="category-icon">@Progress.CategoryIcon</span>
+        }
+        else
+        {
+            <Icon Name="tag" Size="16" Class="category-icon-default" />
+        }
+        <span class="category-name">@Progress.CategoryName</span>
+    </div>
+
+    <div class="category-progress">
+        @if (Progress.Status == "NoBudgetSet")
+        {
+            <span class="no-budget-label">(no budget)</span>
+        }
+        else
+        {
+            <span class="amount-spent">@Progress.SpentAmount.Amount.ToString("C")</span>
+            <span class="amount-separator">/</span>
+            <span class="amount-target">@Progress.TargetAmount.Amount.ToString("C")</span>
+        }
+    </div>
+
+    @if (Progress.Status != "NoBudgetSet")
+    {
+        <div class="category-progress-bar">
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill @GetBarClass()"
+                     style="width: @GetProgressWidth()%"
+                     role="progressbar"
+                     aria-valuenow="@Progress.PercentUsed"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                </div>
+            </div>
+            <span class="progress-percent">@Progress.PercentUsed.ToString("N0")%</span>
+        </div>
+    }
+
+    <div class="category-status">
+        @switch (Progress.Status)
+        {
+            case "OverBudget":
+                <Icon Name="alert-circle" Size="16" Class="status-icon status-danger" />
+                break;
+            case "Warning":
+                <Icon Name="alert-triangle" Size="16" Class="status-icon status-warning" />
+                break;
+            case "OnTrack":
+                <Icon Name="check-circle" Size="16" Class="status-icon status-success" />
+                break;
+        }
+    </div>
+
+    <div class="category-actions">
+        @if (Progress.Status == "NoBudgetSet")
+        {
+            <Button Variant="ButtonVariant.Outline"
+                    Size="ButtonSize.Small"
+                    IconLeft="plus"
+                    OnClick="HandleSetBudget"
+                    aria-label="@($"Set budget for {Progress.CategoryName}")">
+                Set
+            </Button>
+        }
+        else
+        {
+            <Button Variant="ButtonVariant.Outline"
+                    Size="ButtonSize.Small"
+                    IconLeft="edit-2"
+                    OnClick="HandleEdit"
+                    aria-label="@($"Edit budget for {Progress.CategoryName}")">
+                Edit
+            </Button>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the budget progress data for this category.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public BudgetProgressDto Progress { get; set; } = default!;
+
+    /// <summary>
+    /// Gets or sets the callback when edit is clicked (for categories with budgets).
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetProgressDto> OnEdit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when set budget is clicked (for categories without budgets).
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetProgressDto> OnSetBudget { get; set; }
+
+    private string GetStatusClass()
+    {
+        return Progress.Status switch
+        {
+            "OverBudget" => "status-over-budget",
+            "Warning" => "status-warning",
+            "OnTrack" => "status-on-track",
+            "NoBudgetSet" => "status-no-budget",
+            _ => string.Empty
+        };
+    }
+
+    private string GetBarClass()
+    {
+        return Progress.Status switch
+        {
+            "OverBudget" => "bar-danger",
+            "Warning" => "bar-warning",
+            "OnTrack" => "bar-success",
+            _ => string.Empty
+        };
+    }
+
+    private double GetProgressWidth()
+    {
+        // Cap at 100% for display, even if over budget
+        return (double)Math.Min(Progress.PercentUsed, 100m);
+    }
+
+    private async Task HandleEdit()
+    {
+        await OnEdit.InvokeAsync(Progress);
+    }
+
+    private async Task HandleSetBudget()
+    {
+        await OnSetBudget.InvokeAsync(Progress);
+    }
+}

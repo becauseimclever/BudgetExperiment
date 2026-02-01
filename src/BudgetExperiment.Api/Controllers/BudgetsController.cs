@@ -212,4 +212,36 @@ public sealed class BudgetsController : ControllerBase
         var summary = await this._progressService.GetMonthlySummaryAsync(year, month, cancellationToken);
         return this.Ok(summary);
     }
+
+    /// <summary>
+    /// Copies budget goals from one month to another.
+    /// </summary>
+    /// <param name="request">The copy request containing source and target month details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result summarizing the copy operation.</returns>
+    [HttpPost("copy")]
+    [ProducesResponseType<CopyBudgetGoalsResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CopyGoalsAsync(
+        [FromBody] CopyBudgetGoalsRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.SourceMonth < 1 || request.SourceMonth > 12)
+        {
+            return this.BadRequest("Source month must be between 1 and 12.");
+        }
+
+        if (request.TargetMonth < 1 || request.TargetMonth > 12)
+        {
+            return this.BadRequest("Target month must be between 1 and 12.");
+        }
+
+        if (request.SourceYear == request.TargetYear && request.SourceMonth == request.TargetMonth)
+        {
+            return this.BadRequest("Source and target months must be different.");
+        }
+
+        var result = await this._goalService.CopyGoalsAsync(request, cancellationToken);
+        return this.Ok(result);
+    }
 }

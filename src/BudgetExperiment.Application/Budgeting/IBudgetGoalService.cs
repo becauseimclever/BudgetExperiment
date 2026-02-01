@@ -54,4 +54,12 @@ public interface IBudgetGoalService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if successfully deleted, false if not found.</returns>
     Task<bool> DeleteGoalAsync(Guid categoryId, int year, int month, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Copies budget goals from one month to another.
+    /// </summary>
+    /// <param name="request">The copy request containing source and target month details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result summarizing the copy operation.</returns>
+    Task<CopyBudgetGoalsResult> CopyGoalsAsync(CopyBudgetGoalsRequest request, CancellationToken cancellationToken = default);
 }

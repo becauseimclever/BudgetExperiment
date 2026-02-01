@@ -1,0 +1,216 @@
+@* CalendarBudgetPanel.razor - Collapsible budget summary panel for calendar view *@
+
+@if (Summary != null)
+{
+    <div class="calendar-budget-panel @(IsExpanded ? "expanded" : "collapsed")">
+        <button type="button"
+                class="panel-header"
+                @onclick="ToggleExpanded"
+                aria-expanded="@IsExpanded"
+                aria-controls="budget-panel-body">
+            <div class="panel-title">
+                <Icon Name="chart-pie" Size="18" />
+                <span>Budget Summary for @GetMonthName()</span>
+            </div>
+            <div class="panel-summary-inline" @onclick:stopPropagation="true">
+                <span class="summary-quick">
+                    @Summary.TotalSpent.Amount.ToString("C") / @Summary.TotalBudgeted.Amount.ToString("C")
+                </span>
+                <span class="summary-percent @GetOverallStatusClass()">
+                    @Summary.OverallPercentUsed.ToString("N0")%
+                </span>
+            </div>
+            <Icon Name="@(IsExpanded ? "chevron-up" : "chevron-down")" Size="16" Class="toggle-icon" />
+        </button>
+
+        @if (IsExpanded)
+        {
+            <div id="budget-panel-body" class="panel-body">
+                <BudgetProgressBar PercentUsed="@Summary.OverallPercentUsed"
+                                   Status="@GetOverallStatus()" />
+
+                <div class="summary-status-counts">
+                    @if (Summary.CategoriesOnTrack > 0)
+                    {
+                        <span class="status-count status-success">
+                            <Icon Name="check-circle" Size="14" /> @Summary.CategoriesOnTrack on track
+                        </span>
+                    }
+                    @if (Summary.CategoriesWarning > 0)
+                    {
+                        <span class="status-count status-warning">
+                            <Icon Name="alert-triangle" Size="14" /> @Summary.CategoriesWarning warning
+                        </span>
+                    }
+                    @if (Summary.CategoriesOverBudget > 0)
+                    {
+                        <span class="status-count status-danger">
+                            <Icon Name="alert-circle" Size="14" /> @Summary.CategoriesOverBudget over budget
+                        </span>
+                    }
+                </div>
+
+                <div class="category-list">
+                    @foreach (var progress in GetSortedCategories())
+                    {
+                        <CalendarBudgetCategoryRow Progress="@progress"
+                                                   OnEdit="HandleEditGoal"
+                                                   OnSetBudget="HandleCreateGoal" />
+                    }
+                </div>
+
+                @if (Summary.CategoryProgress.Count == 0 || Summary.CategoryProgress.All(p => p.Status == "NoBudgetSet"))
+                {
+                    <div class="copy-goals-section">
+                        <Button Variant="ButtonVariant.Secondary"
+                                Size="ButtonSize.Small"
+                                IconLeft="copy"
+                                OnClick="HandleCopyFromPrevious">
+                            Copy from @GetPreviousMonthName()
+                        </Button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the budget summary data for the month.
+    /// </summary>
+    [Parameter]
+    public BudgetSummaryDto? Summary { get; set; }
+
+    /// <summary>
+    /// Gets or sets the year being displayed.
+    /// </summary>
+    [Parameter]
+    public int Year { get; set; }
+
+    /// <summary>
+    /// Gets or sets the month being displayed (1-12).
+    /// </summary>
+    [Parameter]
+    public int Month { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when edit goal is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetProgressDto> OnEditGoal { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when create goal is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BudgetProgressDto> OnCreateGoal { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when copy from previous month is requested.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCopyFromPrevious { get; set; }
+
+    private bool IsExpanded { get; set; } = true;
+
+    private void ToggleExpanded()
+    {
+        IsExpanded = !IsExpanded;
+    }
+
+    private string GetMonthName()
+    {
+        if (Year == 0 || Month == 0)
+        {
+            return string.Empty;
+        }
+
+        return new DateOnly(Year, Month, 1).ToString("MMMM yyyy");
+    }
+
+    private string GetPreviousMonthName()
+    {
+        if (Year == 0 || Month == 0)
+        {
+            return "previous month";
+        }
+
+        return new DateOnly(Year, Month, 1).AddMonths(-1).ToString("MMMM");
+    }
+
+    private string GetOverallStatusClass()
+    {
+        if (Summary == null)
+        {
+            return string.Empty;
+        }
+
+        if (Summary.OverallPercentUsed >= 100)
+        {
+            return "text-danger";
+        }
+
+        if (Summary.OverallPercentUsed >= 80)
+        {
+            return "text-warning";
+        }
+
+        return "text-success";
+    }
+
+    private string GetOverallStatus()
+    {
+        if (Summary == null)
+        {
+            return "NoBudgetSet";
+        }
+
+        if (Summary.OverallPercentUsed >= 100)
+        {
+            return "OverBudget";
+        }
+
+        if (Summary.OverallPercentUsed >= 80)
+        {
+            return "Warning";
+        }
+
+        return "OnTrack";
+    }
+
+    private IEnumerable<BudgetProgressDto> GetSortedCategories()
+    {
+        if (Summary == null)
+        {
+            return [];
+        }
+
+        // Sort by status priority: OverBudget first, then Warning, then OnTrack, then NoBudgetSet
+        return Summary.CategoryProgress
+            .OrderBy(p => p.Status switch
+            {
+                "OverBudget" => 0,
+                "Warning" => 1,
+                "OnTrack" => 2,
+                "NoBudgetSet" => 3,
+                _ => 4
+            })
+            .ThenByDescending(p => p.PercentUsed);
+    }
+
+    private async Task HandleEditGoal(BudgetProgressDto progress)
+    {
+        await OnEditGoal.InvokeAsync(progress);
+    }
+
+    private async Task HandleCreateGoal(BudgetProgressDto progress)
+    {
+        await OnCreateGoal.InvokeAsync(progress);
+    }
+
+    private async Task HandleCopyFromPrevious()
+    {
+        await OnCopyFromPrevious.InvokeAsync();
+    }
+}

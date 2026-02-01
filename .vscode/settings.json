@@ -5,6 +5,7 @@
             "matchCommandLine": true
         },
         "dotnet run": true,
-        "dotnet test": true
+        "dotnet test": true,
+        "dotnet clean": true
     }
 }

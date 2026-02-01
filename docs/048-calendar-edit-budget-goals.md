@@ -1,5 +1,5 @@
 # Feature 048: Calendar-First Budget Editing
-> **Status:** 🗒️ Planning
+> **Status:** ✅ Complete
 > **Depends on:** Calendar View (complete), Budget Goals (complete)
 
 ## Overview

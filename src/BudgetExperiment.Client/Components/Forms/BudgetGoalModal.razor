@@ -1,0 +1,213 @@
+@* BudgetGoalModal.razor - Modal for creating, editing, and deleting budget goals *@
+
+<Modal IsVisible="@IsVisible" Title="@GetTitle()" OnClose="HandleClose">
+    <div class="budget-goal-form">
+        <FormField Label="Category" InputId="goalCategory">
+            <p id="goalCategory" class="form-static">@CategoryName</p>
+        </FormField>
+
+        <FormField Label="Month" InputId="goalMonth">
+            <p id="goalMonth" class="form-static">@GetMonthDisplay()</p>
+        </FormField>
+
+        <FormField Label="Budget Amount" InputId="targetAmount" IsRequired="true"
+                   ValidationMessage="@ValidationMessage">
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input id="targetAmount"
+                       type="number"
+                       class="form-control"
+                       step="0.01"
+                       min="0"
+                       @bind="TargetAmount"
+                       placeholder="0.00" />
+            </div>
+        </FormField>
+
+        <div class="form-actions form-actions-right">
+            @if (Mode == GoalEditMode.Edit)
+            {
+                <Button Variant="ButtonVariant.Danger"
+                        OnClick="HandleDelete"
+                        IsDisabled="@IsSubmitting">
+                    Delete Goal
+                </Button>
+            }
+            <Button Variant="ButtonVariant.Secondary"
+                    OnClick="HandleClose"
+                    IsDisabled="@IsSubmitting">
+                Cancel
+            </Button>
+            <Button Variant="ButtonVariant.Primary"
+                    OnClick="HandleSave"
+                    IsLoading="@IsSubmitting"
+                    IsDisabled="@IsSubmitting">
+                Save
+            </Button>
+        </div>
+    </div>
+</Modal>
+
+<ConfirmDialog IsVisible="@showDeleteConfirm"
+               Title="Delete Budget Goal"
+               Message="@GetDeleteMessage()"
+               ConfirmText="Delete"
+               IsProcessing="@IsDeleting"
+               OnConfirm="ConfirmDelete"
+               OnCancel="CancelDelete" />
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the modal is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the edit mode (Create or Edit).
+    /// </summary>
+    [Parameter]
+    public GoalEditMode Mode { get; set; } = GoalEditMode.Create;
+
+    /// <summary>
+    /// Gets or sets the category ID.
+    /// </summary>
+    [Parameter]
+    public Guid CategoryId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the category name for display.
+    /// </summary>
+    [Parameter]
+    public string CategoryName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the initial target amount.
+    /// </summary>
+    [Parameter]
+    public decimal InitialAmount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the target year.
+    /// </summary>
+    [Parameter]
+    public int Year { get; set; }
+
+    /// <summary>
+    /// Gets or sets the target month (1-12).
+    /// </summary>
+    [Parameter]
+    public int Month { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when save is successful.
+    /// </summary>
+    [Parameter]
+    public EventCallback<decimal> OnSave { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when delete is successful.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the modal is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private decimal TargetAmount { get; set; }
+    private bool IsSubmitting { get; set; }
+    private bool IsDeleting { get; set; }
+    private bool showDeleteConfirm;
+    private string? ValidationMessage { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible)
+        {
+            TargetAmount = InitialAmount;
+            ValidationMessage = null;
+            showDeleteConfirm = false;
+        }
+    }
+
+    private string GetTitle()
+    {
+        return Mode == GoalEditMode.Create ? "Set Budget Goal" : "Edit Budget Goal";
+    }
+
+    private string GetMonthDisplay()
+    {
+        if (Year == 0 || Month == 0)
+        {
+            return string.Empty;
+        }
+
+        return new DateOnly(Year, Month, 1).ToString("MMMM yyyy");
+    }
+
+    private string GetDeleteMessage()
+    {
+        return $"Are you sure you want to delete the budget goal for {CategoryName} in {GetMonthDisplay()}?";
+    }
+
+    private async Task HandleSave()
+    {
+        ValidationMessage = null;
+
+        if (TargetAmount < 0)
+        {
+            ValidationMessage = "Budget amount cannot be negative.";
+            return;
+        }
+
+        if (TargetAmount == 0)
+        {
+            ValidationMessage = "Please enter a budget amount.";
+            return;
+        }
+
+        IsSubmitting = true;
+
+        try
+        {
+            await OnSave.InvokeAsync(TargetAmount);
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private void HandleDelete()
+    {
+        showDeleteConfirm = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        IsDeleting = true;
+
+        try
+        {
+            await OnDelete.InvokeAsync();
+        }
+        finally
+        {
+            IsDeleting = false;
+            showDeleteConfirm = false;
+        }
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+    }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

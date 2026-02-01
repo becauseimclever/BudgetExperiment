@@ -1,0 +1,131 @@
+/* CalendarBudgetPanel.razor.css - Styles for the calendar budget summary panel */
+
+.calendar-budget-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-4);
+    overflow: hidden;
+}
+
+/* Header */
+.budget-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-secondary);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    user-select: none;
+}
+
+.budget-panel-header:hover {
+    background: var(--color-border-subtle);
+}
+
+.budget-panel-header:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: -2px;
+}
+
+.budget-panel-header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.budget-panel-title {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.budget-panel-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: var(--color-text-secondary);
+    transition: transform var(--transition-fast);
+}
+
+.budget-panel-toggle.expanded {
+    transform: rotate(180deg);
+}
+
+/* Status Summary */
+.budget-status-summary {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border-subtle);
+}
+
+.status-count {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.status-count .count {
+    font-weight: var(--font-weight-semibold);
+}
+
+.status-count.on-track .count {
+    color: var(--color-success);
+}
+
+.status-count.warning .count {
+    color: var(--color-warning);
+}
+
+.status-count.over-budget .count {
+    color: var(--color-error);
+}
+
+/* Body */
+.budget-panel-body {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Category List */
+.budget-category-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.empty-budget-message {
+    text-align: center;
+    padding: var(--space-4);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* Panel Actions */
+.budget-panel-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--color-border-subtle);
+    background: var(--color-surface-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .budget-status-summary {
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+
+    .status-count {
+        font-size: var(--font-size-xs);
+    }
+}

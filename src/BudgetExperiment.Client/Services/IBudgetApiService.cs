@@ -477,6 +477,13 @@ public interface IBudgetApiService
     /// <returns>True if deleted successfully.</returns>
     Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month);
 
+    /// <summary>
+    /// Copies budget goals from one month to another.
+    /// </summary>
+    /// <param name="request">The copy request containing source and target month details.</param>
+    /// <returns>A result summarizing the copy operation.</returns>
+    Task<CopyBudgetGoalsResult?> CopyBudgetGoalsAsync(CopyBudgetGoalsRequest request);
+
     // Budget Progress Operations
 
     /// <summary>

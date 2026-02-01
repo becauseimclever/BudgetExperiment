@@ -4,6 +4,7 @@
 @page "/"
 @page "/{Year:int}/{Month:int}"
 
+@using BudgetExperiment.Client.Components.Forms
 @using BudgetExperiment.Client.Services
 @using BudgetExperiment.Domain
 
@@ -36,6 +37,13 @@
     <PastDueAlert PastDueSummary="@pastDueSummary" OnReviewClick="ShowPastDueReview" />
 
     <BudgetAlert BudgetSummary="@budgetSummary" OnViewBudgetClick="NavigateToBudget" />
+
+    <CalendarBudgetPanel Summary="@budgetSummary"
+                         Year="@currentDate.Year"
+                         Month="@currentDate.Month"
+                         OnEditGoal="ShowEditBudgetGoal"
+                         OnCreateGoal="ShowCreateBudgetGoal"
+                         OnCopyFromPrevious="CopyBudgetGoalsFromPrevious" />
 
     <ErrorAlert Message="@errorMessage"
                 IsDismissible="true"
@@ -103,6 +111,17 @@
                         OnClose="HidePastDueReview"
                         OnConfirm="ConfirmPastDueItems"
                         OnSkip="SkipPastDueItems" />
+
+    <BudgetGoalModal IsVisible="@showBudgetGoalModal"
+                     Mode="@budgetGoalMode"
+                     CategoryId="@(editingBudgetProgress?.CategoryId ?? Guid.Empty)"
+                     CategoryName="@(editingBudgetProgress?.CategoryName ?? string.Empty)"
+                     InitialAmount="@(editingBudgetProgress?.TargetAmount.Amount ?? 0m)"
+                     Year="@currentDate.Year"
+                     Month="@currentDate.Month"
+                     OnSave="SaveBudgetGoal"
+                     OnDelete="DeleteBudgetGoal"
+                     OnClose="HideBudgetGoalModal" />
 </div>
 
 @code {
@@ -153,6 +172,11 @@
 
     // Budget alert state
     private BudgetSummaryDto? budgetSummary;
+
+    // Budget goal editing state
+    private bool showBudgetGoalModal = false;
+    private GoalEditMode budgetGoalMode = GoalEditMode.Create;
+    private BudgetProgressDto? editingBudgetProgress;
 
     protected override async Task OnInitializedAsync()
     {
@@ -272,6 +296,121 @@
     private void NavigateToBudget()
     {
         Navigation.NavigateTo("/budget");
+    }
+
+    // Budget goal methods
+    private void ShowEditBudgetGoal(BudgetProgressDto progress)
+    {
+        editingBudgetProgress = progress;
+        budgetGoalMode = GoalEditMode.Edit;
+        showBudgetGoalModal = true;
+    }
+
+    private void ShowCreateBudgetGoal(BudgetProgressDto progress)
+    {
+        editingBudgetProgress = progress;
+        budgetGoalMode = GoalEditMode.Create;
+        showBudgetGoalModal = true;
+    }
+
+    private void HideBudgetGoalModal()
+    {
+        showBudgetGoalModal = false;
+        editingBudgetProgress = null;
+    }
+
+    private async Task SaveBudgetGoal(decimal amount)
+    {
+        if (editingBudgetProgress == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var goalDto = new BudgetGoalSetDto
+            {
+                Year = currentDate.Year,
+                Month = currentDate.Month,
+                TargetAmount = new MoneyDto
+                {
+                    Amount = amount,
+                    Currency = editingBudgetProgress.TargetAmount.Currency ?? "USD",
+                },
+            };
+
+            var result = await ApiService.SetBudgetGoalAsync(editingBudgetProgress.CategoryId, goalDto);
+            if (result != null)
+            {
+                HideBudgetGoalModal();
+                await LoadBudgetSummary();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save budget goal: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteBudgetGoal()
+    {
+        if (editingBudgetProgress == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var success = await ApiService.DeleteBudgetGoalAsync(
+                editingBudgetProgress.CategoryId,
+                currentDate.Year,
+                currentDate.Month);
+
+            if (success)
+            {
+                HideBudgetGoalModal();
+                await LoadBudgetSummary();
+            }
+            else
+            {
+                errorMessage = "Failed to delete budget goal.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete budget goal: {ex.Message}";
+        }
+    }
+
+    private async Task CopyBudgetGoalsFromPrevious()
+    {
+        errorMessage = null;
+
+        // Calculate previous month
+        var previousDate = currentDate.AddMonths(-1);
+
+        var request = new CopyBudgetGoalsRequest
+        {
+            SourceYear = previousDate.Year,
+            SourceMonth = previousDate.Month,
+            TargetYear = currentDate.Year,
+            TargetMonth = currentDate.Month,
+            OverwriteExisting = false,
+        };
+
+        try
+        {
+            var result = await ApiService.CopyBudgetGoalsAsync(request);
+            if (result is not null && (result.GoalsCreated > 0 || result.GoalsUpdated > 0))
+            {
+                // Refresh budget summary after copying
+                budgetSummary = await ApiService.GetBudgetSummaryAsync(currentDate.Year, currentDate.Month);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to copy budget goals: {ex.Message}";
+        }
     }
 
     private async Task SelectDate(DateOnly date)
