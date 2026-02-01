@@ -4,6 +4,8 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.11.0] - 2026-02-01
+
 ### Features
 
 - **client:** Uncategorized Transactions page with bulk categorize functionality (Feature 040)
