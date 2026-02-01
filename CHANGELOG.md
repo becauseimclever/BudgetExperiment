@@ -6,6 +6,9 @@ All notable changes to Budget Experiment.
 
 ### Features
 
+- **client:** Uncategorized Transactions page with bulk categorize functionality (Feature 040)
+- **api:** GET /api/v1/transactions/uncategorized endpoint with filtering, sorting, paging
+- **api:** POST /api/v1/transactions/bulk-categorize endpoint for bulk category assignment
 - **client:** Zero-flash authentication flow - no more "Checking authentication" or "Redirecting to login" flashes (Feature 052)
 - **client:** AuthInitializer component resolves auth state before rendering any UI
 - **client:** Branded loading overlay in index.html with theme support and reduced-motion
