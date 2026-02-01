@@ -1,0 +1,545 @@
+@page "/uncategorized"
+
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+@inject ScopeService ScopeService
+@inject IChatContextService ChatContext
+
+<PageTitle>Uncategorized Transactions - Budget Experiment</PageTitle>
+
+<div class="page-container-wide">
+    <PageHeader Title="Uncategorized Transactions" Subtitle="@GetSubtitle()" />
+
+    <div class="filter-section">
+        <div class="filter-group">
+            <label for="accountFilter">Account:</label>
+            <select id="accountFilter" class="form-control" style="width: auto; min-width: 150px;" @bind="filter.AccountId" @bind:after="ApplyFilters">
+                <option value="">All Accounts</option>
+                @foreach (var account in accounts)
+                {
+                    <option value="@account.Id">@account.Name</option>
+                }
+            </select>
+        </div>
+        <div class="date-filter">
+            <label for="fromDate">From:</label>
+            <input type="date" id="fromDate" @bind="startDate" @bind:after="ApplyFilters" />
+        </div>
+        <div class="date-filter">
+            <label for="toDate">To:</label>
+            <input type="date" id="toDate" @bind="endDate" @bind:after="ApplyFilters" />
+        </div>
+        <div class="filter-group">
+            <label for="descriptionFilter">Description:</label>
+            <input type="text" id="descriptionFilter" class="form-control" style="width: 200px;"
+                   placeholder="Contains..."
+                   @bind="filter.DescriptionContains"
+                   @bind:after="ApplyFilters" />
+        </div>
+        <div class="filter-group">
+            <label for="minAmount">Min $:</label>
+            <input type="number" id="minAmount" class="form-control" style="width: 100px;"
+                   step="0.01" min="0"
+                   @bind="filter.MinAmount"
+                   @bind:after="ApplyFilters" />
+        </div>
+        <div class="filter-group">
+            <label for="maxAmount">Max $:</label>
+            <input type="number" id="maxAmount" class="form-control" style="width: 100px;"
+                   step="0.01" min="0"
+                   @bind="filter.MaxAmount"
+                   @bind:after="ApplyFilters" />
+        </div>
+        <button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading uncategorized transactions..." />
+    }
+    else if (errorMessage != null)
+    {
+        <ErrorAlert Message="@errorMessage"
+                    OnRetry="RetryLoad"
+                    OnDismiss="DismissError"
+                    IsRetrying="@isRetrying" />
+    }
+
+    @if (!isLoading && pageData.TotalCount == 0 && errorMessage == null)
+    {
+        <div class="empty-state">
+            <div class="empty-icon">
+                <Icon Name="check-circle" Size="48" />
+            </div>
+            <p class="empty-state-title">All Caught Up!</p>
+            <p class="empty-state-description">
+                All transactions have been categorized. Great job!
+            </p>
+        </div>
+    }
+    else if (!isLoading && errorMessage == null)
+    {
+        @if (SelectedCount > 0)
+        {
+            <div class="bulk-action-bar">
+                <span class="selected-count">@SelectedCount selected</span>
+                <div class="bulk-action-controls">
+                    <select class="form-control" style="width: auto; min-width: 200px;" @bind="selectedCategoryId">
+                        <option value="">Select Category...</option>
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                    <button class="btn btn-success" @onclick="BulkCategorize" disabled="@(selectedCategoryId == Guid.Empty || isBulkProcessing)">
+                        @if (isBulkProcessing)
+                        {
+                            <span>Processing...</span>
+                        }
+                        else
+                        {
+                            <span>Apply Category</span>
+                        }
+                    </button>
+                    <button class="btn btn-secondary" @onclick="ClearSelection">Clear Selection</button>
+                </div>
+            </div>
+        }
+
+        <div class="card">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" @bind="selectAll" @bind:after="OnSelectAllChanged" title="Select all on page" />
+                        </th>
+                        <th class="sortable" @onclick='() => ToggleSort("Date")'>
+                            Date
+                            @if (filter.SortBy == "Date")
+                            {
+                                <Icon Name="@(filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                        <th class="sortable" @onclick='() => ToggleSort("Description")'>
+                            Description
+                            @if (filter.SortBy == "Description")
+                            {
+                                <Icon Name="@(filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                        <th>Account</th>
+                        <th class="text-right sortable" @onclick='() => ToggleSort("Amount")'>
+                            Amount
+                            @if (filter.SortBy == "Amount")
+                            {
+                                <Icon Name="@(filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var txn in pageData.Items)
+                    {
+                        <tr class="@(IsSelected(txn.Id) ? "row-selected" : "")">
+                            <td class="checkbox-col">
+                                <input type="checkbox" checked="@IsSelected(txn.Id)" @onchange="() => ToggleSelection(txn.Id)" />
+                            </td>
+                            <td class="date">@txn.Date.ToString("MMM d, yyyy")</td>
+                            <td>@txn.Description</td>
+                            <td>@GetAccountName(txn.AccountId)</td>
+                            <td class="text-right">
+                                <MoneyDisplay Amount="@txn.Amount.Amount" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (pageData.TotalPages > 1)
+        {
+            <div class="pagination-controls">
+                <button class="btn btn-sm btn-secondary" @onclick="GoToFirstPage" disabled="@(filter.Page <= 1)">
+                    <Icon Name="chevrons-left" Size="14" />
+                </button>
+                <button class="btn btn-sm btn-secondary" @onclick="GoToPreviousPage" disabled="@(filter.Page <= 1)">
+                    <Icon Name="chevron-left" Size="14" />
+                </button>
+                <span class="pagination-info">Page @filter.Page of @pageData.TotalPages</span>
+                <button class="btn btn-sm btn-secondary" @onclick="GoToNextPage" disabled="@(filter.Page >= pageData.TotalPages)">
+                    <Icon Name="chevron-right" Size="14" />
+                </button>
+                <button class="btn btn-sm btn-secondary" @onclick="GoToLastPage" disabled="@(filter.Page >= pageData.TotalPages)">
+                    <Icon Name="chevrons-right" Size="14" />
+                </button>
+                <select class="form-control page-size-select" @bind="filter.PageSize" @bind:after="ApplyFilters">
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success mt-3">@successMessage</div>
+        }
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool isRetrying;
+    private bool isBulkProcessing;
+    private string? errorMessage;
+    private string? successMessage;
+
+    private List<AccountDto> accounts = new();
+    private List<BudgetCategoryDto> categories = new();
+    private UncategorizedTransactionPageDto pageData = new();
+    private UncategorizedTransactionFilterDto filter = new();
+
+    // Date binding helpers (DateOnly doesn't bind directly to input type="date")
+    private DateTime? startDate;
+    private DateTime? endDate;
+
+    // Selection state
+    private HashSet<Guid> selectedTransactionIds = new();
+    private bool selectAll;
+    private Guid selectedCategoryId;
+
+    private int SelectedCount => selectedTransactionIds.Count;
+
+    private string? GetSubtitle()
+    {
+        return pageData.TotalCount > 0 ? $"{pageData.TotalCount} transactions need categorization" : null;
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ScopeService.ScopeChanged += OnScopeChanged;
+        ChatContext.SetPageType("uncategorized");
+        await LoadDataAsync();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= OnScopeChanged;
+        ChatContext.ClearContext();
+    }
+
+    private async void OnScopeChanged(BudgetScope? _)
+    {
+        await InvokeAsync(async () =>
+        {
+            ClearSelection();
+            await LoadDataAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            successMessage = null;
+
+            // Sync date filters
+            filter.StartDate = startDate.HasValue ? DateOnly.FromDateTime(startDate.Value) : null;
+            filter.EndDate = endDate.HasValue ? DateOnly.FromDateTime(endDate.Value) : null;
+
+            var accountsTask = ApiService.GetAccountsAsync();
+            var categoriesTask = ApiService.GetCategoriesAsync(activeOnly: true);
+            var uncategorizedTask = ApiService.GetUncategorizedTransactionsAsync(filter);
+
+            await Task.WhenAll(accountsTask, categoriesTask, uncategorizedTask);
+
+            accounts = accountsTask.Result.ToList();
+            categories = categoriesTask.Result.ToList();
+            pageData = uncategorizedTask.Result;
+
+            UpdateSelectAllState();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load uncategorized transactions: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadDataAsync();
+        }
+        finally
+        {
+            isRetrying = false;
+        }
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    private async Task ApplyFilters()
+    {
+        filter.Page = 1; // Reset to first page when filters change
+        ClearSelection();
+        await LoadDataAsync();
+    }
+
+    private void ClearFilters()
+    {
+        filter = new UncategorizedTransactionFilterDto();
+        startDate = null;
+        endDate = null;
+        ClearSelection();
+        _ = LoadDataAsync();
+    }
+
+    private async Task ToggleSort(string column)
+    {
+        if (filter.SortBy == column)
+        {
+            filter.SortDescending = !filter.SortDescending;
+        }
+        else
+        {
+            filter.SortBy = column;
+            filter.SortDescending = true;
+        }
+
+        await LoadDataAsync();
+    }
+
+    // Selection helpers
+    private bool IsSelected(Guid id) => selectedTransactionIds.Contains(id);
+
+    private void ToggleSelection(Guid id)
+    {
+        if (selectedTransactionIds.Contains(id))
+        {
+            selectedTransactionIds.Remove(id);
+        }
+        else
+        {
+            selectedTransactionIds.Add(id);
+        }
+
+        UpdateSelectAllState();
+    }
+
+    private void OnSelectAllChanged()
+    {
+        if (selectAll)
+        {
+            foreach (var txn in pageData.Items)
+            {
+                selectedTransactionIds.Add(txn.Id);
+            }
+        }
+        else
+        {
+            foreach (var txn in pageData.Items)
+            {
+                selectedTransactionIds.Remove(txn.Id);
+            }
+        }
+    }
+
+    private void UpdateSelectAllState()
+    {
+        selectAll = pageData.Items.Count > 0 && pageData.Items.All(t => selectedTransactionIds.Contains(t.Id));
+    }
+
+    private void ClearSelection()
+    {
+        selectedTransactionIds.Clear();
+        selectAll = false;
+        selectedCategoryId = Guid.Empty;
+    }
+
+    private async Task BulkCategorize()
+    {
+        if (selectedCategoryId == Guid.Empty || SelectedCount == 0)
+        {
+            return;
+        }
+
+        isBulkProcessing = true;
+        errorMessage = null;
+        successMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var request = new BulkCategorizeRequest
+            {
+                TransactionIds = selectedTransactionIds.ToList(),
+                CategoryId = selectedCategoryId,
+            };
+
+            var response = await ApiService.BulkCategorizeTransactionsAsync(request);
+
+            if (response.SuccessCount > 0)
+            {
+                successMessage = $"Successfully categorized {response.SuccessCount} transaction(s).";
+                if (response.FailedCount > 0)
+                {
+                    successMessage += $" {response.FailedCount} failed.";
+                }
+            }
+            else if (response.FailedCount > 0)
+            {
+                errorMessage = $"Failed to categorize transactions. {string.Join(" ", response.Errors)}";
+            }
+
+            ClearSelection();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to categorize transactions: {ex.Message}";
+        }
+        finally
+        {
+            isBulkProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    // Pagination
+    private async Task GoToFirstPage()
+    {
+        filter.Page = 1;
+        await LoadDataAsync();
+    }
+
+    private async Task GoToPreviousPage()
+    {
+        if (filter.Page > 1)
+        {
+            filter.Page--;
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task GoToNextPage()
+    {
+        if (filter.Page < pageData.TotalPages)
+        {
+            filter.Page++;
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task GoToLastPage()
+    {
+        filter.Page = pageData.TotalPages;
+        await LoadDataAsync();
+    }
+
+    private string GetAccountName(Guid accountId)
+    {
+        return accounts.FirstOrDefault(a => a.Id == accountId)?.Name ?? "Unknown";
+    }
+}
+
+<style>
+    .bulk-action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        background-color: var(--color-primary-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-primary);
+    }
+
+    .bulk-action-bar .selected-count {
+        font-weight: 600;
+        color: var(--color-primary);
+    }
+
+    .bulk-action-controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .checkbox-col {
+        width: 40px;
+        text-align: center;
+    }
+
+    .row-selected {
+        background-color: var(--color-primary-light) !important;
+    }
+
+    .sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .sortable:hover {
+        background-color: var(--color-bg-hover);
+    }
+
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding: 0.75rem;
+    }
+
+    .pagination-info {
+        margin: 0 0.5rem;
+        color: var(--color-text-secondary);
+    }
+
+    .page-size-select {
+        width: auto;
+        margin-left: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .empty-icon {
+        color: var(--color-success);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state-description {
+        color: var(--color-text-secondary);
+    }
+</style>

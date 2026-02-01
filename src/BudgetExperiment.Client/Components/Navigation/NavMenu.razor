@@ -79,6 +79,14 @@
             }
         </NavLink>
 
+        <NavLink class="nav-item" href="uncategorized" title="Uncategorized Transactions">
+            <span class="nav-icon"><Icon Name="inbox" Size="20" /></span>
+            @if (!IsCollapsed)
+            {
+                <span class="nav-text">Uncategorized</span>
+            }
+        </NavLink>
+
         <NavLink class="nav-item" href="budget" title="Budget Overview">
             <span class="nav-icon"><Icon Name="pie-chart" Size="20" /></span>
             @if (!IsCollapsed)

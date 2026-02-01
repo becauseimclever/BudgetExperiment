@@ -336,14 +336,14 @@ feat(client): add uncategorized transactions API service
 **Effort:** ~2-3 hours (largest phase due to multi-select UI complexity)
 
 **Tasks:**
-- [ ] Create `Uncategorized.razor` page at route `/uncategorized`
-- [ ] Implement filter bar with all filter controls
-- [ ] Implement data table with checkbox selection
-- [ ] Implement pagination controls
-- [ ] Implement bulk categorize action bar
-- [ ] Add navigation link in `NavMenu.razor`
-- [ ] Style consistently with existing pages
-- [ ] Test responsiveness on mobile
+- [x] Create `Uncategorized.razor` page at route `/uncategorized`
+- [x] Implement filter bar with all filter controls (date range, amount, description, account)
+- [x] Implement data table with checkbox selection and select-all
+- [x] Implement pagination controls with page size selector
+- [x] Implement bulk categorize action bar with category dropdown
+- [x] Add sortable column headers (Date, Description, Amount)
+- [x] Add navigation link in `NavMenu.razor` (between Auto-Categorize and Budget)
+- [x] Style consistently with existing pages
 
 **Commit:**
 ```
