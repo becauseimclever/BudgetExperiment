@@ -1,0 +1,122 @@
+@* Button.razor - Standardized button component with variant and size support *@
+
+<button class="btn @VariantClass @SizeClass @(IsBlock ? "btn-block" : "")"
+        type="@Type"
+        disabled="@(IsDisabled || IsLoading)"
+        @onclick="HandleClick"
+        @attributes="AdditionalAttributes">
+    @if (IsLoading)
+    {
+        <LoadingSpinner Size="SpinnerSize.Small" />
+        @if (ChildContent != null)
+        {
+            <span>@ChildContent</span>
+        }
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(IconLeft))
+        {
+            <Icon Name="@IconLeft" Size="16" />
+        }
+        @ChildContent
+        @if (!string.IsNullOrEmpty(IconRight))
+        {
+            <Icon Name="@IconRight" Size="16" />
+        }
+    }
+</button>
+
+@code {
+    /// <summary>
+    /// Gets or sets the button content.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the button variant/style.
+    /// </summary>
+    [Parameter]
+    public ButtonVariant Variant { get; set; } = ButtonVariant.Primary;
+
+    /// <summary>
+    /// Gets or sets the button size.
+    /// </summary>
+    [Parameter]
+    public ButtonSize Size { get; set; } = ButtonSize.Medium;
+
+    /// <summary>
+    /// Gets or sets the button type (button, submit, reset).
+    /// </summary>
+    [Parameter]
+    public string Type { get; set; } = "button";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the button is disabled.
+    /// </summary>
+    [Parameter]
+    public bool IsDisabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the button is in a loading state.
+    /// </summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the button should be full width.
+    /// </summary>
+    [Parameter]
+    public bool IsBlock { get; set; }
+
+    /// <summary>
+    /// Gets or sets the icon to display on the left side of the button text.
+    /// </summary>
+    [Parameter]
+    public string? IconLeft { get; set; }
+
+    /// <summary>
+    /// Gets or sets the icon to display on the right side of the button text.
+    /// </summary>
+    [Parameter]
+    public string? IconRight { get; set; }
+
+    /// <summary>
+    /// Gets or sets the click event callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional HTML attributes to apply to the button element.
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string VariantClass => Variant switch
+    {
+        ButtonVariant.Secondary => "btn-secondary",
+        ButtonVariant.Success => "btn-success",
+        ButtonVariant.Danger => "btn-danger",
+        ButtonVariant.Warning => "btn-warning",
+        ButtonVariant.Ghost => "btn-ghost",
+        ButtonVariant.Outline => "btn-outline",
+        _ => "btn-primary"
+    };
+
+    private string SizeClass => Size switch
+    {
+        ButtonSize.Small => "btn-sm",
+        ButtonSize.Large => "btn-lg",
+        _ => string.Empty
+    };
+
+    private async Task HandleClick()
+    {
+        if (!IsDisabled && !IsLoading)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+}

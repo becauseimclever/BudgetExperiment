@@ -1,0 +1,81 @@
+@* Card.razor - Card container component with optional header and footer *@
+
+<div class="card @AdditionalClasses"
+     @attributes="AdditionalAttributes">
+    @if (HeaderContent != null || !string.IsNullOrEmpty(Title))
+    {
+        <div class="card-header">
+            @if (HeaderContent != null)
+            {
+                @HeaderContent
+            }
+            else if (!string.IsNullOrEmpty(Title))
+            {
+                <h3 class="card-title">@Title</h3>
+                @if (!string.IsNullOrEmpty(Subtitle))
+                {
+                    <p class="card-subtitle">@Subtitle</p>
+                }
+            }
+        </div>
+    }
+    @if (ChildContent != null)
+    {
+        <div class="card-body">
+            @ChildContent
+        </div>
+    }
+    @if (FooterContent != null)
+    {
+        <div class="card-footer">
+            @FooterContent
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the card body content.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the card header content.
+    /// If provided, takes precedence over Title/Subtitle.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? HeaderContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the card footer content.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the card title text.
+    /// Used when HeaderContent is not provided.
+    /// </summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Gets or sets the card subtitle text.
+    /// Only displayed when Title is provided and HeaderContent is not.
+    /// </summary>
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional CSS classes to apply.
+    /// </summary>
+    [Parameter]
+    public string? AdditionalClasses { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional HTML attributes to apply to the card element.
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}

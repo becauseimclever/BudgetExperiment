@@ -1,0 +1,60 @@
+@* EmptyState.razor - Empty state placeholder component for lists and pages *@
+
+<div class="empty-state @AdditionalClasses"
+     @attributes="AdditionalAttributes">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <div class="empty-state-icon">
+            <Icon Name="@Icon" Size="48" />
+        </div>
+    }
+    <h3 class="empty-state-title">@Title</h3>
+    @if (!string.IsNullOrEmpty(Description))
+    {
+        <p class="empty-state-description">@Description</p>
+    }
+    @if (ChildContent != null)
+    {
+        <div class="empty-state-actions">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the action content (typically buttons).
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the empty state title.
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = "No items found";
+
+    /// <summary>
+    /// Gets or sets the empty state description.
+    /// </summary>
+    [Parameter]
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Gets or sets the icon name to display.
+    /// </summary>
+    [Parameter]
+    public string? Icon { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional CSS classes to apply.
+    /// </summary>
+    [Parameter]
+    public string? AdditionalClasses { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional HTML attributes.
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}

@@ -98,6 +98,21 @@ public enum BadgeVariant
 }
 
 /// <summary>
+/// Badge size options.
+/// </summary>
+public enum BadgeSize
+{
+    /// <summary>Small badge.</summary>
+    Small,
+
+    /// <summary>Medium badge (default).</summary>
+    Medium,
+
+    /// <summary>Large badge.</summary>
+    Large,
+}
+
+/// <summary>
 /// Alert variant/style options.
 /// </summary>
 public enum AlertVariant

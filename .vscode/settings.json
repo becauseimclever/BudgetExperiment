@@ -3,6 +3,8 @@
         "/^git add -A; git status$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "dotnet run": true,
+        "dotnet test": true
     }
 }

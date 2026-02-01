@@ -1,0 +1,78 @@
+@* Badge.razor - Status/label badge component with variant support *@
+
+<span class="badge @VariantClass @SizeClass"
+      @attributes="AdditionalAttributes">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <Icon Name="@Icon" Size="@IconSize" />
+    }
+    @if (ChildContent != null)
+    {
+        @ChildContent
+    }
+    else if (!string.IsNullOrEmpty(Text))
+    {
+        @Text
+    }
+</span>
+
+@code {
+    /// <summary>
+    /// Gets or sets the badge content.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the badge text (alternative to ChildContent).
+    /// </summary>
+    [Parameter]
+    public string? Text { get; set; }
+
+    /// <summary>
+    /// Gets or sets the badge variant/style.
+    /// </summary>
+    [Parameter]
+    public BadgeVariant Variant { get; set; } = BadgeVariant.Default;
+
+    /// <summary>
+    /// Gets or sets the badge size.
+    /// </summary>
+    [Parameter]
+    public BadgeSize Size { get; set; } = BadgeSize.Medium;
+
+    /// <summary>
+    /// Gets or sets the icon to display before the text.
+    /// </summary>
+    [Parameter]
+    public string? Icon { get; set; }
+
+    /// <summary>
+    /// Gets or sets additional HTML attributes to apply to the badge element.
+    /// </summary>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string VariantClass => Variant switch
+    {
+        BadgeVariant.Success => "badge-success",
+        BadgeVariant.Warning => "badge-warning",
+        BadgeVariant.Danger => "badge-danger",
+        BadgeVariant.Info => "badge-info",
+        _ => "badge-default"
+    };
+
+    private string SizeClass => Size switch
+    {
+        BadgeSize.Small => "badge-sm",
+        BadgeSize.Large => "badge-lg",
+        _ => string.Empty
+    };
+
+    private int IconSize => Size switch
+    {
+        BadgeSize.Small => 10,
+        BadgeSize.Large => 14,
+        _ => 12
+    };
+}

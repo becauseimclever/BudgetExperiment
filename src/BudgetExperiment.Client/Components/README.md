@@ -179,15 +179,129 @@ Theme switcher component.
 
 ---
 
-## Tier 1 Components (Planned)
+### Button
 
-| Component | Purpose | Status |
-|-----------|---------|--------|
-| `Button.razor` | Standardized button with variants/sizes | 🆕 Phase 2 |
-| `Badge.razor` | Status/label badges | 🆕 Phase 2 |
-| `Card.razor` | Card container | 🆕 Phase 2 |
-| `EmptyState.razor` | Empty state placeholder | 🆕 Phase 2 |
-| `FormField.razor` | Form field wrapper with label/validation | 🆕 Phase 2 |
+Standardized button component with variant and size support.
+
+**Location:** `Common/Button.razor`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Variant` | `ButtonVariant` | `Primary` | Button style (Primary, Secondary, Success, Danger, Warning, Ghost, Outline) |
+| `Size` | `ButtonSize` | `Medium` | Button size (Small, Medium, Large) |
+| `Type` | `string` | `"button"` | Button type (button, submit, reset) |
+| `IsDisabled` | `bool` | `false` | Disabled state |
+| `IsLoading` | `bool` | `false` | Loading state with spinner |
+| `IsBlock` | `bool` | `false` | Full width button |
+| `IconLeft` | `string?` | `null` | Icon name for left side |
+| `IconRight` | `string?` | `null` | Icon name for right side |
+| `OnClick` | `EventCallback` | - | Click handler |
+| `ChildContent` | `RenderFragment?` | `null` | Button label content |
+
+**Usage:**
+```razor
+<Button Variant="ButtonVariant.Success" OnClick="Save">Save Changes</Button>
+<Button Variant="ButtonVariant.Danger" Size="ButtonSize.Small" IsLoading="@isSaving">Delete</Button>
+<Button Variant="ButtonVariant.Ghost" IconLeft="plus">Add Item</Button>
+```
+
+---
+
+### Badge
+
+Status/label badge component with variants.
+
+**Location:** `Common/Badge.razor`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Variant` | `BadgeVariant` | `Default` | Badge style (Default, Success, Warning, Danger, Info) |
+| `Size` | `BadgeSize` | `Medium` | Badge size (Small, Medium, Large) |
+| `Text` | `string?` | `null` | Badge text (alternative to ChildContent) |
+| `Icon` | `string?` | `null` | Icon name |
+| `ChildContent` | `RenderFragment?` | `null` | Badge content |
+
+**Usage:**
+```razor
+<Badge Variant="BadgeVariant.Success" Text="Active" />
+<Badge Variant="BadgeVariant.Warning">Pending</Badge>
+```
+
+---
+
+### Card
+
+Card container with optional header and footer.
+
+**Location:** `Common/Card.razor`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Title` | `string?` | `null` | Card title (renders in header) |
+| `Subtitle` | `string?` | `null` | Card subtitle |
+| `HeaderContent` | `RenderFragment?` | `null` | Custom header content |
+| `FooterContent` | `RenderFragment?` | `null` | Footer content |
+| `ChildContent` | `RenderFragment?` | `null` | Body content |
+| `AdditionalClasses` | `string?` | `null` | Extra CSS classes |
+
+**Usage:**
+```razor
+<Card Title="Account Summary">
+    <p>Account balance: $1,234.56</p>
+    <FooterContent>
+        <Button Variant="ButtonVariant.Secondary">View Details</Button>
+    </FooterContent>
+</Card>
+```
+
+---
+
+### EmptyState
+
+Empty state placeholder for lists and pages.
+
+**Location:** `Common/EmptyState.razor`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Title` | `string` | `"No items found"` | Empty state title |
+| `Description` | `string?` | `null` | Description text |
+| `Icon` | `string?` | `null` | Icon name |
+| `ChildContent` | `RenderFragment?` | `null` | Action content (buttons) |
+
+**Usage:**
+```razor
+<EmptyState Title="No transactions"
+            Description="Add your first transaction to get started."
+            Icon="inbox">
+    <Button Variant="ButtonVariant.Primary">Add Transaction</Button>
+</EmptyState>
+```
+
+---
+
+### FormField
+
+Form field wrapper with label and validation.
+
+**Location:** `Common/FormField.razor`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Label` | `string?` | `null` | Field label |
+| `IsRequired` | `bool` | `false` | Shows required indicator |
+| `ValidationMessage` | `string?` | `null` | Validation error message |
+| `HelpText` | `string?` | `null` | Help text below input |
+| `InputId` | `string?` | `null` | ID for label association |
+| `ChildContent` | `RenderFragment?` | `null` | Input element |
+
+**Usage:**
+```razor
+<FormField Label="Email Address" IsRequired="true" InputId="email"
+           ValidationMessage="@emailError" HelpText="We'll never share your email.">
+    <input type="email" id="email" class="form-control" @bind="email" />
+</FormField>
+```
 
 ---
 
@@ -198,6 +312,9 @@ public enum ModalSize { Small, Medium, Large }
 public enum SpinnerSize { Small, Medium, Large }
 public enum ButtonSize { Small, Medium, Large }
 public enum ButtonVariant { Primary, Secondary, Success, Danger, Warning, Ghost, Outline }
+public enum BadgeSize { Small, Medium, Large }
+public enum BadgeVariant { Default, Success, Warning, Danger, Info }
+public enum AlertVariant { Info, Success, Warning, Danger }
 public enum BadgeVariant { Default, Success, Warning, Danger, Info }
 public enum AlertVariant { Info, Success, Warning, Danger }
 ```
