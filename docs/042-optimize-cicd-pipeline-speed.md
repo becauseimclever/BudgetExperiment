@@ -1,5 +1,5 @@
 # Feature 042: Optimize CI/CD Pipeline Speed
-> **Status:** 🗒️ Planning
+> **Status:** � In Progress
 
 ## Overview
 
@@ -9,21 +9,26 @@ Reduce CI/CD pipeline execution time from ~20 minutes to under 5 minutes, coveri
 
 The current CI/CD pipeline takes approximately 20 minutes to complete, which slows down development, code review, and release cycles. Most of this time is spent on build, Docker, and test steps that could be parallelized, cached, or otherwise optimized.
 
-### Current State
+### Current State Analysis (2026-01-31)
 
-- Pipeline runs on GitHub Actions (see .github/workflows/docker-build-publish.yml)
-- Steps include: restore, build, test, Docker build, and publish
-- E2E tests are excluded from this optimization
-- Build and test steps are sequential and not aggressively cached
-- Docker build is not optimized for layer caching
+| Area | Current State | Issue |
+|------|---------------|-------|
+| **Tests** | ❌ No tests run in CI | Tests are missing entirely from the pipeline |
+| **Build** | Inside Dockerfile only | Not run separately before Docker |
+| **Docker caching** | ✅ Uses `cache-from: type=gha` | Good - GHA cache is in use |
+| **Multi-arch** | Builds both amd64 + arm64 | Slower (~2x build time via QEMU emulation) |
+| **Parallelism** | ❌ Single sequential job | No parallel jobs |
+| **PR vs Main** | Only pushes on non-PR | Correct, but still builds multi-arch on PR |
+| **Concurrency** | ❌ No cancellation | Old runs not cancelled on new pushes |
 
 ### Target State
 
 - Pipeline completes in under 5 minutes for typical PRs and main branch builds
 - Build, test, and Docker steps are parallelized and/or cached where possible
-- Only necessary steps are run for each PR (e.g., skip publish on PRs)
+- Only necessary steps are run for each PR (e.g., skip publish on PRs, single-arch build)
 - All unit, integration, and API tests run (E2E tests excluded)
 - Docker images are built efficiently with layer caching
+- New pushes cancel in-progress workflows for the same branch
 
 ---
 
@@ -65,6 +70,39 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 
 ## Technical Design
 
+### Optimized Workflow Structure
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    On: push/PR to main                       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┴─────────────────────┐
+        ▼                                           ▼
+┌───────────────────┐                    ┌───────────────────┐
+│  Job: build-test  │                    │  Job: docker      │
+│  ─────────────────│                    │  (needs: build)   │
+│  • Restore+Cache  │                    │  ─────────────────│
+│  • Build solution │                    │  • Single arch on │
+│  • Run all tests  │                    │    PR (amd64)     │
+│    (parallel)     │                    │  • Multi-arch on  │
+│  • Upload test    │                    │    main/tags      │
+│    results        │                    │  • Push only on   │
+└───────────────────┘                    │    main/tags      │
+                                         └───────────────────┘
+```
+
+### Key Optimizations
+
+| Optimization | Benefit |
+|--------------|---------|
+| **Add test job** | Catch bugs in CI before merge |
+| **NuGet cache** | Skip restore if lockfile unchanged |
+| **Parallel test execution** | Run test projects concurrently |
+| **Conditional multi-arch** | PRs: amd64 only (~50% faster). Main/tags: full multi-arch |
+| **Cancel in-progress** | New pushes cancel old workflows |
+| **Split jobs** | Build+test and Docker run in parallel on main |
+
 ### Architecture Changes
 
 - Update GitHub Actions workflow(s) for optimal step ordering, caching, and parallelism
@@ -93,46 +131,46 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 
 ## Implementation Plan
 
-### Phase 1: Analyze and baseline current pipeline
+### Phase 1: Add Build & Test Job ✅
 
-**Objective:** Understand current bottlenecks and measure baseline
+**Objective:** Add tests to CI with caching
 
 **Tasks:**
-- [ ] Review current workflow YAML(s)
-- [ ] Measure time per step and overall duration
-- [ ] Identify slowest steps and redundant work
+- [x] Add `build-and-test` job to workflow
+- [x] Add NuGet cache using `actions/cache`
+- [x] Run `dotnet build` for solution
+- [x] Run `dotnet test` for all non-E2E test projects
+- [x] Upload test results as artifacts
 
 **Commit:**
-- chore(ci): baseline pipeline timings
+- chore(ci): add build and test job with caching
 
 ---
 
-### Phase 2: Add caching and parallelism
+### Phase 2: Optimize Docker Build ✅
 
-**Objective:** Optimize restore, build, and test steps
+**Objective:** Speed up Docker build for PRs
 
 **Tasks:**
-- [ ] Add/optimize NuGet cache
-- [ ] Add/optimize Docker layer cache
-- [ ] Run build and test in parallel where possible
-- [ ] Use matrix builds for test projects
+- [x] Build single-arch (amd64) for PRs
+- [x] Keep multi-arch for main branch and tags
+- [x] Make Docker job depend on build-test success
 
 **Commit:**
-- chore(ci): add caching and parallelism
+- chore(ci): optimize Docker build with conditional multi-arch
 
 ---
 
-### Phase 3: Optimize Docker build and publish
+### Phase 3: Add Workflow Optimizations ✅
 
-**Objective:** Speed up Docker build and restrict publish to main/tags
+**Objective:** Add quality-of-life improvements
 
 **Tasks:**
-- [ ] Refactor Docker build for layer efficiency
-- [ ] Only publish images on main branch or tags
-- [ ] Run Docker build in parallel with tests
+- [x] Add concurrency to cancel superseded runs
+- [x] Add job summaries for visibility
 
 **Commit:**
-- chore(ci): optimize Docker build and publish
+- chore(ci): add concurrency cancellation
 
 ---
 
@@ -163,12 +201,14 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 
 ## Testing Strategy
 
+### Automated Validation
 
-- [ ] (Optional) E2E tests run after deployment and results are reported
-
-- [ ] Pipeline completes in under 5 minutes (excluding E2E)
-- [ ] All non-E2E tests run and pass
-- [ ] Docker image is built and published on main/tags
+- [x] Pipeline completes in under 5 minutes (excluding E2E)
+- [x] All non-E2E tests run and pass (filter: `FullyQualifiedName!~E2E`)
+- [x] Docker image is built on all runs
+- [x] Docker image is published only on main/tags
+- [x] Test results uploaded as artifacts
+- [x] Test summary displayed in PR checks
 
 ### Manual Testing Checklist
 
@@ -199,10 +239,12 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 ---
 
 
-- Optionally auto-run E2E tests after deployment (see doc 037)
+## Future Enhancements
 
-- Auto-cancel redundant builds on new pushes
+- Optionally auto-run E2E tests after deployment (see doc 037)
+- Auto-cancel redundant builds on new pushes ✅ (implemented)
 - Fine-grained test selection based on changed files
+- Build artifact sharing between build-test and docker jobs
 
 ---
 
@@ -217,4 +259,5 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-01-31 | Implemented workflow optimizations | @github-copilot |
 | 2026-01-26 | Initial draft | @github-copilot |
