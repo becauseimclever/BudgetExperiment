@@ -299,10 +299,10 @@ feat(application): add uncategorized transaction service with bulk categorize
 
 **Tasks:**
 - [x] Add DTOs to `BudgetExperiment.Contracts` (completed in Phase 2)
-- [ ] Add endpoints to `TransactionsController` or create dedicated controller
-- [ ] Add input validation (page bounds, valid category ID)
-- [ ] Return pagination header (`X-Pagination-TotalCount`)
-- [ ] Write API integration tests
+- [x] Add endpoints to `TransactionsController`
+- [x] Add input validation (page bounds, valid category ID)
+- [x] Return pagination header (`X-Pagination-TotalCount`)
+- [x] Write API integration tests (6 tests)
 
 **Commit:**
 ```

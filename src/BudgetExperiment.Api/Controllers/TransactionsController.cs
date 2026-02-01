@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.Categorization;
 using BudgetExperiment.Contracts.Dtos;
 
 
@@ -20,14 +21,17 @@ namespace BudgetExperiment.Api.Controllers;
 public sealed class TransactionsController : ControllerBase
 {
     private readonly TransactionService _service;
+    private readonly IUncategorizedTransactionService _uncategorizedService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionsController"/> class.
     /// </summary>
     /// <param name="service">The transaction service.</param>
-    public TransactionsController(TransactionService service)
+    /// <param name="uncategorizedService">The uncategorized transaction service.</param>
+    public TransactionsController(TransactionService service, IUncategorizedTransactionService uncategorizedService)
     {
         this._service = service;
+        this._uncategorizedService = uncategorizedService;
     }
 
     /// <summary>
@@ -112,6 +116,85 @@ public sealed class TransactionsController : ControllerBase
         }
 
         return this.Ok(transaction);
+    }
+
+    /// <summary>
+    /// Gets uncategorized transactions with optional filtering, sorting, and paging.
+    /// </summary>
+    /// <param name="startDate">Optional start date filter (inclusive).</param>
+    /// <param name="endDate">Optional end date filter (inclusive).</param>
+    /// <param name="minAmount">Optional minimum amount filter (absolute value).</param>
+    /// <param name="maxAmount">Optional maximum amount filter (absolute value).</param>
+    /// <param name="descriptionContains">Optional description contains filter (case-insensitive).</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="sortBy">Sort field: Date (default), Amount, or Description.</param>
+    /// <param name="sortDescending">Sort direction (default: true for descending).</param>
+    /// <param name="page">Page number (1-based, default: 1).</param>
+    /// <param name="pageSize">Page size (default: 50, max: 100).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A paged list of uncategorized transactions.</returns>
+    [HttpGet("uncategorized")]
+    [ProducesResponseType<UncategorizedTransactionPageDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUncategorizedAsync(
+        [FromQuery] DateOnly? startDate,
+        [FromQuery] DateOnly? endDate,
+        [FromQuery] decimal? minAmount,
+        [FromQuery] decimal? maxAmount,
+        [FromQuery] string? descriptionContains,
+        [FromQuery] Guid? accountId,
+        [FromQuery] string sortBy = "Date",
+        [FromQuery] bool sortDescending = true,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var filter = new UncategorizedTransactionFilterDto
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            MinAmount = minAmount,
+            MaxAmount = maxAmount,
+            DescriptionContains = descriptionContains,
+            AccountId = accountId,
+            SortBy = sortBy,
+            SortDescending = sortDescending,
+            Page = page,
+            PageSize = pageSize,
+        };
+
+        var result = await this._uncategorizedService.GetPagedAsync(filter, cancellationToken);
+
+        // Add pagination header
+        this.Response.Headers["X-Pagination-TotalCount"] = result.TotalCount.ToString();
+
+        return this.Ok(result);
+    }
+
+    /// <summary>
+    /// Bulk categorizes multiple transactions with the specified category.
+    /// </summary>
+    /// <param name="request">The bulk categorize request containing transaction IDs and category ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A response indicating success/failure counts and any errors.</returns>
+    [HttpPost("bulk-categorize")]
+    [ProducesResponseType<BulkCategorizeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> BulkCategorizeAsync(
+        [FromBody] BulkCategorizeRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.CategoryId == Guid.Empty)
+        {
+            return this.BadRequest("CategoryId is required.");
+        }
+
+        if (request.TransactionIds.Count == 0)
+        {
+            return this.BadRequest("At least one transaction ID is required.");
+        }
+
+        var result = await this._uncategorizedService.BulkCategorizeAsync(request, cancellationToken);
+        return this.Ok(result);
     }
 }
 
