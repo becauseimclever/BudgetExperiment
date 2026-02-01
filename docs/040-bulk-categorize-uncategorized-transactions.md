@@ -277,11 +277,12 @@ feat(domain): add paged uncategorized transaction query to repository
 **Effort:** ~1.5 hours
 
 **Tasks:**
-- [ ] Create `IUncategorizedTransactionService` interface
-- [ ] Create `UncategorizedTransactionService` implementation
-- [ ] Add `GetPagedAsync()` method that maps to DTOs
-- [ ] Add `BulkCategorizeAsync()` method with transaction and validation
-- [ ] Write unit tests with mocked repository
+- [x] Create `IUncategorizedTransactionService` interface
+- [x] Create `UncategorizedTransactionService` implementation
+- [x] Add `GetPagedAsync()` method that maps to DTOs
+- [x] Add `BulkCategorizeAsync()` method with transaction and validation
+- [x] Write unit tests with mocked repository (8 tests)
+- [x] Add DTOs to `BudgetExperiment.Contracts`
 
 **Commit:**
 ```
@@ -297,7 +298,7 @@ feat(application): add uncategorized transaction service with bulk categorize
 **Effort:** ~1 hour
 
 **Tasks:**
-- [ ] Add DTOs to `BudgetExperiment.Contracts`
+- [x] Add DTOs to `BudgetExperiment.Contracts` (completed in Phase 2)
 - [ ] Add endpoints to `TransactionsController` or create dedicated controller
 - [ ] Add input validation (page bounds, valid category ID)
 - [ ] Return pagination header (`X-Pagination-TotalCount`)
