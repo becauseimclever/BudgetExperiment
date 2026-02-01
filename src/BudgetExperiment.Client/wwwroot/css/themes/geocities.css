@@ -1,0 +1,120 @@
+/* ==========================================================================
+   GeoCities Retro Theme
+   Budget Experiment Design System
+   
+   Obnoxious 90s web aesthetic with neon colors, high contrast,
+   and nostalgic vibes from the early internet era.
+   ========================================================================== */
+
+[data-theme="geocities"] {
+  /* Backgrounds - Dark with neon highlights */
+  --color-background: #000033;     /* Deep space blue */
+  --color-surface: #000066;        /* Slightly lighter blue */
+  --color-surface-secondary: #000080;
+  --color-border: #00ffff;         /* Cyan border */
+  --color-border-subtle: #0099cc;
+
+  /* App Shell Colors - Hot magenta header */
+  --color-bg-secondary: #000033;
+  --color-bg-elevated: #000066;
+  --color-header-bg: #ff00ff;      /* Hot magenta */
+  --color-header-text: #ffff00;    /* Yellow text */
+  --color-header-text-hover: #00ffff;  /* Cyan hover */
+  --color-header-hover: rgba(0, 255, 255, 0.3);
+  --color-sidebar-bg: #330033;     /* Dark purple sidebar */
+  --color-sidebar-text: #00ff00;   /* Matrix green */
+  --color-sidebar-text-hover: #ffff00;
+
+  /* Text Colors - Bright on dark */
+  --color-text-primary: #00ff00;   /* Matrix green */
+  --color-text-secondary: #00ffff; /* Cyan */
+  --color-text-disabled: #669999;
+  --color-text-inverse: #000000;
+
+  /* Brand Colors - Hot magenta */
+  --color-brand-primary: #ff00ff;  /* Magenta */
+  --color-brand-primary-hover: #ff66ff;
+  --color-brand-primary-active: #cc00cc;
+  --color-brand-rgb: 255, 0, 255;
+
+  /* Semantic Colors - Neon everything */
+  --color-success: #00ff00;        /* Neon green */
+  --color-warning: #ffff00;        /* Neon yellow */
+  --color-warning-rgb: 255, 255, 0;
+  --color-error: #ff0000;          /* Neon red */
+  --color-info: #00ffff;           /* Cyan */
+
+  /* Warning alert colors - Retro style */
+  --color-warning-bg: #333300;
+  --color-warning-border: #ffff00;
+  --color-warning-text: #ffff00;
+
+  /* Transaction-Specific - Neon colors */
+  --color-income: #00ff00;         /* Neon green */
+  --color-expense: #ff0000;        /* Neon red */
+  --color-transfer: #00ffff;       /* Cyan */
+  --color-recurring: #ff00ff;      /* Magenta */
+  --color-recurring-rgb: 255, 0, 255;
+
+  /* Shadows - Neon glow effect */
+  --shadow-sm: 0 0 4px #00ffff;
+  --shadow-md: 0 0 8px #ff00ff;
+  --shadow-lg: 0 0 12px #00ff00;
+  --shadow-xl: 0 0 20px #ffff00;
+
+  /* Focus ring - Neon glow */
+  --focus-ring: 0 0 0 2px #000033,
+                0 0 0 4px #00ffff,
+                0 0 8px #00ffff;
+
+  /* Color scheme for native elements */
+  color-scheme: dark;
+
+  /* GeoCities font stack - Comic Sans glory */
+  --font-family-base: 'Comic Sans MS', 'Comic Neue', cursive, system-ui, sans-serif;
+}
+
+/* GeoCities-specific overrides */
+[data-theme="geocities"] button,
+[data-theme="geocities"] .btn {
+  border: 2px solid #00ffff;
+  text-shadow: 1px 1px 2px #000000;
+  box-shadow: 0 0 8px currentColor;
+}
+
+[data-theme="geocities"] button:hover,
+[data-theme="geocities"] .btn:hover {
+  animation: geocities-blink 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes geocities-blink {
+  from { box-shadow: 0 0 8px #ff00ff; }
+  to { box-shadow: 0 0 16px #00ffff; }
+}
+
+[data-theme="geocities"] h1,
+[data-theme="geocities"] h2,
+[data-theme="geocities"] h3 {
+  text-shadow: 2px 2px 0 #ff00ff, 4px 4px 0 #00ffff;
+}
+
+[data-theme="geocities"] a {
+  color: #ffff00;
+  text-decoration: underline;
+}
+
+[data-theme="geocities"] a:hover {
+  color: #ff00ff;
+  text-decoration: underline overline;
+}
+
+[data-theme="geocities"] .card {
+  border: 3px solid #00ffff;
+  box-shadow: 0 0 10px #ff00ff;
+}
+
+/* Under construction vibes */
+[data-theme="geocities"] .sidebar-nav a::before {
+  content: "★ ";
+  color: #ffff00;
+}

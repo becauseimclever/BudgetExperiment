@@ -1,0 +1,97 @@
+/* ==========================================================================
+   macOS Theme
+   Budget Experiment Design System
+   
+   Clean Apple aesthetic with subtle gradients, refined colors,
+   and system font stack inspired by macOS design language.
+   ========================================================================== */
+
+[data-theme="macos"] {
+  /* Backgrounds - Apple gray */
+  --color-background: #f5f5f7;     /* Apple light gray */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f0f0f2;
+  --color-border: #d2d2d7;
+  --color-border-subtle: #e5e5ea;
+
+  /* App Shell Colors - macOS window chrome */
+  --color-bg-secondary: #f5f5f7;
+  --color-bg-elevated: #ffffff;
+  --color-header-bg: #e8e8ed;      /* macOS toolbar gray */
+  --color-header-text: #1d1d1f;
+  --color-header-text-hover: #000000;
+  --color-header-hover: rgba(0, 0, 0, 0.06);
+  --color-sidebar-bg: #f5f5f7;
+  --color-sidebar-text: #1d1d1f;
+  --color-sidebar-text-hover: #007aff;
+
+  /* Text Colors - Apple typography */
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #86868b;
+  --color-text-disabled: #aeaeb2;
+  --color-text-inverse: #ffffff;
+
+  /* Brand Colors - Apple blue */
+  --color-brand-primary: #007aff;
+  --color-brand-primary-hover: #0066d6;
+  --color-brand-primary-active: #0055b3;
+  --color-brand-rgb: 0, 122, 255;
+
+  /* Semantic Colors - macOS system colors */
+  --color-success: #30d158;        /* Apple green */
+  --color-warning: #ff9f0a;        /* Apple orange/yellow */
+  --color-warning-rgb: 255, 159, 10;
+  --color-error: #ff3b30;          /* Apple red */
+  --color-info: #007aff;           /* Apple blue */
+
+  /* Warning alert colors */
+  --color-warning-bg: #fff8eb;
+  --color-warning-border: #ffcc80;
+  --color-warning-text: #996600;
+
+  /* Transaction-Specific - macOS colors */
+  --color-income: #30d158;         /* Apple green */
+  --color-expense: #ff3b30;        /* Apple red */
+  --color-transfer: #007aff;       /* Apple blue */
+  --color-recurring: #af52de;      /* Apple purple */
+  --color-recurring-rgb: 175, 82, 222;
+
+  /* Shadows - Subtle macOS-style */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  /* Focus ring - macOS blue ring */
+  --focus-ring: 0 0 0 3px rgba(0, 122, 255, 0.4);
+
+  /* Color scheme for native elements */
+  color-scheme: light;
+
+  /* macOS font stack */
+  --font-family-base: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+}
+
+/* macOS-specific overrides - Refined buttons */
+[data-theme="macos"] button,
+[data-theme="macos"] .btn {
+  border-radius: 6px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+[data-theme="macos"] .btn-primary {
+  background: linear-gradient(180deg, #007aff 0%, #0066d6 100%);
+}
+
+[data-theme="macos"] input,
+[data-theme="macos"] select,
+[data-theme="macos"] textarea {
+  border-radius: 6px;
+  border: 1px solid #d2d2d7;
+}
+
+[data-theme="macos"] .card {
+  border-radius: 12px;
+  border: 1px solid var(--color-border-subtle);
+}

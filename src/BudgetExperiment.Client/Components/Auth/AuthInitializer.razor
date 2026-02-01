@@ -1,0 +1,89 @@
+@* -------------------------------------------------------------------------
+   AuthInitializer.razor
+   ---------------------------------------------------------------------------
+   Resolves authentication state BEFORE rendering any child content.
+   Unauthenticated users are immediately redirected to Authentik with
+   forceLoad:true to avoid any Blazor flash. The branded loading overlay
+   from index.html remains visible until auth completes.
+
+   Usage: Wrap around app content in App.razor
+   <AuthInitializer>
+       <Router>...</Router>
+   </AuthInitializer>
+   ------------------------------------------------------------------------- *@
+
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+@if (_isAuthenticated)
+{
+    @ChildContent
+}
+@* Else: branded loading overlay remains visible from index.html *@
+
+@code {
+    /// <summary>
+    /// Gets or sets the child content to render once authenticated.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool _isAuthenticated;
+    private bool _hasCheckedAuth;
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        if (_hasCheckedAuth)
+        {
+            return;
+        }
+
+        _hasCheckedAuth = true;
+
+        // Skip auth check for authentication callback routes
+        if (IsAuthenticationRoute())
+        {
+            _isAuthenticated = true; // Let the route handle itself
+            await HideLoadingOverlayAsync();
+            return;
+        }
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _isAuthenticated = true;
+            await HideLoadingOverlayAsync();
+        }
+        else
+        {
+            // Immediately redirect to login - use forceLoad to avoid Blazor flash
+            var returnUrl = Uri.EscapeDataString(Navigation.Uri);
+            Navigation.NavigateTo($"authentication/login?returnUrl={returnUrl}", forceLoad: true);
+
+            // Don't set _isAuthenticated - nothing will render, overlay stays visible
+        }
+    }
+
+    private bool IsAuthenticationRoute()
+    {
+        var uri = Navigation.Uri;
+        return uri.Contains("/authentication/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task HideLoadingOverlayAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("hideLoadingOverlay");
+        }
+        catch (JSException)
+        {
+            // Ignore JS interop errors during prerendering or if function doesn't exist
+        }
+    }
+}

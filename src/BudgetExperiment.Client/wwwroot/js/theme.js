@@ -69,7 +69,12 @@ function updateMetaThemeColor(theme) {
     const colors = {
         'light': '#ffffff',
         'dark': '#1a1a2e',
-        'vscode-dark': '#1e1e1e'
+        'vscode-dark': '#1e1e1e',
+        'monopoly': '#c1e4da',
+        'win95': '#000080',
+        'macos': '#e8e8ed',
+        'geocities': '#ff00ff',
+        'crayons': '#1f75fe'
     };
     
     metaThemeColor.content = colors[theme] || colors['light'];

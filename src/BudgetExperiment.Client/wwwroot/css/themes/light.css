@@ -15,6 +15,12 @@
   --color-border: #d2d0ce;
   --color-border-subtle: #edebe9;
 
+  /* App Shell Colors - keep dark header for contrast */
+  --color-header-bg: #1e293b;
+  --color-header-text: #ffffff;
+  --color-header-text-hover: #e2e8f0;
+  --color-header-hover: rgba(255, 255, 255, 0.1);
+
   /* Text Colors */
   --color-text-primary: #323130;
   --color-text-secondary: #605e5c;

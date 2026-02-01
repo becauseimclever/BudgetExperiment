@@ -1,0 +1,97 @@
+/* ==========================================================================
+   Windows 95 Theme
+   Budget Experiment Design System
+   
+   Classic Windows 95/98 aesthetic with beveled 3D elements,
+   system gray backgrounds, and navy blue accents.
+   ========================================================================== */
+
+[data-theme="win95"] {
+  /* Backgrounds - Classic Windows gray */
+  --color-background: #c0c0c0;     /* Classic Windows gray */
+  --color-surface: #ffffff;        /* White for content areas */
+  --color-surface-secondary: #dfdfdf;  /* Slightly off-white */
+  --color-border: #808080;
+  --color-border-subtle: #c0c0c0;
+
+  /* App Shell Colors - Navy blue title bar */
+  --color-bg-secondary: #c0c0c0;
+  --color-bg-elevated: #ffffff;
+  --color-header-bg: #000080;      /* Classic navy blue title bar */
+  --color-header-text: #ffffff;
+  --color-header-text-hover: #ffff00;  /* Yellow highlight like active title */
+  --color-header-hover: rgba(255, 255, 255, 0.2);
+  --color-sidebar-bg: #c0c0c0;     /* Gray sidebar */
+  --color-sidebar-text: #000000;
+  --color-sidebar-text-hover: #000080;
+
+  /* Text Colors */
+  --color-text-primary: #000000;
+  --color-text-secondary: #404040;
+  --color-text-disabled: #808080;
+  --color-text-inverse: #ffffff;
+
+  /* Brand Colors - Windows navy blue */
+  --color-brand-primary: #000080;
+  --color-brand-primary-hover: #0000aa;
+  --color-brand-primary-active: #000066;
+  --color-brand-rgb: 0, 0, 128;
+
+  /* Semantic Colors - Classic Windows colors */
+  --color-success: #008000;        /* Classic green */
+  --color-warning: #ffff00;        /* Yellow */
+  --color-warning-rgb: 255, 255, 0;
+  --color-error: #ff0000;          /* Red */
+  --color-info: #000080;           /* Navy */
+
+  /* Warning alert colors */
+  --color-warning-bg: #ffffcc;
+  --color-warning-border: #cccc00;
+  --color-warning-text: #666600;
+
+  /* Transaction-Specific */
+  --color-income: #008000;         /* Green */
+  --color-expense: #ff0000;        /* Red */
+  --color-transfer: #000080;       /* Navy */
+  --color-recurring: #800080;      /* Purple */
+  --color-recurring-rgb: 128, 0, 128;
+
+  /* Shadows - 3D beveled effect */
+  --shadow-sm: inset -1px -1px 0 #000000, inset 1px 1px 0 #ffffff;
+  --shadow-md: inset -2px -2px 0 #808080, inset 2px 2px 0 #ffffff, 
+               inset -1px -1px 0 #000000, inset 1px 1px 0 #dfdfdf;
+  --shadow-lg: 2px 2px 0 #000000;
+  --shadow-xl: 4px 4px 0 #000000;
+
+  /* Focus ring - Dotted Windows style */
+  --focus-ring: 0 0 0 1px #000000;
+
+  /* Color scheme for native elements */
+  color-scheme: light;
+
+  /* Windows 95 specific - Font stack */
+  --font-family-base: 'MS Sans Serif', 'Tahoma', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Windows 95 specific overrides */
+[data-theme="win95"] button,
+[data-theme="win95"] .btn {
+  border: 2px outset #dfdfdf;
+  background: #c0c0c0;
+}
+
+[data-theme="win95"] button:active,
+[data-theme="win95"] .btn:active {
+  border-style: inset;
+}
+
+[data-theme="win95"] input,
+[data-theme="win95"] select,
+[data-theme="win95"] textarea {
+  border: 2px inset #808080;
+}
+
+[data-theme="win95"] .card {
+  border: 2px outset #dfdfdf;
+  box-shadow: none;
+}

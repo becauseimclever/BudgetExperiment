@@ -13,6 +13,10 @@
 @import "themes/dark.css";
 @import "themes/vscode-dark.css";
 @import "themes/monopoly.css";
+@import "themes/win95.css";
+@import "themes/macos.css";
+@import "themes/geocities.css";
+@import "themes/crayons.css";
 
 /* Layout System */
 @import "design-system/layout.css";

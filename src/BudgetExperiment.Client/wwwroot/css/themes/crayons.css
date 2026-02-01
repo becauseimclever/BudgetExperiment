@@ -1,0 +1,131 @@
+/* ==========================================================================
+   Crayon Box Theme
+   Budget Experiment Design System
+   
+   Bold Crayola-inspired primary colors, cheerful yellows and greens,
+   playful aesthetic like opening a fresh box of crayons.
+   ========================================================================== */
+
+[data-theme="crayons"] {
+  /* Backgrounds - Cream paper like drawing paper */
+  --color-background: #fef9e7;     /* Cream/paper white */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #fffbf0;
+  --color-border: #1cac78;         /* Crayola Green */
+  --color-border-subtle: #c9e4c5;
+
+  /* App Shell Colors - Bold Crayola blue header, yellow sidebar */
+  --color-bg-secondary: #fef9e7;
+  --color-bg-elevated: #ffffff;
+  --color-header-bg: #1f75fe;      /* Crayola Blue */
+  --color-header-text: #ffffff;
+  --color-header-text-hover: #fce883;  /* Crayola Yellow */
+  --color-header-hover: rgba(255, 255, 255, 0.2);
+  --color-sidebar-bg: #fce883;     /* Classic yellow box color */
+  --color-sidebar-text: #1f75fe;   /* Crayola Blue */
+  --color-sidebar-text-hover: #ee204d;  /* Crayola Red */
+
+  /* Text Colors - Readable on cream */
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #4a4a5e;
+  --color-text-disabled: #9999aa;
+  --color-text-inverse: #ffffff;
+
+  /* Brand Colors - Crayola Blue */
+  --color-brand-primary: #1f75fe;
+  --color-brand-primary-hover: #4d8eff;
+  --color-brand-primary-active: #0057d4;
+  --color-brand-rgb: 31, 117, 254;
+
+  /* Semantic Colors - Classic Crayola colors */
+  --color-success: #1cac78;        /* Crayola Green */
+  --color-warning: #fce883;        /* Crayola Yellow */
+  --color-warning-rgb: 252, 232, 131;
+  --color-error: #ee204d;          /* Crayola Red */
+  --color-info: #1f75fe;           /* Crayola Blue */
+
+  /* Warning alert colors */
+  --color-warning-bg: #fffde7;
+  --color-warning-border: #fce883;
+  --color-warning-text: #7a6600;
+
+  /* Transaction-Specific - Crayola palette */
+  --color-income: #1cac78;         /* Crayola Green */
+  --color-expense: #ee204d;        /* Crayola Red */
+  --color-transfer: #1f75fe;       /* Crayola Blue */
+  --color-recurring: #926eae;      /* Crayola Purple/Violet */
+  --color-recurring-rgb: 146, 110, 174;
+
+  /* Extended Crayola palette for accents */
+  --color-crayon-orange: #ff7538;
+  --color-crayon-yellow-orange: #ffae42;
+  --color-crayon-carnation-pink: #ffaacc;
+  --color-crayon-violet: #926eae;
+  --color-crayon-cerulean: #1dacd6;
+
+  /* Shadows - Playful, slightly colored */
+  --shadow-sm: 0 1px 3px rgba(31, 117, 254, 0.1);
+  --shadow-md: 0 2px 6px rgba(31, 117, 254, 0.15);
+  --shadow-lg: 0 4px 12px rgba(31, 117, 254, 0.2);
+  --shadow-xl: 0 8px 24px rgba(31, 117, 254, 0.25);
+
+  /* Focus ring - Crayola blue */
+  --focus-ring: 0 0 0 2px var(--color-background),
+                0 0 0 4px #1f75fe;
+
+  /* Color scheme for native elements */
+  color-scheme: light;
+
+  /* Playful font stack */
+  --font-family-base: 'Comic Neue', 'Nunito', 'Patrick Hand', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Crayon Box specific overrides - Playful, rounded */
+[data-theme="crayons"] button,
+[data-theme="crayons"] .btn {
+  border-radius: 20px;
+  font-weight: 600;
+  border: 2px solid currentColor;
+}
+
+[data-theme="crayons"] .btn-primary {
+  background: linear-gradient(135deg, #1f75fe 0%, #1dacd6 100%);
+  border-color: #1f75fe;
+}
+
+[data-theme="crayons"] .btn-success {
+  background: linear-gradient(135deg, #1cac78 0%, #17a2b8 100%);
+}
+
+[data-theme="crayons"] .btn-danger {
+  background: linear-gradient(135deg, #ee204d 0%, #ff7538 100%);
+}
+
+[data-theme="crayons"] input,
+[data-theme="crayons"] select,
+[data-theme="crayons"] textarea {
+  border-radius: 12px;
+  border: 2px solid #1cac78;
+}
+
+[data-theme="crayons"] .card {
+  border-radius: 16px;
+  border: 3px solid #1f75fe;
+}
+
+/* Colorful headings */
+[data-theme="crayons"] h1 { color: #1f75fe; }
+[data-theme="crayons"] h2 { color: #ee204d; }
+[data-theme="crayons"] h3 { color: #1cac78; }
+[data-theme="crayons"] h4 { color: #ff7538; }
+[data-theme="crayons"] h5 { color: #926eae; }
+
+/* Fun sidebar styling */
+[data-theme="crayons"] .sidebar-nav a {
+  border-radius: 20px;
+  margin: 4px 8px;
+}
+
+[data-theme="crayons"] .sidebar-nav a:hover {
+  background: rgba(31, 117, 254, 0.15);
+}

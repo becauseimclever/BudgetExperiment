@@ -50,6 +50,10 @@ public sealed class ThemeService : IAsyncDisposable
         new("dark", "Dark", "moon"),
         new("vscode-dark", "VS Code", "code"),
         new("monopoly", "Monopoly", "dice"),
+        new("win95", "Windows 95", "monitor"),
+        new("macos", "macOS", "laptop"),
+        new("geocities", "GeoCities", "sparkles"),
+        new("crayons", "Crayon Box", "palette"),
     };
 
     /// <summary>
@@ -132,6 +136,19 @@ public sealed class ThemeService : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Gets the themed icon name for the specified standard icon name.
+    /// Uses the current theme to resolve the appropriate icon.
+    /// </summary>
+    /// <param name="iconName">The standard icon name.</param>
+    /// <returns>
+    /// The themed icon name if one exists for the current theme, otherwise the original icon name.
+    /// </returns>
+    public string GetThemedIcon(string iconName)
+    {
+        return ThemedIconRegistry.GetThemedIcon(this.currentTheme, iconName);
+    }
+
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
@@ -156,11 +173,3 @@ public sealed class ThemeService : IAsyncDisposable
         }
     }
 }
-
-/// <summary>
-/// Represents a theme option for display.
-/// </summary>
-/// <param name="Value">The theme value.</param>
-/// <param name="Label">The display label.</param>
-/// <param name="Icon">The icon name.</param>
-public sealed record ThemeOption(string Value, string Label, string Icon);

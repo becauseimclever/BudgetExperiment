@@ -1,41 +1,34 @@
-﻿<CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(App).Assembly">
-        <Found Context="routeData">
-            @if (IsAuthenticationRoute(routeData))
-            {
-                <RouteView RouteData="@routeData" />
-            }
-            else
-            {
-                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                    <NotAuthorized>
-                        @if (context.User.Identity?.IsAuthenticated != true)
-                        {
-                            <RedirectToLogin />
-                        }
-                        else
-                        {
+﻿@using BudgetExperiment.Client.Components.Auth
+
+<CascadingAuthenticationState>
+    <AuthInitializer>
+        <Router AppAssembly="@typeof(App).Assembly">
+            <Found Context="routeData">
+                @if (IsAuthenticationRoute(routeData))
+                {
+                    <RouteView RouteData="@routeData" />
+                }
+                else
+                {
+                    <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                        <NotAuthorized>
+                            @* User is authenticated but not authorized for this resource *@
                             <LayoutView Layout="@typeof(MainLayout)">
                                 <p role="alert">You are not authorized to access this resource.</p>
                             </LayoutView>
-                        }
-                    </NotAuthorized>
-                    <Authorizing>
-                        <div class="auth-loading">
-                            <p>Loading...</p>
-                        </div>
-                    </Authorizing>
-                </AuthorizeRouteView>
-            }
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-        </Found>
-        <NotFound>
-            <PageTitle>Not found</PageTitle>
-            <LayoutView Layout="@typeof(MainLayout)">
-                <p role="alert">Sorry, there's nothing at this address.</p>
-            </LayoutView>
-        </NotFound>
-    </Router>
+                        </NotAuthorized>
+                    </AuthorizeRouteView>
+                }
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </Found>
+            <NotFound>
+                <PageTitle>Not found</PageTitle>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <p role="alert">Sorry, there's nothing at this address.</p>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </AuthInitializer>
 </CascadingAuthenticationState>
 
 @code {

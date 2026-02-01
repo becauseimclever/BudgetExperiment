@@ -5,72 +5,56 @@
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
 @using BudgetExperiment.Client.Services
-@using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthStateProvider
 @inject IAiAvailabilityService AiAvailability
 @inject IJSRuntime JSRuntime
 
 @implements IDisposable
 
-<AuthorizeView>
-    <Authorized>
-        <div class="app-shell @(chatOpen ? "chat-open" : "")">
-            <header class="app-top-header">
-                <button class="app-menu-toggle" @onclick="ToggleNavigation" title="@(navCollapsed ? "Expand menu" : "Collapse menu")">
-                    <Icon Name="menu" Size="24" />
-                </button>
-                <a href="/" class="app-brand">Budget Experiment</a>
-                <div class="app-header-spacer"></div>
-                @if (AiAvailability.IsEnabled)
+@* AuthInitializer guarantees user is authenticated before MainLayout renders *@
+<div class="app-shell @(chatOpen ? "chat-open" : "")">
+    <header class="app-top-header">
+        <button class="app-menu-toggle" @onclick="ToggleNavigation" title="@(navCollapsed ? "Expand menu" : "Collapse menu")">
+            <Icon Name="menu" Size="24" />
+        </button>
+        <a href="/" class="app-brand">Budget Experiment</a>
+        <div class="app-header-spacer"></div>
+        @if (AiAvailability.IsEnabled)
+        {
+            <button class="btn btn-ghost chat-toggle-btn @(AiAvailability.State == AiAvailabilityState.Unavailable ? "ai-unavailable" : "")"
+                    @onclick="ToggleChat"
+                    title="@GetChatButtonTooltip()">
+                <Icon Name="message-circle" Size="20" />
+                @if (AiAvailability.State == AiAvailabilityState.Unavailable)
                 {
-                    <button class="btn btn-ghost chat-toggle-btn @(AiAvailability.State == AiAvailabilityState.Unavailable ? "ai-unavailable" : "")"
-                            @onclick="ToggleChat"
-                            title="@GetChatButtonTooltip()">
-                        <Icon Name="message-circle" Size="20" />
-                        @if (AiAvailability.State == AiAvailabilityState.Unavailable)
-                        {
-                            <span class="ai-warning-badge">
-                                <Icon Name="alert-triangle" Size="12" />
-                            </span>
-                        }
-                        @if (!chatOpen)
-                        {
-                            <span class="chat-toggle-label">AI Assistant</span>
-                        }
-                    </button>
+                    <span class="ai-warning-badge">
+                        <Icon Name="alert-triangle" Size="12" />
+                    </span>
                 }
-                <ThemeToggle />
-                <UserProfile />
-            </header>
-
-            <div class="app-content-wrapper">
-                <aside class="app-sidebar @(navCollapsed ? "collapsed" : "expanded")">
-                    <NavMenu IsCollapsed="@navCollapsed" />
-                </aside>
-
-                <main class="app-main-content">
-                    @Body
-                </main>
-
-                @if (AiAvailability.IsEnabled)
+                @if (!chatOpen)
                 {
-                    <ChatPanel IsOpen="@chatOpen" OnToggle="ToggleChat" />
+                    <span class="chat-toggle-label">AI Assistant</span>
                 }
-            </div>
-        </div>
-    </Authorized>
-    <Authorizing>
-        @* Minimal loading state while checking auth - no API calls *@
-        <div class="auth-loading-container">
-            <div class="auth-loading-spinner"></div>
-            <p>Checking authentication...</p>
-        </div>
-    </Authorizing>
-    <NotAuthorized>
-        @* This shouldn't normally show - AuthorizeRouteView handles redirect *@
-        @Body
-    </NotAuthorized>
-</AuthorizeView>
+            </button>
+        }
+        <ThemeToggle />
+        <UserProfile />
+    </header>
+
+    <div class="app-content-wrapper">
+        <aside class="app-sidebar @(navCollapsed ? "collapsed" : "expanded")">
+            <NavMenu IsCollapsed="@navCollapsed" />
+        </aside>
+
+        <main class="app-main-content">
+            @Body
+        </main>
+
+        @if (AiAvailability.IsEnabled)
+        {
+            <ChatPanel IsOpen="@chatOpen" OnToggle="ToggleChat" />
+        }
+    </div>
+</div>
 
 @code {
     private const string NavCollapsedStorageKey = "budget-experiment-nav-collapsed";

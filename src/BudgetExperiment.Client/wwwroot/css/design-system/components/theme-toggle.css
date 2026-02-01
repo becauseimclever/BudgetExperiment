@@ -107,13 +107,13 @@
 
 /* Header-specific styling (when in top bar) */
 .top-header .theme-toggle-button {
-  color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--color-header-text);
+  border-color: var(--color-header-hover);
 }
 
 .top-header .theme-toggle-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--color-header-hover);
+  color: var(--color-header-text-hover);
 }
 
 /* Mobile adjustments */

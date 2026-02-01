@@ -4,6 +4,26 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Features
+
+- **client:** Zero-flash authentication flow - no more "Checking authentication" or "Redirecting to login" flashes (Feature 052)
+- **client:** AuthInitializer component resolves auth state before rendering any UI
+- **client:** Branded loading overlay in index.html with theme support and reduced-motion
+- **client:** Preload hints for critical CSS/JS assets (app.css, blazor.webassembly.js)
+- **client:** New themes: Windows 95, macOS, GeoCities, Crayon Box
+- **client:** ThemedIconRegistry for theme-specific icon customization
+
+### Documentation
+
+- **docs:** Add THEMING.md guide for creating and customizing themes
+- **docs:** Add Feature 059 - Performance E2E Tests (deferred from 052)
+- **docs:** Add Feature 060 - Silent Token Refresh (deferred from 052)
+
+### Refactoring
+
+- **client:** Simplify MainLayout by removing redundant AuthorizeView wrapper
+- **client:** Remove unused Bootstrap library (~1MB savings)
+
 ## [3.10.1] - 2026-02-01
 
 ### Documentation

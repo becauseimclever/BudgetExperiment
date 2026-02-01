@@ -6,9 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Budget Experiment</title>
     <base href="/" />
+    
+    <!-- Preconnect to auth provider for faster redirects -->
+    <link rel="preconnect" href="https://authentik.becauseimclever.com" crossorigin />
+    
+    <!-- Preload critical assets for faster FCP -->
+    <link rel="preload" href="css/app.css" as="style" />
+    <link rel="preload" href="_framework/blazor.webassembly.js" as="script" />
+    
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="BudgetExperiment.Client.styles.css" rel="stylesheet" />
+    
     <!-- Inline theme initialization to prevent FOUC -->
     <script>
         (function() {
@@ -20,16 +29,86 @@
             document.documentElement.setAttribute('data-theme', resolved);
         })();
     </script>
+    
+    <!-- Inline critical loading styles to avoid FOUC -->
+    <style>
+        .app-loading-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            background-color: var(--color-background, #faf9f8);
+            z-index: 9999;
+            transition: opacity 0.2s ease-out;
+        }
+        .app-loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .app-loading-brand {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--color-brand-primary, #0078d4);
+            margin: 0;
+        }
+        .app-loading-spinner {
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+        }
+        .app-loading-spinner circle {
+            fill: none;
+            stroke: var(--color-brand-primary, #0078d4);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 80, 200;
+            stroke-dashoffset: 0;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        /* Hide app content until ready */
+        #app:not(.ready) {
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
+        }
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .app-loading-spinner { animation-duration: 2s; }
+            .app-loading-overlay { transition: none; }
+        }
+        /* Screen reader only text */
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
+    <!-- Branded loading overlay - persists until auth is resolved -->
+    <div id="app-loading-overlay" class="app-loading-overlay" role="status" aria-live="polite">
+        <h1 class="app-loading-brand">Budget Experiment</h1>
+        <svg class="app-loading-spinner" viewBox="0 0 50 50" aria-hidden="true">
+            <circle cx="25" cy="25" r="20"></circle>
         </svg>
-        <div class="loading-progress-text"></div>
+        <span class="visually-hidden">Loading application...</span>
     </div>
+
+    <!-- App content - hidden until auth is resolved -->
+    <div id="app"></div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
@@ -39,15 +118,58 @@
     <script src="_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>
+        // Hide loading overlay and show app content (called when auth is resolved)
+        window.hideLoadingOverlay = function() {
+            const overlay = document.getElementById('app-loading-overlay');
+            const app = document.getElementById('app');
+            
+            if (overlay) {
+                overlay.classList.add('fade-out');
+                // Remove from DOM after transition
+                setTimeout(function() { 
+                    if (overlay.parentNode) {
+                        overlay.parentNode.removeChild(overlay);
+                    }
+                }, 200);
+            }
+            
+            if (app) {
+                app.classList.add('ready');
+            }
+        };
+        
+        // Show loading overlay (for re-authentication scenarios)
+        window.showLoadingOverlay = function() {
+            // Only recreate if not already present
+            if (document.getElementById('app-loading-overlay')) {
+                return;
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'app-loading-overlay';
+            overlay.className = 'app-loading-overlay';
+            overlay.setAttribute('role', 'status');
+            overlay.setAttribute('aria-live', 'polite');
+            overlay.innerHTML = '<h1 class="app-loading-brand">Budget Experiment</h1>' +
+                '<svg class="app-loading-spinner" viewBox="0 0 50 50" aria-hidden="true">' +
+                '<circle cx="25" cy="25" r="20"></circle></svg>';
+            document.body.insertBefore(overlay, document.body.firstChild);
+            
+            const app = document.getElementById('app');
+            if (app) {
+                app.classList.remove('ready');
+            }
+        };
+        
         window.focusElementByTabIndex = function (tabIndex) {
-            const element = document.querySelector(`[tabindex="${tabIndex}"]`);
+            const element = document.querySelector('[tabindex="' + tabIndex + '"]');
             if (element) {
                 element.focus();
             }
         };
 
         window.focusElement = function (elementId) {
-            setTimeout(() => {
+            setTimeout(function() {
                 const element = document.getElementById(elementId);
                 if (element) {
                     element.focus();
