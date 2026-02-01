@@ -1,5 +1,5 @@
 # Feature 059: Performance E2E Tests with Core Web Vitals
-> **Status:** Planning
+> **Status:** In Progress (Phase 1-3 Complete)
 > **Priority:** Medium
 > **Deferred From:** Feature 052
 
@@ -33,9 +33,9 @@ This feature adds automated performance testing to the E2E test suite using Play
 **So that** I don't accidentally regress the user experience
 
 **Acceptance Criteria:**
-- [ ] Playwright test navigates to app and captures all visible text during load
-- [ ] Test fails if "Checking authentication", "Loading...", or "Redirecting to login" appears
-- [ ] Test passes for both authenticated and unauthenticated flows
+- [x] Playwright test navigates to app and captures all visible text during load
+- [x] Test fails if "Checking authentication", "Loading...", or "Redirecting to login" appears
+- [x] Test passes for both authenticated and unauthenticated flows
 
 ### US-059-002: Core Web Vitals Capture
 **As a** developer  
@@ -43,11 +43,11 @@ This feature adds automated performance testing to the E2E test suite using Play
 **So that** I can track performance over time
 
 **Acceptance Criteria:**
-- [ ] Playwright tests capture First Contentful Paint (FCP)
-- [ ] Playwright tests capture Largest Contentful Paint (LCP)
-- [ ] Playwright tests capture Time to Interactive (TTI)
-- [ ] Playwright tests capture Cumulative Layout Shift (CLS)
-- [ ] Metrics are logged to CI output
+- [x] Playwright tests capture First Contentful Paint (FCP)
+- [x] Playwright tests capture Largest Contentful Paint (LCP)
+- [x] Playwright tests capture Time to Interactive (TTI)
+- [x] Playwright tests capture Cumulative Layout Shift (CLS)
+- [x] Metrics are logged to CI output
 
 ### US-059-003: Performance Threshold Enforcement
 **As a** maintainer  
@@ -55,11 +55,11 @@ This feature adds automated performance testing to the E2E test suite using Play
 **So that** regressions are caught before release
 
 **Acceptance Criteria:**
-- [ ] FCP threshold: < 1.5s (warning at 1.2s)
-- [ ] LCP threshold: < 2.5s (warning at 2.0s)
-- [ ] TTI threshold: < 3.0s (warning at 2.5s)
-- [ ] CLS threshold: < 0.1
-- [ ] Tests fail if thresholds exceeded
+- [x] FCP threshold: < 1.5s (warning at 1.0s)
+- [x] LCP threshold: < 2.5s (warning at 2.0s)
+- [x] TTI threshold: < 3.0s (warning at 2.5s)
+- [x] CLS threshold: < 0.1 (warning at 0.05)
+- [x] Tests fail if thresholds exceeded
 
 ---
 
@@ -143,9 +143,9 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 **Objective:** Create utilities for capturing Core Web Vitals
 
 **Tasks:**
-- [ ] Create `PerformanceHelper.cs` with metrics capture methods
-- [ ] Create `PerformanceMetrics` record type
-- [ ] Add threshold constants
+- [x] Create `PerformanceHelper.cs` with metrics capture methods
+- [x] Create `PerformanceMetrics` record type
+- [x] Add threshold constants (`PerformanceThresholds.cs`)
 - [ ] Write unit tests for threshold logic
 
 ### Phase 2: Zero-Flash Auth Tests
@@ -153,20 +153,20 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 **Objective:** Verify no auth flash messages appear
 
 **Tasks:**
-- [ ] Create `ZeroFlashAuthTests.cs`
-- [ ] Test unauthenticated user flow (redirect to Authentik)
-- [ ] Test authenticated user flow (direct to content)
-- [ ] Verify branded loading overlay is visible during load
+- [x] Create `ZeroFlashAuthTests.cs`
+- [x] Test unauthenticated user flow (redirect to Authentik)
+- [x] Test authenticated user flow (direct to content)
+- [x] Verify branded loading overlay is visible during load
 
 ### Phase 3: Core Web Vitals Tests
 
 **Objective:** Capture and validate Core Web Vitals
 
 **Tasks:**
-- [ ] Create `PerformanceTests.cs`
-- [ ] Capture FCP, LCP, TTI, CLS
-- [ ] Assert against thresholds
-- [ ] Log metrics to console for CI visibility
+- [x] Create `PerformanceTests.cs`
+- [x] Capture FCP, LCP, TTI, CLS
+- [x] Assert against thresholds
+- [x] Log metrics to console for CI visibility
 
 ### Phase 4: CI Integration
 
@@ -205,3 +205,4 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 | Date | Author | Description |
 |------|--------|-------------|
 | 2026-02-01 | AI | Created feature doc (deferred from Feature 052) |
+| 2026-02-01 | AI | Implemented Phase 1-3: PerformanceHelper, ZeroFlashAuthTests, PerformanceTests |
