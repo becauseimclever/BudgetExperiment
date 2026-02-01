@@ -4,6 +4,17 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### CI/CD
+
+- **ci:** Optimize CI/CD pipeline with parallel matrix Docker builds (Feature 042)
+- **ci:** Add build-and-test job running 1623 tests with NuGet caching
+- **ci:** Add Dockerfile.prebuilt for pre-compiled artifact Docker builds
+- **ci:** Use native `ubuntu-24.04-arm` runner for arm64 builds (no QEMU)
+- **ci:** Parallel amd64/arm64 Docker builds with manifest merge
+- **ci:** Tag strategy: `preview` on main branch, `latest` only on releases
+- **ci:** Auto-cancel in-progress workflows on new pushes
+- **ci:** TRX test result reporting with dorny/test-reporter
+
 ## [3.8.5] - 2026-01-31
 
 ### Bug Fixes

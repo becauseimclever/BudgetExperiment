@@ -1,5 +1,5 @@
 # Feature 042: Optimize CI/CD Pipeline Speed
-> **Status:** � In Progress
+> **Status:** ✅ Completed (2026-02-01)
 
 ## Overview
 
@@ -20,6 +20,18 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 | **Parallelism** | ❌ Single sequential job | No parallel jobs |
 | **PR vs Main** | Only pushes on non-PR | Correct, but still builds multi-arch on PR |
 | **Concurrency** | ❌ No cancellation | Old runs not cancelled on new pushes |
+
+### Final Implemented State (2026-02-01)
+
+| Area | Final State | Improvement |
+|------|-------------|-------------|
+| **Tests** | ✅ 1623 tests run in CI | Full test coverage with TRX reporting |
+| **Build** | ✅ Separate build-and-test job | .NET publish before Docker |
+| **Docker** | ✅ Prebuilt Dockerfile | Uses pre-compiled artifacts |
+| **Multi-arch** | ✅ Native runners (amd64 + arm64) | No QEMU emulation |
+| **Parallelism** | ✅ 3-job pipeline with matrix | Build → parallel Docker builds → merge |
+| **Tags** | ✅ `latest` on releases, `preview` on main | Clear versioning strategy |
+| **Concurrency** | ✅ Auto-cancel in-progress | New pushes cancel old workflows |
 
 ### Target State
 
@@ -77,19 +89,36 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 │                    On: push/PR to main                       │
 └─────────────────────────────────────────────────────────────┘
                               │
+                              ▼
+                ┌───────────────────────┐
+                │  Job: build-and-test  │
+                │  ─────────────────────│
+                │  • NuGet cache        │
+                │  • dotnet build       │
+                │  • dotnet test (1623) │
+                │  • dotnet publish     │
+                │  • Upload artifacts   │
+                └───────────────────────┘
+                              │
         ┌─────────────────────┴─────────────────────┐
         ▼                                           ▼
 ┌───────────────────┐                    ┌───────────────────┐
-│  Job: build-test  │                    │  Job: docker      │
-│  ─────────────────│                    │  (needs: build)   │
-│  • Restore+Cache  │                    │  ─────────────────│
-│  • Build solution │                    │  • Single arch on │
-│  • Run all tests  │                    │    PR (amd64)     │
-│    (parallel)     │                    │  • Multi-arch on  │
-│  • Upload test    │                    │    main/tags      │
-│    results        │                    │  • Push only on   │
-└───────────────────┘                    │    main/tags      │
-                                         └───────────────────┘
+│  Job: docker-build│                    │  Job: docker-build│
+│  (amd64)          │                    │  (arm64)          │
+│  ─────────────────│                    │  ─────────────────│
+│  • ubuntu-latest  │                    │  • ubuntu-24.04-  │
+│  • Native build   │                    │    arm (native)   │
+│  • Push by digest │                    │  • Push by digest │
+└───────────────────┘                    └───────────────────┘
+                              │
+                              ▼
+                ┌───────────────────────┐
+                │  Job: docker-merge    │
+                │  ─────────────────────│
+                │  • Create manifest    │
+                │  • Tag: preview/latest│
+                │  • Push to ghcr.io    │
+                └───────────────────────┘
 ```
 
 ### Key Optimizations
@@ -99,9 +128,12 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 | **Add test job** | Catch bugs in CI before merge |
 | **NuGet cache** | Skip restore if lockfile unchanged |
 | **Parallel test execution** | Run test projects concurrently |
-| **Conditional multi-arch** | PRs: amd64 only (~50% faster). Main/tags: full multi-arch |
+| **Native ARM64 runners** | `ubuntu-24.04-arm` eliminates QEMU emulation |
+| **Matrix Docker builds** | amd64 and arm64 build in parallel |
+| **Prebuilt Dockerfile** | Docker copies pre-compiled artifacts, no in-container build |
 | **Cancel in-progress** | New pushes cancel old workflows |
-| **Split jobs** | Build+test and Docker run in parallel on main |
+| **Split jobs** | build-and-test → docker-build (matrix) → docker-merge |
+| **Tag strategy** | `preview` on main, `latest` only on version tags |
 
 ### Architecture Changes
 
@@ -174,6 +206,26 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 
 ---
 
+### Phase 4: Native ARM64 Runners & Matrix Builds ✅
+
+**Objective:** Eliminate QEMU emulation and parallelize Docker builds
+
+**Tasks:**
+- [x] Create `Dockerfile.prebuilt` for pre-compiled artifact builds
+- [x] Implement matrix strategy for parallel amd64/arm64 builds
+- [x] Use native `ubuntu-24.04-arm` runner for arm64
+- [x] Remove QEMU setup step
+- [x] Add docker-merge job to create multi-arch manifest
+- [x] Implement tag strategy: `preview` on main, `latest` on releases
+
+**Commits:**
+- ci: restructure workflow with parallel Docker matrix builds
+- ci: add Dockerfile.prebuilt for pre-compiled builds
+- ci: tag latest only on releases, preview on main
+- ci: lowercase image name for Docker registry
+- ci: use native arm64 runners, remove QEMU
+
+---
 
 ### Phase 5 (Optional): Post-deployment E2E tests
 
@@ -259,5 +311,6 @@ The current CI/CD pipeline takes approximately 20 minutes to complete, which slo
 
 | Date | Change | Author |
 |------|--------|--------|
-| 2026-01-31 | Implemented workflow optimizations | @github-copilot |
+| 2026-02-01 | Feature completed: native runners, matrix builds, tag strategy | @github-copilot |
+| 2026-01-31 | Implemented workflow optimizations, test fixes | @github-copilot |
 | 2026-01-26 | Initial draft | @github-copilot |
