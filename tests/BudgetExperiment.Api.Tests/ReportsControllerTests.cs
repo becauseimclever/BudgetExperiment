@@ -144,13 +144,14 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetMonthlyCategoryReport_Separates_Income_FromExpenses()
     {
         // Arrange - create account and categories
+        // Use a future date (December 2028) to avoid conflicts with seed data
         var accountDto = new AccountCreateDto
         {
             Name = "Income Test Account",
             Type = "Checking",
             InitialBalance = 0m,
             InitialBalanceCurrency = "USD",
-            InitialBalanceDate = new DateOnly(2026, 2, 1),
+            InitialBalanceDate = new DateOnly(2028, 12, 1),
         };
         var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
@@ -163,12 +164,12 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
         var expenseCategoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", expenseCategoryDto);
         var expenseCategory = await expenseCategoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
-        // Create income and expense transactions in February 2026
+        // Create income and expense transactions in December 2028
         var incomeTransaction = new TransactionCreateDto
         {
             AccountId = account!.Id,
             Amount = new MoneyDto { Amount = 3000m, Currency = "USD" },
-            Date = new DateOnly(2026, 2, 1),
+            Date = new DateOnly(2028, 12, 1),
             Description = "Paycheck",
             CategoryId = incomeCategory!.Id,
         };
@@ -178,14 +179,14 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
         {
             AccountId = account.Id,
             Amount = new MoneyDto { Amount = -200m, Currency = "USD" },
-            Date = new DateOnly(2026, 2, 10),
+            Date = new DateOnly(2028, 12, 10),
             Description = "Bills",
             CategoryId = expenseCategory!.Id,
         };
         await this._client.PostAsJsonAsync("/api/v1/transactions", expenseTransaction);
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/reports/categories/monthly?year=2026&month=2");
+        var response = await this._client.GetAsync("/api/v1/reports/categories/monthly?year=2028&month=12");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
