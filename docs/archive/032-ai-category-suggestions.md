@@ -1,25 +1,24 @@
 
 # Feature 032: AI-Powered Category Suggestions
-> **Status:** In Progress
+> **Status:** ✅ Complete
 
 ---
 ## Implementation Status (2026-01-27)
 
 **UI:** Implemented (see Blazor client)
 
-
-
 **Backend/Integration Checklist:**
 
 - [x] CategorySuggestionService analyzes uncategorized transactions and integrates with MerchantKnowledgeBase
 - [x] Auto-creation of categorization rules after category acceptance (API and service logic present)
-- [~] Dismissed suggestions are persisted (restore/undismiss not yet implemented)
+- [x] Dismissed suggestions are persisted
 - [x] System learns from user manual categorizations and updates merchant mappings
-- [~] Endpoints for suggesting, accepting, dismissing, and refreshing category suggestions (restore not implemented)
+- [x] Endpoints for suggesting, accepting, dismissing, and refreshing category suggestions
 - [x] Endpoints for merchant-category mapping management
 - [x] Unit and integration tests for new logic and endpoints (see tests for CategorySuggestionService, MerchantMappingService, and CategorySuggestionsController)
 - [x] OpenAPI docs and user documentation for new endpoints/features (see table below)
 
+**Future Enhancement:** Restore/undismiss functionality is tracked separately in [Feature 032.1](../032.1-category-suggestion-restore.md).
 
 All required UI elements and flows described in the feature spec are present. See `src/BudgetExperiment.Client/Pages/CategorySuggestions.razor` and `src/BudgetExperiment.Client/Components/AI/CategorySuggestionCard.razor` for details.
 
