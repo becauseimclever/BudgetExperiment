@@ -1,5 +1,29 @@
 # Feature 040: Bulk Categorize Uncategorized Transactions
-> **Status:** 🗒️ Planning
+> **Status:** � In Progress
+
+## Evaluation Summary
+
+| Criteria | Assessment |
+|----------|------------|
+| **Feasibility** | ✅ High - Uses existing domain patterns; all infrastructure in place |
+| **Complexity** | 🟡 Medium - New service/endpoints, paged queries, multi-select UI |
+| **Effort Estimate** | 6-8 hours total (see phase estimates below) |
+| **Value** | ✅ High - Major UX improvement for users with many imports |
+| **Risk** | 🟢 Low - No schema changes, existing patterns apply |
+| **Recommendation** | ✅ **Proceed** - Clear value, well-scoped, builds on existing code |
+
+### Key Strengths
+- Leverages existing `UpdateCategory()` method on `Transaction` entity
+- Repository already has `GetUncategorizedAsync()` - just needs paging extension
+- Follows established patterns from `TransfersController` for paging
+- No database migrations required
+
+### Potential Concerns
+- UI complexity with multi-select + filters + pagination (largest effort)
+- Need to decide: add to existing `TransactionsController` vs. new controller
+- Ensure consistent UX with existing pages (filter patterns, table styling)
+
+---
 
 ## Overview
 
@@ -206,7 +230,7 @@ WHERE category_id IS NULL;
 - Table with checkbox selection, sortable columns
 - Pagination controls
 - Bulk action bar (visible when items selected): category dropdown + "Categorize Selected" button
-- Navigation link in sidebar under "Transactions" or near "Import"
+- Navigation link in sidebar between "Auto-Categorize" and "Budget" (near related categorization features)
 
 **Component Structure:**
 ```
@@ -231,11 +255,13 @@ Uncategorized.razor
 
 **Objective:** Add filtered/paged uncategorized query to repository
 
+**Effort:** ~1 hour
+
 **Tasks:**
-- [ ] Add `GetUncategorizedPagedAsync()` signature to `ITransactionRepository`
-- [ ] Implement in `TransactionRepository` with EF Core query
-- [ ] Write integration tests for filtering, sorting, and paging
-- [ ] Verify query performance with EXPLAIN ANALYZE
+- [x] Add `GetUncategorizedPagedAsync()` signature to `ITransactionRepository`
+- [x] Implement in `TransactionRepository` with EF Core query
+- [x] Write integration tests for filtering, sorting, and paging
+- [ ] Verify query performance with EXPLAIN ANALYZE (deferred to production testing)
 
 **Commit:**
 ```
@@ -247,6 +273,8 @@ feat(domain): add paged uncategorized transaction query to repository
 ### Phase 2: Application Service
 
 **Objective:** Add service layer for uncategorized transactions
+
+**Effort:** ~1.5 hours
 
 **Tasks:**
 - [ ] Create `IUncategorizedTransactionService` interface
@@ -266,6 +294,8 @@ feat(application): add uncategorized transaction service with bulk categorize
 
 **Objective:** Expose uncategorized transaction operations via REST API
 
+**Effort:** ~1 hour
+
 **Tasks:**
 - [ ] Add DTOs to `BudgetExperiment.Contracts`
 - [ ] Add endpoints to `TransactionsController` or create dedicated controller
@@ -284,6 +314,8 @@ feat(api): add uncategorized transactions list and bulk categorize endpoints
 
 **Objective:** Add client-side API service for uncategorized transactions
 
+**Effort:** ~0.5 hours
+
 **Tasks:**
 - [ ] Add `IUncategorizedApiService` interface
 - [ ] Implement `UncategorizedApiService` with HTTP calls
@@ -300,6 +332,8 @@ feat(client): add uncategorized transactions API service
 ### Phase 5: UI Implementation
 
 **Objective:** Create the Uncategorized transactions page
+
+**Effort:** ~2-3 hours (largest phase due to multi-select UI complexity)
 
 **Tasks:**
 - [ ] Create `Uncategorized.razor` page at route `/uncategorized`
@@ -321,6 +355,8 @@ feat(client): add uncategorized transactions page with bulk categorize
 ### Phase 6: Polish and Documentation
 
 **Objective:** Finalize feature and update docs
+
+**Effort:** ~0.5 hours
 
 **Tasks:**
 - [ ] Add OpenAPI examples and descriptions
@@ -417,6 +453,27 @@ docs: complete feature 040 bulk categorize uncategorized transactions
 
 ---
 
+## Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Performance with large datasets | Low | Medium | Server-side paging, partial index if needed |
+| UI complexity delays | Medium | Low | Start with MVP (basic table), iterate on UX |
+| Scope creep ("select all matching") | Medium | Medium | Defer to Future Enhancements |
+| Category dropdown performance | Low | Low | Categories already cached/loaded elsewhere |
+
+---
+
+## Decision Log
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-02-01 | Add endpoints to existing `TransactionsController` | Follows REST resource pattern; avoids controller proliferation |
+| 2026-02-01 | Use POST for bulk-categorize (not PATCH) | Operation is not idempotent (could be called with different categories); body semantics clearer |
+| 2026-02-01 | Default page size 50, max 100 | Balance between UX and response size |
+
+---
+
 ## References
 
 - Existing: `ITransactionRepository.GetUncategorizedAsync()` (returns all, no filtering)
@@ -432,3 +489,5 @@ docs: complete feature 040 bulk categorize uncategorized transactions
 |------|--------|--------|
 | 2026-01-26 | Initial draft | @github-copilot |
 | 2026-01-30 | Fleshed out technical design, DTOs, implementation plan | @copilot |
+| 2026-02-01 | Added evaluation summary, effort estimates, risk assessment, decision log | @copilot |
+| 2026-02-01 | Started Phase 1: Domain and Repository | @copilot |

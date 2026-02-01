@@ -213,6 +213,83 @@ internal sealed class TransactionRepository : ITransactionRepository
     }
 
     /// <inheritdoc />
+    public async Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetUncategorizedPagedAsync(
+        DateOnly? startDate = null,
+        DateOnly? endDate = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        string? descriptionContains = null,
+        Guid? accountId = null,
+        string sortBy = "Date",
+        bool sortDescending = true,
+        int skip = 0,
+        int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var query = this.ApplyScopeFilter(this._context.Transactions)
+            .Where(t => t.CategoryId == null);
+
+        // Apply filters
+        if (startDate.HasValue)
+        {
+            query = query.Where(t => t.Date >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(t => t.Date <= endDate.Value);
+        }
+
+        // Amount filters use absolute value comparison (handles both positive and negative amounts)
+        if (minAmount.HasValue)
+        {
+            var min = minAmount.Value;
+            query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) >= min);
+        }
+
+        if (maxAmount.HasValue)
+        {
+            var max = maxAmount.Value;
+            query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) <= max);
+        }
+
+        if (!string.IsNullOrWhiteSpace(descriptionContains))
+        {
+            query = query.Where(t => t.Description.ToLower().Contains(descriptionContains.ToLower()));
+        }
+
+        if (accountId.HasValue)
+        {
+            query = query.Where(t => t.AccountId == accountId.Value);
+        }
+
+        // Get total count before paging
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting (absolute value for amounts)
+        query = sortBy.ToUpperInvariant() switch
+        {
+            "AMOUNT" => sortDescending
+                ? query.OrderByDescending(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount).ThenByDescending(t => t.Date)
+                : query.OrderBy(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount).ThenBy(t => t.Date),
+            "DESCRIPTION" => sortDescending
+                ? query.OrderByDescending(t => t.Description).ThenByDescending(t => t.Date)
+                : query.OrderBy(t => t.Description).ThenBy(t => t.Date),
+            _ => sortDescending
+                ? query.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
+                : query.OrderBy(t => t.Date).ThenBy(t => t.CreatedAt),
+        };
+
+        // Apply paging
+        var items = await query
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<string>> GetAllDescriptionsAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)

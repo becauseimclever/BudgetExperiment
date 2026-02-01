@@ -95,6 +95,34 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     Task<IReadOnlyList<Transaction>> GetUncategorizedAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets uncategorized transactions with filtering, sorting, and paging.
+    /// </summary>
+    /// <param name="startDate">Optional start date filter (inclusive).</param>
+    /// <param name="endDate">Optional end date filter (inclusive).</param>
+    /// <param name="minAmount">Optional minimum amount filter.</param>
+    /// <param name="maxAmount">Optional maximum amount filter.</param>
+    /// <param name="descriptionContains">Optional description contains filter (case-insensitive).</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="sortBy">Sort field: "Date", "Amount", or "Description".</param>
+    /// <param name="sortDescending">Sort direction (true = descending).</param>
+    /// <param name="skip">Number of records to skip.</param>
+    /// <param name="take">Number of records to take.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the paged items and total count.</returns>
+    Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetUncategorizedPagedAsync(
+        DateOnly? startDate = null,
+        DateOnly? endDate = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        string? descriptionContains = null,
+        Guid? accountId = null,
+        string sortBy = "Date",
+        bool sortDescending = true,
+        int skip = 0,
+        int take = 50,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all unique transaction descriptions for pattern analysis.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
