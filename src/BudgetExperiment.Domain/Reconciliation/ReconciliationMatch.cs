@@ -85,6 +85,11 @@ public sealed class ReconciliationMatch
     public DateTime? ResolvedAtUtc { get; private set; }
 
     /// <summary>
+    /// Gets the source of this match (Auto or Manual).
+    /// </summary>
+    public MatchSource Source { get; private set; }
+
+    /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
     public BudgetScope Scope { get; private set; }
@@ -152,6 +157,7 @@ public sealed class ReconciliationMatch
             DateOffsetDays = dateOffsetDays,
             CreatedAtUtc = DateTime.UtcNow,
             ResolvedAtUtc = null,
+            Source = MatchSource.Auto,
             Scope = scope,
             OwnerUserId = ownerUserId,
         };
@@ -187,6 +193,79 @@ public sealed class ReconciliationMatch
     {
         this.EnsureNotResolved();
         this.Status = ReconciliationMatchStatus.AutoMatched;
+        this.ResolvedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Creates a manual link between a transaction and a recurring instance.
+    /// Manual links are immediately accepted with full confidence.
+    /// </summary>
+    /// <param name="importedTransactionId">The imported transaction identifier.</param>
+    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+    /// <param name="recurringInstanceDate">The scheduled instance date.</param>
+    /// <param name="amountVariance">The variance between expected and actual amount.</param>
+    /// <param name="dateOffsetDays">The offset in days from scheduled date.</param>
+    /// <param name="scope">The budget scope.</param>
+    /// <param name="ownerUserId">The owner user ID (required for Personal scope).</param>
+    /// <returns>A new <see cref="ReconciliationMatch"/> instance with Manual source.</returns>
+    /// <exception cref="DomainException">Thrown when validation fails.</exception>
+    public static ReconciliationMatch CreateManualLink(
+        Guid importedTransactionId,
+        Guid recurringTransactionId,
+        DateOnly recurringInstanceDate,
+        decimal amountVariance,
+        int dateOffsetDays,
+        BudgetScope scope,
+        Guid? ownerUserId)
+    {
+        if (importedTransactionId == Guid.Empty)
+        {
+            throw new DomainException("Imported transaction ID is required.");
+        }
+
+        if (recurringTransactionId == Guid.Empty)
+        {
+            throw new DomainException("Recurring transaction ID is required.");
+        }
+
+        if (scope == BudgetScope.Personal && ownerUserId is null)
+        {
+            throw new DomainException("Owner user ID is required for Personal scope.");
+        }
+
+        var now = DateTime.UtcNow;
+        return new ReconciliationMatch
+        {
+            Id = Guid.NewGuid(),
+            ImportedTransactionId = importedTransactionId,
+            RecurringTransactionId = recurringTransactionId,
+            RecurringInstanceDate = recurringInstanceDate,
+            ConfidenceScore = 1.0m,
+            ConfidenceLevel = MatchConfidenceLevel.High,
+            Status = ReconciliationMatchStatus.Accepted,
+            AmountVariance = amountVariance,
+            DateOffsetDays = dateOffsetDays,
+            CreatedAtUtc = now,
+            ResolvedAtUtc = now,
+            Source = MatchSource.Manual,
+            Scope = scope,
+            OwnerUserId = ownerUserId,
+        };
+    }
+
+    /// <summary>
+    /// Unlinks a matched transaction, setting its status to Rejected.
+    /// Can only be called on matches that have been accepted or auto-matched.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when match is not linked.</exception>
+    public void Unlink()
+    {
+        if (this.Status != ReconciliationMatchStatus.Accepted && this.Status != ReconciliationMatchStatus.AutoMatched)
+        {
+            throw new DomainException("Cannot unlink a match that is not linked.");
+        }
+
+        this.Status = ReconciliationMatchStatus.Rejected;
         this.ResolvedAtUtc = DateTime.UtcNow;
     }
 

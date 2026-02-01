@@ -2,8 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
+using BudgetExperiment.Domain;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -163,6 +163,34 @@ public sealed class ReconciliationController : ControllerBase
     }
 
     /// <summary>
+    /// Unlinks a matched transaction, returning it and the recurring instance to unmatched state.
+    /// </summary>
+    /// <param name="matchId">The match identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The unlinked match.</returns>
+    [HttpDelete("matches/{matchId:guid}")]
+    [ProducesResponseType<ReconciliationMatchDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UnlinkMatchAsync(Guid matchId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var match = await this._reconciliationService.UnlinkMatchAsync(matchId, cancellationToken);
+            if (match is null)
+            {
+                return this.NotFound();
+            }
+
+            return this.Ok(match);
+        }
+        catch (DomainException ex)
+        {
+            return this.BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Bulk accepts multiple matches.
     /// </summary>
     /// <param name="request">The bulk accept request.</param>
@@ -200,5 +228,23 @@ public sealed class ReconciliationController : ControllerBase
             recurringTransactionId,
             cancellationToken);
         return this.Ok(matches);
+    }
+
+    /// <summary>
+    /// Gets recurring instances that can be linked to a specific transaction.
+    /// Returns instances within ±30 days of the transaction date.
+    /// </summary>
+    /// <param name="transactionId">The transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of linkable recurring instances.</returns>
+    [HttpGet("linkable-instances")]
+    [ProducesResponseType<IReadOnlyList<LinkableInstanceDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLinkableInstancesAsync(
+        [FromQuery] Guid transactionId,
+        CancellationToken cancellationToken)
+    {
+        var instances = await this._reconciliationService.GetLinkableInstancesAsync(transactionId, cancellationToken);
+        return this.Ok(instances);
     }
 }

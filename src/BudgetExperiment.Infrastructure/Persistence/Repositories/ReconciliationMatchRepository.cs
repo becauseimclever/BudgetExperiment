@@ -129,6 +129,21 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
                 cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<bool> IsInstanceMatchedAsync(
+        Guid recurringTransactionId,
+        DateOnly instanceDate,
+        CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+            .AnyAsync(
+                m => m.RecurringTransactionId == recurringTransactionId
+                    && m.RecurringInstanceDate == instanceDate
+                    && (m.Status == ReconciliationMatchStatus.Accepted
+                        || m.Status == ReconciliationMatchStatus.AutoMatched),
+                cancellationToken);
+    }
+
     private IQueryable<ReconciliationMatch> ApplyScopeFilter(IQueryable<ReconciliationMatch> query)
     {
         var userId = this._userContext.UserIdAsGuid;

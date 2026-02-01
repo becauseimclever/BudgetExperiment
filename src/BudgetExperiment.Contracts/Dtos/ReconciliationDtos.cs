@@ -47,6 +47,11 @@ public sealed record ReconciliationMatchDto
     public string Status { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the match source (Auto, Manual).
+    /// </summary>
+    public string Source { get; init; } = "Auto";
+
+    /// <summary>
     /// Gets the variance between expected and actual amount.
     /// </summary>
     public decimal AmountVariance { get; init; }
@@ -213,6 +218,11 @@ public sealed record RecurringInstanceStatusDto
     /// Gets the match ID (if a match suggestion exists).
     /// </summary>
     public Guid? MatchId { get; init; }
+
+    /// <summary>
+    /// Gets the match source (Auto or Manual) if matched.
+    /// </summary>
+    public string? MatchSource { get; init; }
 }
 
 /// <summary>
@@ -309,4 +319,40 @@ public sealed record BulkMatchActionRequest
     /// Gets the number of matches that failed.
     /// </summary>
     public int FailedCount { get; init; }
+}
+
+/// <summary>
+/// DTO representing a recurring instance that can be linked to a transaction.
+/// </summary>
+public sealed record LinkableInstanceDto
+{
+    /// <summary>
+    /// Gets the recurring transaction identifier.
+    /// </summary>
+    public Guid RecurringTransactionId { get; init; }
+
+    /// <summary>
+    /// Gets the recurring transaction description.
+    /// </summary>
+    public string Description { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Gets the expected amount for this instance.
+    /// </summary>
+    public MoneyDto ExpectedAmount { get; init; } = default!;
+
+    /// <summary>
+    /// Gets the scheduled date for this instance.
+    /// </summary>
+    public DateOnly InstanceDate { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether this instance is already matched to another transaction.
+    /// </summary>
+    public bool IsAlreadyMatched { get; init; }
+
+    /// <summary>
+    /// Gets the confidence score if auto-matched to this transaction (0.0 to 1.0).
+    /// </summary>
+    public decimal? SuggestedConfidence { get; init; }
 }

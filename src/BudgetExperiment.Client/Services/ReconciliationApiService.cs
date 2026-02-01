@@ -205,4 +205,40 @@ public sealed class ReconciliationApiService : IReconciliationApiService
             return false;
         }
     }
+
+    /// <inheritdoc />
+    public async Task<bool> UnlinkMatchAsync(Guid matchId)
+    {
+        try
+        {
+            var response = await this._httpClient.DeleteAsync($"api/v1/reconciliation/matches/{matchId}");
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(Guid transactionId)
+    {
+        try
+        {
+            var result = await this._httpClient.GetFromJsonAsync<List<LinkableInstanceDto>>(
+                $"api/v1/reconciliation/linkable-instances?transactionId={transactionId}",
+                JsonOptions);
+            return result ?? [];
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return [];
+        }
+        catch (HttpRequestException)
+        {
+            return [];
+        }
+    }
 }

@@ -127,6 +127,130 @@ public class ReconciliationApiServiceTests
     }
 
     /// <summary>
+    /// Tests that UnlinkMatchAsync calls the correct DELETE endpoint.
+    /// </summary>
+    [Fact]
+    public async Task UnlinkMatchAsync_CallsCorrectEndpoint()
+    {
+        // Arrange
+        var matchId = Guid.Parse("12345678-1234-1234-1234-123456789012");
+        string? capturedUrl = null;
+        string? capturedMethod = null;
+        var handler = new MockHttpMessageHandler((request, _) =>
+        {
+            capturedUrl = request.RequestUri?.PathAndQuery;
+            capturedMethod = request.Method.Method;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        });
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://localhost/"),
+        };
+        var service = new ReconciliationApiService(httpClient);
+
+        // Act
+        var result = await service.UnlinkMatchAsync(matchId);
+
+        // Assert
+        result.ShouldBeTrue();
+        capturedMethod.ShouldBe("DELETE");
+        capturedUrl.ShouldBe($"/api/v1/reconciliation/matches/{matchId}");
+    }
+
+    /// <summary>
+    /// Tests that UnlinkMatchAsync returns false on HTTP error.
+    /// </summary>
+    [Fact]
+    public async Task UnlinkMatchAsync_ReturnsFalse_WhenRequestFails()
+    {
+        // Arrange
+        var matchId = Guid.NewGuid();
+        var handler = new MockHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)));
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://localhost/"),
+        };
+        var service = new ReconciliationApiService(httpClient);
+
+        // Act
+        var result = await service.UnlinkMatchAsync(matchId);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Tests that GetLinkableInstancesAsync calls the correct endpoint with transactionId.
+    /// </summary>
+    [Fact]
+    public async Task GetLinkableInstancesAsync_CallsCorrectEndpoint()
+    {
+        // Arrange
+        var transactionId = Guid.Parse("12345678-1234-1234-1234-123456789012");
+        string? capturedUrl = null;
+        var handler = new MockHttpMessageHandler((request, _) =>
+        {
+            capturedUrl = request.RequestUri?.PathAndQuery;
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new List<LinkableInstanceDto>
+                {
+                    new LinkableInstanceDto
+                    {
+                        RecurringTransactionId = Guid.NewGuid(),
+                        Description = "Test Recurring",
+                        ExpectedAmount = new MoneyDto { Amount = 100, Currency = "USD" },
+                        InstanceDate = new DateOnly(2026, 1, 15),
+                        IsAlreadyMatched = false,
+                    },
+                }),
+            };
+            return Task.FromResult(response);
+        });
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://localhost/"),
+        };
+        var service = new ReconciliationApiService(httpClient);
+
+        // Act
+        var result = await service.GetLinkableInstancesAsync(transactionId);
+
+        // Assert
+        capturedUrl.ShouldBe($"/api/v1/reconciliation/linkable-instances?transactionId={transactionId}");
+        result.Count.ShouldBe(1);
+        result[0].Description.ShouldBe("Test Recurring");
+    }
+
+    /// <summary>
+    /// Tests that GetLinkableInstancesAsync returns empty list on HTTP error.
+    /// </summary>
+    [Fact]
+    public async Task GetLinkableInstancesAsync_ReturnsEmptyList_WhenRequestFails()
+    {
+        // Arrange
+        var transactionId = Guid.NewGuid();
+        var handler = new MockHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)));
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://localhost/"),
+        };
+        var service = new ReconciliationApiService(httpClient);
+
+        // Act
+        var result = await service.GetLinkableInstancesAsync(transactionId);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    /// <summary>
     /// Simple mock HTTP message handler for testing.
     /// </summary>
     private sealed class MockHttpMessageHandler : HttpMessageHandler

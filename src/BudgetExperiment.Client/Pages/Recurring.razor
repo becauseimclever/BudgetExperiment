@@ -102,6 +102,9 @@
                                 <Icon Name="play" Size="16" /> Resume
                             </button>
                         }
+                        <button class="btn-action" @onclick="() => ShowImportPatterns(recurring)" title="Import Patterns">
+                            <Icon Name="filter" Size="16" /> Patterns
+                        </button>
                         <button class="btn-action btn-action-edit" @onclick="() => ShowEditForm(recurring)" title="Edit">
                             <Icon Name="edit" Size="16" /> Edit
                         </button>
@@ -137,6 +140,12 @@
                    IsProcessing="@isDeleting"
                    OnConfirm="ConfirmDelete"
                    OnCancel="CancelDelete" />
+
+    <ImportPatternsDialog IsVisible="@showImportPatterns"
+                          RecurringTransactionId="@importPatternsRecurringId"
+                          RecurringDescription="@importPatternsDescription"
+                          OnSaved="HandleImportPatternsSaved"
+                          OnCancel="HideImportPatterns" />
 </div>
 
 @code {
@@ -151,11 +160,14 @@
     private bool showAddForm = false;
     private bool showEditForm = false;
     private bool showDeleteConfirm = false;
+    private bool showImportPatterns = false;
 
     private RecurringTransactionCreateDto newRecurring = new();
     private RecurringTransactionUpdateDto editModel = new();
     private Guid editingId;
     private RecurringTransactionDto? deletingRecurring;
+    private Guid importPatternsRecurringId;
+    private string importPatternsDescription = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -360,6 +372,25 @@
     {
         showDeleteConfirm = false;
         deletingRecurring = null;
+    }
+
+    private void ShowImportPatterns(RecurringTransactionDto recurring)
+    {
+        importPatternsRecurringId = recurring.Id;
+        importPatternsDescription = recurring.Description;
+        showImportPatterns = true;
+    }
+
+    private void HideImportPatterns()
+    {
+        showImportPatterns = false;
+        importPatternsRecurringId = Guid.Empty;
+        importPatternsDescription = string.Empty;
+    }
+
+    private void HandleImportPatternsSaved()
+    {
+        HideImportPatterns();
     }
 
     private static string FormatFrequency(RecurringTransactionDto recurring)

@@ -243,4 +243,36 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    /// <summary>
+    /// GET /api/v1/recurring-transactions/{id}/import-patterns returns 404 when recurring transaction does not exist.
+    /// </summary>
+    [Fact]
+    public async Task GetImportPatterns_Returns_404_WhenNotFound()
+    {
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/import-patterns");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/recurring-transactions/{id}/import-patterns returns 404 when recurring transaction does not exist.
+    /// </summary>
+    [Fact]
+    public async Task UpdateImportPatterns_Returns_404_WhenNotFound()
+    {
+        // Arrange
+        var dto = new ImportPatternsDto
+        {
+            Patterns = ["*NETFLIX*", "*HULU*"],
+        };
+
+        // Act
+        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/import-patterns", dto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

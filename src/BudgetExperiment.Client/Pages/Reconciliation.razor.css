@@ -314,6 +314,39 @@
     min-width: 120px;
 }
 
+.instance-actions {
+    display: flex;
+    gap: 0.5rem;
+    min-width: 120px;
+    justify-content: flex-end;
+}
+
+.instance-actions .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.text-warning {
+    color: var(--warning-color);
+}
+
+/* Source Badge */
+.source-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-left: 0.5rem;
+}
+
+.source-badge.manual {
+    background: var(--info-background, rgba(59, 130, 246, 0.15));
+    color: var(--info-color, #3b82f6);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .filter-bar {
@@ -339,5 +372,11 @@
 
     .instance-info {
         width: 100%;
+    }
+
+    .instance-actions {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 0.5rem;
     }
 }

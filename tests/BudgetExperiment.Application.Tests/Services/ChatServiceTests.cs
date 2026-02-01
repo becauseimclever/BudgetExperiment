@@ -575,6 +575,12 @@ public class ChatServiceTests
 
         public Task<RecurringTransactionDto?> ResumeAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult<RecurringTransactionDto?>(null);
+
+        public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<ImportPatternsDto?>(null);
+
+        public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid id, ImportPatternsDto dto, CancellationToken cancellationToken = default) =>
+            Task.FromResult<ImportPatternsDto?>(null);
     }
 
     private sealed class MockRecurringTransferService : IRecurringTransferService

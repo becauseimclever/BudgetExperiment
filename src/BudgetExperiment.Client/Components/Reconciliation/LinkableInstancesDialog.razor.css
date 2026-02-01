@@ -1,0 +1,189 @@
+/* LinkableInstancesDialog.razor.css */
+
+.linkable-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Instance Card */
+.instance-card {
+    background: var(--surface-secondary);
+    border-radius: 8px;
+    padding: 1rem;
+    border-left: 3px solid var(--primary);
+}
+
+.instance-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-word;
+}
+
+.detail-value.amount {
+    font-family: var(--font-mono);
+}
+
+/* Selection Section */
+.selection-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.selection-section h4 {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.loading-state,
+.empty-state {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--surface-secondary);
+    border-radius: 8px;
+    color: var(--text-secondary);
+}
+
+/* Transaction List */
+.transaction-list {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.transaction-option {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: 2px solid transparent;
+}
+
+.transaction-option:hover {
+    background: var(--surface-hover);
+}
+
+.transaction-option.selected {
+    background: var(--primary-background);
+    border-color: var(--primary);
+}
+
+.transaction-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.transaction-description {
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.transaction-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.transaction-amount {
+    font-weight: 600;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+}
+
+.transaction-amount.positive {
+    color: var(--success-color);
+}
+
+.transaction-amount.negative {
+    color: var(--danger-color);
+}
+
+/* Remember Pattern Section */
+.remember-pattern-section {
+    padding: 1rem;
+    background: var(--surface-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.checkbox-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.helper-text {
+    margin: 0.75rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    padding-left: 1.75rem;
+}
+
+/* Error Message */
+.error-message {
+    padding: 0.75rem;
+    background: var(--danger-background);
+    color: var(--danger-color);
+    border-radius: 6px;
+    font-size: 0.875rem;
+}

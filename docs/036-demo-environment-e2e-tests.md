@@ -1,5 +1,5 @@
 # Feature 036: Demo Environment E2E Tests
-> **Status:** 🗒️ Planning
+> **Status:** ⏸️ On Hold (Authentication issues - tests disabled until auth is fixed)
 
 ## Quick Reference
 

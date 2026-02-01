@@ -65,4 +65,16 @@ public interface IReconciliationMatchRepository : IReadRepository<Reconciliation
         Guid recurringTransactionId,
         DateOnly instanceDate,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a recurring instance has any accepted or auto-matched link.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+    /// <param name="instanceDate">The instance date.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the instance is matched, false otherwise.</returns>
+    Task<bool> IsInstanceMatchedAsync(
+        Guid recurringTransactionId,
+        DateOnly instanceDate,
+        CancellationToken cancellationToken = default);
 }

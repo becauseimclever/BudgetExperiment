@@ -1,0 +1,336 @@
+@* LinkableInstancesDialog.razor - Dialog for manually linking a recurring instance to a transaction *@
+@using BudgetExperiment.Contracts.Dtos
+@inject IBudgetApiService BudgetApi
+@inject IReconciliationApiService ReconciliationApi
+
+<Modal IsVisible="@IsVisible" Title="Link to Transaction" Size="ModalSize.Large" OnClose="@HandleCancel">
+    <ChildContent>
+        <div class="linkable-dialog">
+            @* Recurring Instance Info *@
+            @if (RecurringInstance != null)
+            {
+                <div class="instance-card">
+                    <h4>Recurring Instance</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Description</span>
+                        <span class="detail-value">@RecurringInstance.Description</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Expected Date</span>
+                        <span class="detail-value">@RecurringInstance.InstanceDate.ToString("MMM d, yyyy")</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Expected Amount</span>
+                        <span class="detail-value amount">@FormatMoney(RecurringInstance.ExpectedAmount)</span>
+                    </div>
+                </div>
+            }
+
+            @* Transaction Selection *@
+            <div class="selection-section">
+                <h4>Select Transaction to Link</h4>
+
+                @if (isLoadingTransactions)
+                {
+                    <div class="loading-state">
+                        <LoadingSpinner />
+                        <span>Loading unmatched transactions...</span>
+                    </div>
+                }
+                else if (unmatchedTransactions.Count == 0)
+                {
+                    <div class="empty-state">
+                        <span>No unmatched transactions found within the date range.</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="transaction-list">
+                        @foreach (var transaction in unmatchedTransactions)
+                        {
+                            <div class="transaction-option @(selectedTransactionId == transaction.Id ? "selected" : "")"
+                                 @onclick="() => SelectTransaction(transaction)">
+                                <div class="transaction-info">
+                                    <span class="transaction-description">@transaction.Description</span>
+                                    <span class="transaction-meta">
+                                        @transaction.Date.ToString("MMM d, yyyy")
+                                    </span>
+                                </div>
+                                <div class="transaction-amount @(transaction.Amount.Amount >= 0 ? "positive" : "negative")">
+                                    @FormatMoney(transaction.Amount)
+                                </div>
+                                @if (GetMatchConfidence(transaction) is decimal confidence)
+                                {
+                                    <ConfidenceBadge Score="@confidence" />
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* Remember Pattern Option *@
+            @if (selectedTransaction != null)
+            {
+                <div class="remember-pattern-section">
+                    <label class="checkbox-container">
+                        <input type="checkbox" @bind="rememberPattern" />
+                        <span class="checkbox-label">
+                            Remember this description for future imports
+                        </span>
+                    </label>
+                    @if (rememberPattern)
+                    {
+                        <p class="helper-text">
+                            The pattern "@selectedTransaction.Description" will be saved to the recurring transaction
+                            for automatic matching in future imports.
+                        </p>
+                    }
+                </div>
+            }
+
+            @* Error/Success Messages *@
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="error-message">@errorMessage</div>
+            }
+        </div>
+    </ChildContent>
+    <FooterContent>
+        <button class="btn btn-secondary" @onclick="HandleCancel" disabled="@isProcessing">
+            Cancel
+        </button>
+        <button class="btn btn-primary"
+                @onclick="HandleSubmit"
+                disabled="@(!CanSubmit || isProcessing)">
+            @if (isProcessing)
+            {
+                <LoadingSpinner Size="SpinnerSize.Small" />
+            }
+            Link Transaction
+        </button>
+    </FooterContent>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the dialog is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the recurring instance to link a transaction to.
+    /// </summary>
+    [Parameter]
+    public RecurringInstanceStatusDto? RecurringInstance { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a link is created.
+    /// </summary>
+    [Parameter]
+    public EventCallback<ReconciliationMatchDto> OnLinked { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the dialog is cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private List<TransactionDto> unmatchedTransactions = [];
+    private TransactionDto? selectedTransaction;
+    private Guid? selectedTransactionId;
+    private bool rememberPattern;
+
+    private bool isLoadingTransactions;
+    private bool isProcessing;
+    private string? errorMessage;
+
+    private bool CanSubmit => selectedTransactionId.HasValue && RecurringInstance != null;
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && RecurringInstance != null && unmatchedTransactions.Count == 0)
+        {
+            await LoadUnmatchedTransactionsAsync();
+        }
+
+        if (!IsVisible)
+        {
+            ResetDialog();
+        }
+    }
+
+    private async Task LoadUnmatchedTransactionsAsync()
+    {
+        if (RecurringInstance == null)
+        {
+            return;
+        }
+
+        isLoadingTransactions = true;
+        errorMessage = null;
+
+        try
+        {
+            // Get transactions within ±30 days of the instance date
+            var startDate = RecurringInstance.InstanceDate.AddDays(-30);
+            var endDate = RecurringInstance.InstanceDate.AddDays(30);
+
+            var allTransactions = await BudgetApi.GetTransactionsAsync(
+                startDate: startDate,
+                endDate: endDate,
+                accountId: RecurringInstance.AccountId);
+
+            // Filter to only unmatched transactions (those without a recurring transaction link)
+            unmatchedTransactions = allTransactions
+                .Where(t => t.RecurringTransactionId == null)
+                .OrderBy(t => Math.Abs((t.Date.ToDateTime(TimeOnly.MinValue) -
+                    RecurringInstance.InstanceDate.ToDateTime(TimeOnly.MinValue)).Days))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load transactions: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingTransactions = false;
+        }
+    }
+
+    private void SelectTransaction(TransactionDto transaction)
+    {
+        selectedTransaction = transaction;
+        selectedTransactionId = transaction.Id;
+        errorMessage = null;
+    }
+
+    private decimal? GetMatchConfidence(TransactionDto transaction)
+    {
+        if (RecurringInstance == null)
+        {
+            return null;
+        }
+
+        // Simple confidence calculation based on amount and date similarity
+        decimal amountConfidence = 0;
+        decimal dateConfidence = 0;
+
+        // Amount match (within 10% or $10)
+        var expectedAmount = Math.Abs(RecurringInstance.ExpectedAmount.Amount);
+        var actualAmount = Math.Abs(transaction.Amount.Amount);
+        if (expectedAmount > 0)
+        {
+            var amountDiff = Math.Abs(expectedAmount - actualAmount);
+            var percentDiff = amountDiff / expectedAmount;
+            if (amountDiff <= 10 || percentDiff <= 0.1m)
+            {
+                amountConfidence = 1.0m - Math.Min(percentDiff, 0.5m);
+            }
+            else
+            {
+                amountConfidence = Math.Max(0, 1.0m - percentDiff);
+            }
+        }
+
+        // Date proximity (within 7 days is best)
+        var daysDiff = Math.Abs((transaction.Date.ToDateTime(TimeOnly.MinValue) -
+            RecurringInstance.InstanceDate.ToDateTime(TimeOnly.MinValue)).Days);
+        dateConfidence = Math.Max(0, 1.0m - (daysDiff / 30.0m));
+
+        // Weighted confidence
+        return (amountConfidence * 0.6m) + (dateConfidence * 0.4m);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!CanSubmit || RecurringInstance == null || !selectedTransactionId.HasValue)
+        {
+            return;
+        }
+
+        isProcessing = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var request = new ManualMatchRequest
+            {
+                TransactionId = selectedTransactionId.Value,
+                RecurringTransactionId = RecurringInstance.RecurringTransactionId,
+                InstanceDate = RecurringInstance.InstanceDate,
+            };
+
+            var match = await ReconciliationApi.CreateManualMatchAsync(request);
+            if (match != null)
+            {
+                // If remember pattern is checked, save the pattern
+                if (rememberPattern && selectedTransaction != null)
+                {
+                    await SaveImportPatternAsync(RecurringInstance.RecurringTransactionId, selectedTransaction.Description);
+                }
+
+                await OnLinked.InvokeAsync(match);
+                ResetDialog();
+            }
+            else
+            {
+                errorMessage = "Failed to create link. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create link: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveImportPatternAsync(Guid recurringTransactionId, string description)
+    {
+        try
+        {
+            // Get existing patterns
+            var existingPatterns = await BudgetApi.GetImportPatternsAsync(recurringTransactionId);
+            var patterns = existingPatterns?.Patterns?.ToList() ?? [];
+
+            // Add the new pattern (normalized with wildcards)
+            var normalizedPattern = $"*{description.Trim()}*";
+            if (!patterns.Contains(normalizedPattern, StringComparer.OrdinalIgnoreCase))
+            {
+                patterns.Add(normalizedPattern);
+                await BudgetApi.UpdateImportPatternsAsync(recurringTransactionId, new ImportPatternsDto { Patterns = patterns });
+            }
+        }
+        catch
+        {
+            // Silent failure for pattern saving - the link was still created
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        ResetDialog();
+        await OnCancel.InvokeAsync();
+    }
+
+    private void ResetDialog()
+    {
+        selectedTransaction = null;
+        selectedTransactionId = null;
+        rememberPattern = false;
+        unmatchedTransactions = [];
+        errorMessage = null;
+    }
+
+    private static string FormatMoney(MoneyDto? amount)
+    {
+        return amount?.Amount.ToString("C2") ?? "$0.00";
+    }
+}

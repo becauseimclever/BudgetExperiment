@@ -292,6 +292,7 @@ public sealed class ReconciliationService : IReconciliationService
                 MoneyDto? actualAmount = null;
                 decimal? amountVariance = null;
                 Guid? matchId = null;
+                string? matchSource = null;
 
                 if (acceptedMatch != null)
                 {
@@ -299,6 +300,7 @@ public sealed class ReconciliationService : IReconciliationService
                     matchedTransactionId = acceptedMatch.ImportedTransactionId;
                     amountVariance = acceptedMatch.AmountVariance;
                     matchId = acceptedMatch.Id;
+                    matchSource = acceptedMatch.Source.ToString();
                     matchedCount++;
 
                     // Get actual amount from matched transaction
@@ -314,6 +316,7 @@ public sealed class ReconciliationService : IReconciliationService
                 {
                     status = "Pending";
                     matchId = pendingMatch.Id;
+                    matchSource = pendingMatch.Source.ToString();
                     pendingCount++;
                 }
                 else
@@ -333,6 +336,7 @@ public sealed class ReconciliationService : IReconciliationService
                     ActualAmount = actualAmount,
                     AmountVariance = amountVariance,
                     MatchId = matchId,
+                    MatchSource = matchSource,
                 });
             }
         }
@@ -396,19 +400,15 @@ public sealed class ReconciliationService : IReconciliationService
         var amountVariance = recurring.Amount.Amount - transaction.Amount.Amount;
         var dateOffsetDays = transaction.Date.DayNumber - request.InstanceDate.DayNumber;
 
-        // Create the match with high confidence for manual matches
-        var match = ReconciliationMatch.Create(
+        // Create manual link (already accepted with MatchSource.Manual)
+        var match = ReconciliationMatch.CreateManualLink(
             request.TransactionId,
             request.RecurringTransactionId,
             request.InstanceDate,
-            1.0m, // Manual matches get full confidence
             amountVariance,
             dateOffsetDays,
             recurring.Scope,
             recurring.OwnerUserId);
-
-        // Auto-accept manual matches
-        match.Accept();
 
         // Link the transaction
         transaction.LinkToRecurringInstance(request.RecurringTransactionId, request.InstanceDate);
@@ -417,6 +417,105 @@ public sealed class ReconciliationService : IReconciliationService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ReconciliationMapper.ToDto(match, transaction, recurring.Description, recurring.Amount);
+    }
+
+    /// <inheritdoc />
+    public async Task<ReconciliationMatchDto?> UnlinkMatchAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default)
+    {
+        var match = await this._matchRepository.GetByIdAsync(matchId, cancellationToken);
+        if (match is null)
+        {
+            return null;
+        }
+
+        // Unlink the domain match (sets status to Rejected)
+        match.Unlink();
+
+        // Also unlink the transaction
+        var transaction = await this._transactionRepository.GetByIdAsync(
+            match.ImportedTransactionId,
+            cancellationToken);
+        transaction?.UnlinkFromRecurring();
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ReconciliationMapper.ToDto(match);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(
+        Guid transactionId,
+        CancellationToken cancellationToken = default)
+    {
+        var transaction = await this._transactionRepository.GetByIdAsync(transactionId, cancellationToken);
+        if (transaction is null)
+        {
+            return [];
+        }
+
+        // Get instances within ±30 days of the transaction date
+        var startDate = transaction.Date.AddDays(-30);
+        var endDate = transaction.Date.AddDays(30);
+
+        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
+        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
+            recurringTransactions,
+            startDate,
+            endDate,
+            cancellationToken);
+
+        // Flatten to list of instances
+        var allInstances = instancesByDate.Values.SelectMany(list => list).ToList();
+
+        // Get existing matches to determine which instances are already matched
+        var result = new List<LinkableInstanceDto>();
+
+        foreach (var instance in allInstances)
+        {
+            if (instance.IsSkipped)
+            {
+                continue;
+            }
+
+            // Check if this instance is already matched
+            var isAlreadyMatched = await this._matchRepository.IsInstanceMatchedAsync(
+                instance.RecurringTransactionId,
+                instance.InstanceDate,
+                cancellationToken);
+
+            // Calculate a suggested confidence score for display
+            decimal? suggestedConfidence = null;
+            if (!isAlreadyMatched)
+            {
+                var matchResults = this._transactionMatcher.FindMatches(
+                    transaction,
+                    [instance],
+                    MatchingTolerances.Default);
+                var matchResult = matchResults.FirstOrDefault();
+                if (matchResult != null)
+                {
+                    suggestedConfidence = matchResult.ConfidenceScore;
+                }
+            }
+
+            result.Add(new LinkableInstanceDto
+            {
+                RecurringTransactionId = instance.RecurringTransactionId,
+                Description = instance.Description,
+                ExpectedAmount = CommonMapper.ToDto(instance.Amount),
+                InstanceDate = instance.InstanceDate,
+                IsAlreadyMatched = isAlreadyMatched,
+                SuggestedConfidence = suggestedConfidence,
+            });
+        }
+
+        // Sort by date, then by suggested confidence (highest first)
+        return result
+            .OrderBy(i => i.InstanceDate)
+            .ThenByDescending(i => i.SuggestedConfidence ?? 0)
+            .ToList();
     }
 
     private async Task<IReadOnlyList<ReconciliationMatchDto>> EnrichMatchesWithDetailsAsync(

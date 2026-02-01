@@ -122,5 +122,24 @@ internal sealed class RecurringTransactionConfiguration : IEntityTypeConfigurati
         // Indexes for scope filtering
         builder.HasIndex(r => r.Scope);
         builder.HasIndex(r => r.OwnerUserId);
+
+        // Import patterns collection stored as owned entities
+        builder.OwnsMany(r => r.ImportPatterns, ip =>
+        {
+            ip.ToTable("RecurringTransactionImportPatterns");
+
+            ip.WithOwner().HasForeignKey("RecurringTransactionId");
+
+            ip.Property(p => p.Pattern)
+                .HasColumnName("Pattern")
+                .HasMaxLength(500)
+                .IsRequired();
+
+            ip.HasKey("RecurringTransactionId", "Pattern");
+        });
+
+        // Navigate the private _importPatterns field
+        var navigation = builder.Metadata.FindNavigation(nameof(RecurringTransaction.ImportPatterns));
+        navigation?.SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

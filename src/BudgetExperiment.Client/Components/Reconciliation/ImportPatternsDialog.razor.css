@@ -1,0 +1,107 @@
+/* ImportPatternsDialog.razor.css */
+
+.import-patterns-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.dialog-description {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.loading-state,
+.empty-state {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--surface-secondary);
+    border-radius: 8px;
+    color: var(--text-secondary);
+}
+
+/* Pattern List */
+.pattern-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.pattern-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface-secondary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.pattern-text {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-icon:hover {
+    background: var(--surface-hover);
+}
+
+.btn-danger-icon {
+    color: var(--danger-color);
+}
+
+.btn-danger-icon:hover {
+    background: var(--danger-background);
+}
+
+/* Add Pattern Section */
+.add-pattern-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.add-pattern-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.add-pattern-input .form-control {
+    flex: 1;
+}
+
+.helper-text {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Error Message */
+.error-message {
+    padding: 0.75rem;
+    background: var(--danger-background);
+    color: var(--danger-color);
+    border-radius: 6px;
+    font-size: 0.875rem;
+}

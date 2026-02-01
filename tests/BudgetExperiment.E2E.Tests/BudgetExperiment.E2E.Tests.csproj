@@ -5,8 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- E2E tests disabled until authentication issues are resolved. -->
-    <!-- To run manually: dotnet test --filter "FullyQualifiedName~E2E" -e RUN_E2E_TESTS=true -->
+    <!--
+      E2E tests disabled until authentication issues are resolved.
+      To run manually: dotnet test filter "FullyQualifiedName~E2E" e RUN_E2E_TESTS=true
+    -->
     <IsTestProject Condition="'$(RUN_E2E_TESTS)' != 'true'">false</IsTestProject>
   </PropertyGroup>
 

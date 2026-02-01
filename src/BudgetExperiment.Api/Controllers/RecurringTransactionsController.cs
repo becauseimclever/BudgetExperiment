@@ -347,4 +347,49 @@ public sealed class RecurringTransactionsController : ControllerBase
             new { id = transaction.Id },
             transaction);
     }
+
+    /// <summary>
+    /// Gets import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The import patterns.</returns>
+    [HttpGet("{id:guid}/import-patterns")]
+    [ProducesResponseType<ImportPatternsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var patterns = await this._service.GetImportPatternsAsync(id, cancellationToken);
+        if (patterns is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(patterns);
+    }
+
+    /// <summary>
+    /// Updates import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="dto">The import patterns to set.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated import patterns.</returns>
+    [HttpPut("{id:guid}/import-patterns")]
+    [ProducesResponseType<ImportPatternsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateImportPatternsAsync(
+        Guid id,
+        [FromBody] ImportPatternsDto dto,
+        CancellationToken cancellationToken)
+    {
+        var patterns = await this._service.UpdateImportPatternsAsync(id, dto, cancellationToken);
+        if (patterns is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(patterns);
+    }
 }

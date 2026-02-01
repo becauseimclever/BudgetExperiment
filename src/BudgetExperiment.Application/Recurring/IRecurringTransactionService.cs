@@ -74,4 +74,21 @@ public interface IRecurringTransactionService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
     Task<RecurringTransactionDto?> ResumeAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The import patterns DTO, or null if not found.</returns>
+    Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="dto">The import patterns to set.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated import patterns DTO, or null if not found.</returns>
+    Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid id, ImportPatternsDto dto, CancellationToken cancellationToken = default);
 }

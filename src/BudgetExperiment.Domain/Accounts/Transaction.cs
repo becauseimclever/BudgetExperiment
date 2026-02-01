@@ -409,4 +409,20 @@ public sealed class Transaction
         this.RecurringInstanceDate = instanceDate;
         this.UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Unlinks this transaction from its recurring transaction instance.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when transaction is not linked.</exception>
+    public void UnlinkFromRecurring()
+    {
+        if (!this.RecurringTransactionId.HasValue)
+        {
+            throw new DomainException("Transaction is not linked to a recurring transaction.");
+        }
+
+        this.RecurringTransactionId = null;
+        this.RecurringInstanceDate = null;
+        this.UpdatedAt = DateTime.UtcNow;
+    }
 }

@@ -285,4 +285,40 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     }
 
     #endregion
+
+    #region DELETE /api/v1/reconciliation/matches/{matchId} Tests
+
+    /// <summary>
+    /// DELETE /api/v1/reconciliation/matches/{matchId} returns 404 when match not found.
+    /// </summary>
+    [Fact]
+    public async Task UnlinkMatch_Returns_404_WhenMatchNotFound()
+    {
+        // Act
+        var response = await this._client.DeleteAsync($"/api/v1/reconciliation/matches/{Guid.NewGuid()}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    #endregion
+
+    #region GET /api/v1/reconciliation/linkable-instances Tests
+
+    /// <summary>
+    /// GET /api/v1/reconciliation/linkable-instances returns 200 OK with empty list for non-existent transaction.
+    /// </summary>
+    [Fact]
+    public async Task GetLinkableInstances_Returns_200_WithEmptyList_ForNonExistentTransaction()
+    {
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/reconciliation/linkable-instances?transactionId={Guid.NewGuid()}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var instances = await response.Content.ReadFromJsonAsync<List<LinkableInstanceDto>>();
+        Assert.NotNull(instances);
+    }
+
+    #endregion
 }

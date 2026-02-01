@@ -425,4 +425,232 @@ public class RecurringTransactionTests
 
         Assert.True(recurring.UpdatedAtUtc > originalUpdatedAt);
     }
+
+    [Fact]
+    public void ImportPatterns_Is_Empty_On_Create()
+    {
+        // Act
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+
+        // Assert
+        Assert.Empty(recurring.ImportPatterns);
+    }
+
+    [Fact]
+    public void AddImportPattern_Adds_Pattern_To_Collection()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        var pattern = ImportPattern.Create("*ACME CORP PAYROLL*");
+
+        // Act
+        recurring.AddImportPattern(pattern);
+
+        // Assert
+        Assert.Single(recurring.ImportPatterns);
+        Assert.Contains(pattern, recurring.ImportPatterns);
+    }
+
+    [Fact]
+    public void AddImportPattern_Multiple_Patterns_Allowed()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        var pattern1 = ImportPattern.Create("*ACME CORP PAYROLL*");
+        var pattern2 = ImportPattern.Create("ACH DEPOSIT ACME*");
+
+        // Act
+        recurring.AddImportPattern(pattern1);
+        recurring.AddImportPattern(pattern2);
+
+        // Assert
+        Assert.Equal(2, recurring.ImportPatterns.Count);
+    }
+
+    [Fact]
+    public void AddImportPattern_Duplicate_Pattern_Throws()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        var pattern = ImportPattern.Create("*ACME CORP*");
+        recurring.AddImportPattern(pattern);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            recurring.AddImportPattern(ImportPattern.Create("*ACME CORP*")));
+        Assert.Contains("already exists", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AddImportPattern_Null_Pattern_Throws()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            recurring.AddImportPattern(null!));
+        Assert.Contains("pattern", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void RemoveImportPattern_Removes_Existing_Pattern()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        var pattern = ImportPattern.Create("*ACME CORP*");
+        recurring.AddImportPattern(pattern);
+
+        // Act
+        recurring.RemoveImportPattern(pattern);
+
+        // Assert
+        Assert.Empty(recurring.ImportPatterns);
+    }
+
+    [Fact]
+    public void RemoveImportPattern_NonExistent_Pattern_Throws()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        var pattern = ImportPattern.Create("*ACME CORP*");
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            recurring.RemoveImportPattern(pattern));
+        Assert.Contains("not found", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void MatchesImportDescription_Returns_True_When_Pattern_Matches()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        recurring.AddImportPattern(ImportPattern.Create("*ACME CORP PAYROLL*"));
+
+        // Act
+        var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL 01/15");
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void MatchesImportDescription_Returns_False_When_No_Patterns()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+
+        // Act
+        var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL");
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void MatchesImportDescription_Returns_False_When_No_Pattern_Matches()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        recurring.AddImportPattern(ImportPattern.Create("*OTHER COMPANY*"));
+
+        // Act
+        var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL");
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void MatchesImportDescription_Returns_True_When_Any_Pattern_Matches()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        recurring.AddImportPattern(ImportPattern.Create("*OTHER COMPANY*"));
+        recurring.AddImportPattern(ImportPattern.Create("*ACME CORP*"));
+
+        // Act
+        var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL");
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void AddImportPattern_Updates_UpdatedAtUtc()
+    {
+        // Arrange
+        var recurring = RecurringTransaction.Create(
+            this._validAccountId,
+            "Paycheck",
+            this._validAmount,
+            this._validPattern,
+            this._validStartDate);
+        var originalUpdatedAt = recurring.UpdatedAtUtc;
+
+        // Small delay to ensure timestamp changes
+        System.Threading.Thread.Sleep(10);
+
+        // Act
+        recurring.AddImportPattern(ImportPattern.Create("*ACME*"));
+
+        // Assert
+        Assert.True(recurring.UpdatedAtUtc > originalUpdatedAt);
+    }
 }

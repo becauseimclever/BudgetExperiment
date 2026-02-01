@@ -34,6 +34,7 @@ public static class ReconciliationMapper
             ConfidenceScore = match.ConfidenceScore,
             ConfidenceLevel = match.ConfidenceLevel.ToString(),
             Status = match.Status.ToString(),
+            Source = match.Source.ToString(),
             AmountVariance = match.AmountVariance,
             DateOffsetDays = match.DateOffsetDays,
             CreatedAtUtc = match.CreatedAtUtc,

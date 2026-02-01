@@ -1,0 +1,234 @@
+@* ImportPatternsDialog.razor - Dialog for managing import patterns on a recurring transaction *@
+@using BudgetExperiment.Contracts.Dtos
+@inject IBudgetApiService BudgetApi
+
+<Modal IsVisible="@IsVisible" Title="Import Patterns" Size="ModalSize.Medium" OnClose="@HandleCancel">
+    <ChildContent>
+        <div class="import-patterns-dialog">
+            <p class="dialog-description">
+                Import patterns help automatically match imported transactions to this recurring item.
+                Patterns can include wildcards (*) to match any text.
+            </p>
+
+            @if (isLoading)
+            {
+                <div class="loading-state">
+                    <LoadingSpinner />
+                    <span>Loading patterns...</span>
+                </div>
+            }
+            else
+            {
+                @* Pattern List *@
+                <div class="pattern-list">
+                    @if (patterns.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <span>No import patterns configured.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var pattern in patterns)
+                        {
+                            <div class="pattern-item">
+                                <span class="pattern-text">@pattern</span>
+                                <button class="btn-icon btn-danger-icon" @onclick="() => RemovePattern(pattern)" title="Remove pattern">
+                                    <Icon Name="x" Size="16" />
+                                </button>
+                            </div>
+                        }
+                    }
+                </div>
+
+                @* Add New Pattern *@
+                <div class="add-pattern-section">
+                    <div class="add-pattern-input">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="e.g., *ACME CORP* or PAYROLL DEPOSIT"
+                               @bind="newPattern"
+                               @bind:event="oninput"
+                               @onkeypress="HandleKeyPress" />
+                        <button class="btn btn-secondary" @onclick="AddPattern" disabled="@string.IsNullOrWhiteSpace(newPattern)">
+                            Add Pattern
+                        </button>
+                    </div>
+                    <p class="helper-text">
+                        Use * as a wildcard. Example: *ELECTRIC* matches "ABC ELECTRIC CO" and "ELECTRIC BILL".
+                    </p>
+                </div>
+
+                @* Error Message *@
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="error-message">@errorMessage</div>
+                }
+            }
+        </div>
+    </ChildContent>
+    <FooterContent>
+        <button class="btn btn-secondary" @onclick="HandleCancel" disabled="@isSaving">
+            Cancel
+        </button>
+        <button class="btn btn-primary" @onclick="HandleSave" disabled="@isSaving">
+            @if (isSaving)
+            {
+                <LoadingSpinner Size="SpinnerSize.Small" />
+            }
+            Save Patterns
+        </button>
+    </FooterContent>
+</Modal>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the dialog is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the recurring transaction ID.
+    /// </summary>
+    [Parameter]
+    public Guid RecurringTransactionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the recurring transaction description for display.
+    /// </summary>
+    [Parameter]
+    public string RecurringDescription { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the callback when patterns are saved.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSaved { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the dialog is cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private List<string> patterns = [];
+    private string newPattern = string.Empty;
+    private bool isLoading;
+    private bool isSaving;
+    private string? errorMessage;
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && RecurringTransactionId != Guid.Empty && patterns.Count == 0)
+        {
+            await LoadPatternsAsync();
+        }
+
+        if (!IsVisible)
+        {
+            ResetDialog();
+        }
+    }
+
+    private async Task LoadPatternsAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var dto = await BudgetApi.GetImportPatternsAsync(RecurringTransactionId);
+            patterns = dto?.Patterns?.ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load patterns: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void AddPattern()
+    {
+        if (string.IsNullOrWhiteSpace(newPattern))
+        {
+            return;
+        }
+
+        var normalizedPattern = newPattern.Trim();
+
+        // Check for duplicates
+        if (patterns.Contains(normalizedPattern, StringComparer.OrdinalIgnoreCase))
+        {
+            errorMessage = "This pattern already exists.";
+            return;
+        }
+
+        patterns.Add(normalizedPattern);
+        newPattern = string.Empty;
+        errorMessage = null;
+    }
+
+    private void RemovePattern(string pattern)
+    {
+        patterns.Remove(pattern);
+        errorMessage = null;
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddPattern();
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        isSaving = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var dto = new ImportPatternsDto { Patterns = patterns };
+            var result = await BudgetApi.UpdateImportPatternsAsync(RecurringTransactionId, dto);
+
+            if (result != null)
+            {
+                await OnSaved.InvokeAsync();
+                ResetDialog();
+            }
+            else
+            {
+                errorMessage = "Failed to save patterns. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save patterns: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        ResetDialog();
+        await OnCancel.InvokeAsync();
+    }
+
+    private void ResetDialog()
+    {
+        patterns = [];
+        newPattern = string.Empty;
+        errorMessage = null;
+    }
+}
