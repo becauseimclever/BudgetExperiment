@@ -4,6 +4,33 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.12.0] - 2026-02-01
+
+### Features
+
+- **client:** Button component with variant/size support, loading states, and icon slots (Feature 045)
+- **client:** Badge component for status indicators with 5 variants
+- **client:** Card component with header/body/footer sections
+- **client:** EmptyState component for consistent empty list displays
+- **client:** FormField component for standardized form labels, help text, and validation
+
+### Refactoring
+
+- **client:** Migrate 15 pages from raw `<button>` to `<Button>` component
+- **client:** Migrate 13 form components to use FormField and Button components
+- **client:** Standardize button variants: Primary, Secondary, Success, Danger, Warning, Ghost, Outline
+
+### Documentation
+
+- **client:** Component catalog in Components/README.md with API docs
+- **client:** CSS dependencies documentation for all Tier 1 components
+- **client:** Migration guide for Button, FormField, and EmptyState patterns
+- **docs:** COMPONENT-STANDARDS.md for naming conventions and patterns
+
+### Testing
+
+- **client:** Add 87 bUnit tests for new components (Button: 20, Badge: 13, Card: 11, EmptyState: 11, FormField: 14)
+
 ## [3.11.0] - 2026-02-01
 
 ### Features
