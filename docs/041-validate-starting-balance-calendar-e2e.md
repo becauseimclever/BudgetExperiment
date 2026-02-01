@@ -1,7 +1,14 @@
 # Feature 041: Validate Starting Balance in Calendar (E2E)
-> **Status:** 🗒️ Planning
+> **Status:** ❌ Cancelled
+> **Superseded By:** Feature 062 (Functional E2E Test Suite)
 
-## Overview
+## Cancellation Reason
+
+This narrow single-scenario E2E test has been consolidated into Feature 062, which provides a comprehensive functional E2E test suite. The starting balance validation scenario is now US-062-002 in that feature.
+
+---
+
+## Original Overview
 
 Ensure that the starting balance for a given account is accurately reflected in the running balance shown on the calendar view for that account. Add E2E tests (see doc 036) against the demo environment to validate this behavior.
 
