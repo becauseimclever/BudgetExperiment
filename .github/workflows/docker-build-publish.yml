@@ -58,7 +58,7 @@ jobs:
             --configuration Release \
             --no-build \
             --filter "FullyQualifiedName!~E2E" \
-            --logger "trx;LogFileName=test-results.trx" \
+            --logger "trx" \
             --results-directory ./TestResults
 
       - name: Upload test results
