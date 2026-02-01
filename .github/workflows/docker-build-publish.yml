@@ -23,6 +23,9 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    env:
+      # Dummy connection string for DI validation (tests use in-memory database)
+      ConnectionStrings__AppDb: "Host=localhost;Database=test;Username=test;Password=test"
 
     steps:
       - name: Checkout repository
