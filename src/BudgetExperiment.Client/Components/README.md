@@ -315,9 +315,115 @@ public enum ButtonVariant { Primary, Secondary, Success, Danger, Warning, Ghost,
 public enum BadgeSize { Small, Medium, Large }
 public enum BadgeVariant { Default, Success, Warning, Danger, Info }
 public enum AlertVariant { Info, Success, Warning, Danger }
-public enum BadgeVariant { Default, Success, Warning, Danger, Info }
-public enum AlertVariant { Info, Success, Warning, Danger }
 ```
+
+---
+
+## CSS Dependencies
+
+Components depend on the design system CSS files located in `wwwroot/css/design-system/`:
+
+| Component | CSS File | Key Classes |
+|-----------|----------|-------------|
+| Button | `components/buttons.css` | `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-success`, `.btn-danger`, `.btn-warning`, `.btn-ghost`, `.btn-outline`, `.btn-sm`, `.btn-lg`, `.btn-block` |
+| Badge | `components/badges.css` | `.badge`, `.badge-default`, `.badge-success`, `.badge-warning`, `.badge-danger`, `.badge-info`, `.badge-sm`, `.badge-lg` |
+| Card | `components/cards.css` | `.card`, `.card-header`, `.card-body`, `.card-footer`, `.card-title`, `.card-subtitle` |
+| Modal | `components/modals.css` | `.modal-overlay`, `.modal`, `.modal-sm`, `.modal-lg`, `.modal-header`, `.modal-body`, `.modal-footer` |
+| FormField | `components/forms.css` | `.form-group`, `.form-label`, `.form-control`, `.validation-message`, `.help-text`, `.required-indicator` |
+| EmptyState | `components/empty-state.css` | `.empty-state`, `.empty-state-icon`, `.empty-state-title`, `.empty-state-description`, `.empty-state-actions` |
+| LoadingSpinner | `components/spinners.css` | `.spinner`, `.spinner-sm`, `.spinner-lg`, `.loading-overlay` |
+| ErrorAlert | `components/alerts.css` | `.alert`, `.alert-danger`, `.alert-dismissible` |
+
+**Token Dependencies:** All components use CSS variables from `tokens.css` for colors, spacing, and typography.
+
+---
+
+## Migration Guide
+
+### Migrating from Raw `<button>` to `<Button>`
+
+**Before:**
+```razor
+<button class="btn btn-primary" @onclick="Save" disabled="@isSaving">
+    @if (isSaving)
+    {
+        <span class="spinner-border spinner-border-sm"></span>
+        <span>Saving...</span>
+    }
+    else
+    {
+        <span>Save</span>
+    }
+</button>
+```
+
+**After:**
+```razor
+<Button Variant="ButtonVariant.Primary" OnClick="Save" IsLoading="@isSaving">
+    Save
+</Button>
+```
+
+### Migrating to `FormField`
+
+**Before:**
+```razor
+<div class="form-group">
+    <label for="email">Email Address <span class="required">*</span></label>
+    <input type="email" id="email" class="form-control" @bind="email" />
+    @if (!string.IsNullOrEmpty(emailError))
+    {
+        <span class="validation-message">@emailError</span>
+    }
+    <span class="help-text">We'll never share your email.</span>
+</div>
+```
+
+**After:**
+```razor
+<FormField Label="Email Address" IsRequired="true" InputId="email"
+           ValidationMessage="@emailError" HelpText="We'll never share your email.">
+    <input type="email" id="email" class="form-control" @bind="email" />
+</FormField>
+```
+
+### Migrating to `EmptyState`
+
+**Before:**
+```razor
+@if (!items.Any())
+{
+    <div class="text-center p-4">
+        <p class="text-muted">No items found</p>
+        <p class="text-muted small">Add your first item to get started.</p>
+        <button class="btn btn-success" @onclick="AddItem">Add Item</button>
+    </div>
+}
+```
+
+**After:**
+```razor
+@if (!items.Any())
+{
+    <EmptyState Title="No items found"
+                Description="Add your first item to get started."
+                Icon="inbox">
+        <Button Variant="ButtonVariant.Success" OnClick="AddItem">Add Item</Button>
+    </EmptyState>
+}
+```
+
+### Variant Mapping Reference
+
+| Old CSS Class | Button Variant |
+|---------------|----------------|
+| `btn-primary` | `ButtonVariant.Primary` |
+| `btn-secondary` | `ButtonVariant.Secondary` |
+| `btn-success` | `ButtonVariant.Success` |
+| `btn-danger` | `ButtonVariant.Danger` |
+| `btn-warning` | `ButtonVariant.Warning` |
+| `btn-ghost` | `ButtonVariant.Ghost` |
+| `btn-outline-*` | `ButtonVariant.Outline` |
 
 ---
 
