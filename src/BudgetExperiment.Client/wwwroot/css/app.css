@@ -17,6 +17,7 @@
 @import "themes/macos.css";
 @import "themes/geocities.css";
 @import "themes/crayons.css";
+@import "themes/accessible.css";
 
 /* Layout System */
 @import "design-system/layout.css";

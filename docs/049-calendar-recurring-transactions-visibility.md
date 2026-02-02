@@ -1,5 +1,5 @@
 # Calendar Recurring Transactions Visibility
-> **Status:** 🗒️ Planning
+> **Status:** ✅ Complete
 
 ## Feature Overview
 
@@ -15,10 +15,19 @@ Recurring transactions are a core part of budgeting. Making them visible in the 
 - Allow interaction (view/edit details)
 
 ## Acceptance Criteria
-- Recurring items are visually distinct in the calendar
-- Users can view/edit recurring transaction details from the calendar
-- UI is accessible and responsive
+- [x] Recurring items are visually distinct in the calendar
+- [x] Users can view/edit recurring transaction details from the calendar
+- [x] UI is accessible and responsive
+
+## Implementation Summary
+
+This feature was implemented as part of earlier calendar development work:
+
+- **CalendarDay.razor**: Displays recurring indicator with refresh icon and projected total when `Day.HasRecurring` is true
+- **DayDetail.razor**: Shows dedicated "Scheduled Recurring" section with confirm, edit, and skip actions for each recurring item
+- **Visual distinction**: CSS class `has-recurring` applied to days, icons and color-coded amounts distinguish recurring from actual transactions
 
 ---
 *Created: 2026-01-26*
+*Completed: 2026-02-01*
 *Author: @becauseimclever*

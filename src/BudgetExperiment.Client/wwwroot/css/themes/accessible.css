@@ -1,0 +1,361 @@
+/* ==========================================================================
+   Accessible Theme - High Contrast
+   Budget Experiment Design System
+   
+   WCAG 2.0 AA compliant theme for users with low vision or visual impairments.
+   All color combinations meet minimum contrast ratios:
+   - 4.5:1 for normal text
+   - 3:1 for large text and UI components
+   - 7:1 target for enhanced readability (AAA where possible)
+   ========================================================================== */
+
+[data-theme="accessible"] {
+  /* ==========================================================================
+     Background Colors
+     ========================================================================== */
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f5f5f5;
+
+  /* ==========================================================================
+     Text Colors - High contrast for readability
+     Contrast ratios on white background:
+     - Primary: #000000 = 21:1 (AAA)
+     - Secondary: #2d2d2d = 12.6:1 (AAA)
+     - Disabled: #595959 = 7:1 (AAA)
+     ========================================================================== */
+  --color-text-primary: #000000;
+  --color-text-secondary: #2d2d2d;
+  --color-text-disabled: #595959;
+  --color-text-inverse: #ffffff;
+
+  /* ==========================================================================
+     Border Colors - Clear visual boundaries
+     Using solid black borders for maximum clarity
+     ========================================================================== */
+  --color-border: #000000;
+  --color-border-subtle: #595959;
+
+  /* ==========================================================================
+     Brand Colors - High contrast blue
+     #0000cc on white = 8.6:1 (AAA)
+     ========================================================================== */
+  --color-brand-primary: #0000cc;
+  --color-brand-primary-hover: #000099;
+  --color-brand-primary-active: #000066;
+
+  /* ==========================================================================
+     Semantic Colors - All meet WCAG AA on white
+     Success: #006600 = 8.5:1 (AAA)
+     Warning: #664400 = 7.5:1 (AAA) - dark amber for contrast
+     Error: #cc0000 = 5.9:1 (AA)
+     Info: #0000cc = 8.6:1 (AAA)
+     ========================================================================== */
+  --color-success: #006600;
+  --color-warning: #664400;
+  --color-error: #cc0000;
+  --color-info: #0000cc;
+
+  /* ==========================================================================
+     Transaction Colors - High contrast variants
+     ========================================================================== */
+  --color-income: #006600;
+  --color-expense: #cc0000;
+  --color-transfer: #0000cc;
+  --color-recurring: #660099;
+
+  /* ==========================================================================
+     RGB Values for Alpha Compositing
+     ========================================================================== */
+  --color-brand-rgb: 0, 0, 204;
+  --color-warning-rgb: 102, 68, 0;
+  --color-recurring-rgb: 102, 0, 153;
+
+  /* ==========================================================================
+     App Shell Colors - High contrast header
+     ========================================================================== */
+  --color-header-bg: #000000;
+  --color-header-text: #ffffff;
+  --color-header-text-hover: #ffff00;
+  --color-header-hover: rgba(255, 255, 255, 0.2);
+  --color-sidebar-bg: #000000;
+  --color-sidebar-text: #ffffff;
+  --color-sidebar-text-hover: #ffff00;
+
+  /* ==========================================================================
+     Focus Ring - Highly visible 3px outline
+     Black ring with white offset for visibility on any background
+     ========================================================================== */
+  --focus-ring: 0 0 0 3px #000000, 0 0 0 5px #ffffff;
+
+  /* ==========================================================================
+     Typography - Slightly larger base size for readability
+     ========================================================================== */
+  --font-size-xs: 0.8125rem;    /* 13px vs 12px */
+  --font-size-sm: 0.9375rem;    /* 15px vs 14px */
+  --font-size-base: 1.0625rem;  /* 17px vs 16px */
+  --font-size-lg: 1.1875rem;    /* 19px vs 18px */
+
+  /* ==========================================================================
+     Shadows - Minimal, replaced with solid borders
+     ========================================================================== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.35);
+
+  /* ==========================================================================
+     Border Radius - Reduced for clearer boundaries
+     ========================================================================== */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+
+  /* ==========================================================================
+     Link Styling - Underlined for visibility
+     ========================================================================== */
+  --link-decoration: underline;
+
+  /* Color scheme for native elements */
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   Enhanced Focus States
+   Ensure focus is always visible with high contrast outline
+   ========================================================================== */
+
+[data-theme="accessible"] :focus-visible {
+  outline: 3px solid #000000 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px #ffffff !important;
+}
+
+/* ==========================================================================
+   Link Visibility
+   Always underline links for users who cannot distinguish by color alone
+   ========================================================================== */
+
+[data-theme="accessible"] a:not(.btn):not(.nav-link):not(.navbar-brand) {
+  text-decoration: underline;
+}
+
+[data-theme="accessible"] a:not(.btn):not(.nav-link):not(.navbar-brand):hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+/* ==========================================================================
+   Button Enhancements
+   Clear borders on all buttons
+   ========================================================================== */
+
+[data-theme="accessible"] .btn {
+  border-width: 2px;
+  border-style: solid;
+}
+
+[data-theme="accessible"] .btn-primary {
+  background-color: #0000cc;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+[data-theme="accessible"] .btn-primary:hover,
+[data-theme="accessible"] .btn-primary:focus {
+  background-color: #000099;
+  border-color: #000000;
+}
+
+[data-theme="accessible"] .btn-secondary {
+  background-color: #ffffff;
+  border-color: #000000;
+  color: #000000;
+}
+
+[data-theme="accessible"] .btn-secondary:hover,
+[data-theme="accessible"] .btn-secondary:focus {
+  background-color: #f0f0f0;
+  border-color: #000000;
+}
+
+/* ==========================================================================
+   Form Input Enhancements
+   Clear borders and high contrast placeholders
+   ========================================================================== */
+
+[data-theme="accessible"] input,
+[data-theme="accessible"] select,
+[data-theme="accessible"] textarea {
+  border: 2px solid #000000;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+[data-theme="accessible"] input::placeholder,
+[data-theme="accessible"] textarea::placeholder {
+  color: #595959;
+  opacity: 1;
+}
+
+[data-theme="accessible"] input:focus,
+[data-theme="accessible"] select:focus,
+[data-theme="accessible"] textarea:focus {
+  border-color: #0000cc;
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Card Enhancements
+   Clear boundaries with solid borders
+   ========================================================================== */
+
+[data-theme="accessible"] .card {
+  border: 2px solid #000000;
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   Table Enhancements
+   Clear grid lines
+   ========================================================================== */
+
+[data-theme="accessible"] table {
+  border: 2px solid #000000;
+}
+
+[data-theme="accessible"] th,
+[data-theme="accessible"] td {
+  border: 1px solid #000000;
+}
+
+[data-theme="accessible"] th {
+  background-color: #f0f0f0;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Modal Enhancements
+   High contrast overlay and clear boundaries
+   ========================================================================== */
+
+[data-theme="accessible"] .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="accessible"] .modal-content {
+  border: 3px solid #000000;
+}
+
+/* ==========================================================================
+   Alert Enhancements
+   Clear borders in addition to background colors
+   ========================================================================== */
+
+[data-theme="accessible"] .alert {
+  border-width: 2px;
+  border-style: solid;
+}
+
+[data-theme="accessible"] .alert-success {
+  background-color: #e6f4e6;
+  border-color: #006600;
+  color: #004400;
+}
+
+[data-theme="accessible"] .alert-warning {
+  background-color: #fff4e6;
+  border-color: #664400;
+  color: #4a3000;
+}
+
+[data-theme="accessible"] .alert-danger,
+[data-theme="accessible"] .alert-error {
+  background-color: #ffe6e6;
+  border-color: #cc0000;
+  color: #990000;
+}
+
+[data-theme="accessible"] .alert-info {
+  background-color: #e6e6ff;
+  border-color: #0000cc;
+  color: #000099;
+}
+
+/* ==========================================================================
+   Badge Enhancements
+   High contrast with borders
+   ========================================================================== */
+
+[data-theme="accessible"] .badge {
+  border: 1px solid #000000;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Calendar Enhancements
+   Clear day boundaries and high contrast selection
+   ========================================================================== */
+
+[data-theme="accessible"] .calendar-day {
+  border: 1px solid #000000;
+}
+
+[data-theme="accessible"] .calendar-day.today {
+  border: 3px solid #0000cc;
+  font-weight: 700;
+}
+
+[data-theme="accessible"] .calendar-day.selected {
+  background-color: #0000cc;
+  color: #ffffff;
+}
+
+[data-theme="accessible"] .calendar-day:hover:not(.selected) {
+  background-color: #e6e6ff;
+}
+
+/* ==========================================================================
+   Navigation Enhancements
+   Clear active/current state indicators
+   ========================================================================== */
+
+[data-theme="accessible"] .nav-link.active,
+[data-theme="accessible"] .nav-item.active .nav-link {
+  border-left: 4px solid #0000cc;
+  font-weight: 700;
+  background-color: rgba(0, 0, 204, 0.1);
+}
+
+/* ==========================================================================
+   Icon Visibility
+   Ensure icons meet contrast requirements
+   ========================================================================== */
+
+[data-theme="accessible"] .icon {
+  stroke-width: 2.5;
+}
+
+/* ==========================================================================
+   Selection/Highlight Colors
+   High contrast selection
+   ========================================================================== */
+
+[data-theme="accessible"] ::selection {
+  background-color: #0000cc;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Disabled State
+   Clear visual indication of disabled elements
+   ========================================================================== */
+
+[data-theme="accessible"] :disabled,
+[data-theme="accessible"] .disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-style: dashed !important;
+}

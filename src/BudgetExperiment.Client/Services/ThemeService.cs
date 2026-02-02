@@ -48,6 +48,7 @@ public sealed class ThemeService : IAsyncDisposable
         new("system", "System", "monitor"),
         new("light", "Light", "sun"),
         new("dark", "Dark", "moon"),
+        new("accessible", "Accessible", "accessibility"),
         new("vscode-dark", "VS Code", "code"),
         new("monopoly", "Monopoly", "dice"),
         new("win95", "Windows 95", "monitor"),
@@ -137,6 +138,49 @@ public sealed class ThemeService : IAsyncDisposable
     }
 
     /// <summary>
+    /// Gets the accessibility state from the theme system.
+    /// </summary>
+    /// <returns>The accessibility state with detection and override information.</returns>
+    public async Task<AccessibilityState> GetAccessibilityStateAsync()
+    {
+        if (this.module == null)
+        {
+            return new AccessibilityState(false, false, false);
+        }
+
+        try
+        {
+            return await this.module.InvokeAsync<AccessibilityState>("getAccessibilityState");
+        }
+        catch (JSException)
+        {
+            return new AccessibilityState(false, false, false);
+        }
+    }
+
+    /// <summary>
+    /// Clears the explicit theme override, allowing auto-detection to apply.
+    /// </summary>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task ClearThemeOverrideAsync()
+    {
+        if (this.module != null)
+        {
+            try
+            {
+                await this.module.InvokeVoidAsync("clearThemeOverride");
+                var effectiveTheme = await this.module.InvokeAsync<string>("getEffectiveTheme");
+                this.currentTheme = effectiveTheme;
+                this.ThemeChanged?.Invoke(effectiveTheme);
+            }
+            catch (JSException)
+            {
+                // Ignore JS errors
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets the themed icon name for the specified standard icon name.
     /// Uses the current theme to resolve the appropriate icon.
     /// </summary>
@@ -173,3 +217,14 @@ public sealed class ThemeService : IAsyncDisposable
         }
     }
 }
+
+/// <summary>
+/// Represents the accessibility detection state from the theme system.
+/// </summary>
+/// <param name="IsAccessibilityPreferenceDetected">True if system accessibility preferences were detected.</param>
+/// <param name="WasThemeAutoApplied">True if the accessible theme was auto-applied based on preferences.</param>
+/// <param name="HasExplicitOverride">True if user has explicitly chosen a theme override.</param>
+public record AccessibilityState(
+    bool IsAccessibilityPreferenceDetected,
+    bool WasThemeAutoApplied,
+    bool HasExplicitOverride);
