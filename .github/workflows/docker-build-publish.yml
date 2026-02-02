@@ -65,12 +65,12 @@ jobs:
       - name: Build solution
         run: dotnet build BudgetExperiment.sln --configuration Release --no-restore
 
-      - name: Run tests (excluding E2E)
+      - name: Run tests (excluding E2E and external dependencies)
         run: |
           dotnet test BudgetExperiment.sln \
             --configuration Release \
             --no-build \
-            --filter "FullyQualifiedName!~E2E" \
+            --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency" \
             --logger "trx" \
             --results-directory ./TestResults
 

@@ -47,6 +47,7 @@ internal sealed class FakeAppSettingsService : IAppSettingsService
 /// Integration tests for OllamaAiService.
 /// These tests require a running Ollama instance and are skipped if unavailable.
 /// </summary>
+[Trait("Category", "ExternalDependency")]
 public class OllamaAiServiceTests : IAsyncLifetime
 {
     private readonly HttpClient _httpClient;
