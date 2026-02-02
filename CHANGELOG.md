@@ -6,11 +6,26 @@ All notable changes to Budget Experiment.
 
 ### Features
 
+- **client:** Accessible theme with WCAG 2.0 AA high-contrast colors (Feature 046)
+- **client:** Auto-detect Windows High Contrast Mode and prefers-contrast settings
 - **client:** Calendar-first budget editing with inline goal management (Feature 048)
 - **client:** CalendarBudgetPanel component - collapsible month summary with category list
 - **client:** CalendarBudgetCategoryRow component - category row with progress bar and edit actions
 - **client:** BudgetGoalModal component - create/edit/delete budget goals
 - **api:** POST /api/v1/budgets/copy endpoint to copy goals between months
+
+### Accessibility
+
+- **client:** Skip-link for keyboard users to bypass navigation
+- **client:** ARIA landmarks on MainLayout (banner, navigation, main)
+- **client:** Modal component with role="dialog", aria-modal, Escape key close
+- **client:** NavMenu with semantic list structure and aria-expanded/aria-controls
+- **e2e:** Add axe-core accessibility tests for all major pages (14 tests)
+
+### Documentation
+
+- **docs:** ACCESSIBILITY.md guide with WCAG requirements, testing checklists
+- **docs:** THEMING.md updated with Accessible theme and auto-detection details
 
 ### Testing
 

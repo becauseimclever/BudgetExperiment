@@ -294,12 +294,29 @@ These variables **must** be defined for proper theme functionality:
 | System | `system` | Follows OS light/dark preference |
 | Light | `light` | Clean light theme |
 | Dark | `dark` | Modern dark theme |
+| Accessible | `accessible` | High-contrast WCAG 2.0 AA compliant theme |
 | VS Code | `vscode-dark` | VS Code dark editor style |
 | Monopoly | `monopoly` | Board game-inspired parchment and teal |
 | Windows 95 | `win95` | Classic 90s Windows with 3D bevels |
 | macOS | `macos` | Apple-inspired clean aesthetic |
 | GeoCities | `geocities` | Nostalgic 90s web with neon colors |
 | Crayon Box | `crayons` | Playful Crayola-inspired primary colors |
+
+### Accessible Theme
+
+The Accessible theme is designed for users with low vision or visual impairments. It provides:
+
+- **High contrast ratios**: All text meets WCAG 2.0 AAA (7:1+) contrast
+- **Solid borders**: 2px black borders on interactive elements
+- **Enhanced focus**: 3px focus ring with white offset
+- **Underlined links**: Links always underlined for non-color identification
+- **Larger text**: Slightly larger font sizes for readability
+
+The theme auto-applies when the system detects:
+- Windows High Contrast Mode (`forced-colors: active`)
+- User prefers more contrast (`prefers-contrast: more`)
+
+See [ACCESSIBILITY.md](./ACCESSIBILITY.md) for more details.
 
 ## Tips for Theme Design
 
@@ -313,5 +330,4 @@ These variables **must** be defined for proper theme functionality:
 
 - UI theme builder for custom user themes
 - User-specific theme preferences stored in database
-- High contrast / accessibility themes
 - Theme export/import functionality
