@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Globalization;
+
 using Bunit;
 
 using BudgetExperiment.Client.Components.Calendar;
@@ -29,7 +31,13 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
     }
 
     /// <inheritdoc/>
-    public Task InitializeAsync() => Task.CompletedTask;
+    public Task InitializeAsync()
+    {
+        // Set culture to en-US for consistent currency formatting in tests
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc/>
     public new Task DisposeAsync() => base.DisposeAsync().AsTask();
