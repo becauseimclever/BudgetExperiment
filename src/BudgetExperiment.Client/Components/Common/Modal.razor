@@ -1,14 +1,30 @@
-@* Modal.razor - Reusable modal dialog wrapper *@
+@* Modal.razor - Reusable modal dialog wrapper with accessibility support *@
+
+@inject IJSRuntime JSRuntime
 
 @if (IsVisible)
 {
-    <div class="modal-backdrop show" @onclick="HandleOverlayClick">
-        <div class="modal-dialog @SizeClass" @onclick:stopPropagation="true">
+    <div class="modal-backdrop show"
+         @onclick="HandleOverlayClick"
+         @onkeydown="HandleKeyDown"
+         role="presentation">
+        <div @ref="modalDialogRef"
+             class="modal-dialog @SizeClass"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="@modalTitleId"
+             tabindex="-1"
+             @onclick:stopPropagation="true">
             <header class="modal-header">
-                <h3 class="modal-title">@Title</h3>
+                <h3 id="@modalTitleId" class="modal-title">@Title</h3>
                 @if (ShowCloseButton)
                 {
-                    <button class="modal-close" @onclick="Close" aria-label="Close"><Icon Name="x" Size="20" /></button>
+                    <button class="modal-close"
+                            @onclick="Close"
+                            aria-label="Close dialog"
+                            type="button">
+                        <Icon Name="x" Size="20" />
+                    </button>
                 }
             </header>
             <div class="modal-body">
@@ -25,6 +41,9 @@
 }
 
 @code {
+    private ElementReference modalDialogRef;
+    private string modalTitleId = $"modal-title-{Guid.NewGuid():N}";
+
     /// <summary>
     /// Gets or sets a value indicating whether the modal is visible.
     /// </summary>
@@ -79,6 +98,31 @@
         ModalSize.Large => "modal-dialog-lg",
         _ => string.Empty
     };
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsVisible)
+        {
+            // Focus the modal dialog when it opens for accessibility
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.modal-dialog')?.focus()");
+            }
+            catch
+            {
+                // Ignore focus errors during prerendering
+            }
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await Close();
+        }
+    }
 
     private async Task HandleOverlayClick()
     {

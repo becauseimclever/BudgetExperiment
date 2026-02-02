@@ -4,6 +4,31 @@
    ========================================================================== */
 
 /* ==========================================================================
+   Skip Link (Accessibility)
+   Hidden link that becomes visible on focus for keyboard navigation
+   ========================================================================== */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  z-index: var(--z-overlay);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: var(--space-4);
+  outline: 3px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
    Container
    ========================================================================== */
 

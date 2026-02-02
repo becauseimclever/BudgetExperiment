@@ -10,23 +10,32 @@
 
 @implements IDisposable
 
+@* Skip link for keyboard users to bypass navigation *@
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
 @* AuthInitializer guarantees user is authenticated before MainLayout renders *@
-<div class="app-shell @(chatOpen ? "chat-open" : "")">
-    <header class="app-top-header">
-        <button class="app-menu-toggle" @onclick="ToggleNavigation" title="@(navCollapsed ? "Expand menu" : "Collapse menu")">
+<div class="app-shell @(chatOpen ? "chat-open" : "")" role="application">
+    <header class="app-top-header" role="banner">
+        <button class="app-menu-toggle"
+                @onclick="ToggleNavigation"
+                title="@(navCollapsed ? "Expand menu" : "Collapse menu")"
+                aria-label="@(navCollapsed ? "Expand navigation menu" : "Collapse navigation menu")"
+                aria-expanded="@(!navCollapsed)">
             <Icon Name="menu" Size="24" />
         </button>
-        <a href="/" class="app-brand">Budget Experiment</a>
+        <a href="/" class="app-brand" aria-label="Budget Experiment - Home">Budget Experiment</a>
         <div class="app-header-spacer"></div>
         @if (AiAvailability.IsEnabled)
         {
             <button class="btn btn-ghost chat-toggle-btn @(AiAvailability.State == AiAvailabilityState.Unavailable ? "ai-unavailable" : "")"
                     @onclick="ToggleChat"
-                    title="@GetChatButtonTooltip()">
+                    title="@GetChatButtonTooltip()"
+                    aria-label="@GetChatButtonTooltip()"
+                    aria-expanded="@chatOpen">
                 <Icon Name="message-circle" Size="20" />
                 @if (AiAvailability.State == AiAvailabilityState.Unavailable)
                 {
-                    <span class="ai-warning-badge">
+                    <span class="ai-warning-badge" aria-hidden="true">
                         <Icon Name="alert-triangle" Size="12" />
                     </span>
                 }
@@ -41,11 +50,11 @@
     </header>
 
     <div class="app-content-wrapper">
-        <aside class="app-sidebar @(navCollapsed ? "collapsed" : "expanded")">
+        <aside class="app-sidebar @(navCollapsed ? "collapsed" : "expanded")" role="navigation" aria-label="Main navigation">
             <NavMenu IsCollapsed="@navCollapsed" />
         </aside>
 
-        <main class="app-main-content">
+        <main id="main-content" class="app-main-content" role="main" tabindex="-1">
             @Body
         </main>
 

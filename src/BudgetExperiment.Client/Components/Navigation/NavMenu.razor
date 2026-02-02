@@ -11,97 +11,121 @@
 
 @implements IDisposable
 
-<nav class="nav-menu @(IsCollapsed ? "collapsed" : "expanded")">
+<nav class="nav-menu @(IsCollapsed ? "collapsed" : "expanded")" aria-label="Main menu">
     <ScopeSwitcher IsCollapsed="@IsCollapsed" />
 
-    <div class="nav-items">
-        <NavLink class="nav-item" href="" Match="NavLinkMatch.All" title="Calendar">
-            <span class="nav-icon"><Icon Name="calendar" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Calendar</span>
-            }
-        </NavLink>
+    <ul class="nav-items" role="list">
+        <li>
+            <NavLink class="nav-item" href="" Match="NavLinkMatch.All" title="Calendar" aria-label="Calendar - Home">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="calendar" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Calendar</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="recurring" title="Recurring Bills">
-            <span class="nav-icon"><Icon Name="refresh" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Recurring Bills</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="recurring" title="Recurring Bills" aria-label="Recurring Bills">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="refresh" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Recurring Bills</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="recurring-transfers" title="Auto-Transfers">
-            <span class="nav-icon"><Icon Name="repeat" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Auto-Transfers</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="recurring-transfers" title="Auto-Transfers" aria-label="Automatic Transfers">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="repeat" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Auto-Transfers</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="reconciliation" title="Reconciliation">
-            <span class="nav-icon"><Icon Name="check-circle" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Reconciliation</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="reconciliation" title="Reconciliation" aria-label="Account Reconciliation">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="check-circle" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Reconciliation</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="transfers" title="Transfers">
-            <span class="nav-icon"><Icon Name="arrows-horizontal" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Transfers</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="transfers" title="Transfers" aria-label="Transfers between accounts">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="arrows-horizontal" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Transfers</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="paycheck-planner" title="Paycheck Planner">
-            <span class="nav-icon"><Icon Name="calculator" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Paycheck Planner</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="paycheck-planner" title="Paycheck Planner" aria-label="Paycheck Planner">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="calculator" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Paycheck Planner</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="categories" title="Budget Categories">
-            <span class="nav-icon"><Icon Name="tag" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Categories</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="categories" title="Budget Categories" aria-label="Budget Categories">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="tag" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Categories</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="rules" title="Auto-Categorize">
-            <span class="nav-icon"><Icon Name="filter" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Auto-Categorize</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="rules" title="Auto-Categorize" aria-label="Auto-categorization rules">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="filter" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Auto-Categorize</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="uncategorized" title="Uncategorized Transactions">
-            <span class="nav-icon"><Icon Name="inbox" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Uncategorized</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="uncategorized" title="Uncategorized Transactions" aria-label="Uncategorized Transactions">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="inbox" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Uncategorized</span>
+                }
+            </NavLink>
+        </li>
 
-        <NavLink class="nav-item" href="budget" title="Budget Overview">
-            <span class="nav-icon"><Icon Name="pie-chart" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Budget</span>
-            }
-        </NavLink>
+        <li>
+            <NavLink class="nav-item" href="budget" title="Budget Overview" aria-label="Budget Overview">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="pie-chart" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Budget</span>
+                }
+            </NavLink>
+        </li>
 
-        <div class="nav-section">
-            <button class="nav-item nav-section-toggle" @onclick="ToggleReportsSection" title="Reports">
-                <span class="nav-icon"><Icon Name="bar-chart" Size="20" /></span>
+        <li class="nav-section">
+            <button class="nav-item nav-section-toggle"
+                    @onclick="ToggleReportsSection"
+                    title="Reports"
+                    aria-expanded="@reportsExpanded"
+                    aria-controls="reports-submenu">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="bar-chart" Size="20" /></span>
                 @if (!IsCollapsed)
                 {
                     <span class="nav-text">Reports</span>
-                    <span class="nav-chevron @(reportsExpanded ? "expanded" : "")">
+                    <span class="nav-chevron @(reportsExpanded ? "expanded" : "")" aria-hidden="true">
                         <Icon Name="chevron-down" Size="16" />
                     </span>
                 }
@@ -109,26 +133,34 @@
 
             @if (!IsCollapsed && reportsExpanded)
             {
-                <div class="nav-subitems">
-                    <NavLink class="nav-item nav-subitem" href="reports" Match="NavLinkMatch.All" title="Reports Overview">
-                        <span class="nav-icon"><Icon Name="pie-chart" Size="16" /></span>
-                        <span class="nav-text">Overview</span>
-                    </NavLink>
-                    <NavLink class="nav-item nav-subitem" href="reports/categories" title="Category Spending">
-                        <span class="nav-icon"><Icon Name="tag" Size="16" /></span>
-                        <span class="nav-text">Categories</span>
-                    </NavLink>
-                </div>
+                <ul id="reports-submenu" class="nav-subitems" role="list">
+                    <li>
+                        <NavLink class="nav-item nav-subitem" href="reports" Match="NavLinkMatch.All" title="Reports Overview" aria-label="Reports Overview">
+                            <span class="nav-icon" aria-hidden="true"><Icon Name="pie-chart" Size="16" /></span>
+                            <span class="nav-text">Overview</span>
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink class="nav-item nav-subitem" href="reports/categories" title="Category Spending" aria-label="Category Spending Report">
+                            <span class="nav-icon" aria-hidden="true"><Icon Name="tag" Size="16" /></span>
+                            <span class="nav-text">Categories</span>
+                        </NavLink>
+                    </li>
+                </ul>
             }
-        </div>
+        </li>
 
-        <div class="nav-section">
-            <button class="nav-item nav-section-toggle" @onclick="ToggleAccountsSection" title="Accounts">
-                <span class="nav-icon"><Icon Name="bank" Size="20" /></span>
+        <li class="nav-section">
+            <button class="nav-item nav-section-toggle"
+                    @onclick="ToggleAccountsSection"
+                    title="Accounts"
+                    aria-expanded="@accountsExpanded"
+                    aria-controls="accounts-submenu">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="bank" Size="20" /></span>
                 @if (!IsCollapsed)
                 {
                     <span class="nav-text">Accounts</span>
-                    <span class="nav-chevron @(accountsExpanded ? "expanded" : "")">
+                    <span class="nav-chevron @(accountsExpanded ? "expanded" : "")" aria-hidden="true">
                         <Icon Name="chevron-down" Size="16" />
                     </span>
                 }
@@ -136,47 +168,57 @@
 
             @if (!IsCollapsed && accountsExpanded)
             {
-                <div class="nav-subitems">
-                    <NavLink class="nav-item nav-subitem" href="accounts" Match="NavLinkMatch.All" title="All Accounts">
-                        <span class="nav-icon"><Icon Name="list" Size="16" /></span>
-                        <span class="nav-text">All Accounts</span>
-                    </NavLink>
+                <ul id="accounts-submenu" class="nav-subitems" role="list">
+                    <li>
+                        <NavLink class="nav-item nav-subitem" href="accounts" Match="NavLinkMatch.All" title="All Accounts" aria-label="All Accounts">
+                            <span class="nav-icon" aria-hidden="true"><Icon Name="list" Size="16" /></span>
+                            <span class="nav-text">All Accounts</span>
+                        </NavLink>
+                    </li>
                     @foreach (var account in accounts)
                     {
-                        <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name">
-                            <span class="nav-icon"><Icon Name="credit-card" Size="16" /></span>
-                            <span class="nav-text">@TruncateName(account.Name)</span>
-                        </NavLink>
+                        <li>
+                            <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name" aria-label="@($"View {account.Name} transactions")">
+                                <span class="nav-icon" aria-hidden="true"><Icon Name="credit-card" Size="16" /></span>
+                                <span class="nav-text">@TruncateName(account.Name)</span>
+                            </NavLink>
+                        </li>
                     }
-                </div>
+                </ul>
             }
-        </div>
+        </li>
 
-        <NavLink class="nav-item" href="import" title="Import Transactions">
-            <span class="nav-icon"><Icon Name="upload" Size="20" /></span>
-            @if (!IsCollapsed)
-            {
-                <span class="nav-text">Import</span>
-            }
-        </NavLink>
-    </div>
+        <li>
+            <NavLink class="nav-item" href="import" title="Import Transactions" aria-label="Import Transactions">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="upload" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Import</span>
+                }
+            </NavLink>
+        </li>
+    </ul>
 
-    <div class="nav-footer">
+    <div class="nav-footer" role="list">
         @if (AiAvailability.IsEnabled)
         {
             <div class="nav-section @(AiAvailability.State == AiAvailabilityState.Unavailable ? "ai-unavailable" : "")">
-                <button class="nav-item nav-section-toggle" @onclick="ToggleAiToolsSection" title="@GetAiToolsTooltip()">
-                    <span class="nav-icon"><Icon Name="sparkles" Size="20" /></span>
+                <button class="nav-item nav-section-toggle"
+                        @onclick="ToggleAiToolsSection"
+                        title="@GetAiToolsTooltip()"
+                        aria-expanded="@aiToolsExpanded"
+                        aria-controls="ai-tools-submenu">
+                    <span class="nav-icon" aria-hidden="true"><Icon Name="sparkles" Size="20" /></span>
                     @if (!IsCollapsed)
                     {
                         <span class="nav-text">AI Tools</span>
                         @if (AiAvailability.State == AiAvailabilityState.Unavailable)
                         {
-                            <span class="nav-warning-icon" title="@AiAvailability.ErrorMessage">
+                            <span class="nav-warning-icon" title="@AiAvailability.ErrorMessage" aria-hidden="true">
                                 <Icon Name="alert-triangle" Size="14" />
                             </span>
                         }
-                        <span class="nav-chevron @(aiToolsExpanded ? "expanded" : "")">
+                        <span class="nav-chevron @(aiToolsExpanded ? "expanded" : "")" aria-hidden="true">
                             <Icon Name="chevron-down" Size="16" />
                         </span>
                     }
@@ -184,22 +226,26 @@
 
                 @if (!IsCollapsed && aiToolsExpanded)
                 {
-                    <div class="nav-subitems">
-                        <NavLink class="nav-item nav-subitem" href="ai/suggestions" title="Smart Insights">
-                            <span class="nav-icon"><Icon Name="lightbulb" Size="16" /></span>
-                            <span class="nav-text">Smart Insights</span>
-                        </NavLink>
-                        <NavLink class="nav-item nav-subitem" href="category-suggestions" title="Category Suggestions">
-                            <span class="nav-icon"><Icon Name="tag" Size="16" /></span>
-                            <span class="nav-text">Category Suggestions</span>
-                        </NavLink>
-                    </div>
+                    <ul id="ai-tools-submenu" class="nav-subitems" role="list">
+                        <li>
+                            <NavLink class="nav-item nav-subitem" href="ai/suggestions" title="Smart Insights" aria-label="AI Smart Insights">
+                                <span class="nav-icon" aria-hidden="true"><Icon Name="lightbulb" Size="16" /></span>
+                                <span class="nav-text">Smart Insights</span>
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink class="nav-item nav-subitem" href="category-suggestions" title="Category Suggestions" aria-label="AI Category Suggestions">
+                                <span class="nav-icon" aria-hidden="true"><Icon Name="tag" Size="16" /></span>
+                                <span class="nav-text">Category Suggestions</span>
+                            </NavLink>
+                        </li>
+                    </ul>
                 }
             </div>
         }
 
-        <NavLink class="nav-item" href="settings" title="Settings">
-            <span class="nav-icon"><Icon Name="settings" Size="20" /></span>
+        <NavLink class="nav-item" href="settings" title="Settings" aria-label="Application Settings">
+            <span class="nav-icon" aria-hidden="true"><Icon Name="settings" Size="20" /></span>
             @if (!IsCollapsed)
             {
                 <span class="nav-text">Settings</span>
