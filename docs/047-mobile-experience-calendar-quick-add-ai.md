@@ -1,7 +1,9 @@
 # Feature 047: Mobile Experience - Calendar, Quick Add, and AI Assistant
-> **Status:** 🗒️ Planning  
+> **Status:** � In Progress  
 > **Priority:** High  
-> **Dependencies:** Feature 046 (Accessibility), Feature 045 (Component Refactor)
+> **Dependencies:** Feature 046 (Accessibility) ✅, Feature 045 (Component Refactor) ✅  
+> **Estimated Effort:** 3-4 sprints (~6-8 weeks)  
+> **Risk Level:** Medium (JS interop complexity, cross-browser touch behaviors)
 
 ## Overview
 
@@ -42,6 +44,63 @@ Many users access Budget Experiment from mobile devices. The current UI, while f
 
 ---
 
+## Effort Estimation
+
+| Phase | Complexity | Estimated Days | Dependencies |
+|-------|------------|----------------|--------------|
+| Phase 1: Bottom Sheet Component | Medium | 3-4 days | None |
+| Phase 2: Floating Action Button | Low | 2 days | Phase 1 |
+| Phase 3: Quick Add Form & Flow | Medium | 3-4 days | Phase 1, 2 |
+| Phase 4: Swipe Gesture Support | High | 4-5 days | None (parallel) |
+| Phase 5: Calendar Touch Optimization | Low | 2 days | None |
+| Phase 6: Week View for Mobile | Medium | 3-4 days | Phase 5 |
+| Phase 7: AI Assistant Mobile | Medium | 3-4 days | Phase 1 |
+| Phase 8: Testing & Polish | Medium | 3-4 days | All |
+| **Total** | | **23-31 days** | |
+
+**Note:** Phases 1-3 and 4-6 can run in parallel tracks.
+
+---
+
+## Risk Analysis
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| iOS Safari touch event quirks | High | Medium | Test on real devices early; use `touchstart`/`touchend` with `passive: true` |
+| Virtual keyboard obscures inputs | High | Medium | Use `visualViewport` API and CSS `env(safe-area-inset-*)` |
+| Swipe conflicts with native scroll | Medium | High | Require horizontal threshold > vertical delta before capturing |
+| Bottom sheet performance on low-end devices | Medium | Medium | Use CSS transforms (GPU-accelerated); avoid layout thrashing |
+| FAB occludes content at screen bottom | Low | Medium | Add bottom padding to pages; ensure FAB has backdrop or shadow |
+| Blazor WASM size impact from new components | Low | Low | Components are small; lazy-load JS modules only on mobile |
+| Cross-browser touch API differences | Medium | Medium | Abstract touch handling in `swipe.js`; test on Chrome, Safari, Firefox mobile |
+
+---
+
+## Alternatives Considered
+
+| Approach | Pros | Cons | Decision |
+|----------|------|------|----------|
+| Use Hammer.js for gestures | Battle-tested, rich API | 7KB+ added, overkill for our needs | ❌ Rejected |
+| Native `<dialog>` for bottom sheet | Built-in, accessible | No swipe/drag support; limited styling | ❌ Rejected |
+| CSS-only swipe detection | No JS dependency | Limited; can't detect swipe direction reliably | ❌ Rejected |
+| Speed dial FAB | Familiar pattern, expandable | More complex; 2+ buttons in small area | ✅ Accepted for AI + Quick Add |
+| Single FAB (Quick Add only) | Simpler | AI Assistant less discoverable | ❌ Rejected |
+| Tab bar at bottom | iOS-native pattern | Conflicts with existing nav; major refactor | ⏳ Deferred to future |
+
+---
+
+## Success Metrics
+
+| Metric | Baseline | Target | Measurement |
+|--------|----------|--------|-------------|
+| Mobile calendar day tap accuracy | ~70% (estimated) | >95% | User testing / analytics |
+| Time to add transaction (mobile) | ~15 seconds via nav | <8 seconds via FAB | Manual timing |
+| Mobile bounce rate | Unknown | Decrease 20% | Analytics |
+| Lighthouse mobile score | 75-80 | >90 | CI/CD check |
+| Touch target compliance | ~60% meet 48px | 100% | Automated axe-core tests |
+
+---
+
 ## User Stories
 
 ### Mobile Calendar Navigation
@@ -52,10 +111,12 @@ Many users access Budget Experiment from mobile devices. The current UI, while f
 **So that** I can easily tap on a specific day without mis-tapping
 
 **Acceptance Criteria:**
-- [ ] Calendar day cells have minimum 48x48px touch target on mobile
-- [ ] Day numbers are legible (minimum 14px font)
-- [ ] Today indicator and selected day are clearly distinguishable
-- [ ] Transaction totals remain visible but use compact format
+- [ ] Calendar day cells have minimum 48x48px touch target on mobile (WCAG 2.5.5)
+- [ ] Day numbers are legible (minimum 14px font, `--font-size-sm`)
+- [ ] Today indicator and selected day are clearly distinguishable (not relying on color alone)
+- [ ] Transaction totals remain visible but use compact format (e.g., "$-150" not "$-150.00")
+- [ ] Touch feedback (`:active` state) is immediate and visible
+- [ ] No overlap or clipping of content at 320px viewport width
 
 #### US-047-002: Swipe Month Navigation
 **As a** mobile user  
@@ -102,13 +163,16 @@ Many users access Budget Experiment from mobile devices. The current UI, while f
 **So that** I can quickly enter data without full-screen disruption
 
 **Acceptance Criteria:**
-- [ ] Bottom sheet slides up from screen bottom
+- [ ] Bottom sheet slides up from screen bottom with smooth animation (300ms ease-out)
 - [ ] Sheet height is 60-80% of viewport (adjustable by drag)
-- [ ] Form has large touch targets (min 48px height)
-- [ ] Account defaults to most recently used or primary
-- [ ] Date defaults to today (can be changed)
-- [ ] Sheet dismissible by swipe down or cancel button
-- [ ] Submitting closes sheet and shows success toast
+- [ ] Drag handle visible at top of sheet for affordance
+- [ ] Form has large touch targets (min 48px height per field)
+- [ ] Account defaults to most recently used (persisted in localStorage) or primary
+- [ ] Date defaults to today (user can change via native date picker)
+- [ ] Sheet dismissible by swipe down (100px threshold) or cancel button
+- [ ] Submitting closes sheet and shows success toast notification
+- [ ] Sheet respects `safe-area-inset-bottom` for notched devices
+- [ ] Virtual keyboard doesn't obscure active input field
 
 #### US-047-006: AI-Assisted Quick Add
 **As a** mobile user  
@@ -155,15 +219,30 @@ Many users access Budget Experiment from mobile devices. The current UI, while f
 **So that** I can enter transactions without frustration
 
 **Acceptance Criteria:**
-- [ ] All form inputs have minimum 48px height
-- [ ] Labels are above fields (not inline) on mobile
-- [ ] Select dropdowns use native mobile select (better UX)
-- [ ] Keyboard type matches field (numeric for amount)
-- [ ] Form fits in viewport without excessive scrolling
+- [ ] All form inputs have minimum 48px height (via `min-height: var(--touch-target-min)`)
+- [ ] Labels are above fields (not inline) on mobile (stacked layout)
+- [ ] Select dropdowns use native mobile select (better UX, OS-provided picker)
+- [ ] Keyboard type matches field (`inputmode="decimal"` for amount, `type="date"` for date)
+- [ ] Form fits in viewport without excessive scrolling (5 fields max visible)
+- [ ] Tap on label focuses associated input
+- [ ] Clear visual feedback on focus (focus ring visible)
+- [ ] Error messages appear inline below field with sufficient contrast
 
 ---
 
 ## Technical Design
+
+### Current Mobile CSS Audit
+
+The following mobile styles already exist and should be leveraged/extended:
+
+| File | Current Mobile Behavior | Enhancement Needed |
+|------|-------------------------|-------------------|
+| `calendar.css` | Min-height 60px at 768px, 0.7rem headers at 480px | Increase to 70px, larger fonts |
+| `ChatPanel.razor.css` | Fixed position, 100% width at 480px | Convert to bottom sheet pattern |
+| `layout.css` | Sidebar collapses, `.hide-mobile` utilities exist | Add FAB positioning utilities |
+| `MainLayout.razor.css` | Header shrinks on mobile | Add FAB container slot |
+| `forms.css` | Standard form styling | Add 48px min-height for touch |
 
 ### Architecture Changes
 
@@ -307,6 +386,42 @@ export function isTouchDevice() {
 }
 ```
 
+### CSS Design Tokens to Add
+
+Add these tokens to `tokens.css` for mobile-specific values:
+
+```css
+:root {
+  /* Touch target sizes (WCAG 2.5.5) */
+  --touch-target-min: 48px;
+  --touch-target-recommended: 56px;
+  
+  /* FAB sizing */
+  --fab-size: 56px;
+  --fab-size-mini: 40px;
+  --fab-spacing: var(--space-4); /* 16px from edges */
+  --fab-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  
+  /* Bottom sheet */
+  --bottom-sheet-radius: var(--radius-lg);
+  --bottom-sheet-handle-width: 40px;
+  --bottom-sheet-handle-height: 4px;
+  --bottom-sheet-z-index: var(--z-modal);
+  
+  /* Safe areas for notched devices */
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile-specific overrides */
+@media (max-width: 768px) {
+  :root {
+    --calendar-day-min-height: 70px;
+    --calendar-day-font-size: var(--font-size-sm);
+  }
+}
+```
+
 ### API Endpoints
 
 No new API endpoints required. Existing endpoints:
@@ -318,26 +433,51 @@ No new API endpoints required. Existing endpoints:
 
 ## Implementation Plan
 
-### Phase 1: Bottom Sheet Component
+### Phase 1: Bottom Sheet Component ✅
 > **Commit:** `feat(client): add reusable BottomSheet component for mobile`
 
 **Objective:** Create the foundational bottom sheet pattern for mobile interactions
 
 **Tasks:**
-- [ ] Create `BottomSheet.razor` component with slide-up animation
-- [ ] Create `bottom-sheet.css` with transitions and height variants
-- [ ] Implement drag-to-resize functionality
-- [ ] Implement swipe-down-to-close gesture
-- [ ] Add backdrop overlay with click-to-close
-- [ ] Add ARIA attributes for accessibility
-- [ ] Write unit tests for component behavior
-- [ ] Test on actual mobile devices/emulators
+- [x] Create `BottomSheet.razor` component with slide-up animation
+- [x] Create `bottom-sheet.css` with transitions and height variants
+- [x] Implement drag-to-resize functionality via JS interop
+- [x] Implement swipe-down-to-close gesture (threshold: 100px drag down)
+- [x] Add backdrop overlay with click-to-close
+- [x] Add drag handle visual indicator at top of sheet
+- [x] Add ARIA attributes (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`)
+- [x] Implement focus trap inside sheet when open
+- [x] Handle `Escape` key to close
+- [x] Write unit tests for component behavior (bUnit)
+- [ ] Test on actual mobile devices/emulators (iOS Safari, Android Chrome)
+
+**CSS Animation Specifications:**
+```css
+/* Bottom sheet enter animation */
+.bottom-sheet-enter {
+  transform: translateY(100%);
+}
+.bottom-sheet-enter-active {
+  transform: translateY(0);
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Bottom sheet exit animation */
+.bottom-sheet-exit {
+  transform: translateY(0);
+}
+.bottom-sheet-exit-active {
+  transform: translateY(100%);
+  transition: transform 200ms ease-in;
+}
+```
 
 **Validation:**
 - Bottom sheet opens smoothly from bottom
 - Can be dragged to resize
 - Swipe down dismisses sheet
 - Focus trapped inside sheet when open
+- Works with keyboard navigation
 
 ---
 
@@ -347,20 +487,34 @@ No new API endpoints required. Existing endpoints:
 **Objective:** Add persistent FAB for quick transaction entry on mobile
 
 **Tasks:**
-- [ ] Create `MobileFab.razor` with Quick Add and optional AI button
-- [ ] Create `fab.css` with positioning and animation
+- [ ] Create `MobileFab.razor` with Quick Add primary button and AI secondary button
+- [ ] Create `fab.css` with positioning, animation, and theme support
+- [ ] Implement speed dial expand/collapse animation
 - [ ] Show FAB only on mobile (< 768px) using CSS media query
-- [ ] Hide FAB when modal/bottom-sheet is open
-- [ ] Implement "speed dial" expand pattern for multiple actions
-- [ ] Add proper ARIA labels and roles
-- [ ] Integrate into `MainLayout.razor`
-- [ ] Test cross-browser (Safari, Chrome mobile)
+- [ ] Hide FAB when modal/bottom-sheet is open (via cascading parameter or service)
+- [ ] Add ripple effect on tap for visual feedback
+- [ ] Add proper ARIA labels (`aria-label="Add transaction"`, `aria-expanded`)
+- [ ] Integrate into `MainLayout.razor` outside of `<main>` for proper z-index
+- [ ] Test cross-browser (Safari, Chrome mobile, Firefox mobile)
+
+**FAB Layout (Speed Dial Pattern):**
+```
+                   ┌───────────┐
+                   │ AI (mini) │  ← Secondary, appears on expand
+                   └───────────┘
+                        ↑
+                   ┌───────────┐
+                   │  + / ×    │  ← Primary FAB, toggles expand
+                   └───────────┘
+                   16px from edges
+```
 
 **Validation:**
 - FAB visible on mobile screens
 - FAB hidden on desktop
-- Tapping FAB triggers Quick Add flow
+- Tapping FAB triggers Quick Add flow (or expands speed dial)
 - FAB accessible via screen reader
+- FAB does not obscure critical content
 
 ---
 
@@ -370,21 +524,31 @@ No new API endpoints required. Existing endpoints:
 **Objective:** Create streamlined mobile transaction entry experience
 
 **Tasks:**
-- [ ] Create `QuickAddForm.razor` (simplified TransactionForm)
-- [ ] Optimize form fields for touch (48px min height)
-- [ ] Use native select elements on mobile
-- [ ] Set input types (`inputmode="decimal"` for amount)
+- [ ] Create `QuickAddForm.razor` (simplified TransactionForm for mobile)
+- [ ] Optimize form fields for touch (48px min height via `--touch-target-min`)
+- [ ] Use native `<select>` elements on mobile (better UX than custom dropdowns)
+- [ ] Set input types (`inputmode="decimal"` for amount, `inputmode="text"` for description)
 - [ ] Wire FAB to open QuickAddForm in BottomSheet
-- [ ] Default account to most recently used
-- [ ] Default date to today
-- [ ] Add success toast on save
-- [ ] Test form with virtual keyboard open
+- [ ] Default account to most recently used (stored in localStorage)
+- [ ] Default date to today (pre-populated)
+- [ ] Add success toast on save (use existing toast pattern or create)
+- [ ] Implement AI-assisted parsing preview ("Coffee at Starbucks $5" → prefilled fields)
+- [ ] Test form with virtual keyboard open (ensure input stays visible)
+- [ ] Handle viewport resize when keyboard appears (`visualViewport` API)
+
+**Form Field Order (optimized for mobile flow):**
+1. Description (first focus, largest input)
+2. Amount (numeric keyboard via `inputmode="decimal"`)
+3. Category (native select)
+4. Account (native select, defaulted)
+5. Date (native date picker, defaulted to today)
 
 **Validation:**
 - FAB opens Quick Add bottom sheet
-- Form fields large enough for comfortable touch
+- Form fields large enough for comfortable touch (48px+)
 - Keyboard doesn't obscure active field
 - Transaction saves successfully
+- Success feedback displayed
 
 ---
 
@@ -394,19 +558,37 @@ No new API endpoints required. Existing endpoints:
 **Objective:** Enable swipe left/right for month navigation
 
 **Tasks:**
-- [ ] Create `SwipeContainer.razor` wrapper component
-- [ ] Create `swipe.js` for touch event handling
-- [ ] Wrap `CalendarGrid` in `SwipeContainer`
-- [ ] Call `PreviousMonth`/`NextMonth` on swipe
-- [ ] Add subtle visual feedback during swipe
-- [ ] Ensure vertical scroll still works (not hijacked)
-- [ ] Test on iOS Safari and Android Chrome
+- [ ] Create `SwipeContainer.razor` wrapper component with JS interop
+- [ ] Create `swipe.js` for touch event handling (touchstart/touchmove/touchend)
+- [ ] Implement swipe detection with configurable threshold (default 50px)
+- [ ] Require horizontal delta > vertical delta to avoid scroll hijacking
+- [ ] Wrap `CalendarGrid` in `SwipeContainer` on Calendar.razor page
+- [ ] Call `PreviousMonth`/`NextMonth` on swipe completion
+- [ ] Add subtle visual feedback during swipe (translateX parallax effect)
+- [ ] Use `requestAnimationFrame` for smooth animation
+- [ ] Ensure vertical scroll still works for day detail content
+- [ ] Handle edge cases: multi-touch, rapid swipes, interrupted swipes
+- [ ] Test on iOS Safari and Android Chrome (different touch behaviors)
+
+**Swipe Detection Algorithm:**
+```javascript
+// Only trigger swipe if:
+// 1. Horizontal distance > threshold (50px)
+// 2. Horizontal distance > vertical distance (not scrolling)
+// 3. Swipe completed within reasonable time (<500ms)
+if (Math.abs(deltaX) > threshold && 
+    Math.abs(deltaX) > Math.abs(deltaY) &&
+    elapsed < 500) {
+    // Trigger swipe callback
+}
+```
 
 **Validation:**
 - Swipe right goes to previous month
 - Swipe left goes to next month
 - Vertical scrolling still works
-- No accidental triggers from taps
+- No accidental triggers from taps or slow drags
+- Works with screen reader gestures disabled
 
 ---
 
@@ -495,35 +677,87 @@ No new API endpoints required. Existing endpoints:
 
 ## Testing Strategy
 
-### Unit Tests
+### Unit Tests (bUnit)
 
-- [ ] `BottomSheet` renders at correct heights
-- [ ] `BottomSheet` calls `OnClose` when swiped down
-- [ ] `MobileFab` calls correct callback when tapped
-- [ ] `SwipeContainer` detects left/right swipes correctly
-- [ ] `QuickAddForm` validates required fields
+- [ ] `BottomSheet` renders at correct heights (Small=40%, Medium=60%, Large=80%)
+- [ ] `BottomSheet` calls `OnClose` when backdrop clicked (if CloseOnOverlayClick=true)
+- [ ] `BottomSheet` traps focus inside when open
+- [ ] `BottomSheet` handles Escape key to close
+- [ ] `MobileFab` calls `OnQuickAddClick` when primary FAB tapped
+- [ ] `MobileFab` expands/collapses speed dial on primary tap
+- [ ] `MobileFab` calls `OnAiAssistantClick` when AI button tapped
+- [ ] `SwipeContainer` fires `OnSwipeLeft`/`OnSwipeRight` with correct direction
+- [ ] `QuickAddForm` validates required fields (description, amount)
+- [ ] `QuickAddForm` defaults date to today
+- [ ] `CalendarWeekView` renders 7 days correctly
+- [ ] `CalendarViewToggle` persists preference
 
 ### Integration Tests
 
-- [ ] FAB triggers Quick Add flow end-to-end
-- [ ] Transaction created via Quick Add appears in calendar
-- [ ] Calendar month changes on swipe
+- [ ] FAB triggers Quick Add flow end-to-end (FAB → BottomSheet → Form → API → Success)
+- [ ] Transaction created via Quick Add appears in calendar grid
+- [ ] Calendar month changes on swipe and URL updates
+- [ ] AI Assistant opens as bottom sheet on mobile viewport
+- [ ] Week view toggle switches calendar display mode
 
 ### E2E Tests (Playwright)
 
-- [ ] Mobile viewport (375x667): FAB visible, calendar touchable
-- [ ] Quick Add flow: FAB → form → submit → success
-- [ ] Swipe navigation: calendar month changes
-- [ ] AI Assistant: FAB → chat → send message → receive response
+```typescript
+// Example test structure
+test.describe('Mobile Experience', () => {
+  test.use({ viewport: { width: 375, height: 667 } }); // iPhone SE
+
+  test('FAB visible on mobile', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('[data-testid="mobile-fab"]')).toBeVisible();
+  });
+
+  test('Quick Add flow via FAB', async ({ page }) => {
+    await page.goto('/');
+    await page.click('[data-testid="mobile-fab"]');
+    await expect(page.locator('.bottom-sheet')).toBeVisible();
+    await page.fill('[data-testid="quick-add-description"]', 'Coffee');
+    await page.fill('[data-testid="quick-add-amount"]', '-5.00');
+    await page.click('[data-testid="quick-add-submit"]');
+    await expect(page.locator('.toast-success')).toBeVisible();
+  });
+
+  test('Swipe navigation changes month', async ({ page }) => {
+    await page.goto('/2026/2');
+    await page.locator('.calendar-grid').swipe('left');
+    await expect(page).toHaveURL('/2026/3');
+  });
+
+  test('Calendar day cells meet touch target size', async ({ page }) => {
+    await page.goto('/');
+    const dayCell = page.locator('.calendar-day').first();
+    const box = await dayCell.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(48);
+    expect(box?.height).toBeGreaterThanOrEqual(48);
+  });
+});
+```
+
+### Accessibility Tests (axe-core)
+
+- [ ] BottomSheet passes axe-core with no critical/serious violations
+- [ ] FAB has accessible name and role
+- [ ] Focus order correct when bottom sheet opens/closes
+- [ ] Touch targets meet WCAG 2.5.5 (44x44px minimum)
+- [ ] Color contrast maintained in all FAB/bottom sheet states
 
 ### Manual Testing Checklist
 
-- [ ] Test on iPhone Safari (iOS 16+)
-- [ ] Test on Android Chrome
-- [ ] Test on iPad (tablet breakpoint)
-- [ ] Test with VoiceOver (iOS) / TalkBack (Android)
-- [ ] Test with keyboard only (accessibility)
+- [ ] Test on iPhone Safari (iOS 16+) – real device preferred
+- [ ] Test on Android Chrome (Android 12+) – real device preferred
+- [ ] Test on iPad (tablet breakpoint 768px-1024px)
+- [ ] Test with VoiceOver (iOS) – FAB and bottom sheet announced correctly
+- [ ] Test with TalkBack (Android) – navigation works
+- [ ] Test with keyboard only (desktop at 768px viewport) – all features accessible
 - [ ] Test in portrait and landscape orientations
+- [ ] Test with `prefers-reduced-motion` enabled – animations disabled/reduced
+- [ ] Test with slow 3G network throttling – lazy-loaded JS doesn't break UX
+- [ ] Test rapid FAB tapping – no duplicate bottom sheets
 
 ---
 
@@ -571,9 +805,39 @@ No new API endpoints required. Existing endpoints:
 
 - [Material Design FAB Guidelines](https://material.io/components/buttons-floating-action-button)
 - [Bottom Sheet Pattern](https://material.io/components/sheets-bottom)
-- [Touch Target Size (WCAG)](https://www.w3.org/WAI/WCAG21/Understanding/target-size.html)
+- [Touch Target Size (WCAG 2.5.5)](https://www.w3.org/WAI/WCAG21/Understanding/target-size.html)
 - [Feature 046 - Accessibility](./046-accessible-theme-and-wcag-ui-tests.md)
 - [Feature 045 - Component Standards](./045-ui-component-refactor-and-library.md)
+- [Component Standards Guide](./COMPONENT-STANDARDS.md)
+- [Visual Viewport API (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Visual_Viewport_API)
+- [CSS env() safe-area-inset](https://developer.mozilla.org/en-US/docs/Web/CSS/env)
+
+---
+
+## Pre-Implementation Checklist
+
+Before starting development, ensure:
+
+- [ ] Feature 045 (Component Refactor) is complete ✅
+- [ ] Feature 046 (Accessibility) is complete ✅
+- [ ] Test device(s) available (iPhone, Android phone, or good emulators)
+- [ ] Safari on macOS for iOS debugging via Web Inspector
+- [ ] Chrome DevTools mobile emulation configured
+- [ ] Playwright mobile viewports configured in test setup
+- [ ] Design tokens documented in `tokens.css`
+- [ ] Component naming follows COMPONENT-STANDARDS.md patterns
+
+---
+
+## Open Questions
+
+| Question | Status | Decision |
+|----------|--------|----------|
+| Should week view be opt-in or default on mobile? | ✅ Decided | Opt-in via toggle; month view remains default |
+| Should FAB have haptic feedback on iOS? | ✅ Decided | Yes, use Vibration API where supported |
+| Should AI-assisted Quick Add be MVP or Phase 2? | ✅ Decided | MVP: basic form; Phase 2: AI parsing |
+| What's the maximum bottom sheet height? | ✅ Decided | 90% viewport (leave header visible) |
+| Should FAB hide on scroll down (like Android)? | ✅ Decided | Start with always-visible; iterate based on feedback |
 
 ---
 
@@ -583,3 +847,4 @@ No new API endpoints required. Existing endpoints:
 |------|--------|--------|
 | 2026-01-26 | Initial draft | @becauseimclever |
 | 2026-02-02 | Fleshed out with technical design & implementation phases | @copilot |
+| 2026-02-05 | Added effort estimates, risk analysis, alternatives, success metrics, detailed phase tasks, comprehensive testing strategy, pre-implementation checklist, open questions | @copilot |

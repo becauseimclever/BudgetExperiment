@@ -1,0 +1,296 @@
+@* BottomSheet.razor - Reusable bottom sheet component for mobile interactions *@
+@* Slides up from bottom with drag-to-resize and swipe-to-close gestures *@
+
+@inject IJSRuntime JSRuntime
+
+@implements IAsyncDisposable
+
+@if (IsVisible)
+{
+    <div class="bottom-sheet-backdrop @(isRendered ? "is-visible" : "")"
+         @onclick="HandleBackdropClick"
+         role="presentation">
+    </div>
+
+    <div @ref="sheetRef"
+         class="bottom-sheet @HeightClass @(isRendered ? "is-visible" : "") @(isClosing ? "is-closing" : "")"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="@titleId"
+         tabindex="-1"
+         @onkeydown="HandleKeyDown">
+
+        @if (IsDraggable)
+        {
+            <div @ref="handleRef"
+                 class="bottom-sheet__handle"
+                 role="slider"
+                 aria-label="Drag to resize or swipe down to close"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 tabindex="0">
+                <div class="bottom-sheet__handle-bar"></div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <header class="bottom-sheet__header">
+                <h2 id="@titleId" class="bottom-sheet__title">@Title</h2>
+                @if (IsCloseButtonVisible)
+                {
+                    <button class="bottom-sheet__close"
+                            @onclick="Close"
+                            aria-label="Close"
+                            type="button">
+                        <Icon Name="x" Size="20" />
+                    </button>
+                }
+            </header>
+        }
+
+        <div class="bottom-sheet__body">
+            @ChildContent
+        </div>
+
+        @if (FooterContent != null)
+        {
+            <footer class="bottom-sheet__footer">
+                @FooterContent
+            </footer>
+        }
+    </div>
+}
+
+@code {
+    private ElementReference sheetRef;
+    private ElementReference handleRef;
+    private IJSObjectReference? jsModule;
+    private IJSObjectReference? sheetInterop;
+    private IJSObjectReference? focusTrap;
+    private DotNetObjectReference<BottomSheet>? dotNetRef;
+    private string titleId = $"bottom-sheet-title-{Guid.NewGuid():N}";
+    private bool isRendered = false;
+    private bool isClosing = false;
+    private bool previousIsVisible = false;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the bottom sheet is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the bottom sheet is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets the main content of the bottom sheet.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the bottom sheet title.
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the optional footer content (typically buttons).
+    /// </summary>
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the height of the bottom sheet.
+    /// </summary>
+    [Parameter]
+    public BottomSheetHeight Height { get; set; } = BottomSheetHeight.Medium;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the bottom sheet can be dragged to resize.
+    /// </summary>
+    [Parameter]
+    public bool IsDraggable { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether swiping down closes the bottom sheet.
+    /// </summary>
+    [Parameter]
+    public bool IsCloseOnSwipeDown { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether clicking the backdrop closes the bottom sheet.
+    /// </summary>
+    [Parameter]
+    public bool IsCloseOnBackdropClick { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the close button is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsCloseButtonVisible { get; set; } = true;
+
+    private string HeightClass => Height switch
+    {
+        BottomSheetHeight.Small => "bottom-sheet--small",
+        BottomSheetHeight.Large => "bottom-sheet--large",
+        BottomSheetHeight.FullScreen => "bottom-sheet--fullscreen",
+        _ => "bottom-sheet--medium",
+    };
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        // Detect visibility change
+        if (IsVisible && !previousIsVisible)
+        {
+            // Opening: delay adding is-visible for animation
+            isRendered = false;
+            isClosing = false;
+            await Task.Yield();
+            isRendered = true;
+        }
+        else if (!IsVisible && previousIsVisible)
+        {
+            // Closing handled by Close method
+        }
+
+        previousIsVisible = IsVisible;
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsVisible && isRendered && jsModule == null)
+        {
+            await InitializeJsInterop();
+        }
+    }
+
+    private async Task InitializeJsInterop()
+    {
+        try
+        {
+            jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/bottom-sheet.js");
+
+            dotNetRef = DotNetObjectReference.Create(this);
+
+            // Initialize sheet interactions
+            if (IsDraggable || IsCloseOnSwipeDown)
+            {
+                sheetInterop = await jsModule.InvokeAsync<IJSObjectReference>(
+                    "initBottomSheet",
+                    sheetRef,
+                    handleRef,
+                    dotNetRef,
+                    new
+                    {
+                        closeThreshold = 100,
+                        isDraggable = IsDraggable,
+                        isCloseOnSwipeDown = IsCloseOnSwipeDown,
+                    });
+            }
+
+            // Initialize focus trap
+            focusTrap = await jsModule.InvokeAsync<IJSObjectReference>(
+                "trapFocus", sheetRef);
+
+            // Prevent body scroll
+            await jsModule.InvokeVoidAsync("preventBodyScroll", true);
+        }
+        catch (JSException)
+        {
+            // JS interop may fail during prerendering - ignore
+        }
+    }
+
+    private async Task CleanupJsInterop()
+    {
+        try
+        {
+            if (jsModule != null)
+            {
+                await jsModule.InvokeVoidAsync("preventBodyScroll", false);
+            }
+
+            if (sheetInterop != null)
+            {
+                await sheetInterop.InvokeVoidAsync("dispose");
+                await sheetInterop.DisposeAsync();
+                sheetInterop = null;
+            }
+
+            if (focusTrap != null)
+            {
+                await focusTrap.InvokeVoidAsync("dispose");
+                await focusTrap.DisposeAsync();
+                focusTrap = null;
+            }
+
+            dotNetRef?.Dispose();
+            dotNetRef = null;
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit disconnected - ignore
+        }
+    }
+
+    /// <summary>
+    /// Called from JavaScript when user swipes down to close.
+    /// </summary>
+    [JSInvokable]
+    public async Task OnSwipeClose()
+    {
+        await Close();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await Close();
+        }
+    }
+
+    private async Task HandleBackdropClick()
+    {
+        if (IsCloseOnBackdropClick)
+        {
+            await Close();
+        }
+    }
+
+    private async Task Close()
+    {
+        if (isClosing)
+        {
+            return;
+        }
+
+        isClosing = true;
+        StateHasChanged();
+
+        // Wait for close animation
+        await Task.Delay(200);
+
+        await CleanupJsInterop();
+        await OnClose.InvokeAsync();
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await CleanupJsInterop();
+
+        if (jsModule != null)
+        {
+            await jsModule.DisposeAsync();
+        }
+    }
+}

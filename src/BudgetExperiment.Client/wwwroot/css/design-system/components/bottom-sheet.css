@@ -1,0 +1,291 @@
+/* ==========================================================================
+   Bottom Sheet Component
+   Budget Experiment Design System
+   Mobile-first slide-up panel for forms, dialogs, and AI assistant
+   ========================================================================== */
+
+/* ==========================================================================
+   CSS Custom Properties for Bottom Sheet
+   ========================================================================== */
+
+:root {
+  /* Touch target sizes (WCAG 2.5.5) */
+  --touch-target-min: 48px;
+  --touch-target-recommended: 56px;
+
+  /* Bottom sheet specific */
+  --bottom-sheet-radius: var(--radius-xl);
+  --bottom-sheet-handle-width: 40px;
+  --bottom-sheet-handle-height: 4px;
+  --bottom-sheet-z-index: var(--z-modal);
+  --bottom-sheet-backdrop-z-index: var(--z-modal-backdrop);
+
+  /* Safe areas for notched devices */
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+/* ==========================================================================
+   Bottom Sheet Backdrop
+   ========================================================================== */
+
+.bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: var(--bottom-sheet-backdrop-z-index);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-base), visibility var(--transition-base);
+  /* Prevent body scroll when sheet is open */
+  touch-action: none;
+}
+
+.bottom-sheet-backdrop.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Dark theme backdrop */
+[data-theme="dark"] .bottom-sheet-backdrop,
+[data-theme="vscode-dark"] .bottom-sheet-backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   Bottom Sheet Container
+   ========================================================================== */
+
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--bottom-sheet-z-index);
+  background-color: var(--color-surface);
+  border-radius: var(--bottom-sheet-radius) var(--bottom-sheet-radius) 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  transform: translateY(100%);
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  /* Safe area padding for notched devices */
+  padding-bottom: var(--safe-area-bottom);
+  /* Prevent content from being selected during drag */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bottom-sheet.is-visible {
+  transform: translateY(0);
+}
+
+.bottom-sheet.is-dragging {
+  transition: none;
+}
+
+/* Closing animation */
+.bottom-sheet.is-closing {
+  transform: translateY(100%);
+  transition: transform 200ms ease-in;
+}
+
+/* ==========================================================================
+   Height Variants
+   ========================================================================== */
+
+.bottom-sheet--small {
+  height: 40vh;
+}
+
+.bottom-sheet--medium {
+  height: 60vh;
+}
+
+.bottom-sheet--large {
+  height: 80vh;
+}
+
+.bottom-sheet--fullscreen {
+  height: 90vh;
+}
+
+/* ==========================================================================
+   Drag Handle
+   ========================================================================== */
+
+.bottom-sheet__handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) 0;
+  cursor: grab;
+  flex-shrink: 0;
+  /* Larger touch area */
+  min-height: var(--touch-target-min);
+}
+
+.bottom-sheet__handle:active {
+  cursor: grabbing;
+}
+
+.bottom-sheet__handle-bar {
+  width: var(--bottom-sheet-handle-width);
+  height: var(--bottom-sheet-handle-height);
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  transition: background-color var(--transition-fast);
+}
+
+.bottom-sheet__handle:hover .bottom-sheet__handle-bar {
+  background-color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+.bottom-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.bottom-sheet__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.bottom-sheet__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast);
+  /* Negative margin to align with edge while keeping touch target */
+  margin-right: calc(-1 * var(--space-2));
+}
+
+.bottom-sheet__close:hover {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+}
+
+.bottom-sheet__close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ==========================================================================
+   Body/Content Area
+   ========================================================================== */
+
+.bottom-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--space-4);
+  /* Re-enable user selection in body */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Scroll shadow indicators */
+.bottom-sheet__body::before,
+.bottom-sheet__body::after {
+  content: '';
+  position: sticky;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   Footer (optional)
+   ========================================================================== */
+
+.bottom-sheet__footer {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Accessibility: Reduced Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-sheet,
+  .bottom-sheet-backdrop {
+    transition: none;
+  }
+
+  .bottom-sheet.is-closing {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Desktop: Hide or adjust bottom sheet
+   On larger screens, you might want to use Modal instead
+   ========================================================================== */
+
+@media (min-width: 769px) {
+  /* On desktop, center the sheet like a modal if needed */
+  .bottom-sheet--desktop-modal {
+    left: 50%;
+    right: auto;
+    bottom: 50%;
+    transform: translate(-50%, 50%) translateY(100%);
+    max-width: 500px;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    max-height: 80vh;
+  }
+
+  .bottom-sheet--desktop-modal.is-visible {
+    transform: translate(-50%, 50%);
+  }
+}
+
+/* ==========================================================================
+   Mobile Adjustments
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .bottom-sheet__header {
+    padding: 0 var(--space-3) var(--space-2);
+  }
+
+  .bottom-sheet__body {
+    padding: var(--space-3);
+  }
+
+  .bottom-sheet__footer {
+    padding: var(--space-3);
+    flex-direction: column;
+  }
+
+  .bottom-sheet__footer > * {
+    width: 100%;
+  }
+}
