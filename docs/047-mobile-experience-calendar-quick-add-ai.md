@@ -481,20 +481,20 @@ No new API endpoints required. Existing endpoints:
 
 ---
 
-### Phase 2: Floating Action Button
-> **Commit:** `feat(client): add MobileFab component with Quick Add and AI buttons`
+### Phase 2: Floating Action Button ✅
+> **Commit:** `feat(client): add MobileFab floating action button component`
 
 **Objective:** Add persistent FAB for quick transaction entry on mobile
 
 **Tasks:**
-- [ ] Create `MobileFab.razor` with Quick Add primary button and AI secondary button
-- [ ] Create `fab.css` with positioning, animation, and theme support
-- [ ] Implement speed dial expand/collapse animation
-- [ ] Show FAB only on mobile (< 768px) using CSS media query
-- [ ] Hide FAB when modal/bottom-sheet is open (via cascading parameter or service)
-- [ ] Add ripple effect on tap for visual feedback
-- [ ] Add proper ARIA labels (`aria-label="Add transaction"`, `aria-expanded`)
-- [ ] Integrate into `MainLayout.razor` outside of `<main>` for proper z-index
+- [x] Create `MobileFab.razor` with Quick Add primary button and AI secondary button
+- [x] Create `fab.css` with positioning, animation, and theme support
+- [x] Implement speed dial expand/collapse animation
+- [x] Show FAB only on mobile (< 768px) using CSS media query
+- [x] Hide FAB when modal/bottom-sheet is open (via IsHidden parameter)
+- [x] Add ripple effect on tap for visual feedback
+- [x] Add proper ARIA labels (`aria-label="Add transaction"`, `aria-expanded`)
+- [x] Integrate into `MainLayout.razor` outside of `<main>` for proper z-index
 - [ ] Test cross-browser (Safari, Chrome mobile, Firefox mobile)
 
 **FAB Layout (Speed Dial Pattern):**
