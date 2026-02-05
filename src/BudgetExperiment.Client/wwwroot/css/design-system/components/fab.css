@@ -1,0 +1,311 @@
+/* ==========================================================================
+   Floating Action Button (FAB) Component
+   Budget Experiment Design System
+   Mobile-first speed dial pattern for quick actions
+   ========================================================================== */
+
+/* ==========================================================================
+   CSS Custom Properties for FAB
+   ========================================================================== */
+
+:root {
+  /* FAB sizing */
+  --fab-size: 56px;
+  --fab-size-mini: 40px;
+  --fab-spacing: var(--space-4); /* 16px from edges */
+  --fab-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  --fab-shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.25), 0 3px 6px rgba(0, 0, 0, 0.2);
+  --fab-z-index: calc(var(--z-fixed) + 50); /* Above fixed elements, below modals */
+}
+
+/* ==========================================================================
+   FAB Container
+   ========================================================================== */
+
+.fab-container {
+  position: fixed;
+  bottom: var(--fab-spacing);
+  right: var(--fab-spacing);
+  z-index: var(--fab-z-index);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--space-3);
+  /* Safe area for notched devices */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Hide on desktop by default */
+@media (min-width: 769px) {
+  .fab-container {
+    display: none;
+  }
+
+  /* Allow override to show on desktop if needed */
+  .fab-container.fab-show-desktop {
+    display: flex;
+  }
+}
+
+/* ==========================================================================
+   Primary FAB Button
+   ========================================================================== */
+
+.fab-primary {
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: 50%;
+  border: none;
+  background-color: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+  box-shadow: var(--fab-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast),
+              box-shadow var(--transition-fast),
+              transform var(--transition-fast);
+  /* Prevent text selection */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Touch optimization */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fab-primary:hover {
+  background-color: var(--color-brand-primary-hover);
+  box-shadow: var(--fab-shadow-hover);
+}
+
+.fab-primary:active {
+  background-color: var(--color-brand-primary-active);
+  transform: scale(0.95);
+}
+
+.fab-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--fab-shadow), var(--focus-ring);
+}
+
+/* Expanded state - rotate icon */
+.fab-primary.is-expanded {
+  background-color: var(--color-text-secondary);
+}
+
+.fab-primary.is-expanded .fab-icon {
+  transform: rotate(45deg);
+}
+
+.fab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+}
+
+/* ==========================================================================
+   Secondary FAB Buttons (Speed Dial Items)
+   ========================================================================== */
+
+.fab-secondary {
+  width: var(--fab-size-mini);
+  height: var(--fab-size-mini);
+  border-radius: 50%;
+  border: none;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--fab-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast),
+              box-shadow var(--transition-fast),
+              transform var(--transition-fast),
+              opacity var(--transition-fast);
+  /* Touch optimization */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* Hidden by default */
+  opacity: 0;
+  transform: scale(0.3) translateY(20px);
+  pointer-events: none;
+}
+
+.fab-secondary:hover {
+  background-color: var(--color-surface-secondary);
+  box-shadow: var(--fab-shadow-hover);
+}
+
+.fab-secondary:active {
+  transform: scale(0.9);
+}
+
+.fab-secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--fab-shadow), var(--focus-ring);
+}
+
+/* Visible state when expanded */
+.fab-container.is-expanded .fab-secondary {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
+/* Stagger animation for multiple items */
+.fab-container.is-expanded .fab-secondary:nth-child(1) {
+  transition-delay: 0ms;
+}
+
+.fab-container.is-expanded .fab-secondary:nth-child(2) {
+  transition-delay: 50ms;
+}
+
+.fab-container.is-expanded .fab-secondary:nth-child(3) {
+  transition-delay: 100ms;
+}
+
+/* ==========================================================================
+   FAB Labels
+   ========================================================================== */
+
+.fab-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.fab-label {
+  position: absolute;
+  right: calc(var(--fab-size-mini) + var(--space-2));
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transform: translateX(10px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  pointer-events: none;
+}
+
+.fab-container.is-expanded .fab-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ==========================================================================
+   FAB Backdrop (optional dim overlay)
+   ========================================================================== */
+
+.fab-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: calc(var(--fab-z-index) - 1);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-base), visibility var(--transition-base);
+}
+
+.fab-backdrop.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ==========================================================================
+   AI Assistant Button Variant
+   ========================================================================== */
+
+.fab-secondary.fab-ai {
+  background-color: var(--color-surface);
+  color: var(--color-brand-primary);
+}
+
+.fab-secondary.fab-ai:hover {
+  background-color: rgba(var(--color-brand-rgb), 0.1);
+}
+
+/* AI unavailable state */
+.fab-secondary.fab-ai.is-unavailable {
+  color: var(--color-text-disabled);
+}
+
+/* ==========================================================================
+   Ripple Effect
+   ========================================================================== */
+
+.fab-primary,
+.fab-secondary {
+  position: relative;
+  overflow: hidden;
+}
+
+.fab-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  animation: fab-ripple-animation 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes fab-ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Accessibility: Reduced Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .fab-primary,
+  .fab-secondary,
+  .fab-icon,
+  .fab-label,
+  .fab-backdrop {
+    transition: none;
+  }
+
+  .fab-ripple {
+    animation: none;
+  }
+
+  .fab-container.is-expanded .fab-secondary {
+    transition-delay: 0ms;
+  }
+}
+
+/* ==========================================================================
+   Dark Theme Adjustments
+   ========================================================================== */
+
+[data-theme="dark"] .fab-secondary,
+[data-theme="vscode-dark"] .fab-secondary {
+  background-color: var(--color-surface-secondary);
+}
+
+[data-theme="dark"] .fab-label,
+[data-theme="vscode-dark"] .fab-label {
+  background-color: var(--color-surface-secondary);
+}
+
+/* ==========================================================================
+   Hidden State (when modal/bottom-sheet is open)
+   ========================================================================== */
+
+.fab-container.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.8);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}

@@ -1,0 +1,220 @@
+@namespace BudgetExperiment.Client.Components
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div class="fab-container @(IsExpanded ? "is-expanded" : "") @(IsHidden ? "is-hidden" : "")"
+     @onclick:stopPropagation="true">
+
+    @* Secondary buttons (shown when expanded) *@
+    @if (ShowAiButton)
+    {
+        <div class="fab-item">
+            <span class="fab-label" id="fab-ai-label">@AiButtonLabel</span>
+            <button type="button"
+                    class="fab-secondary fab-ai @(IsAiUnavailable ? "is-unavailable" : "")"
+                    @onclick="OnAiClickHandler"
+                    aria-labelledby="fab-ai-label"
+                    aria-disabled="@IsAiUnavailable.ToString().ToLowerInvariant()"
+                    title="@AiButtonLabel">
+                <span class="fab-icon">
+                    <Icon Name="sparkles" Size="20" />
+                </span>
+            </button>
+        </div>
+    }
+
+    <div class="fab-item">
+        <span class="fab-label" id="fab-quickadd-label">@QuickAddLabel</span>
+        <button type="button"
+                class="fab-secondary"
+                @onclick="OnQuickAddClickHandler"
+                aria-labelledby="fab-quickadd-label"
+                title="@QuickAddLabel">
+            <span class="fab-icon">
+                <Icon Name="add" Size="20" />
+            </span>
+        </button>
+    </div>
+
+    @* Primary FAB button *@
+    <button type="button"
+            class="fab-primary @(IsExpanded ? "is-expanded" : "")"
+            @onclick="ToggleExpanded"
+            aria-expanded="@IsExpanded.ToString().ToLowerInvariant()"
+            aria-label="@(IsExpanded ? "Close menu" : "Open quick actions menu")"
+            title="@(IsExpanded ? "Close" : "Quick actions")">
+        <span class="fab-icon">
+            <Icon Name="add" Size="24" />
+        </span>
+    </button>
+</div>
+
+@if (ShowBackdrop && IsExpanded)
+{
+    <div class="fab-backdrop is-visible" @onclick="CollapseMenu" aria-hidden="true"></div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets whether the FAB speed dial is expanded.
+    /// </summary>
+    [Parameter]
+    public bool IsExpanded { get; set; }
+
+    /// <summary>
+    /// Callback when expanded state changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> IsExpandedChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the FAB should be hidden (e.g., when a modal is open).
+    /// </summary>
+    [Parameter]
+    public bool IsHidden { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to show the AI assistant button.
+    /// </summary>
+    [Parameter]
+    public bool ShowAiButton { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets whether the AI assistant is currently unavailable.
+    /// </summary>
+    [Parameter]
+    public bool IsAiUnavailable { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to show a backdrop when expanded.
+    /// </summary>
+    [Parameter]
+    public bool ShowBackdrop { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the label for the Quick Add button.
+    /// </summary>
+    [Parameter]
+    public string QuickAddLabel { get; set; } = "Quick Add";
+
+    /// <summary>
+    /// Gets or sets the label for the AI button.
+    /// </summary>
+    [Parameter]
+    public string AiButtonLabel { get; set; } = "AI Assistant";
+
+    /// <summary>
+    /// Callback when Quick Add button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnQuickAddClick { get; set; }
+
+    /// <summary>
+    /// Callback when AI button is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnAiClick { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to trigger haptic feedback on interactions.
+    /// </summary>
+    [Parameter]
+    public bool EnableHapticFeedback { get; set; } = true;
+
+    private IJSObjectReference? _jsModule;
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                    "import", "./js/fab.js");
+            }
+            catch (JSException)
+            {
+                // Module may not be available in test environment
+            }
+        }
+    }
+
+    private async Task ToggleExpanded()
+    {
+        IsExpanded = !IsExpanded;
+        await IsExpandedChanged.InvokeAsync(IsExpanded);
+
+        if (EnableHapticFeedback)
+        {
+            await TriggerHapticFeedbackAsync();
+        }
+    }
+
+    private async Task CollapseMenu()
+    {
+        if (IsExpanded)
+        {
+            IsExpanded = false;
+            await IsExpandedChanged.InvokeAsync(IsExpanded);
+        }
+    }
+
+    private async Task OnQuickAddClickHandler()
+    {
+        await CollapseMenu();
+        await OnQuickAddClick.InvokeAsync();
+
+        if (EnableHapticFeedback)
+        {
+            await TriggerHapticFeedbackAsync();
+        }
+    }
+
+    private async Task OnAiClickHandler()
+    {
+        if (IsAiUnavailable)
+        {
+            return;
+        }
+
+        await CollapseMenu();
+        await OnAiClick.InvokeAsync();
+
+        if (EnableHapticFeedback)
+        {
+            await TriggerHapticFeedbackAsync();
+        }
+    }
+
+    private async Task TriggerHapticFeedbackAsync()
+    {
+        if (_jsModule is not null)
+        {
+            try
+            {
+                await _jsModule.InvokeVoidAsync("triggerHapticFeedback");
+            }
+            catch (JSException)
+            {
+                // Haptic feedback not supported or module unavailable
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            try
+            {
+                await _jsModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignore during circuit disconnection
+            }
+        }
+    }
+}

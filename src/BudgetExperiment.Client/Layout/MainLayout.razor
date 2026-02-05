@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
+@using BudgetExperiment.Client.Components
 @using BudgetExperiment.Client.Components.Auth
 @using BudgetExperiment.Client.Components.Chat
 @using BudgetExperiment.Client.Components.Navigation
@@ -7,6 +8,7 @@
 @using BudgetExperiment.Client.Services
 @inject IAiAvailabilityService AiAvailability
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 @implements IDisposable
 
@@ -63,12 +65,20 @@
             <ChatPanel IsOpen="@chatOpen" OnToggle="ToggleChat" />
         }
     </div>
+
+    @* Mobile Floating Action Button *@
+    <MobileFab @bind-IsExpanded="fabExpanded"
+               ShowAiButton="@AiAvailability.IsEnabled"
+               IsAiUnavailable="@(AiAvailability.State == AiAvailabilityState.Unavailable)"
+               OnQuickAddClick="OnFabQuickAdd"
+               OnAiClick="OnFabAiClick" />
 </div>
 
 @code {
     private const string NavCollapsedStorageKey = "budget-experiment-nav-collapsed";
     private bool navCollapsed = false;
     private bool chatOpen = false;
+    private bool fabExpanded = false;
     private bool hasLoadedState = false;
 
     /// <inheritdoc />
@@ -131,6 +141,22 @@
         }
 
         return chatOpen ? "Close chat" : "Open AI Assistant";
+    }
+
+    private void OnFabQuickAdd()
+    {
+        // Navigate to Add Transaction page
+        NavigationManager.NavigateTo("/add-transaction");
+    }
+
+    private void OnFabAiClick()
+    {
+        // Open the chat panel
+        if (!chatOpen)
+        {
+            chatOpen = true;
+            StateHasChanged();
+        }
     }
 
     /// <inheritdoc />
