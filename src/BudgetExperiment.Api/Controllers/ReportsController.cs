@@ -35,10 +35,14 @@ public sealed class ReportsController : ControllerBase
     /// <summary>
     /// Gets the monthly category spending report.
     /// </summary>
-    /// <param name="year">The year.</param>
+    /// <param name="year">The year (e.g., 2026).</param>
     /// <param name="month">The month (1-12).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The monthly category report.</returns>
+    /// <returns>The monthly category report with per-category spending totals and percentages.</returns>
+    /// <remarks>
+    /// Example: <c>GET /api/v1/reports/categories/monthly?year=2026&amp;month=2</c>
+    /// Returns overall income/spending totals and a breakdown by category.
+    /// </remarks>
     [HttpGet("categories/monthly")]
     [ProducesResponseType<MonthlyCategoryReportDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,11 +68,16 @@ public sealed class ReportsController : ControllerBase
     /// <summary>
     /// Gets the category spending report for an arbitrary date range.
     /// </summary>
-    /// <param name="startDate">The start date (inclusive).</param>
-    /// <param name="endDate">The end date (inclusive).</param>
+    /// <param name="startDate">The start date, inclusive (format: yyyy-MM-dd, e.g., 2026-01-15).</param>
+    /// <param name="endDate">The end date, inclusive (format: yyyy-MM-dd, e.g., 2026-02-15).</param>
     /// <param name="accountId">Optional account filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The date range category report.</returns>
+    /// <returns>The date range category report with per-category spending totals and percentages.</returns>
+    /// <remarks>
+    /// Example: <c>GET /api/v1/reports/categories/range?startDate=2026-01-15&amp;endDate=2026-02-15</c>
+    /// Supports paycheck-to-paycheck analysis or custom period analysis.
+    /// Maximum range: 366 days.
+    /// </remarks>
     [HttpGet("categories/range")]
     [ProducesResponseType<DateRangeCategoryReportDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -96,11 +105,16 @@ public sealed class ReportsController : ControllerBase
     /// Gets spending trends over multiple months.
     /// </summary>
     /// <param name="months">Number of months to include (default 6, max 24).</param>
-    /// <param name="endYear">Optional end year (defaults to current).</param>
-    /// <param name="endMonth">Optional end month (defaults to current).</param>
-    /// <param name="categoryId">Optional category filter.</param>
+    /// <param name="endYear">Optional end year (defaults to current year).</param>
+    /// <param name="endMonth">Optional end month (defaults to current month).</param>
+    /// <param name="categoryId">Optional category filter to view a single category over time.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The spending trends report.</returns>
+    /// <returns>Monthly totals with income, spending, net, and trend direction.</returns>
+    /// <remarks>
+    /// Example: <c>GET /api/v1/reports/trends?months=12</c>
+    /// Example with category filter: <c>GET /api/v1/reports/trends?months=6&amp;categoryId=abc123</c>
+    /// Includes average monthly spending/income and overall trend direction (increasing/stable/decreasing).
+    /// </remarks>
     [HttpGet("trends")]
     [ProducesResponseType<SpendingTrendsReportDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -133,10 +147,14 @@ public sealed class ReportsController : ControllerBase
     /// <summary>
     /// Gets a spending summary for a single day.
     /// </summary>
-    /// <param name="date">The date (yyyy-MM-dd).</param>
+    /// <param name="date">The date (format: yyyy-MM-dd, e.g., 2026-02-05).</param>
     /// <param name="accountId">Optional account filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The day summary.</returns>
+    /// <returns>Income, spending, net totals and top 3 spending categories for the day.</returns>
+    /// <remarks>
+    /// Example: <c>GET /api/v1/reports/day-summary/2026-02-05</c>
+    /// Returns zero totals for days with no transactions.
+    /// </remarks>
     [HttpGet("day-summary/{date}")]
     [ProducesResponseType<DaySummaryDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDaySummaryAsync(
@@ -152,10 +170,15 @@ public sealed class ReportsController : ControllerBase
     /// Gets the budget vs. actual comparison for a specific month.
     /// Convenience endpoint delegating to the existing budget progress service.
     /// </summary>
-    /// <param name="year">The year.</param>
+    /// <param name="year">The year (e.g., 2026).</param>
     /// <param name="month">The month (1-12).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The budget summary with per-category progress.</returns>
+    /// <returns>The budget summary with per-category target vs. spent vs. remaining and status.</returns>
+    /// <remarks>
+    /// Example: <c>GET /api/v1/reports/budget-comparison?year=2026&amp;month=2</c>
+    /// Returns per-category budget progress (OnTrack/Warning/OverBudget/NoBudgetSet).
+    /// Same data shape as the budget goals summary endpoint.
+    /// </remarks>
     [HttpGet("budget-comparison")]
     [ProducesResponseType<BudgetSummaryDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

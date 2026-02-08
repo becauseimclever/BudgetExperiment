@@ -21,6 +21,9 @@ All notable changes to Budget Experiment.
 - **client:** DaySummary component — day-level analytics (income, spending, net, top categories) integrated into DayDetail panel
 - **client:** Add "View Reports" button to Calendar header for calendar-to-reports navigation with month context
 - **client:** Add `GetDaySummaryAsync` to IBudgetApiService and BudgetApiService
+- **client:** WeekSummary component — week-level analytics panel with income/spending/net, daily average, and daily breakdown
+- **client:** CalendarGrid week row selection — week-number buttons (W1–W6) with visual highlight and aria-pressed
+- **api:** Enhanced ReportsController XML docs with `<remarks>` examples for Scalar/OpenAPI documentation
 
 ### Bug Fixes
 
@@ -34,10 +37,15 @@ All notable changes to Budget Experiment.
 - **client:** 15 bUnit tests for CalendarInsightsPanel (collapsed/expanded state, data loading, trend indicators, categories)
 - **client:** 11 bUnit tests for TrendIndicator (positive/negative/zero trends, InvertColors, formatting)
 - **client:** 11 bUnit tests for DaySummary (income/spending/net display, categories, empty state, null response, accessibility)
+- **client:** 15 bUnit tests for WeekSummary (visibility, income/spending, net, daily breakdown, date range, accessibility, today highlight, daily average)
+- **client:** 8 bUnit tests for CalendarGrid week selection (week click events, visual highlight, aria-pressed, header cells, aria labels)
+- **e2e:** 10 Playwright tests for report navigation (page loads, URL params, calendar→reports flow, console errors, accessibility audits)
+- **e2e:** 2 navigation tests for MonthlyTrends and BudgetComparison pages
 
 ### Documentation
 
-- **docs:** Feature 050 spec updated to Phase 5 Complete status with implementation notes
+- **docs:** Feature 050 spec updated to All 6 Phases Complete with implementation notes
+- **readme:** Enhanced reports description with date range filtering, week summaries, and quick insights
 
 ## [3.13.0] - 2026-02-07
 

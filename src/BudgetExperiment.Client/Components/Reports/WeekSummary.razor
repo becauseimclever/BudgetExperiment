@@ -1,0 +1,202 @@
+@* WeekSummary.razor - Week-level analytics with daily breakdown and category totals *@
+@* Uses client-side calculation from existing calendar data — no new API endpoint *@
+
+@if (IsVisible && Days.Count > 0)
+{
+    <div class="week-summary" role="region" aria-label="Weekly spending summary">
+        <div class="week-summary-header">
+            <h5 class="week-summary-title">
+                <Icon Name="calendar" Size="14" />
+                Week Summary
+            </h5>
+            <span class="week-summary-dates">
+                @FormatDateRange()
+            </span>
+            <button type="button"
+                    class="week-summary-close"
+                    @onclick="HandleClose"
+                    aria-label="Close week summary"
+                    title="Close">
+                <Icon Name="x" Size="14" />
+            </button>
+        </div>
+
+        <div class="week-summary-stats">
+            <div class="stat-item income">
+                <span class="stat-label">Income</span>
+                <span class="stat-value positive">@FormatAmount(_totalIncome)</span>
+            </div>
+            <div class="stat-item spending">
+                <span class="stat-label">Spending</span>
+                <span class="stat-value negative">@FormatAmount(_totalSpending)</span>
+            </div>
+            <div class="stat-item net">
+                <span class="stat-label">Net</span>
+                <span class="stat-value @(_netAmount >= 0 ? "positive" : "negative")">
+                    @FormatSignedAmount(_netAmount)
+                </span>
+            </div>
+            <div class="stat-item average">
+                <span class="stat-label">Avg/Day</span>
+                <span class="stat-value">@FormatAmount(_dailyAverage)</span>
+            </div>
+        </div>
+
+        @if (_dailyBreakdown.Count > 0)
+        {
+            <div class="week-summary-daily">
+                <span class="section-label">Daily Breakdown</span>
+                <div class="daily-list" role="list" aria-label="Daily spending breakdown">
+                    @foreach (var day in _dailyBreakdown)
+                    {
+                        <div class="daily-item @(day.IsToday ? "today" : "")"
+                             role="listitem"
+                             aria-label="@day.DayLabel: @FormatSignedAmount(day.NetAmount)">
+                            <span class="daily-label">@day.DayLabel</span>
+                            <span class="daily-txns">@day.TransactionCount txn@(day.TransactionCount != 1 ? "s" : "")</span>
+                            <span class="daily-amount @(day.NetAmount >= 0 ? "positive" : "negative")">
+                                @FormatSignedAmount(day.NetAmount)
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+
+        <div class="week-summary-footer">
+            <span class="footer-total">
+                @_totalTransactions transaction@(_totalTransactions != 1 ? "s" : "") this week
+            </span>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the days in the selected week (7 days from calendar grid data).
+    /// </summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CalendarDaySummaryDto> Days { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the week summary is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the user closes the week summary.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private decimal _totalIncome;
+    private decimal _totalSpending;
+    private decimal _netAmount;
+    private decimal _dailyAverage;
+    private int _totalTransactions;
+    private List<DailyBreakdownItem> _dailyBreakdown = [];
+
+    /// <inheritdoc/>
+    protected override void OnParametersSet()
+    {
+        CalculateSummary();
+    }
+
+    private void CalculateSummary()
+    {
+        if (Days.Count == 0)
+        {
+            ResetValues();
+            return;
+        }
+
+        // Positive ActualTotal = income, negative = spending.
+        // CalendarDaySummaryDto has ActualTotal (which is the net of the day), TransactionCount.
+        // We use CombinedTotal for the net (actual + projected).
+        _totalIncome = 0m;
+        _totalSpending = 0m;
+        _totalTransactions = 0;
+
+        _dailyBreakdown = new List<DailyBreakdownItem>(Days.Count);
+
+        foreach (var day in Days)
+        {
+            var actualAmount = day.ActualTotal.Amount;
+            if (actualAmount > 0)
+            {
+                _totalIncome += actualAmount;
+            }
+            else
+            {
+                _totalSpending += Math.Abs(actualAmount);
+            }
+
+            _totalTransactions += day.TransactionCount;
+
+            _dailyBreakdown.Add(new DailyBreakdownItem
+            {
+                DayLabel = day.Date.ToString("ddd M/d"),
+                NetAmount = actualAmount,
+                TransactionCount = day.TransactionCount,
+                IsToday = day.IsToday,
+            });
+        }
+
+        _netAmount = _totalIncome - _totalSpending;
+
+        // Daily average spending (only count days in the current month with transactions)
+        var daysWithSpending = Days.Count(d => d.IsCurrentMonth && d.TransactionCount > 0);
+        _dailyAverage = daysWithSpending > 0 ? _totalSpending / daysWithSpending : 0m;
+    }
+
+    private void ResetValues()
+    {
+        _totalIncome = 0m;
+        _totalSpending = 0m;
+        _netAmount = 0m;
+        _dailyAverage = 0m;
+        _totalTransactions = 0;
+        _dailyBreakdown = [];
+    }
+
+    private string FormatDateRange()
+    {
+        if (Days.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var start = Days[0].Date;
+        var end = Days[^1].Date;
+        return $"{start:MMM d} – {end:MMM d, yyyy}";
+    }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private static string FormatAmount(decimal amount)
+    {
+        return $"${Math.Abs(amount):N2}";
+    }
+
+    private static string FormatSignedAmount(decimal amount)
+    {
+        var sign = amount >= 0 ? "+" : "-";
+        return $"{sign}${Math.Abs(amount):N2}";
+    }
+
+    private sealed class DailyBreakdownItem
+    {
+        public string DayLabel { get; set; } = string.Empty;
+
+        public decimal NetAmount { get; set; }
+
+        public int TransactionCount { get; set; }
+
+        public bool IsToday { get; set; }
+    }
+}

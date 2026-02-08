@@ -19,7 +19,7 @@ Budget Experiment helps you manage your finances by:
 - **AI-powered categorization**: Get intelligent rule suggestions using local AI (via Ollama)
 - **CSV import**: Import transactions from Bank of America, Capital One, and UHCU with duplicate detection
 - **Calendar view**: Visualize daily transaction summaries and navigate spending history
-- **Reports & analytics**: Category spending, monthly trends, budget vs. actual comparison — all navigable from the calendar
+- **Reports & analytics**: Category spending, monthly trends, budget vs. actual comparison, date range filtering, week summaries — all navigable from the calendar with quick insights panel
 
 ## 🏗️ Architecture
 
@@ -208,7 +208,7 @@ Key endpoints:
 - **Categories**: `/api/v1/categories` - Budget category management
 - **Budgets**: `/api/v1/budgets` - Budget goals and progress tracking
 - **Calendar**: `/api/v1/calendar` - Calendar view data with daily summaries
-- **Reports**: `/api/v1/reports` - Category spending, spending trends, day summaries
+- **Reports**: `/api/v1/reports` - Category spending, spending trends, budget comparison, day summaries, date range analysis
 - **Allocations**: `/api/v1/allocations` - Paycheck allocation planning
 - **Chat**: `/api/v1/chat` - AI Chat Assistant for natural language commands
 - **AI**: `/api/v1/ai` - AI-powered rule suggestions (requires Ollama)
