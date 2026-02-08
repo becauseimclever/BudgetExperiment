@@ -709,6 +709,9 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null) => Task.FromResult<SpendingTrendsReportDto?>(null);
 
         /// <inheritdoc/>
+        public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null) => Task.FromResult<DaySummaryDto?>(null);
+
+        /// <inheritdoc/>
         public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId) => Task.FromResult<ImportPatternsDto?>(null);
 
         /// <inheritdoc/>

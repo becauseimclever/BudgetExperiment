@@ -1,5 +1,5 @@
 # Feature 050: Calendar-Driven Reports & Analytics
-> **Status:** 🔄 In Progress (Phase 4 Complete)  
+> **Status:** 🔄 In Progress (Phase 5 Complete)  
 > **Priority:** Medium  
 > **Estimated Effort:** Large (6–9 sprints across all phases)  
 > **Dependencies:** Feature 048 (Calendar Budget Editing — Complete), Reports Infrastructure (Partial — see below)
@@ -498,7 +498,7 @@ The **minimum viable delivery** (Phases 1–3) delivers the highest-value slice:
 | 2 | DateRangePicker + Enhanced Category Report + Trends Page | Medium | ✅ |
 | 3 | Budget vs. Actual Report Page + BarChart component | Medium | ✅ |
 | 4 | Calendar Insights Panel + Trend Indicator | Medium | |
-| 5 | Day Summary in DayDetail + Calendar ↔ Reports navigation | Small | |
+| 5 | Day Summary in DayDetail + Calendar ↔ Reports navigation | Small | ✅ |
 | 6 | Week Summary + Testing & Documentation | Small–Medium (optional) | |
 
 ### Phase 1: Date Range & Trends API Endpoints (TDD) ✅
@@ -615,20 +615,20 @@ The **minimum viable delivery** (Phases 1–3) delivers the highest-value slice:
 
 ---
 
-### Phase 5: Day Summary + Calendar ↔ Reports Navigation
+### Phase 5: Day Summary + Calendar ↔ Reports Navigation ✅
 > **Commit prefix:** `feat(client): add day summary analytics and calendar-reports navigation`
 
 **Objective:** Enhance DayDetail with a category breakdown and add bidirectional navigation between calendar and reports.
 
 **Tasks:**
-- [ ] Add `GetDaySummaryAsync` to `IBudgetApiService` + implement
-- [ ] Create `DaySummary.razor` component (income, spending, net, top 3 categories)
-- [ ] Integrate into existing `DayDetail.razor` (above or below the transaction list)
-- [ ] Handle days with no transactions gracefully ("No transactions on this day")
-- [ ] Add "View Reports" button/icon to Calendar page header → navigates to reports with current month pre-selected
-- [ ] Calendar month navigation updates URL: `/{Year}/{Month}` (already exists)
-- [ ] Reports "Back to Calendar" link uses `/{Year}/{Month}` to return to the same month
-- [ ] Test: navigating calendar → reports → back preserves month context
+- [x] Add `GetDaySummaryAsync` to `IBudgetApiService` + implement
+- [x] Create `DaySummary.razor` component (income, spending, net, top 3 categories)
+- [x] Integrate into existing `DayDetail.razor` (above or below the transaction list)
+- [x] Handle days with no transactions gracefully ("No transactions on this day")
+- [x] Add "View Reports" button/icon to Calendar page header → navigates to reports with current month pre-selected
+- [x] Calendar month navigation updates URL: `/{Year}/{Month}` (already exists)
+- [x] Reports "Back to Calendar" link uses `/{Year}/{Month}` to return to the same month
+- [x] Test: navigating calendar → reports → back preserves month context
 
 **Validation:**
 - Day summary totals match the sum of visible transactions in DayDetail
@@ -818,3 +818,4 @@ The **minimum viable delivery** (Phases 1–3) delivers the highest-value slice:
 | 2026-02-08 | **Phase 2 complete**: Created `DateRangePicker` component (13 bUnit tests), `BarChart` SVG component with code-behind (10 bUnit tests), `BarChartData` models, `MonthlyTrendsReport` page at `/reports/trends`. Enhanced `MonthlyCategoriesReport` with DateRangePicker and URL query params. Added `GetCategoryReportByRangeAsync` and `GetSpendingTrendsAsync` to client API service. Enabled Monthly Trends card on ReportsIndex. Added Back to Calendar navigation. **Doc cleanup**: removed pervasive line duplication throughout entire document. | @copilot |
 | 2026-02-08 | **Phase 3 complete**: Created `BudgetComparisonReport.razor` page at `/reports/budget-comparison` with grouped BarChart (Budget vs. Actual per category), data table with status color-coding, overall summary card with percent-used display, month navigation (Previous/Next), no-budget-goals empty state with CTA, and ScopeService subscription. 16 bUnit tests using hand-written `StubBudgetApiService`. Enabled "Budget vs. Actual" card link on ReportsIndex (removed Coming Soon badge). Reuses existing `GetBudgetSummaryAsync` — no new API methods. |
 | 2026-02-08 | **Phase 4 complete**: Created `CalendarInsightsPanel.razor` — collapsible panel on calendar page showing monthly analytics (Total Income, Total Spending, Net, Top 3 Categories, transaction count). Includes mini `DonutChart` (Compact mode) and `TrendIndicator.razor` component (% change vs. previous month, color-coded with `InvertColors` for spending). Panel fetches current + previous month data in parallel for trend comparison. Collapsed/expanded state persisted in `localStorage`. "View Full Report" link navigates to `/reports/categories`. Added `trending-down` icon to Icon component. Integrated into `Calendar.razor` below `CalendarBudgetPanel`. 15 bUnit tests for `CalendarInsightsPanel`, 11 bUnit tests for `TrendIndicator` — all passing. | @copilot |
+| 2026-02-08 | **Phase 5 complete**: Created `DaySummary.razor` component with income/spending/net stats grid + top categories list, integrated below transaction summary in `DayDetail.razor` (with `AccountId` passthrough). Added `GetDaySummaryAsync` to `IBudgetApiService` + `BudgetApiService`. Added "View Reports" button to Calendar page header (navigates to `/reports/categories` with current month). Fixed "Back to Calendar" links on `MonthlyCategoriesReport` and `BudgetComparisonReport` to use report's current month context instead of `DateTime.Today`. Created `Calendar.razor.css` for scoped styles. 11 bUnit tests for `DaySummary`. All 2,034 solution tests passing. | @copilot |

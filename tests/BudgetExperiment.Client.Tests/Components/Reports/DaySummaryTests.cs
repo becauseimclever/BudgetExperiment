@@ -1,8 +1,6 @@
-// <copyright file="CalendarInsightsPanelTests.cs" company="BecauseImClever">
+// <copyright file="DaySummaryTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
-
-using System.Globalization;
 
 using Bunit;
 
@@ -15,16 +13,16 @@ using Microsoft.Extensions.DependencyInjection;
 namespace BudgetExperiment.Client.Tests.Components.Reports;
 
 /// <summary>
-/// Unit tests for the CalendarInsightsPanel component.
+/// Unit tests for the DaySummary component.
 /// </summary>
-public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
+public class DaySummaryTests : BunitContext, IAsyncLifetime
 {
     private readonly StubBudgetApiService _stubApiService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CalendarInsightsPanelTests"/> class.
+    /// Initializes a new instance of the <see cref="DaySummaryTests"/> class.
     /// </summary>
-    public CalendarInsightsPanelTests()
+    public DaySummaryTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this._stubApiService = new StubBudgetApiService();
@@ -33,387 +31,308 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
     }
 
     /// <inheritdoc/>
-    public Task InitializeAsync()
-    {
-        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
-        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
     /// <inheritdoc/>
     public new Task DisposeAsync() => base.DisposeAsync().AsTask();
 
     /// <summary>
-    /// Verifies that the panel renders in collapsed state by default.
+    /// Verifies that the component renders income, spending, and net amounts.
     /// </summary>
     [Fact]
-    public void Panel_RendersCollapsedByDefault()
-    {
-        // Arrange & Act
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Assert
-        var panel = cut.Find(".calendar-insights-panel");
-        Assert.Contains("collapsed", panel.ClassList);
-        Assert.DoesNotContain("expanded", panel.ClassList);
-    }
-
-    /// <summary>
-    /// Verifies that the panel shows "Month Insights" title.
-    /// </summary>
-    [Fact]
-    public void Panel_ShowsTitle()
-    {
-        // Arrange & Act
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Assert
-        Assert.Contains("Month Insights", cut.Markup);
-    }
-
-    /// <summary>
-    /// Verifies that clicking header expands the panel and loads data.
-    /// </summary>
-    [Fact]
-    public void Panel_ExpandsOnHeaderClick_AndLoadsData()
+    public void DaySummary_ShowsIncomeSpendingAndNet_WhenDataExists()
     {
         // Arrange
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
+        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
 
         // Act
-        cut.Find(".insights-panel-header").Click();
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
 
         // Assert
-        var panel = cut.Find(".calendar-insights-panel");
-        Assert.Contains("expanded", panel.ClassList);
-        Assert.True(this._stubApiService.GetMonthlyCategoryReportCalled);
+        Assert.Contains("Daily Summary", cut.Markup);
+        Assert.Contains("$500.00", cut.Markup); // Income
+        Assert.Contains("$150.00", cut.Markup); // Spending
     }
 
     /// <summary>
-    /// Verifies that clicking header again collapses the panel.
+    /// Verifies that the component displays top categories.
     /// </summary>
     [Fact]
-    public void Panel_CollapsesOnSecondHeaderClick()
+    public void DaySummary_ShowsTopCategories_WhenPresent()
     {
         // Arrange
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Act - expand then collapse
-        cut.Find(".insights-panel-header").Click();
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert
-        var panel = cut.Find(".calendar-insights-panel");
-        Assert.Contains("collapsed", panel.ClassList);
-    }
-
-    /// <summary>
-    /// Verifies that the panel displays income, spending, and net values.
-    /// </summary>
-    [Fact]
-    public void Panel_DisplaysSummaryValues_WhenExpanded()
-    {
-        // Arrange
-        var report = CreateTestReport();
-        report.TotalIncome = new MoneyDto { Amount = 4000m, Currency = "USD" };
-        report.TotalSpending = new MoneyDto { Amount = 2500m, Currency = "USD" };
-        this._stubApiService.MonthlyCategoryReportResult = report;
-
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
+        this._stubApiService.DaySummaryResult = CreateSummaryWithCategories();
 
         // Act
-        cut.Find(".insights-panel-header").Click();
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
 
         // Assert
-        Assert.Contains("$4,000.00", cut.Markup);
-        Assert.Contains("$2,500.00", cut.Markup);
-        Assert.Contains("$1,500.00", cut.Markup); // Net = 4000 - 2500
-    }
-
-    /// <summary>
-    /// Verifies that the panel shows top 3 categories.
-    /// </summary>
-    [Fact]
-    public void Panel_ShowsTopThreeCategories()
-    {
-        // Arrange
-        var report = CreateTestReport();
-        report.Categories = new List<CategorySpendingDto>
-        {
-            new() { CategoryId = Guid.NewGuid(), CategoryName = "Groceries", CategoryColor = "#4CAF50", Amount = new MoneyDto { Amount = 450m, Currency = "USD" }, Percentage = 30m, TransactionCount = 12 },
-            new() { CategoryId = Guid.NewGuid(), CategoryName = "Dining", CategoryColor = "#FF5722", Amount = new MoneyDto { Amount = 300m, Currency = "USD" }, Percentage = 20m, TransactionCount = 8 },
-            new() { CategoryId = Guid.NewGuid(), CategoryName = "Gas", CategoryColor = "#2196F3", Amount = new MoneyDto { Amount = 200m, Currency = "USD" }, Percentage = 13.3m, TransactionCount = 5 },
-            new() { CategoryId = Guid.NewGuid(), CategoryName = "Entertainment", CategoryColor = "#9C27B0", Amount = new MoneyDto { Amount = 100m, Currency = "USD" }, Percentage = 6.7m, TransactionCount = 3 },
-        };
-        this._stubApiService.MonthlyCategoryReportResult = report;
-
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Act
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert - top 3 shown, 4th not shown in the top categories list
-        var categoryRows = cut.FindAll(".insights-category-row");
-        Assert.Equal(3, categoryRows.Count);
         Assert.Contains("Groceries", cut.Markup);
         Assert.Contains("Dining", cut.Markup);
-        Assert.Contains("Gas", cut.Markup);
+        Assert.Contains("Transport", cut.Markup);
     }
 
     /// <summary>
-    /// Verifies that the panel shows a "View Full Report" link.
+    /// Verifies that the component shows an empty message when there are no transactions.
     /// </summary>
     [Fact]
-    public void Panel_ShowsViewFullReportLink()
+    public void DaySummary_ShowsEmptyMessage_WhenNoTransactions()
     {
         // Arrange
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Act
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert
-        var link = cut.Find(".view-full-report");
-        Assert.Equal("/reports/categories?year=2026&month=2", link.GetAttribute("href"));
-        Assert.Contains("View Full Report", link.TextContent);
-    }
-
-    /// <summary>
-    /// Verifies that the panel shows empty state when no data.
-    /// </summary>
-    [Fact]
-    public void Panel_ShowsEmptyState_WhenNoData()
-    {
-        // Arrange - leave stub returning null
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Act
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert
-        Assert.Contains("No spending data available", cut.Markup);
-    }
-
-    /// <summary>
-    /// Verifies that the OnExpandedChanged callback is fired.
-    /// </summary>
-    [Fact]
-    public void Panel_FiresOnExpandedChanged()
-    {
-        // Arrange
-        var expandedValue = false;
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2)
-            .Add(p => p.OnExpandedChanged, val => expandedValue = val));
-
-        // Act
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert
-        Assert.True(expandedValue);
-    }
-
-    /// <summary>
-    /// Verifies that trend indicator is rendered when previous month data exists.
-    /// </summary>
-    [Fact]
-    public void Panel_ShowsTrendIndicator_WhenPreviousDataExists()
-    {
-        // Arrange
-        var currentReport = CreateTestReport();
-        currentReport.TotalSpending = new MoneyDto { Amount = 2500m, Currency = "USD" };
-
-        var previousReport = CreateTestReport();
-        previousReport.TotalSpending = new MoneyDto { Amount = 2000m, Currency = "USD" };
-
-        this._stubApiService.MonthlyCategoryReportResult = currentReport;
-        this._stubApiService.PreviousMonthReportResult = previousReport;
-
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Act
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert - TrendIndicator should be rendered
-        Assert.Contains("trend-indicator", cut.Markup);
-        Assert.Contains("vs. last month", cut.Markup);
-    }
-
-    /// <summary>
-    /// Verifies that the panel does not fetch data when collapsed.
-    /// </summary>
-    [Fact]
-    public void Panel_DoesNotFetchData_WhenCollapsed()
-    {
-        // Arrange & Act
-        Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Assert
-        Assert.False(this._stubApiService.GetMonthlyCategoryReportCalled);
-    }
-
-    /// <summary>
-    /// Verifies that net amount shows positive class when income exceeds spending.
-    /// </summary>
-    [Fact]
-    public void Panel_ShowsPositiveNetClass_WhenIncomeExceedsSpending()
-    {
-        // Arrange
-        var report = CreateTestReport();
-        report.TotalIncome = new MoneyDto { Amount = 5000m, Currency = "USD" };
-        report.TotalSpending = new MoneyDto { Amount = 3000m, Currency = "USD" };
-        this._stubApiService.MonthlyCategoryReportResult = report;
-
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Act
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert
-        Assert.Contains("stat-positive", cut.Markup);
-    }
-
-    /// <summary>
-    /// Verifies that net amount shows negative class when spending exceeds income.
-    /// </summary>
-    [Fact]
-    public void Panel_ShowsNegativeNetClass_WhenSpendingExceedsIncome()
-    {
-        // Arrange
-        var report = CreateTestReport();
-        report.TotalIncome = new MoneyDto { Amount = 2000m, Currency = "USD" };
-        report.TotalSpending = new MoneyDto { Amount = 3000m, Currency = "USD" };
-        this._stubApiService.MonthlyCategoryReportResult = report;
-
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
-
-        // Act
-        cut.Find(".insights-panel-header").Click();
-
-        // Assert
-        Assert.Contains("stat-negative", cut.Markup);
-    }
-
-    /// <summary>
-    /// Verifies that the panel renders the donut chart.
-    /// </summary>
-    [Fact]
-    public void Panel_RendersDonutChart_WhenCategoriesExist()
-    {
-        // Arrange
-        var report = CreateTestReport();
-        report.Categories = new List<CategorySpendingDto>
+        this._stubApiService.DaySummaryResult = new DaySummaryDto
         {
-            new() { CategoryId = Guid.NewGuid(), CategoryName = "Groceries", Amount = new MoneyDto { Amount = 450m, Currency = "USD" }, Percentage = 100m, TransactionCount = 5 },
+            Date = new DateOnly(2026, 2, 5),
+            TransactionCount = 0,
         };
-        this._stubApiService.MonthlyCategoryReportResult = report;
-
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
 
         // Act
-        cut.Find(".insights-panel-header").Click();
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
 
-        // Assert - DonutChart should produce an SVG
-        Assert.Contains("donut-chart", cut.Markup);
+        // Assert
+        Assert.Contains("No transaction analytics for this day", cut.Markup);
+        Assert.DoesNotContain("Daily Summary", cut.Markup);
     }
 
     /// <summary>
-    /// Verifies that the panel displays transaction count.
+    /// Verifies that the component handles a null API response gracefully.
     /// </summary>
     [Fact]
-    public void Panel_DisplaysTransactionCount()
+    public void DaySummary_HandlesNullResponse_Gracefully()
     {
         // Arrange
-        var report = CreateTestReport();
-        report.Categories = new List<CategorySpendingDto>
-        {
-            new() { CategoryId = Guid.NewGuid(), CategoryName = "Groceries", Amount = new MoneyDto { Amount = 450m, Currency = "USD" }, Percentage = 60m, TransactionCount = 12 },
-            new() { CategoryId = Guid.NewGuid(), CategoryName = "Dining", Amount = new MoneyDto { Amount = 300m, Currency = "USD" }, Percentage = 40m, TransactionCount = 8 },
-        };
-        this._stubApiService.MonthlyCategoryReportResult = report;
-
-        var cut = Render<CalendarInsightsPanel>(parameters => parameters
-            .Add(p => p.Year, 2026)
-            .Add(p => p.Month, 2));
+        this._stubApiService.DaySummaryResult = null;
 
         // Act
-        cut.Find(".insights-panel-header").Click();
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
 
-        // Assert - 12 + 8 = 20 transactions
-        Assert.Contains("20", cut.Markup);
+        // Assert — should render without errors ( no summary, no empty message)
+        Assert.DoesNotContain("Daily Summary", cut.Markup);
+        Assert.DoesNotContain("No transaction analytics", cut.Markup);
     }
 
-    private static MonthlyCategoryReportDto CreateTestReport()
+    /// <summary>
+    /// Verifies that positive net shows positive styling.
+    /// </summary>
+    [Fact]
+    public void DaySummary_ShowsPositiveNet_WhenIncomeExceedsSpending()
     {
-        return new MonthlyCategoryReportDto
+        // Arrange
+        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
+
+        // Act
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
+
+        // Assert
+        var netStat = cut.FindAll(".stat-item.net .stat-value");
+        Assert.Single(netStat);
+        Assert.Contains("positive", netStat[0].ClassList);
+        Assert.Contains("+$350.00", netStat[0].TextContent);
+    }
+
+    /// <summary>
+    /// Verifies that negative net shows negative styling.
+    /// </summary>
+    [Fact]
+    public void DaySummary_ShowsNegativeNet_WhenSpendingExceedsIncome()
+    {
+        // Arrange
+        this._stubApiService.DaySummaryResult = new DaySummaryDto
         {
-            Year = 2026,
-            Month = 2,
-            TotalSpending = new MoneyDto { Amount = 1500m, Currency = "USD" },
-            TotalIncome = new MoneyDto { Amount = 3000m, Currency = "USD" },
-            Categories = [],
+            Date = new DateOnly(2026, 2, 5),
+            TotalIncome = new MoneyDto { Amount = 100m, Currency = "USD" },
+            TotalSpending = new MoneyDto { Amount = 250m, Currency = "USD" },
+            NetAmount = new MoneyDto { Amount = -150m, Currency = "USD" },
+            TransactionCount = 3,
+        };
+
+        // Act
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
+
+        // Assert
+        var netStat = cut.FindAll(".stat-item.net .stat-value");
+        Assert.Single(netStat);
+        Assert.Contains("negative", netStat[0].ClassList);
+        Assert.Contains("-$150.00", netStat[0].TextContent);
+    }
+
+    /// <summary>
+    /// Verifies that the component does not show categories section when no top categories exist.
+    /// </summary>
+    [Fact]
+    public void DaySummary_HidesCategoriesSection_WhenNoCategories()
+    {
+        // Arrange
+        this._stubApiService.DaySummaryResult = new DaySummaryDto
+        {
+            Date = new DateOnly(2026, 2, 5),
+            TotalIncome = new MoneyDto { Amount = 0m, Currency = "USD" },
+            TotalSpending = new MoneyDto { Amount = 50m, Currency = "USD" },
+            NetAmount = new MoneyDto { Amount = -50m, Currency = "USD" },
+            TransactionCount = 1,
+            TopCategories = [],
+        };
+
+        // Act
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
+
+        // Assert
+        Assert.DoesNotContain("Top Categories", cut.Markup);
+        Assert.Contains("Daily Summary", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that the component has an accessible region label.
+    /// </summary>
+    [Fact]
+    public void DaySummary_HasAccessibleRegionLabel()
+    {
+        // Arrange
+        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
+
+        // Act
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
+
+        // Assert
+        var region = cut.Find("[role='region']");
+        Assert.Equal("Day spending summary", region.GetAttribute("aria-label"));
+    }
+
+    /// <summary>
+    /// Verifies that the component reloads data when rendered with a different date.
+    /// </summary>
+    [Fact]
+    public void DaySummary_LoadsData_ForDifferentDates()
+    {
+        // Arrange — first date
+        var summary1 = new DaySummaryDto
+        {
+            Date = new DateOnly(2026, 2, 5),
+            TotalIncome = new MoneyDto { Amount = 100m, Currency = "USD" },
+            TotalSpending = new MoneyDto { Amount = 50m, Currency = "USD" },
+            NetAmount = new MoneyDto { Amount = 50m, Currency = "USD" },
+            TransactionCount = 2,
+        };
+        this._stubApiService.DaySummaryResult = summary1;
+
+        var cut1 = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
+
+        Assert.Contains("$100.00", cut1.Markup);
+
+        // Act — different date with different data
+        var summary2 = new DaySummaryDto
+        {
+            Date = new DateOnly(2026, 2, 6),
+            TotalIncome = new MoneyDto { Amount = 200m, Currency = "USD" },
+            TotalSpending = new MoneyDto { Amount = 75m, Currency = "USD" },
+            NetAmount = new MoneyDto { Amount = 125m, Currency = "USD" },
+            TransactionCount = 3,
+        };
+        this._stubApiService.DaySummaryResult = summary2;
+
+        var cut2 = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 6)));
+
+        // Assert — should have loaded data for the second date
+        Assert.Contains("$200.00", cut2.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that the category list has proper ARIA label.
+    /// </summary>
+    [Fact]
+    public void DaySummary_CategoryList_HasAriaLabel()
+    {
+        // Arrange
+        this._stubApiService.DaySummaryResult = CreateSummaryWithCategories();
+
+        // Act
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5)));
+
+        // Assert
+        var list = cut.Find("ul[aria-label]");
+        Assert.Equal("Top spending categories", list.GetAttribute("aria-label"));
+    }
+
+    /// <summary>
+    /// Verifies that the component passes the account ID filter to the API call.
+    /// </summary>
+    [Fact]
+    public void DaySummary_PassesAccountId_ToApiCall()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
+
+        // Act
+        var cut = Render<DaySummary>(parameters => parameters
+            .Add(p => p.Date, new DateOnly(2026, 2, 5))
+            .Add(p => p.AccountId, accountId));
+
+        // Assert
+        Assert.Equal(accountId, this._stubApiService.LastRequestedAccountId);
+    }
+
+    private static DaySummaryDto CreateSummaryWithTransactions()
+    {
+        return new DaySummaryDto
+        {
+            Date = new DateOnly(2026, 2, 5),
+            TotalIncome = new MoneyDto { Amount = 500m, Currency = "USD" },
+            TotalSpending = new MoneyDto { Amount = 150m, Currency = "USD" },
+            NetAmount = new MoneyDto { Amount = 350m, Currency = "USD" },
+            TransactionCount = 5,
+            TopCategories = [],
+        };
+    }
+
+    private static DaySummaryDto CreateSummaryWithCategories()
+    {
+        return new DaySummaryDto
+        {
+            Date = new DateOnly(2026, 2, 5),
+            TotalIncome = new MoneyDto { Amount = 0m, Currency = "USD" },
+            TotalSpending = new MoneyDto { Amount = 120m, Currency = "USD" },
+            NetAmount = new MoneyDto { Amount = -120m, Currency = "USD" },
+            TransactionCount = 4,
+            TopCategories = new List<DayTopCategoryDto>
+            {
+                new() { CategoryName = "Groceries", Amount = new MoneyDto { Amount = 60m, Currency = "USD" } },
+                new() { CategoryName = "Dining", Amount = new MoneyDto { Amount = 35m, Currency = "USD" } },
+                new() { CategoryName = "Transport", Amount = new MoneyDto { Amount = 25m, Currency = "USD" } },
+            },
         };
     }
 
     /// <summary>
-    /// Stub implementation of IBudgetApiService for CalendarInsightsPanel tests.
+    /// Stub implementation of IBudgetApiService for DaySummary tests.
     /// </summary>
     private sealed class StubBudgetApiService : IBudgetApiService
     {
-        /// <summary>Gets or sets the result for the current month report.</summary>
-        public MonthlyCategoryReportDto? MonthlyCategoryReportResult { get; set; }
+        /// <summary>Gets or sets the DaySummaryDto to return from GetDaySummaryAsync.</summary>
+        public DaySummaryDto? DaySummaryResult { get; set; }
 
-        /// <summary>Gets or sets the result for the previous month report (for trend calculation).</summary>
-        public MonthlyCategoryReportDto? PreviousMonthReportResult { get; set; }
+        /// <summary>Gets or sets the number of times GetDaySummaryAsync was called.</summary>
+        public int GetDaySummaryCallCount { get; set; }
 
-        /// <summary>Gets a value indicating whether GetMonthlyCategoryReportAsync was called.</summary>
-        public bool GetMonthlyCategoryReportCalled { get; private set; }
+        /// <summary>Gets the last account ID passed to GetDaySummaryAsync.</summary>
+        public Guid? LastRequestedAccountId { get; private set; }
 
         /// <inheritdoc/>
-        public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month)
+        public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null)
         {
-            this.GetMonthlyCategoryReportCalled = true;
-
-            // Return previous month data if the requested month is one before the current
-            if (this.PreviousMonthReportResult != null &&
-                this.MonthlyCategoryReportResult != null &&
-                (month != this.MonthlyCategoryReportResult.Month || year != this.MonthlyCategoryReportResult.Year))
-            {
-                return Task.FromResult<MonthlyCategoryReportDto?>(this.PreviousMonthReportResult);
-            }
-
-            return Task.FromResult(this.MonthlyCategoryReportResult);
+            this.GetDaySummaryCallCount++;
+            this.LastRequestedAccountId = accountId;
+            return Task.FromResult(this.DaySummaryResult);
         }
 
         // --- All other interface methods return defaults ---
@@ -638,13 +557,13 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         public Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request) => Task.FromResult(new BulkCategorizeResponse());
 
         /// <inheritdoc/>
+        public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month) => Task.FromResult<MonthlyCategoryReportDto?>(null);
+
+        /// <inheritdoc/>
         public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<DateRangeCategoryReportDto?>(null);
 
         /// <inheritdoc/>
         public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null) => Task.FromResult<SpendingTrendsReportDto?>(null);
-
-        /// <inheritdoc/>
-        public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null) => Task.FromResult<DaySummaryDto?>(null);
 
         /// <inheritdoc/>
         public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId) => Task.FromResult<ImportPatternsDto?>(null);

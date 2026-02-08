@@ -20,7 +20,15 @@
     <div class="split mb-4">
         <Button Variant="ButtonVariant.Primary" OnClick="PreviousMonth">&lt; Previous</Button>
         <h2 class="text-secondary m-0">@currentDate.ToString("MMMM yyyy")</h2>
-        <Button Variant="ButtonVariant.Primary" OnClick="NextMonth">Next &gt;</Button>
+        <div class="calendar-header-actions">
+            <a href="/reports/categories?year=@currentDate.Year&amp;month=@currentDate.Month"
+               class="btn-view-reports"
+               title="View Reports for @currentDate.ToString("MMMM yyyy")">
+                <Icon Name="chart" Size="16" />
+                Reports
+            </a>
+            <Button Variant="ButtonVariant.Primary" OnClick="NextMonth">Next &gt;</Button>
+        </div>
     </div>
 
     <div class="account-filter">
@@ -86,6 +94,7 @@
     @if (selectedDate.HasValue && dayDetail != null)
     {
         <DayDetail Detail="@dayDetail"
+                   AccountId="@filterAccountId"
                    OnAddTransaction="ShowAddTransaction"
                    OnEditInstance="ShowEditInstance"
                    OnSkipInstance="SkipInstance"

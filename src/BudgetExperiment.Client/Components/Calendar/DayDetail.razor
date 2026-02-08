@@ -105,6 +105,8 @@
             </div>
         </div>
     }
+
+    <DaySummary Date="@Detail.Date" AccountId="@AccountId" />
 </div>
 
 @code {
@@ -113,6 +115,12 @@
     /// </summary>
     [Parameter, EditorRequired]
     public DayDetailDto Detail { get; set; } = new();
+
+    /// <summary>
+    /// Optional account filter for the day summary analytics.
+    /// </summary>
+    [Parameter]
+    public Guid? AccountId { get; set; }
 
     /// <summary>
     /// Callback when the Add Transaction button is clicked.

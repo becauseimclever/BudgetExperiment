@@ -1,0 +1,117 @@
+@* DaySummary.razor - Day-level analytics with income, spending, net, and top categories *@
+
+@inject IBudgetApiService ApiService
+
+@if (isLoading)
+{
+    <div class="day-summary-analytics loading" aria-busy="true">
+        <span class="loading-text">Loading summary...</span>
+    </div>
+}
+else if (summary != null && summary.TransactionCount > 0)
+{
+    <div class="day-summary-analytics" role="region" aria-label="Day spending summary">
+        <h5 class="day-summary-title">
+            <Icon Name="chart" Size="14" />
+            Daily Summary
+        </h5>
+
+        <div class="day-summary-stats">
+            <div class="stat-item income">
+                <span class="stat-label">Income</span>
+                <span class="stat-value positive">@FormatAmount(summary.TotalIncome.Amount)</span>
+            </div>
+            <div class="stat-item spending">
+                <span class="stat-label">Spending</span>
+                <span class="stat-value negative">@FormatAmount(summary.TotalSpending.Amount)</span>
+            </div>
+            <div class="stat-item net">
+                <span class="stat-label">Net</span>
+                <span class="stat-value @(summary.NetAmount.Amount >= 0 ? "positive" : "negative")">
+                    @FormatSignedAmount(summary.NetAmount.Amount)
+                </span>
+            </div>
+        </div>
+
+        @if (summary.TopCategories.Count > 0)
+        {
+            <div class="day-summary-categories">
+                <span class="categories-label">Top Categories</span>
+                <ul class="category-list" aria-label="Top spending categories">
+                    @foreach (var category in summary.TopCategories)
+                    {
+                        <li class="category-item">
+                            <span class="category-name">@category.CategoryName</span>
+                            <span class="category-amount">@FormatAmount(category.Amount.Amount)</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+}
+else if (summary != null && summary.TransactionCount == 0)
+{
+    <div class="day-summary-analytics empty" role="region" aria-label="Day spending summary">
+        <span class="empty-text">No transaction analytics for this day.</span>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// The date to display the summary for.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public DateOnly Date { get; set; }
+
+    /// <summary>
+    /// Optional account filter.
+    /// </summary>
+    [Parameter]
+    public Guid? AccountId { get; set; }
+
+    private DaySummaryDto? summary;
+    private bool isLoading;
+    private DateOnly loadedDate;
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Date != loadedDate)
+        {
+            await LoadSummaryAsync();
+        }
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        isLoading = true;
+        loadedDate = Date;
+        StateHasChanged();
+
+        try
+        {
+            summary = await ApiService.GetDaySummaryAsync(Date, AccountId);
+        }
+        catch
+        {
+            summary = null;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string FormatAmount(decimal amount)
+    {
+        return $"${Math.Abs(amount):N2}";
+    }
+
+    private static string FormatSignedAmount(decimal amount)
+    {
+        var sign = amount >= 0 ? "+" : "-";
+        return $"{sign}${Math.Abs(amount):N2}";
+    }
+}

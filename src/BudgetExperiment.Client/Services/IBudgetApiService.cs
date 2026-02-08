@@ -620,6 +620,14 @@ public interface IBudgetApiService
     Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null);
 
     /// <summary>
+    /// Gets the day summary analytics for a specific date.
+    /// </summary>
+    /// <param name="date">The date to get the summary for.</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>The day summary with income, spending, net, and top categories.</returns>
+    Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null);
+
+    /// <summary>
     /// Gets the import patterns for a recurring transaction.
     /// </summary>
     /// <param name="recurringTransactionId">The recurring transaction ID.</param>

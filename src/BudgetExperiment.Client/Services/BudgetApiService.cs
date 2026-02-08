@@ -1142,6 +1142,30 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null)
+    {
+        try
+        {
+            var url = $"api/v1/reports/day-summary/{date:yyyy-MM-dd}";
+            if (accountId.HasValue)
+            {
+                url += $"?accountId={accountId.Value}";
+            }
+
+            return await this._httpClient.GetFromJsonAsync<DaySummaryDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId)
     {
         try

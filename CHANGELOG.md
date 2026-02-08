@@ -14,15 +14,30 @@ All notable changes to Budget Experiment.
 - **client:** Enhanced MonthlyCategoriesReport with DateRangePicker, URL query params, and flexible date range support
 - **client:** Activate Monthly Trends card on ReportsIndex as live link
 - **client:** Add `GetCategoryReportByRangeAsync` and `GetSpendingTrendsAsync` to BudgetApiService
+- **client:** BudgetComparisonReport page (`/reports/budget-comparison`) with grouped BarChart, data table, summary card, month navigation, and ScopeService subscription
+- **client:** Enable Budget vs. Actual card on ReportsIndex as live link
+- **client:** CalendarInsightsPanel — collapsible monthly analytics panel on calendar page with income/spending/net, top categories, mini DonutChart, and TrendIndicator (% change vs. previous month)
+- **client:** TrendIndicator component for color-coded percentage changes with InvertColors support
+- **client:** DaySummary component — day-level analytics (income, spending, net, top categories) integrated into DayDetail panel
+- **client:** Add "View Reports" button to Calendar header for calendar-to-reports navigation with month context
+- **client:** Add `GetDaySummaryAsync` to IBudgetApiService and BudgetApiService
+
+### Bug Fixes
+
+- **client:** Fix "Back to Calendar" links on MonthlyCategoriesReport and BudgetComparisonReport to preserve report month context instead of always navigating to the current month
 
 ### Testing
 
 - **client:** 13 bUnit tests for DateRangePicker (presets, date inputs, validation, sizing)
 - **client:** 10 bUnit tests for BarChart (empty state, grouped bars, legend, ARIA labels, colors)
+- **client:** 16 bUnit tests for BudgetComparisonReport (summary, chart, data table, navigation, empty states, error handling)
+- **client:** 15 bUnit tests for CalendarInsightsPanel (collapsed/expanded state, data loading, trend indicators, categories)
+- **client:** 11 bUnit tests for TrendIndicator (positive/negative/zero trends, InvertColors, formatting)
+- **client:** 11 bUnit tests for DaySummary (income/spending/net display, categories, empty state, null response, accessibility)
 
 ### Documentation
 
-- **docs:** Feature 050 spec updated to Phase 2 Complete status with implementation notes
+- **docs:** Feature 050 spec updated to Phase 5 Complete status with implementation notes
 
 ## [3.13.0] - 2026-02-07
 
