@@ -1,0 +1,127 @@
+/* DateRangePicker.razor.css - Scoped styles for date range picker */
+
+.date-range-picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Presets */
+.date-range-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.preset-button {
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    white-space: nowrap;
+}
+
+.preset-button:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-primary);
+}
+
+.preset-button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.preset-button.active {
+    background: var(--color-primary);
+    color: var(--color-primary-contrast, #fff);
+    border-color: var(--color-primary);
+}
+
+/* Date Inputs */
+.date-range-inputs {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-2);
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.date-input-group label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.date-input-group input[type="date"] {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-family: inherit;
+    min-width: 140px;
+    transition: border-color var(--transition-fast);
+}
+
+.date-input-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-bg, rgba(99, 102, 241, 0.1));
+}
+
+.date-range-separator {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    padding-bottom: var(--space-2);
+}
+
+/* Size variants */
+.date-range-picker.small .preset-button {
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-xs);
+}
+
+.date-range-picker.small .date-input-group input[type="date"] {
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-xs);
+    min-width: 120px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .date-range-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .date-range-separator {
+        display: none;
+    }
+
+    .date-input-group input[type="date"] {
+        width: 100%;
+    }
+
+    .date-range-presets {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .date-range-presets::-webkit-scrollbar {
+        display: none;
+    }
+}

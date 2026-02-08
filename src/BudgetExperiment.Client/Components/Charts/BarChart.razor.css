@@ -1,0 +1,138 @@
+/* BarChart.razor.css - Scoped styles for the bar chart component */
+
+.bar-chart-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3, 0.75rem);
+    width: 100%;
+}
+
+.bar-chart-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bar-chart {
+    width: 100%;
+    min-width: 300px;
+    height: auto;
+}
+
+/* Grid and axis */
+.grid-line {
+    stroke: var(--chart-grid-color, #e5e7eb);
+}
+
+.axis-label {
+    fill: var(--color-text-muted, #6b7280);
+    font-family: inherit;
+}
+
+.x-axis-label {
+    fill: var(--color-text-muted, #6b7280);
+}
+
+/* Bars */
+.bar-rect {
+    transition: filter 0.15s ease, opacity 0.15s ease;
+    cursor: pointer;
+    outline: none;
+}
+
+.bar-rect:hover,
+.bar-rect:focus-visible {
+    filter: brightness(1.15);
+}
+
+.bar-rect:focus-visible {
+    outline: 2px solid var(--color-primary, #6366f1);
+    outline-offset: 1px;
+}
+
+/* Legend */
+.bar-chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3, 0.75rem);
+    padding: var(--space-2, 0.5rem) 0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+    font-size: var(--text-sm, 0.875rem);
+    color: var(--color-text, #111827);
+}
+
+.legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.legend-label {
+    white-space: nowrap;
+}
+
+/* Tooltip */
+.bar-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-surface-elevated, #fff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
+    padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+    box-shadow: var(--shadow-lg, 0 4px 12px rgba(0, 0, 0, 0.1));
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.bar-tooltip .tooltip-label {
+    font-weight: 600;
+    color: var(--color-text, #111827);
+    margin-bottom: 2px;
+}
+
+.bar-tooltip .tooltip-series {
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-text-muted, #6b7280);
+}
+
+.bar-tooltip .tooltip-value {
+    font-size: var(--text-base, 1rem);
+    font-weight: 700;
+    color: var(--color-primary, #6366f1);
+}
+
+/* Empty state */
+.bar-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background: var(--color-surface, #fff);
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--color-border, #e5e7eb);
+    color: var(--color-text-muted, #6b7280);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .bar-chart {
+        min-width: 250px;
+    }
+
+    .bar-chart-legend {
+        gap: var(--space-2, 0.5rem);
+    }
+}

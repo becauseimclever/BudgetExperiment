@@ -4,6 +4,26 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.14.0] - 2026-02-08
+
+### Features
+
+- **client:** DateRangePicker component with quick presets (This Month, Last Month, Last 7/30 Days, Custom)
+- **client:** BarChart component — pure SVG grouped bar chart with legend, tooltips, and ARIA labels
+- **client:** MonthlyTrendsReport page (`/reports/trends`) with month count selector, category filter, bar chart, summary card, and data table
+- **client:** Enhanced MonthlyCategoriesReport with DateRangePicker, URL query params, and flexible date range support
+- **client:** Activate Monthly Trends card on ReportsIndex as live link
+- **client:** Add `GetCategoryReportByRangeAsync` and `GetSpendingTrendsAsync` to BudgetApiService
+
+### Testing
+
+- **client:** 13 bUnit tests for DateRangePicker (presets, date inputs, validation, sizing)
+- **client:** 10 bUnit tests for BarChart (empty state, grouped bars, legend, ARIA labels, colors)
+
+### Documentation
+
+- **docs:** Feature 050 spec updated to Phase 2 Complete status with implementation notes
+
 ## [3.13.0] - 2026-02-07
 
 ### Features

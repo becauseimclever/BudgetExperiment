@@ -601,6 +601,25 @@ public interface IBudgetApiService
     Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month);
 
     /// <summary>
+    /// Gets the category spending report for an arbitrary date range.
+    /// </summary>
+    /// <param name="startDate">The start date.</param>
+    /// <param name="endDate">The end date.</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>The date range category report.</returns>
+    Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null);
+
+    /// <summary>
+    /// Gets the spending trends report over multiple months.
+    /// </summary>
+    /// <param name="months">Number of months to include (default 6, max 24).</param>
+    /// <param name="endYear">Optional end year (defaults to current).</param>
+    /// <param name="endMonth">Optional end month (defaults to current).</param>
+    /// <param name="categoryId">Optional category filter.</param>
+    /// <returns>The spending trends report.</returns>
+    Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null);
+
+    /// <summary>
     /// Gets the import patterns for a recurring transaction.
     /// </summary>
     /// <param name="recurringTransactionId">The recurring transaction ID.</param>

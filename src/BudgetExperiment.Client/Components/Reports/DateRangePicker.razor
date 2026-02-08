@@ -1,0 +1,179 @@
+@* DateRangePicker.razor - Date range selection with quick presets *@
+
+<div class="date-range-picker @(Size)">
+    <div class="date-range-presets" role="group" aria-label="Date range presets">
+        @if (ShowPresets)
+        {
+            @foreach (var preset in Presets)
+            {
+                <button class="preset-button @(activePreset == preset.Key ? "active" : "")"
+                        @onclick="() => ApplyPreset(preset.Key)"
+                        type="button"
+                        aria-pressed="@(activePreset == preset.Key ? "true" : "false")">
+                    @preset.Value
+                </button>
+            }
+        }
+    </div>
+
+    <div class="date-range-inputs">
+        <div class="date-input-group">
+            <label for="start-date">Start</label>
+            <input id="start-date"
+                   type="date"
+                   value="@StartDate.ToString("yyyy-MM-dd")"
+                   max="@EndDate.ToString("yyyy-MM-dd")"
+                   @onchange="HandleStartDateChange"
+                   aria-label="Start date" />
+        </div>
+        <span class="date-range-separator" aria-hidden="true">–</span>
+        <div class="date-input-group">
+            <label for="end-date">End</label>
+            <input id="end-date"
+                   type="date"
+                   value="@EndDate.ToString("yyyy-MM-dd")"
+                   min="@StartDate.ToString("yyyy-MM-dd")"
+                   @onchange="HandleEndDateChange"
+                   aria-label="End date" />
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the start date of the range.
+    /// </summary>
+    [Parameter]
+    public DateOnly StartDate { get; set; } = DateOnly.FromDateTime(DateTime.Today).AddDays(-29);
+
+    /// <summary>
+    /// Gets or sets the end date of the range.
+    /// </summary>
+    [Parameter]
+    public DateOnly EndDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+    /// <summary>
+    /// Event callback when the date range changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(DateOnly Start, DateOnly End)> OnRangeChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show quick preset buttons.
+    /// </summary>
+    [Parameter]
+    public bool ShowPresets { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the size variant of the picker.
+    /// </summary>
+    [Parameter]
+    public string Size { get; set; } = "medium";
+
+    private string? activePreset = "this-month";
+
+    private static readonly Dictionary<string, string> Presets = new()
+    {
+        ["this-month"] = "This Month",
+        ["last-month"] = "Last Month",
+        ["last-7"] = "Last 7 Days",
+        ["last-30"] = "Last 30 Days",
+        ["custom"] = "Custom",
+    };
+
+    /// <inheritdoc/>
+    protected override void OnParametersSet()
+    {
+        DetectActivePreset();
+    }
+
+    private void DetectActivePreset()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var thisMonthStart = new DateOnly(today.Year, today.Month, 1);
+        var thisMonthEnd = thisMonthStart.AddMonths(1).AddDays(-1);
+
+        if (StartDate == thisMonthStart && EndDate == thisMonthEnd)
+        {
+            activePreset = "this-month";
+            return;
+        }
+
+        var lastMonthStart = thisMonthStart.AddMonths(-1);
+        var lastMonthEnd = thisMonthStart.AddDays(-1);
+        if (StartDate == lastMonthStart && EndDate == lastMonthEnd)
+        {
+            activePreset = "last-month";
+            return;
+        }
+
+        if (StartDate == today.AddDays(-6) && EndDate == today)
+        {
+            activePreset = "last-7";
+            return;
+        }
+
+        if (StartDate == today.AddDays(-29) && EndDate == today)
+        {
+            activePreset = "last-30";
+            return;
+        }
+
+        activePreset = "custom";
+    }
+
+    private async Task ApplyPreset(string presetKey)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var (start, end) = presetKey switch
+        {
+            "this-month" => (new DateOnly(today.Year, today.Month, 1), new DateOnly(today.Year, today.Month, 1).AddMonths(1).AddDays(-1)),
+            "last-month" => (new DateOnly(today.Year, today.Month, 1).AddMonths(-1), new DateOnly(today.Year, today.Month, 1).AddDays(-1)),
+            "last-7" => (today.AddDays(-6), today),
+            "last-30" => (today.AddDays(-29), today),
+            _ => (StartDate, EndDate),
+        };
+
+        if (presetKey == "custom")
+        {
+            activePreset = "custom";
+            return;
+        }
+
+        activePreset = presetKey;
+        await EmitRangeChanged(start, end);
+    }
+
+    private async Task HandleStartDateChange(ChangeEventArgs e)
+    {
+        if (DateOnly.TryParse(e.Value?.ToString(), out var date))
+        {
+            if (date <= EndDate)
+            {
+                activePreset = "custom";
+                await EmitRangeChanged(date, EndDate);
+            }
+        }
+    }
+
+    private async Task HandleEndDateChange(ChangeEventArgs e)
+    {
+        if (DateOnly.TryParse(e.Value?.ToString(), out var date))
+        {
+            if (date >= StartDate)
+            {
+                activePreset = "custom";
+                await EmitRangeChanged(StartDate, date);
+            }
+        }
+    }
+
+    private async Task EmitRangeChanged(DateOnly start, DateOnly end)
+    {
+        if (OnRangeChanged.HasDelegate)
+        {
+            await OnRangeChanged.InvokeAsync((start, end));
+        }
+    }
+}
