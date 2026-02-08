@@ -1,0 +1,234 @@
+@* QuickAddForm.razor - Simplified mobile transaction entry form *@
+@* Optimized for touch with 48px min-height fields and native inputs *@
+
+@inject IJSRuntime JSRuntime
+
+<form class="quick-add-form" @onsubmit="HandleSubmitAsync">
+    <FormField Label="Description" InputId="qa-description" IsRequired="true">
+        <input id="qa-description"
+               type="text"
+               class="form-control quick-add-input"
+               inputmode="text"
+               autocomplete="off"
+               placeholder="e.g. Coffee at Starbucks"
+               @bind="Model.Description"
+               @bind:event="oninput"
+               required />
+    </FormField>
+
+    <FormField Label="Amount" InputId="qa-amount" IsRequired="true" HelpText="Negative for expenses">
+        <input id="qa-amount"
+               type="number"
+               class="form-control quick-add-input"
+               inputmode="decimal"
+               step="0.01"
+               placeholder="0.00"
+               @bind="AmountValue"
+               required />
+    </FormField>
+
+    <FormField Label="Category" InputId="qa-category">
+        <select id="qa-category"
+                class="form-control quick-add-input"
+                @bind="SelectedCategoryId">
+            <option value="">None</option>
+            @foreach (var category in Categories.Where(c => c.IsActive))
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </FormField>
+
+    <FormField Label="Account" InputId="qa-account" IsRequired="true">
+        <select id="qa-account"
+                class="form-control quick-add-input"
+                @bind="Model.AccountId"
+                required>
+            <option value="">Select Account</option>
+            @foreach (var account in Accounts)
+            {
+                <option value="@account.Id">@account.Name</option>
+            }
+        </select>
+    </FormField>
+
+    <FormField Label="Date" InputId="qa-date" IsRequired="true">
+        <input id="qa-date"
+               type="date"
+               class="form-control quick-add-input"
+               @bind="DateValue"
+               required />
+    </FormField>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="form-error-box" role="alert">
+            <span class="form-error-box-icon"><Icon Name="alert-triangle" Size="16" Class="icon-warning" /></span>
+            <span class="form-error-box-text">@ErrorMessage</span>
+        </div>
+    }
+
+    <div class="quick-add-actions">
+        <Button Variant="ButtonVariant.Secondary"
+                OnClick="HandleCancelAsync"
+                IsDisabled="@IsSubmitting"
+                type="button">
+            Cancel
+        </Button>
+        <Button Variant="ButtonVariant.Primary"
+                IsLoading="@IsSubmitting"
+                IsDisabled="@IsSubmitting"
+                type="submit">
+            Save
+        </Button>
+    </div>
+</form>
+
+@code {
+    private const string LastUsedAccountKey = "budget-experiment-last-account";
+
+    /// <summary>
+    /// Gets or sets the list of accounts for the dropdown.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<AccountDto> Accounts { get; set; } = Array.Empty<AccountDto>();
+
+    /// <summary>
+    /// Gets or sets the list of budget categories for the dropdown.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<BudgetCategoryDto> Categories { get; set; } = Array.Empty<BudgetCategoryDto>();
+
+    /// <summary>
+    /// Gets or sets the callback when the form is submitted with a valid model.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransactionCreateDto> OnSubmit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the form is cancelled.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the form is currently submitting.
+    /// </summary>
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    /// <summary>
+    /// Gets or sets the error message to display.
+    /// </summary>
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    /// <summary>
+    /// Gets the transaction model being edited.
+    /// </summary>
+    internal TransactionCreateDto Model { get; private set; } = new()
+    {
+        Date = DateOnly.FromDateTime(DateTime.UtcNow),
+        Amount = new MoneyDto { Amount = 0, Currency = "USD" },
+    };
+
+    private DateTime DateValue
+    {
+        get => Model.Date.ToDateTime(TimeOnly.MinValue);
+        set => Model.Date = DateOnly.FromDateTime(value);
+    }
+
+    private decimal AmountValue
+    {
+        get => Model.Amount.Amount;
+        set => Model.Amount = new MoneyDto { Amount = value, Currency = Model.Amount.Currency ?? "USD" };
+    }
+
+    private string? SelectedCategoryId
+    {
+        get => Model.CategoryId?.ToString();
+        set => Model.CategoryId = Guid.TryParse(value, out var id) ? id : null;
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadLastUsedAccountAsync();
+        }
+    }
+
+    /// <summary>
+    /// Resets the form to its default state for a new entry.
+    /// </summary>
+    public void Reset()
+    {
+        Model = new TransactionCreateDto
+        {
+            Date = DateOnly.FromDateTime(DateTime.UtcNow),
+            Amount = new MoneyDto { Amount = 0, Currency = "USD" },
+        };
+
+        // Re-apply last used account if available
+        _ = LoadLastUsedAccountAsync();
+    }
+
+    private async Task LoadLastUsedAccountAsync()
+    {
+        try
+        {
+            var savedAccountId = await JSRuntime.InvokeAsync<string?>(
+                "localStorage.getItem", LastUsedAccountKey);
+
+            if (Guid.TryParse(savedAccountId, out var accountId)
+                && Accounts.Any(a => a.Id == accountId))
+            {
+                Model.AccountId = accountId;
+                StateHasChanged();
+            }
+        }
+        catch (JSException)
+        {
+            // Ignore localStorage errors
+        }
+    }
+
+    private async Task SaveLastUsedAccountAsync(Guid accountId)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync(
+                "localStorage.setItem",
+                LastUsedAccountKey,
+                accountId.ToString());
+        }
+        catch (JSException)
+        {
+            // Ignore localStorage errors
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Model.Description))
+        {
+            return;
+        }
+
+        if (Model.AccountId == Guid.Empty)
+        {
+            return;
+        }
+
+        // Save the used account for next time
+        await SaveLastUsedAccountAsync(Model.AccountId);
+
+        await OnSubmit.InvokeAsync(Model);
+    }
+
+    private async Task HandleCancelAsync()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

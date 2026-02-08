@@ -39,6 +39,7 @@
   padding: var(--space-1);
   cursor: pointer;
   transition: background-color var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .calendar-day:hover {
@@ -52,6 +53,24 @@
 
 .calendar-day.today {
   background: rgba(var(--color-warning-rgb, 255, 193, 7), 0.15);
+}
+
+.calendar-day.today .day-number {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dot indicator below today's number — not relying on color alone */
+.calendar-day.today .day-number::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-brand-primary);
 }
 
 .calendar-day.selected {
@@ -346,8 +365,14 @@
   }
 
   .calendar-day {
-    min-height: 60px;
+    min-height: 70px;
     padding: var(--space-1);
+    touch-action: manipulation;
+  }
+
+  .calendar-day:active {
+    background: rgba(var(--color-brand-rgb, 0, 123, 255), 0.1);
+    transition: none;
   }
 
   .day-number {
@@ -371,6 +396,20 @@
   .calendar-day-header {
     padding: var(--space-1);
     font-size: 0.7rem;
+  }
+
+  /* Compact display: hide transaction count, show only total */
+  .transaction-count {
+    display: none;
+  }
+
+  .day-total {
+    font-size: 0.7em;
+  }
+
+  .recurring-indicator {
+    padding: 1px var(--space-1);
+    font-size: 0.6em;
   }
 }
 
@@ -414,6 +453,22 @@
 @media (max-width: 480px) {
   .day-balance {
     font-size: 0.6em;
+  }
+}
+
+/* ==========================================================================
+   Swipe Container
+   ========================================================================== */
+
+.swipe-container {
+  will-change: transform;
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-container {
+    transition: none !important;
+    transform: none !important;
   }
 }
 

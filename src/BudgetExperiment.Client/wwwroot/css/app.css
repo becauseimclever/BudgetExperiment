@@ -45,6 +45,9 @@
 @import "design-system/components/rules.css";
 @import "design-system/components/bottom-sheet.css";
 @import "design-system/components/fab.css";
+@import "design-system/components/quick-add.css";
+@import "design-system/components/week-view.css";
+@import "design-system/components/mobile-chat.css";
 
 /* Utility Classes */
 @import "design-system/utilities.css";

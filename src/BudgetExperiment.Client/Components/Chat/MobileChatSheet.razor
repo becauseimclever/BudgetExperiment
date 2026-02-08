@@ -1,0 +1,338 @@
+@* MobileChatSheet.razor - Mobile-optimized AI chat rendered inside a BottomSheet *@
+@* Reuses ChatInput and ChatMessageBubble but in a bottom-sheet layout *@
+
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+@using BudgetExperiment.Domain
+
+@inject IChatApiService ChatApi
+@inject IChatContextService ChatContext
+
+@implements IDisposable
+
+<BottomSheet IsVisible="@IsVisible"
+             Title="AI Assistant"
+             Height="@sheetHeight"
+             OnClose="HandleClose"
+             IsDraggable="true"
+             IsCloseOnSwipeDown="true">
+    <ChildContent>
+        @if (IsLoading)
+        {
+            <div class="mobile-chat-loading">
+                <LoadingSpinner Message="Starting chat..." />
+            </div>
+        }
+        else if (Session is null)
+        {
+            <div class="mobile-chat-error">
+                <Icon Name="alert-circle" Size="32" />
+                <p>Unable to start chat session</p>
+                <button class="btn btn-primary btn-sm" @onclick="InitializeSessionAsync">
+                    Try Again
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="mobile-chat-body">
+                <div class="mobile-chat-messages">
+                    @if (Messages.Count == 0)
+                    {
+                        <div class="mobile-chat-welcome">
+                            <Icon Name="sparkles" Size="36" Class="welcome-icon" />
+                            <h3>Budget Assistant</h3>
+                            <p>Try saying things like:</p>
+                            <ul class="mobile-chat-examples">
+                                <li @onclick='() => SendQuickMessage("Add $50 grocery purchase")'>
+                                    "Add $50 grocery purchase"
+                                </li>
+                                <li @onclick='() => SendQuickMessage("I spent $30 on gas yesterday")'>
+                                    "I spent $30 on gas yesterday"
+                                </li>
+                                <li @onclick='() => SendQuickMessage("Transfer $200 from checking to savings")'>
+                                    "Transfer $200 to savings"
+                                </li>
+                            </ul>
+                            @if (!string.IsNullOrEmpty(contextSummary))
+                            {
+                                <div class="mobile-chat-context">
+                                    <Icon Name="info" Size="14" />
+                                    <span>@contextSummary</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var message in Messages)
+                        {
+                            <ChatMessageBubble
+                                Message="message"
+                                OnConfirm="HandleConfirmActionAsync"
+                                OnCancel="HandleCancelActionAsync"
+                                OnOptionSelected="HandleOptionSelectedAsync"
+                                IsProcessing="processingMessageId == message.Id" />
+                        }
+
+                        @if (IsSending)
+                        {
+                            <div class="mobile-chat-typing">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="mobile-chat-input-area">
+                    <ChatInput
+                        OnSend="HandleSendMessageAsync"
+                        IsDisabled="IsSending"
+                        Placeholder="Type a message..." />
+                </div>
+            </div>
+        }
+    </ChildContent>
+
+    <FooterContent>
+        <div class="mobile-chat-footer">
+            <button class="btn btn-ghost btn-sm" @onclick="ExpandToFullScreen" title="Expand chat">
+                <Icon Name="maximize" Size="16" />
+                <span>Expand</span>
+            </button>
+            @if (Session is not null)
+            {
+                <button class="btn btn-ghost btn-sm" @onclick="HandleNewSessionAsync" title="New conversation">
+                    <Icon Name="plus" Size="16" />
+                    <span>New Chat</span>
+                </button>
+            }
+        </div>
+    </FooterContent>
+</BottomSheet>
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the sheet is visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback fired when the sheet is closed.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback fired when an entity is created via chat.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnEntityCreated { get; set; }
+
+    private bool IsLoading { get; set; }
+
+    private bool IsSending { get; set; }
+
+    private ChatSessionDto? Session { get; set; }
+
+    private List<ChatMessageDto> Messages { get; set; } = [];
+
+    private Guid? processingMessageId;
+
+    private string? contextSummary;
+
+    private bool wasVisible;
+
+    private BottomSheetHeight sheetHeight = BottomSheetHeight.Large;
+
+    /// <inheritdoc/>
+    protected override void OnInitialized()
+    {
+        ChatContext.ContextChanged += OnContextChanged;
+        UpdateContextSummary();
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !wasVisible && Session is null)
+        {
+            await InitializeSessionAsync();
+        }
+
+        if (!IsVisible && wasVisible)
+        {
+            // Reset to large when closed
+            sheetHeight = BottomSheetHeight.Large;
+        }
+
+        wasVisible = IsVisible;
+    }
+
+    private void OnContextChanged(object? sender, EventArgs e)
+    {
+        UpdateContextSummary();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateContextSummary()
+    {
+        contextSummary = ChatContext.CurrentContext.GetContextSummary();
+    }
+
+    private async Task InitializeSessionAsync()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        try
+        {
+            Session = await ChatApi.GetOrCreateSessionAsync();
+            if (Session is not null)
+            {
+                var messages = await ChatApi.GetMessagesAsync(Session.Id);
+                Messages = messages.ToList();
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleNewSessionAsync()
+    {
+        if (Session is not null)
+        {
+            await ChatApi.CloseSessionAsync(Session.Id);
+        }
+
+        Messages.Clear();
+        Session = null;
+        await InitializeSessionAsync();
+    }
+
+    private async Task HandleSendMessageAsync(string content)
+    {
+        if (Session is null || string.IsNullOrWhiteSpace(content))
+        {
+            return;
+        }
+
+        IsSending = true;
+        StateHasChanged();
+        try
+        {
+            var response = await ChatApi.SendMessageAsync(Session.Id, content);
+            if (response is not null)
+            {
+                if (response.UserMessage is not null)
+                {
+                    Messages.Add(response.UserMessage);
+                }
+
+                if (response.AssistantMessage is not null)
+                {
+                    Messages.Add(response.AssistantMessage);
+                }
+            }
+        }
+        finally
+        {
+            IsSending = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleConfirmActionAsync(Guid messageId)
+    {
+        processingMessageId = messageId;
+        StateHasChanged();
+        try
+        {
+            var response = await ChatApi.ConfirmActionAsync(messageId);
+            if (response is not null && response.Success)
+            {
+                var message = Messages.FirstOrDefault(m => m.Id == messageId);
+                if (message is not null)
+                {
+                    message.ActionStatus = ChatActionStatus.Confirmed;
+                }
+
+                if (response.CreatedEntityId.HasValue)
+                {
+                    await OnEntityCreated.InvokeAsync(response.CreatedEntityId.Value);
+                }
+
+                Messages.Add(new ChatMessageDto
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = Session!.Id,
+                    Role = ChatRole.Assistant,
+                    Content = response.Message ?? "Action completed successfully!",
+                    CreatedAtUtc = DateTime.UtcNow,
+                    ActionStatus = ChatActionStatus.None,
+                });
+            }
+        }
+        finally
+        {
+            processingMessageId = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleCancelActionAsync(Guid messageId)
+    {
+        processingMessageId = messageId;
+        StateHasChanged();
+        try
+        {
+            var success = await ChatApi.CancelActionAsync(messageId);
+            if (success)
+            {
+                var message = Messages.FirstOrDefault(m => m.Id == messageId);
+                if (message is not null)
+                {
+                    message.ActionStatus = ChatActionStatus.Cancelled;
+                }
+            }
+        }
+        finally
+        {
+            processingMessageId = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleOptionSelectedAsync(string optionValue)
+    {
+        await HandleSendMessageAsync(optionValue);
+    }
+
+    private async Task SendQuickMessage(string message)
+    {
+        await HandleSendMessageAsync(message);
+    }
+
+    private void ExpandToFullScreen()
+    {
+        sheetHeight = sheetHeight == BottomSheetHeight.FullScreen
+            ? BottomSheetHeight.Large
+            : BottomSheetHeight.FullScreen;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ChatContext.ContextChanged -= OnContextChanged;
+    }
+}

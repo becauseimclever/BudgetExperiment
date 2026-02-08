@@ -51,15 +51,33 @@
                 OnRetry="RetryLoad"
                 OnDismiss="DismissError" />
 
+    <CalendarViewToggle @ref="viewToggle" CurrentView="@calendarViewMode" CurrentViewChanged="OnViewModeChanged" />
+
     @if (isLoading)
     {
         <LoadingSpinner Message="Loading calendar..." />
     }
     else if (errorMessage == null && calendarGrid != null)
     {
-        <CalendarGrid Days="@calendarGrid.Days"
-                      SelectedDate="@selectedDate"
-                      OnDaySelected="SelectDate" />
+        @if (calendarViewMode == CalendarViewMode.Week)
+        {
+            <SwipeContainer OnSwipedLeft="NextWeekSwipe" OnSwipedRight="PreviousWeekSwipe">
+                <CalendarWeekView Days="@calendarGrid.Days"
+                                  SelectedDate="@selectedDate"
+                                  OnDaySelected="SelectDate"
+                                  WeekIndex="@weekIndex"
+                                  WeekIndexChanged="OnWeekIndexChanged"
+                                  OnWeekOverflow="HandleWeekOverflow" />
+            </SwipeContainer>
+        }
+        else
+        {
+            <SwipeContainer OnSwipedLeft="NextMonth" OnSwipedRight="PreviousMonth">
+                <CalendarGrid Days="@calendarGrid.Days"
+                              SelectedDate="@selectedDate"
+                              OnDaySelected="SelectDate" />
+            </SwipeContainer>
+        }
     }
 
     @if (selectedDate.HasValue && dayDetail != null)
@@ -141,6 +159,11 @@
     private bool isRetrying;
     private string? errorMessage;
 
+    // View mode state
+    private CalendarViewMode calendarViewMode = CalendarViewMode.Month;
+    private int weekIndex;
+    private CalendarViewToggle? viewToggle;
+
     // Data from API - no business logic, just display
     private List<AccountDto> accounts = new();
     private List<BudgetCategoryDto> categories = new();
@@ -210,6 +233,15 @@
                 await LoadCalendarData();
                 await LoadBudgetSummary();
             }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && viewToggle != null)
+        {
+            await viewToggle.LoadPreferenceAsync();
+            StateHasChanged();
         }
     }
 
@@ -430,6 +462,86 @@
     {
         var next = currentDate.AddMonths(1);
         Navigation.NavigateTo($"/{next.Year}/{next.Month}");
+    }
+
+    // Week view methods
+    private void OnViewModeChanged(CalendarViewMode mode)
+    {
+        calendarViewMode = mode;
+        if (mode == CalendarViewMode.Week)
+        {
+            weekIndex = GetWeekIndexForToday();
+        }
+    }
+
+    private void OnWeekIndexChanged(int newIndex)
+    {
+        weekIndex = newIndex;
+    }
+
+    private void HandleWeekOverflow(DateOnly targetDate)
+    {
+        Navigation.NavigateTo($"/{targetDate.Year}/{targetDate.Month}");
+    }
+
+    private void NextWeekSwipe()
+    {
+        if (calendarGrid == null)
+        {
+            return;
+        }
+
+        var totalWeeks = calendarGrid.Days.Count / 7;
+        if (weekIndex < totalWeeks - 1)
+        {
+            weekIndex++;
+        }
+        else
+        {
+            var next = currentDate.AddMonths(1);
+            Navigation.NavigateTo($"/{next.Year}/{next.Month}");
+        }
+    }
+
+    private void PreviousWeekSwipe()
+    {
+        if (weekIndex > 0)
+        {
+            weekIndex--;
+        }
+        else
+        {
+            var prev = currentDate.AddMonths(-1);
+            Navigation.NavigateTo($"/{prev.Year}/{prev.Month}");
+        }
+    }
+
+    private int GetWeekIndexForToday()
+    {
+        if (calendarGrid == null || calendarGrid.Days.Count == 0)
+        {
+            return 0;
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        for (int i = 0; i < calendarGrid.Days.Count; i++)
+        {
+            if (calendarGrid.Days[i].Date == today)
+            {
+                return i / 7;
+            }
+        }
+
+        // Default to first week containing current month days
+        for (int i = 0; i < calendarGrid.Days.Count; i++)
+        {
+            if (calendarGrid.Days[i].IsCurrentMonth)
+            {
+                return i / 7;
+            }
+        }
+
+        return 0;
     }
 
     private void ShowAddTransaction()

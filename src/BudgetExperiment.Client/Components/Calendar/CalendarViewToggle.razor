@@ -1,0 +1,77 @@
+@* CalendarViewToggle.razor - Month/Week view toggle, visible on mobile only *@
+
+@inject IJSRuntime JSRuntime
+
+<div class="calendar-view-toggle">
+    <button class="toggle-btn @(CurrentView == CalendarViewMode.Month ? "active" : "")"
+            @onclick="() => SetView(CalendarViewMode.Month)"
+            aria-pressed="@(CurrentView == CalendarViewMode.Month ? "true" : "false")"
+            aria-label="Month view">
+        Month
+    </button>
+    <button class="toggle-btn @(CurrentView == CalendarViewMode.Week ? "active" : "")"
+            @onclick="() => SetView(CalendarViewMode.Week)"
+            aria-pressed="@(CurrentView == CalendarViewMode.Week ? "true" : "false")"
+            aria-label="Week view">
+        Week
+    </button>
+</div>
+
+@code {
+    private const string StorageKey = "budget-experiment-calendar-view";
+
+    /// <summary>
+    /// The current calendar view mode.
+    /// </summary>
+    [Parameter]
+    public CalendarViewMode CurrentView { get; set; } = CalendarViewMode.Month;
+
+    /// <summary>
+    /// Callback fired when the view mode changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CalendarViewMode> CurrentViewChanged { get; set; }
+
+    /// <summary>
+    /// Loads the persisted view preference from localStorage.
+    /// </summary>
+    public async Task LoadPreferenceAsync()
+    {
+        try
+        {
+            var saved = await JSRuntime.InvokeAsync<string?>(
+                "localStorage.getItem", StorageKey);
+
+            if (!string.IsNullOrEmpty(saved) && Enum.TryParse<CalendarViewMode>(saved, out var mode))
+            {
+                CurrentView = mode;
+                await CurrentViewChanged.InvokeAsync(mode);
+            }
+        }
+        catch
+        {
+            // Ignore localStorage errors (SSR / prerender)
+        }
+    }
+
+    private async Task SetView(CalendarViewMode mode)
+    {
+        if (CurrentView == mode)
+        {
+            return;
+        }
+
+        CurrentView = mode;
+        await CurrentViewChanged.InvokeAsync(mode);
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync(
+                "localStorage.setItem", StorageKey, mode.ToString());
+        }
+        catch
+        {
+            // Ignore localStorage errors
+        }
+    }
+}

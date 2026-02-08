@@ -59,10 +59,10 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
     }
 
     /// <summary>
-    /// Verifies that the panel renders with expanded class by default.
+    /// Verifies that the panel renders with collapsed class by default.
     /// </summary>
     [Fact]
-    public void Panel_RendersExpandedByDefault()
+    public void Panel_RendersCollapsedByDefault()
     {
         // Arrange
         var summary = CreateTestSummary();
@@ -75,7 +75,7 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
 
         // Assert
         var panel = cut.Find(".calendar-budget-panel");
-        Assert.Contains("expanded", panel.ClassList);
+        Assert.Contains("collapsed", panel.ClassList);
     }
 
     /// <summary>
@@ -91,20 +91,20 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2));
 
-        // Act - Click to collapse
-        cut.Find(".panel-header").Click();
+        // Act - Click to expand
+        cut.Find(".budget-panel-header").Click();
 
-        // Assert - Now collapsed
+        // Assert - Now expanded
         var panel = cut.Find(".calendar-budget-panel");
-        Assert.Contains("collapsed", panel.ClassList);
-        Assert.DoesNotContain("expanded", panel.ClassList);
-
-        // Act - Click to expand again
-        cut.Find(".panel-header").Click();
-
-        // Assert - Expanded again
-        panel = cut.Find(".calendar-budget-panel");
         Assert.Contains("expanded", panel.ClassList);
+        Assert.DoesNotContain("collapsed", panel.ClassList);
+
+        // Act - Click to collapse again
+        cut.Find(".budget-panel-header").Click();
+
+        // Assert - Collapsed again
+        panel = cut.Find(".calendar-budget-panel");
+        Assert.Contains("collapsed", panel.ClassList);
     }
 
     /// <summary>
@@ -186,6 +186,9 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2));
 
+        // Expand the panel to show status counts
+        cut.Find(".budget-panel-header").Click();
+
         // Assert
         Assert.Contains("3 on track", cut.Markup);
         Assert.Contains("1 warning", cut.Markup);
@@ -213,8 +216,11 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2));
 
+        // Expand the panel to show category rows
+        cut.Find(".budget-panel-header").Click();
+
         // Assert - OverBudget should appear before Warning, which should appear before OnTrack
-        var rows = cut.FindAll(".category-row");
+        var rows = cut.FindAll(".budget-category-row");
         Assert.Equal(3, rows.Count);
 
         // Check order by finding the category names in order
@@ -255,6 +261,9 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
             .Add(p => p.Month, 2)
             .Add(p => p.OnEditGoal, EventCallback.Factory.Create<BudgetProgressDto>(this, p => editedProgress = p)));
 
+        // Expand the panel to show category actions
+        cut.Find(".budget-panel-header").Click();
+
         // Act - Find and click the Edit button
         var editButton = cut.Find(".category-actions button");
         editButton.Click();
@@ -291,6 +300,9 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2)
             .Add(p => p.OnCreateGoal, EventCallback.Factory.Create<BudgetProgressDto>(this, p => createdProgress = p)));
+
+        // Expand the panel to show category actions
+        cut.Find(".budget-panel-header").Click();
 
         // Act - Find and click the Set button
         var setButton = cut.Find(".category-actions button");

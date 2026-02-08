@@ -1,7 +1,18 @@
 @* CalendarDay.razor - Individual calendar day cell component *@
 
-<div class="calendar-day @CssClasses" @onclick="HandleClick">
-    <span class="day-number">@Day.Date.Day</span>
+<div class="calendar-day @CssClasses"
+     @onclick="HandleClick"
+     role="button"
+     tabindex="0"
+     aria-label="@GetAriaLabel()"
+     aria-selected="@IsSelected.ToString().ToLowerInvariant()">
+    <span class="day-number">
+        @Day.Date.Day
+        @if (Day.IsToday)
+        {
+            <span class="sr-only">(Today)</span>
+        }
+    </span>
     @if (Day.TransactionCount > 0)
     {
         <div class="day-total">
@@ -67,5 +78,21 @@
     {
         var sign = amount >= 0 ? "+" : "-";
         return $"{sign}${Math.Abs(amount):N0}";
+    }
+
+    private string GetAriaLabel()
+    {
+        var label = Day.Date.ToString("MMMM d, yyyy");
+        if (Day.IsToday)
+        {
+            label += ", Today";
+        }
+
+        if (Day.TransactionCount > 0)
+        {
+            label += $", {Day.TransactionCount} transaction{(Day.TransactionCount != 1 ? "s" : "")}";
+        }
+
+        return label;
     }
 }

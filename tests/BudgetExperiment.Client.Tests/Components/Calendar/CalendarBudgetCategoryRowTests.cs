@@ -144,7 +144,7 @@ public class CalendarBudgetCategoryRowTests : BunitContext, IAsyncLifetime
             .Add(p => p.Progress, progress));
 
         // Assert
-        var row = cut.Find(".category-row");
+        var row = cut.Find(".budget-category-row");
         Assert.Contains("status-on-track", row.ClassList);
     }
 
@@ -162,7 +162,7 @@ public class CalendarBudgetCategoryRowTests : BunitContext, IAsyncLifetime
             .Add(p => p.Progress, progress));
 
         // Assert
-        var row = cut.Find(".category-row");
+        var row = cut.Find(".budget-category-row");
         Assert.Contains("status-warning", row.ClassList);
     }
 
@@ -180,7 +180,7 @@ public class CalendarBudgetCategoryRowTests : BunitContext, IAsyncLifetime
             .Add(p => p.Progress, progress));
 
         // Assert
-        var row = cut.Find(".category-row");
+        var row = cut.Find(".budget-category-row");
         Assert.Contains("status-over-budget", row.ClassList);
     }
 

@@ -75,6 +75,9 @@ Use `--filter "Category=X"` to run specific test categories:
 | `CoreWebVitals` | FCP, LCP, TTI, CLS threshold tests |
 | `FCP` | First Contentful Paint specific tests |
 | `CLS` | Cumulative Layout Shift tests |
+| `Mobile` | Mobile viewport (375x667) specific tests |
+| `Accessibility` | axe-core WCAG compliance checks |
+| `Orientation` | Portrait/landscape orientation changes |
 
 ### Running Performance Tests
 
@@ -87,6 +90,15 @@ dotnet test tests/BudgetExperiment.E2E.Tests --filter "Category=CoreWebVitals"
 
 # Run zero-flash authentication tests
 dotnet test tests/BudgetExperiment.E2E.Tests --filter "Category=ZeroFlash"
+
+# Run all mobile tests (375x667 viewport)
+dotnet test tests/BudgetExperiment.E2E.Tests --filter "Category=Mobile"
+
+# Run mobile accessibility tests only
+dotnet test tests/BudgetExperiment.E2E.Tests --filter "Category=Mobile&Category=Accessibility"
+
+# Run orientation change tests
+dotnet test tests/BudgetExperiment.E2E.Tests --filter "Category=Orientation"
 ```
 
 ## Demo Environment
@@ -132,19 +144,30 @@ npx playwright show-trace playwright-traces/trace-*.zip
 ```
 BudgetExperiment.E2E.Tests/
 ├── Fixtures/
-│   └── PlaywrightFixture.cs      # Browser lifecycle management
+│   ├── PlaywrightFixture.cs           # Desktop browser lifecycle management
+│   └── MobilePlaywrightFixture.cs     # Mobile viewport (375x667, touch, iOS UA)
 ├── Helpers/
-│   ├── AuthenticationHelper.cs    # Authentik login flow
-│   ├── NavigationHelper.cs        # Route constants
-│   ├── PerformanceHelper.cs       # Core Web Vitals capture utilities
-│   ├── PerformanceMetrics.cs      # Performance metrics record type
-│   └── PerformanceThresholds.cs   # Performance threshold constants
+│   ├── AuthenticationHelper.cs        # Authentik login flow
+│   ├── AccessibilityHelper.cs         # axe-core WCAG analysis utilities
+│   ├── NavigationHelper.cs            # Route constants
+│   ├── PerformanceHelper.cs           # Core Web Vitals capture utilities
+│   ├── PerformanceMetrics.cs          # Performance metrics record type
+│   └── PerformanceThresholds.cs       # Performance threshold constants
 ├── Tests/
-│   ├── SmokeTests.cs              # Basic app validation
-│   ├── NavigationTests.cs         # Page accessibility tests
-│   ├── PerformanceTests.cs        # Core Web Vitals tests
-│   └── ZeroFlashAuthTests.cs      # Auth flash verification
+│   ├── AccessibilityTests.cs          # Desktop WCAG compliance
+│   ├── MobileAccessibilityTests.cs    # Mobile WCAG compliance (axe-core)
+│   ├── MobileAiChatTests.cs           # AI chat bottom sheet on mobile
+│   ├── MobileCalendarTests.cs         # Calendar week/month view on mobile
+│   ├── MobileFabTests.cs              # FAB + speed dial on mobile
+│   ├── MobileOrientationTests.cs      # Portrait/landscape orientation tests
+│   ├── MobileQuickAddTests.cs         # Quick Add form in bottom sheet
+│   ├── MobileTouchTargetTests.cs      # WCAG 2.5.5 touch target sizes
+│   ├── NavigationTests.cs             # Page accessibility tests
+│   ├── PerformanceTests.cs            # Core Web Vitals tests
+│   ├── SmokeTests.cs                  # Basic app validation
+│   └── ZeroFlashAuthTests.cs          # Auth flash verification
 ├── GlobalUsings.cs
-├── PlaywrightCollection.cs        # xUnit collection fixture
+├── MobilePlaywrightCollection.cs      # Mobile xUnit collection fixture
+├── PlaywrightCollection.cs            # Desktop xUnit collection fixture
 └── README.md
 ```

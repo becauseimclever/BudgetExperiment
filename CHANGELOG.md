@@ -4,8 +4,19 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.13.0] - 2026-02-07
+
 ### Features
 
+- **client:** Mobile-optimized calendar experience with swipe navigation and week view (Feature 047)
+- **client:** SwipeContainer component with JS interop for horizontal swipe gesture detection
+- **client:** CalendarWeekView component with 7-day grid, navigation, and overflow support
+- **client:** CalendarViewToggle component (Month/Week) with localStorage persistence
+- **client:** Floating Action Button (FAB) with speed dial for Quick Add and AI Assistant
+- **client:** QuickAddForm component with touch-optimized inputs (48px min-height, native keyboards)
+- **client:** BottomSheet component for mobile modal presentation with swipe-to-dismiss
+- **client:** MobileChatSheet component for AI Assistant in bottom-sheet presentation
+- **client:** ToastContainer and ToastService for app-wide toast notifications with auto-dismiss
 - **client:** Accessible theme with WCAG 2.0 AA high-contrast colors (Feature 046)
 - **client:** Auto-detect Windows High Contrast Mode and prefers-contrast settings
 - **client:** Calendar-first budget editing with inline goal management (Feature 048)
@@ -14,22 +25,38 @@ All notable changes to Budget Experiment.
 - **client:** BudgetGoalModal component - create/edit/delete budget goals
 - **api:** POST /api/v1/budgets/copy endpoint to copy goals between months
 
+### Bug Fixes
+
+- **client:** Fix CalendarBudgetCategoryRow rendering category icons as raw text instead of SVG
+- **client:** Add 14 missing SVG icon paths to Icon.razor (cart, car, bolt, film, utensils, heart, etc.)
+- **client:** Fix CSS class mismatch in CalendarBudgetCategoryRow (category-row → budget-category-row)
+- **client:** Fix category icons rendering at 40px instead of 16px due to global CSS override
+- **client:** Fix budget panel defaulting to expanded, pushing calendar below viewport fold
+- **client:** Fix budget panel two-tone color when collapsed (panel-header → budget-panel-header alignment)
+- **client:** Add button reset styles (width: 100%, border: none) to budget panel header
+
 ### Accessibility
 
 - **client:** Skip-link for keyboard users to bypass navigation
 - **client:** ARIA landmarks on MainLayout (banner, navigation, main)
 - **client:** Modal component with role="dialog", aria-modal, Escape key close
 - **client:** NavMenu with semantic list structure and aria-expanded/aria-controls
+- **client:** WCAG 2.5.5 touch target compliance (44px minimum) for all mobile interactive elements
 - **e2e:** Add axe-core accessibility tests for all major pages (14 tests)
+- **e2e:** Add mobile accessibility tests for FAB, BottomSheet, Week View, and AI Chat
 
 ### Documentation
 
+- **docs:** Feature 047 mobile experience technical design and implementation plan
 - **docs:** ACCESSIBILITY.md guide with WCAG requirements, testing checklists
 - **docs:** THEMING.md updated with Accessible theme and auto-detection details
 
 ### Testing
 
+- **client:** Add bUnit tests for SwipeContainer, ToastContainer, QuickAddForm, CalendarViewToggle, CalendarWeekView, MobileChatSheet
+- **client:** Add ToastService unit tests (10 tests)
 - **client:** Add 35 bUnit tests for budget panel components
+- **e2e:** Add mobile E2E tests: FAB, Quick Add, Calendar, Week View, AI Chat, Orientation, Touch Targets
 - **api:** Add 7 integration tests for copy goals endpoint
 - **application:** Add 4 unit tests for CopyGoalsAsync service method
 

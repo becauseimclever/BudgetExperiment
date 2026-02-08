@@ -1,0 +1,73 @@
+@* ToastContainer.razor - Displays toast notifications *@
+@* Place once in MainLayout to handle app-wide toasts *@
+
+@implements IDisposable
+@inject IToastService ToastService
+
+<div class="toast-container toast-container-top-right" aria-live="polite" aria-atomic="false">
+    @foreach (var toast in ToastService.Toasts)
+    {
+        <div class="toast toast-@LevelClass(toast.Level) show"
+             role="status"
+             data-testid="toast-@toast.Level.ToString().ToLowerInvariant()">
+            <span class="toast-icon" aria-hidden="true">
+                <Icon Name="@GetIcon(toast.Level)" Size="20" />
+            </span>
+            <div class="toast-content">
+                @if (!string.IsNullOrEmpty(toast.Title))
+                {
+                    <div class="toast-title">@toast.Title</div>
+                }
+                <div class="toast-message">@toast.Message</div>
+            </div>
+            <button class="toast-dismiss"
+                    @onclick="() => Dismiss(toast.Id)"
+                    aria-label="Dismiss notification"
+                    type="button">
+                <Icon Name="x" Size="16" />
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        ToastService.OnChange += HandleToastChange;
+    }
+
+    private void HandleToastChange()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Dismiss(Guid id)
+    {
+        ToastService.Remove(id);
+    }
+
+    private static string LevelClass(ToastLevel level) => level switch
+    {
+        ToastLevel.Success => "success",
+        ToastLevel.Error => "error",
+        ToastLevel.Warning => "warning",
+        ToastLevel.Info => "info",
+        _ => "info",
+    };
+
+    private static string GetIcon(ToastLevel level) => level switch
+    {
+        ToastLevel.Success => "check-circle",
+        ToastLevel.Error => "alert-circle",
+        ToastLevel.Warning => "alert-triangle",
+        ToastLevel.Info => "info",
+        _ => "info",
+    };
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ToastService.OnChange -= HandleToastChange;
+    }
+}

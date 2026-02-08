@@ -1,0 +1,129 @@
+@* SwipeContainer.razor - Wrapper for horizontal swipe gesture detection *@
+@* Wraps child content and fires callbacks on swipe left/right *@
+
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div @ref="_containerRef" class="swipe-container">
+    @ChildContent
+</div>
+
+@code {
+    private ElementReference _containerRef;
+    private IJSObjectReference? _jsModule;
+    private IJSObjectReference? _swipeInterop;
+    private DotNetObjectReference<SwipeContainer>? _dotNetRef;
+
+    /// <summary>
+    /// Gets or sets the child content to wrap with swipe detection.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the user swipes left.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSwipedLeft { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the user swipes right.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSwipedRight { get; set; }
+
+    /// <summary>
+    /// Gets or sets the minimum horizontal distance in pixels to trigger a swipe.
+    /// </summary>
+    [Parameter]
+    public int ThresholdPx { get; set; } = 50;
+
+    /// <summary>
+    /// Gets or sets the maximum time in milliseconds for a swipe gesture.
+    /// </summary>
+    [Parameter]
+    public int MaxTimeMs { get; set; } = 500;
+
+    /// <inheritdoc/>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await InitializeJsInteropAsync();
+        }
+    }
+
+    private async Task InitializeJsInteropAsync()
+    {
+        try
+        {
+            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/swipe.js");
+
+            _dotNetRef = DotNetObjectReference.Create(this);
+
+            _swipeInterop = await _jsModule.InvokeAsync<IJSObjectReference>(
+                "initSwipeDetection",
+                _containerRef,
+                _dotNetRef,
+                new
+                {
+                    threshold = ThresholdPx,
+                    maxTime = MaxTimeMs,
+                });
+        }
+        catch (JSException)
+        {
+            // JS interop may fail during prerendering or tests
+        }
+    }
+
+    /// <summary>
+    /// Called from JavaScript when user swipes left.
+    /// </summary>
+    [JSInvokable]
+    public async Task OnSwipeLeft()
+    {
+        await OnSwipedLeft.InvokeAsync();
+    }
+
+    /// <summary>
+    /// Called from JavaScript when user swipes right.
+    /// </summary>
+    [JSInvokable]
+    public async Task OnSwipeRight()
+    {
+        await OnSwipedRight.InvokeAsync();
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_swipeInterop is not null)
+            {
+                await _swipeInterop.InvokeVoidAsync("dispose");
+                await _swipeInterop.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit disconnected — ignore
+        }
+
+        _dotNetRef?.Dispose();
+
+        if (_jsModule is not null)
+        {
+            try
+            {
+                await _jsModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignore during circuit disconnection
+            }
+        }
+    }
+}

@@ -1,5 +1,5 @@
 # Feature 047: Mobile Experience - Calendar, Quick Add, and AI Assistant
-> **Status:** � In Progress  
+> **Status:** ✅ Implemented (v3.13.0)  
 > **Priority:** High  
 > **Dependencies:** Feature 046 (Accessibility) ✅, Feature 045 (Component Refactor) ✅  
 > **Estimated Effort:** 3-4 sprints (~6-8 weeks)  
@@ -524,17 +524,17 @@ No new API endpoints required. Existing endpoints:
 **Objective:** Create streamlined mobile transaction entry experience
 
 **Tasks:**
-- [ ] Create `QuickAddForm.razor` (simplified TransactionForm for mobile)
-- [ ] Optimize form fields for touch (48px min height via `--touch-target-min`)
-- [ ] Use native `<select>` elements on mobile (better UX than custom dropdowns)
-- [ ] Set input types (`inputmode="decimal"` for amount, `inputmode="text"` for description)
-- [ ] Wire FAB to open QuickAddForm in BottomSheet
-- [ ] Default account to most recently used (stored in localStorage)
-- [ ] Default date to today (pre-populated)
-- [ ] Add success toast on save (use existing toast pattern or create)
-- [ ] Implement AI-assisted parsing preview ("Coffee at Starbucks $5" → prefilled fields)
-- [ ] Test form with virtual keyboard open (ensure input stays visible)
-- [ ] Handle viewport resize when keyboard appears (`visualViewport` API)
+- [x] Create `QuickAddForm.razor` (simplified TransactionForm for mobile)
+- [x] Optimize form fields for touch (48px min height via `--touch-target-min`)
+- [x] Use native `<select>` elements on mobile (better UX than custom dropdowns)
+- [x] Set input types (`inputmode="decimal"` for amount, `inputmode="text"` for description)
+- [x] Wire FAB to open QuickAddForm in BottomSheet
+- [x] Default account to most recently used (stored in localStorage)
+- [x] Default date to today (pre-populated)
+- [x] Add success toast on save (created ToastService + ToastContainer)
+- [ ] Implement AI-assisted parsing preview ("Coffee at Starbucks $5" → prefilled fields) *(deferred — future enhancement)*
+- [ ] Test form with virtual keyboard open (ensure input stays visible) *(manual test — see Manual Testing Checklist)*
+- [x] Handle viewport resize when keyboard appears (`visualViewport` API) *(done in Phase 1 — bottom-sheet.js uses `visualViewport?.height`)*
 
 **Form Field Order (optimized for mobile flow):**
 1. Description (first focus, largest input)
@@ -558,16 +558,16 @@ No new API endpoints required. Existing endpoints:
 **Objective:** Enable swipe left/right for month navigation
 
 **Tasks:**
-- [ ] Create `SwipeContainer.razor` wrapper component with JS interop
-- [ ] Create `swipe.js` for touch event handling (touchstart/touchmove/touchend)
-- [ ] Implement swipe detection with configurable threshold (default 50px)
-- [ ] Require horizontal delta > vertical delta to avoid scroll hijacking
-- [ ] Wrap `CalendarGrid` in `SwipeContainer` on Calendar.razor page
-- [ ] Call `PreviousMonth`/`NextMonth` on swipe completion
-- [ ] Add subtle visual feedback during swipe (translateX parallax effect)
-- [ ] Use `requestAnimationFrame` for smooth animation
-- [ ] Ensure vertical scroll still works for day detail content
-- [ ] Handle edge cases: multi-touch, rapid swipes, interrupted swipes
+- [x] Create `SwipeContainer.razor` wrapper component with JS interop
+- [x] Create `swipe.js` for touch event handling (touchstart/touchmove/touchend)
+- [x] Implement swipe detection with configurable threshold (default 50px)
+- [x] Require horizontal delta > vertical delta to avoid scroll hijacking
+- [x] Wrap `CalendarGrid` in `SwipeContainer` on Calendar.razor page
+- [x] Call `PreviousMonth`/`NextMonth` on swipe completion
+- [x] Add subtle visual feedback during swipe (translateX parallax effect)
+- [x] Use `requestAnimationFrame` for smooth animation
+- [x] Ensure vertical scroll still works for day detail content
+- [x] Handle edge cases: multi-touch, rapid swipes, interrupted swipes
 - [ ] Test on iOS Safari and Android Chrome (different touch behaviors)
 
 **Swipe Detection Algorithm:**
@@ -598,10 +598,10 @@ if (Math.abs(deltaX) > threshold &&
 **Objective:** Improve calendar usability on mobile
 
 **Tasks:**
-- [ ] Increase `calendar-day` min-height to 70px on mobile
-- [ ] Increase font sizes for legibility
-- [ ] Add compact transaction display (just count/total)
-- [ ] Improve today/selected state visibility
+- [x] Increase `calendar-day` min-height to 70px on mobile
+- [x] Increase font sizes for legibility
+- [x] Add compact transaction display (just count/total)
+- [x] Improve today/selected state visibility
 - [ ] Add haptic feedback on day tap (if available)
 - [ ] Test with finger vs. stylus
 
@@ -618,13 +618,13 @@ if (Math.abs(deltaX) > threshold &&
 **Objective:** Provide higher-detail week view for mobile users
 
 **Tasks:**
-- [ ] Create `CalendarWeekView.razor` (7 columns, taller rows)
-- [ ] Create `CalendarViewToggle.razor` (Month | Week buttons)
-- [ ] Show toggle only on mobile (CSS media query)
-- [ ] Week view shows more transaction detail per day
-- [ ] Persist view preference in localStorage
-- [ ] Week navigation via swipe or buttons
-- [ ] Integrate into `Calendar.razor` page
+- [x] Create `CalendarWeekView.razor` (7 columns, taller rows)
+- [x] Create `CalendarViewToggle.razor` (Month | Week buttons)
+- [x] Show toggle only on mobile (CSS media query)
+- [x] Week view shows more transaction detail per day
+- [x] Persist view preference in localStorage
+- [x] Week navigation via swipe or buttons
+- [x] Integrate into `Calendar.razor` page
 
 **Validation:**
 - Toggle visible on mobile only
@@ -639,11 +639,11 @@ if (Math.abs(deltaX) > threshold &&
 **Objective:** Make AI Assistant easily accessible on mobile
 
 **Tasks:**
-- [ ] Add AI button to MobileFab (speed dial or separate button)
-- [ ] Modify `ChatPanel` to render as `BottomSheet` on mobile
-- [ ] Ensure input field stays above keyboard
-- [ ] Add drag-to-fullscreen for expanded chat
-- [ ] Test chat flow on mobile (send, receive, scroll)
+- [x] Add AI button to MobileFab (speed dial or separate button)
+- [x] Modify `ChatPanel` to render as `BottomSheet` on mobile
+- [x] Ensure input field stays above keyboard
+- [x] Add drag-to-fullscreen for expanded chat
+- [x] Test chat flow on mobile (send, receive, scroll)
 - [ ] Integrate AI-assisted Quick Add (parse natural language)
 
 **Validation:**
@@ -660,13 +660,13 @@ if (Math.abs(deltaX) > threshold &&
 **Objective:** Comprehensive testing and final refinements
 
 **Tasks:**
-- [ ] Add Playwright E2E tests with mobile viewport
-- [ ] Test all flows: Quick Add, Calendar navigation, AI chat
-- [ ] Test orientation change (portrait/landscape)
-- [ ] Run axe-core accessibility checks on mobile views
-- [ ] Fix any responsive CSS issues found
+- [x] Add Playwright E2E tests with mobile viewport
+- [x] Test all flows: Quick Add, Calendar navigation, AI chat
+- [x] Test orientation change (portrait/landscape)
+- [x] Run axe-core accessibility checks on mobile views
+- [x] Fix any responsive CSS issues found
 - [ ] Performance test on lower-end devices
-- [ ] Update documentation
+- [x] Update documentation
 
 **Validation:**
 - All E2E tests pass on mobile viewport
@@ -679,26 +679,26 @@ if (Math.abs(deltaX) > threshold &&
 
 ### Unit Tests (bUnit)
 
-- [ ] `BottomSheet` renders at correct heights (Small=40%, Medium=60%, Large=80%)
-- [ ] `BottomSheet` calls `OnClose` when backdrop clicked (if CloseOnOverlayClick=true)
-- [ ] `BottomSheet` traps focus inside when open
-- [ ] `BottomSheet` handles Escape key to close
-- [ ] `MobileFab` calls `OnQuickAddClick` when primary FAB tapped
-- [ ] `MobileFab` expands/collapses speed dial on primary tap
-- [ ] `MobileFab` calls `OnAiAssistantClick` when AI button tapped
-- [ ] `SwipeContainer` fires `OnSwipeLeft`/`OnSwipeRight` with correct direction
-- [ ] `QuickAddForm` validates required fields (description, amount)
-- [ ] `QuickAddForm` defaults date to today
-- [ ] `CalendarWeekView` renders 7 days correctly
-- [ ] `CalendarViewToggle` persists preference
+- [x] `BottomSheet` renders at correct heights (Small=40%, Medium=60%, Large=80%)
+- [x] `BottomSheet` calls `OnClose` when backdrop clicked (if CloseOnOverlayClick=true)
+- [x] `BottomSheet` traps focus inside when open
+- [x] `BottomSheet` handles Escape key to close
+- [x] `MobileFab` calls `OnQuickAddClick` when primary FAB tapped
+- [x] `MobileFab` expands/collapses speed dial on primary tap
+- [x] `MobileFab` calls `OnAiAssistantClick` when AI button tapped
+- [x] `SwipeContainer` fires `OnSwipeLeft`/`OnSwipeRight` with correct direction
+- [x] `QuickAddForm` validates required fields (description, amount)
+- [x] `QuickAddForm` defaults date to today
+- [x] `CalendarWeekView` renders 7 days correctly
+- [x] `CalendarViewToggle` persists preference
 
 ### Integration Tests
 
-- [ ] FAB triggers Quick Add flow end-to-end (FAB → BottomSheet → Form → API → Success)
+- [x] FAB triggers Quick Add flow end-to-end (FAB → BottomSheet → Form → API → Success)
 - [ ] Transaction created via Quick Add appears in calendar grid
-- [ ] Calendar month changes on swipe and URL updates
-- [ ] AI Assistant opens as bottom sheet on mobile viewport
-- [ ] Week view toggle switches calendar display mode
+- [x] Calendar month changes on swipe and URL updates
+- [x] AI Assistant opens as bottom sheet on mobile viewport
+- [x] Week view toggle switches calendar display mode
 
 ### E2E Tests (Playwright)
 
@@ -740,11 +740,11 @@ test.describe('Mobile Experience', () => {
 
 ### Accessibility Tests (axe-core)
 
-- [ ] BottomSheet passes axe-core with no critical/serious violations
-- [ ] FAB has accessible name and role
-- [ ] Focus order correct when bottom sheet opens/closes
-- [ ] Touch targets meet WCAG 2.5.5 (44x44px minimum)
-- [ ] Color contrast maintained in all FAB/bottom sheet states
+- [x] BottomSheet passes axe-core with no critical/serious violations
+- [x] FAB has accessible name and role
+- [x] Focus order correct when bottom sheet opens/closes
+- [x] Touch targets meet WCAG 2.5.5 (44x44px minimum)
+- [x] Color contrast maintained in all FAB/bottom sheet states
 
 ### Manual Testing Checklist
 
@@ -848,3 +848,4 @@ Before starting development, ensure:
 | 2026-01-26 | Initial draft | @becauseimclever |
 | 2026-02-02 | Fleshed out with technical design & implementation phases | @copilot |
 | 2026-02-05 | Added effort estimates, risk analysis, alternatives, success metrics, detailed phase tasks, comprehensive testing strategy, pre-implementation checklist, open questions | @copilot |
+| 2026-02-07 | Implementation complete; released in v3.13.0. Calendar bug fixes (icons, panel sizing, CSS alignment) included. | @copilot |

@@ -1,0 +1,247 @@
+/* ==========================================================================
+   Calendar Week View & View Toggle
+   Mobile-first week view with taller rows for more transaction detail.
+   Toggle is visible only on mobile (<768px).
+   ========================================================================== */
+
+/* ---------- View Toggle ---------- */
+.calendar-view-toggle {
+    display: none; /* Hidden on desktop by default */
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-1);
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: var(--space-2) var(--space-3);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    min-height: 44px;
+    touch-action: manipulation;
+}
+
+.toggle-btn:hover {
+    color: var(--color-text-primary);
+}
+
+.toggle-btn.active {
+    background: var(--color-brand-primary);
+    color: var(--color-text-inverse, #fff);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ---------- Week View ---------- */
+.week-view {
+    width: 100%;
+}
+
+.week-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+    padding: 0 var(--space-1);
+}
+
+.week-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease;
+}
+
+.week-nav-btn:hover {
+    background: var(--color-surface-secondary);
+}
+
+.week-nav-btn:active {
+    background: var(--color-surface-secondary);
+}
+
+.week-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+/* ---------- Week Grid ---------- */
+.week-view-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.week-view-grid .week-day-header {
+    background: var(--color-surface-secondary);
+    padding: var(--space-2);
+    text-align: center;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ---------- Week Day Cell ---------- */
+.week-day {
+    background: var(--color-surface);
+    padding: var(--space-2);
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease;
+}
+
+.week-day:hover {
+    background: var(--color-surface-secondary);
+}
+
+.week-day:active {
+    background: color-mix(in srgb, var(--color-brand-primary) 10%, var(--color-surface));
+}
+
+.week-day.other-month {
+    opacity: 0.5;
+}
+
+.week-day.today .day-number {
+    color: var(--color-brand-primary);
+    font-weight: 700;
+}
+
+.week-day.today {
+    background: color-mix(in srgb, var(--color-brand-primary) 5%, var(--color-surface));
+}
+
+.week-day .day-number {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.week-day-total {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.week-day-count {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.week-day-recurring {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.week-day-recurring .positive {
+    color: var(--color-success);
+}
+
+.week-day-recurring .negative {
+    color: var(--color-error);
+}
+
+.week-day-balance {
+    margin-top: auto;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.week-day-balance .balance-label {
+    font-weight: 500;
+}
+
+.week-day-balance.negative {
+    color: var(--color-error);
+}
+
+/* ---------- Mobile (show toggle, adjust week view) ---------- */
+@media (max-width: 768px) {
+    .calendar-view-toggle {
+        display: flex;
+    }
+
+    .week-day {
+        min-height: 100px;
+        padding: var(--space-1);
+    }
+
+    .week-day .day-number {
+        font-size: var(--font-size-xs);
+    }
+
+    .week-day-total {
+        font-size: var(--font-size-xs);
+    }
+
+    .week-day-balance .balance-label {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .week-day {
+        min-height: 80px;
+        padding: 4px;
+    }
+
+    .week-day-count {
+        display: none;
+    }
+
+    .week-label {
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .toggle-btn,
+    .week-nav-btn,
+    .week-day {
+        transition: none;
+    }
+}

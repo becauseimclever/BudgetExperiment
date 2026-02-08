@@ -1,14 +1,14 @@
 @* CalendarBudgetCategoryRow.razor - Individual category row with progress and edit actions *@
 
-<div class="category-row @GetStatusClass()">
+<div class="budget-category-row @GetStatusClass()">
     <div class="category-info">
         @if (!string.IsNullOrEmpty(Progress.CategoryIcon))
         {
-            <span class="category-icon">@Progress.CategoryIcon</span>
+            <Icon Name="@Progress.CategoryIcon" Size="16" Class="budget-row-icon" />
         }
         else
         {
-            <Icon Name="tag" Size="16" Class="category-icon-default" />
+            <Icon Name="tag" Size="16" Class="budget-row-icon" />
         }
         <span class="category-name">@Progress.CategoryName</span>
     </div>

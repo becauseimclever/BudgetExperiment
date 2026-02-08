@@ -1,0 +1,171 @@
+/* ==========================================================================
+   Mobile Chat Sheet
+   Styles for the mobile-optimized AI chat within a BottomSheet.
+   ========================================================================== */
+
+.mobile-chat-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.mobile-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-chat-input-area {
+    flex-shrink: 0;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    /* Keep input above virtual keyboard */
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ---------- Loading & Error States ---------- */
+.mobile-chat-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8) var(--space-4);
+    min-height: 200px;
+}
+
+.mobile-chat-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-8) var(--space-4);
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- Welcome Screen ---------- */
+.mobile-chat-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-4) var(--space-3);
+    color: var(--color-text-secondary);
+}
+
+.mobile-chat-welcome .welcome-icon {
+    color: var(--color-brand-primary);
+    margin-bottom: var(--space-3);
+}
+
+.mobile-chat-welcome h3 {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+}
+
+.mobile-chat-welcome p {
+    margin: 0 0 var(--space-3) 0;
+    font-size: var(--font-size-sm);
+}
+
+.mobile-chat-examples {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.mobile-chat-examples li {
+    padding: var(--space-3);
+    margin: var(--space-1) 0;
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.mobile-chat-examples li:active {
+    background: color-mix(in srgb, var(--color-brand-primary) 15%, var(--color-surface-secondary));
+}
+
+.mobile-chat-context {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-brand-primary);
+}
+
+/* ---------- Typing Indicator ---------- */
+.mobile-chat-typing {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: var(--space-3) var(--space-4);
+    align-self: flex-start;
+}
+
+.mobile-chat-typing .typing-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-brand-primary);
+    border-radius: 50%;
+    animation: mobile-typing-bounce 1.4s infinite ease-in-out;
+}
+
+.mobile-chat-typing .typing-dot:nth-child(1) { animation-delay: 0s; }
+.mobile-chat-typing .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.mobile-chat-typing .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes mobile-typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* ---------- Footer ---------- */
+.mobile-chat-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+}
+
+.mobile-chat-footer .btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-xs);
+    min-height: 36px;
+    touch-action: manipulation;
+}
+
+/* ---------- Reduced Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .mobile-chat-typing .typing-dot {
+        animation: none;
+        opacity: 0.7;
+    }
+
+    .mobile-chat-examples li {
+        transition: none;
+    }
+}

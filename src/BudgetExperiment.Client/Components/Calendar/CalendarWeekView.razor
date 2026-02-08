@@ -1,0 +1,231 @@
+@* CalendarWeekView.razor - Week view with taller rows showing more transaction detail *@
+
+<div class="week-view">
+    <div class="week-view-header">
+        <button class="week-nav-btn" @onclick="PreviousWeek" aria-label="Previous week">&lt;</button>
+        <span class="week-label">@GetWeekLabel()</span>
+        <button class="week-nav-btn" @onclick="NextWeek" aria-label="Next week">&gt;</button>
+    </div>
+
+    <div class="week-view-grid">
+        <div class="week-day-header">Sun</div>
+        <div class="week-day-header">Mon</div>
+        <div class="week-day-header">Tue</div>
+        <div class="week-day-header">Wed</div>
+        <div class="week-day-header">Thu</div>
+        <div class="week-day-header">Fri</div>
+        <div class="week-day-header">Sat</div>
+
+        @foreach (var day in CurrentWeekDays)
+        {
+            <div class="week-day @GetDayCssClasses(day)"
+                 @onclick="() => HandleDayClick(day.Date)"
+                 role="button"
+                 tabindex="0"
+                 aria-label="@GetAriaLabel(day)"
+                 aria-selected="@(day.Date == SelectedDate).ToString().ToLowerInvariant()">
+                <span class="day-number">
+                    @day.Date.Day
+                    @if (day.IsToday)
+                    {
+                        <span class="sr-only">(Today)</span>
+                    }
+                </span>
+
+                @if (day.TransactionCount > 0)
+                {
+                    <div class="week-day-total">
+                        <MoneyDisplay Amount="@day.ActualTotal.Amount" />
+                    </div>
+                    <div class="week-day-count">
+                        @day.TransactionCount txn@(day.TransactionCount != 1 ? "s" : "")
+                    </div>
+                }
+
+                @if (day.HasRecurring)
+                {
+                    <div class="week-day-recurring" title="@day.RecurringCount scheduled">
+                        <Icon Name="refresh" Size="12" Class="recurring-icon" />
+                        <span class="@(day.ProjectedTotal.Amount >= 0 ? "positive" : "negative")">
+                            @FormatMoney(day.ProjectedTotal.Amount)
+                        </span>
+                    </div>
+                }
+
+                <div class="week-day-balance @(day.IsBalanceNegative ? "negative" : "")">
+                    <span class="balance-label">Bal:</span>
+                    <MoneyDisplay Amount="@day.EndOfDayBalance.Amount" />
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// All days in the calendar grid (42 days for 6 weeks).
+    /// </summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CalendarDaySummaryDto> Days { get; set; } = Array.Empty<CalendarDaySummaryDto>();
+
+    /// <summary>
+    /// The currently selected date, if any.
+    /// </summary>
+    [Parameter]
+    public DateOnly? SelectedDate { get; set; }
+
+    /// <summary>
+    /// Callback when a day is selected.
+    /// </summary>
+    [Parameter]
+    public EventCallback<DateOnly> OnDaySelected { get; set; }
+
+    /// <summary>
+    /// Callback when navigation goes beyond available weeks (needs month change).
+    /// </summary>
+    [Parameter]
+    public EventCallback<DateOnly> OnWeekOverflow { get; set; }
+
+    /// <summary>
+    /// The current week index (0-based, 0-5 for 6 weeks in grid).
+    /// </summary>
+    [Parameter]
+    public int WeekIndex { get; set; }
+
+    /// <summary>
+    /// Callback when week index changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> WeekIndexChanged { get; set; }
+
+    private int totalWeeks => Days.Count / 7;
+
+    /// <summary>
+    /// Gets the 7 days for the current week.
+    /// </summary>
+    internal IReadOnlyList<CalendarDaySummaryDto> CurrentWeekDays
+    {
+        get
+        {
+            if (Days.Count == 0)
+            {
+                return Array.Empty<CalendarDaySummaryDto>();
+            }
+
+            var safeIndex = Math.Clamp(WeekIndex, 0, totalWeeks - 1);
+            var start = safeIndex * 7;
+            return Days.Skip(start).Take(7).ToList();
+        }
+    }
+
+    private async Task HandleDayClick(DateOnly date)
+    {
+        await OnDaySelected.InvokeAsync(date);
+    }
+
+    private async Task PreviousWeek()
+    {
+        if (WeekIndex > 0)
+        {
+            await WeekIndexChanged.InvokeAsync(WeekIndex - 1);
+        }
+        else
+        {
+            // Navigate to the previous month's last week
+            var firstDay = Days.FirstOrDefault();
+            if (firstDay != null)
+            {
+                await OnWeekOverflow.InvokeAsync(firstDay.Date.AddDays(-1));
+            }
+        }
+    }
+
+    private async Task NextWeek()
+    {
+        if (WeekIndex < totalWeeks - 1)
+        {
+            await WeekIndexChanged.InvokeAsync(WeekIndex + 1);
+        }
+        else
+        {
+            // Navigate to the next month's first week
+            var lastDay = Days.LastOrDefault();
+            if (lastDay != null)
+            {
+                await OnWeekOverflow.InvokeAsync(lastDay.Date.AddDays(1));
+            }
+        }
+    }
+
+    private string GetWeekLabel()
+    {
+        var weekDays = CurrentWeekDays;
+        if (weekDays.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var first = weekDays[0].Date;
+        var last = weekDays[^1].Date;
+
+        if (first.Month == last.Month)
+        {
+            return $"{first:MMM d} – {last.Day}, {last.Year}";
+        }
+
+        return $"{first:MMM d} – {last:MMM d}, {last.Year}";
+    }
+
+    private static string GetDayCssClasses(CalendarDaySummaryDto day)
+    {
+        var classes = new List<string>();
+        if (!day.IsCurrentMonth)
+        {
+            classes.Add("other-month");
+        }
+
+        if (day.IsToday)
+        {
+            classes.Add("today");
+        }
+
+        if (day.HasRecurring)
+        {
+            classes.Add("has-recurring");
+        }
+
+        if (day.IsBalanceNegative)
+        {
+            classes.Add("balance-negative");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    private static string GetAriaLabel(CalendarDaySummaryDto day)
+    {
+        var label = day.Date.ToString("MMMM d, yyyy");
+        if (day.IsToday)
+        {
+            label += ", Today";
+        }
+
+        if (day.TransactionCount > 0)
+        {
+            label += $", {day.TransactionCount} transaction{(day.TransactionCount != 1 ? "s" : "")}";
+        }
+
+        if (day.HasRecurring)
+        {
+            label += $", {day.RecurringCount} recurring";
+        }
+
+        return label;
+    }
+
+    private static string FormatMoney(decimal amount)
+    {
+        var sign = amount >= 0 ? "+" : "-";
+        return $"{sign}${Math.Abs(amount):N0}";
+    }
+}

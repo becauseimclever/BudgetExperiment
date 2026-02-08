@@ -5,8 +5,11 @@
 @using BudgetExperiment.Client.Components.Chat
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Client.Components.Forms
 @using BudgetExperiment.Client.Services
 @inject IAiAvailabilityService AiAvailability
+@inject IBudgetApiService ApiService
+@inject IToastService ToastService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
@@ -68,10 +71,34 @@
 
     @* Mobile Floating Action Button *@
     <MobileFab @bind-IsExpanded="fabExpanded"
+               IsHidden="@(quickAddOpen || mobileChatOpen)"
                ShowAiButton="@AiAvailability.IsEnabled"
                IsAiUnavailable="@(AiAvailability.State == AiAvailabilityState.Unavailable)"
                OnQuickAddClick="OnFabQuickAdd"
                OnAiClick="OnFabAiClick" />
+
+    @* Quick Add Bottom Sheet *@
+    <BottomSheet IsVisible="@quickAddOpen"
+                 Title="Quick Add Transaction"
+                 Height="BottomSheetHeight.Large"
+                 OnClose="CloseQuickAdd">
+        <QuickAddForm Accounts="@quickAddAccounts"
+                      Categories="@quickAddCategories"
+                      OnSubmit="HandleQuickAddSubmitAsync"
+                      OnCancel="CloseQuickAdd"
+                      IsSubmitting="@quickAddSubmitting"
+                      ErrorMessage="@quickAddError"
+                      @ref="quickAddFormRef" />
+    </BottomSheet>
+
+    @* Mobile AI Chat Bottom Sheet *@
+    @if (AiAvailability.IsEnabled)
+    {
+        <MobileChatSheet IsVisible="@mobileChatOpen" OnClose="CloseMobileChat" />
+    }
+
+    @* Toast Notifications *@
+    <ToastContainer />
 </div>
 
 @code {
@@ -80,6 +107,13 @@
     private bool chatOpen = false;
     private bool fabExpanded = false;
     private bool hasLoadedState = false;
+    private bool quickAddOpen = false;
+    private bool quickAddSubmitting = false;
+    private bool mobileChatOpen = false;
+    private string? quickAddError;
+    private IReadOnlyList<AccountDto> quickAddAccounts = Array.Empty<AccountDto>();
+    private IReadOnlyList<BudgetCategoryDto> quickAddCategories = Array.Empty<BudgetCategoryDto>();
+    private QuickAddForm? quickAddFormRef;
 
     /// <inheritdoc />
     protected override void OnInitialized()
@@ -143,20 +177,74 @@
         return chatOpen ? "Close chat" : "Open AI Assistant";
     }
 
-    private void OnFabQuickAdd()
+    private async Task OnFabQuickAdd()
     {
-        // Navigate to Add Transaction page
-        NavigationManager.NavigateTo("/add-transaction");
+        quickAddError = null;
+        quickAddSubmitting = false;
+
+        try
+        {
+            var accountsTask = ApiService.GetAccountsAsync();
+            var categoriesTask = ApiService.GetCategoriesAsync(activeOnly: true);
+            await Task.WhenAll(accountsTask, categoriesTask);
+
+            quickAddAccounts = await accountsTask;
+            quickAddCategories = await categoriesTask;
+        }
+        catch
+        {
+            quickAddAccounts = Array.Empty<AccountDto>();
+            quickAddCategories = Array.Empty<BudgetCategoryDto>();
+        }
+
+        quickAddFormRef?.Reset();
+        quickAddOpen = true;
+    }
+
+    private void CloseQuickAdd()
+    {
+        quickAddOpen = false;
+        quickAddError = null;
+    }
+
+    private async Task HandleQuickAddSubmitAsync(TransactionCreateDto transaction)
+    {
+        quickAddSubmitting = true;
+        quickAddError = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ApiService.CreateTransactionAsync(transaction);
+            if (result != null)
+            {
+                quickAddOpen = false;
+                ToastService.ShowSuccess("Transaction added successfully.");
+            }
+            else
+            {
+                quickAddError = "Failed to create transaction. Please try again.";
+            }
+        }
+        catch
+        {
+            quickAddError = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            quickAddSubmitting = false;
+        }
     }
 
     private void OnFabAiClick()
     {
-        // Open the chat panel
-        if (!chatOpen)
-        {
-            chatOpen = true;
-            StateHasChanged();
-        }
+        // Open the mobile chat bottom sheet (FAB is mobile-only)
+        mobileChatOpen = true;
+    }
+
+    private void CloseMobileChat()
+    {
+        mobileChatOpen = false;
     }
 
     /// <inheritdoc />

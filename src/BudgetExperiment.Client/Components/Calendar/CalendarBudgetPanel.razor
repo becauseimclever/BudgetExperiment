@@ -4,13 +4,13 @@
 {
     <div class="calendar-budget-panel @(IsExpanded ? "expanded" : "collapsed")">
         <button type="button"
-                class="panel-header"
+                class="budget-panel-header"
                 @onclick="ToggleExpanded"
                 aria-expanded="@IsExpanded"
                 aria-controls="budget-panel-body">
-            <div class="panel-title">
+            <div class="budget-panel-header-content">
                 <Icon Name="chart-pie" Size="18" />
-                <span>Budget Summary for @GetMonthName()</span>
+                <span class="budget-panel-title">Budget Summary for @GetMonthName()</span>
             </div>
             <div class="panel-summary-inline" @onclick:stopPropagation="true">
                 <span class="summary-quick">
@@ -20,16 +20,16 @@
                     @Summary.OverallPercentUsed.ToString("N0")%
                 </span>
             </div>
-            <Icon Name="@(IsExpanded ? "chevron-up" : "chevron-down")" Size="16" Class="toggle-icon" />
+            <Icon Name="@(IsExpanded ? "chevron-up" : "chevron-down")" Size="16" Class="budget-panel-toggle" />
         </button>
 
         @if (IsExpanded)
         {
-            <div id="budget-panel-body" class="panel-body">
+            <div id="budget-panel-body" class="budget-panel-body">
                 <BudgetProgressBar PercentUsed="@Summary.OverallPercentUsed"
                                    Status="@GetOverallStatus()" />
 
-                <div class="summary-status-counts">
+                <div class="budget-status-summary">
                     @if (Summary.CategoriesOnTrack > 0)
                     {
                         <span class="status-count status-success">
@@ -50,7 +50,7 @@
                     }
                 </div>
 
-                <div class="category-list">
+                <div class="budget-category-list">
                     @foreach (var progress in GetSortedCategories())
                     {
                         <CalendarBudgetCategoryRow Progress="@progress"
@@ -112,7 +112,7 @@
     [Parameter]
     public EventCallback OnCopyFromPrevious { get; set; }
 
-    private bool IsExpanded { get; set; } = true;
+    private bool IsExpanded { get; set; }
 
     private void ToggleExpanded()
     {
