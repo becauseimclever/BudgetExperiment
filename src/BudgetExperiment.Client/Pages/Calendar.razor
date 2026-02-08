@@ -45,6 +45,9 @@
                          OnCreateGoal="ShowCreateBudgetGoal"
                          OnCopyFromPrevious="CopyBudgetGoalsFromPrevious" />
 
+    <CalendarInsightsPanel Year="@currentDate.Year"
+                           Month="@currentDate.Month" />
+
     <ErrorAlert Message="@errorMessage"
                 IsDismissible="true"
                 IsRetrying="@isRetrying"

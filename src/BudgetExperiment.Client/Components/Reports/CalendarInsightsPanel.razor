@@ -1,0 +1,329 @@
+@* CalendarInsightsPanel.razor - Collapsible monthly insights panel for the calendar page *@
+
+@using BudgetExperiment.Client.Components.Charts
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IBudgetApiService ApiService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<div class="calendar-insights-panel @(IsExpanded ? "expanded" : "collapsed")">
+    <button type="button"
+            class="insights-panel-header"
+            @onclick="ToggleExpandedAsync"
+            aria-expanded="@IsExpanded"
+            aria-controls="insights-panel-body">
+        <div class="insights-panel-header-content">
+            <Icon Name="bar-chart" Size="18" />
+            <span class="insights-panel-title">Month Insights</span>
+        </div>
+        <div class="insights-panel-summary" @onclick:stopPropagation="true">
+            @if (_report != null)
+            {
+                <span class="summary-net @GetNetClass()">
+                    Net: @GetNetAmount().ToString("C")
+                </span>
+            }
+        </div>
+        <Icon Name="@(IsExpanded ? "chevron-up" : "chevron-down")" Size="16" Class="insights-panel-toggle" />
+    </button>
+
+    @if (IsExpanded)
+    {
+        <div id="insights-panel-body" class="insights-panel-body">
+            @if (_isLoading)
+            {
+                <div class="insights-loading">
+                    <LoadingSpinner Message="Loading insights..." />
+                </div>
+            }
+            else if (_report != null)
+            {
+                <div class="insights-content">
+                    <div class="insights-summary-grid">
+                        <div class="insights-stat">
+                            <span class="stat-label">Income</span>
+                            <span class="stat-value stat-income">@_report.TotalIncome.Amount.ToString("C")</span>
+                        </div>
+                        <div class="insights-stat">
+                            <span class="stat-label">Spending</span>
+                            <span class="stat-value stat-spending">@_report.TotalSpending.Amount.ToString("C")</span>
+                            <TrendIndicator CurrentValue="@_report.TotalSpending.Amount"
+                                            PreviousValue="@(_previousReport?.TotalSpending.Amount ?? 0m)"
+                                            HasData="@(_previousReport != null)"
+                                            InvertColors="true"
+                                            Label="vs. last month" />
+                        </div>
+                        <div class="insights-stat">
+                            <span class="stat-label">Net</span>
+                            <span class="stat-value @GetNetClass()">@GetNetAmount().ToString("C")</span>
+                        </div>
+                        <div class="insights-stat">
+                            <span class="stat-label">Transactions</span>
+                            <span class="stat-value">@GetTransactionCount()</span>
+                        </div>
+                    </div>
+
+                    @if (GetTopCategories().Any())
+                    {
+                        <div class="insights-categories-section">
+                            <h4 class="insights-section-title">Top Categories</h4>
+                            <div class="insights-chart-row">
+                                <div class="insights-mini-chart">
+                                    <DonutChart Segments="@GetChartSegments()"
+                                                CenterValue="@_report.TotalSpending.Amount"
+                                                CenterLabel="Spent"
+                                                Currency="@_report.TotalSpending.Currency"
+                                                Size="120"
+                                                StrokeWidth="20"
+                                                Compact="true"
+                                                ShowLegend="false"
+                                                AriaLabel="Top spending categories" />
+                                </div>
+                                <div class="insights-top-categories">
+                                    @foreach (var category in GetTopCategories())
+                                    {
+                                        <div class="insights-category-row">
+                                            <span class="category-color-dot" style="background: @(category.CategoryColor ?? "#6b7280")"></span>
+                                            <span class="category-name">@category.CategoryName</span>
+                                            <span class="category-amount">@category.Amount.Amount.ToString("C")</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="insights-footer">
+                        <a href="@GetReportLink()" class="view-full-report">
+                            <Icon Name="bar-chart" Size="14" />
+                            View Full Report
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="insights-empty">
+                    <p>No spending data available for this month.</p>
+                    <a href="@GetReportLink()" class="view-full-report">View Reports</a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private const string StorageKey = "calendarInsightsPanelExpanded";
+    private const int MaxTopCategories = 3;
+
+    /// <summary>
+    /// Gets or sets the year to show insights for.
+    /// </summary>
+    [Parameter]
+    public int Year { get; set; }
+
+    /// <summary>
+    /// Gets or sets the month to show insights for.
+    /// </summary>
+    [Parameter]
+    public int Month { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the panel is expanded.
+    /// </summary>
+    [Parameter]
+    public bool IsExpanded { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when expanded state changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> OnExpandedChanged { get; set; }
+
+    private MonthlyCategoryReportDto? _report;
+    private MonthlyCategoryReportDto? _previousReport;
+    private bool _isLoading;
+    private bool _hasLoadedInitialState;
+    private int _loadedYear;
+    private int _loadedMonth;
+
+    /// <inheritdoc/>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_hasLoadedInitialState)
+        {
+            _hasLoadedInitialState = true;
+            await LoadExpandedStateAsync();
+            StateHasChanged();
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Year > 0 && Month > 0 && (Year != _loadedYear || Month != _loadedMonth))
+        {
+            if (IsExpanded)
+            {
+                await LoadDataAsync();
+            }
+            else
+            {
+                // Mark that we need to reload when expanded
+                _loadedYear = 0;
+                _loadedMonth = 0;
+            }
+        }
+    }
+
+    private async Task ToggleExpandedAsync()
+    {
+        IsExpanded = !IsExpanded;
+        await OnExpandedChanged.InvokeAsync(IsExpanded);
+        await SaveExpandedStateAsync();
+
+        if (IsExpanded && (_loadedYear != Year || _loadedMonth != Month))
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // Fetch current and previous month in parallel for trend comparison
+            var currentTask = ApiService.GetMonthlyCategoryReportAsync(Year, Month);
+
+            var prevMonth = Month == 1 ? 12 : Month - 1;
+            var prevYear = Month == 1 ? Year - 1 : Year;
+            var previousTask = ApiService.GetMonthlyCategoryReportAsync(prevYear, prevMonth);
+
+            await Task.WhenAll(currentTask, previousTask);
+
+            _report = await currentTask;
+            _previousReport = await previousTask;
+            _loadedYear = Year;
+            _loadedMonth = Month;
+        }
+        catch
+        {
+            // Insights are non-critical; swallow errors silently
+            _report = null;
+            _previousReport = null;
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadExpandedStateAsync()
+    {
+        try
+        {
+            var savedState = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            if (bool.TryParse(savedState, out var expanded))
+            {
+                IsExpanded = expanded;
+                await OnExpandedChanged.InvokeAsync(IsExpanded);
+
+                if (IsExpanded)
+                {
+                    await LoadDataAsync();
+                }
+            }
+        }
+        catch
+        {
+            // localStorage may not be available
+        }
+    }
+
+    private async Task SaveExpandedStateAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, IsExpanded.ToString().ToLowerInvariant());
+        }
+        catch
+        {
+            // localStorage may not be available
+        }
+    }
+
+    private decimal GetNetAmount()
+    {
+        if (_report == null)
+        {
+            return 0m;
+        }
+
+        return _report.TotalIncome.Amount - _report.TotalSpending.Amount;
+    }
+
+    private string GetNetClass()
+    {
+        var net = GetNetAmount();
+        return net switch
+        {
+            > 0 => "stat-positive",
+            < 0 => "stat-negative",
+            _ => string.Empty,
+        };
+    }
+
+    private int GetTransactionCount()
+    {
+        if (_report?.Categories == null)
+        {
+            return 0;
+        }
+
+        return _report.Categories.Sum(c => c.TransactionCount);
+    }
+
+    private IReadOnlyList<CategorySpendingDto> GetTopCategories()
+    {
+        if (_report?.Categories == null || _report.Categories.Count == 0)
+        {
+            return [];
+        }
+
+        return _report.Categories
+            .OrderByDescending(c => c.Amount.Amount)
+            .Take(MaxTopCategories)
+            .ToList();
+    }
+
+    private IReadOnlyList<DonutSegmentData> GetChartSegments()
+    {
+        if (_report?.Categories == null || _report.Categories.Count == 0)
+        {
+            return [];
+        }
+
+        return _report.Categories
+            .Select(c => new DonutSegmentData
+            {
+                Id = c.CategoryId?.ToString() ?? "uncategorized",
+                Label = c.CategoryName,
+                Value = c.Amount.Amount,
+                Percentage = c.Percentage,
+                Color = c.CategoryColor ?? "#6b7280",
+                TransactionCount = c.TransactionCount,
+            })
+            .ToList();
+    }
+
+    private string GetReportLink()
+    {
+        return $"/reports/categories?year={Year}&month={Month}";
+    }
+}
