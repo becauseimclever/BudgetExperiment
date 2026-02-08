@@ -86,9 +86,18 @@
             <SwipeContainer OnSwipedLeft="NextMonth" OnSwipedRight="PreviousMonth">
                 <CalendarGrid Days="@calendarGrid.Days"
                               SelectedDate="@selectedDate"
-                              OnDaySelected="SelectDate" />
+                              OnDaySelected="SelectDate"
+                              SelectedWeekIndex="@selectedWeekIndex"
+                              OnWeekSelected="SelectWeek" />
             </SwipeContainer>
         }
+    }
+
+    @if (selectedWeekIndex >= 0 && calendarGrid != null)
+    {
+        <WeekSummary Days="@GetSelectedWeekDays()"
+                     IsVisible="true"
+                     OnClose="ClearWeekSelection" />
     }
 
     @if (selectedDate.HasValue && dayDetail != null)
@@ -174,6 +183,7 @@
     // View mode state
     private CalendarViewMode calendarViewMode = CalendarViewMode.Month;
     private int weekIndex;
+    private int selectedWeekIndex = -1;
     private CalendarViewToggle? viewToggle;
 
     // Data from API - no business logic, just display
@@ -241,6 +251,7 @@
             {
                 currentDate = newDate;
                 selectedDate = null;
+                selectedWeekIndex = -1;
                 dayDetail = null;
                 await LoadCalendarData();
                 await LoadBudgetSummary();
@@ -489,6 +500,32 @@
     private void OnWeekIndexChanged(int newIndex)
     {
         weekIndex = newIndex;
+    }
+
+    private void SelectWeek(int weekIdx)
+    {
+        selectedWeekIndex = selectedWeekIndex == weekIdx ? -1 : weekIdx;
+    }
+
+    private void ClearWeekSelection()
+    {
+        selectedWeekIndex = -1;
+    }
+
+    private IReadOnlyList<CalendarDaySummaryDto> GetSelectedWeekDays()
+    {
+        if (calendarGrid == null || selectedWeekIndex < 0)
+        {
+            return [];
+        }
+
+        var start = selectedWeekIndex * 7;
+        if (start >= calendarGrid.Days.Count)
+        {
+            return [];
+        }
+
+        return calendarGrid.Days.Skip(start).Take(7).ToList();
     }
 
     private void HandleWeekOverflow(DateOnly targetDate)
@@ -839,6 +876,7 @@
         await InvokeAsync(async () =>
         {
             selectedDate = null;
+            selectedWeekIndex = -1;
             dayDetail = null;
             await LoadAccounts();
             await LoadCalendarData();

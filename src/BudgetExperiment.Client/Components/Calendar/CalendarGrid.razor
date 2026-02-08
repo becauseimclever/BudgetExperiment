@@ -1,6 +1,7 @@
 @* CalendarGrid.razor - Month calendar grid component *@
 
 <div class="calendar-grid">
+    <div class="calendar-day-header week-col-header" aria-hidden="true"></div>
     <div class="calendar-day-header">Sun</div>
     <div class="calendar-day-header">Mon</div>
     <div class="calendar-day-header">Tue</div>
@@ -9,11 +10,27 @@
     <div class="calendar-day-header">Fri</div>
     <div class="calendar-day-header">Sat</div>
 
-    @foreach (var day in Days)
+    @foreach (var week in GetWeeks())
     {
-        <CalendarDay Day="@day"
-                     IsSelected="@(day.Date == SelectedDate)"
-                     OnClick="HandleDayClick" />
+        <div class="calendar-week-row @(week.Index == SelectedWeekIndex ? "week-selected" : "")"
+             role="row"
+             aria-label="@GetWeekAriaLabel(week)">
+            <button type="button"
+                    class="week-number-btn"
+                    @onclick="() => HandleWeekClick(week.Index)"
+                    @onclick:stopPropagation="true"
+                    title="View week summary"
+                    aria-label="Select week @(week.Index + 1) for summary"
+                    aria-pressed="@(week.Index == SelectedWeekIndex ? "true" : "false")">
+                <span class="week-number-text">W@(week.Index + 1)</span>
+            </button>
+            @foreach (var day in week.Days)
+            {
+                <CalendarDay Day="@day"
+                             IsSelected="@(day.Date == SelectedDate)"
+                             OnClick="HandleDayClick" />
+            }
+        </div>
     }
 </div>
 
@@ -36,8 +53,59 @@
     [Parameter]
     public EventCallback<DateOnly> OnDaySelected { get; set; }
 
+    /// <summary>
+    /// Gets or sets the index of the currently selected week (0-based), or -1 for no selection.
+    /// </summary>
+    [Parameter]
+    public int SelectedWeekIndex { get; set; } = -1;
+
+    /// <summary>
+    /// Callback when a week row is selected.
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnWeekSelected { get; set; }
+
     private async Task HandleDayClick(DateOnly date)
     {
         await OnDaySelected.InvokeAsync(date);
+    }
+
+    private async Task HandleWeekClick(int weekIndex)
+    {
+        await OnWeekSelected.InvokeAsync(weekIndex);
+    }
+
+    private IReadOnlyList<WeekRow> GetWeeks()
+    {
+        var weeks = new List<WeekRow>();
+        for (int i = 0; i < Days.Count; i += 7)
+        {
+            var weekDays = Days.Skip(i).Take(7).ToList();
+            if (weekDays.Count > 0)
+            {
+                weeks.Add(new WeekRow { Index = i / 7, Days = weekDays });
+            }
+        }
+
+        return weeks;
+    }
+
+    private static string GetWeekAriaLabel(WeekRow week)
+    {
+        if (week.Days.Count == 0)
+        {
+            return "Empty week";
+        }
+
+        var start = week.Days[0].Date;
+        var end = week.Days[^1].Date;
+        return $"Week of {start:MMMM d} to {end:MMMM d}";
+    }
+
+    private sealed class WeekRow
+    {
+        public int Index { get; set; }
+
+        public List<CalendarDaySummaryDto> Days { get; set; } = [];
     }
 }
