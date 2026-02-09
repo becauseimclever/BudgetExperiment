@@ -4,6 +4,20 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.14.1] - 2026-02-08
+
+### Bug Fixes
+
+- **client:** Consolidate donut chart styling across Calendar and Reports pages — align StrokeWidth, currency, fallback color, and segment filtering
+
+### Testing
+
+- **client:** 2 bUnit tests for CalendarInsightsPanel chart segment filtering (zero-amount exclusion, descending sort order)
+
+### Documentation
+
+- **docs:** Feature 067 spec — consolidate donut chart styling across pages
+
 ## [3.14.0] - 2026-02-08
 
 ### Features
