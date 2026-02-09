@@ -310,6 +310,8 @@
         }
 
         return _report.Categories
+            .Where(c => c.Amount.Amount > 0)
+            .OrderByDescending(c => c.Amount.Amount)
             .Select(c => new DonutSegmentData
             {
                 Id = c.CategoryId?.ToString() ?? "uncategorized",

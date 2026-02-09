@@ -51,8 +51,9 @@
                 <DonutChart Segments="@chartSegments"
                             CenterValue="@totalSpending.Amount"
                             CenterLabel="Total"
+                            Currency="@totalSpending.Currency"
                             Size="320"
-                            StrokeWidth="50"
+                            StrokeWidth="20"
                             OnSegmentClick="HandleSegmentClick"
                             ShowLegend="true" />
             </div>
@@ -223,7 +224,7 @@
                 Label = c.CategoryName,
                 Value = c.Amount.Amount,
                 Percentage = c.Percentage,
-                Color = c.CategoryColor ?? "#999999",
+                Color = c.CategoryColor ?? "#6b7280",
                 TransactionCount = c.TransactionCount,
                 Data = c,
             })

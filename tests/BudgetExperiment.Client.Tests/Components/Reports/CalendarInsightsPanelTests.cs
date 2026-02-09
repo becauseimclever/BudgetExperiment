@@ -374,6 +374,72 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         Assert.Contains("20", cut.Markup);
     }
 
+    /// <summary>
+    /// Verifies that chart segments exclude zero-amount categories.
+    /// </summary>
+    [Fact]
+    public void Panel_ChartSegments_ExcludeZeroAmountCategories()
+    {
+        // Arrange
+        var report = CreateTestReport();
+        report.TotalSpending = new MoneyDto { Amount = 500m, Currency = "USD" };
+        report.Categories = new List<CategorySpendingDto>
+        {
+            new() { CategoryId = Guid.NewGuid(), CategoryName = "Groceries", CategoryColor = "#4CAF50", Amount = new MoneyDto { Amount = 500m, Currency = "USD" }, Percentage = 100m, TransactionCount = 5 },
+            new() { CategoryId = Guid.NewGuid(), CategoryName = "EmptyCategory", CategoryColor = "#FF0000", Amount = new MoneyDto { Amount = 0m, Currency = "USD" }, Percentage = 0m, TransactionCount = 0 },
+        };
+        this._stubApiService.MonthlyCategoryReportResult = report;
+
+        var cut = Render<CalendarInsightsPanel>(parameters => parameters
+            .Add(p => p.Year, 2026)
+            .Add(p => p.Month, 2));
+
+        // Act
+        cut.Find(".insights-panel-header").Click();
+
+        // Assert - only one segment circle should be rendered (zero-amount excluded)
+        var segments = cut.FindAll("circle.donut-segment");
+        Assert.Single(segments);
+
+        // The zero-amount category color should not appear as a segment stroke
+        Assert.DoesNotContain("#FF0000", cut.FindAll("circle.donut-segment").Select(s => s.GetAttribute("stroke")).ToList());
+    }
+
+    /// <summary>
+    /// Verifies that chart segments are sorted by amount descending.
+    /// </summary>
+    [Fact]
+    public void Panel_ChartSegments_SortedByAmountDescending()
+    {
+        // Arrange
+        var report = CreateTestReport();
+        report.TotalSpending = new MoneyDto { Amount = 900m, Currency = "USD" };
+        report.Categories = new List<CategorySpendingDto>
+        {
+            new() { CategoryId = Guid.NewGuid(), CategoryName = "Small", CategoryColor = "#FF0000", Amount = new MoneyDto { Amount = 100m, Currency = "USD" }, Percentage = 11.1m, TransactionCount = 1 },
+            new() { CategoryId = Guid.NewGuid(), CategoryName = "Large", CategoryColor = "#00FF00", Amount = new MoneyDto { Amount = 500m, Currency = "USD" }, Percentage = 55.6m, TransactionCount = 5 },
+            new() { CategoryId = Guid.NewGuid(), CategoryName = "Medium", CategoryColor = "#0000FF", Amount = new MoneyDto { Amount = 300m, Currency = "USD" }, Percentage = 33.3m, TransactionCount = 3 },
+        };
+        this._stubApiService.MonthlyCategoryReportResult = report;
+
+        var cut = Render<CalendarInsightsPanel>(parameters => parameters
+            .Add(p => p.Year, 2026)
+            .Add(p => p.Month, 2));
+
+        // Act
+        cut.Find(".insights-panel-header").Click();
+
+        // Assert - segments should be ordered: Large (#00FF00), Medium (#0000FF), Small (#FF0000)
+        var segmentColors = cut.FindAll("circle.donut-segment")
+            .Select(s => s.GetAttribute("stroke"))
+            .ToList();
+
+        Assert.Equal(3, segmentColors.Count);
+        Assert.Equal("#00FF00", segmentColors[0]); // Large (500)
+        Assert.Equal("#0000FF", segmentColors[1]); // Medium (300)
+        Assert.Equal("#FF0000", segmentColors[2]); // Small (100)
+    }
+
     private static MonthlyCategoryReportDto CreateTestReport()
     {
         return new MonthlyCategoryReportDto
