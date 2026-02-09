@@ -157,6 +157,30 @@ public class NavigationTests
     }
 
     /// <summary>
+    /// Verifies the Monthly Trends report page loads successfully.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Navigation")]
+    [Trait("Category", "DemoSafe")]
+    public async Task MonthlyTrendsReportPage_ShouldLoad()
+    {
+        await NavigateAndVerifyPageAsync("reports/trends", "Monthly Trends");
+    }
+
+    /// <summary>
+    /// Verifies the Budget vs. Actual report page loads successfully.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Navigation")]
+    [Trait("Category", "DemoSafe")]
+    public async Task BudgetComparisonReportPage_ShouldLoad()
+    {
+        await NavigateAndVerifyPageAsync("reports/budget-comparison", "Budget vs. Actual");
+    }
+
+    /// <summary>
     /// Verifies the Accounts page loads successfully.
     /// </summary>
     /// <returns>A task representing the async test.</returns>

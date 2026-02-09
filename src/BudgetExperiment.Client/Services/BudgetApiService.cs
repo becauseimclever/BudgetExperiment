@@ -1084,6 +1084,88 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
+    {
+        try
+        {
+            var url = $"api/v1/reports/categories/range?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            if (accountId.HasValue)
+            {
+                url += $"&accountId={accountId.Value}";
+            }
+
+            return await this._httpClient.GetFromJsonAsync<DateRangeCategoryReportDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null)
+    {
+        try
+        {
+            var url = $"api/v1/reports/trends?months={months}";
+            if (endYear.HasValue)
+            {
+                url += $"&endYear={endYear.Value}";
+            }
+
+            if (endMonth.HasValue)
+            {
+                url += $"&endMonth={endMonth.Value}";
+            }
+
+            if (categoryId.HasValue)
+            {
+                url += $"&categoryId={categoryId.Value}";
+            }
+
+            return await this._httpClient.GetFromJsonAsync<SpendingTrendsReportDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null)
+    {
+        try
+        {
+            var url = $"api/v1/reports/day-summary/{date:yyyy-MM-dd}";
+            if (accountId.HasValue)
+            {
+                url += $"?accountId={accountId.Value}";
+            }
+
+            return await this._httpClient.GetFromJsonAsync<DaySummaryDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId)
     {
         try

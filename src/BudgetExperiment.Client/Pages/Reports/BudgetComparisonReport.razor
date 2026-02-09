@@ -1,0 +1,434 @@
+@page "/reports/budget-comparison"
+
+@using BudgetExperiment.Client.Components.Charts
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+@inject ScopeService ScopeService
+
+<PageTitle>Budget vs. Actual - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Budget vs. Actual">
+        <Actions>
+            <a href="/@selectedYear/@selectedMonth" class="btn-back-calendar" title="Back to Calendar">
+                <Icon Name="calendar" Size="16" />
+                Calendar
+            </a>
+        </Actions>
+    </PageHeader>
+
+    <div class="month-navigation" role="navigation" aria-label="Month navigation">
+        <button class="nav-btn" @onclick="PreviousMonth" type="button" aria-label="Previous month">
+            <Icon Name="chevron-left" Size="20" />
+        </button>
+        <h2 class="month-title">@(new DateOnly(selectedYear, selectedMonth, 1).ToString("MMMM yyyy"))</h2>
+        <button class="nav-btn" @onclick="NextMonth" type="button" aria-label="Next month">
+            <Icon Name="chevron-right" Size="20" />
+        </button>
+    </div>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading budget comparison..." />
+    }
+    else if (summary == null && errorMessage == null)
+    {
+        <div class="empty-state">
+            <Icon Name="bar-chart" Size="48" />
+            <p>No budget data available for this month.</p>
+            <p class="empty-state-hint">Set budget goals to start tracking your spending.</p>
+        </div>
+    }
+    else if (errorMessage == null && summary != null)
+    {
+        @if (summary.CategoryProgress.Count == 0 || summary.TotalBudgeted.Amount == 0)
+        {
+            <div class="empty-state">
+                <Icon Name="target" Size="48" />
+                <p>No budget goals set for this month.</p>
+                <p class="empty-state-hint">Create budget goals from the calendar to start tracking spending against your targets.</p>
+                <a href="/@selectedYear/@selectedMonth" class="btn-primary">
+                    <Icon Name="plus" Size="16" />
+                    Set Budget Goals
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="comparison-content">
+                @* Overall Summary *@
+                <div class="overall-summary">
+                    <div class="summary-card">
+                        <h3>Overall Budget</h3>
+                        <div class="overall-percent @GetOverallStatusClass()">
+                            <span class="percent-value">@(Math.Round(summary.OverallPercentUsed))%</span>
+                            <span class="percent-label">used</span>
+                        </div>
+                        <div class="summary-stats">
+                            <div class="summary-stat">
+                                <span class="stat-label">Budgeted</span>
+                                <span class="stat-value">
+                                    <MoneyDisplay Amount="@summary.TotalBudgeted.Amount" CurrencyCode="@summary.TotalBudgeted.Currency" />
+                                </span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-label">Spent</span>
+                                <span class="stat-value text-expense">
+                                    <MoneyDisplay Amount="@summary.TotalSpent.Amount" CurrencyCode="@summary.TotalSpent.Currency" />
+                                </span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-label">Remaining</span>
+                                <span class="stat-value @(summary.TotalRemaining.Amount >= 0 ? "text-income" : "text-expense")">
+                                    <MoneyDisplay Amount="@summary.TotalRemaining.Amount" CurrencyCode="@summary.TotalRemaining.Currency" />
+                                </span>
+                            </div>
+                        </div>
+                        <div class="status-counts">
+                            @if (summary.CategoriesOnTrack > 0)
+                            {
+                                <span class="status-badge status-on-track">
+                                    <Icon Name="check-circle" Size="14" />
+                                    @summary.CategoriesOnTrack on track
+                                </span>
+                            }
+                            @if (summary.CategoriesWarning > 0)
+                            {
+                                <span class="status-badge status-warning">
+                                    <Icon Name="alert-triangle" Size="14" />
+                                    @summary.CategoriesWarning warning
+                                </span>
+                            }
+                            @if (summary.CategoriesOverBudget > 0)
+                            {
+                                <span class="status-badge status-over-budget">
+                                    <Icon Name="alert-circle" Size="14" />
+                                    @summary.CategoriesOverBudget over budget
+                                </span>
+                            }
+                            @if (summary.CategoriesNoBudgetSet > 0)
+                            {
+                                <span class="status-badge status-no-budget">
+                                    <Icon Name="minus-circle" Size="14" />
+                                    @summary.CategoriesNoBudgetSet no budget
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* Bar Chart: Budget vs. Actual per category *@
+                @if (chartGroups.Count > 0)
+                {
+                    <div class="chart-section">
+                        <BarChart Groups="@chartGroups"
+                                  Series="@chartSeries"
+                                  ShowLegend="true"
+                                  AriaLabel="@($"Budget vs. Actual spending comparison for {new DateOnly(selectedYear, selectedMonth, 1):MMMM yyyy}")" />
+                    </div>
+                }
+
+                @* Data Table *@
+                <div class="data-table">
+                    <h3>Category Breakdown</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-right">Budget</th>
+                                <th class="text-right">Actual</th>
+                                <th class="text-right">Remaining</th>
+                                <th class="text-right">% Used</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-right">Txns</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var category in SortedCategories)
+                            {
+                                <tr class="@GetRowStatusClass(category.Status)">
+                                    <td class="category-name">
+                                        @if (!string.IsNullOrEmpty(category.CategoryIcon))
+                                        {
+                                            <span class="category-icon">@category.CategoryIcon</span>
+                                        }
+                                        @category.CategoryName
+                                    </td>
+                                    <td class="text-right">
+                                        @if (category.Status == "NoBudgetSet")
+                                        {
+                                            <span class="no-budget-label">—</span>
+                                        }
+                                        else
+                                        {
+                                            <MoneyDisplay Amount="@category.TargetAmount.Amount" CurrencyCode="@category.TargetAmount.Currency" />
+                                        }
+                                    </td>
+                                    <td class="text-right text-expense">
+                                        <MoneyDisplay Amount="@category.SpentAmount.Amount" CurrencyCode="@category.SpentAmount.Currency" />
+                                    </td>
+                                    <td class="text-right @(category.RemainingAmount.Amount >= 0 ? "text-income" : "text-expense")">
+                                        @if (category.Status == "NoBudgetSet")
+                                        {
+                                            <span class="no-budget-label">—</span>
+                                        }
+                                        else
+                                        {
+                                            <MoneyDisplay Amount="@category.RemainingAmount.Amount" CurrencyCode="@category.RemainingAmount.Currency" />
+                                        }
+                                    </td>
+                                    <td class="text-right">
+                                        @if (category.Status == "NoBudgetSet")
+                                        {
+                                            <span class="no-budget-label">—</span>
+                                        }
+                                        else
+                                        {
+                                            @($"{Math.Round(category.PercentUsed)}%")
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-indicator @GetStatusIndicatorClass(category.Status)" title="@GetStatusLabel(category.Status)">
+                                            <Icon Name="@GetStatusIcon(category.Status)" Size="14" />
+                                            <span class="status-text">@GetStatusLabel(category.Status)</span>
+                                        </span>
+                                    </td>
+                                    <td class="text-right">@category.TransactionCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private BudgetSummaryDto? summary;
+    private List<BarChartGroup> chartGroups = new();
+    private List<BarChartSeries> chartSeries = new();
+    private int selectedYear;
+    private int selectedMonth;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isRetrying;
+
+    private IEnumerable<BudgetProgressDto> SortedCategories =>
+        summary?.CategoryProgress
+            .OrderBy(c => GetStatusSortOrder(c.Status))
+            .ThenByDescending(c => c.PercentUsed)
+        ?? Enumerable.Empty<BudgetProgressDto>();
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        var now = DateTime.UtcNow;
+        selectedYear = now.Year;
+        selectedMonth = now.Month;
+
+        ScopeService.ScopeChanged += HandleScopeChanged;
+
+        await LoadReportAsync();
+    }
+
+    private async void HandleScopeChanged(BudgetScope? scope)
+    {
+        await LoadReportAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadReportAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            summary = await ApiService.GetBudgetSummaryAsync(selectedYear, selectedMonth);
+            if (summary != null)
+            {
+                BuildChartData();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load budget comparison: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void BuildChartData()
+    {
+        if (summary == null)
+        {
+            chartGroups = new List<BarChartGroup>();
+            chartSeries = new List<BarChartSeries>();
+            return;
+        }
+
+        chartSeries = new List<BarChartSeries>
+        {
+            new() { Name = "Budget", Color = "var(--color-primary, #6366f1)" },
+            new() { Name = "Actual", Color = "var(--color-expense, #EF4444)" },
+        };
+
+        chartGroups = summary.CategoryProgress
+            .Where(c => c.Status != "NoBudgetSet")
+            .OrderBy(c => GetStatusSortOrder(c.Status))
+            .ThenByDescending(c => c.PercentUsed)
+            .Select(category => new BarChartGroup
+            {
+                Label = TruncateLabel(category.CategoryName),
+                Values = new List<BarChartValue>
+                {
+                    new() { Series = "Budget", Value = category.TargetAmount.Amount, Color = "#6366f1" },
+                    new() { Series = "Actual", Value = category.SpentAmount.Amount, Color = "#EF4444" },
+                },
+            })
+            .ToList();
+    }
+
+    private async Task PreviousMonth()
+    {
+        if (selectedMonth == 1)
+        {
+            selectedMonth = 12;
+            selectedYear--;
+        }
+        else
+        {
+            selectedMonth--;
+        }
+
+        await LoadReportAsync();
+    }
+
+    private async Task NextMonth()
+    {
+        if (selectedMonth == 12)
+        {
+            selectedMonth = 1;
+            selectedYear++;
+        }
+        else
+        {
+            selectedMonth++;
+        }
+
+        await LoadReportAsync();
+    }
+
+    private string GetOverallStatusClass()
+    {
+        if (summary == null)
+        {
+            return string.Empty;
+        }
+
+        return summary.OverallPercentUsed switch
+        {
+            >= 100 => "text-danger",
+            >= 80 => "text-warning",
+            _ => "text-success",
+        };
+    }
+
+    private static string GetRowStatusClass(string status)
+    {
+        return status switch
+        {
+            "OverBudget" => "status-over-budget",
+            "Warning" => "status-warning",
+            "OnTrack" => "status-on-track",
+            "NoBudgetSet" => "status-no-budget",
+            _ => string.Empty,
+        };
+    }
+
+    private static string GetStatusIndicatorClass(string status)
+    {
+        return status switch
+        {
+            "OverBudget" => "indicator-danger",
+            "Warning" => "indicator-warning",
+            "OnTrack" => "indicator-success",
+            "NoBudgetSet" => "indicator-muted",
+            _ => string.Empty,
+        };
+    }
+
+    private static string GetStatusIcon(string status)
+    {
+        return status switch
+        {
+            "OverBudget" => "alert-circle",
+            "Warning" => "alert-triangle",
+            "OnTrack" => "check-circle",
+            "NoBudgetSet" => "minus-circle",
+            _ => "help-circle",
+        };
+    }
+
+    private static string GetStatusLabel(string status)
+    {
+        return status switch
+        {
+            "OverBudget" => "Over Budget",
+            "Warning" => "Warning",
+            "OnTrack" => "On Track",
+            "NoBudgetSet" => "No Budget",
+            _ => status,
+        };
+    }
+
+    private static int GetStatusSortOrder(string status)
+    {
+        return status switch
+        {
+            "OverBudget" => 0,
+            "Warning" => 1,
+            "OnTrack" => 2,
+            "NoBudgetSet" => 3,
+            _ => 4,
+        };
+    }
+
+    private static string TruncateLabel(string name)
+    {
+        return name.Length > 12 ? name[..10] + "…" : name;
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+        await LoadReportAsync();
+        isRetrying = false;
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= HandleScopeChanged;
+    }
+}

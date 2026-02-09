@@ -4,6 +4,49 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.14.0] - 2026-02-08
+
+### Features
+
+- **client:** DateRangePicker component with quick presets (This Month, Last Month, Last 7/30 Days, Custom)
+- **client:** BarChart component — pure SVG grouped bar chart with legend, tooltips, and ARIA labels
+- **client:** MonthlyTrendsReport page (`/reports/trends`) with month count selector, category filter, bar chart, summary card, and data table
+- **client:** Enhanced MonthlyCategoriesReport with DateRangePicker, URL query params, and flexible date range support
+- **client:** Activate Monthly Trends card on ReportsIndex as live link
+- **client:** Add `GetCategoryReportByRangeAsync` and `GetSpendingTrendsAsync` to BudgetApiService
+- **client:** BudgetComparisonReport page (`/reports/budget-comparison`) with grouped BarChart, data table, summary card, month navigation, and ScopeService subscription
+- **client:** Enable Budget vs. Actual card on ReportsIndex as live link
+- **client:** CalendarInsightsPanel — collapsible monthly analytics panel on calendar page with income/spending/net, top categories, mini DonutChart, and TrendIndicator (% change vs. previous month)
+- **client:** TrendIndicator component for color-coded percentage changes with InvertColors support
+- **client:** DaySummary component — day-level analytics (income, spending, net, top categories) integrated into DayDetail panel
+- **client:** Add "View Reports" button to Calendar header for calendar-to-reports navigation with month context
+- **client:** Add `GetDaySummaryAsync` to IBudgetApiService and BudgetApiService
+- **client:** WeekSummary component — week-level analytics panel with income/spending/net, daily average, and daily breakdown
+- **client:** CalendarGrid week row selection — week-number buttons (W1–W6) with visual highlight and aria-pressed
+- **api:** Enhanced ReportsController XML docs with `<remarks>` examples for Scalar/OpenAPI documentation
+
+### Bug Fixes
+
+- **client:** Fix "Back to Calendar" links on MonthlyCategoriesReport and BudgetComparisonReport to preserve report month context instead of always navigating to the current month
+
+### Testing
+
+- **client:** 13 bUnit tests for DateRangePicker (presets, date inputs, validation, sizing)
+- **client:** 10 bUnit tests for BarChart (empty state, grouped bars, legend, ARIA labels, colors)
+- **client:** 16 bUnit tests for BudgetComparisonReport (summary, chart, data table, navigation, empty states, error handling)
+- **client:** 15 bUnit tests for CalendarInsightsPanel (collapsed/expanded state, data loading, trend indicators, categories)
+- **client:** 11 bUnit tests for TrendIndicator (positive/negative/zero trends, InvertColors, formatting)
+- **client:** 11 bUnit tests for DaySummary (income/spending/net display, categories, empty state, null response, accessibility)
+- **client:** 15 bUnit tests for WeekSummary (visibility, income/spending, net, daily breakdown, date range, accessibility, today highlight, daily average)
+- **client:** 8 bUnit tests for CalendarGrid week selection (week click events, visual highlight, aria-pressed, header cells, aria labels)
+- **e2e:** 10 Playwright tests for report navigation (page loads, URL params, calendar→reports flow, console errors, accessibility audits)
+- **e2e:** 2 navigation tests for MonthlyTrends and BudgetComparison pages
+
+### Documentation
+
+- **docs:** Feature 050 spec updated to All 6 Phases Complete with implementation notes
+- **readme:** Enhanced reports description with date range filtering, week summaries, and quick insights
+
 ## [3.13.0] - 2026-02-07
 
 ### Features

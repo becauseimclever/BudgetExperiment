@@ -1,0 +1,128 @@
+@* TrendIndicator.razor - Shows percentage change vs. previous period with color-coded direction *@
+
+<span class="trend-indicator @GetTrendClass()" title="@GetAccessibleLabel()">
+    @if (HasData)
+    {
+        <Icon Name="@GetIconName()" Size="14" />
+        <span class="trend-value">@GetFormattedChange()</span>
+        <span class="trend-label">@Label</span>
+    }
+    else
+    {
+        <span class="trend-no-data">@NoDataLabel</span>
+    }
+</span>
+
+@code {
+    /// <summary>
+    /// Gets or sets the current period value.
+    /// </summary>
+    [Parameter]
+    public decimal CurrentValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets the previous period value.
+    /// </summary>
+    [Parameter]
+    public decimal PreviousValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets the label shown after the percentage (e.g., "vs. last month").
+    /// </summary>
+    [Parameter]
+    public string Label { get; set; } = "vs. last period";
+
+    /// <summary>
+    /// Gets or sets the label shown when there is no previous data.
+    /// </summary>
+    [Parameter]
+    public string NoDataLabel { get; set; } = "No previous data";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to invert colors.
+    /// When true, a decrease is shown in green (good for spending).
+    /// When false, an increase is shown in green (good for income).
+    /// </summary>
+    [Parameter]
+    public bool InvertColors { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether previous period data is available.
+    /// </summary>
+    [Parameter]
+    public bool HasData { get; set; } = true;
+
+    private decimal PercentChange
+    {
+        get
+        {
+            if (PreviousValue == 0)
+            {
+                return CurrentValue > 0 ? 100m : 0m;
+            }
+
+            return ((CurrentValue - PreviousValue) / Math.Abs(PreviousValue)) * 100m;
+        }
+    }
+
+    private string TrendDirection
+    {
+        get
+        {
+            if (Math.Abs(PercentChange) < 0.5m)
+            {
+                return "stable";
+            }
+
+            return PercentChange > 0 ? "increasing" : "decreasing";
+        }
+    }
+
+    private string GetTrendClass()
+    {
+        if (!HasData)
+        {
+            return "trend-no-previous";
+        }
+
+        return TrendDirection switch
+        {
+            "increasing" => InvertColors ? "trend-negative" : "trend-positive",
+            "decreasing" => InvertColors ? "trend-positive" : "trend-negative",
+            _ => "trend-stable",
+        };
+    }
+
+    private string GetIconName()
+    {
+        return TrendDirection switch
+        {
+            "increasing" => "trending-up",
+            "decreasing" => "trending-down",
+            _ => "minus",
+        };
+    }
+
+    private string GetFormattedChange()
+    {
+        var sign = PercentChange >= 0 ? "+" : string.Empty;
+        return $"{sign}{PercentChange:N1}%";
+    }
+
+    private string GetAccessibleLabel()
+    {
+        if (!HasData)
+        {
+            return NoDataLabel;
+        }
+
+        var direction = TrendDirection switch
+        {
+            "increasing" => "increased",
+            "decreasing" => "decreased",
+            _ => "remained stable",
+        };
+
+        return $"Spending {direction} {Math.Abs(PercentChange):N1}% compared to {Label}";
+    }
+}

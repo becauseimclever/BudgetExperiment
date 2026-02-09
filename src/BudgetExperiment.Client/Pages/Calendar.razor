@@ -20,7 +20,15 @@
     <div class="split mb-4">
         <Button Variant="ButtonVariant.Primary" OnClick="PreviousMonth">&lt; Previous</Button>
         <h2 class="text-secondary m-0">@currentDate.ToString("MMMM yyyy")</h2>
-        <Button Variant="ButtonVariant.Primary" OnClick="NextMonth">Next &gt;</Button>
+        <div class="calendar-header-actions">
+            <a href="/reports/categories?year=@currentDate.Year&amp;month=@currentDate.Month"
+               class="btn-view-reports"
+               title="View Reports for @currentDate.ToString("MMMM yyyy")">
+                <Icon Name="chart" Size="16" />
+                Reports
+            </a>
+            <Button Variant="ButtonVariant.Primary" OnClick="NextMonth">Next &gt;</Button>
+        </div>
     </div>
 
     <div class="account-filter">
@@ -44,6 +52,9 @@
                          OnEditGoal="ShowEditBudgetGoal"
                          OnCreateGoal="ShowCreateBudgetGoal"
                          OnCopyFromPrevious="CopyBudgetGoalsFromPrevious" />
+
+    <CalendarInsightsPanel Year="@currentDate.Year"
+                           Month="@currentDate.Month" />
 
     <ErrorAlert Message="@errorMessage"
                 IsDismissible="true"
@@ -75,14 +86,24 @@
             <SwipeContainer OnSwipedLeft="NextMonth" OnSwipedRight="PreviousMonth">
                 <CalendarGrid Days="@calendarGrid.Days"
                               SelectedDate="@selectedDate"
-                              OnDaySelected="SelectDate" />
+                              OnDaySelected="SelectDate"
+                              SelectedWeekIndex="@selectedWeekIndex"
+                              OnWeekSelected="SelectWeek" />
             </SwipeContainer>
         }
+    }
+
+    @if (selectedWeekIndex >= 0 && calendarGrid != null)
+    {
+        <WeekSummary Days="@GetSelectedWeekDays()"
+                     IsVisible="true"
+                     OnClose="ClearWeekSelection" />
     }
 
     @if (selectedDate.HasValue && dayDetail != null)
     {
         <DayDetail Detail="@dayDetail"
+                   AccountId="@filterAccountId"
                    OnAddTransaction="ShowAddTransaction"
                    OnEditInstance="ShowEditInstance"
                    OnSkipInstance="SkipInstance"
@@ -162,6 +183,7 @@
     // View mode state
     private CalendarViewMode calendarViewMode = CalendarViewMode.Month;
     private int weekIndex;
+    private int selectedWeekIndex = -1;
     private CalendarViewToggle? viewToggle;
 
     // Data from API - no business logic, just display
@@ -229,6 +251,7 @@
             {
                 currentDate = newDate;
                 selectedDate = null;
+                selectedWeekIndex = -1;
                 dayDetail = null;
                 await LoadCalendarData();
                 await LoadBudgetSummary();
@@ -477,6 +500,32 @@
     private void OnWeekIndexChanged(int newIndex)
     {
         weekIndex = newIndex;
+    }
+
+    private void SelectWeek(int weekIdx)
+    {
+        selectedWeekIndex = selectedWeekIndex == weekIdx ? -1 : weekIdx;
+    }
+
+    private void ClearWeekSelection()
+    {
+        selectedWeekIndex = -1;
+    }
+
+    private IReadOnlyList<CalendarDaySummaryDto> GetSelectedWeekDays()
+    {
+        if (calendarGrid == null || selectedWeekIndex < 0)
+        {
+            return [];
+        }
+
+        var start = selectedWeekIndex * 7;
+        if (start >= calendarGrid.Days.Count)
+        {
+            return [];
+        }
+
+        return calendarGrid.Days.Skip(start).Take(7).ToList();
     }
 
     private void HandleWeekOverflow(DateOnly targetDate)
@@ -827,6 +876,7 @@
         await InvokeAsync(async () =>
         {
             selectedDate = null;
+            selectedWeekIndex = -1;
             dayDetail = null;
             await LoadAccounts();
             await LoadCalendarData();

@@ -1,0 +1,44 @@
+/* TrendIndicator.razor.css - Styles for the trend indicator component */
+
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+}
+
+.trend-value {
+    font-weight: var(--font-weight-semibold);
+}
+
+.trend-label {
+    color: var(--color-text-secondary);
+    font-weight: normal;
+}
+
+/* Positive trend (green) - increase for income, decrease for spending */
+.trend-positive {
+    color: var(--color-success);
+}
+
+/* Negative trend (red) - decrease for income, increase for spending */
+.trend-negative {
+    color: var(--color-error);
+}
+
+/* Stable trend (yellow/neutral) */
+.trend-stable {
+    color: var(--color-warning);
+}
+
+/* No previous data */
+.trend-no-previous {
+    color: var(--color-text-tertiary);
+}
+
+.trend-no-data {
+    font-style: italic;
+    font-weight: normal;
+}

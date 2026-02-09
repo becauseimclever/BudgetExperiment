@@ -1,0 +1,308 @@
+@page "/reports/trends"
+
+@using BudgetExperiment.Client.Components.Charts
+@using BudgetExperiment.Domain
+
+@implements IDisposable
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+@inject ScopeService ScopeService
+
+<PageTitle>Monthly Trends - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Monthly Trends">
+        <Actions>
+            <a href="/@DateTime.Today.Year/@DateTime.Today.Month" class="btn-back-calendar" title="Back to Calendar">
+                <Icon Name="calendar" Size="16" />
+                Calendar
+            </a>
+        </Actions>
+    </PageHeader>
+
+    <div class="trends-controls">
+        <div class="month-count-selector" role="group" aria-label="Number of months">
+            @foreach (var option in monthOptions)
+            {
+                <button class="month-option @(selectedMonths == option ? "active" : "")"
+                        @onclick="() => SetMonthCount(option)"
+                        type="button"
+                        aria-pressed="@(selectedMonths == option ? "true" : "false")">
+                    @option months
+                </button>
+            }
+        </div>
+
+        <div class="category-filter">
+            <label for="category-select">Category</label>
+            <select id="category-select" @onchange="HandleCategoryChange">
+                <option value="">All Categories</option>
+                @if (categories != null)
+                {
+                    @foreach (var cat in categories)
+                    {
+                        <option value="@cat.Id" selected="@(selectedCategoryId == cat.Id)">@cat.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading trends data..." />
+    }
+    else if (report == null && errorMessage == null)
+    {
+        <div class="empty-state">
+            <Icon Name="bar-chart" Size="48" />
+            <p>No spending data available for the selected period.</p>
+            <p class="empty-state-hint">Add transactions to see trends over time.</p>
+        </div>
+    }
+    else if (errorMessage == null && report != null)
+    {
+        <div class="trends-content">
+            <div class="chart-section">
+                <BarChart Groups="@chartGroups"
+                          Series="@chartSeries"
+                          ShowLegend="true"
+                          AriaLabel="@($"Monthly spending trends over {selectedMonths} months")" />
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-card">
+                    <h3>Averages</h3>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <span class="stat-label">Avg. Spending</span>
+                            <span class="stat-value text-expense">
+                                <MoneyDisplay Amount="@report.AverageMonthlySpending.Amount" CurrencyCode="@report.AverageMonthlySpending.Currency" />
+                            </span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">Avg. Income</span>
+                            <span class="stat-value text-income">
+                                <MoneyDisplay Amount="@report.AverageMonthlyIncome.Amount" CurrencyCode="@report.AverageMonthlyIncome.Currency" />
+                            </span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">Trend</span>
+                            <span class="stat-value @GetTrendClass()">
+                                @GetTrendDisplay()
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <h3>Monthly Breakdown</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th class="text-right">Income</th>
+                                <th class="text-right">Spending</th>
+                                <th class="text-right">Net</th>
+                                <th class="text-right">Txns</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var point in report.MonthlyData.OrderByDescending(m => m.Year).ThenByDescending(m => m.Month))
+                            {
+                                <tr>
+                                    <td>@(new DateOnly(point.Year, point.Month, 1).ToString("MMM yyyy"))</td>
+                                    <td class="text-right text-income">
+                                        <MoneyDisplay Amount="@point.TotalIncome.Amount" CurrencyCode="@point.TotalIncome.Currency" />
+                                    </td>
+                                    <td class="text-right text-expense">
+                                        <MoneyDisplay Amount="@point.TotalSpending.Amount" CurrencyCode="@point.TotalSpending.Currency" />
+                                    </td>
+                                    <td class="text-right @(point.NetAmount.Amount >= 0 ? "text-income" : "text-expense")">
+                                        <MoneyDisplay Amount="@point.NetAmount.Amount" CurrencyCode="@point.NetAmount.Currency" />
+                                    </td>
+                                    <td class="text-right">@point.TransactionCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private SpendingTrendsReportDto? report;
+    private IReadOnlyList<BudgetCategoryDto>? categories;
+    private List<BarChartGroup> chartGroups = new();
+    private List<BarChartSeries> chartSeries = new();
+    private int selectedMonths = 6;
+    private Guid? selectedCategoryId;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isRetrying;
+
+    private static readonly int[] monthOptions = [6, 12, 24];
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        ScopeService.ScopeChanged += HandleScopeChanged;
+
+        // Load categories and report in parallel
+        var categoriesTask = ApiService.GetCategoriesAsync(activeOnly: true);
+        var reportTask = LoadReportDataAsync();
+
+        categories = await categoriesTask;
+        await reportTask;
+    }
+
+    private async void HandleScopeChanged(BudgetScope? scope)
+    {
+        await LoadReportAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadReportAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await LoadReportDataAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load trends: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadReportDataAsync()
+    {
+        try
+        {
+            report = await ApiService.GetSpendingTrendsAsync(selectedMonths, categoryId: selectedCategoryId);
+            if (report != null)
+            {
+                BuildChartData();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load trends: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void BuildChartData()
+    {
+        if (report == null)
+        {
+            chartGroups = new List<BarChartGroup>();
+            chartSeries = new List<BarChartSeries>();
+            return;
+        }
+
+        chartSeries = new List<BarChartSeries>
+        {
+            new() { Name = "Income", Color = "var(--color-income, #10B981)" },
+            new() { Name = "Spending", Color = "var(--color-expense, #EF4444)" },
+            new() { Name = "Net", Color = "var(--color-primary, #6366f1)" },
+        };
+
+        chartGroups = report.MonthlyData
+            .OrderBy(m => m.Year)
+            .ThenBy(m => m.Month)
+            .Select(point => new BarChartGroup
+            {
+                Label = new DateOnly(point.Year, point.Month, 1).ToString("MMM yy"),
+                Values = new List<BarChartValue>
+                {
+                    new() { Series = "Income", Value = point.TotalIncome.Amount, Color = "#10B981" },
+                    new() { Series = "Spending", Value = point.TotalSpending.Amount, Color = "#EF4444" },
+                },
+            })
+            .ToList();
+    }
+
+    private async Task SetMonthCount(int months)
+    {
+        selectedMonths = months;
+        await LoadReportAsync();
+    }
+
+    private async Task HandleCategoryChange(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        selectedCategoryId = Guid.TryParse(value, out var id) ? id : null;
+        await LoadReportAsync();
+    }
+
+    private string GetTrendClass()
+    {
+        if (report == null)
+        {
+            return string.Empty;
+        }
+
+        return report.TrendDirection switch
+        {
+            "decreasing" => "text-income", // spending decreasing is positive
+            "increasing" => "text-expense",
+            _ => string.Empty,
+        };
+    }
+
+    private string GetTrendDisplay()
+    {
+        if (report == null)
+        {
+            return "—";
+        }
+
+        var arrow = report.TrendDirection switch
+        {
+            "increasing" => "↑",
+            "decreasing" => "↓",
+            _ => "→",
+        };
+
+        return $"{arrow} {Math.Abs(report.TrendPercentage):N1}%";
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+        await LoadReportAsync();
+        isRetrying = false;
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= HandleScopeChanged;
+    }
+}

@@ -1,0 +1,69 @@
+/* CalendarGrid.razor.css - Scoped styles for calendar grid week rows */
+
+.calendar-week-row {
+    display: contents;
+    position: relative;
+}
+
+/* Week number button sits in its own column */
+.week-number-btn {
+    display: none;
+}
+
+/* When grid supports week selection, show week numbers */
+::deep .calendar-grid {
+    /* Override to 8 columns when week numbers are shown */
+}
+
+.calendar-week-row.week-selected ::deep .calendar-day {
+    box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
+/* Week number buttons - visible on hover of the week row */
+.week-number-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: var(--color-surface-secondary);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    padding: var(--space-1);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.week-number-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-primary);
+}
+
+.week-number-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+    z-index: 1;
+}
+
+.week-number-btn[aria-pressed="true"] {
+    background: rgba(var(--color-brand-rgb, 0, 123, 255), 0.15);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.week-number-text {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+@media (max-width: 480px) {
+    .week-number-btn {
+        padding: 2px;
+    }
+
+    .week-number-text {
+        font-size: 0.6rem;
+    }
+}
