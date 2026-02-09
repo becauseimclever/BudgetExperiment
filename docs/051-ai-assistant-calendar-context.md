@@ -16,18 +16,22 @@ Currently, the AI Assistant does not know what date or month the user is viewing
 ### Current State
 
 **What Exists:**
-- `ChatContextService` on the client tracks current account, category, and page type
-- `ChatPageContext` class has properties for `CurrentAccountId`, `CurrentCategoryId`, `PageType`
-- `ChatContext` record in the Application layer has a `CurrentDate` property (but it's not wired up)
-- Calendar page tracks `selectedDate` and `currentDate` (viewed month) internally
+- `ChatContextService` on the client tracks current account (ID + name), category (ID + name), and page type
+- `ChatPageContext` class has properties for `CurrentAccountId`, `CurrentAccountName`, `CurrentCategoryId`, `CurrentCategoryName`, `PageType`, and a `GetContextSummary()` method
+- `ChatContext` record in the Application layer already has `CurrentDate` (DateOnly?), `CurrentAccountId`, `CurrentAccountName`, `CurrentCategoryId`, `CurrentCategoryName`, `CurrentPage`
+- `NaturalLanguageParser.FormatContext` already handles `CurrentDate` in prompt building (emits "Viewing date: {date}") — but no caller populates it
+- `IChatService.SendMessageAsync` already accepts an optional `ChatContext?` parameter — controller passes `null`
+- Calendar page tracks `selectedDate` (DateOnly?), `currentDate` (DateOnly, viewed month), `selectedAccountId`, and `filterAccountId` internally
+- `ChatPanel.razor` injects `IChatContextService` and subscribes to `ContextChanged`, displays `GetContextSummary()`
 - AI suggestions work but are date-unaware
 
 **Current Gaps:**
-1. `ChatPageContext` has no calendar date properties
-2. Calendar page doesn't update `ChatContextService` when dates change
-3. `SendMessageRequest` DTO doesn't include context data
-4. API controller doesn't pass context to the chat service
-5. AI assistant shows generic examples, not date-aware ones
+1. `ChatPageContext` has no calendar date properties (`CalendarViewedYear`, `CalendarViewedMonth`, `SelectedDate`)
+2. Calendar page doesn't inject `IChatContextService` or update it when dates change
+3. `SendMessageRequest` DTO has only `Content` — no context data
+4. `ChatContextDto` does not exist in Contracts
+5. API controller explicitly passes `null` for context to `ChatService`
+6. `ChatApiService.SendMessageAsync` only accepts `(Guid sessionId, string content)` — no context parameter
 
 ### Target State
 
@@ -178,8 +182,8 @@ Currently, the AI Assistant does not know what date or month the user is viewing
 
 | File | Status | Description |
 |------|--------|-------------|
-| `Application/Chat/ChatService.cs` | No change | Already accepts `ChatContext` parameter |
-| `Application/Chat/NaturalLanguageParser.cs` | Modified | Enhance prompt formatting with calendar context |
+| `Application/Chat/ChatService.cs` | No change | Already accepts `ChatContext?` parameter (currently receives `null`) |
+| `Application/Chat/NaturalLanguageParser.cs` | Minor tweak | `FormatContext` already handles `CurrentDate`; improve prompt wording |
 
 ### DTO Changes
 
@@ -477,14 +481,16 @@ private static string FormatContext(ChatContext? context)
 
 ---
 
-### Phase 6: Enhance AI Prompt with Calendar Context
+### Phase 6: Enhance AI Prompt with Calendar Context (Mostly Exists)
 > **Commit:** `feat(app): enhance AI prompt with calendar date context`
 
 **Objective:** AI uses calendar context for smarter suggestions.
 
+**Note:** `NaturalLanguageParser.FormatContext` already handles `CurrentDate`, `CurrentAccountName`, `CurrentCategoryName`, and `CurrentPage`. The existing prompt text is basic ("Viewing date: {date}"). This phase focuses on verifying/improving the prompt phrasing and testing the end-to-end flow.
+
 **Tasks:**
-- [ ] Update `NaturalLanguageParser.FormatContext` with calendar-specific prompts
-- [ ] Ensure AI uses `CurrentDate` for transaction date when present
+- [ ] Review and improve `FormatContext` prompt wording (e.g., instruct AI to pre-fill transaction date)
+- [ ] Verify `CurrentDate` is used for transaction date when present
 - [ ] Write unit tests verifying date is extracted from context
 - [ ] Test with various prompts ("add transaction", "spent $50 on groceries")
 
@@ -579,7 +585,7 @@ private static string FormatContext(ChatContext? context)
 ## References
 
 - [Feature 032 - AI Category Suggestions](./archive/032-ai-category-suggestions.md) - AI infrastructure reference
-- [Feature 043 - Consolidate AI Features](./043-consolidate-ai-features-ui.md) - Chat panel implementation
+- [Feature 043 - Consolidate AI Features](./archive/043-consolidate-ai-features-ui.md) - Chat panel implementation
 - [ChatContextService.cs](../src/BudgetExperiment.Client/Services/ChatContextService.cs) - Current implementation
 - [NaturalLanguageParser.cs](../src/BudgetExperiment.Application/Chat/NaturalLanguageParser.cs) - AI prompt building
 
@@ -591,3 +597,4 @@ private static string FormatContext(ChatContext? context)
 |------|--------|--------|
 | 2026-01-26 | Initial draft | @becauseimclever |
 | 2026-02-02 | Full technical design, implementation phases, user stories | @github-copilot |
+| 2026-02-09 | Codebase audit: updated current state, fixed broken 043 link, noted Application layer already supports dates | @github-copilot |
