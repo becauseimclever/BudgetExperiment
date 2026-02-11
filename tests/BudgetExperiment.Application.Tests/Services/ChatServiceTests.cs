@@ -172,6 +172,34 @@ public class ChatServiceTests
     }
 
     [Fact]
+    public async Task SendMessageAsync_PassesContextToParser()
+    {
+        // Arrange
+        var session = ChatSession.Create();
+        this._sessionRepo.AddSession(session);
+
+        this._parser.SetupResult(new ParseResult(
+            Success: true,
+            Action: null,
+            ResponseText: "Ok"));
+
+        var context = new ChatContext(
+            CurrentAccountName: "Checking",
+            CurrentDate: new DateOnly(2026, 2, 10),
+            CurrentPage: "calendar");
+
+        // Act
+        var result = await this._service.SendMessageAsync(session.Id, "Add $50 groceries", context);
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        this._parser.LastContext.ShouldNotBeNull();
+        this._parser.LastContext!.CurrentAccountName.ShouldBe("Checking");
+        this._parser.LastContext.CurrentDate.ShouldBe(new DateOnly(2026, 2, 10));
+        this._parser.LastContext.CurrentPage.ShouldBe("calendar");
+    }
+
+    [Fact]
     public async Task SendMessageAsync_Returns_Parse_Error_When_Parser_Fails()
     {
         // Arrange
@@ -497,6 +525,8 @@ public class ChatServiceTests
     {
         private ParseResult _result = new(false, null, "Not configured");
 
+        public ChatContext? LastContext { get; private set; }
+
         public void SetupResult(ParseResult result)
         {
             this._result = result;
@@ -507,8 +537,11 @@ public class ChatServiceTests
             IReadOnlyList<AccountInfo> accounts,
             IReadOnlyList<CategoryInfo> categories,
             ChatContext? context = null,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._result);
+            CancellationToken cancellationToken = default)
+        {
+            this.LastContext = context;
+            return Task.FromResult(this._result);
+        }
     }
 
     private sealed class MockTransferService : ITransferService

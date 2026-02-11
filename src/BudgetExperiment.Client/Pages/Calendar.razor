@@ -13,6 +13,7 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
+@inject IChatContextService ChatContext
 
 <PageTitle>Budget Experiment</PageTitle>
 
@@ -33,7 +34,7 @@
 
     <div class="account-filter">
         <label for="accountSelect">Filter by Account:</label>
-        <select id="accountSelect" class="form-control" style="width: auto; display: inline-block; margin-left: var(--space-2);" @bind="selectedAccountId" @bind:after="LoadCalendarData">
+        <select id="accountSelect" class="form-control" style="width: auto; display: inline-block; margin-left: var(--space-2);" @bind="selectedAccountId" @bind:after="OnAccountFilterChanged">
             <option value="">All Accounts</option>
             @foreach (var account in accounts)
             {
@@ -235,6 +236,8 @@
         }
 
         currentDate = new DateOnly(Year, Month, 1);
+            ChatContext.SetPageType("calendar");
+            UpdateChatContext();
         await LoadAccounts();
         await LoadCategories();
         await LoadCalendarData();
@@ -253,6 +256,7 @@
                 selectedDate = null;
                 selectedWeekIndex = -1;
                 dayDetail = null;
+                    UpdateChatContext();
                 await LoadCalendarData();
                 await LoadBudgetSummary();
             }
@@ -471,6 +475,7 @@
     private async Task SelectDate(DateOnly date)
     {
         selectedDate = date;
+        UpdateChatContext();
         // Single API call returns complete pre-merged day details
         dayDetail = await ApiService.GetDayDetailAsync(date, filterAccountId);
     }
@@ -878,6 +883,7 @@
             selectedDate = null;
             selectedWeekIndex = -1;
             dayDetail = null;
+            UpdateChatContext();
             await LoadAccounts();
             await LoadCalendarData();
             await LoadPastDueItems();
@@ -889,5 +895,32 @@
     public void Dispose()
     {
         ScopeService.ScopeChanged -= OnScopeChanged;
+        ChatContext.ClearContext();
+    }
+
+    private async Task OnAccountFilterChanged()
+    {
+        await LoadCalendarData();
+        UpdateChatContext();
+    }
+
+    private void UpdateChatContext()
+    {
+        ChatContext.SetCalendarContext(
+            currentDate.Year,
+            currentDate.Month,
+            selectedDate,
+            filterAccountId,
+            GetSelectedAccountName());
+    }
+
+    private string? GetSelectedAccountName()
+    {
+        if (!filterAccountId.HasValue)
+        {
+            return null;
+        }
+
+        return accounts.FirstOrDefault(account => account.Id == filterAccountId.Value)?.Name;
     }
 }

@@ -1,0 +1,7 @@
+/* ChartGrid.razor.css - Scoped grid styles */
+
+.chart-grid-line {
+    stroke: var(--chart-grid-color, #e5e7eb);
+    stroke-width: 0.5;
+    stroke-dasharray: 2,2;
+}

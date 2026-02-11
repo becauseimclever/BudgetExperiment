@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.Chat;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -112,7 +113,8 @@ public sealed class ChatController : ControllerBase
             return this.BadRequest("Message content is required.");
         }
 
-        var result = await this._chatService.SendMessageAsync(sessionId, request.Content, null, cancellationToken);
+        var context = MapContext(request.Context);
+        var result = await this._chatService.SendMessageAsync(sessionId, request.Content, context, cancellationToken);
 
         var response = new SendMessageResponse
         {
@@ -205,5 +207,21 @@ public sealed class ChatController : ControllerBase
         }
 
         return this.NoContent();
+    }
+
+    private static ChatContext? MapContext(ChatContextDto? context)
+    {
+        if (context is null)
+        {
+            return null;
+        }
+
+        return new ChatContext(
+            CurrentAccountId: context.CurrentAccountId,
+            CurrentAccountName: context.CurrentAccountName,
+            CurrentCategoryId: context.CurrentCategoryId,
+            CurrentCategoryName: context.CurrentCategoryName,
+            CurrentDate: context.SelectedDate,
+            CurrentPage: context.PageType);
     }
 }

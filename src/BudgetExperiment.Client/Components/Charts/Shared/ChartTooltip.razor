@@ -1,0 +1,42 @@
+@* ChartTooltip.razor - Shared tooltip for charts *@
+
+@if (Visible)
+{
+    <div class="chart-tooltip" role="status">
+        @if (!string.IsNullOrWhiteSpace(Title))
+        {
+            <div class="chart-tooltip-label">@Title</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Series))
+        {
+            <div class="chart-tooltip-series">@Series</div>
+        }
+        <div class="chart-tooltip-value">@Value</div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether the tooltip is visible.
+    /// </summary>
+    [Parameter]
+    public bool Visible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tooltip title.
+    /// </summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tooltip series label.
+    /// </summary>
+    [Parameter]
+    public string? Series { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tooltip value.
+    /// </summary>
+    [Parameter]
+    public string? Value { get; set; }
+}

@@ -231,7 +231,7 @@
         StateHasChanged();
         try
         {
-            var response = await ChatApi.SendMessageAsync(Session.Id, content);
+            var response = await ChatApi.SendMessageAsync(Session.Id, content, ChatContext.ToDto());
             if (response is not null)
             {
                 if (response.UserMessage is not null)

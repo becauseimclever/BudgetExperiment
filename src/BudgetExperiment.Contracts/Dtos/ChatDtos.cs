@@ -194,6 +194,11 @@ public sealed class SendMessageRequest
     /// Gets or sets the message content.
     /// </summary>
     public string Content { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the optional context from the client UI.
+    /// </summary>
+    public ChatContextDto? Context { get; set; }
 }
 
 /// <summary>

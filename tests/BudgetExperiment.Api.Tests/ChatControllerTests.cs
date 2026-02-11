@@ -3,9 +3,13 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
+
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Api.Tests;
 
@@ -14,6 +18,7 @@ namespace BudgetExperiment.Api.Tests;
 /// </summary>
 public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
+    private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
     /// <summary>
@@ -22,6 +27,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <param name="factory">The test factory.</param>
     public ChatControllerTests(CustomWebApplicationFactory factory)
     {
+        this._factory = factory;
         this._client = factory.CreateApiClient();
     }
 
@@ -147,6 +153,74 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     }
 
     /// <summary>
+    /// POST /api/v1/chat/sessions/{id}/messages passes context to chat service.
+    /// </summary>
+    [Fact]
+    public async Task SendMessage_PassesContextToService()
+    {
+        // Arrange
+        var capturingService = new CapturingChatService();
+        using var factory = this.CreateFactoryWithChatService(capturingService);
+        using var client = CreateAuthenticatedClient(factory);
+
+        var request = new SendMessageRequest
+        {
+            Content = "Add $15 groceries",
+            Context = new ChatContextDto
+            {
+                CurrentAccountId = Guid.NewGuid(),
+                CurrentAccountName = "Checking",
+                CurrentCategoryId = Guid.NewGuid(),
+                CurrentCategoryName = "Groceries",
+                SelectedDate = new DateOnly(2026, 2, 10),
+                PageType = "calendar",
+            },
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync(
+            $"/api/v1/chat/sessions/{Guid.NewGuid()}/messages",
+            request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(capturingService.LastContext);
+        Assert.Equal(request.Context!.CurrentAccountId, capturingService.LastContext!.CurrentAccountId);
+        Assert.Equal(request.Context.CurrentAccountName, capturingService.LastContext.CurrentAccountName);
+        Assert.Equal(request.Context.CurrentCategoryId, capturingService.LastContext.CurrentCategoryId);
+        Assert.Equal(request.Context.CurrentCategoryName, capturingService.LastContext.CurrentCategoryName);
+        Assert.Equal(request.Context.SelectedDate, capturingService.LastContext.CurrentDate);
+        Assert.Equal(request.Context.PageType, capturingService.LastContext.CurrentPage);
+    }
+
+    /// <summary>
+    /// POST /api/v1/chat/sessions/{id}/messages allows null context.
+    /// </summary>
+    [Fact]
+    public async Task SendMessage_AllowsNullContext()
+    {
+        // Arrange
+        var capturingService = new CapturingChatService();
+        using var factory = this.CreateFactoryWithChatService(capturingService);
+        using var client = CreateAuthenticatedClient(factory);
+
+        var request = new SendMessageRequest
+        {
+            Content = "Add $15 groceries",
+            Context = null,
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync(
+            $"/api/v1/chat/sessions/{Guid.NewGuid()}/messages",
+            request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(capturingService.LastContext);
+    }
+
+    /// <summary>
     /// POST /api/v1/chat/messages/{id}/confirm returns 404 for non-existent message.
     /// </summary>
     [Fact]
@@ -221,5 +295,65 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
         var session = await getResponse.Content.ReadFromJsonAsync<ChatSessionDto>();
         Assert.NotNull(session);
         Assert.False(session.IsActive);
+    }
+
+    private static HttpClient CreateAuthenticatedClient(WebApplicationFactory<Program> factory)
+    {
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("TestAuto", "authenticated");
+        return client;
+    }
+
+    private WebApplicationFactory<Program> CreateFactoryWithChatService(CapturingChatService chatService)
+    {
+        return this._factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IChatService));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddSingleton<IChatService>(chatService);
+            });
+        });
+    }
+
+    private sealed class CapturingChatService : IChatService
+    {
+        public ChatContext? LastContext { get; private set; }
+
+        public Task<ChatSession> GetOrCreateSessionAsync(string userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ChatSession.Create());
+
+        public Task<ChatSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<ChatSession?>(null);
+
+        public Task<IReadOnlyList<ChatSession>> GetUserSessionsAsync(string userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ChatSession>>([]);
+
+        public Task<IReadOnlyList<ChatMessage>?> GetMessagesAsync(Guid sessionId, int limit = 50, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ChatMessage>?>([]);
+
+        public Task<ChatResult> SendMessageAsync(
+            Guid sessionId,
+            string content,
+            ChatContext? context = null,
+            CancellationToken cancellationToken = default)
+        {
+            this.LastContext = context;
+            return Task.FromResult(new ChatResult(true, null, null));
+        }
+
+        public Task<ActionExecutionResult> ConfirmActionAsync(Guid messageId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ActionExecutionResult(false, ChatActionType.Unknown, null, "Not implemented"));
+
+        public Task<bool> CancelActionAsync(Guid messageId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
+
+        public Task<bool> CloseSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 }

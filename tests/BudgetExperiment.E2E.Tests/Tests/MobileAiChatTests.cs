@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Text.RegularExpressions;
+
 using BudgetExperiment.E2E.Tests.Fixtures;
 using BudgetExperiment.E2E.Tests.Helpers;
 
@@ -207,5 +209,163 @@ public class MobileAiChatTests
         var dialog = page.GetByRole(AriaRole.Dialog);
         await Expect(dialog).ToBeVisibleAsync(new() { Timeout = 5000 });
         await Expect(dialog).ToHaveAttributeAsync("aria-modal", "true");
+    }
+
+    /// <summary>
+    /// Verifies the chat welcome screen shows calendar context after selecting a date.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Mobile")]
+    [Trait("Category", "DemoSafe")]
+    public async Task AiChat_ShouldShowCalendarContextHint_AfterDateSelection()
+    {
+        // Arrange
+        var page = fixture.Page;
+        await AuthenticationHelper.LoginAsync(page, fixture.BaseUrl);
+        await page.GotoAsync(fixture.BaseUrl);
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Act - select today's date on the calendar
+        var todayButton = page.GetByRole(AriaRole.Button, new()
+        {
+            NameRegex = new Regex("Today", RegexOptions.IgnoreCase),
+        });
+        await Expect(todayButton).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await todayButton.ClickAsync();
+
+        // Open AI chat
+        await page.Locator(".fab-primary").ClickAsync();
+        await page.Locator(".fab-ai").ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+
+        // Start a new session to ensure welcome screen shows context hint
+        var newChatButton = page.GetByTitle("New conversation");
+        await newChatButton.ClickAsync();
+
+        // Assert - context hint should include selected date
+        var contextHint = page.Locator(".mobile-chat-context");
+        await Expect(contextHint).ToBeVisibleAsync(new() { Timeout = 5000 });
+        var hintText = await contextHint.TextContentAsync();
+        Assert.NotNull(hintText);
+        Assert.Contains("Selected:", hintText, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Verifies the context hint updates when navigating to a different month.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Mobile")]
+    [Trait("Category", "DemoSafe")]
+    public async Task AiChat_ContextHint_ShouldUpdate_WhenMonthChanges()
+    {
+        // Arrange
+        var page = fixture.Page;
+        await AuthenticationHelper.LoginAsync(page, fixture.BaseUrl);
+        await page.GotoAsync(fixture.BaseUrl);
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var header = page.Locator("h2.text-secondary");
+        await Expect(header).ToBeVisibleAsync(new() { Timeout = 5000 });
+        var initialMonth = await header.TextContentAsync();
+
+        // Act - move to next month
+        await page.GetByRole(AriaRole.Button, new() { Name = "Next >" }).ClickAsync();
+        await Expect(header).Not.ToHaveTextAsync(initialMonth ?? string.Empty);
+        var updatedMonth = await header.TextContentAsync();
+
+        // Open AI chat
+        await page.Locator(".fab-primary").ClickAsync();
+        await page.Locator(".fab-ai").ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+
+        // Start a new session to ensure welcome screen shows context hint
+        var newChatButton = page.GetByTitle("New conversation");
+        await newChatButton.ClickAsync();
+
+        // Assert - context hint should reflect the new month
+        var contextHint = page.Locator(".mobile-chat-context");
+        await Expect(contextHint).ToBeVisibleAsync(new() { Timeout = 5000 });
+        var hintText = await contextHint.TextContentAsync();
+        Assert.NotNull(hintText);
+        Assert.Contains("Viewing", hintText, StringComparison.Ordinal);
+        if (!string.IsNullOrWhiteSpace(updatedMonth))
+        {
+            Assert.Contains(updatedMonth.Trim(), hintText, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
+    /// Verifies the context hint does not show a selected date when none is chosen.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Mobile")]
+    [Trait("Category", "DemoSafe")]
+    public async Task AiChat_ContextHint_ShouldNotShowSelectedDate_WhenNoneSelected()
+    {
+        // Arrange
+        var page = fixture.Page;
+        await AuthenticationHelper.LoginAsync(page, fixture.BaseUrl);
+        await page.GotoAsync(fixture.BaseUrl);
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Act - open AI chat without selecting a date
+        await page.Locator(".fab-primary").ClickAsync();
+        await page.Locator(".fab-ai").ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+
+        // Start a new session to ensure welcome screen shows context hint
+        var newChatButton = page.GetByTitle("New conversation");
+        await newChatButton.ClickAsync();
+
+        // Assert - hint should not include a selected date label
+        var contextHint = page.Locator(".mobile-chat-context");
+        await Expect(contextHint).ToBeVisibleAsync(new() { Timeout = 5000 });
+        var hintText = await contextHint.TextContentAsync();
+        Assert.NotNull(hintText);
+        Assert.DoesNotContain("Selected:", hintText, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Verifies context is cleared when navigating away from the calendar.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Mobile")]
+    [Trait("Category", "DemoSafe")]
+    public async Task AiChat_ContextHint_ShouldClear_WhenLeavingCalendar()
+    {
+        // Arrange
+        var page = fixture.Page;
+        await AuthenticationHelper.LoginAsync(page, fixture.BaseUrl);
+        await page.GotoAsync(fixture.BaseUrl);
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Select today's date
+        var todayButton = page.GetByRole(AriaRole.Button, new()
+        {
+            NameRegex = new Regex("Today", RegexOptions.IgnoreCase),
+        });
+        await Expect(todayButton).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await todayButton.ClickAsync();
+
+        // Navigate away to Settings
+        await page.GetByTitle("Settings").ClickAsync();
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Open AI chat
+        await page.Locator(".fab-primary").ClickAsync();
+        await page.Locator(".fab-ai").ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+
+        // Start a new session to ensure welcome screen shows context hint if present
+        var newChatButton = page.GetByTitle("New conversation");
+        await newChatButton.ClickAsync();
+
+        // Assert - context hint should not render
+        var contextHint = page.Locator(".mobile-chat-context");
+        await Expect(contextHint).Not.ToBeVisibleAsync(new() { Timeout = 5000 });
     }
 }

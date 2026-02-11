@@ -1,0 +1,52 @@
+@* ChartAxis.razor - SVG axis tick renderer *@
+
+@using System.Globalization
+
+@if (Ticks.Count > 0)
+{
+    foreach (var tick in Ticks)
+    {
+        if (Orientation == "y")
+        {
+            @RenderSvgText(AxisPosition, tick.Position, "chart-axis-label", "end", "middle", tick.Label)
+        }
+        else
+        {
+            @RenderSvgText(tick.Position, AxisPosition, "chart-axis-label", "middle", null, tick.Label)
+        }
+    }
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the axis orientation. Supported values: x, y.
+    /// </summary>
+    [Parameter]
+    public string Orientation { get; set; } = "x";
+
+    /// <summary>
+    /// Gets or sets the axis position (x for Y axis, y for X axis).
+    /// </summary>
+    [Parameter]
+    public double AxisPosition { get; set; }
+
+    /// <summary>
+    /// Gets or sets the ticks to render.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<ChartTick> Ticks { get; set; } = [];
+
+    private static string F(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private MarkupString RenderSvgText(double x, double y, string cssClass, string textAnchor, string? dominantBaseline, string content)
+    {
+        var baseline = string.IsNullOrWhiteSpace(dominantBaseline)
+            ? string.Empty
+            : $" dominant-baseline=\"{dominantBaseline}\"";
+        return new MarkupString(
+            $"<text x=\"{F(x)}\" y=\"{F(y)}\" class=\"{cssClass}\" text-anchor=\"{textAnchor}\"{baseline}>{content}</text>");
+    }
+}

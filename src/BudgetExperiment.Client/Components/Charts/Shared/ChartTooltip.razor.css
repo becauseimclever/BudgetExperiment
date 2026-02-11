@@ -1,0 +1,33 @@
+/* ChartTooltip.razor.css - Scoped tooltip styles */
+
+.chart-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-surface-elevated, #fff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
+    padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+    box-shadow: var(--shadow-lg, 0 4px 12px rgba(0, 0, 0, 0.1));
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.chart-tooltip-label {
+    font-weight: 600;
+    color: var(--color-text, #111827);
+    margin-bottom: 2px;
+}
+
+.chart-tooltip-series {
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-text-muted, #6b7280);
+}
+
+.chart-tooltip-value {
+    font-size: var(--text-base, 1rem);
+    font-weight: 700;
+    color: var(--color-primary, #6366f1);
+}

@@ -37,8 +37,9 @@ public interface IChatApiService
     /// </summary>
     /// <param name="sessionId">The session identifier.</param>
     /// <param name="content">The message content.</param>
+    /// <param name="context">The optional UI context for the message.</param>
     /// <returns>The response containing user and assistant messages.</returns>
-    Task<SendMessageResponse?> SendMessageAsync(Guid sessionId, string content);
+    Task<SendMessageResponse?> SendMessageAsync(Guid sessionId, string content, ChatContextDto? context = null);
 
     /// <summary>
     /// Confirms a pending action.
