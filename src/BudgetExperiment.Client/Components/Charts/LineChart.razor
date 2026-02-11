@@ -19,6 +19,24 @@
                  preserveAspectRatio="xMidYMid meet">
                 <title>@AriaLabel</title>
 
+                @if (ShowArea && UseGradientFill)
+                {
+                    <defs>
+                        @foreach (var series in ComputedSeries)
+                        {
+                            if (series.GradientId is null)
+                            {
+                                continue;
+                            }
+
+                            <linearGradient id="@series.GradientId" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="@series.Definition.Color" stop-opacity="0.35" />
+                                <stop offset="100%" stop-color="@series.Definition.Color" stop-opacity="0.05" />
+                            </linearGradient>
+                        }
+                    </defs>
+                }
+
                 @if (ShowGrid)
                 {
                     <ChartGrid Left="@MarginLeft"
@@ -74,7 +92,7 @@
                 {
                     if (ShowArea && series.AreaPath is not null)
                     {
-                        <path d="@series.AreaPath" class="line-area" fill="@series.Definition.Color" />
+                        <path d="@series.AreaPath" class="line-area" fill="@series.AreaFill" />
                     }
 
                     <path d="@series.Path"

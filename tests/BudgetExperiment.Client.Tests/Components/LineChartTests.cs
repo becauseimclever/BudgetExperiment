@@ -46,6 +46,30 @@ public class LineChartTests : BunitContext
     }
 
     [Fact]
+    public void LineChart_Renders_Area_WhenEnabled()
+    {
+        // Arrange
+        var data = new List<LineData>
+        {
+            new() { Label = "Jan", Value = 200m },
+            new() { Label = "Feb", Value = 400m },
+        };
+
+        // Act
+        var cut = Render<LineChart>(parameters => parameters
+            .Add(p => p.Data, data)
+            .Add(p => p.ShowArea, true)
+            .Add(p => p.UseGradientFill, true));
+
+        // Assert
+        var areaPaths = cut.FindAll("path.line-area");
+        Assert.Single(areaPaths);
+
+        var gradients = cut.FindAll("linearGradient");
+        Assert.NotEmpty(gradients);
+    }
+
+    [Fact]
     public void LineChart_Renders_Points_WhenEnabled()
     {
         // Arrange
@@ -146,5 +170,23 @@ public class LineChartTests : BunitContext
         // Assert
         var svg = cut.Find("svg.line-chart");
         Assert.Equal("Monthly trend", svg.GetAttribute("aria-label"));
+    }
+
+    [Fact]
+    public void LineChart_Renders_Large_Dataset()
+    {
+        // Arrange
+        var data = Enumerable.Range(1, 120)
+            .Select(i => new LineData { Label = $"M{i}", Value = i * 10m })
+            .ToList();
+
+        // Act
+        var cut = Render<LineChart>(parameters => parameters
+            .Add(p => p.Data, data)
+            .Add(p => p.ShowPoints, false));
+
+        // Assert
+        var path = cut.FindAll("path.line-path");
+        Assert.Single(path);
     }
 }

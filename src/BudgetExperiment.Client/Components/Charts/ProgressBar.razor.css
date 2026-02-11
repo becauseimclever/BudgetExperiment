@@ -1,0 +1,39 @@
+/* ProgressBar.razor.css - Scoped styles for progress bar */
+
+.progress-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 0.5rem);
+    width: 100%;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--color-surface-muted, #f3f4f6);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease, background-color 0.2s ease;
+}
+
+.progress-bar-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-text-muted, #6b7280);
+}
+
+.progress-bar-text {
+    font-weight: 600;
+    color: var(--color-text, #111827);
+}
+
+.progress-bar-percent {
+    font-variant-numeric: tabular-nums;
+}

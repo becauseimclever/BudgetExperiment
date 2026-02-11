@@ -1,0 +1,91 @@
+@* StackedBarChart.razor - Pure SVG stacked bar chart rendered by Blazor *@
+
+@using BudgetExperiment.Client.Components.Charts.Shared
+
+<div class="stacked-bar-chart-container">
+    @if (!Data.Any())
+    {
+        <div class="stacked-bar-chart-empty" role="img" aria-label="@AriaLabel">
+            <p>No data to display</p>
+        </div>
+    }
+    else
+    {
+        <div class="stacked-bar-chart-wrapper">
+            <svg viewBox="0 0 @F(ComputedViewBoxWidth) @F(ViewBoxHeight)"
+                 class="stacked-bar-chart"
+                 role="img"
+                 aria-label="@AriaLabel"
+                 preserveAspectRatio="xMidYMid meet">
+                <title>@AriaLabel</title>
+
+                @if (ShowGrid)
+                {
+                    <ChartGrid Left="@MarginLeft"
+                               Right="@(ComputedViewBoxWidth - MarginRight)"
+                               Top="@MarginTop"
+                               Bottom="@ChartAreaBottom"
+                               HorizontalTicks="@ComputedYTicks"
+                               VerticalTicks="@ComputedXTicks" />
+                }
+
+                <line x1="@F(MarginLeft)"
+                      y1="@F(ChartAreaBottom)"
+                      x2="@F(ComputedViewBoxWidth - MarginRight)"
+                      y2="@F(ChartAreaBottom)"
+                      class="chart-axis-line" />
+
+                @if (ShowYAxis)
+                {
+                    <ChartAxis Orientation="y"
+                               AxisPosition="@(MarginLeft - 6)"
+                               Ticks="@ComputedYTicks" />
+                }
+
+                @foreach (var group in ComputedGroups)
+                {
+                    if (ShowLabels)
+                    {
+                        @RenderSvgText(group.LabelX, ChartAreaBottom + 14, "chart-axis-label", "middle", "7", group.GroupLabel)
+                    }
+
+                    foreach (var segment in group.Segments)
+                    {
+                        <rect x="@F(segment.X)"
+                              y="@F(segment.Y)"
+                              width="@F(segment.Width)"
+                              height="@F(segment.Height)"
+                              fill="@segment.Color"
+                              class="stacked-bar-segment"
+                              role="img"
+                              tabindex="0"
+                              aria-label="@segment.AriaLabel"
+                              @onfocusin="() => HandleSegmentHover(segment)"
+                              @onfocusout="HandleSegmentHoverEnd"
+                              @onmouseenter="() => HandleSegmentHover(segment)"
+                              @onmouseleave="HandleSegmentHoverEnd"
+                              @onclick="() => HandleSegmentClick(segment)" />
+                    }
+                }
+            </svg>
+        </div>
+
+        @if (ShowLegend && Series.Any())
+        {
+            <div class="stacked-bar-legend" role="list" aria-label="Chart legend">
+                @foreach (var s in Series)
+                {
+                    <div class="legend-item" role="listitem">
+                        <span class="legend-swatch" style="background-color: @s.Color" aria-hidden="true"></span>
+                        <span class="legend-label">@s.Label</span>
+                    </div>
+                }
+            </div>
+        }
+
+        <ChartTooltip Visible="@(HoveredSegment is not null)"
+                      Title="@HoveredSegment?.GroupLabel"
+                      Series="@HoveredSegment?.SeriesLabel"
+                      Value="@HoveredSegment?.FormattedValue" />
+    }
+</div>

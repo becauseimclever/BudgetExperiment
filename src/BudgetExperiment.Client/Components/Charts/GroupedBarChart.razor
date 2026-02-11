@@ -1,0 +1,98 @@
+@* GroupedBarChart.razor - Pure SVG grouped bar chart rendered by Blazor *@
+
+@using BudgetExperiment.Client.Components.Charts.Shared
+
+<div class="grouped-bar-chart-container">
+    @if (!Data.Any())
+    {
+        <div class="grouped-bar-chart-empty" role="img" aria-label="@AriaLabel">
+            <p>No data to display</p>
+        </div>
+    }
+    else
+    {
+        <div class="grouped-bar-chart-wrapper">
+            <svg viewBox="0 0 @F(ComputedViewBoxWidth) @F(ViewBoxHeight)"
+                 class="grouped-bar-chart"
+                 role="img"
+                 aria-label="@AriaLabel"
+                 preserveAspectRatio="xMidYMid meet">
+                <title>@AriaLabel</title>
+
+                @if (ShowGrid)
+                {
+                    <ChartGrid Left="@MarginLeft"
+                               Right="@(ComputedViewBoxWidth - MarginRight)"
+                               Top="@MarginTop"
+                               Bottom="@ChartAreaBottom"
+                               HorizontalTicks="@ComputedYTicks"
+                               VerticalTicks="@ComputedXTicks" />
+                }
+
+                <line x1="@F(MarginLeft)"
+                      y1="@F(ChartAreaBottom)"
+                      x2="@F(ComputedViewBoxWidth - MarginRight)"
+                      y2="@F(ChartAreaBottom)"
+                      class="chart-axis-line" />
+
+                @if (ShowYAxis)
+                {
+                    <ChartAxis Orientation="y"
+                               AxisPosition="@(MarginLeft - 6)"
+                               Ticks="@ComputedYTicks" />
+                }
+
+                @foreach (var group in ComputedGroups)
+                {
+                    if (ShowLabels)
+                    {
+                        @RenderSvgText(group.LabelX, ChartAreaBottom + 14, "chart-axis-label", "middle", "7", group.GroupLabel)
+                    }
+
+                    foreach (var rect in group.Rects)
+                    {
+                        <rect x="@F(rect.X)"
+                              y="@F(rect.Y)"
+                              width="@F(rect.Width)"
+                              height="@F(rect.Height)"
+                              fill="@rect.Color"
+                              rx="1.5"
+                              ry="1.5"
+                              class="grouped-bar-rect"
+                              role="img"
+                              tabindex="0"
+                              aria-label="@rect.AriaLabel"
+                              @onfocusin="() => HandleBarHover(rect)"
+                              @onfocusout="HandleBarHoverEnd"
+                              @onmouseenter="() => HandleBarHover(rect)"
+                              @onmouseleave="HandleBarHoverEnd"
+                              @onclick="() => HandleBarClick(rect)" />
+
+                        if (ShowValues && rect.Height > 0)
+                        {
+                            @RenderSvgText(rect.X + (rect.Width / 2), rect.Y - 4, "bar-value", "middle", "7", rect.FormattedValue)
+                        }
+                    }
+                }
+            </svg>
+        </div>
+
+        @if (ShowLegend && Series.Any())
+        {
+            <div class="grouped-bar-legend" role="list" aria-label="Chart legend">
+                @foreach (var s in Series)
+                {
+                    <div class="legend-item" role="listitem">
+                        <span class="legend-swatch" style="background-color: @s.Color" aria-hidden="true"></span>
+                        <span class="legend-label">@s.Label</span>
+                    </div>
+                }
+            </div>
+        }
+
+        <ChartTooltip Visible="@(HoveredBar is not null)"
+                      Title="@HoveredBar?.GroupLabel"
+                      Series="@HoveredBar?.SeriesLabel"
+                      Value="@HoveredBar?.FormattedValue" />
+    }
+</div>

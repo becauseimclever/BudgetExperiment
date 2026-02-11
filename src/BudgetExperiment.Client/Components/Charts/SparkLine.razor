@@ -1,0 +1,23 @@
+@* SparkLine.razor - Inline mini chart for quick trend indication *@
+
+@if (!Values.Any())
+{
+    <span class="sparkline-empty" role="img" aria-label="@AriaLabel">No data</span>
+}
+else
+{
+    <svg class="sparkline"
+         viewBox="0 0 @F(Width) @F(Height)"
+         role="img"
+         aria-label="@AriaLabel"
+         preserveAspectRatio="none">
+        <title>@AriaLabel</title>
+        <polyline points="@Points" class="sparkline-line" stroke="@LineColor" />
+
+        @if (ShowEndpoints && EndpointPoints is not null)
+        {
+            <circle cx="@F(EndpointPoints.Value.StartX)" cy="@F(EndpointPoints.Value.StartY)" r="1.6" class="sparkline-endpoint" fill="@LineColor" />
+            <circle cx="@F(EndpointPoints.Value.EndX)" cy="@F(EndpointPoints.Value.EndY)" r="1.6" class="sparkline-endpoint" fill="@LineColor" />
+        }
+    </svg>
+}

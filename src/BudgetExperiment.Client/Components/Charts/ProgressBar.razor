@@ -1,0 +1,23 @@
+@* ProgressBar.razor - Horizontal progress indicator *@
+
+<div class="progress-bar-container">
+    <div class="progress-bar"
+         role="progressbar"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         aria-valuenow="@F(Percent)"
+         aria-label="@AriaLabel">
+        <div class="progress-bar-fill" style="width: @F(Percent)%; background-color: @FillColor;"></div>
+    </div>
+
+    @if (ShowLabel)
+    {
+        <div class="progress-bar-label">
+            <span class="progress-bar-text">@LabelText</span>
+            @if (ShowPercent)
+            {
+                <span class="progress-bar-percent">@PercentText</span>
+            }
+        </div>
+    }
+</div>

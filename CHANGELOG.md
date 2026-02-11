@@ -4,6 +4,21 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Features
+
+- **client:** LineChart component for trend visualization with multi-series support, axes, grid, and reference lines
+- **client:** Shared chart primitives (ChartAxis, ChartGrid, ChartTooltip) for SVG charts
+- **client:** GroupedBarChart and StackedBarChart components for multi-series comparisons and composition views
+- **client:** AreaChart component with optional gradient fills
+- **client:** SparkLine, ProgressBar, and RadialGauge components for compact trend and progress visualization
+
+### Testing
+
+- **client:** bUnit tests for LineChart (empty state, paths, points, multi-series, ARIA)
+- **client:** bUnit tests for GroupedBarChart and StackedBarChart (empty state, rendering, legend, ARIA)
+- **client:** bUnit tests for AreaChart and large dataset rendering
+- **client:** bUnit tests for SparkLine, ProgressBar, and RadialGauge
+
 ## [3.14.1] - 2026-02-08
 
 ### Bug Fixes

@@ -39,6 +39,12 @@ public partial class LineChart
     public bool ShowArea { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a value indicating whether to use gradient fills for the area.
+    /// </summary>
+    [Parameter]
+    public bool UseGradientFill { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets the interpolation mode. Supported values: linear, smooth.
     /// </summary>
     [Parameter]
@@ -270,8 +276,9 @@ public partial class LineChart
                 max = min + 1m;
             }
 
-            foreach (var definition in SeriesDefinitions)
+            for (var seriesIndex = 0; seriesIndex < SeriesDefinitions.Count; seriesIndex++)
             {
+                var definition = SeriesDefinitions[seriesIndex];
                 var points = new List<ChartPoint>();
 
                 for (var index = 0; index < Data.Count; index++)
@@ -302,6 +309,10 @@ public partial class LineChart
 
                 var path = BuildPath(points);
                 var areaPath = ShowArea ? BuildAreaPath(points, path) : null;
+                var gradientId = ShowArea && UseGradientFill ? BuildGradientId(definition.Id, seriesIndex) : null;
+                var areaFill = ShowArea
+                    ? (UseGradientFill && gradientId is not null ? $"url(#{gradientId})" : definition.Color)
+                    : string.Empty;
 
                 results.Add(new LineSeriesInfo
                 {
@@ -309,6 +320,8 @@ public partial class LineChart
                     Points = points,
                     Path = path,
                     AreaPath = areaPath,
+                    AreaFill = areaFill,
+                    GradientId = gradientId,
                 });
             }
 
@@ -427,6 +440,19 @@ public partial class LineChart
             $"<text x=\"{xStr}\" y=\"{yStr}\" class=\"{cssClass}\" text-anchor=\"{textAnchor}\" font-size=\"{fontSize}\">{content}</text>");
     }
 
+    private static string BuildGradientId(string seriesId, int index)
+    {
+        var sanitized = string.Concat(seriesId
+            .Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
+            .Select(ch => char.ToLowerInvariant(ch)));
+        if (string.IsNullOrWhiteSpace(sanitized))
+        {
+            sanitized = "series";
+        }
+
+        return $"line-area-{sanitized}-{index}";
+    }
+
 
     private string BuildPath(IReadOnlyList<ChartPoint> points)
     {
@@ -523,6 +549,10 @@ public partial class LineChart
         public string Path { get; set; } = string.Empty;
 
         public string? AreaPath { get; set; }
+
+        public string AreaFill { get; set; } = string.Empty;
+
+        public string? GradientId { get; set; }
     }
 
     private sealed class ChartPoint
