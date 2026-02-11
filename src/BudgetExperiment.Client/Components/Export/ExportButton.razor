@@ -1,0 +1,127 @@
+@* ExportButton.razor - Dropdown button for export options *@
+
+@inject IExportDownloadService ExportDownloadService
+@inject IToastService ToastService
+
+<div class="export-button" @onkeydown="HandleKeyDown">
+    <button class="export-trigger"
+            type="button"
+            @onclick="ToggleMenu"
+            aria-haspopup="menu"
+            aria-expanded="@IsOpen"
+            aria-label="@AriaLabel"
+            aria-busy="@IsExporting"
+            disabled="@IsExporting">
+        @if (IsExporting)
+        {
+            <span class="export-spinner" aria-hidden="true"></span>
+        }
+        <span>@(IsExporting ? LoadingLabel : Label)</span>
+    </button>
+
+    @if (IsOpen)
+    {
+        <div class="export-menu" role="menu">
+            @foreach (var option in Options)
+            {
+                if (option.Disabled || IsExporting)
+                {
+                    <div class="export-item disabled" role="menuitem" aria-disabled="true">
+                        <div class="export-label">@option.Label</div>
+                        @if (!string.IsNullOrWhiteSpace(option.Description))
+                        {
+                            <div class="export-description">@option.Description</div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <button class="export-item"
+                            role="menuitem"
+                            type="button"
+                            @onclick="() => HandleExportAsync(option)">
+                        <div class="export-label">@option.Label</div>
+                        @if (!string.IsNullOrWhiteSpace(option.Description))
+                        {
+                            <div class="export-description">@option.Description</div>
+                        }
+                    </button>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the button label.
+    /// </summary>
+    [Parameter]
+    public string Label { get; set; } = "Export";
+
+    /// <summary>
+    /// Gets or sets the label shown while exporting.
+    /// </summary>
+    [Parameter]
+    public string LoadingLabel { get; set; } = "Exporting...";
+
+    /// <summary>
+    /// Gets or sets the export options.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<ExportOption> Options { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the accessibility label.
+    /// </summary>
+    [Parameter]
+    public string AriaLabel { get; set; } = "Export options";
+
+    private bool IsOpen { get; set; }
+
+    private bool IsExporting { get; set; }
+
+    private void ToggleMenu()
+    {
+        if (IsExporting)
+        {
+            return;
+        }
+
+        IsOpen = !IsOpen;
+    }
+
+    private void CloseMenu()
+    {
+        IsOpen = false;
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseMenu();
+        }
+    }
+
+    private async Task HandleExportAsync(ExportOption option)
+    {
+        if (IsExporting)
+        {
+            return;
+        }
+
+        IsExporting = true;
+        CloseMenu();
+        StateHasChanged();
+
+        var result = await ExportDownloadService.DownloadAsync(option.Href);
+        if (!result.Success)
+        {
+            ToastService.ShowError(result.ErrorMessage ?? "Export failed.");
+        }
+
+        IsExporting = false;
+        StateHasChanged();
+    }
+}

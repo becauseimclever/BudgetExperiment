@@ -11,6 +11,9 @@ All notable changes to Budget Experiment.
 - **client:** GroupedBarChart and StackedBarChart components for multi-series comparisons and composition views
 - **client:** AreaChart component with optional gradient fills
 - **client:** SparkLine, ProgressBar, and RadialGauge components for compact trend and progress visualization
+- **api:** CSV export endpoint for monthly category report
+- **application:** Export service infrastructure with CSV formatter
+- **client:** Export button download handling with loading state and error feedback
 
 ### Testing
 
@@ -18,6 +21,9 @@ All notable changes to Budget Experiment.
 - **client:** bUnit tests for GroupedBarChart and StackedBarChart (empty state, rendering, legend, ARIA)
 - **client:** bUnit tests for AreaChart and large dataset rendering
 - **client:** bUnit tests for SparkLine, ProgressBar, and RadialGauge
+- **api:** ExportController integration test for CSV export
+- **application:** Export service unit tests for CSV formatter and routing
+- **client:** bUnit tests for ExportButton download flow
 
 ## [3.14.1] - 2026-02-08
 

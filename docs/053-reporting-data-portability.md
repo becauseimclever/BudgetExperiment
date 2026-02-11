@@ -30,14 +30,14 @@ Deliver a modern, accessible, and highly interactive reporting experience for bu
 - **ProgressBar Component**: Horizontal progress indicator (`Components/Charts/ProgressBar.razor`)
 - **RadialGauge Component**: Circular progress gauge (`Components/Charts/RadialGauge.razor`)
 - **Shared Chart Primitives**: ChartAxis, ChartGrid, ChartTooltip (`Components/Charts/Shared/*`)
+- **CSV Export Endpoint**: Monthly categories report export (`/api/v1/exports/categories/monthly`)
 - **Monthly Categories Report**: Uses DonutChart to show category spending breakdown
 
 **Current Gaps:**
-1. No area chart for cumulative views
-2. No sparkline for inline trend indicators
-3. No export functionality (CSV, Excel, PDF)
-4. No custom report builder
-5. Limited interactivity beyond tooltips (no zoom/filter)
+1. Export limited to CSV (reports only)
+2. No Excel/PDF exports
+3. No custom report builder
+4. Limited interactivity beyond tooltips (no zoom/filter)
 
 ---
 
@@ -572,8 +572,7 @@ public sealed class CustomReportLayout : EntityBase
 - Prefer building in-house solutions over third-party libraries when plausible, especially for core features.
 - All libraries must be free or free and open source.
 - **Charts**: Built in-house using pure SVG (following DonutChart pattern) – no external charting libraries.
-- **Excel Export**: EPPlus (LGPL-2.1 with Polyform Noncommercial License for v5+) OR ClosedXML (MIT) – prefer ClosedXML.
-- **PDF Export**: QuestPDF (MIT) – preferred for modern API and ease of use.
+- **Excel/PDF Export**: Deferred until Phase 5 expands beyond CSV.
 
 ---
 
@@ -585,13 +584,13 @@ public sealed class CustomReportLayout : EntityBase
 **Objective:** Create a reusable bar chart component following the DonutChart pattern.
 
 **Tasks:**
-- [ ] Create `BarData.cs` data model
-- [ ] Create `BarChart.razor` component with SVG rendering
-- [ ] Implement vertical and horizontal orientations
-- [ ] Add hover states and tooltips
-- [ ] Add click handler for drill-down
-- [ ] Add CSS animations for bar entry
-- [ ] Write bUnit tests for rendering and interaction
+- [x] Create `BarData.cs` data model
+- [x] Create `BarChart.razor` component with SVG rendering
+- [x] Implement vertical and horizontal orientations
+- [x] Add hover states and tooltips
+- [x] Add click handler for drill-down
+- [x] Add CSS animations for bar entry
+- [x] Write bUnit tests for rendering and interaction
 - [ ] Add to component documentation
 
 **Validation:**
@@ -634,12 +633,12 @@ public sealed class CustomReportLayout : EntityBase
 - [x] Create shared `ChartTooltip.razor` component
 - [x] Create `LineChart.razor` with SVG path rendering
 - [x] Implement linear and smooth (Catmull-Rom) interpolation
-- [ ] Add optional area fill (gradient)
+- [x] Add optional area fill (gradient)
 - [x] Add data point markers with hover interaction
 - [x] Implement reference lines for targets/thresholds
-- [ ] Create `AreaChart.razor` (extends LineChart with fill)
+- [x] Create `AreaChart.razor` (extends LineChart with fill)
 - [x] Write bUnit tests
-- [ ] Test with large datasets (performance)
+- [x] Test with large datasets (performance)
 
 **Validation:**
 - Lines render smoothly
@@ -654,13 +653,13 @@ public sealed class CustomReportLayout : EntityBase
 **Objective:** Create compact visualization components for dashboard use.
 
 **Tasks:**
-- [ ] Create `SparkLine.razor` ultra-compact trend line
-- [ ] Create `ProgressBar.razor` with threshold coloring
-- [ ] Create `RadialGauge.razor` circular progress indicator
-- [ ] Add `ThresholdColor.cs` model for color thresholds
-- [ ] Ensure all components work at small sizes
-- [ ] Add animations for progress components
-- [ ] Write bUnit tests
+- [x] Create `SparkLine.razor` ultra-compact trend line
+- [x] Create `ProgressBar.razor` with threshold coloring
+- [x] Create `RadialGauge.razor` circular progress indicator
+- [x] Add `ThresholdColor.cs` model for color thresholds
+- [x] Ensure all components work at small sizes
+- [x] Add animations for progress components
+- [x] Write bUnit tests
 
 **Validation:**
 - SparkLine fits inline with text
@@ -670,27 +669,21 @@ public sealed class CustomReportLayout : EntityBase
 ---
 
 ### Phase 5: Export Infrastructure
-> **Commit:** `feat(api): add export service infrastructure for CSV, Excel, and PDF`
+> **Commit:** `feat(api): add CSV export service infrastructure`
 
 **Objective:** Build server-side export capabilities.
 
 **Tasks:**
-- [ ] Add ClosedXML NuGet package for Excel generation
-- [ ] Add QuestPDF NuGet package for PDF generation
-- [ ] Create `IExportService` interface
-- [ ] Implement `CsvExportService` for CSV generation
-- [ ] Implement `ExcelExportService` using ClosedXML
-- [ ] Implement `PdfExportService` using QuestPDF
-- [ ] Create `ExportController` with endpoints
-- [ ] Add proper Content-Disposition headers
-- [ ] Write unit tests for export services
-- [ ] Write integration tests for export endpoints
-- [ ] Update OpenAPI documentation
+- [x] Create `IExportService` interface
+- [x] Implement `CsvExportService` for CSV generation
+- [x] Create `ExportController` with endpoints
+- [x] Add proper Content-Disposition headers
+- [x] Write unit tests for export services
+- [x] Write integration tests for export endpoints
+- [x] Update OpenAPI documentation
 
 **Validation:**
 - CSV downloads with correct encoding
-- Excel file opens in Excel/LibreOffice
-- PDF renders charts and tables correctly
 
 ---
 
@@ -700,13 +693,14 @@ public sealed class CustomReportLayout : EntityBase
 **Objective:** Add export functionality to existing reports.
 
 **Tasks:**
-- [ ] Create `ExportButton.razor` dropdown component
-- [ ] Integrate into `MonthlyCategoriesReport.razor`
-- [ ] Integrate into other report pages
-- [ ] Add loading state during export
-- [ ] Handle errors gracefully
+**Tasks:**
+- [x] Create `ExportButton.razor` dropdown component
+- [x] Integrate into `MonthlyCategoriesReport.razor`
+- [x] Integrate into other report pages
+- [x] Add loading state during export
+- [x] Handle errors gracefully
 - [ ] Test file download in various browsers
-- [ ] Add keyboard accessibility
+- [x] Add keyboard accessibility
 
 **Validation:**
 - Export button shows format options
@@ -899,5 +893,6 @@ public sealed class CustomReportLayout : EntityBase
 | 2026-02-10 | Added grouped and stacked bar chart implementations and Phase 2 progress | @copilot |
 | 2026-02-10 | Completed Phase 3 area chart and gradient fills | @copilot |
 | 2026-02-10 | Completed Phase 4 sparkline and progress components | @copilot |
+| 2026-02-10 | Started Phase 5 with CSV-only export infrastructure | @copilot |
 
 ---

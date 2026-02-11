@@ -19,6 +19,7 @@
                 <Icon Name="calendar" Size="16" />
                 Calendar
             </a>
+            <ExportButton Options="@ExportOptions" />
         </Actions>
     </PageHeader>
 
@@ -129,6 +130,16 @@
     private string? errorMessage;
     private bool isLoading = true;
     private bool isRetrying;
+
+    private IReadOnlyList<ExportOption> ExportOptions =>
+    [
+        new ExportOption
+        {
+            Label = "Export CSV",
+            Description = "Category totals for the selected range",
+            Href = $"/api/v1/exports/categories/range?startDate={rangeStart:yyyy-MM-dd}&endDate={rangeEnd:yyyy-MM-dd}",
+        },
+    ];
 
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()

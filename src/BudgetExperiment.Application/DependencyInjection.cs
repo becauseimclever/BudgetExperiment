@@ -1,3 +1,4 @@
+using BudgetExperiment.Application.Export;
 using BudgetExperiment.Domain;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +56,8 @@ public static class DependencyInjection
         services.AddScoped<ITransactionMatcher, TransactionMatcher>();
         services.AddScoped<IReconciliationService, ReconciliationService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IExportFormatter, CsvExportService>();
+        services.AddScoped<IExportService, ExportService>();
         return services;
     }
 }

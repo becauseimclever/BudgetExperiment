@@ -18,6 +18,7 @@
                 <Icon Name="calendar" Size="16" />
                 Calendar
             </a>
+            <ExportButton Options="@ExportOptions" />
         </Actions>
     </PageHeader>
 
@@ -151,6 +152,16 @@
 
     private static readonly int[] monthOptions = [6, 12, 24];
 
+    private IReadOnlyList<ExportOption> ExportOptions =>
+    [
+        new ExportOption
+        {
+            Label = "Export CSV",
+            Description = "Monthly income and spending totals",
+            Href = BuildTrendsExportUrl(),
+        },
+    ];
+
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
@@ -253,6 +264,17 @@
         var value = e.Value?.ToString();
         selectedCategoryId = Guid.TryParse(value, out var id) ? id : null;
         await LoadReportAsync();
+    }
+
+    private string BuildTrendsExportUrl()
+    {
+        var url = $"/api/v1/exports/trends?months={selectedMonths}";
+        if (selectedCategoryId.HasValue)
+        {
+            url += $"&categoryId={selectedCategoryId.Value}";
+        }
+
+        return url;
     }
 
     private string GetTrendClass()

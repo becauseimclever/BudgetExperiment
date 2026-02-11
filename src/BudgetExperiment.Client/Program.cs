@@ -88,6 +88,7 @@ builder.Services.AddScoped<IChatApiService, ChatApiService>();
 builder.Services.AddScoped<IChatContextService, ChatContextService>();
 builder.Services.AddScoped<IImportApiService, ImportApiService>();
 builder.Services.AddScoped<IReconciliationApiService, ReconciliationApiService>();
+builder.Services.AddScoped<IExportDownloadService, ExportDownloadService>();
 builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<VersionService>();
