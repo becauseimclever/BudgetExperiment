@@ -1,0 +1,53 @@
+<div class="report-canvas"
+     @ondragover:preventDefault
+     @ondrop="HandleDrop">
+    <div class="report-canvas-header">
+        <h3>Report Canvas</h3>
+        <span class="report-canvas-hint">Drag widgets here</span>
+    </div>
+
+    @if (Layout?.Widgets.Count == 0)
+    {
+        <div class="report-canvas-empty">
+            <Icon Name="plus" Size="18" />
+            <span>Drop widgets to build your report</span>
+        </div>
+    }
+    else
+    {
+        <div class="report-canvas-grid">
+            @foreach (var widget in Layout!.Widgets)
+            {
+                <ReportWidget Widget="widget" OnRemove="OnRemove" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the current layout definition.
+    /// </summary>
+    [Parameter]
+    public CustomReportLayoutDefinition? Layout { get; set; }
+
+    /// <summary>
+    /// Gets or sets the drop callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDropWidget { get; set; }
+
+    /// <summary>
+    /// Gets or sets the widget removal callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnRemove { get; set; }
+
+    private async Task HandleDrop()
+    {
+        if (OnDropWidget.HasDelegate)
+        {
+            await OnDropWidget.InvokeAsync();
+        }
+    }
+}

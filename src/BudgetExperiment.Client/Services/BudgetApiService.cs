@@ -1166,6 +1166,120 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<CustomReportLayoutDto>> GetCustomReportLayoutsAsync()
+    {
+        try
+        {
+            var result = await this._httpClient.GetFromJsonAsync<List<CustomReportLayoutDto>>(
+                "api/v1/custom-reports",
+                JsonOptions);
+            return result ?? new List<CustomReportLayoutDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<CustomReportLayoutDto>();
+        }
+        catch (HttpRequestException)
+        {
+            return new List<CustomReportLayoutDto>();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<CustomReportLayoutDto?> GetCustomReportLayoutAsync(Guid id)
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<CustomReportLayoutDto>(
+                $"api/v1/custom-reports/{id}",
+                JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<CustomReportLayoutDto?> CreateCustomReportLayoutAsync(CustomReportLayoutCreateDto dto)
+    {
+        try
+        {
+            var response = await this._httpClient.PostAsJsonAsync(
+                "api/v1/custom-reports",
+                dto,
+                JsonOptions);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<CustomReportLayoutDto>(JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<CustomReportLayoutDto?> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto)
+    {
+        try
+        {
+            var response = await this._httpClient.PutAsJsonAsync(
+                $"api/v1/custom-reports/{id}",
+                dto,
+                JsonOptions);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<CustomReportLayoutDto>(JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteCustomReportLayoutAsync(Guid id)
+    {
+        try
+        {
+            var response = await this._httpClient.DeleteAsync($"api/v1/custom-reports/{id}");
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId)
     {
         try

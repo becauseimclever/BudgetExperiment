@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<ITransactionMatcher, TransactionMatcher>();
         services.AddScoped<IReconciliationService, ReconciliationService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<ICustomReportLayoutService, CustomReportLayoutService>();
         services.AddScoped<IExportFormatter, CsvExportService>();
         services.AddScoped<IExportService, ExportService>();
         return services;

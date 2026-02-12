@@ -1,0 +1,216 @@
+@page "/reports/custom-builder"
+
+@using System.Text.Json
+@using BudgetExperiment.Client.Models
+
+@inject IBudgetApiService ApiService
+@inject IToastService ToastService
+
+<PageTitle>Custom Report Builder - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Custom Report Builder">
+        <Actions>
+            <button class="btn-secondary" type="button" @onclick="CreateNewLayout" disabled="@isSaving">
+                <Icon Name="plus" Size="16" />
+                New Layout
+            </button>
+            <button class="btn-primary" type="button" @onclick="SaveLayoutAsync" disabled="@isSaving || currentLayout == null">
+                <Icon Name="save" Size="16" />
+                @(isSaving ? "Saving..." : "Save")
+            </button>
+        </Actions>
+    </PageHeader>
+
+    <div class="builder-toolbar">
+        <div class="layout-selector">
+            <label for="layout-select">Layout</label>
+            <select id="layout-select" @onchange="HandleLayoutChange" disabled="@isSaving">
+                <option value="">Select layout</option>
+                @foreach (var layout in layouts)
+                {
+                    <option value="@layout.Id" selected="@(currentLayout?.Id == layout.Id)">@layout.Name</option>
+                }
+            </select>
+        </div>
+        <div class="layout-name">
+            <label for="layout-name">Name</label>
+            <input id="layout-name" type="text" @bind="layoutName" disabled="@isSaving || currentLayout == null" />
+        </div>
+    </div>
+
+    <div class="builder-grid">
+        <WidgetPalette Items="paletteItems" OnDragStart="HandleDragStart" />
+        <ReportCanvas Layout="layoutDefinition" OnDropWidget="HandleDrop" OnRemove="HandleRemoveWidget" />
+    </div>
+</div>
+
+@code {
+    private readonly JsonSerializerOptions jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
+    private IReadOnlyList<CustomReportLayoutDto> layouts = [];
+    private CustomReportLayoutDto? currentLayout;
+    private CustomReportLayoutDefinition layoutDefinition = new();
+    private string layoutName = string.Empty;
+    private string? draggedWidgetType;
+    private bool isSaving;
+
+    private readonly IReadOnlyList<ReportWidgetPaletteItem> paletteItems =
+    [
+        new ReportWidgetPaletteItem
+        {
+            Type = "summary",
+            Title = "Summary Card",
+            Description = "High-level income, spending, and net totals.",
+        },
+        new ReportWidgetPaletteItem
+        {
+            Type = "chart",
+            Title = "Chart",
+            Description = "Drop in a chart placeholder.",
+        },
+        new ReportWidgetPaletteItem
+        {
+            Type = "table",
+            Title = "Data Table",
+            Description = "Tabular breakdown of report data.",
+        },
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLayoutsAsync();
+    }
+
+    private async Task LoadLayoutsAsync()
+    {
+        layouts = await ApiService.GetCustomReportLayoutsAsync();
+        if (layouts.Count > 0)
+        {
+            await SelectLayoutAsync(layouts[0]);
+        }
+        else
+        {
+            layoutDefinition = new CustomReportLayoutDefinition();
+            layoutName = string.Empty;
+        }
+    }
+
+    private async Task SelectLayoutAsync(CustomReportLayoutDto layout)
+    {
+        currentLayout = layout;
+        layoutName = layout.Name;
+        layoutDefinition = DeserializeLayout(layout.LayoutJson);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private CustomReportLayoutDefinition DeserializeLayout(string json)
+    {
+        try
+        {
+            var layout = JsonSerializer.Deserialize<CustomReportLayoutDefinition>(json, jsonOptions);
+            return layout ?? new CustomReportLayoutDefinition();
+        }
+        catch (JsonException)
+        {
+            return new CustomReportLayoutDefinition();
+        }
+    }
+
+    private string SerializeLayout()
+    {
+        return JsonSerializer.Serialize(layoutDefinition, jsonOptions);
+    }
+
+    private async Task CreateNewLayout()
+    {
+        var dto = new CustomReportLayoutCreateDto
+        {
+            Name = "Untitled Report",
+            LayoutJson = JsonSerializer.Serialize(new CustomReportLayoutDefinition(), jsonOptions),
+        };
+
+        var created = await ApiService.CreateCustomReportLayoutAsync(dto);
+        if (created == null)
+        {
+            ToastService.ShowError("Unable to create layout.");
+            return;
+        }
+
+        layouts = await ApiService.GetCustomReportLayoutsAsync();
+        await SelectLayoutAsync(created);
+    }
+
+    private async Task SaveLayoutAsync()
+    {
+        if (currentLayout == null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        var dto = new CustomReportLayoutUpdateDto
+        {
+            Name = layoutName,
+            LayoutJson = SerializeLayout(),
+        };
+
+        var updated = await ApiService.UpdateCustomReportLayoutAsync(currentLayout.Id, dto);
+        if (updated == null)
+        {
+            ToastService.ShowError("Unable to save layout.");
+            isSaving = false;
+            return;
+        }
+
+        layouts = await ApiService.GetCustomReportLayoutsAsync();
+        await SelectLayoutAsync(updated);
+        isSaving = false;
+    }
+
+    private void HandleDragStart(string widgetType)
+    {
+        draggedWidgetType = widgetType;
+    }
+
+    private void HandleDrop()
+    {
+        if (string.IsNullOrWhiteSpace(draggedWidgetType))
+        {
+            return;
+        }
+
+        layoutDefinition.Widgets.Add(new ReportWidgetDefinition
+        {
+            Id = Guid.NewGuid(),
+            Type = draggedWidgetType,
+            Title = paletteItems.First(item => item.Type == draggedWidgetType).Title,
+        });
+
+        draggedWidgetType = null;
+    }
+
+    private void HandleRemoveWidget(Guid widgetId)
+    {
+        var widget = layoutDefinition.Widgets.FirstOrDefault(w => w.Id == widgetId);
+        if (widget != null)
+        {
+            layoutDefinition.Widgets.Remove(widget);
+        }
+    }
+
+    private async Task HandleLayoutChange(ChangeEventArgs args)
+    {
+        if (Guid.TryParse(args.Value?.ToString(), out var layoutId))
+        {
+            var layout = layouts.FirstOrDefault(l => l.Id == layoutId);
+            if (layout != null)
+            {
+                await SelectLayoutAsync(layout);
+            }
+        }
+    }
+}

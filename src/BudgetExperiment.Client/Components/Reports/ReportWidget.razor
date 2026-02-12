@@ -1,0 +1,27 @@
+<div class="report-widget">
+    <div class="report-widget-header">
+        <div class="report-widget-title">@Widget.Title</div>
+        <button type="button" class="report-widget-remove" @onclick="() => OnRemove.InvokeAsync(Widget.Id)">
+            <Icon Name="x" Size="14" />
+            <span class="sr-only">Remove widget</span>
+        </button>
+    </div>
+    <div class="report-widget-body">
+        <div class="report-widget-type">@Widget.Type</div>
+        <p class="report-widget-placeholder">Widget content renders here.</p>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the widget definition.
+    /// </summary>
+    [Parameter]
+    public required ReportWidgetDefinition Widget { get; set; }
+
+    /// <summary>
+    /// Gets or sets the remove callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnRemove { get; set; }
+}

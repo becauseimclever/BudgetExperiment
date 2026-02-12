@@ -1,0 +1,32 @@
+.builder-toolbar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.layout-selector,
+.layout-name {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.layout-selector select,
+.layout-name input {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #e5e7eb);
+    background: var(--color-surface, #fff);
+}
+
+.builder-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(220px, 280px) 1fr;
+}
+
+@media (max-width: 960px) {
+    .builder-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -32,11 +32,13 @@ Deliver a modern, accessible, and highly interactive reporting experience for bu
 - **Shared Chart Primitives**: ChartAxis, ChartGrid, ChartTooltip (`Components/Charts/Shared/*`)
 - **CSV Export Endpoint**: Monthly categories report export (`/api/v1/exports/categories/monthly`)
 - **Monthly Categories Report**: Uses DonutChart to show category spending breakdown
+- **Custom Report Builder (Basic)**: Widget palette + canvas with save/load layouts
+- **Custom Report Layout API**: CRUD endpoints at `/api/v1/custom-reports`
 
 **Current Gaps:**
 1. Export limited to CSV (reports only)
 2. No Excel/PDF exports
-3. No custom report builder
+3. Custom report builder lacks layout grid, widget configuration, and export
 4. Limited interactivity beyond tooltips (no zoom/filter)
 
 ---
@@ -464,6 +466,16 @@ public sealed record ThresholdColor
 | GET | `/api/v1/export/report/{reportType}/pdf` | Export report as PDF |
 | GET | `/api/v1/export/all` | Full data export (ZIP with multiple files) |
 
+#### Custom Report Layout Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/custom-reports` | Get all custom report layouts |
+| GET | `/api/v1/custom-reports/{id}` | Get custom report layout by id |
+| POST | `/api/v1/custom-reports` | Create a custom report layout |
+| PUT | `/api/v1/custom-reports/{id}` | Update a custom report layout |
+| DELETE | `/api/v1/custom-reports/{id}` | Delete a custom report layout |
+
 #### Export Query Parameters
 
 ```
@@ -491,15 +503,16 @@ Content-Disposition: attachment; filename="transactions_2026-01-01_2026-01-31.cs
 #### Layout Entity
 
 ```csharp
-public sealed class CustomReportLayout : EntityBase
+public sealed class CustomReportLayout
 {
-    public required Guid UserId { get; init; }
-    public required string Name { get; set; }
-    public string? Description { get; set; }
-    public required string LayoutJson { get; set; } // Serialized widget positions
-    public bool IsDefault { get; set; } = false;
-    public DateTime CreatedAtUtc { get; init; }
-    public DateTime UpdatedAtUtc { get; set; }
+  public Guid Id { get; private set; }
+  public string Name { get; private set; } = string.Empty;
+  public string LayoutJson { get; private set; } = "{}";
+  public DateTime CreatedAtUtc { get; private set; }
+  public DateTime UpdatedAtUtc { get; private set; }
+  public BudgetScope Scope { get; private set; }
+  public Guid? OwnerUserId { get; private set; }
+  public Guid CreatedByUserId { get; private set; }
 }
 ```
 
@@ -507,31 +520,28 @@ public sealed class CustomReportLayout : EntityBase
 
 ```json
 {
-  "version": 1,
   "widgets": [
     {
-      "id": "widget-1",
-      "type": "donut-chart",
-      "title": "Category Spending",
-      "config": {
-        "reportType": "categories",
-        "dateRange": "current-month"
-      },
-      "position": { "x": 0, "y": 0, "width": 6, "height": 4 }
+      "id": "6f9a64b3-1fb5-45f3-8f51-7f6f1b1b7c31",
+      "type": "summary",
+      "title": "Summary Card"
     },
     {
-      "id": "widget-2",
-      "type": "bar-chart",
-      "title": "Budget vs Actual",
-      "config": {
-        "reportType": "budget-comparison",
-        "showLegend": true
-      },
-      "position": { "x": 6, "y": 0, "width": 6, "height": 4 }
+      "id": "c7edb3f8-6ccf-4f14-a48b-7a0b9f5e7c24",
+      "type": "chart",
+      "title": "Chart"
     }
   ]
 }
 ```
+
+#### Drag-and-Drop Layout Creation
+
+- The widget palette exposes available widgets with drag handles.
+- Dropping onto the canvas appends a new widget to the layout.
+- Widgets are saved in the order they are added.
+- Layout changes persist on save and reload.
+- Grid positioning and widget sizing are deferred to Phase 8.
 
 #### Widget Types
 
@@ -693,7 +703,6 @@ public sealed class CustomReportLayout : EntityBase
 **Objective:** Add export functionality to existing reports.
 
 **Tasks:**
-**Tasks:**
 - [x] Create `ExportButton.razor` dropdown component
 - [x] Integrate into `MonthlyCategoriesReport.razor`
 - [x] Integrate into other report pages
@@ -715,14 +724,14 @@ public sealed class CustomReportLayout : EntityBase
 **Objective:** Create the custom report builder page with widget palette.
 
 **Tasks:**
-- [ ] Create `CustomReportLayout` domain entity
-- [ ] Create `CustomReportLayoutDto` contract
-- [ ] Add API endpoints for CRUD operations
-- [ ] Create `CustomReportBuilder.razor` page
-- [ ] Create `WidgetPalette.razor` component
-- [ ] Create `ReportCanvas.razor` drop zone
-- [ ] Implement basic drag-and-drop (native HTML5 or minimal JS interop)
-- [ ] Create `ReportWidget.razor` wrapper
+- [x] Create `CustomReportLayout` domain entity
+- [x] Create `CustomReportLayoutDto` contract
+- [x] Add API endpoints for CRUD operations
+- [x] Create `CustomReportBuilder.razor` page
+- [x] Create `WidgetPalette.razor` component
+- [x] Create `ReportCanvas.razor` drop zone
+- [x] Implement basic drag-and-drop (native HTML5 or minimal JS interop)
+- [x] Create `ReportWidget.razor` wrapper
 - [ ] Write tests
 
 **Validation:**
@@ -734,6 +743,7 @@ public sealed class CustomReportLayout : EntityBase
 
 ### Phase 8: Custom Report Builder - Advanced
 > **Commit:** `feat(client): enhance custom report builder with widget configuration`
+> **Note:** Add configuration panel, grid layout, and snapping behavior for widgets.
 
 **Objective:** Add widget configuration and refinements.
 

@@ -1,0 +1,40 @@
+.report-canvas {
+    background: var(--color-surface, #fff);
+    border: 2px dashed var(--color-border, #e5e7eb);
+    border-radius: var(--radius-lg, 12px);
+    padding: 1rem;
+    min-height: 320px;
+}
+
+.report-canvas-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.report-canvas-header h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.report-canvas-hint {
+    font-size: 0.85rem;
+    color: var(--color-text-muted, #6b7280);
+}
+
+.report-canvas-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    border-radius: 10px;
+    background: var(--color-surface-alt, #f9fafb);
+    color: var(--color-text-muted, #6b7280);
+}
+
+.report-canvas-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}

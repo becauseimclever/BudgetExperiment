@@ -1,0 +1,39 @@
+.widget-palette {
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-md, 10px);
+    padding: 1rem;
+}
+
+.widget-palette-title {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.widget-palette-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.widget-palette-item {
+    border: 1px dashed var(--color-border, #e5e7eb);
+    border-radius: 8px;
+    padding: 0.75rem;
+    cursor: grab;
+    background: var(--color-surface, #fff);
+}
+
+.widget-palette-item:active {
+    cursor: grabbing;
+}
+
+.widget-palette-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.widget-palette-description {
+    font-size: 0.85rem;
+    color: var(--color-text-muted, #6b7280);
+}

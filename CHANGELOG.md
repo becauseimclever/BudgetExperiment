@@ -14,6 +14,13 @@ All notable changes to Budget Experiment.
 - **api:** CSV export endpoint for monthly category report
 - **application:** Export service infrastructure with CSV formatter
 - **client:** Export button download handling with loading state and error feedback
+- **domain:** Custom report layout entity and repository contract
+- **infrastructure:** EF Core configuration, DbSet, and repository for custom report layouts
+- **application:** Custom report layout service with scope-aware CRUD operations
+- **api:** Custom report layout CRUD endpoints (`/api/v1/custom-reports`)
+- **client:** Custom report builder page with widget palette, canvas, and placeholder widgets
+- **client:** Custom report layout CRUD methods in BudgetApiService
+- **client:** Reports index card for custom report builder
 
 ### Testing
 
@@ -24,6 +31,10 @@ All notable changes to Budget Experiment.
 - **api:** ExportController integration test for CSV export
 - **application:** Export service unit tests for CSV formatter and routing
 - **client:** bUnit tests for ExportButton download flow
+
+### Documentation
+
+- **docs:** Update Feature 053 spec for custom report builder layout, endpoints, and Phase 7 status
 
 ## [3.14.1] - 2026-02-08
 
