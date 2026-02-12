@@ -61,4 +61,19 @@ public class CsvExportServiceTests
         csv.ShouldContain("\"Contains, comma\"");
         csv.ShouldContain("\"He said \"\"Hello\"\"\"");
     }
+
+    [Fact]
+    public async Task ExportTableAsync_Handles_Empty_Rows()
+    {
+        // Arrange
+        var table = new ExportTable("Empty", ["Name", "Amount"], []);
+        var service = new CsvExportService();
+
+        // Act
+        var bytes = await service.ExportTableAsync(table, CancellationToken.None);
+        var csv = Encoding.UTF8.GetString(bytes);
+
+        // Assert
+        csv.ShouldContain("Name,Amount");
+    }
 }

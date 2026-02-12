@@ -42,4 +42,25 @@ public class ProgressBarTests : BunitContext
         var bar = cut.Find(".progress-bar");
         Assert.Equal("Progress status", bar.GetAttribute("aria-label"));
     }
+
+    [Fact]
+    public void ProgressBar_Uses_Threshold_Color()
+    {
+        // Arrange
+        var thresholds = new List<ThresholdColor>
+        {
+            new() { MinPercent = 0m, Color = "#00ff00", Label = "On track" },
+            new() { MinPercent = 80m, Color = "#ff0000", Label = "Over" },
+        };
+
+        // Act
+        var cut = Render<ProgressBar>(parameters => parameters
+            .Add(p => p.Value, 90m)
+            .Add(p => p.MaxValue, 100m)
+            .Add(p => p.Thresholds, thresholds));
+
+        // Assert
+        var fill = cut.Find(".progress-bar-fill");
+        Assert.Contains("#ff0000", fill.GetAttribute("style"));
+    }
 }

@@ -23,4 +23,20 @@ public sealed class ReportWidgetDefinition
     /// Gets or sets the widget title.
     /// </summary>
     public string Title { get; set; } = "Widget";
+
+    /// <summary>
+    /// Gets or sets the grid layouts per breakpoint.
+    /// </summary>
+    public Dictionary<string, ReportWidgetLayoutPosition> Layouts { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Gets or sets sizing constraints for the widget.
+    /// </summary>
+    public ReportWidgetConstraints? Constraints { get; set; }
+
+    /// <summary>
+    /// Gets or sets the widget configuration.
+    /// </summary>
+    public ReportWidgetConfigDefinition? Config { get; set; }
 }

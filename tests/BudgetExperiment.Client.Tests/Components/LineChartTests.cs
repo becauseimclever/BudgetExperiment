@@ -189,4 +189,26 @@ public class LineChartTests : BunitContext
         var path = cut.FindAll("path.line-path");
         Assert.Single(path);
     }
+
+    [Fact]
+    public void LineChart_SmoothInterpolation_Uses_Curve_Path()
+    {
+        // Arrange
+        var data = new List<LineData>
+        {
+            new() { Label = "Jan", Value = 200m },
+            new() { Label = "Feb", Value = 400m },
+            new() { Label = "Mar", Value = 300m },
+        };
+
+        // Act
+        var cut = Render<LineChart>(parameters => parameters
+            .Add(p => p.Data, data)
+            .Add(p => p.Interpolation, "smooth"));
+
+        // Assert
+        var path = cut.Find("path.line-path");
+        var d = path.GetAttribute("d") ?? string.Empty;
+        Assert.Contains("C", d);
+    }
 }

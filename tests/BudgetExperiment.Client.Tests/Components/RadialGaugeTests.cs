@@ -51,4 +51,31 @@ public class RadialGaugeTests : BunitContext
         var gauge = cut.Find(".radial-gauge");
         Assert.Equal("Gauge status", gauge.GetAttribute("aria-label"));
     }
+
+    [Fact]
+    public void RadialGauge_Calculates_DashOffset()
+    {
+        // Arrange
+        const int size = 120;
+        const int strokeWidth = 10;
+        var value = 50m;
+        var max = 100m;
+
+        // Act
+        var cut = Render<RadialGauge>(parameters => parameters
+            .Add(p => p.Value, value)
+            .Add(p => p.MaxValue, max)
+            .Add(p => p.Size, size)
+            .Add(p => p.StrokeWidth, strokeWidth));
+
+        // Assert
+        var progress = cut.Find(".radial-gauge-progress");
+        var dashOffset = double.Parse(progress.GetAttribute("stroke-dashoffset") ?? "0", System.Globalization.CultureInfo.InvariantCulture);
+
+        var radius = (size - strokeWidth) / 2d - 2d;
+        var circumference = 2 * Math.PI * radius;
+        var expected = circumference * (1 - (double)(value / max));
+
+        Assert.InRange(dashOffset, expected - 0.2, expected + 0.2);
+    }
 }

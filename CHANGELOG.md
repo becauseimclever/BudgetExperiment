@@ -21,6 +21,11 @@ All notable changes to Budget Experiment.
 - **client:** Custom report builder page with widget palette, canvas, and placeholder widgets
 - **client:** Custom report layout CRUD methods in BudgetApiService
 - **client:** Reports index card for custom report builder
+- **client:** Custom report builder grid layout with drag/resize snapping and widget presets
+- **client:** Widget configuration panel with title editing and per-widget options
+- **client:** Report widget actions for selection, duplicate, and delete
+- **client:** BarChart click events for drill-down
+- **client:** Component showcase page for charts and exports
 
 ### Testing
 
@@ -31,10 +36,20 @@ All notable changes to Budget Experiment.
 - **api:** ExportController integration test for CSV export
 - **application:** Export service unit tests for CSV formatter and routing
 - **client:** bUnit tests for ExportButton download flow
+- **client:** bUnit tests for BarChart click/colors, LineChart smooth interpolation, StackedBarChart segment heights, ProgressBar thresholds, and RadialGauge dash offsets
+- **client:** bUnit tests for report builder components (ReportWidget, WidgetConfigPanel)
+- **api:** Export controller auth tests for CSV endpoints
+- **e2e:** Report chart interaction tests (tooltips, drill-down)
+- **e2e:** Report export flow test for CSV download
+- **e2e:** Custom report builder tests for drag/select and save/reload
+- **e2e:** Accessibility coverage expanded to report pages
 
 ### Documentation
 
 - **docs:** Update Feature 053 spec for custom report builder layout, endpoints, and Phase 7 status
+- **docs:** Feature 053 updates for grid layout, presets, tests, and deferred items
+- **docs:** Chart component standards added to component guidelines
+- **readme:** Reports and component showcase documentation updates
 
 ## [3.14.1] - 2026-02-08
 

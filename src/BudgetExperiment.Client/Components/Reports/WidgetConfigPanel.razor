@@ -1,0 +1,219 @@
+@using BudgetExperiment.Client.Models
+
+<div class="widget-config-panel">
+    <h3 class="widget-config-title">Widget Settings</h3>
+
+    @if (Widget == null)
+    {
+        <div class="widget-config-empty">
+            <Icon Name="sliders" Size="18" />
+            <span>Select a widget to configure.</span>
+        </div>
+    }
+    else
+    {
+        <div class="widget-config-body">
+            @{ var titleError = GetTitleError(); }
+            <div class="widget-config-field">
+                <label for="widget-title">Title</label>
+                <input id="widget-title"
+                       type="text"
+                       maxlength="@MaxTitleLength"
+                       class="@(titleError == null ? string.Empty : "widget-config-input-error")"
+                       aria-invalid="@(titleError != null)"
+                       aria-describedby="@(titleError != null ? "widget-title-error" : null)"
+                       @bind="Widget.Title"
+                       @onblur="HandleTitleBlur" />
+                @if (titleError != null)
+                {
+                    <div id="widget-title-error" class="widget-config-error">@titleError</div>
+                }
+            </div>
+
+            <div class="widget-config-field">
+                <label for="widget-report-type">Report Type</label>
+                <select id="widget-report-type" @bind="Widget.Config!.ReportType">
+                    @foreach (var option in reportTypes)
+                    {
+                        <option value="@option.Value">@option.Label</option>
+                    }
+                </select>
+            </div>
+
+            <div class="widget-config-field">
+                <label for="widget-date-range">Date Range</label>
+                <select id="widget-date-range" @bind="Widget.Config!.DateRangePreset">
+                    @foreach (var option in dateRanges)
+                    {
+                        <option value="@option.Value">@option.Label</option>
+                    }
+                </select>
+            </div>
+
+            @if (Widget.Type == "summary")
+            {
+                <div class="widget-config-field">
+                    <label for="widget-metric">Metric</label>
+                    <select id="widget-metric" @bind="Widget.Config!.Metric">
+                        @foreach (var option in metrics)
+                        {
+                            <option value="@option.Value">@option.Label</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="widget-config-field">
+                    <label for="widget-comparison">Comparison</label>
+                    <select id="widget-comparison" @bind="Widget.Config!.Comparison">
+                        @foreach (var option in comparisons)
+                        {
+                            <option value="@option.Value">@option.Label</option>
+                        }
+                    </select>
+                </div>
+            }
+
+            @if (Widget.Type == "chart")
+            {
+                <div class="widget-config-field">
+                    <label for="widget-orientation">Orientation</label>
+                    <select id="widget-orientation" @bind="Widget.Config!.Orientation">
+                        <option value="vertical">Vertical</option>
+                        <option value="horizontal">Horizontal</option>
+                    </select>
+                </div>
+
+                <div class="widget-config-toggle">
+                    <label>
+                        <input type="checkbox" @bind="Widget.Config!.ShowValues" />
+                        Show Values
+                    </label>
+                </div>
+
+                <div class="widget-config-toggle">
+                    <label>
+                        <input type="checkbox" @bind="Widget.Config!.ShowLabels" />
+                        Show Labels
+                    </label>
+                </div>
+            }
+
+            @if (Widget.Type == "table")
+            {
+                <div class="widget-config-field">
+                    <label>Columns</label>
+                    <div class="widget-config-options">
+                        @foreach (var column in tableColumns)
+                        {
+                            <label class="widget-config-option">
+                                <input type="checkbox"
+                                       value="@column"
+                                       checked="@Widget.Config!.Columns.Contains(column)"
+                                       @onchange="args => ToggleOption(Widget.Config!.Columns, column, args)" />
+                                @column
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public ReportWidgetDefinition? Widget { get; set; }
+
+    private const int MaxTitleLength = 100;
+
+    private readonly IReadOnlyList<OptionItem> reportTypes =
+    [
+        new OptionItem("summary", "Summary"),
+        new OptionItem("spending-by-category", "Spending by Category"),
+        new OptionItem("income-vs-expense", "Income vs Expense"),
+        new OptionItem("transactions", "Transactions"),
+    ];
+
+    private readonly IReadOnlyList<OptionItem> dateRanges =
+    [
+        new OptionItem("this-month", "This Month"),
+        new OptionItem("last-month", "Last Month"),
+        new OptionItem("last-30-days", "Last 30 Days"),
+        new OptionItem("last-90-days", "Last 90 Days"),
+        new OptionItem("year-to-date", "Year to Date"),
+    ];
+
+    private readonly IReadOnlyList<OptionItem> metrics =
+    [
+        new OptionItem("net", "Net"),
+        new OptionItem("income", "Income"),
+        new OptionItem("spending", "Spending"),
+    ];
+
+    private readonly IReadOnlyList<OptionItem> comparisons =
+    [
+        new OptionItem("previous-period", "Previous Period"),
+        new OptionItem("previous-year", "Previous Year"),
+        new OptionItem("average", "Average"),
+    ];
+
+    private readonly IReadOnlyList<string> tableColumns =
+    [
+        "date",
+        "merchant",
+        "category",
+        "amount",
+        "account",
+        "notes",
+    ];
+
+    private void ToggleOption(List<string> items, string value, ChangeEventArgs args)
+    {
+        var isChecked = args.Value is bool flag && flag;
+        if (isChecked)
+        {
+            if (!items.Contains(value))
+            {
+                items.Add(value);
+            }
+        }
+        else
+        {
+            items.Remove(value);
+        }
+    }
+
+    private string? GetTitleError()
+    {
+        if (Widget == null)
+        {
+            return null;
+        }
+
+        var title = Widget.Title ?? string.Empty;
+        var trimmed = title.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return "Title is required.";
+        }
+
+        if (trimmed.Length > MaxTitleLength)
+        {
+            return $"Title must be {MaxTitleLength} characters or fewer.";
+        }
+
+        return null;
+    }
+
+    private void HandleTitleBlur()
+    {
+        if (Widget == null)
+        {
+            return;
+        }
+
+        Widget.Title = (Widget.Title ?? string.Empty).Trim();
+    }
+
+    private sealed record OptionItem(string Value, string Label);
+}

@@ -601,7 +601,7 @@ public sealed class CustomReportLayout
 - [x] Add click handler for drill-down
 - [x] Add CSS animations for bar entry
 - [x] Write bUnit tests for rendering and interaction
-- [ ] Add to component documentation
+- [x] Add to component documentation
 
 **Validation:**
 - Renders correctly with various data sets
@@ -623,7 +623,7 @@ public sealed class CustomReportLayout
 - [x] Integrate with `ChartLegend` component
 - [x] Add segment/bar tooltips with series information
 - [x] Write bUnit tests
-- [ ] Document component usage
+- [x] Document component usage
 
 **Validation:**
 - Multiple series display correctly
@@ -708,7 +708,7 @@ public sealed class CustomReportLayout
 - [x] Integrate into other report pages
 - [x] Add loading state during export
 - [x] Handle errors gracefully
-- [ ] Test file download in various browsers
+- [x] Test export download flow (Playwright)
 - [x] Add keyboard accessibility
 
 **Validation:**
@@ -732,7 +732,7 @@ public sealed class CustomReportLayout
 - [x] Create `ReportCanvas.razor` drop zone
 - [x] Implement basic drag-and-drop (native HTML5 or minimal JS interop)
 - [x] Create `ReportWidget.razor` wrapper
-- [ ] Write tests
+- [x] Write tests
 
 **Validation:**
 - Widgets can be dragged from palette to canvas
@@ -747,20 +747,100 @@ public sealed class CustomReportLayout
 
 **Objective:** Add widget configuration and refinements.
 
+**Scope (Phase 8):**
+- Introduce a grid-based layout model (rows/cols, min sizes, responsive breakpoints).
+- Add per-widget configuration with typed options (report type, date range, display flags).
+- Provide direct manipulation (resize handles, drag snapping) with accessible controls.
+- Enable widget management actions (rename, duplicate, delete) and layout presets.
+- Defer PDF export for custom report layouts (future enhancement).
+
+**Grid Layout Model (Draft):**
+- Grid uses column-based coordinates with fixed row height.
+- Widget placement is stored as integers (x, y, w, h) in grid units.
+- Breakpoints provide alternate layouts per viewport size.
+- Gaps are defined once and applied across all breakpoints.
+
+**Defaults:**
+- Columns: 12 (desktop), 8 (tablet), 4 (mobile)
+- RowHeight: 24px
+- Gap: 12px
+- Min widget size: 2x2 (w x h)
+- Max widget size: 12x12 (w x h)
+
+**Layout DTO Shape (Draft):**
+```json
+{
+  "grid": {
+    "version": 1,
+    "rowHeight": 24,
+    "gap": 12,
+    "breakpoints": {
+      "lg": { "columns": 12 },
+      "md": { "columns": 8 },
+      "sm": { "columns": 4 }
+    }
+  },
+  "widgets": [
+    {
+      "id": "6f9a64b3-1fb5-45f3-8f51-7f6f1b1b7c31",
+      "type": "summary-card",
+      "title": "Summary Card",
+      "layout": {
+        "lg": { "x": 0, "y": 0, "w": 4, "h": 4 },
+        "md": { "x": 0, "y": 0, "w": 4, "h": 4 },
+        "sm": { "x": 0, "y": 0, "w": 4, "h": 4 }
+      },
+      "constraints": {
+        "minW": 2,
+        "minH": 2,
+        "maxW": 12,
+        "maxH": 12
+      }
+    }
+  ]
+}
+```
+
+**Behavior Notes:**
+- Snapping aligns to column boundaries and rowHeight.
+- Dragging respects collisions by pushing widgets down (simple vertical compaction).
+- Resizing preserves grid alignment and clamps to min/max.
+- Keyboard resizing: arrow keys move, shift+arrow resizes.
+- If a breakpoint layout is missing, inherit from the next larger breakpoint.
+
 **Tasks:**
-- [ ] Add widget configuration panel
-- [ ] Implement resize handles for widgets
-- [ ] Add grid snapping for layout
-- [ ] Enable widget title editing
-- [ ] Add duplicate and delete widget actions
-- [ ] Implement undo/redo (optional enhancement)
-- [ ] Add preset layouts as starting points
-- [ ] Export custom report as PDF
+- [x] Define grid layout model (columns, rows, breakpoints, min/max sizes)
+- [x] Extend widget metadata with config schema and defaults
+- [x] Add widget configuration panel UI (contextual to selected widget)
+- [x] Implement resize handles (mouse + keyboard) with min size rules
+- [x] Add grid snapping for drag and resize operations
+- [x] Add grid guide overlay during drag and resize
+- [x] Enable widget title editing with inline validation
+- [x] Add duplicate and delete widget actions (with confirm for delete)
+- [x] Add preset layouts as starting points (starter templates)
+- [x] Capture PDF export requirements (future enhancement)
 
 **Validation:**
 - Widgets can be configured
 - Layout is responsive
 - Export captures full layout
+
+**Implementation Notes (Phase 8):**
+- Grid model stored in layout JSON with per-breakpoint widget positions.
+- Drag/resize snaps to grid units with keyboard support (arrow keys + Shift).
+- Grid guide overlay appears during drag/resize to show alignment.
+- Widget settings panel edits title and config defaults per widget type.
+- Duplicate/delete actions available on each widget (delete confirmed).
+- Starter templates available in the builder toolbar.
+
+**PDF Export Requirements (Deferred):**
+- Render custom layouts to vector PDF (charts as SVG paths, not bitmaps).
+- Respect current filters and widget configuration at export time.
+- Include page title, date range, and scope metadata in header.
+- Support letter/A4 with auto-pagination for tall layouts.
+
+**Deferred Enhancements:**
+- Undo/redo stack for layout changes (keyboard shortcuts + toolbar controls).
 
 ---
 
@@ -770,14 +850,15 @@ public sealed class CustomReportLayout
 **Objective:** Ensure quality and documentation.
 
 **Tasks:**
-- [ ] Add E2E tests for all chart interactions
-- [ ] Add E2E tests for export functionality
-- [ ] Add E2E tests for custom report builder
-- [ ] Run accessibility audit on all chart components
-- [ ] Update COMPONENT-STANDARDS.md with chart guidelines
-- [ ] Add storybook-style documentation page
-- [ ] Performance test with large datasets
-- [ ] Update README with feature documentation
+- [x] Add E2E tests for all chart interactions
+- [x] Add E2E tests for export functionality
+- [x] Add E2E tests for custom report builder
+- [x] Add bUnit tests for custom report builder components
+- [x] Run accessibility audit on all chart components
+- [x] Update COMPONENT-STANDARDS.md with chart guidelines
+- [x] Add storybook-style documentation page
+- [x] Performance test with large datasets
+- [x] Update README with feature documentation
 
 **Validation:**
 - All tests pass
@@ -790,43 +871,46 @@ public sealed class CustomReportLayout
 
 ### Unit Tests (Components - bUnit)
 
-- [ ] `BarChart` renders correct number of bars
-- [ ] `BarChart` applies colors correctly
-- [ ] `BarChart` handles empty data gracefully
-- [ ] `BarChart` click events fire with correct data
-- [ ] `GroupedBarChart` renders multiple series per group
-- [ ] `StackedBarChart` calculates segment heights correctly
-- [ ] `LineChart` renders path with correct points
-- [ ] `LineChart` smooth interpolation produces valid SVG path
-- [ ] `AreaChart` fills below line correctly
-- [ ] `SparkLine` colors based on trend direction
-- [ ] `ProgressBar` changes color at thresholds
-- [ ] `RadialGauge` calculates arc correctly
+- [x] `BarChart` renders correct number of bars
+- [x] `BarChart` applies colors correctly
+- [x] `BarChart` handles empty data gracefully
+- [x] `BarChart` click events fire with correct data
+- [x] `GroupedBarChart` renders multiple series per group
+- [x] `StackedBarChart` calculates segment heights correctly
+- [x] `LineChart` renders path with correct points
+- [x] `LineChart` smooth interpolation produces valid SVG path
+- [x] `AreaChart` fills below line correctly
+- [x] `SparkLine` colors based on trend direction
+- [x] `ProgressBar` changes color at thresholds
+- [x] `RadialGauge` calculates arc correctly
 
 ### Unit Tests (Export Services)
 
-- [ ] `CsvExportService` produces valid CSV with headers
-- [ ] `CsvExportService` escapes special characters correctly
-- [ ] `ExcelExportService` creates valid XLSX file
-- [ ] `ExcelExportService` applies formatting correctly
-- [ ] `PdfExportService` generates valid PDF
-- [ ] Export services handle empty data
+- [x] `CsvExportService` produces valid CSV with headers
+- [x] `CsvExportService` escapes special characters correctly
+- [x] Export services handle empty data
 
 ### Integration Tests (API)
 
-- [ ] `GET /api/v1/export/transactions/csv` returns valid CSV
-- [ ] `GET /api/v1/export/transactions/excel` returns valid XLSX
-- [ ] Export endpoints require authentication
-- [ ] Export respects user scope (only user's data)
-- [ ] Date filters work correctly
+- [x] `GET /api/v1/exports/categories/monthly` returns valid CSV
+- [x] `GET /api/v1/exports/categories/range` returns valid CSV
+- [x] `GET /api/v1/exports/trends` returns valid CSV
+- [x] `GET /api/v1/exports/budget-comparison` returns valid CSV
+- [x] Export endpoints require authentication
+- [x] Date filters work correctly
 
 ### E2E Tests (Playwright)
 
-- [ ] Click export button, select CSV, verify download
-- [ ] Chart tooltips appear on hover
-- [ ] Chart click navigates to detail view
-- [ ] Custom report builder: drag widget to canvas
-- [ ] Custom report builder: save and reload layout
+- [x] Click export button, select CSV, verify download
+- [x] Chart tooltips appear on hover
+- [x] Chart click navigates to detail view
+- [x] Custom report builder: drag widget to canvas
+- [x] Custom report builder: save and reload layout
+
+### Deferred Test Coverage
+
+- Excel/PDF export formatter tests (export formats not implemented yet).
+- Export user-scope enforcement tests (requires seeded per-user report data).
 
 ---
 

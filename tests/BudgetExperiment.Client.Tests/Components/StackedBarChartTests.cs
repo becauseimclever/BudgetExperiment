@@ -130,4 +130,42 @@ public class StackedBarChartTests : BunitContext
         var svg = cut.Find("svg.stacked-bar-chart");
         Assert.Equal("Stacked chart", svg.GetAttribute("aria-label"));
     }
+
+    [Fact]
+    public void StackedBarChart_Segment_Heights_Respect_Values()
+    {
+        // Arrange
+        var data = new List<GroupedBarData>
+        {
+            new()
+            {
+                GroupId = "jan",
+                GroupLabel = "Jan",
+                Values = new Dictionary<string, decimal>
+                {
+                    ["income"] = 1200m,
+                    ["spending"] = 400m,
+                },
+            },
+        };
+
+        var series = new List<BarSeriesDefinition>
+        {
+            new() { Id = "income", Label = "Income", Color = "#10B981" },
+            new() { Id = "spending", Label = "Spending", Color = "#EF4444" },
+        };
+
+        // Act
+        var cut = Render<StackedBarChart>(parameters => parameters
+            .Add(p => p.Data, data)
+            .Add(p => p.Series, series));
+
+        // Assert
+        var segments = cut.FindAll("rect.stacked-bar-segment");
+        Assert.Equal(2, segments.Count);
+
+        var firstHeight = double.Parse(segments[0].GetAttribute("height") ?? "0", System.Globalization.CultureInfo.InvariantCulture);
+        var secondHeight = double.Parse(segments[1].GetAttribute("height") ?? "0", System.Globalization.CultureInfo.InvariantCulture);
+        Assert.True(firstHeight > secondHeight);
+    }
 }

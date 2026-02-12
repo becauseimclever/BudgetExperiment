@@ -60,6 +60,7 @@
                               @onfocusout="HandleBarHoverEnd"
                               @onmouseenter="() => HandleBarHover(rect.GroupLabel, rect.SeriesName, rect.Value)"
                               @onmouseleave="HandleBarHoverEnd"
+                              @onclick="() => HandleBarClick(rect)"
                               aria-label="@rect.AriaLabel" />
                     }
                 }
