@@ -1,0 +1,41 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "E2E: Functional 062 (Local)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"c:\\ws\\BudgetExperiment\\tests\\BudgetExperiment.E2E.Tests\\BudgetExperiment.E2E.Tests.csproj",
+				"--filter",
+				"Category=Functional"
+			],
+			"options": {
+				"env": {
+					"RUN_E2E_TESTS": "true",
+					"BUDGET_APP_URL": "http://localhost:5099"
+				}
+			},
+			"group": "test"
+		},
+		{
+			"label": "E2E: Functional 062 (DemoSafe)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"c:\\ws\\BudgetExperiment\\tests\\BudgetExperiment.E2E.Tests\\BudgetExperiment.E2E.Tests.csproj",
+				"--filter",
+				"Category=Functional&Category=DemoSafe"
+			],
+			"options": {
+				"env": {
+					"RUN_E2E_TESTS": "true",
+					"BUDGET_APP_URL": "https://budgetdemo.becauseimclever.com"
+				}
+			},
+			"group": "test"
+		}
+	]
+}
