@@ -1,0 +1,464 @@
+@page "/reports/custom-builder"
+
+@using System.Text.Json
+@using BudgetExperiment.Client.Models
+
+@inject IBudgetApiService ApiService
+@inject IJSRuntime JsRuntime
+@inject IToastService ToastService
+
+<PageTitle>Custom Report Builder - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Custom Report Builder">
+        <Actions>
+            <button class="btn-secondary" type="button" @onclick="CreateNewLayout" disabled="@isSaving">
+                <Icon Name="plus" Size="16" />
+                New Layout
+            </button>
+            <button class="btn-primary" type="button" @onclick="SaveLayoutAsync" disabled="@isSaving || currentLayout == null">
+                <Icon Name="save" Size="16" />
+                @(isSaving ? "Saving..." : "Save")
+            </button>
+        </Actions>
+    </PageHeader>
+
+    <div class="builder-toolbar">
+        <div class="layout-selector">
+            <label for="layout-select">Layout</label>
+            <select id="layout-select" @onchange="HandleLayoutChange" disabled="@isSaving">
+                <option value="">Select layout</option>
+                @foreach (var savedLayout in layouts)
+                {
+                    <option value="@savedLayout.Id" selected="@(currentLayout?.Id == savedLayout.Id)">@savedLayout.Name</option>
+                }
+            </select>
+        </div>
+        <div class="layout-name">
+            <label for="layout-name">Name</label>
+            <input id="layout-name" type="text" @bind="layoutName" disabled="@isSaving || currentLayout == null" />
+        </div>
+        <div class="layout-preset">
+            <label for="layout-preset">Starter Template</label>
+            <div class="layout-preset-controls">
+                <select id="layout-preset" @bind="selectedPresetId" disabled="@isSaving">
+                    <option value="">Select template</option>
+                    @foreach (var preset in layoutPresets)
+                    {
+                        <option value="@preset.Id">@preset.Name</option>
+                    }
+                </select>
+                <button class="btn-secondary" type="button" @onclick="ApplyPresetAsync" disabled="@isSaving || string.IsNullOrWhiteSpace(selectedPresetId)">
+                    Apply
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="builder-grid">
+        <WidgetPalette Items="paletteItems" OnDragStart="HandleDragStart" />
+        <ReportCanvas ReportLayout="layoutDefinition"
+                      SelectedWidgetId="selectedWidgetId"
+                      OnSelectWidget="HandleSelectWidget"
+                      OnDropWidget="HandleDrop"
+                      OnDuplicate="HandleDuplicateWidget"
+                      OnRemove="HandleRemoveWidget" />
+        <WidgetConfigPanel Widget="SelectedWidget" />
+    </div>
+</div>
+
+@code {
+    private readonly JsonSerializerOptions jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
+    private IReadOnlyList<CustomReportLayoutDto> layouts = [];
+    private CustomReportLayoutDto? currentLayout;
+    private CustomReportLayoutDefinition layoutDefinition = new();
+    private string layoutName = string.Empty;
+    private string? draggedWidgetType;
+    private Guid? selectedWidgetId;
+    private string? selectedPresetId;
+    private bool isSaving;
+
+    private readonly IReadOnlyList<ReportWidgetPaletteItem> paletteItems =
+    [
+        new ReportWidgetPaletteItem
+        {
+            Type = "summary",
+            Title = "Summary Card",
+            Description = "High-level income, spending, and net totals.",
+        },
+        new ReportWidgetPaletteItem
+        {
+            Type = "chart",
+            Title = "Chart",
+            Description = "Drop in a chart placeholder.",
+        },
+        new ReportWidgetPaletteItem
+        {
+            Type = "table",
+            Title = "Data Table",
+            Description = "Tabular breakdown of report data.",
+        },
+    ];
+
+    private readonly IReadOnlyList<LayoutPresetDefinition> layoutPresets =
+    [
+        new LayoutPresetDefinition("summary-trend", "Summary + Trend", "Summary tiles, trend chart, and a small table.", CreateSummaryTrendPreset),
+        new LayoutPresetDefinition("spending-focus", "Spending Focus", "Category and trend charts with a full-width table.", CreateSpendingFocusPreset),
+        new LayoutPresetDefinition("table-heavy", "Table Heavy", "Large table with summary callouts.", CreateTableHeavyPreset),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLayoutsAsync();
+    }
+
+    private async Task LoadLayoutsAsync()
+    {
+        layouts = await ApiService.GetCustomReportLayoutsAsync();
+        if (layouts.Count > 0)
+        {
+            await SelectLayoutAsync(layouts[0]);
+        }
+        else
+        {
+            layoutDefinition = new CustomReportLayoutDefinition();
+            layoutDefinition.Normalize();
+            layoutName = string.Empty;
+        }
+    }
+
+    private async Task SelectLayoutAsync(CustomReportLayoutDto layout)
+    {
+        currentLayout = layout;
+        layoutName = layout.Name;
+        layoutDefinition = DeserializeLayout(layout.LayoutJson);
+        layoutDefinition.Normalize();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private CustomReportLayoutDefinition DeserializeLayout(string json)
+    {
+        try
+        {
+            var layout = JsonSerializer.Deserialize<CustomReportLayoutDefinition>(json, jsonOptions);
+            return layout ?? new CustomReportLayoutDefinition();
+        }
+        catch (JsonException)
+        {
+            return new CustomReportLayoutDefinition();
+        }
+    }
+
+    private string SerializeLayout()
+    {
+        layoutDefinition.Normalize();
+        return JsonSerializer.Serialize(layoutDefinition, jsonOptions);
+    }
+
+    private async Task CreateNewLayout()
+    {
+        var dto = new CustomReportLayoutCreateDto
+        {
+            Name = "Untitled Report",
+            LayoutJson = JsonSerializer.Serialize(new CustomReportLayoutDefinition(), jsonOptions),
+        };
+
+        var created = await ApiService.CreateCustomReportLayoutAsync(dto);
+        if (created == null)
+        {
+            ToastService.ShowError("Unable to create layout.");
+            return;
+        }
+
+        layouts = await ApiService.GetCustomReportLayoutsAsync();
+        await SelectLayoutAsync(created);
+    }
+
+    private async Task SaveLayoutAsync()
+    {
+        if (currentLayout == null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        var dto = new CustomReportLayoutUpdateDto
+        {
+            Name = layoutName,
+            LayoutJson = SerializeLayout(),
+        };
+
+        var updated = await ApiService.UpdateCustomReportLayoutAsync(currentLayout.Id, dto);
+        if (updated == null)
+        {
+            ToastService.ShowError("Unable to save layout.");
+            isSaving = false;
+            return;
+        }
+
+        layouts = await ApiService.GetCustomReportLayoutsAsync();
+        await SelectLayoutAsync(updated);
+        isSaving = false;
+    }
+
+    private void HandleDragStart(string widgetType)
+    {
+        draggedWidgetType = widgetType;
+    }
+
+    private void HandleDrop()
+    {
+        if (string.IsNullOrWhiteSpace(draggedWidgetType))
+        {
+            return;
+        }
+
+        var widget = new ReportWidgetDefinition
+        {
+            Id = Guid.NewGuid(),
+            Type = draggedWidgetType,
+            Title = paletteItems.First(item => item.Type == draggedWidgetType).Title,
+        };
+
+        layoutDefinition.AddWidget(widget);
+        selectedWidgetId = widget.Id;
+
+        draggedWidgetType = null;
+    }
+
+    private async Task ApplyPresetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(selectedPresetId))
+        {
+            return;
+        }
+
+        var preset = layoutPresets.FirstOrDefault(item => item.Id == selectedPresetId);
+        if (preset == null)
+        {
+            return;
+        }
+
+        if (layoutDefinition.Widgets.Count > 0)
+        {
+            var confirmed = await JsRuntime.InvokeAsync<bool>(
+                "confirm",
+                "Applying a template will replace the current layout. Continue?");
+            if (!confirmed)
+            {
+                return;
+            }
+        }
+
+        layoutDefinition = preset.CreateDefinition();
+        layoutDefinition.Normalize();
+        selectedWidgetId = null;
+    }
+
+    private ReportWidgetDefinition? SelectedWidget
+    {
+        get
+        {
+            if (selectedWidgetId == null)
+            {
+                return null;
+            }
+
+            return layoutDefinition.Widgets.FirstOrDefault(widget => widget.Id == selectedWidgetId);
+        }
+    }
+
+    private void HandleSelectWidget(Guid widgetId)
+    {
+        selectedWidgetId = widgetId;
+    }
+
+    private async Task HandleRemoveWidget(Guid widgetId)
+    {
+        var widget = layoutDefinition.Widgets.FirstOrDefault(w => w.Id == widgetId);
+        if (widget == null)
+        {
+            return;
+        }
+
+        var confirmed = await JsRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"Remove widget '{widget.Title}'?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        layoutDefinition.Widgets.Remove(widget);
+
+        if (selectedWidgetId == widgetId)
+        {
+            selectedWidgetId = null;
+        }
+    }
+
+    private void HandleDuplicateWidget(Guid widgetId)
+    {
+        var widget = layoutDefinition.Widgets.FirstOrDefault(w => w.Id == widgetId);
+        if (widget == null)
+        {
+            return;
+        }
+
+        var clone = CloneWidget(widget);
+        layoutDefinition.AddWidget(clone);
+        selectedWidgetId = clone.Id;
+    }
+
+    private static ReportWidgetDefinition CloneWidget(ReportWidgetDefinition widget)
+    {
+        return new ReportWidgetDefinition
+        {
+            Id = Guid.NewGuid(),
+            Type = widget.Type,
+            Title = widget.Title,
+            Constraints = widget.Constraints == null
+                ? null
+                : new ReportWidgetConstraints
+                {
+                    MinWidth = widget.Constraints.MinWidth,
+                    MinHeight = widget.Constraints.MinHeight,
+                    MaxWidth = widget.Constraints.MaxWidth,
+                    MaxHeight = widget.Constraints.MaxHeight,
+                },
+            Config = widget.Config == null
+                ? null
+                : new ReportWidgetConfigDefinition
+                {
+                    ReportType = widget.Config.ReportType,
+                    DateRangePreset = widget.Config.DateRangePreset,
+                    Metric = widget.Config.Metric,
+                    Comparison = widget.Config.Comparison,
+                    Orientation = widget.Config.Orientation,
+                    ShowValues = widget.Config.ShowValues,
+                    ShowLabels = widget.Config.ShowLabels,
+                    Series = new List<string>(widget.Config.Series),
+                    Columns = new List<string>(widget.Config.Columns),
+                },
+            Layouts = widget.Layouts.ToDictionary(
+                item => item.Key,
+                item => new ReportWidgetLayoutPosition
+                {
+                    X = item.Value.X,
+                    Y = item.Value.Y,
+                    Width = item.Value.Width,
+                    Height = item.Value.Height,
+                },
+                StringComparer.OrdinalIgnoreCase),
+        };
+    }
+
+    private static CustomReportLayoutDefinition CreateSummaryTrendPreset()
+    {
+        var layout = new CustomReportLayoutDefinition();
+        layout.AddWidget(CreateWidget("summary", "Net Summary", CreateLayout(1, 1, 4, 4)));
+        layout.AddWidget(CreateWidget("summary", "Income", CreateLayout(5, 1, 4, 4)));
+        layout.AddWidget(CreateWidget("summary", "Spending", CreateLayout(9, 1, 4, 4)));
+        layout.AddWidget(CreateWidget("chart", "Spending Trend", CreateLayout(1, 5, 8, 6), config =>
+        {
+            config.ReportType = "spending-trend";
+            config.DateRangePreset = "last-90-days";
+        }));
+        layout.AddWidget(CreateWidget("table", "Recent Transactions", CreateLayout(9, 5, 4, 6)));
+        return layout;
+    }
+
+    private static CustomReportLayoutDefinition CreateSpendingFocusPreset()
+    {
+        var layout = new CustomReportLayoutDefinition();
+        layout.AddWidget(CreateWidget("chart", "Category Breakdown", CreateLayout(1, 1, 7, 6), config =>
+        {
+            config.ReportType = "spending-by-category";
+            config.DateRangePreset = "this-month";
+        }));
+        layout.AddWidget(CreateWidget("chart", "Monthly Trend", CreateLayout(8, 1, 5, 6), config =>
+        {
+            config.ReportType = "spending-trend";
+            config.DateRangePreset = "last-6-months";
+        }));
+        layout.AddWidget(CreateWidget("table", "Transactions", CreateLayout(1, 7, 12, 6)));
+        return layout;
+    }
+
+    private static CustomReportLayoutDefinition CreateTableHeavyPreset()
+    {
+        var layout = new CustomReportLayoutDefinition();
+        layout.AddWidget(CreateWidget("table", "Transaction Ledger", CreateLayout(1, 1, 12, 8), config =>
+        {
+            config.ReportType = "transactions";
+            config.DateRangePreset = "last-30-days";
+        }));
+        layout.AddWidget(CreateWidget("summary", "Net", CreateLayout(1, 9, 4, 4)));
+        layout.AddWidget(CreateWidget("summary", "Income", CreateLayout(5, 9, 4, 4), config =>
+        {
+            config.Metric = "income";
+            config.Comparison = "previous-period";
+        }));
+        layout.AddWidget(CreateWidget("summary", "Spending", CreateLayout(9, 9, 4, 4), config =>
+        {
+            config.Metric = "spending";
+            config.Comparison = "previous-period";
+        }));
+        return layout;
+    }
+
+    private static ReportWidgetDefinition CreateWidget(
+        string type,
+        string title,
+        ReportWidgetLayoutPosition layout,
+        Action<ReportWidgetConfigDefinition>? configure = null)
+    {
+        var config = ReportWidgetConfigDefinition.CreateDefault(type);
+        configure?.Invoke(config);
+
+        return new ReportWidgetDefinition
+        {
+            Id = Guid.NewGuid(),
+            Type = type,
+            Title = title,
+            Config = config,
+            Layouts = new Dictionary<string, ReportWidgetLayoutPosition>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["lg"] = layout,
+            },
+        };
+    }
+
+    private static ReportWidgetLayoutPosition CreateLayout(int x, int y, int width, int height)
+    {
+        return new ReportWidgetLayoutPosition
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+        };
+    }
+
+    private sealed record LayoutPresetDefinition(
+        string Id,
+        string Name,
+        string Description,
+        Func<CustomReportLayoutDefinition> CreateDefinition);
+
+    private async Task HandleLayoutChange(ChangeEventArgs args)
+    {
+        if (Guid.TryParse(args.Value?.ToString(), out var layoutId))
+        {
+            var layout = layouts.FirstOrDefault(l => l.Id == layoutId);
+            if (layout != null)
+            {
+                await SelectLayoutAsync(layout);
+            }
+        }
+    }
+}

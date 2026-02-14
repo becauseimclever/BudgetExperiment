@@ -1,0 +1,141 @@
+@* LineChart.razor - Pure SVG line chart rendered by Blazor *@
+
+@using BudgetExperiment.Client.Components.Charts.Shared
+
+<div class="line-chart-container">
+    @if (!Data.Any())
+    {
+        <div class="line-chart-empty" role="img" aria-label="@AriaLabel">
+            <p>No data to display</p>
+        </div>
+    }
+    else
+    {
+        <div class="line-chart-wrapper">
+            <svg viewBox="0 0 @F(ComputedViewBoxWidth) @F(ViewBoxHeight)"
+                 class="line-chart"
+                 role="img"
+                 aria-label="@AriaLabel"
+                 preserveAspectRatio="xMidYMid meet">
+                <title>@AriaLabel</title>
+
+                @if (ShowArea && UseGradientFill)
+                {
+                    <defs>
+                        @foreach (var series in ComputedSeries)
+                        {
+                            if (series.GradientId is null)
+                            {
+                                continue;
+                            }
+
+                            <linearGradient id="@series.GradientId" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="@series.Definition.Color" stop-opacity="0.35" />
+                                <stop offset="100%" stop-color="@series.Definition.Color" stop-opacity="0.05" />
+                            </linearGradient>
+                        }
+                    </defs>
+                }
+
+                @if (ShowGrid)
+                {
+                    <ChartGrid Left="@MarginLeft"
+                               Right="@(ComputedViewBoxWidth - MarginRight)"
+                               Top="@MarginTop"
+                               Bottom="@ChartAreaBottom"
+                               HorizontalTicks="@ComputedYTicks"
+                               VerticalTicks="@ComputedXTicks" />
+                }
+
+                <line x1="@F(MarginLeft)"
+                      y1="@F(ChartAreaBottom)"
+                      x2="@F(ComputedViewBoxWidth - MarginRight)"
+                      y2="@F(ChartAreaBottom)"
+                      class="chart-axis-line" />
+
+                <line x1="@F(MarginLeft)"
+                      y1="@F(MarginTop)"
+                      x2="@F(MarginLeft)"
+                      y2="@F(ChartAreaBottom)"
+                      class="chart-axis-line" />
+
+                @if (ShowYAxis)
+                {
+                    <ChartAxis Orientation="y"
+                               AxisPosition="@(MarginLeft - 6)"
+                               Ticks="@ComputedYTicks" />
+                }
+
+                @if (ShowXAxis)
+                {
+                    <ChartAxis Orientation="x"
+                               AxisPosition="@(ChartAreaBottom + 14)"
+                               Ticks="@ComputedXTicks" />
+                }
+
+                @if (ReferenceLines is { Count: > 0 })
+                {
+                    @foreach (var reference in ComputedReferenceLines)
+                    {
+                        <line x1="@F(MarginLeft)"
+                              y1="@F(reference.Y)"
+                              x2="@F(ComputedViewBoxWidth - MarginRight)"
+                              y2="@F(reference.Y)"
+                              class="reference-line"
+                              stroke="@reference.Color"
+                              stroke-dasharray="4,3" />
+                        @RenderSvgText(ComputedViewBoxWidth - MarginRight, reference.Y - 4, "reference-label", "end", "7", reference.Label)
+                    }
+                }
+
+                @foreach (var series in ComputedSeries)
+                {
+                    if (ShowArea && series.AreaPath is not null)
+                    {
+                        <path d="@series.AreaPath" class="line-area" fill="@series.AreaFill" />
+                    }
+
+                    <path d="@series.Path"
+                          class="line-path"
+                          stroke="@series.Definition.Color"
+                          stroke-dasharray="@(series.Definition.Dashed ? "4,3" : null)" />
+
+                    @if (ShowPoints)
+                    {
+                        foreach (var point in series.Points)
+                        {
+                            <circle cx="@F(point.X)"
+                                    cy="@F(point.Y)"
+                                    r="3"
+                                    class="line-point @(HoveredPoint == point ? "hovered" : "")"
+                                    fill="@series.Definition.Color"
+                                    tabindex="0"
+                                    role="img"
+                                    aria-label="@point.AriaLabel"
+                                    @onfocusin="() => HandlePointHover(point)"
+                                    @onfocusout="HandlePointHoverEnd"
+                                    @onmouseenter="() => HandlePointHover(point)"
+                                    @onmouseleave="HandlePointHoverEnd"
+                                    @onclick="() => HandlePointClick(point)" />
+                        }
+                    }
+                }
+
+                @if (!string.IsNullOrWhiteSpace(XAxisLabel))
+                {
+                    @RenderSvgText(MarginLeft + (ChartAreaWidth / 2), ViewBoxHeight - 4, "axis-title", "middle", "9", XAxisLabel)
+                }
+
+                @if (!string.IsNullOrWhiteSpace(YAxisLabel))
+                {
+                    @((MarkupString)$"<text x=\"{F(12)}\" y=\"{F(MarginTop + (ChartAreaHeight / 2))}\" class=\"axis-title\" text-anchor=\"middle\" font-size=\"9\" transform=\"rotate(-90 12 {F(MarginTop + (ChartAreaHeight / 2))})\">{YAxisLabel}</text>")
+                }
+            </svg>
+        </div>
+
+        <ChartTooltip Visible="@(HoveredPoint is not null)"
+                      Title="@HoveredPoint?.Label"
+                      Series="@HoveredPoint?.SeriesLabel"
+                      Value="@HoveredPoint?.FormattedValue" />
+    }
+</div>

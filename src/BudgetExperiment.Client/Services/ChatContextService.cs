@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Dtos;
+
 namespace BudgetExperiment.Client.Services;
 
 /// <summary>
@@ -35,6 +37,21 @@ public class ChatPageContext
     public string? PageType { get; set; }
 
     /// <summary>
+    /// Gets or sets the year being viewed on the calendar.
+    /// </summary>
+    public int? CalendarViewedYear { get; set; }
+
+    /// <summary>
+    /// Gets or sets the month being viewed on the calendar (1-12).
+    /// </summary>
+    public int? CalendarViewedMonth { get; set; }
+
+    /// <summary>
+    /// Gets or sets the selected date on the calendar.
+    /// </summary>
+    public DateOnly? SelectedDate { get; set; }
+
+    /// <summary>
     /// Gets a summary of the context for the AI prompt.
     /// </summary>
     /// <returns>A human-readable context summary.</returns>
@@ -42,14 +59,31 @@ public class ChatPageContext
     {
         var parts = new List<string>();
 
+        if (CalendarViewedYear.HasValue && CalendarViewedMonth.HasValue)
+        {
+            var year = CalendarViewedYear.Value;
+            var month = CalendarViewedMonth.Value;
+
+            if (year > 0 && month >= 1 && month <= 12)
+            {
+                var monthName = new DateOnly(year, month, 1).ToString("MMMM yyyy");
+                parts.Add($"Viewing {monthName}");
+            }
+        }
+
+        if (SelectedDate.HasValue)
+        {
+            parts.Add($"Selected: {SelectedDate.Value:MMM d}");
+        }
+
         if (!string.IsNullOrEmpty(CurrentAccountName))
         {
-            parts.Add($"Currently viewing account: {CurrentAccountName}");
+            parts.Add($"Account: {CurrentAccountName}");
         }
 
         if (!string.IsNullOrEmpty(CurrentCategoryName))
         {
-            parts.Add($"Currently viewing category: {CurrentCategoryName}");
+            parts.Add($"Category: {CurrentCategoryName}");
         }
 
         if (!string.IsNullOrEmpty(PageType))
@@ -97,6 +131,22 @@ public interface IChatContextService
     void SetPageType(string? pageType);
 
     /// <summary>
+    /// Sets the current calendar context.
+    /// </summary>
+    /// <param name="year">The calendar year being viewed.</param>
+    /// <param name="month">The calendar month being viewed (1-12).</param>
+    /// <param name="selectedDate">The selected date, if any.</param>
+    /// <param name="accountId">The selected account ID, if any.</param>
+    /// <param name="accountName">The selected account name, if any.</param>
+    void SetCalendarContext(int year, int month, DateOnly? selectedDate, Guid? accountId = null, string? accountName = null);
+
+    /// <summary>
+    /// Converts the current context to a DTO for API transmission.
+    /// </summary>
+    /// <returns>The current context as a DTO.</returns>
+    ChatContextDto ToDto();
+
+    /// <summary>
     /// Clears all context.
     /// </summary>
     void ClearContext();
@@ -137,6 +187,38 @@ public class ChatContextService : IChatContextService
     }
 
     /// <inheritdoc />
+    public void SetCalendarContext(int year, int month, DateOnly? selectedDate, Guid? accountId = null, string? accountName = null)
+    {
+        CurrentContext.CalendarViewedYear = year;
+        CurrentContext.CalendarViewedMonth = month;
+        CurrentContext.SelectedDate = selectedDate;
+
+        if (accountId.HasValue || !string.IsNullOrWhiteSpace(accountName))
+        {
+            CurrentContext.CurrentAccountId = accountId;
+            CurrentContext.CurrentAccountName = accountName;
+        }
+
+        OnContextChanged();
+    }
+
+    /// <inheritdoc />
+    public ChatContextDto ToDto()
+    {
+        return new ChatContextDto
+        {
+            CurrentAccountId = CurrentContext.CurrentAccountId,
+            CurrentAccountName = CurrentContext.CurrentAccountName,
+            CurrentCategoryId = CurrentContext.CurrentCategoryId,
+            CurrentCategoryName = CurrentContext.CurrentCategoryName,
+            CalendarViewedYear = CurrentContext.CalendarViewedYear,
+            CalendarViewedMonth = CurrentContext.CalendarViewedMonth,
+            SelectedDate = CurrentContext.SelectedDate,
+            PageType = CurrentContext.PageType,
+        };
+    }
+
+    /// <inheritdoc />
     public void ClearContext()
     {
         CurrentContext.CurrentAccountId = null;
@@ -144,6 +226,9 @@ public class ChatContextService : IChatContextService
         CurrentContext.CurrentCategoryId = null;
         CurrentContext.CurrentCategoryName = null;
         CurrentContext.PageType = null;
+        CurrentContext.CalendarViewedYear = null;
+        CurrentContext.CalendarViewedMonth = null;
+        CurrentContext.SelectedDate = null;
         OnContextChanged();
     }
 

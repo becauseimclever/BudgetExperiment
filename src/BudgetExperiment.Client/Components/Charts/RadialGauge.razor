@@ -1,0 +1,25 @@
+@* RadialGauge.razor - Circular progress gauge *@
+
+@if (!HasData)
+{
+    <div class="radial-gauge-empty" role="img" aria-label="@AriaLabel">No data</div>
+}
+else
+{
+    <div class="radial-gauge" role="img" aria-label="@AriaLabel">
+        <svg viewBox="0 0 @F(Size) @F(Size)" class="radial-gauge-svg" aria-hidden="true">
+            <title>@AriaLabel</title>
+            <circle cx="@F(Center)" cy="@F(Center)" r="@F(Radius)" class="radial-gauge-track" />
+            <circle cx="@F(Center)"
+                    cy="@F(Center)"
+                    r="@F(Radius)"
+                    class="radial-gauge-progress"
+                    stroke="@StrokeColor"
+                    stroke-dasharray="@F(Circumference)"
+                    stroke-dashoffset="@F(DashOffset)"
+                    transform="@RotationTransform" />
+            @RenderSvgText(Center, Center - 4, "radial-gauge-value", "middle", "10", ValueText)
+            @RenderSvgText(Center, Center + 12, "radial-gauge-label", "middle", "7", LabelText)
+        </svg>
+    </div>
+}

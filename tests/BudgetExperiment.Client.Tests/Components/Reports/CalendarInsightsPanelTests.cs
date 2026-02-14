@@ -717,5 +717,20 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns) => Task.FromResult<ImportPatternsDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<CustomReportLayoutDto>> GetCustomReportLayoutsAsync() => Task.FromResult<IReadOnlyList<CustomReportLayoutDto>>([]);
+
+        /// <inheritdoc/>
+        public Task<CustomReportLayoutDto?> GetCustomReportLayoutAsync(Guid id) => Task.FromResult<CustomReportLayoutDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<CustomReportLayoutDto?> CreateCustomReportLayoutAsync(CustomReportLayoutCreateDto dto) => Task.FromResult<CustomReportLayoutDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<CustomReportLayoutDto?> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto) => Task.FromResult<CustomReportLayoutDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<bool> DeleteCustomReportLayoutAsync(Guid id) => Task.FromResult(false);
     }
 }

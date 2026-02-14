@@ -1,0 +1,41 @@
+.builder-toolbar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.layout-selector,
+.layout-name,
+.layout-preset {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.layout-selector select,
+.layout-name input,
+.layout-preset select {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #e5e7eb);
+    background: var(--color-surface, #fff);
+}
+
+.layout-preset-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.builder-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(220px, 280px) 1fr minmax(240px, 320px);
+}
+
+@media (max-width: 960px) {
+    .builder-grid {
+        grid-template-columns: 1fr;
+    }
+}

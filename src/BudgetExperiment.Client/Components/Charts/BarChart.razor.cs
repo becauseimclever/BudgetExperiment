@@ -36,6 +36,12 @@ public partial class BarChart
     [Parameter]
     public string AriaLabel { get; set; } = "Bar chart";
 
+    /// <summary>
+    /// Gets or sets the callback for bar clicks.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BarChartClickInfo> OnBarClick { get; set; }
+
     private string? HoveredSeriesName { get; set; }
 
     private string? HoveredGroupLabel { get; set; }
@@ -203,6 +209,14 @@ public partial class BarChart
     {
         HoveredSeriesName = null;
         HoveredGroupLabel = null;
+    }
+
+    private void HandleBarClick(BarRectInfo rect)
+    {
+        if (OnBarClick.HasDelegate)
+        {
+            OnBarClick.InvokeAsync(new BarChartClickInfo(rect.GroupLabel, rect.SeriesName, rect.Value));
+        }
     }
 
     private sealed class TickInfo

@@ -25,6 +25,7 @@ pwsh tests/BudgetExperiment.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install
 
 ```powershell
 # Run all tests against demo environment (default)
+$env:RUN_E2E_TESTS = "true"
 dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests
 
 # Run only smoke tests
@@ -32,7 +33,39 @@ dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests --filter "Ca
 
 # Run navigation tests
 dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests --filter "Category=Navigation"
+
+# Run functional read-only tests (safe for shared demo)
+dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests --filter "Category=Functional&Category=DemoSafe"
+
+# Run full functional suite locally (includes mutating CRUD/import/account tests)
+$env:BUDGET_APP_URL = "http://localhost:5099"
+dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests --filter "Category=Functional"
 ```
+
+### Run Functional 062 via VS Code Task
+
+Use one of the workspace tasks:
+
+- `E2E: Functional 062 (Local)`
+- `E2E: Functional 062 (DemoSafe)`
+
+`E2E: Functional 062 (Local)` sets:
+
+- `RUN_E2E_TESTS=true`
+- `BUDGET_APP_URL=http://localhost:5099`
+
+and runs:
+
+- `dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj --filter "Category=Functional"`
+
+`E2E: Functional 062 (DemoSafe)` sets:
+
+- `RUN_E2E_TESTS=true`
+- `BUDGET_APP_URL=https://budgetdemo.becauseimclever.com`
+
+and runs:
+
+- `dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj --filter "Category=Functional&Category=DemoSafe"`
 
 ## Environment Variables
 
@@ -42,21 +75,25 @@ dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests --filter "Ca
 | `HEADED` | Show browser window | `false` |
 | `SLOWMO` | Slow down actions (ms) | `0` |
 | `PLAYWRIGHT_TRACES` | Capture traces | `false` |
+| `RUN_E2E_TESTS` | Enables this test project in `dotnet test` | `false` |
 
 ### Examples
 
 ```powershell
 # Run against local development
 $env:BUDGET_APP_URL = "http://localhost:5099"
+$env:RUN_E2E_TESTS = "true"
 dotnet test tests/BudgetExperiment.E2E.Tests
 
 # Debug with visible browser and slow motion
 $env:HEADED = "true"
 $env:SLOWMO = "1000"
+$env:RUN_E2E_TESTS = "true"
 dotnet test tests/BudgetExperiment.E2E.Tests --filter "Category=Smoke"
 
 # Capture traces for debugging failures
 $env:PLAYWRIGHT_TRACES = "true"
+$env:RUN_E2E_TESTS = "true"
 dotnet test tests/BudgetExperiment.E2E.Tests
 ```
 
@@ -78,6 +115,8 @@ Use `--filter "Category=X"` to run specific test categories:
 | `Mobile` | Mobile viewport (375x667) specific tests |
 | `Accessibility` | axe-core WCAG compliance checks |
 | `Orientation` | Portrait/landscape orientation changes |
+| `Functional` | Consolidated functional user-flow suite (Feature 062) |
+| `LocalOnly` | Mutating tests; intended for local environment only |
 
 ### Running Performance Tests
 

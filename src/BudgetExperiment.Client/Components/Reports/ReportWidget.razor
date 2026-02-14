@@ -1,0 +1,127 @@
+<div class="report-widget @GetRootClass()"
+     style="@LayoutStyle"
+     data-widget-id="@Widget.Id"
+     data-col-start-lg="@LayoutLg.X"
+     data-col-span-lg="@LayoutLg.Width"
+     data-row-start-lg="@LayoutLg.Y"
+     data-row-span-lg="@LayoutLg.Height"
+     data-col-start-md="@LayoutMd.X"
+     data-col-span-md="@LayoutMd.Width"
+     data-row-start-md="@LayoutMd.Y"
+     data-row-span-md="@LayoutMd.Height"
+     data-col-start-sm="@LayoutSm.X"
+     data-col-span-sm="@LayoutSm.Width"
+     data-row-start-sm="@LayoutSm.Y"
+     data-row-span-sm="@LayoutSm.Height"
+     data-min-w="@MinWidth"
+     data-min-h="@MinHeight"
+     data-max-w="@MaxWidth"
+     data-max-h="@MaxHeight">
+        <div class="report-widget-header"
+            tabindex="0"
+            role="button"
+            aria-label="Drag or resize widget"
+             title="Drag to move. Use arrow keys to move; Shift+Arrow to resize."
+             @onclick="() => OnSelect.InvokeAsync(Widget.Id)"
+             @onkeydown="HandleHeaderKeyDown">
+        <div class="report-widget-title">@Widget.Title</div>
+            <div class="report-widget-actions">
+                <button type="button"
+                        class="report-widget-action"
+                        @onclick="() => OnDuplicate.InvokeAsync(Widget.Id)"
+                        @onclick:stopPropagation="true">
+                    <Icon Name="copy" Size="14" />
+                    <span class="sr-only">Duplicate widget</span>
+                </button>
+                <button type="button"
+                        class="report-widget-action"
+                        @onclick="() => OnRemove.InvokeAsync(Widget.Id)"
+                        @onclick:stopPropagation="true">
+                    <Icon Name="x" Size="14" />
+                    <span class="sr-only">Remove widget</span>
+                </button>
+            </div>
+    </div>
+    <div class="report-widget-body">
+        <div class="report-widget-type">@Widget.Type</div>
+        <p class="report-widget-placeholder">Widget content renders here.</p>
+    </div>
+    <button type="button" class="report-widget-resize-handle" aria-label="Resize widget" title="Resize widget"></button>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the widget definition.
+    /// </summary>
+    [Parameter]
+    public required ReportWidgetDefinition Widget { get; set; }
+
+    /// <summary>
+    /// Gets or sets the remove callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnRemove { get; set; }
+
+    /// <summary>
+    /// Gets or sets the inline layout style.
+    /// </summary>
+    [Parameter]
+    public string? LayoutStyle { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the widget is selected.
+    /// </summary>
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    /// <summary>
+    /// Gets or sets the selection callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnSelect { get; set; }
+
+    /// <summary>
+    /// Gets or sets the duplicate callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDuplicate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the large breakpoint layout.
+    /// </summary>
+    [Parameter]
+    public ReportWidgetLayoutPosition LayoutLg { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the medium breakpoint layout.
+    /// </summary>
+    [Parameter]
+    public ReportWidgetLayoutPosition LayoutMd { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the small breakpoint layout.
+    /// </summary>
+    [Parameter]
+    public ReportWidgetLayoutPosition LayoutSm { get; set; } = new();
+
+    private int MinWidth => Widget.Constraints?.MinWidth ?? 2;
+
+    private int MinHeight => Widget.Constraints?.MinHeight ?? 2;
+
+    private int MaxWidth => Widget.Constraints?.MaxWidth ?? 12;
+
+    private int MaxHeight => Widget.Constraints?.MaxHeight ?? 12;
+
+    private string GetRootClass()
+    {
+        return IsSelected ? "is-selected" : string.Empty;
+    }
+
+    private async Task HandleHeaderKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key is "Enter" or " ")
+        {
+            await OnSelect.InvokeAsync(Widget.Id);
+        }
+    }
+}

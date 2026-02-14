@@ -18,6 +18,7 @@
                 <Icon Name="calendar" Size="16" />
                 Calendar
             </a>
+            <ExportButton Options="@ExportOptions" />
         </Actions>
     </PageHeader>
 
@@ -222,6 +223,16 @@
     private string? errorMessage;
     private bool isLoading = true;
     private bool isRetrying;
+
+    private IReadOnlyList<ExportOption> ExportOptions =>
+    [
+        new ExportOption
+        {
+            Label = "Export CSV",
+            Description = "Budget vs. actual totals by category",
+            Href = $"/api/v1/exports/budget-comparison?year={selectedYear}&month={selectedMonth}",
+        },
+    ];
 
     private IEnumerable<BudgetProgressDto> SortedCategories =>
         summary?.CategoryProgress

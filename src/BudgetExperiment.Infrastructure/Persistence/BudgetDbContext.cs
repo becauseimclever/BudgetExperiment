@@ -108,6 +108,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     public DbSet<CategorySuggestion> CategorySuggestions => this.Set<CategorySuggestion>();
 
     /// <summary>
+    /// Gets the custom report layouts.
+    /// </summary>
+    public DbSet<CustomReportLayout> CustomReportLayouts => this.Set<CustomReportLayout>();
+
+    /// <summary>
     /// Gets the learned merchant mappings.
     /// </summary>
     public DbSet<LearnedMerchantMapping> LearnedMerchantMappings => this.Set<LearnedMerchantMapping>();

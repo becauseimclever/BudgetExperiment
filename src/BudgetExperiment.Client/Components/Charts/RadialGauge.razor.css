@@ -1,0 +1,41 @@
+/* RadialGauge.razor.css - Scoped styles for radial gauge */
+
+.radial-gauge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radial-gauge-svg {
+    width: 100%;
+    height: auto;
+}
+
+.radial-gauge-track {
+    fill: none;
+    stroke: var(--color-surface-muted, #f3f4f6);
+    stroke-width: 10;
+}
+
+.radial-gauge-progress {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.4s ease, stroke 0.2s ease;
+}
+
+.radial-gauge-value {
+    fill: var(--color-text, #111827);
+    font-weight: 700;
+}
+
+.radial-gauge-label {
+    fill: var(--color-text-muted, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.radial-gauge-empty {
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-text-muted, #6b7280);
+}

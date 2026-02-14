@@ -1,0 +1,88 @@
+/* LineChart.razor.css - Scoped styles for the line chart component */
+
+.line-chart-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3, 0.75rem);
+    width: 100%;
+    position: relative;
+}
+
+.line-chart-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.line-chart {
+    width: 100%;
+    min-width: 320px;
+    height: auto;
+}
+
+.chart-axis-line {
+    stroke: var(--chart-axis-color, #9ca3af);
+    stroke-width: 1;
+}
+
+.line-path {
+    fill: none;
+    stroke-width: 2.2;
+}
+
+.line-area {
+    opacity: 0.18;
+}
+
+.line-point {
+    transition: transform 0.15s ease, filter 0.15s ease;
+    cursor: pointer;
+    outline: none;
+}
+
+.line-point:hover,
+.line-point.hovered,
+.line-point:focus-visible {
+    transform: scale(1.15);
+    filter: brightness(1.1);
+}
+
+.line-point:focus-visible {
+    outline: 2px solid var(--color-primary, #6366f1);
+    outline-offset: 1px;
+}
+
+.reference-line {
+    stroke-width: 1;
+}
+
+.reference-label {
+    fill: var(--color-text-muted, #6b7280);
+    font-size: 7px;
+}
+
+.axis-title {
+    fill: var(--color-text-muted, #6b7280);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.line-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background: var(--color-surface, #fff);
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--color-border, #e5e7eb);
+    color: var(--color-text-muted, #6b7280);
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .line-chart {
+        min-width: 280px;
+    }
+}

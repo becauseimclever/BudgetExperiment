@@ -72,7 +72,7 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
                 ErrorMessage: response.ErrorMessage);
         }
 
-        return ParseAiResponse(response.Content, accounts, categories);
+        return ParseAiResponse(response.Content, accounts, categories, context);
     }
 
     private static string FormatAccounts(IReadOnlyList<AccountInfo> accounts)
@@ -105,33 +105,38 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
         }
 
         var parts = new List<string>();
+
+        if (context.CurrentDate.HasValue)
+        {
+            var dateText = context.CurrentDate.Value.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture);
+            parts.Add($"The user has selected {dateText} on the calendar. Use this date for transactions unless they specify otherwise.");
+        }
+
         if (!string.IsNullOrEmpty(context.CurrentAccountName))
         {
-            parts.Add($"Current account: {context.CurrentAccountName}");
+            parts.Add($"The user is viewing the '{context.CurrentAccountName}' account. Use this account as the default unless they specify otherwise.");
         }
 
         if (!string.IsNullOrEmpty(context.CurrentCategoryName))
         {
-            parts.Add($"Current category: {context.CurrentCategoryName}");
-        }
-
-        if (context.CurrentDate.HasValue)
-        {
-            parts.Add($"Viewing date: {context.CurrentDate.Value:yyyy-MM-dd}");
+            parts.Add($"The user is viewing the '{context.CurrentCategoryName}' category. Use this category as the default unless they specify otherwise.");
         }
 
         if (!string.IsNullOrEmpty(context.CurrentPage))
         {
-            parts.Add($"Current page: {context.CurrentPage}");
+            parts.Add($"The user is on the {context.CurrentPage} page.");
         }
 
-        return parts.Count > 0 ? string.Join(", ", parts) : "No specific context.";
+        return parts.Count > 0
+            ? "Context from the user's current view:\n" + string.Join("\n", parts)
+            : "No specific context.";
     }
 
     private static ParseResult ParseAiResponse(
         string content,
         IReadOnlyList<AccountInfo> accounts,
-        IReadOnlyList<CategoryInfo> categories)
+        IReadOnlyList<CategoryInfo> categories,
+        ChatContext? context)
     {
         try
         {
@@ -175,8 +180,8 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
             var data = root.TryGetProperty("data", out var dataProp) ? dataProp : default;
             ChatAction? action = intent switch
             {
-                "transaction" => ParseTransactionAction(data, accounts, categories),
-                "transfer" => ParseTransferAction(data, accounts),
+                "transaction" => ParseTransactionAction(data, accounts, categories, context),
+                "transfer" => ParseTransferAction(data, accounts, context),
                 "recurring_transaction" => ParseRecurringTransactionAction(data, accounts, categories),
                 "recurring_transfer" => ParseRecurringTransferAction(data, accounts),
                 "unknown" => null,
@@ -244,7 +249,8 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
     private static CreateTransactionAction? ParseTransactionAction(
         JsonElement data,
         IReadOnlyList<AccountInfo> accounts,
-        IReadOnlyList<CategoryInfo> categories)
+        IReadOnlyList<CategoryInfo> categories,
+        ChatContext? context)
     {
         if (data.ValueKind == JsonValueKind.Undefined)
         {
@@ -254,7 +260,7 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
         var accountId = ParseGuid(data, "accountId");
         var accountName = data.TryGetProperty("accountName", out var anProp) ? anProp.GetString() ?? string.Empty : string.Empty;
         var amount = data.TryGetProperty("amount", out var amtProp) ? amtProp.GetDecimal() : 0m;
-        var date = ParseDate(data, "date") ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var date = ParseDate(data, "date") ?? context?.CurrentDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
         var description = data.TryGetProperty("description", out var descProp) ? descProp.GetString() ?? string.Empty : string.Empty;
         var category = data.TryGetProperty("category", out var catProp) && catProp.ValueKind == JsonValueKind.String
             ? catProp.GetString()
@@ -298,7 +304,8 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
 
     private static CreateTransferAction? ParseTransferAction(
         JsonElement data,
-        IReadOnlyList<AccountInfo> accounts)
+        IReadOnlyList<AccountInfo> accounts,
+        ChatContext? context)
     {
         if (data.ValueKind == JsonValueKind.Undefined)
         {
@@ -310,7 +317,7 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
         var toAccountId = ParseGuid(data, "toAccountId");
         var toAccountName = data.TryGetProperty("toAccountName", out var tanProp) ? tanProp.GetString() ?? string.Empty : string.Empty;
         var amount = data.TryGetProperty("amount", out var amtProp) ? amtProp.GetDecimal() : 0m;
-        var date = ParseDate(data, "date") ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var date = ParseDate(data, "date") ?? context?.CurrentDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
         var description = data.TryGetProperty("description", out var descProp) && descProp.ValueKind == JsonValueKind.String
             ? descProp.GetString()
             : null;

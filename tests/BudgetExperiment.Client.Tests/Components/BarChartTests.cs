@@ -207,6 +207,57 @@ public class BarChartTests : BunitContext
     }
 
     [Fact]
+    public void BarChart_Applies_Bar_Colors()
+    {
+        // Arrange
+        var groups = new List<BarChartGroup>
+        {
+            new()
+            {
+                Label = "Jan",
+                Values = [new BarChartValue { Series = "Spending", Value = 500m, Color = "#123456" }],
+            },
+        };
+
+        // Act
+        var cut = Render<BarChart>(parameters => parameters
+            .Add(p => p.Groups, groups));
+
+        // Assert
+        var bar = cut.Find("rect.bar-rect");
+        Assert.Equal("#123456", bar.GetAttribute("fill"));
+    }
+
+    [Fact]
+    public void BarChart_Invokes_Click_Callback()
+    {
+        // Arrange
+        var groups = new List<BarChartGroup>
+        {
+            new()
+            {
+                Label = "Jan",
+                Values = [new BarChartValue { Series = "Spending", Value = 500m, Color = "#EF4444" }],
+            },
+        };
+
+        BarChartClickInfo? clickInfo = null;
+
+        // Act
+        var cut = Render<BarChart>(parameters => parameters
+            .Add(p => p.Groups, groups)
+            .Add(p => p.OnBarClick, info => clickInfo = info));
+
+        cut.Find("rect.bar-rect").Click();
+
+        // Assert
+        Assert.NotNull(clickInfo);
+        Assert.Equal("Jan", clickInfo!.GroupLabel);
+        Assert.Equal("Spending", clickInfo.SeriesName);
+        Assert.Equal(500m, clickInfo.Value);
+    }
+
+    [Fact]
     public void BarChart_Renders_XAxisLabels()
     {
         // Arrange

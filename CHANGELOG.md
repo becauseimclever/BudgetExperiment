@@ -4,6 +4,68 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.15.0] - 2026-02-14
+
+### Features
+
+- **client:** LineChart component for trend visualization with multi-series support, axes, grid, and reference lines
+- **client:** Shared chart primitives (ChartAxis, ChartGrid, ChartTooltip) for SVG charts
+- **client:** GroupedBarChart and StackedBarChart components for multi-series comparisons and composition views
+- **client:** AreaChart component with optional gradient fills
+- **client:** SparkLine, ProgressBar, and RadialGauge components for compact trend and progress visualization
+- **api:** CSV export endpoint for monthly category report
+- **application:** Export service infrastructure with CSV formatter
+- **client:** Export button download handling with loading state and error feedback
+- **domain:** Custom report layout entity and repository contract
+- **infrastructure:** EF Core configuration, DbSet, and repository for custom report layouts
+- **application:** Custom report layout service with scope-aware CRUD operations
+- **api:** Custom report layout CRUD endpoints (`/api/v1/custom-reports`)
+- **client:** Custom report builder page with widget palette, canvas, and placeholder widgets
+- **client:** Custom report layout CRUD methods in BudgetApiService
+- **client:** Reports index card for custom report builder
+- **client:** Custom report builder grid layout with drag/resize snapping and widget presets
+- **client:** Widget configuration panel with title editing and per-widget options
+- **client:** Report widget actions for selection, duplicate, and delete
+- **client:** BarChart click events for drill-down
+- **client:** Component showcase page for charts and exports
+
+### Bug Fixes
+
+- **client:** Fix Razor parser failure with escaped quotes in ReportCanvas interpolated strings
+- **client:** Fix `@layout` directive conflict in CustomReportBuilder by renaming variable
+- **client:** Fix AreaChart string parameter bindings missing `@` prefix
+- **client:** Fix ExportDownloadService async disposal pattern
+- **infra:** Add missing `Domain.Reports` global using in Infrastructure and Application
+- **api:** Add missing XML doc param tag in ExportController
+- **api:** Fix invalid `ChatActionType.Unknown` enum reference in tests
+
+### Testing
+
+- **client:** bUnit tests for LineChart (empty state, paths, points, multi-series, ARIA)
+- **client:** bUnit tests for GroupedBarChart and StackedBarChart (empty state, rendering, legend, ARIA)
+- **client:** bUnit tests for AreaChart and large dataset rendering
+- **client:** bUnit tests for SparkLine, ProgressBar, and RadialGauge
+- **api:** ExportController integration test for CSV export
+- **application:** Export service unit tests for CSV formatter and routing
+- **client:** bUnit tests for ExportButton download flow
+- **client:** bUnit tests for BarChart click/colors, LineChart smooth interpolation, StackedBarChart segment heights, ProgressBar thresholds, and RadialGauge dash offsets
+- **client:** bUnit tests for report builder components (ReportWidget, WidgetConfigPanel)
+- **api:** Export controller auth tests for CSV endpoints
+- **e2e:** Report chart interaction tests (tooltips, drill-down)
+- **e2e:** Report export flow test for CSV download
+- **e2e:** Custom report builder tests for drag/select and save/reload
+- **e2e:** Accessibility coverage expanded to report pages
+- **client:** Fix missing IBudgetApiService stub methods and service registrations in test classes
+- **client:** Fix ThemeService IAsyncDisposable handling with IAsyncLifetime in bUnit tests
+
+### Documentation
+
+- **docs:** Update Feature 053 spec for custom report builder layout, endpoints, and Phase 7 status
+- **docs:** Feature 053 updates for grid layout, presets, tests, and deferred items
+- **docs:** Chart component standards added to component guidelines
+- **docs:** Feature 053.1 — build and test fix catalog for features 051–053
+- **readme:** Reports and component showcase documentation updates
+
 ## [3.14.1] - 2026-02-08
 
 ### Bug Fixes

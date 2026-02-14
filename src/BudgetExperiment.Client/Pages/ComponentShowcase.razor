@@ -1,0 +1,144 @@
+@page "/components"
+
+@using BudgetExperiment.Client.Components.Charts
+@using BudgetExperiment.Client.Components.Export
+@using BudgetExperiment.Client.Models
+
+<PageTitle>Component Showcase - Budget Experiment</PageTitle>
+
+<div class="page-container component-showcase">
+    <PageHeader Title="Component Showcase">
+        <Actions>
+            <a class="btn-secondary" href="/reports" title="Back to Reports">
+                <Icon Name="arrow-left" Size="16" />
+                Reports
+            </a>
+        </Actions>
+    </PageHeader>
+
+    <section class="showcase-section">
+        <h2>Charts</h2>
+        <div class="showcase-grid">
+            <div class="showcase-card">
+                <h3>Donut Chart</h3>
+                <DonutChart Segments="@donutSegments"
+                            CenterValue="@donutTotal"
+                            CenterLabel="Total"
+                            Currency="USD"
+                            Size="240"
+                            StrokeWidth="18"
+                            ShowLegend="true" />
+            </div>
+            <div class="showcase-card">
+                <h3>Bar Chart</h3>
+                <BarChart Groups="@barGroups"
+                          Series="@barSeries"
+                          ShowLegend="true"
+                          AriaLabel="Monthly income and spending" />
+            </div>
+            <div class="showcase-card">
+                <h3>Line Chart</h3>
+                <LineChart Data="@lineData"
+                           ShowPoints="true"
+                           ShowGrid="true"
+                           XAxisLabel="Month"
+                           YAxisLabel="Amount"
+                           AriaLabel="Monthly trend" />
+            </div>
+        </div>
+    </section>
+
+    <section class="showcase-section">
+        <h2>Compact Indicators</h2>
+        <div class="showcase-grid">
+            <div class="showcase-card">
+                <h3>SparkLine</h3>
+                <SparkLine Values="@sparkValues" Width="120" Height="32" AriaLabel="Income sparkline" />
+            </div>
+            <div class="showcase-card">
+                <h3>Progress Bar</h3>
+                <ProgressBar Percent="72" LabelText="Budget Used" ShowPercent="true" ShowLabel="true" />
+            </div>
+            <div class="showcase-card">
+                <h3>Radial Gauge</h3>
+                <RadialGauge Percent="56" LabelText="Goal" />
+            </div>
+        </div>
+    </section>
+
+    <section class="showcase-section">
+        <h2>Exports</h2>
+        <div class="showcase-card">
+            <ExportButton Options="@exportOptions" />
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly IReadOnlyList<DonutSegmentData> donutSegments =
+    [
+        new DonutSegmentData { Id = "housing", Label = "Housing", Value = 1250m, Percentage = 40m, Color = "#6366f1", TransactionCount = 12 },
+        new DonutSegmentData { Id = "food", Label = "Food", Value = 620m, Percentage = 20m, Color = "#f97316", TransactionCount = 18 },
+        new DonutSegmentData { Id = "utilities", Label = "Utilities", Value = 310m, Percentage = 10m, Color = "#22c55e", TransactionCount = 6 },
+        new DonutSegmentData { Id = "other", Label = "Other", Value = 930m, Percentage = 30m, Color = "#94a3b8", TransactionCount = 9 },
+    ];
+
+    private decimal donutTotal => donutSegments.Sum(item => item.Value);
+
+    private readonly IReadOnlyList<BarChartSeries> barSeries =
+    [
+        new BarChartSeries { Name = "Income", Color = "#10b981" },
+        new BarChartSeries { Name = "Spending", Color = "#ef4444" },
+    ];
+
+    private readonly IReadOnlyList<BarChartGroup> barGroups =
+    [
+        new BarChartGroup
+        {
+            Label = "Jan",
+            Values =
+            [
+                new BarChartValue { Series = "Income", Value = 4200m, Color = "#10b981" },
+                new BarChartValue { Series = "Spending", Value = 3100m, Color = "#ef4444" },
+            ],
+        },
+        new BarChartGroup
+        {
+            Label = "Feb",
+            Values =
+            [
+                new BarChartValue { Series = "Income", Value = 4050m, Color = "#10b981" },
+                new BarChartValue { Series = "Spending", Value = 2950m, Color = "#ef4444" },
+            ],
+        },
+        new BarChartGroup
+        {
+            Label = "Mar",
+            Values =
+            [
+                new BarChartValue { Series = "Income", Value = 4300m, Color = "#10b981" },
+                new BarChartValue { Series = "Spending", Value = 3220m, Color = "#ef4444" },
+            ],
+        },
+    ];
+
+    private readonly IReadOnlyList<LineData> lineData =
+    [
+        new LineData { Label = "Jan", Value = 3100m },
+        new LineData { Label = "Feb", Value = 3400m },
+        new LineData { Label = "Mar", Value = 3600m },
+        new LineData { Label = "Apr", Value = 3200m },
+    ];
+
+    private readonly IReadOnlyList<decimal> sparkValues = [3m, 5m, 4m, 6m, 7m, 6m, 8m];
+
+    private readonly IReadOnlyList<ExportOption> exportOptions =
+    [
+        new ExportOption
+        {
+            Label = "Export CSV",
+            Description = "Sample export option",
+            Href = "/api/v1/exports/categories/range?startDate=2026-01-01&endDate=2026-01-31",
+        },
+    ];
+}

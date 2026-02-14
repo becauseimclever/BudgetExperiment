@@ -258,6 +258,37 @@ Based on the audit of 29 components (2026-02-01):
 | MoneyDisplay | `ShowColor` | `IsColorCoded` |
 | MoneyDisplay | `ShowPositiveSign` | `ShouldShowPositiveSign` |
 | ScopeBadge | `ShowLabel` | `IsLabelVisible` |
+
+---
+
+## 9. Chart Component Standards
+
+Chart components live in `Components/Charts/` and must follow the same parameter and accessibility conventions.
+
+### 9.1 Accessibility Requirements
+
+- All chart SVGs must include `role="img"` and `aria-label`.
+- Interactive segments (bars, points, donut segments) must be focusable and expose `aria-label` text.
+- Tooltips should be visible on hover and keyboard focus, and cleared on blur.
+- Legends must be keyboard navigable when interactive.
+
+### 9.2 Data Models
+
+- Use typed data models (`BarChartGroup`, `LineData`, `DonutSegmentData`) for rendering.
+- Avoid raw `Dictionary<string, decimal>` unless the component explicitly supports multi-series.
+- Provide stable `Id` values for segments when possible.
+
+### 9.3 Styling & Layout
+
+- Prefer CSS variables for colors and spacing (use design system tokens).
+- Chart root classes use kebab-case: `.donut-chart`, `.bar-chart`, `.line-chart`.
+- Tooltips should use consistent classes (`.donut-tooltip`, `.bar-tooltip`, `.chart-tooltip`).
+
+### 9.4 Behavior
+
+- Charts must handle empty data gracefully with an empty-state message.
+- Hover/focus interactions must not require a mouse (keyboard supported).
+- Avoid third-party charting libraries; charts are pure SVG.
 | TransactionTable | `ShowDate` | `IsDateVisible` |
 | TransactionTable | `ShowActions` | `IsActionsVisible` |
 | TransactionTable | `ShowBalance` | `IsBalanceVisible` |

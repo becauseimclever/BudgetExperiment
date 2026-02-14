@@ -1,0 +1,67 @@
+@* ChartGrid.razor - SVG grid renderer *@
+
+@using System.Globalization
+
+@if (HorizontalTicks.Count > 0 || VerticalTicks.Count > 0)
+{
+    foreach (var tick in HorizontalTicks)
+    {
+        <line x1="@F(Left)"
+              y1="@F(tick.Position)"
+              x2="@F(Right)"
+              y2="@F(tick.Position)"
+              class="chart-grid-line" />
+    }
+
+    foreach (var tick in VerticalTicks)
+    {
+        <line x1="@F(tick.Position)"
+              y1="@F(Top)"
+              x2="@F(tick.Position)"
+              y2="@F(Bottom)"
+              class="chart-grid-line" />
+    }
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the left boundary of the grid.
+    /// </summary>
+    [Parameter]
+    public double Left { get; set; }
+
+    /// <summary>
+    /// Gets or sets the right boundary of the grid.
+    /// </summary>
+    [Parameter]
+    public double Right { get; set; }
+
+    /// <summary>
+    /// Gets or sets the top boundary of the grid.
+    /// </summary>
+    [Parameter]
+    public double Top { get; set; }
+
+    /// <summary>
+    /// Gets or sets the bottom boundary of the grid.
+    /// </summary>
+    [Parameter]
+    public double Bottom { get; set; }
+
+    /// <summary>
+    /// Gets or sets the horizontal grid ticks (Y positions).
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<ChartTick> HorizontalTicks { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the vertical grid ticks (X positions).
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<ChartTick> VerticalTicks { get; set; } = [];
+
+    private static string F(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+}

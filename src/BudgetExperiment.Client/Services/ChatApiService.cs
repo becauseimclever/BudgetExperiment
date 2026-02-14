@@ -94,11 +94,15 @@ public sealed class ChatApiService : IChatApiService
     }
 
     /// <inheritdoc />
-    public async Task<SendMessageResponse?> SendMessageAsync(Guid sessionId, string content)
+    public async Task<SendMessageResponse?> SendMessageAsync(Guid sessionId, string content, ChatContextDto? context = null)
     {
         try
         {
-            var request = new SendMessageRequest { Content = content };
+            var request = new SendMessageRequest
+            {
+                Content = content,
+                Context = context,
+            };
             var response = await this._httpClient.PostAsJsonAsync(
                 $"api/v1/chat/sessions/{sessionId}/messages",
                 request,

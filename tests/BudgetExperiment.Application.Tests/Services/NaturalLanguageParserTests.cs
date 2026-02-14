@@ -542,8 +542,80 @@ public class NaturalLanguageParserTests
         // Verify context was included in the prompt
         var sentPrompt = this._mockAiService.LastPrompt;
         sentPrompt.ShouldNotBeNull();
-        sentPrompt.SystemPrompt.ShouldContain("Current account: Checking");
-        sentPrompt.SystemPrompt.ShouldContain("Current category: Groceries");
+        sentPrompt.SystemPrompt.ShouldContain("Context from the user's current view:");
+        sentPrompt.SystemPrompt.ShouldContain("The user has selected January 15, 2026 on the calendar.");
+        sentPrompt.SystemPrompt.ShouldContain("The user is viewing the 'Checking' account.");
+        sentPrompt.SystemPrompt.ShouldContain("The user is viewing the 'Groceries' category.");
+        sentPrompt.SystemPrompt.ShouldContain("The user is on the transactions page.");
+    }
+
+    [Fact]
+    public async Task ParseCommandAsync_TransactionWithoutDate_UsesContextDate()
+    {
+        // Arrange
+        var context = new ChatContext(
+            CurrentAccountName: "Checking",
+            CurrentDate: new DateOnly(2026, 2, 10));
+        var aiResponse = """
+            {
+                "intent": "transaction",
+                "confidence": 0.9,
+                "response": "Adding $25 coffee.",
+                "data": {
+                    "accountId": "11111111-1111-1111-1111-111111111111",
+                    "amount": -25.00,
+                    "description": "Coffee"
+                }
+            }
+            """;
+        this._mockAiService.SetupSuccess(aiResponse);
+
+        // Act
+        var result = await this._parser.ParseCommandAsync(
+            "Add $25 coffee",
+            this._accounts,
+            this._categories,
+            context);
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        var action = result.Action.ShouldBeOfType<CreateTransactionAction>();
+        action.Date.ShouldBe(new DateOnly(2026, 2, 10));
+    }
+
+    [Fact]
+    public async Task ParseCommandAsync_TransactionWithDate_PrefersExplicitDateOverContext()
+    {
+        // Arrange
+        var context = new ChatContext(
+            CurrentAccountName: "Checking",
+            CurrentDate: new DateOnly(2026, 2, 10));
+        var aiResponse = """
+            {
+                "intent": "transaction",
+                "confidence": 0.9,
+                "response": "Adding $25 coffee.",
+                "data": {
+                    "accountId": "11111111-1111-1111-1111-111111111111",
+                    "amount": -25.00,
+                    "date": "2026-02-12",
+                    "description": "Coffee"
+                }
+            }
+            """;
+        this._mockAiService.SetupSuccess(aiResponse);
+
+        // Act
+        var result = await this._parser.ParseCommandAsync(
+            "Add $25 coffee",
+            this._accounts,
+            this._categories,
+            context);
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        var action = result.Action.ShouldBeOfType<CreateTransactionAction>();
+        action.Date.ShouldBe(new DateOnly(2026, 2, 12));
     }
 
     [Fact]

@@ -187,13 +187,36 @@ public class AccessibilityTests
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Act
-        // Exclude chart SVGs as they have complex accessibility requirements
-        var result = await AccessibilityHelper.AnalyzePageAsync(
-            page,
-            exclude: [".chart-container", "svg.chart"]);
+        var result = await AccessibilityHelper.AnalyzePageAsync(page);
 
         // Assert
         AccessibilityHelper.AssertNoSeriousViolations(result, "Reports");
+    }
+
+    /// <summary>
+    /// Verifies the report detail pages have no serious accessibility violations.
+    /// </summary>
+    /// <param name="route">Report route.</param>
+    /// <param name="name">Report name.</param>
+    /// <returns>A task representing the async test.</returns>
+    [Theory]
+    [Trait("Category", "Accessibility")]
+    [InlineData("reports/categories", "Category Spending")]
+    [InlineData("reports/trends", "Monthly Trends")]
+    [InlineData("reports/budget-comparison", "Budget Comparison")]
+    public async Task ReportPages_ShouldHaveNoSeriousAccessibilityViolations(string route, string name)
+    {
+        // Arrange
+        var page = fixture.Page;
+        await AuthenticationHelper.LoginAsync(page, fixture.BaseUrl);
+        await page.GotoAsync($"{fixture.BaseUrl}/{route}");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Act
+        var result = await AccessibilityHelper.AnalyzePageAsync(page);
+
+        // Assert
+        AccessibilityHelper.AssertNoSeriousViolations(result, name);
     }
 
     /// <summary>

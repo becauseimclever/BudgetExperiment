@@ -1,0 +1,242 @@
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime
+
+<div class="report-canvas"
+    @ondragover:preventDefault
+    @ondrop="HandleDrop">
+    <div class="report-canvas-header">
+        <h3>Report Canvas</h3>
+        <span class="report-canvas-hint">Drag widgets here</span>
+    </div>
+
+    <div class="report-canvas-grid" style="@GetGridStyle()" @ref="gridRef">
+        @if (ReportLayout?.Widgets.Count == 0)
+        {
+            <div class="report-canvas-empty">
+                <Icon Name="plus" Size="18" />
+                <span>Drop widgets to build your report</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var widget in ReportLayout!.Widgets)
+            {
+                var lg = GetLayout(widget, "lg");
+                var md = GetLayout(widget, "md");
+                var sm = GetLayout(widget, "sm");
+
+                <ReportWidget Widget="widget"
+                              LayoutStyle="@GetWidgetStyle(lg, md, sm)"
+                              LayoutLg="lg"
+                              LayoutMd="md"
+                              LayoutSm="sm"
+                              IsSelected="@(SelectedWidgetId == widget.Id)"
+                              OnSelect="OnSelectWidget"
+                              OnDuplicate="OnDuplicate"
+                              OnRemove="OnRemove" />
+            }
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the current layout definition.
+    /// </summary>
+    [Parameter]
+    public CustomReportLayoutDefinition? ReportLayout { get; set; }
+
+    /// <summary>
+    /// Gets or sets the drop callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDropWidget { get; set; }
+
+    /// <summary>
+    /// Gets or sets the widget removal callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnRemove { get; set; }
+
+    /// <summary>
+    /// Gets or sets the widget duplicate callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDuplicate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the selected widget identifier.
+    /// </summary>
+    [Parameter]
+    public Guid? SelectedWidgetId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the widget selection callback.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnSelectWidget { get; set; }
+
+    private const int DefaultWidgetWidth = 4;
+    private const int DefaultWidgetHeight = 4;
+    private const int DefaultMinSize = 2;
+    private const int DefaultMaxSize = 12;
+    private const int BreakpointMdMaxWidth = 1024;
+    private const int BreakpointSmMaxWidth = 720;
+
+    private ElementReference gridRef;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<ReportCanvas>? dotNetRef;
+    private bool isInitialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await InitializeInteropAsync();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module != null)
+        {
+            await module.InvokeVoidAsync("disposeGridLayout", gridRef);
+            await module.DisposeAsync();
+        }
+
+        dotNetRef?.Dispose();
+    }
+
+    private string GetGridStyle()
+    {
+        var grid = ReportLayout?.Grid ?? ReportGridDefinition.CreateDefault();
+        var lgCols = grid.GetColumns("lg");
+        var mdCols = grid.GetColumns("md");
+        var smCols = grid.GetColumns("sm");
+        return $"--grid-columns-lg: {lgCols}; " +
+            $"--grid-columns-md: {mdCols}; " +
+            $"--grid-columns-sm: {smCols}; " +
+            $"--grid-row-height: {grid.RowHeight}px; " +
+            $"--grid-gap: {grid.Gap}px;";
+    }
+
+    private string GetWidgetStyle(
+        ReportWidgetLayoutPosition lg,
+        ReportWidgetLayoutPosition md,
+        ReportWidgetLayoutPosition sm)
+    {
+        return $"--grid-col-start-lg: {lg.X}; --grid-col-span-lg: {lg.Width}; " +
+            $"--grid-row-start-lg: {lg.Y}; --grid-row-span-lg: {lg.Height}; " +
+            $"--grid-col-start-md: {md.X}; --grid-col-span-md: {md.Width}; " +
+            $"--grid-row-start-md: {md.Y}; --grid-row-span-md: {md.Height}; " +
+            $"--grid-col-start-sm: {sm.X}; --grid-col-span-sm: {sm.Width}; " +
+            $"--grid-row-start-sm: {sm.Y}; --grid-row-span-sm: {sm.Height};";
+    }
+
+    private ReportWidgetLayoutPosition GetLayout(ReportWidgetDefinition widget, string breakpoint)
+    {
+        var grid = ReportLayout?.Grid ?? ReportGridDefinition.CreateDefault();
+        var columns = grid.GetColumns(breakpoint);
+        if (widget.Layouts.TryGetValue(breakpoint, out var layout))
+        {
+            return Clamp(layout, columns, widget.Constraints);
+        }
+
+        var width = Math.Min(DefaultWidgetWidth, columns);
+        return new ReportWidgetLayoutPosition
+        {
+            X = 1,
+            Y = 1,
+            Width = width,
+            Height = DefaultWidgetHeight,
+        };
+    }
+
+    private static ReportWidgetLayoutPosition Clamp(
+        ReportWidgetLayoutPosition layout,
+        int columns,
+        ReportWidgetConstraints? constraints)
+    {
+        var minWidth = constraints?.MinWidth ?? DefaultMinSize;
+        var minHeight = constraints?.MinHeight ?? DefaultMinSize;
+        var maxWidth = constraints?.MaxWidth ?? DefaultMaxSize;
+        var maxHeight = constraints?.MaxHeight ?? DefaultMaxSize;
+
+        var width = Math.Clamp(layout.Width, minWidth, Math.Min(maxWidth, columns));
+        var height = Math.Clamp(layout.Height, minHeight, maxHeight);
+        var x = Math.Clamp(layout.X, 1, Math.Max(1, columns - width + 1));
+        var y = Math.Max(1, layout.Y);
+
+        return new ReportWidgetLayoutPosition
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+        };
+    }
+
+    private async Task HandleDrop()
+    {
+        if (OnDropWidget.HasDelegate)
+        {
+            await OnDropWidget.InvokeAsync();
+        }
+    }
+
+    private async Task InitializeInteropAsync()
+    {
+        if (isInitialized)
+        {
+            return;
+        }
+
+        dotNetRef = DotNetObjectReference.Create(this);
+        module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/report-layout-grid.js");
+        await module.InvokeVoidAsync(
+            "initializeGridLayout",
+            gridRef,
+            dotNetRef,
+            new
+            {
+                rowHeight = ReportLayout?.Grid.RowHeight ?? 24,
+                gap = ReportLayout?.Grid.Gap ?? 12,
+                breakpointMdMax = BreakpointMdMaxWidth,
+                breakpointSmMax = BreakpointSmMaxWidth,
+            });
+
+        isInitialized = true;
+    }
+
+    [JSInvokable]
+    public Task UpdateWidgetLayoutAsync(
+        string widgetId,
+        string breakpoint,
+        int x,
+        int y,
+        int width,
+        int height)
+    {
+        if (ReportLayout == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (!Guid.TryParse(widgetId, out var parsedId))
+        {
+            return Task.CompletedTask;
+        }
+
+        ReportLayout.UpdateWidgetLayout(parsedId, breakpoint, new ReportWidgetLayoutPosition
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+        });
+
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

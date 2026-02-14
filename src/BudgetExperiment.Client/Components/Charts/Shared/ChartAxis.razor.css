@@ -1,0 +1,7 @@
+/* ChartAxis.razor.css - Scoped axis styles */
+
+.chart-axis-label {
+    fill: var(--color-text-muted, #6b7280);
+    font-size: 8px;
+    font-family: inherit;
+}

@@ -330,7 +330,7 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
         public Task<IReadOnlyList<ChatMessageDto>> GetMessagesAsync(Guid sessionId, int limit = 50) =>
             Task.FromResult(this.MessagesToReturn);
 
-        public Task<SendMessageResponse?> SendMessageAsync(Guid sessionId, string content) =>
+        public Task<SendMessageResponse?> SendMessageAsync(Guid sessionId, string content, ChatContextDto? context = null) =>
             Task.FromResult<SendMessageResponse?>(null);
 
         public Task<ConfirmActionResponse?> ConfirmActionAsync(Guid messageId) =>
@@ -374,6 +374,36 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
             this.ContextChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        public void SetCalendarContext(int year, int month, DateOnly? selectedDate, Guid? accountId = null, string? accountName = null)
+        {
+            this.context.CalendarViewedYear = year;
+            this.context.CalendarViewedMonth = month;
+            this.context.SelectedDate = selectedDate;
+
+            if (accountId.HasValue || !string.IsNullOrWhiteSpace(accountName))
+            {
+                this.context.CurrentAccountId = accountId;
+                this.context.CurrentAccountName = accountName;
+            }
+
+            this.ContextChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public ChatContextDto ToDto()
+        {
+            return new ChatContextDto
+            {
+                CurrentAccountId = this.context.CurrentAccountId,
+                CurrentAccountName = this.context.CurrentAccountName,
+                CurrentCategoryId = this.context.CurrentCategoryId,
+                CurrentCategoryName = this.context.CurrentCategoryName,
+                CalendarViewedYear = this.context.CalendarViewedYear,
+                CalendarViewedMonth = this.context.CalendarViewedMonth,
+                SelectedDate = this.context.SelectedDate,
+                PageType = this.context.PageType,
+            };
+        }
+
         public void ClearContext()
         {
             this.context.CurrentAccountId = null;
@@ -381,6 +411,9 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
             this.context.CurrentCategoryId = null;
             this.context.CurrentCategoryName = null;
             this.context.PageType = null;
+            this.context.CalendarViewedYear = null;
+            this.context.CalendarViewedMonth = null;
+            this.context.SelectedDate = null;
             this.ContextChanged?.Invoke(this, EventArgs.Empty);
         }
     }

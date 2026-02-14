@@ -1,5 +1,5 @@
 # Feature 062: Functional E2E Test Suite
-> **Status:** 🗒️ Planning
+> **Status:** ✅ Implemented
 > **Priority:** Medium
 
 ## Overview
@@ -118,10 +118,10 @@ tests/BudgetExperiment.E2E.Tests/
 **Objective:** Validate calendar display and navigation
 
 **Tasks:**
-- [ ] Create `CalendarTests.cs`
-- [ ] Test calendar loads and displays current month
-- [ ] Test month navigation
-- [ ] Test daily transaction display
+- [x] Create `CalendarTests.cs`
+- [x] Test calendar loads and displays current month
+- [x] Test month navigation
+- [x] Test daily transaction display
 
 **Commit:**
 - test(e2e): add calendar navigation tests
@@ -131,10 +131,10 @@ tests/BudgetExperiment.E2E.Tests/
 **Objective:** Validate starting balance in running balance calculation
 
 **Tasks:**
-- [ ] Add starting balance validation tests to `CalendarTests.cs`
-- [ ] Verify running balance starts with account starting balance
-- [ ] Verify running balance accumulates correctly with transactions
-- [ ] Test account switching updates running balance
+- [x] Add starting balance validation tests to `CalendarTests.cs`
+- [x] Verify running balance starts with account starting balance
+- [x] Verify running balance accumulates correctly with transactions
+- [x] Test account switching updates running balance
 
 **Commit:**
 - test(e2e): validate starting balance in calendar
@@ -144,11 +144,11 @@ tests/BudgetExperiment.E2E.Tests/
 **Objective:** Validate transaction management
 
 **Tasks:**
-- [ ] Create `TransactionTests.cs`
-- [ ] Test create transaction flow
-- [ ] Test edit transaction flow
-- [ ] Test delete transaction flow
-- [ ] Verify calendar updates after changes
+- [x] Create `TransactionTests.cs`
+- [x] Test create transaction flow
+- [x] Test edit transaction flow
+- [x] Test delete transaction flow
+- [x] Verify calendar updates after changes
 
 **Commit:**
 - test(e2e): add transaction CRUD tests
@@ -158,10 +158,10 @@ tests/BudgetExperiment.E2E.Tests/
 **Objective:** Validate account management and CSV import
 
 **Tasks:**
-- [ ] Create `AccountTests.cs`
-- [ ] Create `CsvImportTests.cs`
-- [ ] Test account creation and switching
-- [ ] Test CSV import end-to-end
+- [x] Create `AccountTests.cs`
+- [x] Create `CsvImportTests.cs`
+- [x] Test account creation and switching
+- [x] Test CSV import end-to-end
 
 **Commit:**
 - test(e2e): add account and import tests
@@ -173,6 +173,23 @@ tests/BudgetExperiment.E2E.Tests/
 - E2E test infrastructure (Playwright setup)
 - Demo environment with seeded data
 - Feature 059 (Performance E2E) for shared fixtures
+
+## Local Execution
+
+- Run in VS Code task runner:
+    - `E2E: Functional 062 (Local)`
+    - `E2E: Functional 062 (DemoSafe)`
+- Task file: `.vscode/tasks.json`
+- Local task sets:
+    - `RUN_E2E_TESTS=true`
+    - `BUDGET_APP_URL=http://localhost:5099`
+- Local task command:
+    - `dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj --filter "Category=Functional"`
+- DemoSafe task sets:
+    - `RUN_E2E_TESTS=true`
+    - `BUDGET_APP_URL=https://budgetdemo.becauseimclever.com`
+- DemoSafe task command:
+    - `dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj --filter "Category=Functional&Category=DemoSafe"`
 
 ---
 
@@ -188,3 +205,6 @@ tests/BudgetExperiment.E2E.Tests/
 | Date | Author | Description |
 |------|--------|-------------|
 | 2026-02-01 | AI | Created feature doc, consolidated Feature 041 scenarios |
+| 2026-02-14 | AI | Implemented functional Playwright suite: Calendar, Transaction, Account, CSV Import tests + local-run guidance |
+| 2026-02-14 | AI | Added VS Code local task for one-click Feature 062 functional suite execution |
+| 2026-02-14 | AI | Added VS Code DemoSafe task for shared-environment functional validation |

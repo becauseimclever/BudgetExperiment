@@ -1,0 +1,96 @@
+/* ExportButton.razor.css - Scoped styles for export button */
+
+.export-button {
+    position: relative;
+    display: inline-flex;
+}
+
+.export-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--color-border, #e5e7eb);
+    background: var(--color-surface, #fff);
+    color: var(--color-text, #111827);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.export-trigger:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.export-spinner {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    border: 2px solid var(--color-border, #e5e7eb);
+    border-top-color: var(--color-primary, #6366f1);
+    animation: export-spin 0.8s linear infinite;
+}
+
+.export-trigger:hover,
+.export-trigger:focus-visible {
+    background: var(--color-surface-hover, #f9fafb);
+}
+
+.export-trigger:focus-visible {
+    outline: 2px solid var(--color-primary, #6366f1);
+    outline-offset: 2px;
+}
+
+.export-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    min-width: 180px;
+    background: var(--color-surface-elevated, #fff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
+    box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.12));
+    z-index: 20;
+    padding: 0.35rem;
+}
+
+.export-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+}
+
+.export-item:hover,
+.export-item:focus-visible {
+    background: var(--color-surface-hover, #f9fafb);
+}
+
+.export-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.export-label {
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 600;
+}
+
+.export-description {
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-text-muted, #6b7280);
+}
+
+@keyframes export-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

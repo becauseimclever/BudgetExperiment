@@ -1,0 +1,32 @@
+<div class="widget-palette">
+    <h3 class="widget-palette-title">Widget Palette</h3>
+    <div class="widget-palette-list" role="list">
+        @foreach (var item in Items)
+        {
+            <div class="widget-palette-item"
+                 role="listitem"
+                 draggable="true"
+                 @ondragstart="() => OnDragStart.InvokeAsync(item.Type)">
+                <div class="widget-palette-name">@item.Title</div>
+                @if (!string.IsNullOrWhiteSpace(item.Description))
+                {
+                    <div class="widget-palette-description">@item.Description</div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the palette items.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<ReportWidgetPaletteItem> Items { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the callback when dragging starts.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnDragStart { get; set; }
+}

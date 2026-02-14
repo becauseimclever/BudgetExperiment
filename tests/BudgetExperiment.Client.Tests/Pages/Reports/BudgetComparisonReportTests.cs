@@ -33,6 +33,8 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IBudgetApiService>(this.stubApiService);
         this.Services.AddSingleton(new ScopeService(this.JSInterop.JSRuntime));
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<IToastService, ToastService>();
+        this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
     }
 
     /// <inheritdoc/>
@@ -716,5 +718,26 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns) => Task.FromResult<ImportPatternsDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<CustomReportLayoutDto>> GetCustomReportLayoutsAsync() => Task.FromResult<IReadOnlyList<CustomReportLayoutDto>>([]);
+
+        /// <inheritdoc/>
+        public Task<CustomReportLayoutDto?> GetCustomReportLayoutAsync(Guid id) => Task.FromResult<CustomReportLayoutDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<CustomReportLayoutDto?> CreateCustomReportLayoutAsync(CustomReportLayoutCreateDto dto) => Task.FromResult<CustomReportLayoutDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<CustomReportLayoutDto?> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto) => Task.FromResult<CustomReportLayoutDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<bool> DeleteCustomReportLayoutAsync(Guid id) => Task.FromResult(false);
+    }
+
+    private sealed class StubExportDownloadService : IExportDownloadService
+    {
+        public Task<ExportDownloadResult> DownloadAsync(string url, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ExportDownloadResult.Ok());
     }
 }

@@ -1,0 +1,23 @@
+/* SparkLine.razor.css - Scoped styles for sparklines */
+
+.sparkline {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.sparkline-line {
+    fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sparkline-endpoint {
+    opacity: 0.9;
+}
+
+.sparkline-empty {
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-text-muted, #6b7280);
+}

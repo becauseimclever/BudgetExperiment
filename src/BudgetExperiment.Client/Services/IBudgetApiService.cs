@@ -628,6 +628,41 @@ public interface IBudgetApiService
     Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null);
 
     /// <summary>
+    /// Gets all custom report layouts.
+    /// </summary>
+    /// <returns>List of custom report layouts.</returns>
+    Task<IReadOnlyList<CustomReportLayoutDto>> GetCustomReportLayoutsAsync();
+
+    /// <summary>
+    /// Gets a custom report layout by id.
+    /// </summary>
+    /// <param name="id">Layout id.</param>
+    /// <returns>The layout or null.</returns>
+    Task<CustomReportLayoutDto?> GetCustomReportLayoutAsync(Guid id);
+
+    /// <summary>
+    /// Creates a custom report layout.
+    /// </summary>
+    /// <param name="dto">Create DTO.</param>
+    /// <returns>The created layout.</returns>
+    Task<CustomReportLayoutDto?> CreateCustomReportLayoutAsync(CustomReportLayoutCreateDto dto);
+
+    /// <summary>
+    /// Updates a custom report layout.
+    /// </summary>
+    /// <param name="id">Layout id.</param>
+    /// <param name="dto">Update DTO.</param>
+    /// <returns>The updated layout or null.</returns>
+    Task<CustomReportLayoutDto?> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto);
+
+    /// <summary>
+    /// Deletes a custom report layout.
+    /// </summary>
+    /// <param name="id">Layout id.</param>
+    /// <returns>True if deleted.</returns>
+    Task<bool> DeleteCustomReportLayoutAsync(Guid id);
+
+    /// <summary>
     /// Gets the import patterns for a recurring transaction.
     /// </summary>
     /// <param name="recurringTransactionId">The recurring transaction ID.</param>
