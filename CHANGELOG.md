@@ -4,6 +4,16 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.15.1] - 2026-02-14
+
+### Bug Fixes
+
+- **client:** Fix modal stealing keyboard focus on every re-render, preventing typing in inputs
+
+### Testing
+
+- **client:** bUnit tests for Modal component (focus behavior, re-render regression, Escape/overlay close, sizing, accessibility)
+
 ## [3.15.0] - 2026-02-14
 
 ### Features

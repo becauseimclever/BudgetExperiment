@@ -43,6 +43,7 @@
 @code {
     private ElementReference modalDialogRef;
     private string modalTitleId = $"modal-title-{Guid.NewGuid():N}";
+    private bool _previouslyVisible;
 
     /// <summary>
     /// Gets or sets a value indicating whether the modal is visible.
@@ -102,9 +103,11 @@
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (IsVisible)
+        if (IsVisible && !_previouslyVisible)
         {
-            // Focus the modal dialog when it opens for accessibility
+            _previouslyVisible = true;
+
+            // Focus the modal dialog only when it first opens for accessibility
             try
             {
                 await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.modal-dialog')?.focus()");
@@ -113,6 +116,10 @@
             {
                 // Ignore focus errors during prerendering
             }
+        }
+        else if (!IsVisible)
+        {
+            _previouslyVisible = false;
         }
     }
 
