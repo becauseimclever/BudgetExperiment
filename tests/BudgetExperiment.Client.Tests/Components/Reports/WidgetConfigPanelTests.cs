@@ -6,14 +6,31 @@ using Bunit;
 
 using BudgetExperiment.Client.Components.Reports;
 using BudgetExperiment.Client.Models;
+using BudgetExperiment.Client.Services;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Reports;
 
 /// <summary>
 /// Unit tests for the WidgetConfigPanel component.
 /// </summary>
-public class WidgetConfigPanelTests : BunitContext
+public class WidgetConfigPanelTests : BunitContext, IAsyncLifetime
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WidgetConfigPanelTests"/> class.
+    /// </summary>
+    public WidgetConfigPanelTests()
+    {
+        this.Services.AddSingleton<ThemeService>();
+    }
+
+    /// <inheritdoc/>
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    /// <inheritdoc/>
+    public new Task DisposeAsync() => base.DisposeAsync().AsTask();
+
     [Fact]
     public void WidgetConfigPanel_Renders_Empty_State_WhenNoWidget()
     {

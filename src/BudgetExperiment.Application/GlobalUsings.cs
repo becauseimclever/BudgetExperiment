@@ -13,6 +13,7 @@ global using BudgetExperiment.Domain.Paycheck;
 global using BudgetExperiment.Domain.Reconciliation;
 global using BudgetExperiment.Domain.Recurring;
 global using BudgetExperiment.Domain.Repositories;
+global using BudgetExperiment.Domain.Reports;
 global using BudgetExperiment.Domain.Settings;
 
 // Application namespaces

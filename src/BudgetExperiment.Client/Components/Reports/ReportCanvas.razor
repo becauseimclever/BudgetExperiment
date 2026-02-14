@@ -11,7 +11,7 @@
     </div>
 
     <div class="report-canvas-grid" style="@GetGridStyle()" @ref="gridRef">
-        @if (Layout?.Widgets.Count == 0)
+        @if (ReportLayout?.Widgets.Count == 0)
         {
             <div class="report-canvas-empty">
                 <Icon Name="plus" Size="18" />
@@ -20,7 +20,7 @@
         }
         else
         {
-            @foreach (var widget in Layout!.Widgets)
+            @foreach (var widget in ReportLayout!.Widgets)
             {
                 var lg = GetLayout(widget, "lg");
                 var md = GetLayout(widget, "md");
@@ -45,7 +45,7 @@
     /// Gets or sets the current layout definition.
     /// </summary>
     [Parameter]
-    public CustomReportLayoutDefinition? Layout { get; set; }
+    public CustomReportLayoutDefinition? ReportLayout { get; set; }
 
     /// <summary>
     /// Gets or sets the drop callback.
@@ -110,10 +110,13 @@
 
     private string GetGridStyle()
     {
-        var grid = Layout?.Grid ?? ReportGridDefinition.CreateDefault();
-        return $"--grid-columns-lg: {grid.GetColumns(\"lg\")}; " +
-            $"--grid-columns-md: {grid.GetColumns(\"md\")}; " +
-            $"--grid-columns-sm: {grid.GetColumns(\"sm\")}; " +
+        var grid = ReportLayout?.Grid ?? ReportGridDefinition.CreateDefault();
+        var lgCols = grid.GetColumns("lg");
+        var mdCols = grid.GetColumns("md");
+        var smCols = grid.GetColumns("sm");
+        return $"--grid-columns-lg: {lgCols}; " +
+            $"--grid-columns-md: {mdCols}; " +
+            $"--grid-columns-sm: {smCols}; " +
             $"--grid-row-height: {grid.RowHeight}px; " +
             $"--grid-gap: {grid.Gap}px;";
     }
@@ -133,7 +136,7 @@
 
     private ReportWidgetLayoutPosition GetLayout(ReportWidgetDefinition widget, string breakpoint)
     {
-        var grid = Layout?.Grid ?? ReportGridDefinition.CreateDefault();
+        var grid = ReportLayout?.Grid ?? ReportGridDefinition.CreateDefault();
         var columns = grid.GetColumns(breakpoint);
         if (widget.Layouts.TryGetValue(breakpoint, out var layout))
         {
@@ -197,8 +200,8 @@
             dotNetRef,
             new
             {
-                rowHeight = Layout?.Grid.RowHeight ?? 24,
-                gap = Layout?.Grid.Gap ?? 12,
+                rowHeight = ReportLayout?.Grid.RowHeight ?? 24,
+                gap = ReportLayout?.Grid.Gap ?? 12,
                 breakpointMdMax = BreakpointMdMaxWidth,
                 breakpointSmMax = BreakpointSmMaxWidth,
             });
@@ -215,7 +218,7 @@
         int width,
         int height)
     {
-        if (Layout == null)
+        if (ReportLayout == null)
         {
             return Task.CompletedTask;
         }
@@ -225,7 +228,7 @@
             return Task.CompletedTask;
         }
 
-        Layout.UpdateWidgetLayout(parsedId, breakpoint, new ReportWidgetLayoutPosition
+        ReportLayout.UpdateWidgetLayout(parsedId, breakpoint, new ReportWidgetLayoutPosition
         {
             X = x,
             Y = y,

@@ -55,7 +55,7 @@ public sealed class ExportDownloadService : IExportDownloadService, IAsyncDispos
                 return ExportDownloadResult.Fail("Download helper unavailable.");
             }
 
-            await using var streamRef = new DotNetStreamReference(new MemoryStream(bytes));
+            using var streamRef = new DotNetStreamReference(new MemoryStream(bytes));
             await this.module.InvokeVoidAsync(
                 "downloadFileFromStream",
                 cancellationToken,

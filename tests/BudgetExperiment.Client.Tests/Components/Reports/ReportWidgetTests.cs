@@ -6,16 +6,32 @@ using Bunit;
 
 using BudgetExperiment.Client.Components.Reports;
 using BudgetExperiment.Client.Models;
+using BudgetExperiment.Client.Services;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Reports;
 
 /// <summary>
 /// Unit tests for the ReportWidget component.
 /// </summary>
-public class ReportWidgetTests : BunitContext
+public class ReportWidgetTests : BunitContext, IAsyncLifetime
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReportWidgetTests"/> class.
+    /// </summary>
+    public ReportWidgetTests()
+    {
+        this.Services.AddSingleton<ThemeService>();
+    }
+
+    /// <inheritdoc/>
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    /// <inheritdoc/>
+    public new Task DisposeAsync() => base.DisposeAsync().AsTask();
+
     [Fact]
     public void ReportWidget_Renders_Title_And_Type()
     {

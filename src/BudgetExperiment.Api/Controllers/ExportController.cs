@@ -28,6 +28,7 @@ public sealed class ExportController : ControllerBase
     /// Initializes a new instance of the <see cref="ExportController"/> class.
     /// </summary>
     /// <param name="reportService">Report service.</param>
+    /// <param name="budgetProgressService">Budget progress service.</param>
     /// <param name="exportService">Export service.</param>
     public ExportController(
         IReportService reportService,

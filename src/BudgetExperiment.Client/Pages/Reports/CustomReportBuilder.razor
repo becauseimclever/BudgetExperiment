@@ -28,9 +28,9 @@
             <label for="layout-select">Layout</label>
             <select id="layout-select" @onchange="HandleLayoutChange" disabled="@isSaving">
                 <option value="">Select layout</option>
-                @foreach (var layout in layouts)
+                @foreach (var savedLayout in layouts)
                 {
-                    <option value="@layout.Id" selected="@(currentLayout?.Id == layout.Id)">@layout.Name</option>
+                    <option value="@savedLayout.Id" selected="@(currentLayout?.Id == savedLayout.Id)">@savedLayout.Name</option>
                 }
             </select>
         </div>
@@ -57,7 +57,7 @@
 
     <div class="builder-grid">
         <WidgetPalette Items="paletteItems" OnDragStart="HandleDragStart" />
-        <ReportCanvas Layout="layoutDefinition"
+        <ReportCanvas ReportLayout="layoutDefinition"
                       SelectedWidgetId="selectedWidgetId"
                       OnSelectWidget="HandleSelectWidget"
                       OnDropWidget="HandleDrop"

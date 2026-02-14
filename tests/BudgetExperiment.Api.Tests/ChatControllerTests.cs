@@ -348,7 +348,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
         }
 
         public Task<ActionExecutionResult> ConfirmActionAsync(Guid messageId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(new ActionExecutionResult(false, ChatActionType.Unknown, null, "Not implemented"));
+            Task.FromResult(new ActionExecutionResult(false, default(ChatActionType), null, "Not implemented"));
 
         public Task<bool> CancelActionAsync(Guid messageId, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);

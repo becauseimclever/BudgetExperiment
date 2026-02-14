@@ -4,6 +4,8 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.15.0] - 2026-02-14
+
 ### Features
 
 - **client:** LineChart component for trend visualization with multi-series support, axes, grid, and reference lines
@@ -27,6 +29,16 @@ All notable changes to Budget Experiment.
 - **client:** BarChart click events for drill-down
 - **client:** Component showcase page for charts and exports
 
+### Bug Fixes
+
+- **client:** Fix Razor parser failure with escaped quotes in ReportCanvas interpolated strings
+- **client:** Fix `@layout` directive conflict in CustomReportBuilder by renaming variable
+- **client:** Fix AreaChart string parameter bindings missing `@` prefix
+- **client:** Fix ExportDownloadService async disposal pattern
+- **infra:** Add missing `Domain.Reports` global using in Infrastructure and Application
+- **api:** Add missing XML doc param tag in ExportController
+- **api:** Fix invalid `ChatActionType.Unknown` enum reference in tests
+
 ### Testing
 
 - **client:** bUnit tests for LineChart (empty state, paths, points, multi-series, ARIA)
@@ -43,12 +55,15 @@ All notable changes to Budget Experiment.
 - **e2e:** Report export flow test for CSV download
 - **e2e:** Custom report builder tests for drag/select and save/reload
 - **e2e:** Accessibility coverage expanded to report pages
+- **client:** Fix missing IBudgetApiService stub methods and service registrations in test classes
+- **client:** Fix ThemeService IAsyncDisposable handling with IAsyncLifetime in bUnit tests
 
 ### Documentation
 
 - **docs:** Update Feature 053 spec for custom report builder layout, endpoints, and Phase 7 status
 - **docs:** Feature 053 updates for grid layout, presets, tests, and deferred items
 - **docs:** Chart component standards added to component guidelines
+- **docs:** Feature 053.1 — build and test fix catalog for features 051–053
 - **readme:** Reports and component showcase documentation updates
 
 ## [3.14.1] - 2026-02-08

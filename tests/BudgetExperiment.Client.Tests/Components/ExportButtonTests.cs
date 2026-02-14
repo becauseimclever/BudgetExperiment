@@ -7,6 +7,7 @@ using System.Threading;
 using Bunit;
 using BudgetExperiment.Client.Components.Export;
 using BudgetExperiment.Client.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components;
 
