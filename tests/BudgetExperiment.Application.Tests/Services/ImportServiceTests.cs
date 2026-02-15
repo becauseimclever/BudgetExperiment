@@ -1033,17 +1033,16 @@ public class ImportServiceTests
     #region Skip Rows Tests
 
     [Fact]
-    public async Task PreviewAsync_WithSkipRows_SkipsFirstNRows()
+    public async Task PreviewAsync_WithSkipRows_ProcessesAllRowsAndOffsetsRowIndex()
     {
-        // Arrange
+        // Arrange - CsvParserService already stripped 2 metadata rows before header.
+        // PreviewAsync receives only the data rows, RowsToSkip is for display offset only.
         var request = new ImportPreviewRequest
         {
             AccountId = Guid.NewGuid(),
             Rows =
             [
-                ["Account: 12345", "", ""],  // Metadata row 1 (should be skipped)
-                ["Date Range: 01/01/2026", "", ""],  // Metadata row 2 (should be skipped)
-                ["01/15/2026", "Actual Transaction", "-50.00"],  // Real data row
+                ["01/15/2026", "Actual Transaction", "-50.00"],
             ],
             Mappings =
             [
@@ -1059,7 +1058,7 @@ public class ImportServiceTests
         // Act
         var result = await this._service.PreviewAsync(request);
 
-        // Assert
+        // Assert - data row is processed, row index offset by skipped rows + header
         Assert.Single(result.Rows);
         Assert.Equal("Actual Transaction", result.Rows[0].Description);
         Assert.Equal(-50.00m, result.Rows[0].Amount);
@@ -1067,9 +1066,10 @@ public class ImportServiceTests
     }
 
     [Fact]
-    public async Task PreviewAsync_WithSkipRowsExceedingTotal_ReturnsEmptyResult()
+    public async Task PreviewAsync_WithHighSkipRows_StillProcessesAllDataRows()
     {
-        // Arrange
+        // Arrange - RowsToSkip is handled by CsvParserService during parsing.
+        // PreviewAsync receives post-parse data rows regardless of RowsToSkip value.
         var request = new ImportPreviewRequest
         {
             AccountId = Guid.NewGuid(),
@@ -1084,15 +1084,16 @@ public class ImportServiceTests
                 new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
             ],
             DateFormat = "MM/dd/yyyy",
-            RowsToSkip = 5, // Skip more rows than available
+            RowsToSkip = 5, // Only used for row-index display offset
             DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
         };
 
         // Act
         var result = await this._service.PreviewAsync(request);
 
-        // Assert
-        Assert.Empty(result.Rows);
+        // Assert - data row is still processed, row index offset by skipped rows
+        Assert.Single(result.Rows);
+        Assert.Equal(6, result.Rows[0].RowIndex); // 5 skipped + 1-based
     }
 
     [Fact]
@@ -1268,6 +1269,45 @@ public class ImportServiceTests
         Assert.Single(result.Rows);
         Assert.Equal(ImportRowStatus.Warning, result.Rows[0].Status);
         Assert.Contains("Unrecognized indicator", result.Rows[0].StatusMessage);
+    }
+
+    #endregion
+
+    #region RowsToSkip should NOT double-skip
+
+    [Fact]
+    public async Task PreviewAsync_WithRowsToSkip_DoesNotDoubleSkipAlreadyParsedRows()
+    {
+        // Arrange - The CsvParserService has already skipped metadata rows and returned
+        // only data rows. RowsToSkip should NOT be applied again by PreviewAsync.
+        var request = new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows =
+            [
+                ["01/01/2026", "Transaction 1", "-10.00"],
+                ["01/02/2026", "Transaction 2", "-20.00"],
+                ["01/03/2026", "Transaction 3", "-30.00"],
+                ["01/04/2026", "Transaction 4", "-40.00"],
+                ["01/05/2026", "Transaction 5", "-50.00"],
+                ["01/06/2026", "Transaction 6", "-60.00"],
+                ["01/07/2026", "Transaction 7", "-70.00"],
+            ],
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+            ],
+            RowsToSkip = 6,
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+        };
+
+        // Act
+        var result = await this._service.PreviewAsync(request);
+
+        // Assert - All 7 rows should be processed, none double-skipped
+        Assert.Equal(7, result.Rows.Count);
     }
 
     #endregion

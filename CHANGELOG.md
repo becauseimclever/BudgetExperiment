@@ -4,6 +4,21 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.15.2] - 2026-02-15
+
+### Bug Fixes
+
+- **application:** Fix CSV import skip-rows double-skip bug — `RowsToSkip` was applied in both `CsvParserService` and `ImportService`, causing the first N data rows to be silently discarded
+
+### Testing
+
+- **application:** Add regression test for skip-rows double-skip bug (`PreviewAsync_WithRowsToSkip_DoesNotDoubleSkipAlreadyParsedRows`)
+- **application:** Update two existing skip-rows tests to assert correct (non-double-skip) behavior
+
+### Documentation
+
+- **docs:** Feature 069 — CSV import skip-rows double-skip bug fix
+
 ## [3.15.1] - 2026-02-14
 
 ### Bug Fixes

@@ -95,19 +95,11 @@ public sealed class ImportService : IImportService
             return new ImportPreviewResult();
         }
 
-        // Apply skip rows - skip the first N data rows (metadata rows)
+        // RowsToSkip is applied during CSV parsing (CsvParserService.ParseAsync)
+        // which already strips metadata rows before the header. The rows arriving
+        // here are post-skip data rows, so we must NOT skip again. RowsToSkip is
+        // only used for display-offset calculation in row index numbering below.
         var rowsToProcess = request.Rows;
-        var skippedRows = new List<IReadOnlyList<string>>();
-        if (request.RowsToSkip > 0 && request.RowsToSkip < request.Rows.Count)
-        {
-            skippedRows = request.Rows.Take(request.RowsToSkip).ToList();
-            rowsToProcess = request.Rows.Skip(request.RowsToSkip).ToList();
-        }
-        else if (request.RowsToSkip >= request.Rows.Count)
-        {
-            // All rows are skipped - nothing to process
-            return new ImportPreviewResult();
-        }
 
         // Load active categorization rules
         var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
