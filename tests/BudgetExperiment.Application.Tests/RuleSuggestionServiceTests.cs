@@ -1216,4 +1216,182 @@ public class RuleSuggestionServiceTests
     }
 
     #endregion
+
+    #region ExtractJson Tests
+
+    [Fact]
+    public void ExtractJson_Returns_Pure_Json_Unchanged()
+    {
+        // Arrange
+        var json = """{"suggestions": []}""";
+
+        // Act
+        var result = RuleSuggestionService.ExtractJson(json);
+
+        // Assert
+        Assert.Equal(json, result);
+    }
+
+    [Fact]
+    public void ExtractJson_Strips_Markdown_Code_Block_Wrapping()
+    {
+        // Arrange
+        var content = """
+            ```json
+            {"suggestions": [{"pattern": "WALMART"}]}
+            ```
+            """;
+
+        // Act
+        var result = RuleSuggestionService.ExtractJson(content);
+
+        // Assert
+        Assert.StartsWith("{", result);
+        Assert.EndsWith("}", result);
+        Assert.Contains("WALMART", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Strips_Preamble_Text()
+    {
+        // Arrange
+        var content = """
+            Here is the JSON response:
+            {"suggestions": [{"pattern": "TARGET"}]}
+            """;
+
+        // Act
+        var result = RuleSuggestionService.ExtractJson(content);
+
+        // Assert
+        Assert.StartsWith("{", result);
+        Assert.Contains("TARGET", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Strips_Trailing_Text()
+    {
+        // Arrange
+        var content = """
+            {"suggestions": []}
+            Hope this helps!
+            """;
+
+        // Act
+        var result = RuleSuggestionService.ExtractJson(content);
+
+        // Assert
+        Assert.Equal("""{"suggestions": []}""", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Throws_JsonException_When_No_Json_Found()
+    {
+        // Arrange
+        var content = "Sorry, I cannot help with that.";
+
+        // Act & Assert
+        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(content));
+    }
+
+    [Fact]
+    public void ExtractJson_Throws_JsonException_For_Empty_Content()
+    {
+        // Act & Assert
+        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(string.Empty));
+    }
+
+    #endregion
+
+    #region Markdown-Wrapped AI Response Integration Tests
+
+    [Fact]
+    public async Task SuggestNewRulesAsync_Parses_Markdown_Wrapped_Json_Response()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "WALMART STORE #123", "WALMART SUPERCENTER");
+        SetupCategories(categoryRepo, ("Groceries", GroceryCategoryId));
+        SetupExistingRules(ruleRepo);
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // AI response wrapped in markdown code block — the exact scenario that caused the bug
+        var aiResponse = """
+            ```json
+            {
+              "suggestions": [
+                {
+                  "pattern": "WALMART",
+                  "matchType": "Contains",
+                  "categoryName": "Groceries",
+                  "confidence": 0.95,
+                  "reasoning": "Both contain WALMART",
+                  "sampleMatches": ["WALMART STORE #123", "WALMART SUPERCENTER"]
+                }
+              ]
+            }
+            ```
+            """;
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.SuggestNewRulesAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("WALMART", result[0].SuggestedPattern);
+        Assert.Equal(GroceryCategoryId, result[0].SuggestedCategoryId);
+    }
+
+    [Fact]
+    public async Task SuggestNewRulesAsync_Parses_Response_With_Preamble_Text()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "TARGET STORE #789");
+        SetupCategories(categoryRepo, ("Groceries", GroceryCategoryId));
+        SetupExistingRules(ruleRepo);
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // AI response with preamble text before JSON
+        var aiResponse = """
+            Here are my suggestions based on the transaction data:
+            {
+              "suggestions": [
+                {
+                  "pattern": "TARGET",
+                  "matchType": "Contains",
+                  "categoryName": "Groceries",
+                  "confidence": 0.90,
+                  "reasoning": "Target is a grocery store",
+                  "sampleMatches": ["TARGET STORE #789"]
+                }
+              ]
+            }
+            """;
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.SuggestNewRulesAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("TARGET", result[0].SuggestedPattern);
+    }
+
+    #endregion
 }

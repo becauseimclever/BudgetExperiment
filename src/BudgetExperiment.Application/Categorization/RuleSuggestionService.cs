@@ -413,7 +413,8 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
     {
         try
         {
-            var parsed = JsonSerializer.Deserialize<NewRuleSuggestionResponse>(jsonContent, JsonOptions);
+            var extracted = ExtractJson(jsonContent);
+            var parsed = JsonSerializer.Deserialize<NewRuleSuggestionResponse>(extracted, JsonOptions);
             if (parsed?.Suggestions is null || parsed.Suggestions.Count == 0)
             {
                 return Array.Empty<RuleSuggestion>();
@@ -530,6 +531,28 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         public string? Resolution { get; init; }
     }
 
+    /// <summary>
+    /// Extracts the first complete JSON object from raw AI response text.
+    /// AI models frequently wrap JSON in markdown code blocks or add preamble
+    /// text despite being instructed not to. This method strips that wrapping
+    /// so <see cref="JsonSerializer"/> can parse the content.
+    /// </summary>
+    /// <param name="content">The raw AI response text.</param>
+    /// <returns>The extracted JSON string.</returns>
+    /// <exception cref="JsonException">Thrown when no JSON object is found in the content.</exception>
+    public static string ExtractJson(string content)
+    {
+        var jsonStart = content.IndexOf('{');
+        var jsonEnd = content.LastIndexOf('}');
+
+        if (jsonStart < 0 || jsonEnd < 0 || jsonEnd <= jsonStart)
+        {
+            throw new JsonException("No JSON object found in AI response.");
+        }
+
+        return content.Substring(jsonStart, jsonEnd - jsonStart + 1);
+    }
+
     private static IReadOnlyList<(string RuleName, int MatchCount)> CalculateMatchStats(
         IReadOnlyList<CategorizationRule> rules,
         IReadOnlyList<string> descriptions)
@@ -598,7 +621,8 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
     {
         try
         {
-            var parsed = JsonSerializer.Deserialize<OptimizationSuggestionResponse>(jsonContent, JsonOptions);
+            var extracted = ExtractJson(jsonContent);
+            var parsed = JsonSerializer.Deserialize<OptimizationSuggestionResponse>(extracted, JsonOptions);
             if (parsed?.Suggestions is null || parsed.Suggestions.Count == 0)
             {
                 return Array.Empty<RuleSuggestion>();
@@ -756,7 +780,8 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
     {
         try
         {
-            var parsed = JsonSerializer.Deserialize<ConflictDetectionResponse>(jsonContent, JsonOptions);
+            var extracted = ExtractJson(jsonContent);
+            var parsed = JsonSerializer.Deserialize<ConflictDetectionResponse>(extracted, JsonOptions);
             if (parsed?.Conflicts is null || parsed.Conflicts.Count == 0)
             {
                 return Array.Empty<RuleSuggestion>();
