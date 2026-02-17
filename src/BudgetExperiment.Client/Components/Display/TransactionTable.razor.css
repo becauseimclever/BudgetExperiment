@@ -1,0 +1,26 @@
+/* ==========================================================================
+   Sortable Column Headers
+   ========================================================================== */
+
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    white-space: nowrap;
+}
+
+th.sortable:hover {
+    background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
+}
+
+th.sortable.sorted {
+    color: var(--color-primary, #0d6efd);
+}
+
+.sort-arrow {
+    display: inline-block;
+    width: 1em;
+    font-size: 0.7em;
+    vertical-align: middle;
+    opacity: 0.8;
+}

@@ -11,14 +11,22 @@ else
             <tr>
                 @if (ShowDate)
                 {
-                    <th>Date</th>
+                    <th class="@SortableHeaderClass(SortDate)" @onclick="@(() => ToggleSort(SortDate))" aria-sort="@GetAriaSortValue(SortDate)">
+                        Date <span class="sort-arrow">@GetSortArrow(SortDate)</span>
+                    </th>
                 }
-                <th>Description</th>
+                <th class="@SortableHeaderClass(SortDescription)" @onclick="@(() => ToggleSort(SortDescription))" aria-sort="@GetAriaSortValue(SortDescription)">
+                    Description <span class="sort-arrow">@GetSortArrow(SortDescription)</span>
+                </th>
                 <th>Category</th>
-                <th class="text-right">Amount</th>
+                <th class="text-right @SortableHeaderClass(SortAmount)" @onclick="@(() => ToggleSort(SortAmount))" aria-sort="@GetAriaSortValue(SortAmount)">
+                    Amount <span class="sort-arrow">@GetSortArrow(SortAmount)</span>
+                </th>
                 @if (ShowBalance)
                 {
-                    <th class="text-right">Balance</th>
+                    <th class="text-right @SortableHeaderClass(SortBalance)" @onclick="@(() => ToggleSort(SortBalance))" aria-sort="@GetAriaSortValue(SortBalance)">
+                        Balance <span class="sort-arrow">@GetSortArrow(SortBalance)</span>
+                    </th>
                 }
                 @if (ShowActions)
                 {
@@ -214,17 +222,106 @@ else
     [Parameter]
     public EventCallback<TransactionListItem> OnConfirmRecurring { get; set; }
 
+    private const string SortDate = "Date";
+    private const string SortDescription = "Description";
+    private const string SortAmount = "Amount";
+    private const string SortBalance = "Balance";
+
+    private string _sortColumn = SortDate;
+    private bool _sortDescending = true;
+
     private IEnumerable<TransactionDto> OrderedTransactions =>
-        ShowDate
-            ? Transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
-            : Transactions;
+        ApplySortTransactions(Transactions);
 
     private IEnumerable<TransactionListItem> OrderedItems =>
         Items == null
             ? Enumerable.Empty<TransactionListItem>()
-            : ShowDate
-                ? Items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue)
-                : Items;
+            : ApplySortItems(Items);
+
+    private void ToggleSort(string column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortDescending = !_sortDescending;
+        }
+        else
+        {
+            _sortColumn = column;
+
+            // Default direction: Date descending, everything else ascending
+            _sortDescending = column == SortDate;
+        }
+    }
+
+    private string SortableHeaderClass(string column)
+    {
+        var css = "sortable";
+        if (_sortColumn == column)
+        {
+            css += " sorted";
+        }
+
+        return css;
+    }
+
+    private string GetSortArrow(string column)
+    {
+        if (_sortColumn != column)
+        {
+            return string.Empty;
+        }
+
+        return _sortDescending ? "\u25BC" : "\u25B2";
+    }
+
+    private string GetAriaSortValue(string column)
+    {
+        if (_sortColumn != column)
+        {
+            return "none";
+        }
+
+        return _sortDescending ? "descending" : "ascending";
+    }
+
+    private IEnumerable<TransactionListItem> ApplySortItems(IReadOnlyList<TransactionListItem> items)
+    {
+        return _sortColumn switch
+        {
+            SortDate => _sortDescending
+                ? items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue)
+                : items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt ?? DateTime.MinValue),
+            SortDescription => _sortDescending
+                ? items.OrderByDescending(i => i.Description, StringComparer.OrdinalIgnoreCase)
+                : items.OrderBy(i => i.Description, StringComparer.OrdinalIgnoreCase),
+            SortAmount => _sortDescending
+                ? items.OrderByDescending(i => i.Amount.Amount)
+                : items.OrderBy(i => i.Amount.Amount),
+            SortBalance => _sortDescending
+                ? items.OrderByDescending(i => i.RunningBalance.Amount)
+                : items.OrderBy(i => i.RunningBalance.Amount),
+            _ => items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue),
+        };
+    }
+
+    private IEnumerable<TransactionDto> ApplySortTransactions(IReadOnlyList<TransactionDto> transactions)
+    {
+        return _sortColumn switch
+        {
+            SortDate => _sortDescending
+                ? transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
+                : transactions.OrderBy(t => t.Date).ThenBy(t => t.CreatedAt),
+            SortDescription => _sortDescending
+                ? transactions.OrderByDescending(t => t.Description, StringComparer.OrdinalIgnoreCase)
+                : transactions.OrderBy(t => t.Description, StringComparer.OrdinalIgnoreCase),
+            SortAmount => _sortDescending
+                ? transactions.OrderByDescending(t => t.Amount.Amount)
+                : transactions.OrderBy(t => t.Amount.Amount),
+            _ => _sortDescending
+                ? transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
+                : transactions.OrderBy(t => t.Date).ThenBy(t => t.CreatedAt),
+        };
+    }
 
     private static string GetTransferTooltip(TransactionListItem item)
     {

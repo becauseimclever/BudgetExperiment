@@ -201,12 +201,12 @@ Refs: #071"
 **Objective:** Make Date, Description, Amount, and Balance columns sortable with visual indicators.
 
 **Tasks:**
-- [ ] Add sort state (`_sortColumn`, `_sortDescending`) to `TransactionTable.razor` `@code` block.
-- [ ] Replace static `<th>` elements with clickable sort headers.
-- [ ] Implement `ToggleSort(column)` method and `SortedItems` computed property.
-- [ ] Add CSS for `.sortable`, `.sorted`, `.sort-arrow` in scoped stylesheet.
-- [ ] Verify running balance values remain unchanged regardless of display sort order.
-- [ ] Add bUnit tests for sort toggle behaviour (if bUnit is in use).
+- [x] Add sort state (`_sortColumn`, `_sortDescending`) to `TransactionTable.razor` `@code` block.
+- [x] Replace static `<th>` elements with clickable sort headers with `aria-sort` attributes.
+- [x] Implement `ToggleSort(column)`, `ApplySortItems`, and `ApplySortTransactions` methods.
+- [x] Add scoped CSS for `.sortable`, `.sorted`, `.sort-arrow` in `TransactionTable.razor.css`.
+- [x] Verify running balance values remain unchanged regardless of display sort order (bUnit test).
+- [x] Add 10 bUnit tests covering default sort, toggle, arrows, aria attributes, and balance integrity.
 
 **Commit:**
 ```bash
@@ -339,3 +339,4 @@ No new security surface. Sorting and pagination are client-side only; no new API
 |------|--------|--------|
 | 2026-02-16 | Initial draft | @copilot |
 | 2026-02-16 | Phase 1 complete — running balance bug fixed with 4 new tests | @copilot |
+| 2026-02-16 | Phase 2 complete — sortable columns with 10 bUnit tests | @copilot |
