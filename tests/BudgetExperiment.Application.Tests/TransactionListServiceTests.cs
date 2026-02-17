@@ -894,6 +894,233 @@ public class TransactionListServiceTests
         Assert.Equal(2500m, result.StartingBalance.Amount);
     }
 
+    [Fact]
+    public async Task GetAccountTransactionListAsync_RunningBalance_IncludesInitialBalance_WhenStartDateEqualsInitialBalanceDate()
+    {
+        // Arrange - Account with $1000 initial balance on Jan 1, view starts on Jan 1
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        // GetBalanceBeforeDateAsync(Jan 1) correctly returns 0 — nothing exists before Jan 1
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 1),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Zero("USD"));
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransactionWithDate(accountId, -50m, new DateOnly(2026, 1, 1), "Coffee"),
+            CreateTestTransactionWithDate(accountId, 200m, new DateOnly(2026, 1, 5), "Refund"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 1, 31));
+
+        // Assert - Running balance must include the $1000 initial balance
+        // Starting seed: 0 (before Jan 1) + 1000 (initial balance) = 1000
+        // After -50 on Jan 1: 950
+        // After +200 on Jan 5: 1150
+        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt).ToList();
+        Assert.Equal(950m, itemsByDateAsc[0].RunningBalance.Amount);
+        Assert.Equal(1150m, itemsByDateAsc[1].RunningBalance.Amount);
+
+        // StartingBalance (the seed shown in the UI) should be 1000
+        Assert.Equal(1000m, result.StartingBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_RunningBalance_IncludesInitialBalance_WhenStartDateBeforeInitialBalanceDate()
+    {
+        // Arrange - Account with $500 initial balance on Jan 15, view starts on Jan 1
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Savings", 500m, new DateOnly(2026, 1, 15));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        // GetBalanceBeforeDateAsync(Jan 1) returns 0 — nothing before Jan 1
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 1),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Zero("USD"));
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransactionWithDate(accountId, -100m, new DateOnly(2026, 1, 20), "Withdrawal"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 1, 31));
+
+        // Assert - Running balance must include the $500 initial balance
+        // Seed: 0 (before Jan 1) + 500 (initial balance, since Jan 1 < Jan 15) = 500
+        // After -100 on Jan 20: 400
+        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ToList();
+        Assert.Equal(400m, itemsByDateAsc[0].RunningBalance.Amount);
+
+        // StartingBalance should include the initial balance
+        Assert.Equal(500m, result.StartingBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_DailyBalances_IncludeInitialBalance_WhenStartDateEqualsInitialBalanceDate()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 1),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Zero("USD"));
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransactionWithDate(accountId, -50m, new DateOnly(2026, 1, 1), "Coffee"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 1, 31));
+
+        // Assert - Daily balance for Jan 1 should start at 1000 (initial balance)
+        Assert.Single(result.DailyBalances);
+        var day = result.DailyBalances[0];
+        Assert.Equal(new DateOnly(2026, 1, 1), day.Date);
+        Assert.Equal(1000m, day.StartingBalance.Amount);
+        Assert.Equal(950m, day.EndingBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_ZeroInitialBalance_NoAdjustmentNeeded()
+    {
+        // Arrange - Account with $0 initial balance (default)
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 0m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 1, 1),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Zero("USD"));
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransactionWithDate(accountId, 500m, new DateOnly(2026, 1, 5), "Deposit"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        _recurringTransferRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 1, 31));
+
+        // Assert - Running balance starts at 0, after +500 = 500
+        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ToList();
+        Assert.Equal(500m, itemsByDateAsc[0].RunningBalance.Amount);
+        Assert.Equal(0m, result.StartingBalance.Amount);
+    }
+
     #endregion
 
     private TransactionListService CreateService()

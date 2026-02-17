@@ -108,11 +108,20 @@ public sealed class TransactionListService : ITransactionListService
             accountId,
             cancellationToken);
 
+        // GetBalanceBeforeDateAsync returns the balance *strictly before* startDate.
+        // When startDate <= InitialBalanceDate the initial balance is not included
+        // in the "before" result, so we must add it to the running balance seed.
+        var balanceSeed = startingBalance.Amount;
+        if (startDate <= account.InitialBalanceDate)
+        {
+            balanceSeed += account.InitialBalance.Amount;
+        }
+
         // Sort items by date ascending for running balance calculation
         var sortedForBalance = items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt ?? DateTime.MinValue).ToList();
 
         // Calculate running balance for each item
-        var runningBalance = startingBalance.Amount;
+        var runningBalance = balanceSeed;
         foreach (var item in sortedForBalance)
         {
             runningBalance += item.Amount.Amount;
@@ -120,7 +129,7 @@ public sealed class TransactionListService : ITransactionListService
         }
 
         // Calculate daily balance summaries
-        var dailyBalances = CalculateDailyBalances(sortedForBalance, startingBalance.Amount);
+        var dailyBalances = CalculateDailyBalances(sortedForBalance, balanceSeed);
 
         // Calculate summary
         var transactionCount = sortedItems.Count(i => i.Type == "transaction");
@@ -149,7 +158,7 @@ public sealed class TransactionListService : ITransactionListService
                 CurrentBalance = new MoneyDto { Currency = "USD", Amount = currentBalance },
             },
             DailyBalances = dailyBalances.OrderByDescending(d => d.Date).ToList(),
-            StartingBalance = new MoneyDto { Currency = startingBalance.Currency, Amount = startingBalance.Amount },
+            StartingBalance = new MoneyDto { Currency = startingBalance.Currency, Amount = balanceSeed },
         };
     }
 
