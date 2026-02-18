@@ -4,7 +4,7 @@
     <AuthInitializer>
         <Router AppAssembly="@typeof(App).Assembly">
             <Found Context="routeData">
-                @if (IsAuthenticationRoute(routeData))
+                @if (IsPublicRoute(routeData))
                 {
                     <RouteView RouteData="@routeData" />
                 }
@@ -32,8 +32,10 @@
 </CascadingAuthenticationState>
 
 @code {
-    private static bool IsAuthenticationRoute(RouteData routeData)
+    private static bool IsPublicRoute(RouteData routeData)
     {
-        return routeData.PageType.FullName?.Contains("Authentication") == true;
+        var typeName = routeData.PageType.FullName;
+        return typeName?.Contains("Authentication") == true
+            || typeName?.Contains("Licenses") == true;
     }
 }

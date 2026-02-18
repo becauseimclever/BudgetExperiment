@@ -118,6 +118,19 @@
   flex-shrink: 0;
   padding: var(--space-4);
   border-top: 1px solid var(--color-border-subtle);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  margin-top: auto;
+}
+
+.app-footer a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 /* ==========================================================================
