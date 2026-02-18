@@ -11,20 +11,20 @@ else
             <tr>
                 @if (ShowDate)
                 {
-                    <th class="@SortableHeaderClass(SortDate)" @onclick="@(() => ToggleSort(SortDate))" aria-sort="@GetAriaSortValue(SortDate)">
+                    <th class="@SortableHeaderClass(SortDate)" @onclick="@(() => ToggleSort(SortDate))" @onkeydown="@(e => HandleHeaderKeyDown(e, SortDate))" aria-sort="@GetAriaSortValue(SortDate)" tabindex="0" role="columnheader">
                         Date <span class="sort-arrow">@GetSortArrow(SortDate)</span>
                     </th>
                 }
-                <th class="@SortableHeaderClass(SortDescription)" @onclick="@(() => ToggleSort(SortDescription))" aria-sort="@GetAriaSortValue(SortDescription)">
+                <th class="@SortableHeaderClass(SortDescription)" @onclick="@(() => ToggleSort(SortDescription))" @onkeydown="@(e => HandleHeaderKeyDown(e, SortDescription))" aria-sort="@GetAriaSortValue(SortDescription)" tabindex="0" role="columnheader">
                     Description <span class="sort-arrow">@GetSortArrow(SortDescription)</span>
                 </th>
                 <th>Category</th>
-                <th class="text-right @SortableHeaderClass(SortAmount)" @onclick="@(() => ToggleSort(SortAmount))" aria-sort="@GetAriaSortValue(SortAmount)">
+                <th class="text-right @SortableHeaderClass(SortAmount)" @onclick="@(() => ToggleSort(SortAmount))" @onkeydown="@(e => HandleHeaderKeyDown(e, SortAmount))" aria-sort="@GetAriaSortValue(SortAmount)" tabindex="0" role="columnheader">
                     Amount <span class="sort-arrow">@GetSortArrow(SortAmount)</span>
                 </th>
                 @if (ShowBalance)
                 {
-                    <th class="text-right @SortableHeaderClass(SortBalance)" @onclick="@(() => ToggleSort(SortBalance))" aria-sort="@GetAriaSortValue(SortBalance)">
+                    <th class="text-right @SortableHeaderClass(SortBalance)" @onclick="@(() => ToggleSort(SortBalance))" @onkeydown="@(e => HandleHeaderKeyDown(e, SortBalance))" aria-sort="@GetAriaSortValue(SortBalance)" tabindex="0" role="columnheader">
                         Balance <span class="sort-arrow">@GetSortArrow(SortBalance)</span>
                     </th>
                 }
@@ -37,7 +37,7 @@ else
         <tbody>
             @if (Items != null && Items.Count > 0)
             {
-                @foreach (var item in OrderedItems)
+                @foreach (var item in PagedItems)
                 {
                     <tr class="@GetRowClass(item)">
                         @if (ShowDate)
@@ -140,6 +140,26 @@ else
             }
         </tbody>
     </table>
+
+    @if (Items != null && Items.Count > 0 && TotalPages > 1)
+    {
+        <nav class="pagination-bar" aria-label="Transaction table pagination">
+            <span class="pagination-info">Showing @PaginationStart&ndash;@PaginationEnd of @TotalItemCount</span>
+            <div class="pagination-controls">
+                <button class="pagination-prev" disabled="@(_currentPage == 1)" @onclick="PreviousPage" aria-label="Previous page">&laquo;</button>
+                @foreach (var pageNum in PageNumbers)
+                {
+                    <button class="pagination-page @(pageNum == _currentPage ? "active" : "")" @onclick="@(() => GoToPage(pageNum))">@pageNum</button>
+                }
+                <button class="pagination-next" disabled="@(_currentPage == TotalPages)" @onclick="NextPage" aria-label="Next page">&raquo;</button>
+                <select class="pagination-page-size" value="@_pageSize" @onchange="OnPageSizeChanged" aria-label="Page size">
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </nav>
+    }
 }
 
 @code {
@@ -226,9 +246,13 @@ else
     private const string SortDescription = "Description";
     private const string SortAmount = "Amount";
     private const string SortBalance = "Balance";
+    private const int DefaultPageSize = 50;
 
     private string _sortColumn = SortDate;
     private bool _sortDescending = true;
+    private int _currentPage = 1;
+    private int _pageSize = DefaultPageSize;
+    private IReadOnlyList<TransactionListItem>? _previousItems;
 
     private IEnumerable<TransactionDto> OrderedTransactions =>
         ApplySortTransactions(Transactions);
@@ -237,6 +261,29 @@ else
         Items == null
             ? Enumerable.Empty<TransactionListItem>()
             : ApplySortItems(Items);
+
+    private IEnumerable<TransactionListItem> PagedItems =>
+        OrderedItems.Skip((_currentPage - 1) * _pageSize).Take(_pageSize);
+
+    private int TotalItemCount => Items?.Count ?? 0;
+
+    private int TotalPages => TotalItemCount == 0 ? 1 : (int)Math.Ceiling((double)TotalItemCount / _pageSize);
+
+    private int PaginationStart => (((_currentPage - 1) * _pageSize) + 1);
+
+    private int PaginationEnd => Math.Min(_currentPage * _pageSize, TotalItemCount);
+
+    private IEnumerable<int> PageNumbers => Enumerable.Range(1, TotalPages);
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Items, _previousItems))
+        {
+            _previousItems = Items;
+            _currentPage = 1;
+        }
+    }
 
     private void ToggleSort(string column)
     {
@@ -250,6 +297,40 @@ else
 
             // Default direction: Date descending, everything else ascending
             _sortDescending = column == SortDate;
+        }
+
+        _currentPage = 1;
+    }
+
+    private void HandleHeaderKeyDown(KeyboardEventArgs e, string column)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            ToggleSort(column);
+        }
+    }
+
+    private void GoToPage(int page)
+    {
+        _currentPage = Math.Clamp(page, 1, TotalPages);
+    }
+
+    private void PreviousPage()
+    {
+        GoToPage(_currentPage - 1);
+    }
+
+    private void NextPage()
+    {
+        GoToPage(_currentPage + 1);
+    }
+
+    private void OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var newSize))
+        {
+            _pageSize = newSize;
+            _currentPage = 1;
         }
     }
 

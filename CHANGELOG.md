@@ -4,6 +4,30 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **application:** Include initial balance in running balance when transaction list starts on account's InitialBalanceDate
+
+### Features
+
+- **client:** Sortable columns in transaction table — clickable headers for Date, Description, Amount, Balance with toggle ascending/descending and arrow indicators
+- **client:** Client-side pagination for transaction table — default page size 50, selectable 25/50/100, page navigation bar with item count display
+
+### Accessibility
+
+- **client:** Keyboard navigation for sortable column headers (Enter/Space activation, tabindex, focus-visible outline)
+- **client:** ARIA attributes on sort headers (`aria-sort`) and pagination controls (`aria-label`, `<nav>` landmark)
+
+### Testing
+
+- **application:** Unit tests for running balance initial-balance boundary condition (4 tests)
+- **client:** bUnit tests for sortable column headers (14 tests)
+- **client:** bUnit tests for client-side pagination (20 tests)
+
+### Documentation
+
+- **docs:** Feature 071 — transaction list running balance bug, sorting & pagination
+
 ## [3.15.2] - 2026-02-15
 
 ### Bug Fixes

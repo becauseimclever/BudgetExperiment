@@ -13,6 +13,11 @@ th.sortable:hover {
     background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
 }
 
+th.sortable:focus-visible {
+    outline: 2px solid var(--color-primary, #0d6efd);
+    outline-offset: -2px;
+}
+
 th.sortable.sorted {
     color: var(--color-primary, #0d6efd);
 }
@@ -23,4 +28,79 @@ th.sortable.sorted {
     font-size: 0.7em;
     vertical-align: middle;
     opacity: 0.8;
+}
+
+/* ==========================================================================
+   Pagination Bar
+   ========================================================================== */
+
+.pagination-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.pagination-info {
+    color: var(--color-text-muted, #6c757d);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pagination-prev,
+.pagination-next,
+.pagination-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--color-border, #dee2e6);
+    background-color: var(--color-bg-surface, #fff);
+    color: var(--color-text, #212529);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.pagination-prev:hover:not([disabled]),
+.pagination-next:hover:not([disabled]),
+.pagination-page:hover:not(.active) {
+    background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.04));
+    border-color: var(--color-primary, #0d6efd);
+}
+
+.pagination-prev:disabled,
+.pagination-next:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-page.active {
+    background-color: var(--color-primary, #0d6efd);
+    border-color: var(--color-primary, #0d6efd);
+    color: #fff;
+    cursor: default;
+}
+
+.pagination-page-size {
+    margin-left: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--color-border, #dee2e6);
+    border-radius: 0.25rem;
+    background-color: var(--color-bg-surface, #fff);
+    color: var(--color-text, #212529);
+    font-size: 0.875rem;
+    cursor: pointer;
 }

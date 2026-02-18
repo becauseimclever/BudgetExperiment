@@ -210,6 +210,61 @@ public sealed class TransactionTableSortTests : BunitContext
         Assert.Empty(cut.FindAll("th"));
     }
 
+    [Fact]
+    public void SortableHeaders_HaveTabIndex()
+    {
+        // Arrange & Act
+        var cut = RenderTable(CreateTestItems());
+
+        // Assert — all sortable headers are keyboard-focusable
+        var headers = cut.FindAll("th.sortable");
+        Assert.All(headers, h => Assert.Equal("0", h.GetAttribute("tabindex")));
+    }
+
+    [Fact]
+    public void SortableHeaders_HaveColumnHeaderRole()
+    {
+        // Arrange & Act
+        var cut = RenderTable(CreateTestItems());
+
+        // Assert
+        var headers = cut.FindAll("th.sortable");
+        Assert.All(headers, h => Assert.Equal("columnheader", h.GetAttribute("role")));
+    }
+
+    [Fact]
+    public void EnterKey_TogglesSortOnHeader()
+    {
+        // Arrange
+        var cut = RenderTable(CreateTestItems());
+        var dateHeader = cut.Find("th.sortable.sorted");
+
+        // Assert — starts descending
+        Assert.Equal("descending", dateHeader.GetAttribute("aria-sort"));
+
+        // Act — press Enter to toggle
+        dateHeader.KeyDown(key: "Enter");
+
+        // Assert — now ascending
+        dateHeader = cut.Find("th.sortable.sorted");
+        Assert.Equal("ascending", dateHeader.GetAttribute("aria-sort"));
+    }
+
+    [Fact]
+    public void SpaceKey_TogglesSortOnHeader()
+    {
+        // Arrange
+        var cut = RenderTable(CreateTestItems());
+        var dateHeader = cut.Find("th.sortable.sorted");
+
+        // Act — press Space to toggle
+        dateHeader.KeyDown(key: " ");
+
+        // Assert — toggled to ascending
+        dateHeader = cut.Find("th.sortable.sorted");
+        Assert.Equal("ascending", dateHeader.GetAttribute("aria-sort"));
+    }
+
     private static List<TransactionListItem> CreateTestItems()
     {
         return new List<TransactionListItem>
