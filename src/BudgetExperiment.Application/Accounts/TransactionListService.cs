@@ -137,7 +137,7 @@ public sealed class TransactionListService : ITransactionListService
         var totalAmount = sortedItems.Sum(i => i.Amount.Amount);
         var totalIncome = sortedItems.Where(i => i.Amount.Amount > 0).Sum(i => i.Amount.Amount);
         var totalExpenses = sortedItems.Where(i => i.Amount.Amount < 0).Sum(i => i.Amount.Amount);
-        var currentBalance = account.InitialBalance.Amount + totalAmount;
+        var currentBalance = runningBalance;
 
         return new TransactionListDto
         {

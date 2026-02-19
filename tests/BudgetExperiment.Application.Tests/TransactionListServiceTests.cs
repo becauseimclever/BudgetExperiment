@@ -269,6 +269,112 @@ public class TransactionListServiceTests
         Assert.Equal(1300.00m, result.Summary.CurrentBalance.Amount); // 1000 + 300
     }
 
+    [Fact]
+    public async Task GetAccountTransactionListAsync_CurrentBalance_Includes_PreRange_Transactions()
+    {
+        // Arrange — Account with $1000 initial balance on 2026-01-01.
+        // Transactions in January total +$500 (before the viewed range).
+        // Viewing February which has one −$200 transaction.
+        // Correct current balance = 1000 + 500 − 200 = 1300.
+        // Bug would compute: 1000 + (−200) = 800 (ignoring January).
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 1000m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        // Only February transaction is returned by the repo (date range filter).
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransactionWithDate(accountId, -200.00m, new DateOnly(2026, 2, 10), "Feb expense"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        // Balance service returns initial balance + January transactions = 1000 + 500 = 1500
+        // (balance strictly before Feb 1).
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 2, 1),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 1500.00m));
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 2, 1),
+            new DateOnly(2026, 2, 28));
+
+        // Assert — current balance should equal balanceSeed (1500) + range total (−200) = 1300
+        Assert.Equal(1300.00m, result.Summary.CurrentBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetAccountTransactionListAsync_CurrentBalance_Matches_Last_RunningBalance()
+    {
+        // Arrange — verify CurrentBalance matches the last row's running balance.
+        var accountId = Guid.NewGuid();
+        var account = CreateTestAccountWithInitialBalance(accountId, "Checking", 500m, new DateOnly(2026, 1, 1));
+
+        _accountRepo
+            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTestTransactionWithDate(accountId, 300.00m, new DateOnly(2026, 3, 5), "Deposit"),
+            CreateTestTransactionWithDate(accountId, -100.00m, new DateOnly(2026, 3, 15), "Bill"),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        // Pre-range balance (initial 500 + Jan-Feb transactions totaling +200) = 700
+        _balanceService
+            .Setup(s => s.GetBalanceBeforeDateAsync(
+                new DateOnly(2026, 3, 1),
+                accountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create("USD", 700.00m));
+
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAccountTransactionListAsync(
+            accountId,
+            new DateOnly(2026, 3, 1),
+            new DateOnly(2026, 3, 31));
+
+        // Assert — last running balance (date ascending): 700 + 300 = 1000, then 1000 − 100 = 900
+        // CurrentBalance should match the last row's running balance.
+        var lastItem = result.Items.OrderBy(i => i.Date).Last();
+        Assert.Equal(900.00m, result.Summary.CurrentBalance.Amount);
+        Assert.Equal(result.Summary.CurrentBalance.Amount, lastItem.RunningBalance!.Amount);
+    }
+
     #region Unified Transaction Display Tests (Feature 014)
 
     [Fact]
