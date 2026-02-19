@@ -1,5 +1,5 @@
 # Feature 074: Batch Realize — NotImplementedException in Application Service
-> **Status:** Planning  
+> **Status:** Complete  
 > **Priority:** Medium (code hygiene / architecture)  
 > **Estimated Effort:** Small (< 1 day)  
 > **Dependencies:** None
@@ -104,8 +104,8 @@ foreach (var item in request.Items)
 
 ## Definition of Done
 
-- [ ] No `NotImplementedException` in `PastDueService`
-- [ ] Controller delegates to application service
-- [ ] Unit tests cover all batch realize paths
-- [ ] All existing tests pass
-- [ ] No new StyleCop warnings
+- [x] No `NotImplementedException` in `PastDueService`
+- [x] Controller delegates to application service
+- [x] Unit tests cover all batch realize paths
+- [x] All existing tests pass
+- [x] No new StyleCop warnings
