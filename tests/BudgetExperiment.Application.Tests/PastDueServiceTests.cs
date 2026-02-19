@@ -19,6 +19,8 @@ public sealed class PastDueServiceTests
     private readonly Mock<IRecurringTransferRepository> _recurringTransferRepo;
     private readonly Mock<ITransactionRepository> _transactionRepo;
     private readonly Mock<IAccountRepository> _accountRepo;
+    private readonly Mock<IRecurringTransactionRealizationService> _transactionRealizationService;
+    private readonly Mock<IRecurringTransferRealizationService> _transferRealizationService;
     private readonly PastDueService _service;
 
     /// <summary>
@@ -30,12 +32,16 @@ public sealed class PastDueServiceTests
         this._recurringTransferRepo = new Mock<IRecurringTransferRepository>();
         this._transactionRepo = new Mock<ITransactionRepository>();
         this._accountRepo = new Mock<IAccountRepository>();
+        this._transactionRealizationService = new Mock<IRecurringTransactionRealizationService>();
+        this._transferRealizationService = new Mock<IRecurringTransferRealizationService>();
 
         this._service = new PastDueService(
             this._recurringTransactionRepo.Object,
             this._recurringTransferRepo.Object,
             this._transactionRepo.Object,
             this._accountRepo.Object,
+            this._transactionRealizationService.Object,
+            this._transferRealizationService.Object,
             () => new DateOnly(2026, 1, 11)); // Fixed "today" for testing
     }
 
@@ -374,5 +380,116 @@ public sealed class PastDueServiceTests
         Assert.NotNull(result.TotalAmount);
         Assert.Equal(-45.98m, result.TotalAmount.Amount);
         Assert.Equal(new DateOnly(2026, 1, 5), result.OldestDate);
+    }
+
+    /// <summary>
+    /// RealizeBatchAsync realizes mixed transaction and transfer items successfully.
+    /// </summary>
+    [Fact]
+    public async Task RealizeBatchAsync_MixedItems_ReturnsAllSuccess()
+    {
+        // Arrange
+        var transactionId = Guid.NewGuid();
+        var transferId = Guid.NewGuid();
+        var request = new BatchRealizeRequest
+        {
+            Items =
+            [
+                new BatchRealizeItemRequest { Id = transactionId, Type = "recurring-transaction", InstanceDate = new DateOnly(2026, 1, 5) },
+                new BatchRealizeItemRequest { Id = transferId, Type = "recurring-transfer", InstanceDate = new DateOnly(2026, 1, 6) },
+            ],
+        };
+
+        this._transactionRealizationService
+            .Setup(s => s.RealizeInstanceAsync(
+                transactionId,
+                It.Is<RealizeRecurringTransactionRequest>(r => r.InstanceDate == new DateOnly(2026, 1, 5)),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransactionDto());
+
+        this._transferRealizationService
+            .Setup(s => s.RealizeInstanceAsync(
+                transferId,
+                It.Is<RealizeRecurringTransferRequest>(r => r.InstanceDate == new DateOnly(2026, 1, 6)),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransferResponse());
+
+        // Act
+        var result = await this._service.RealizeBatchAsync(request);
+
+        // Assert
+        Assert.Equal(2, result.SuccessCount);
+        Assert.Equal(0, result.FailureCount);
+        Assert.Empty(result.Failures);
+    }
+
+    /// <summary>
+    /// RealizeBatchAsync reports failure for unknown item type.
+    /// </summary>
+    [Fact]
+    public async Task RealizeBatchAsync_UnknownType_ReturnsFailure()
+    {
+        // Arrange
+        var itemId = Guid.NewGuid();
+        var request = new BatchRealizeRequest
+        {
+            Items =
+            [
+                new BatchRealizeItemRequest { Id = itemId, Type = "unknown-type", InstanceDate = new DateOnly(2026, 1, 5) },
+            ],
+        };
+
+        // Act
+        var result = await this._service.RealizeBatchAsync(request);
+
+        // Assert
+        Assert.Equal(0, result.SuccessCount);
+        Assert.Equal(1, result.FailureCount);
+        Assert.Single(result.Failures);
+        Assert.Equal(itemId, result.Failures[0].Id);
+        Assert.Contains("Unknown item type", result.Failures[0].Error);
+    }
+
+    /// <summary>
+    /// RealizeBatchAsync handles partial failure when one item throws.
+    /// </summary>
+    [Fact]
+    public async Task RealizeBatchAsync_PartialFailure_ReportsSuccessAndFailure()
+    {
+        // Arrange
+        var successId = Guid.NewGuid();
+        var failId = Guid.NewGuid();
+        var request = new BatchRealizeRequest
+        {
+            Items =
+            [
+                new BatchRealizeItemRequest { Id = successId, Type = "recurring-transaction", InstanceDate = new DateOnly(2026, 1, 5) },
+                new BatchRealizeItemRequest { Id = failId, Type = "recurring-transaction", InstanceDate = new DateOnly(2026, 1, 6) },
+            ],
+        };
+
+        this._transactionRealizationService
+            .Setup(s => s.RealizeInstanceAsync(
+                successId,
+                It.IsAny<RealizeRecurringTransactionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransactionDto());
+
+        this._transactionRealizationService
+            .Setup(s => s.RealizeInstanceAsync(
+                failId,
+                It.IsAny<RealizeRecurringTransactionRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DomainException("Already realized"));
+
+        // Act
+        var result = await this._service.RealizeBatchAsync(request);
+
+        // Assert
+        Assert.Equal(1, result.SuccessCount);
+        Assert.Equal(1, result.FailureCount);
+        Assert.Single(result.Failures);
+        Assert.Equal(failId, result.Failures[0].Id);
+        Assert.Equal("Already realized", result.Failures[0].Error);
     }
 }

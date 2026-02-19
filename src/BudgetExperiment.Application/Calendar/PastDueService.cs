@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.Recurring;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -18,6 +19,8 @@ public sealed class PastDueService : IPastDueService
     private readonly IRecurringTransferRepository _recurringTransferRepo;
     private readonly ITransactionRepository _transactionRepo;
     private readonly IAccountRepository _accountRepo;
+    private readonly IRecurringTransactionRealizationService _transactionRealizationService;
+    private readonly IRecurringTransferRealizationService _transferRealizationService;
     private readonly Func<DateOnly> _todayProvider;
 
     /// <summary>
@@ -27,18 +30,24 @@ public sealed class PastDueService : IPastDueService
     /// <param name="recurringTransferRepo">The recurring transfer repository.</param>
     /// <param name="transactionRepo">The transaction repository.</param>
     /// <param name="accountRepo">The account repository.</param>
+    /// <param name="transactionRealizationService">The recurring transaction realization service.</param>
+    /// <param name="transferRealizationService">The recurring transfer realization service.</param>
     /// <param name="todayProvider">Optional function to provide current date (for testing).</param>
     public PastDueService(
         IRecurringTransactionRepository recurringTransactionRepo,
         IRecurringTransferRepository recurringTransferRepo,
         ITransactionRepository transactionRepo,
         IAccountRepository accountRepo,
+        IRecurringTransactionRealizationService transactionRealizationService,
+        IRecurringTransferRealizationService transferRealizationService,
         Func<DateOnly>? todayProvider = null)
     {
         this._recurringTransactionRepo = recurringTransactionRepo;
         this._recurringTransferRepo = recurringTransferRepo;
         this._transactionRepo = transactionRepo;
         this._accountRepo = accountRepo;
+        this._transactionRealizationService = transactionRealizationService;
+        this._transferRealizationService = transferRealizationService;
         this._todayProvider = todayProvider ?? (() => DateOnly.FromDateTime(DateTime.UtcNow));
     }
 
@@ -156,9 +165,67 @@ public sealed class PastDueService : IPastDueService
     }
 
     /// <inheritdoc/>
-    public Task<BatchRealizeResultDto> RealizeBatchAsync(BatchRealizeRequest request, CancellationToken cancellationToken = default)
+    public async Task<BatchRealizeResultDto> RealizeBatchAsync(BatchRealizeRequest request, CancellationToken cancellationToken = default)
     {
-        // This will be implemented when we wire up the batch endpoint
-        throw new NotImplementedException();
+        var successCount = 0;
+        var failures = new List<BatchRealizeFailure>();
+
+        foreach (var item in request.Items)
+        {
+            try
+            {
+                if (item.Type == "recurring-transaction")
+                {
+                    var realizeRequest = new RealizeRecurringTransactionRequest
+                    {
+                        InstanceDate = item.InstanceDate,
+                    };
+                    await this._transactionRealizationService.RealizeInstanceAsync(
+                        item.Id,
+                        realizeRequest,
+                        cancellationToken);
+                    successCount++;
+                }
+                else if (item.Type == "recurring-transfer")
+                {
+                    var realizeRequest = new RealizeRecurringTransferRequest
+                    {
+                        InstanceDate = item.InstanceDate,
+                    };
+                    await this._transferRealizationService.RealizeInstanceAsync(
+                        item.Id,
+                        realizeRequest,
+                        cancellationToken);
+                    successCount++;
+                }
+                else
+                {
+                    failures.Add(new BatchRealizeFailure
+                    {
+                        Id = item.Id,
+                        Type = item.Type,
+                        InstanceDate = item.InstanceDate,
+                        Error = $"Unknown item type: {item.Type}",
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                failures.Add(new BatchRealizeFailure
+                {
+                    Id = item.Id,
+                    Type = item.Type,
+                    InstanceDate = item.InstanceDate,
+                    Error = ex.Message,
+                });
+            }
+        }
+
+        return new BatchRealizeResultDto
+        {
+            SuccessCount = successCount,
+            FailureCount = failures.Count,
+            Failures = failures,
+        };
     }
 }
