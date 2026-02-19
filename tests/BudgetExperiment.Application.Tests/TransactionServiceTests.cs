@@ -162,4 +162,48 @@ public class TransactionServiceTests
         Assert.Null(result.CategoryId);
         categorizationEngine.Verify(e => e.FindMatchingCategoryAsync("RANDOM STORE", default), Times.Once);
     }
+
+    [Fact]
+    public async Task DeleteAsync_Removes_Transaction_And_Returns_True()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var money = MoneyValue.Create("USD", 25m);
+        var transaction = account.AddTransaction(money, new DateOnly(2026, 1, 10), "To Delete");
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(transaction.Id, default)).ReturnsAsync(transaction);
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        // Act
+        var result = await service.DeleteAsync(transaction.Id);
+
+        // Assert
+        Assert.True(result);
+        transactionRepo.Verify(r => r.RemoveAsync(transaction, default), Times.Once);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Returns_False_When_Transaction_Not_Found()
+    {
+        // Arrange
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Transaction?)null);
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        // Act
+        var result = await service.DeleteAsync(Guid.NewGuid());
+
+        // Assert
+        Assert.False(result);
+        transactionRepo.Verify(r => r.RemoveAsync(It.IsAny<Transaction>(), default), Times.Never);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
+    }
 }

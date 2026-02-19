@@ -114,5 +114,24 @@ public sealed class TransactionService : ITransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return AccountMapper.ToDto(transaction);
     }
+
+    /// <summary>
+    /// Deletes a transaction by its identifier.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the transaction was deleted; false if not found.</returns>
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (transaction is null)
+        {
+            return false;
+        }
+
+        await this._repository.RemoveAsync(transaction, cancellationToken);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }
 

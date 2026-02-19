@@ -68,6 +68,54 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    /// <summary>
+    /// DELETE /api/v1/transactions/{id} returns 404 for non-existent transaction.
+    /// </summary>
+    [Fact]
+    public async Task Delete_Returns_404_WhenNotFound()
+    {
+        // Act
+        var response = await this._client.DeleteAsync($"/api/v1/transactions/{Guid.NewGuid()}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    /// <summary>
+    /// DELETE /api/v1/transactions/{id} returns 204 when transaction exists.
+    /// </summary>
+    [Fact]
+    public async Task Delete_Returns_204_WhenTransactionExists()
+    {
+        // Arrange — create an account first, then a transaction
+        var accountDto = new AccountCreateDto { Name = "DeleteTest", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = 42m },
+            Date = new DateOnly(2026, 2, 19),
+            Description = "To Be Deleted",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        // Act
+        var deleteResponse = await this._client.DeleteAsync($"/api/v1/transactions/{created.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        // Verify transaction is gone
+        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+
     #region Uncategorized Transactions Tests
 
     /// <summary>

@@ -1,5 +1,5 @@
 # Feature 073: Delete Transaction — Not Implemented Across Stack
-> **Status:** Planning  
+> **Status:** Complete  
 > **Priority:** High (bug)  
 > **Estimated Effort:** Medium (1–2 days)  
 > **Dependencies:** None

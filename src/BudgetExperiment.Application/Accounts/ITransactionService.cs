@@ -45,4 +45,12 @@ public interface ITransactionService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated transaction DTO, or null if not found.</returns>
     Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a transaction by its identifier.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the transaction was deleted; false if not found.</returns>
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

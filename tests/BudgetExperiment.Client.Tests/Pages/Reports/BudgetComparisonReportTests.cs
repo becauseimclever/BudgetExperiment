@@ -513,6 +513,9 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         public Task<TransactionDto?> UpdateTransactionAsync(Guid id, TransactionUpdateDto model) => Task.FromResult<TransactionDto?>(null);
 
         /// <inheritdoc/>
+        public Task<bool> DeleteTransactionAsync(Guid id) => Task.FromResult(false);
+
+        /// <inheritdoc/>
         public Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null) => Task.FromResult(new CalendarGridDto());
 
         /// <inheritdoc/>

@@ -421,11 +421,19 @@
 
         try
         {
-            // TODO: Implement delete when API supports it
-            // await ApiService.DeleteTransactionAsync(deletingItem.Id);
+            var deleted = await ApiService.DeleteTransactionAsync(deletingItem.Id);
+            if (!deleted)
+            {
+                errorMessage = "Failed to delete transaction. It may have already been removed.";
+            }
+
             showDeleteConfirm = false;
             deletingItem = null;
             await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete transaction: {ex.Message}";
         }
         finally
         {

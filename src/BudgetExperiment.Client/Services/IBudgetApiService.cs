@@ -79,6 +79,13 @@ public interface IBudgetApiService
     Task<TransactionDto?> UpdateTransactionAsync(Guid id, TransactionUpdateDto model);
 
     /// <summary>
+    /// Deletes a transaction by ID.
+    /// </summary>
+    /// <param name="id">The transaction ID.</param>
+    /// <returns>True if successfully deleted; false otherwise.</returns>
+    Task<bool> DeleteTransactionAsync(Guid id);
+
+    /// <summary>
     /// Gets a complete calendar grid with all data pre-computed.
     /// </summary>
     /// <param name="year">The year.</param>

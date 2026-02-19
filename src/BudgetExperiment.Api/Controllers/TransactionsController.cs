@@ -119,6 +119,26 @@ public sealed class TransactionsController : ControllerBase
     }
 
     /// <summary>
+    /// Deletes a transaction by ID.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>204 No Content on success; 404 if not found.</returns>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var deleted = await this._service.DeleteAsync(id, cancellationToken);
+        if (!deleted)
+        {
+            return this.NotFound();
+        }
+
+        return this.NoContent();
+    }
+
+    /// <summary>
     /// Gets uncategorized transactions with optional filtering, sorting, and paging.
     /// </summary>
     /// <param name="startDate">Optional start date filter (inclusive).</param>

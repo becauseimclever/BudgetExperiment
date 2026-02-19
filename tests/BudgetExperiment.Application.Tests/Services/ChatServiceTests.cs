@@ -669,6 +669,9 @@ public class ChatServiceTests
 
         public Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, CancellationToken cancellationToken = default) =>
             Task.FromResult<TransactionDto?>(null);
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
     }
 
     private sealed class MockUnitOfWork : IUnitOfWork

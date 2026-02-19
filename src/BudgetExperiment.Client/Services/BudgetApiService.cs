@@ -202,6 +202,21 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<bool> DeleteTransactionAsync(Guid id)
+    {
+        try
+        {
+            var response = await this._httpClient.DeleteAsync($"api/v1/transactions/{id}");
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null)
     {
         try
