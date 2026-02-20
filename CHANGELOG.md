@@ -12,6 +12,9 @@ All notable changes to Budget Experiment.
 
 - **client:** Sortable columns in transaction table — clickable headers for Date, Description, Amount, Balance with toggle ascending/descending and arrow indicators
 - **client:** Client-side pagination for transaction table — default page size 50, selectable 25/50/100, page navigation bar with item count display
+- **client:** Silent token refresh handling — `TokenRefreshHandler` DelegatingHandler intercepts 401 responses, attempts silent token refresh, retries original request on success
+- **client:** Graceful session expiry — toast notification via existing `IToastService` when silent refresh fails, with return URL preserved for re-authentication
+- **client:** Form data preservation on session expiry — `IFormStateService`/`FormStateService` with localStorage persistence, opt-in form registration, automatic save on token refresh failure
 
 ### Accessibility
 
@@ -23,10 +26,14 @@ All notable changes to Budget Experiment.
 - **application:** Unit tests for running balance initial-balance boundary condition (4 tests)
 - **client:** bUnit tests for sortable column headers (14 tests)
 - **client:** bUnit tests for client-side pagination (20 tests)
+- **client:** Unit tests for `TokenRefreshHandler` (9 tests — 401 refresh, retry, concurrency, form state save, auth route skipping)
+- **client:** Unit tests for `FormStateService` (11 tests — save/restore/clear, multiple forms, error handling, duplicate keys)
+- **e2e:** Playwright E2E tests for session expiry scenarios (5 tests — toast on expiry, no duplicate toasts, form state preservation, re-authentication flow, valid session baseline)
 
 ### Documentation
 
 - **docs:** Feature 071 — transaction list running balance bug, sorting & pagination
+- **docs:** Feature 054 — silent token refresh handling (complete)
 
 ## [3.15.2] - 2026-02-15
 
@@ -273,7 +280,7 @@ All notable changes to Budget Experiment.
 
 - **docs:** Add THEMING.md guide for creating and customizing themes
 - **docs:** Add Feature 059 - Performance E2E Tests (deferred from 052)
-- **docs:** Add Feature 060 - Silent Token Refresh (deferred from 052)
+- **docs:** Add Feature 054 - Silent Token Refresh (deferred from 052, reprioritized from 060)
 
 ### Refactoring
 

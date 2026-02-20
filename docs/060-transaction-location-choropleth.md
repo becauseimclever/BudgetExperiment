@@ -1,4 +1,4 @@
-# 054 - Transaction Location Data & Choropleth Reporting
+# 060 - Transaction Location Data & Choropleth Reporting
 > **Status:** 🗒️ Planning
 
 ## Overview
@@ -28,7 +28,7 @@ This feature adds geographic location data to transactions and provides chorople
 
 ### Location Data Capture
 
-#### US-054-001: Manual Location Entry
+#### US-060-001: Manual Location Entry
 **As a** user  
 **I want to** manually add or edit location data for a transaction  
 **So that** I can accurately track where my spending occurs
@@ -39,7 +39,7 @@ This feature adds geographic location data to transactions and provides chorople
 - [ ] Changes persist and appear in transaction details
 - [ ] Location can be cleared/removed
 
-#### US-054-002: GPS Capture on Mobile
+#### US-060-002: GPS Capture on Mobile
 **As a** mobile user  
 **I want to** capture my current GPS location when entering a transaction  
 **So that** I don't have to manually type location details
@@ -51,7 +51,7 @@ This feature adds geographic location data to transactions and provides chorople
 - [ ] User can override auto-captured location
 - [ ] Graceful handling when GPS unavailable or denied
 
-#### US-054-003: Parse Location from Description
+#### US-060-003: Parse Location from Description
 **As a** user importing transactions  
 **I want** the system to automatically extract location data from transaction descriptions  
 **So that** imported transactions have location data without manual entry
@@ -64,7 +64,7 @@ This feature adds geographic location data to transactions and provides chorople
 
 ### Location Settings
 
-#### US-054-004: Global Location Toggle
+#### US-060-004: Global Location Toggle
 **As a** privacy-conscious user  
 **I want to** enable or disable all location features with a single setting  
 **So that** I have full control over whether location data is collected or displayed
@@ -76,7 +76,7 @@ This feature adds geographic location data to transactions and provides chorople
 - [ ] Setting change takes effect immediately without refresh
 - [ ] Clear messaging about what the setting controls
 
-#### US-054-005: Delete All Location Data
+#### US-060-005: Delete All Location Data
 **As a** user  
 **I want to** bulk-delete all location data from my transactions  
 **So that** I can remove historical location information for privacy
@@ -89,7 +89,7 @@ This feature adds geographic location data to transactions and provides chorople
 
 ### Choropleth Visualization
 
-#### US-054-006: Spending by State/Region Map
+#### US-060-006: Spending by State/Region Map
 **As a** user  
 **I want to** see a map showing my spending by state or region  
 **So that** I can visualize geographic spending patterns
@@ -101,7 +101,7 @@ This feature adds geographic location data to transactions and provides chorople
 - [ ] Click drills down to city-level data for that state
 - [ ] Date range filter matches other reports
 
-#### US-054-007: Accessible Map Visualization
+#### US-060-007: Accessible Map Visualization
 **As a** user with visual impairments  
 **I want** the choropleth map to be accessible  
 **So that** I can understand spending patterns with assistive technology
@@ -112,7 +112,7 @@ This feature adds geographic location data to transactions and provides chorople
 - [ ] Keyboard navigation between regions
 - [ ] Data table alternative view available
 
-#### US-054-008: Export Location Report Data
+#### US-060-008: Export Location Report Data
 **As a** user  
 **I want to** export the location spending data  
 **So that** I can use it in other tools or keep records
@@ -454,7 +454,7 @@ git commit -m "feat(domain): add transaction location value objects
 - Extend Transaction entity with Location property
 - Add EnableLocationData setting to AppSettings
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -480,7 +480,7 @@ git commit -m "feat(infrastructure): add location data persistence
 - Configure TransactionLocation as owned entity
 - Add composite index on Country/StateOrRegion
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -507,7 +507,7 @@ git commit -m "feat(api): add transaction location endpoints
 - Add DELETE endpoint to clear transaction location
 - Update OpenAPI docs with location schemas
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -535,7 +535,7 @@ git commit -m "feat(application): add transaction location parser
 - Return confidence scores for parsed locations
 - Add to import pipeline as optional enrichment
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -562,7 +562,7 @@ git commit -m "feat(infrastructure): add Nominatim geocoding service
 - Add POST /geocoding/reverse endpoint
 - Respect OpenStreetMap usage policy
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -589,7 +589,7 @@ git commit -m "feat(client): add transaction location UI components
 - Integrate into transaction edit form
 - Respect EnableLocationData setting visibility
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -617,7 +617,7 @@ git commit -m "feat(application): add location spending report service
 - Add GET /reports/spending-by-location endpoint
 - Return RegionSpendingDto with drill-down data
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -647,7 +647,7 @@ git commit -m "feat(client): add choropleth map visualization component
 - Implement keyboard navigation and ARIA labels
 - Add colorblind-friendly palette support
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -676,7 +676,7 @@ git commit -m "feat(client): add spending by location report page
 - Add sortable data table with region breakdown
 - Implement CSV export functionality
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -702,7 +702,7 @@ git commit -m "feat: add location data settings and privacy controls
 - Add bulk delete location data with confirmation
 - Add DELETE /settings/location-data endpoint
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---
@@ -727,7 +727,7 @@ git commit -m "feat(import): add location parsing to CSV import
 - Allow accept/reject per transaction
 - Display parse success rate in import summary
 
-Refs: #054"
+Refs: #060"
 ```
 
 ---

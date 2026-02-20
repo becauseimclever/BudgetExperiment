@@ -69,11 +69,15 @@ builder.Services.AddSingleton<ScopeService>();
 // Register the ScopeMessageHandler as transient (DelegatingHandler instances should be transient)
 builder.Services.AddTransient<ScopeMessageHandler>();
 
+// Register the TokenRefreshHandler as transient for silent 401 token refresh
+builder.Services.AddTransient<TokenRefreshHandler>();
+
 // Configure HttpClient with authorization message handler to include auth token
 // and scope message handler to include X-Budget-Scope header
 builder.Services.AddHttpClient(
     "BudgetApi",
     client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+    .AddHttpMessageHandler<TokenRefreshHandler>()
     .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>()
     .AddHttpMessageHandler<ScopeMessageHandler>();
 
@@ -90,6 +94,7 @@ builder.Services.AddScoped<IImportApiService, ImportApiService>();
 builder.Services.AddScoped<IReconciliationApiService, ReconciliationApiService>();
 builder.Services.AddScoped<IExportDownloadService, ExportDownloadService>();
 builder.Services.AddScoped<IToastService, ToastService>();
+builder.Services.AddScoped<IFormStateService, FormStateService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<VersionService>();
 
