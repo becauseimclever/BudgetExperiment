@@ -66,20 +66,20 @@ public sealed class TransactionTableSortTests : BunitContext
         // Act — click Amount header (first click = ascending)
         amountHeader.Click();
 
-        // Assert — sorted by amount ascending: -200, -50, 1000
-        var amounts = cut.FindAll("tbody tr td.text-right");
-        Assert.Contains("($200.00)", amounts[0].TextContent);
-        Assert.Contains("($50.00)", amounts[1].TextContent);
-        Assert.Contains("$1,000.00", amounts[2].TextContent);
+        // Assert — sorted by amount ascending: -200 (Groceries), -50 (Coffee), 1000 (Paycheck)
+        var rows = cut.FindAll("tbody tr");
+        Assert.Contains("Groceries", rows[0].TextContent);
+        Assert.Contains("Coffee", rows[1].TextContent);
+        Assert.Contains("Paycheck", rows[2].TextContent);
 
         // Act — click again to toggle descending
         amountHeader.Click();
 
-        // Assert — sorted by amount descending: 1000, -50, -200
-        amounts = cut.FindAll("tbody tr td.text-right");
-        Assert.Contains("$1,000.00", amounts[0].TextContent);
-        Assert.Contains("($50.00)", amounts[1].TextContent);
-        Assert.Contains("($200.00)", amounts[2].TextContent);
+        // Assert — sorted by amount descending: 1000 (Paycheck), -50 (Coffee), -200 (Groceries)
+        rows = cut.FindAll("tbody tr");
+        Assert.Contains("Paycheck", rows[0].TextContent);
+        Assert.Contains("Coffee", rows[1].TextContent);
+        Assert.Contains("Groceries", rows[2].TextContent);
     }
 
     [Fact]
@@ -164,12 +164,13 @@ public sealed class TransactionTableSortTests : BunitContext
         balanceHeader.Click();
 
         // Assert — ascending by running balance: 450 (Groceries), 950 (Coffee), 1450 (Paycheck)
-        var balanceCells = cut.FindAll("td.running-balance");
-        Assert.Equal(3, balanceCells.Count);
+        var rows = cut.FindAll("tbody tr");
+        Assert.Equal(3, rows.Count);
 
-        // First should be smallest balance
-        Assert.Contains("$450.00", balanceCells[0].TextContent);
-        Assert.Contains("$1,450.00", balanceCells[2].TextContent);
+        // Verify order by description (culture-agnostic)
+        Assert.Contains("Groceries", rows[0].TextContent);
+        Assert.Contains("Coffee", rows[1].TextContent);
+        Assert.Contains("Paycheck", rows[2].TextContent);
     }
 
     [Fact]
