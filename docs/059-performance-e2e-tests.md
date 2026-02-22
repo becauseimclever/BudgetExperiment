@@ -1,5 +1,5 @@
 # Feature 059: Performance E2E Tests with Core Web Vitals
-> **Status:** In Progress (Phase 1-3 Complete)
+> **Status:** In Progress (Phase 1-3 Complete, Phase 4 Partial)
 > **Priority:** Medium
 > **Deferred From:** Feature 052
 
@@ -173,9 +173,10 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 **Objective:** Run performance tests in GitHub Actions
 
 **Tasks:**
-- [ ] Update `.github/workflows/ci.yml` to include performance tests
-- [ ] Add performance test environment variables
-- [ ] Configure test to use demo environment
+- [x] Create `ci.yml` workflow (build + test on PRs and pushes to `main`)
+- [x] Remove PR trigger from `docker-build-publish.yml` (Docker only on push to `main` / tags)
+- [x] Add E2E performance test placeholder job in `ci.yml` (commented out, ready to enable)
+- [ ] Enable E2E job once demo environment and Playwright browsers are configured
 - [ ] Add performance summary to CI output
 
 ---
@@ -206,3 +207,4 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 |------|--------|-------------|
 | 2026-02-01 | AI | Created feature doc (deferred from Feature 052) |
 | 2026-02-01 | AI | Implemented Phase 1-3: PerformanceHelper, ZeroFlashAuthTests, PerformanceTests |
+| 2026-02-22 | AI | Phase 4 partial: Created ci.yml workflow, moved PR triggers from Docker to CI, added E2E placeholder job |
