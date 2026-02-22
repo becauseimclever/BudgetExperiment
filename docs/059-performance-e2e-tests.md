@@ -1,5 +1,5 @@
 # Feature 059: Performance E2E Tests with Core Web Vitals
-> **Status:** In Progress (Phase 1-3 Complete, Phase 4 Partial)
+> **Status:** Complete (remaining CI enablement tracked in [#17](https://github.com/becauseimclever/BudgetExperiment/issues/17))
 > **Priority:** Medium
 > **Deferred From:** Feature 052
 
@@ -198,7 +198,7 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 - Feature 052 (Performance TTFP) - ✅ Complete
 - CI workflow (`ci.yml`) - ✅ Created
 - Docker workflow restricted to releases + manual dispatch - ✅ Done
-- Demo environment availability for CI E2E runs
+- Demo environment availability for CI E2E runs — deferred to [#17](https://github.com/becauseimclever/BudgetExperiment/issues/17)
 
 ---
 
@@ -211,3 +211,4 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 | 2026-02-22 | AI | Phase 4 partial: Created ci.yml workflow, moved PR triggers from Docker to CI, added E2E placeholder job |
 | 2026-02-22 | AI | Optimized Docker workflow to tags-only + workflow_dispatch (no more builds on every push to main) |
 | 2026-02-22 | AI | Added unit tests for threshold logic (PerformanceThresholdsTests, PerformanceMetricsTests, PerformanceHelperThresholdTests). Created issue #17 for demo env CI enablement |
+| 2026-02-22 | AI | Feature closed. Remaining CI enablement deferred to issue #17 |
