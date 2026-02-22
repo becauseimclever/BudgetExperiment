@@ -4,9 +4,12 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+## [3.16.1] - 2026-02-22
+
 ### Bug Fixes
 
 - **application:** Include initial balance in running balance when transaction list starts on account's InitialBalanceDate
+- **tests:** Make `TransactionTableSortTests` culture-agnostic — assert sort order by description instead of formatted currency strings to fix CI failures on Linux runners
 
 ### Features
 
