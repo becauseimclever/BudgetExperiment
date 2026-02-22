@@ -4,6 +4,7 @@ using BudgetExperiment.Client;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
 
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -24,17 +25,35 @@ catch (HttpRequestException)
     // API not available - will fall back to static config if present
 }
 
-// Register config as singleton for injection (if available)
+// Register config as singleton for injection (always available to components)
 if (clientConfig is not null)
 {
     builder.Services.AddSingleton(clientConfig);
     builder.Services.AddSingleton(clientConfig.Authentication);
 }
-
-// Configure OIDC authentication
-if (clientConfig?.Authentication.Mode == "oidc" && clientConfig.Authentication.Oidc is not null)
+else
 {
-    // Use configuration from API
+    // Fallback: assume OIDC mode if config endpoint is unavailable
+    var fallbackAuth = new AuthenticationConfigDto { Mode = "oidc" };
+    builder.Services.AddSingleton(new ClientConfigDto { Authentication = fallbackAuth });
+    builder.Services.AddSingleton(fallbackAuth);
+}
+
+var isAuthOff = string.Equals(
+    clientConfig?.Authentication.Mode,
+    "none",
+    StringComparison.OrdinalIgnoreCase);
+
+// Configure authentication based on mode
+if (isAuthOff)
+{
+    // Auth-off mode: no OIDC provider — always authenticated as family user
+    builder.Services.AddAuthorizationCore();
+    builder.Services.AddSingleton<AuthenticationStateProvider, NoAuthAuthenticationStateProvider>();
+}
+else if (clientConfig?.Authentication.Mode == "oidc" && clientConfig.Authentication.Oidc is not null)
+{
+    // Use OIDC configuration from API
     var oidc = clientConfig.Authentication.Oidc;
     builder.Services.AddOidcAuthentication(options =>
     {
@@ -69,17 +88,28 @@ builder.Services.AddSingleton<ScopeService>();
 // Register the ScopeMessageHandler as transient (DelegatingHandler instances should be transient)
 builder.Services.AddTransient<ScopeMessageHandler>();
 
-// Register the TokenRefreshHandler as transient for silent 401 token refresh
-builder.Services.AddTransient<TokenRefreshHandler>();
+if (isAuthOff)
+{
+    // Auth-off mode: no token handlers needed — API accepts all requests
+    builder.Services.AddHttpClient(
+        "BudgetApi",
+        client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+        .AddHttpMessageHandler<ScopeMessageHandler>();
+}
+else
+{
+    // Register the TokenRefreshHandler as transient for silent 401 token refresh
+    builder.Services.AddTransient<TokenRefreshHandler>();
 
-// Configure HttpClient with authorization message handler to include auth token
-// and scope message handler to include X-Budget-Scope header
-builder.Services.AddHttpClient(
-    "BudgetApi",
-    client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
-    .AddHttpMessageHandler<TokenRefreshHandler>()
-    .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>()
-    .AddHttpMessageHandler<ScopeMessageHandler>();
+    // Configure HttpClient with authorization message handler to include auth token
+    // and scope message handler to include X-Budget-Scope header
+    builder.Services.AddHttpClient(
+        "BudgetApi",
+        client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+        .AddHttpMessageHandler<TokenRefreshHandler>()
+        .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>()
+        .AddHttpMessageHandler<ScopeMessageHandler>();
+}
 
 // Provide scoped HttpClient for injection (uses BudgetApi named client)
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BudgetApi"));

@@ -1,4 +1,51 @@
-# Quick Start - Raspberry Pi Deployment# Windows to Raspberry Pi Deployment - Quick Start Guide
+# Quick Start - Deployment Guide
+
+## Demo Mode (Easiest — No Setup Required)
+
+Get BudgetExperiment running in under a minute with bundled PostgreSQL and no authentication:
+
+```bash
+# Clone the repository (or download docker-compose.demo.yml)
+git clone https://github.com/becauseimclever/BudgetExperiment.git
+cd BudgetExperiment
+
+# Start everything
+docker compose -f docker-compose.demo.yml up -d
+```
+
+Open [http://localhost:5099](http://localhost:5099). That's it!
+
+### What's included
+
+- **PostgreSQL 16** — bundled and pre-configured, no external database needed
+- **Authentication disabled** — no identity provider setup required
+- **Persistent data** — stored in a Docker volume that survives restarts
+
+### Managing demo data
+
+```bash
+# Stop (keeps data)
+docker compose -f docker-compose.demo.yml down
+
+# Stop and delete all data
+docker compose -f docker-compose.demo.yml down -v
+
+# Update to latest version
+docker compose -f docker-compose.demo.yml pull
+docker compose -f docker-compose.demo.yml up -d
+```
+
+### Upgrading to production
+
+When you're ready for production use:
+
+1. **Enable authentication** — set `Authentication__Mode=OIDC` and configure a provider. See [docs/AUTH-PROVIDERS.md](docs/AUTH-PROVIDERS.md).
+2. **Use an external database** — point `ConnectionStrings__AppDb` to a managed PostgreSQL instance for backups and reliability.
+3. **Switch to `docker-compose.pi.yml`** — the production compose file for Raspberry Pi or server deployment (see below).
+
+---
+
+## Raspberry Pi Deployment (Production)# Windows to Raspberry Pi Deployment - Quick Start Guide
 
 
 

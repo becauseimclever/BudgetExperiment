@@ -1,0 +1,27 @@
+.auth-off-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 1rem;
+    background-color: var(--color-warning-bg, #fff8e1);
+    color: var(--color-warning-text, #856404);
+    border-bottom: 1px solid var(--color-warning-border, #ffc107);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    z-index: 100;
+}
+
+.auth-off-warning-icon {
+    flex-shrink: 0;
+    font-size: 0.875rem;
+}
+
+.auth-off-banner a {
+    color: var(--color-warning-link, #6d4c00);
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.auth-off-banner a:hover {
+    color: var(--color-warning-link-hover, #533900);
+}

@@ -1,28 +1,18 @@
-// <copyright file="AuthentikOptions.cs" company="Fortinbra">
-// Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
+// <copyright file="AuthentikProviderOptions.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
 namespace BudgetExperiment.Api;
 
 /// <summary>
-/// Configuration options for Authentik OIDC authentication.
+/// Authentik-specific OIDC provider configuration options.
+/// Nested under <see cref="AuthenticationOptions.Authentik"/>.
 /// </summary>
-/// <remarks>
-/// This class is kept for backward compatibility with existing code that injects
-/// <c>IOptions&lt;AuthentikOptions&gt;</c>. New code should use
-/// <see cref="AuthenticationOptions.Authentik"/> instead.
-/// </remarks>
-[Obsolete("Use AuthenticationOptions.Authentik (AuthentikProviderOptions) instead. This class will be removed in a future release.")]
-public sealed class AuthentikOptions
+public sealed class AuthentikProviderOptions
 {
     /// <summary>
-    /// The configuration section name.
-    /// </summary>
-    public const string SectionName = "Authentication:Authentik";
-
-    /// <summary>
     /// Gets or sets the authority URL (Authentik provider URL).
-    /// Example: https://auth.example.com/application/o/budget-experiment/
+    /// Example: https://auth.example.com/application/o/budget-experiment/.
     /// </summary>
     public string Authority { get; set; } = string.Empty;
 

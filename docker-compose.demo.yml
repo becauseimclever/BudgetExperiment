@@ -1,0 +1,80 @@
+# All-in-one demo deployment for BudgetExperiment
+# Includes PostgreSQL database - no external dependencies required!
+#
+# Usage:
+#   docker compose -f docker-compose.demo.yml up -d
+#
+# This compose file includes:
+# - PostgreSQL 16 database (pre-configured, persistent volume)
+# - BudgetExperiment API + Blazor Client
+#
+# Authentication is DISABLED by default for easy evaluation.
+# See docs/AUTH-PROVIDERS.md for production auth configuration.
+#
+# Data persists across restarts via a named volume.
+# To reset all data: docker compose -f docker-compose.demo.yml down -v
+#
+# To override settings, create a .env file (see .env.example).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: budgetexperiment-db
+    environment:
+      POSTGRES_USER: budget
+      POSTGRES_PASSWORD: budget
+      POSTGRES_DB: budgetexperiment
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budget -d budgetexperiment"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - budget-demo
+    restart: unless-stopped
+
+  budgetexperiment:
+    image: ghcr.io/becauseimclever/budgetexperiment:latest
+    container_name: budgetexperiment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5099:8080"
+    environment:
+      # ASP.NET Core configuration
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+
+      # Database connection to bundled PostgreSQL
+      - ConnectionStrings__AppDb=Host=postgres;Port=5432;Database=budgetexperiment;Username=budget;Password=budget
+
+      # Authentication DISABLED for demo (no login required)
+      # Change to "OIDC" and configure a provider for production use.
+      # See docs/AUTH-PROVIDERS.md for provider setup guides.
+      - Authentication__Mode=None
+
+      # Logging
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Warning
+
+      # Allow all hosts (demo only - restrict in production)
+      - AllowedHosts=*
+    networks:
+      - budget-demo
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+
+networks:
+  budget-demo:
+    driver: bridge

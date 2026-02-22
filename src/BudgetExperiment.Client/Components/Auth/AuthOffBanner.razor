@@ -1,0 +1,22 @@
+@* AuthOffBanner.razor - Subtle warning banner displayed when authentication is disabled *@
+
+@using BudgetExperiment.Contracts.Dtos
+
+@inject AuthenticationConfigDto AuthConfig
+
+@if (IsAuthOff)
+{
+    <div class="auth-off-banner" role="status" aria-label="Authentication disabled warning">
+        <span class="auth-off-warning-icon" aria-hidden="true">&#x26A0;&#xFE0F;</span>
+        <span>Running in demo mode &ndash; authentication disabled.</span>
+        <a href="https://github.com/becauseimclever/BudgetExperiment/blob/main/docs/AUTH-PROVIDERS.md"
+           target="_blank"
+           rel="noopener noreferrer">
+            Learn how to enable authentication
+        </a>
+    </div>
+}
+
+@code {
+    private bool IsAuthOff => string.Equals(AuthConfig.Mode, "none", StringComparison.OrdinalIgnoreCase);
+}

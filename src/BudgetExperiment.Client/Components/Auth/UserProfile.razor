@@ -1,11 +1,15 @@
 @* UserProfile.razor - Displays current user info and logout button *@
 
+@using BudgetExperiment.Contracts.Dtos
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
+@inject AuthenticationConfigDto AuthConfig
 
+@if (!IsAuthOff)
+{
 <AuthorizeView>
     <Authorized>
         <div class="user-profile">
@@ -53,8 +57,11 @@
         </a>
     </NotAuthorized>
 </AuthorizeView>
+}
 
 @code {
+    private bool IsAuthOff => string.Equals(AuthConfig.Mode, "none", StringComparison.OrdinalIgnoreCase);
+
     private bool isOpen;
     private string? avatarUrl;
     private string? email;

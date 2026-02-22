@@ -22,6 +22,20 @@ Budget Experiment helps you manage your finances by:
 - **Reports & analytics**: Category spending, monthly trends, budget vs. actual comparison, date range filtering, week summaries, CSV exports, and a custom report builder
 - **Component showcase**: Dedicated UI page for chart and component previews
 
+## ⚡ Quick Start (Demo Mode)
+
+Try BudgetExperiment with a single command — no database setup or authentication required:
+
+```bash
+docker compose -f docker-compose.demo.yml up -d
+```
+
+Then open [http://localhost:5099](http://localhost:5099) in your browser.
+
+This bundles PostgreSQL and runs with authentication disabled for easy evaluation. Data persists across restarts via a Docker volume. To reset: `docker compose -f docker-compose.demo.yml down -v`.
+
+When ready for production, see [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md) for Raspberry Pi deployment and [docs/AUTH-PROVIDERS.md](docs/AUTH-PROVIDERS.md) for authentication provider setup (Authentik, Google, Microsoft, or any OIDC provider).
+
 ## 🏗️ Architecture
 
 Built using **Clean Architecture** principles with strict layer separation:
@@ -125,8 +139,14 @@ dotnet test tests/BudgetExperiment.Domain.Tests/BudgetExperiment.Domain.Tests.cs
 
 ## 🐳 Deployment (Docker)
 
-For Raspberry Pi or server deployment, use pre-built images from CI/CD:
+**Demo mode** (includes PostgreSQL, no auth required):
+```bash
+docker compose -f docker-compose.demo.yml up -d
+```
+
+**Production** (Raspberry Pi or server with external PostgreSQL + OIDC auth):
 - [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md) - Quick deployment guide
+- [docs/AUTH-PROVIDERS.md](docs/AUTH-PROVIDERS.md) - Authentication provider setup
 
 Images are automatically built and published to GitHub Container Registry on push to `main` or version tags.
 

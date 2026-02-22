@@ -2,6 +2,7 @@
 // Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
 
 using BudgetExperiment.Api;
+using BudgetExperiment.Api.Authentication;
 using BudgetExperiment.Api.HealthChecks;
 using BudgetExperiment.Application;
 using BudgetExperiment.Domain;
@@ -36,7 +37,10 @@ public partial class Program
         builder.Services.AddOpenApi();
 
         // Authentication & Authorization
+#pragma warning disable CS0618 // AuthentikOptions is obsolete but still registered for backward compat
         builder.Services.Configure<AuthentikOptions>(builder.Configuration.GetSection(AuthentikOptions.SectionName));
+#pragma warning restore CS0618
+        builder.Services.Configure<AuthenticationOptions>(builder.Configuration.GetSection(AuthenticationOptions.SectionName));
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IUserContext, UserContext>();
         ConfigureAuthentication(builder.Services, builder.Configuration);
@@ -85,6 +89,9 @@ public partial class Program
         });
 
         var app = builder.Build();
+
+        // Log warning when authentication is disabled
+        LogAuthModeWarning(app);
 
         // Apply migrations based on configuration (defaults to enabled)
         await ApplyMigrationsAsync(app);
@@ -215,18 +222,58 @@ public partial class Program
     }
 
     /// <summary>
-    /// Configures JWT Bearer authentication for Authentik OIDC integration.
+    /// Configures authentication based on the resolved mode and provider.
+    /// Supports: Mode=None (auth off), Mode=OIDC with Provider=Authentik (default).
+    /// Maintains backward compatibility with existing <c>Authentication:Authentik:*</c> config keys.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The configuration root.</param>
     private static void ConfigureAuthentication(IServiceCollection services, IConfiguration configuration)
     {
-        var authentikOptions = configuration.GetSection(AuthentikOptions.SectionName).Get<AuthentikOptions>() ?? new AuthentikOptions();
+        var effectiveMode = AuthenticationOptions.ResolveEffectiveMode(configuration);
 
-        if (string.IsNullOrWhiteSpace(authentikOptions.Authority))
+        if (string.Equals(effectiveMode, AuthModeConstants.None, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("'Authentication:Authentik:Authority' is not configured. Authentication is required.");
+            // Auth-off mode — register NoAuthHandler so every request is
+            // automatically authenticated as the well-known "Family" user.
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = NoAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = NoAuthHandler.SchemeName;
+            })
+            .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, NoAuthHandler>(
+                NoAuthHandler.SchemeName, _ => { });
+
+            services.AddAuthorization();
+            return;
         }
+
+        // Mode=OIDC — resolve provider and configure JWT Bearer
+        var authOptions = new AuthenticationOptions();
+        configuration.GetSection(AuthenticationOptions.SectionName).Bind(authOptions);
+
+        ConfigureOidcAuthentication(services, authOptions);
+    }
+
+    /// <summary>
+    /// Configures OIDC (JWT Bearer) authentication for the resolved provider.
+    /// Supports Authentik (default), Google, Microsoft Entra ID, and generic OIDC (Keycloak, Auth0, Okta, etc.).
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="authOptions">The bound authentication options.</param>
+    private static void ConfigureOidcAuthentication(IServiceCollection services, AuthenticationOptions authOptions)
+    {
+        // Resolve authority and audience based on provider
+        var (authority, audience, requireHttps) = AuthenticationOptions.ResolveProviderSettings(authOptions);
+
+        AuthenticationOptions.ValidateOidcAuthority(authority);
+
+        var isGoogleProvider = string.Equals(
+            authOptions.Provider, AuthProviderConstants.Google, StringComparison.OrdinalIgnoreCase);
+        var isMicrosoftProvider = string.Equals(
+            authOptions.Provider, AuthProviderConstants.Microsoft, StringComparison.OrdinalIgnoreCase);
+        var isGenericOidcProvider = string.Equals(
+            authOptions.Provider, AuthProviderConstants.Oidc, StringComparison.OrdinalIgnoreCase);
 
         services.AddAuthentication(options =>
         {
@@ -235,21 +282,56 @@ public partial class Program
         })
         .AddJwtBearer(options =>
         {
-            options.Authority = authentikOptions.Authority;
-            options.Audience = authentikOptions.Audience;
-            options.RequireHttpsMetadata = authentikOptions.RequireHttpsMetadata;
+            options.Authority = authority;
+            options.Audience = audience;
+            options.RequireHttpsMetadata = requireHttps;
 
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidateAudience = !string.IsNullOrWhiteSpace(authentikOptions.Audience),
+                ValidateAudience = !string.IsNullOrWhiteSpace(audience),
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ClockSkew = TimeSpan.FromMinutes(1),
             };
 
-            // Map Authentik claims to standard .NET claims
             options.MapInboundClaims = false;
+
+            // Provider-specific claim mapping for tokens that lack preferred_username
+            if (isGoogleProvider)
+            {
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        GoogleClaimMapper.MapClaims(context.Principal);
+                        return Task.CompletedTask;
+                    },
+                };
+            }
+            else if (isMicrosoftProvider)
+            {
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        MicrosoftClaimMapper.MapClaims(context.Principal);
+                        return Task.CompletedTask;
+                    },
+                };
+            }
+            else if (isGenericOidcProvider)
+            {
+                var claimMappings = authOptions.Oidc.ClaimMappings;
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        GenericOidcClaimMapper.MapClaims(context.Principal, claimMappings);
+                        return Task.CompletedTask;
+                    },
+                };
+            }
         });
 
         services.AddAuthorization();
@@ -257,7 +339,8 @@ public partial class Program
 
     /// <summary>
     /// Configures client configuration options for the /api/v1/config endpoint.
-    /// Maps Authentik settings to client-safe configuration.
+    /// Resolves OIDC settings from the active provider (Authentik, Google, etc.)
+    /// using <see cref="AuthenticationOptions.ResolveProviderSettings"/>.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The configuration root.</param>
@@ -265,19 +348,36 @@ public partial class Program
     {
         services.Configure<ClientConfigOptions>(options =>
         {
-            var authentikSection = configuration.GetSection(AuthentikOptions.SectionName);
+            // Resolve mode using the shared logic (handles legacy Enabled flag)
+            var effectiveMode = AuthenticationOptions.ResolveEffectiveMode(configuration);
+            options.AuthMode = string.Equals(effectiveMode, AuthModeConstants.None, StringComparison.OrdinalIgnoreCase)
+                ? "none"
+                : "oidc";
 
-            // Determine auth mode based on whether Authentik is enabled
-            var enabled = authentikSection.GetValue<bool?>("Enabled") ?? true;
-            options.AuthMode = enabled ? "oidc" : "none";
+            // Resolve OIDC settings from the active provider
+            var authOptions = new AuthenticationOptions();
+            configuration.GetSection(AuthenticationOptions.SectionName).Bind(authOptions);
 
-            // OIDC settings from Authentik config
-            options.OidcAuthority = authentikSection.GetValue<string>("Authority") ?? string.Empty;
+            var (authority, clientId, _) = AuthenticationOptions.ResolveProviderSettings(authOptions);
+            options.OidcAuthority = authority;
 
-            // ClientId can be explicitly set, or fall back to Audience (common in Authentik setups)
-            options.OidcClientId = authentikSection.GetValue<string>("ClientId")
-                ?? authentikSection.GetValue<string>("Audience")
-                ?? string.Empty;
+            // For Authentik, ClientId can be explicitly set or fall back to Audience
+            if (string.Equals(authOptions.Provider, AuthProviderConstants.Authentik, StringComparison.OrdinalIgnoreCase))
+            {
+                var authentikSection = configuration.GetSection("Authentication:Authentik");
+                options.OidcClientId = authentikSection.GetValue<string>("ClientId")
+                    ?? authentikSection.GetValue<string>("Audience")
+                    ?? string.Empty;
+            }
+            else if (string.Equals(authOptions.Provider, AuthProviderConstants.Oidc, StringComparison.OrdinalIgnoreCase))
+            {
+                // Generic OIDC: ClientId is separate from Audience (which is used for JWT validation)
+                options.OidcClientId = authOptions.Oidc.ClientId;
+            }
+            else
+            {
+                options.OidcClientId = clientId;
+            }
 
             // Apply any explicit ClientConfig overrides
             var clientSection = configuration.GetSection(ClientConfigOptions.SectionName);
@@ -286,5 +386,23 @@ public partial class Program
                 clientSection.Bind(options);
             }
         });
+    }
+
+    /// <summary>
+    /// Logs a startup warning when authentication is disabled (<c>Mode=None</c>).
+    /// </summary>
+    /// <param name="app">The web application.</param>
+    private static void LogAuthModeWarning(WebApplication app)
+    {
+        var effectiveMode = AuthenticationOptions.ResolveEffectiveMode(app.Configuration);
+
+        if (string.Equals(effectiveMode, AuthModeConstants.None, StringComparison.OrdinalIgnoreCase))
+        {
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(
+                "\u26a0\ufe0f Authentication is DISABLED. All requests are treated as authenticated. " +
+                "Do NOT expose this instance to the internet. " +
+                "Set 'Authentication:Mode' to 'OIDC' to enable authentication.");
+        }
     }
 }

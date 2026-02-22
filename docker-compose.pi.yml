@@ -9,6 +9,9 @@
 # Usage:
 #   docker-compose -f docker-compose.pi.yml up -d
 #
+# For a zero-config demo (bundled PostgreSQL, no auth), use docker-compose.demo.yml instead.
+# For authentication provider setup, see docs/AUTH-PROVIDERS.md.
+#
 # Example .env file:
 #   DB_CONNECTION_STRING=Host=your-db-server;Port=5432;Database=budgetexperiment;Username=your-user;Password=your-password
 #   AUTHENTIK_ENABLED=true

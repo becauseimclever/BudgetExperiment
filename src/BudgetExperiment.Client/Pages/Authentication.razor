@@ -1,8 +1,14 @@
 @page "/authentication/{Action}"
 @layout EmptyLayout
 
+@using BudgetExperiment.Contracts.Dtos
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
+@inject AuthenticationConfigDto AuthConfig
+@inject NavigationManager Navigation
+
+@if (!_isAuthOff)
+{
 <RemoteAuthenticatorView Action="@Action">
     <LoggingIn>
         <div class="auth-loading">
@@ -40,6 +46,7 @@
         </div>
     </LogOutFailed>
 </RemoteAuthenticatorView>
+}
 
 @code {
     /// <summary>
@@ -47,4 +54,16 @@
     /// </summary>
     [Parameter]
     public string? Action { get; set; }
+
+    private bool _isAuthOff;
+
+    /// <inheritdoc/>
+    protected override void OnInitialized()
+    {
+        _isAuthOff = string.Equals(AuthConfig.Mode, "none", StringComparison.OrdinalIgnoreCase);
+        if (_isAuthOff)
+        {
+            Navigation.NavigateTo("/", replace: true);
+        }
+    }
 }
