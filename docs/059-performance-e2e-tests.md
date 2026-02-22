@@ -146,7 +146,7 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 - [x] Create `PerformanceHelper.cs` with metrics capture methods
 - [x] Create `PerformanceMetrics` record type
 - [x] Add threshold constants (`PerformanceThresholds.cs`)
-- [ ] Write unit tests for threshold logic
+- [x] Write unit tests for threshold logic
 
 ### Phase 2: Zero-Flash Auth Tests
 
@@ -174,10 +174,10 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 
 **Tasks:**
 - [x] Create `ci.yml` workflow (build + test on PRs and pushes to `main`)
-- [x] Remove PR trigger from `docker-build-publish.yml` (Docker only on push to `main` / tags)
+- [x] Separate CI from Docker: Docker triggers only on `v*` tags + manual `workflow_dispatch`
 - [x] Add E2E performance test placeholder job in `ci.yml` (commented out, ready to enable)
-- [ ] Enable E2E job once demo environment and Playwright browsers are configured
-- [ ] Add performance summary to CI output
+- [ ] Enable E2E job once demo environment and Playwright browsers are configured (see [#17](https://github.com/becauseimclever/BudgetExperiment/issues/17))
+- [ ] Add performance summary to CI output (see [#17](https://github.com/becauseimclever/BudgetExperiment/issues/17))
 
 ---
 
@@ -196,8 +196,9 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 ## Dependencies
 
 - Feature 052 (Performance TTFP) - ✅ Complete
-- E2E test infrastructure decisions
-- Demo environment availability for CI
+- CI workflow (`ci.yml`) - ✅ Created
+- Docker workflow restricted to releases + manual dispatch - ✅ Done
+- Demo environment availability for CI E2E runs
 
 ---
 
@@ -208,3 +209,5 @@ public async Task Auth_ShouldNotShowFlashMessages_WhenLoading()
 | 2026-02-01 | AI | Created feature doc (deferred from Feature 052) |
 | 2026-02-01 | AI | Implemented Phase 1-3: PerformanceHelper, ZeroFlashAuthTests, PerformanceTests |
 | 2026-02-22 | AI | Phase 4 partial: Created ci.yml workflow, moved PR triggers from Docker to CI, added E2E placeholder job |
+| 2026-02-22 | AI | Optimized Docker workflow to tags-only + workflow_dispatch (no more builds on every push to main) |
+| 2026-02-22 | AI | Added unit tests for threshold logic (PerformanceThresholdsTests, PerformanceMetricsTests, PerformanceHelperThresholdTests). Created issue #17 for demo env CI enablement |
