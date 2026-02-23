@@ -201,7 +201,8 @@
 
                     <ImportPreviewTable PreviewResult="@wizardState.PreviewResult"
                                         SelectedIndices="@wizardState.SelectedRowIndices"
-                                        SelectedIndicesChanged="HandleSelectionChanged" />
+                                        SelectedIndicesChanged="HandleSelectionChanged"
+                                        OnLocationToggle="HandleLocationToggle" />
 
                     @if (wizardState.PreviewResult.ErrorCount > 0)
                     {
@@ -764,6 +765,32 @@
         StateHasChanged();
     }
 
+    private void HandleLocationToggle(int rowIndex)
+    {
+        if (wizardState.PreviewResult == null)
+        {
+            return;
+        }
+
+        var rows = wizardState.PreviewResult.Rows.ToList();
+        var idx = rows.FindIndex(r => r.RowIndex == rowIndex);
+        if (idx < 0 || rows[idx].ParsedLocation == null)
+        {
+            return;
+        }
+
+        rows[idx] = rows[idx] with
+        {
+            ParsedLocation = rows[idx].ParsedLocation! with
+            {
+                IsAccepted = !rows[idx].ParsedLocation!.IsAccepted,
+            },
+        };
+
+        wizardState.PreviewResult = wizardState.PreviewResult with { Rows = rows };
+        StateHasChanged();
+    }
+
     private async Task ExecuteImport()
     {
         if (wizardState.PreviewResult == null || wizardState.SelectedAccountId == null)
@@ -789,6 +816,11 @@
                 Amount = r.Amount!.Value,
                 CategoryId = r.CategoryId,
                 Reference = r.Reference,
+                LocationCity = r.ParsedLocation is { IsAccepted: true } ? r.ParsedLocation.City : null,
+                LocationStateOrRegion = r.ParsedLocation is { IsAccepted: true } ? r.ParsedLocation.StateOrRegion : null,
+                LocationCountry = r.ParsedLocation is { IsAccepted: true } ? r.ParsedLocation.Country : null,
+                LocationPostalCode = r.ParsedLocation is { IsAccepted: true } ? r.ParsedLocation.PostalCode : null,
+                LocationSource = r.ParsedLocation is { IsAccepted: true } ? "Parsed" : null,
             }).ToList();
 
             var request = new ImportExecuteRequest

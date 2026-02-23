@@ -212,6 +212,85 @@ public sealed class ReportService : IReportService
         };
     }
 
+    /// <inheritdoc/>
+    public async Task<LocationSpendingReportDto> GetSpendingByLocationAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var transactions = await this._transactionRepository.GetByDateRangeAsync(
+            startDate, endDate, accountId, cancellationToken);
+
+        var nonTransferTransactions = transactions.Where(t => !t.IsTransfer).ToList();
+
+        var expenseTransactions = nonTransferTransactions
+            .Where(t => t.Amount.Amount < 0)
+            .ToList();
+
+        var totalSpending = expenseTransactions.Sum(t => Math.Abs(t.Amount.Amount));
+
+        var withLocation = expenseTransactions
+            .Where(t => t.Location is not null && t.Location.StateOrRegion is not null)
+            .ToList();
+
+        var regionGroups = withLocation
+            .GroupBy(t => new { t.Location!.Country, t.Location.StateOrRegion })
+            .ToList();
+
+        var regions = new List<RegionSpendingDto>();
+
+        foreach (var group in regionGroups)
+        {
+            var regionSpending = group.Sum(t => Math.Abs(t.Amount.Amount));
+            var percentage = totalSpending > 0
+                ? Math.Round(regionSpending / totalSpending * 100, 2)
+                : 0m;
+
+            var country = group.Key.Country ?? string.Empty;
+            var state = group.Key.StateOrRegion!;
+            var regionCode = string.IsNullOrEmpty(country) ? state : $"{country}-{state}";
+
+            var cityGroups = group
+                .Where(t => t.Location!.City is not null)
+                .GroupBy(t => t.Location!.City!)
+                .Select(cg => new CitySpendingDto
+                {
+                    City = cg.Key,
+                    TotalSpending = cg.Sum(t => Math.Abs(t.Amount.Amount)),
+                    TransactionCount = cg.Count(),
+                    Percentage = regionSpending > 0
+                        ? Math.Round(cg.Sum(t => Math.Abs(t.Amount.Amount)) / regionSpending * 100, 2)
+                        : 0m,
+                })
+                .OrderByDescending(c => c.TotalSpending)
+                .ToList();
+
+            regions.Add(new RegionSpendingDto
+            {
+                RegionCode = regionCode,
+                RegionName = state,
+                Country = country,
+                TotalSpending = regionSpending,
+                TransactionCount = group.Count(),
+                Percentage = percentage,
+                Cities = cityGroups.Count > 0 ? cityGroups : null,
+            });
+        }
+
+        regions = regions.OrderByDescending(r => r.TotalSpending).ToList();
+
+        return new LocationSpendingReportDto
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            TotalSpending = totalSpending,
+            TotalTransactions = nonTransferTransactions.Count,
+            TransactionsWithLocation = withLocation.Count,
+            Regions = regions,
+        };
+    }
+
     private static (string Direction, decimal Percentage) CalculateTrend(
         List<MonthlyTrendPointDto> monthlyData)
     {

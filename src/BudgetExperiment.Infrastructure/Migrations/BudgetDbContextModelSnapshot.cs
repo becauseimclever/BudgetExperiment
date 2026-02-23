@@ -988,6 +988,48 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.ToTable("RecurringTransferExceptions", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetExperiment.Domain.Reports.CustomReportLayout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LayoutJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("Scope");
+
+                    b.ToTable("CustomReportLayouts", (string)null);
+                });
+
             modelBuilder.Entity("BudgetExperiment.Domain.Settings.AppSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1034,6 +1076,11 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("EnableLocationData")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("PastDueLookbackDays")
                         .HasColumnType("integer");
 
@@ -1056,6 +1103,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
                             AiTimeoutSeconds = 120,
                             AutoRealizePastDueItems = false,
                             CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EnableLocationData = false,
                             PastDueLookbackDays = 30,
                             UpdatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
@@ -1186,10 +1234,74 @@ namespace BudgetExperiment.Infrastructure.Migrations
                                 .HasForeignKey("TransactionId");
                         });
 
+                    b.OwnsOne("BudgetExperiment.Domain.Common.TransactionLocation", "Location", b1 =>
+                        {
+                            b1.Property<Guid>("TransactionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("City")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("Location_City");
+
+                            b1.Property<string>("Country")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("Location_Country");
+
+                            b1.Property<string>("PostalCode")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("Location_PostalCode");
+
+                            b1.Property<int>("Source")
+                                .HasColumnType("integer")
+                                .HasColumnName("Location_Source");
+
+                            b1.Property<string>("StateOrRegion")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("Location_StateOrRegion");
+
+                            b1.HasKey("TransactionId");
+
+                            b1.ToTable("Transactions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TransactionId");
+
+                            b1.OwnsOne("BudgetExperiment.Domain.Common.GeoCoordinate", "Coordinates", b2 =>
+                                {
+                                    b2.Property<Guid>("TransactionLocationTransactionId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Latitude")
+                                        .HasPrecision(9, 6)
+                                        .HasColumnType("numeric(9,6)")
+                                        .HasColumnName("Location_Latitude");
+
+                                    b2.Property<decimal>("Longitude")
+                                        .HasPrecision(9, 6)
+                                        .HasColumnType("numeric(9,6)")
+                                        .HasColumnName("Location_Longitude");
+
+                                    b2.HasKey("TransactionLocationTransactionId");
+
+                                    b2.ToTable("Transactions");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("TransactionLocationTransactionId");
+                                });
+
+                            b1.Navigation("Coordinates");
+                        });
+
                     b.Navigation("Amount")
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("BudgetExperiment.Domain.Budgeting.BudgetGoal", b =>

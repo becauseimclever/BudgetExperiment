@@ -68,6 +68,15 @@ public interface ICategorySuggestionService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets dismissed category suggestions for the current user.
+    /// </summary>
+    /// <param name="skip">Number of items to skip.</param>
+    /// <param name="take">Number of items to take.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dismissed suggestions.</returns>
+    Task<IReadOnlyList<CategorySuggestion>> GetDismissedSuggestionsAsync(int skip, int take, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Dismisses a category suggestion.
     /// </summary>
     /// <param name="id">The suggestion ID to dismiss.</param>

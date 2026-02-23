@@ -133,5 +133,80 @@ public sealed class TransactionService : ITransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    /// <summary>
+    /// Updates the location on a transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The location update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction DTO, or null if not found.</returns>
+    public async Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, CancellationToken cancellationToken = default)
+    {
+        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        GeoCoordinate? coordinates = null;
+        if (dto.Latitude.HasValue && dto.Longitude.HasValue)
+        {
+            coordinates = GeoCoordinate.Create(dto.Latitude.Value, dto.Longitude.Value);
+        }
+
+        var location = TransactionLocation.Create(
+            dto.City,
+            dto.StateOrRegion,
+            dto.Country,
+            dto.PostalCode,
+            coordinates,
+            LocationSource.Manual);
+
+        transaction.SetLocation(location);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        return AccountMapper.ToDto(transaction);
+    }
+
+    /// <summary>
+    /// Clears the location from a transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the transaction was found and location cleared; false if not found.</returns>
+    public async Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (transaction is null)
+        {
+            return false;
+        }
+
+        transaction.ClearLocation();
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    /// <summary>
+    /// Clears location data from all transactions (bulk privacy operation).
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of transactions whose location was cleared.</returns>
+    public async Task<int> ClearAllLocationDataAsync(CancellationToken cancellationToken = default)
+    {
+        var transactions = await this._repository.GetAllWithLocationAsync(cancellationToken);
+        if (transactions.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var transaction in transactions)
+        {
+            transaction.ClearLocation();
+        }
+
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        return transactions.Count;
+    }
 }
 

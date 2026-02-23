@@ -1,0 +1,261 @@
+@page "/reports/location"
+
+@using BudgetExperiment.Client.Components.Reports
+@using BudgetExperiment.Contracts.Dtos
+
+@implements IDisposable
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager Navigation
+@inject ScopeService ScopeService
+
+<PageTitle>Spending by Location - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Spending by Location">
+        <Actions>
+            <a href="/@rangeStart.Year/@rangeStart.Month" class="btn-back-calendar" title="Back to Calendar">
+                <Icon Name="calendar" Size="16" />
+                Calendar
+            </a>
+            <ExportButton Options="@ExportOptions" />
+        </Actions>
+    </PageHeader>
+
+    <DateRangePicker StartDate="@rangeStart"
+                     EndDate="@rangeEnd"
+                     OnRangeChanged="HandleRangeChanged"
+                     ShowPresets="true" />
+
+    <ErrorAlert Message="@errorMessage"
+                OnRetry="RetryLoad"
+                OnDismiss="DismissError"
+                IsRetrying="@isRetrying" />
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading location report..." />
+    }
+    else if (report == null && errorMessage == null)
+    {
+        <div class="empty-state">
+            <Icon Name="map-pin" Size="48" />
+            <p>No location data for the selected period.</p>
+            <p class="empty-state-hint">Transactions with location data will appear here.</p>
+        </div>
+    }
+    else if (errorMessage == null && report != null)
+    {
+        <div class="report-content">
+            <div class="map-section">
+                <ChoroplethMap Regions="@report.Regions"
+                               OnRegionClick="HandleRegionClick" />
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-card">
+                    <h3>Summary</h3>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <span class="stat-label">Total Spending</span>
+                            <span class="stat-value text-expense">$@report.TotalSpending.ToString("N2")</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">Transactions</span>
+                            <span class="stat-value">@report.TotalTransactions</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">With Location</span>
+                            <span class="stat-value">@report.TransactionsWithLocation</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="stat-label">Regions</span>
+                            <span class="stat-value">@report.Regions.Count</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (selectedRegion != null)
+            {
+                <div class="city-breakdown">
+                    <h3>@selectedRegion.RegionName — City Breakdown</h3>
+                    @if (selectedRegion.Cities is { Count: > 0 })
+                    {
+                        <table class="location-data-table">
+                            <thead>
+                                <tr>
+                                    <th>City</th>
+                                    <th class="text-right">Spending</th>
+                                    <th class="text-right">Transactions</th>
+                                    <th class="text-right">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var city in selectedRegion.Cities.OrderByDescending(c => c.TotalSpending))
+                                {
+                                    <tr>
+                                        <td>@city.City</td>
+                                        <td class="text-right text-expense">$@city.TotalSpending.ToString("N2")</td>
+                                        <td class="text-right">@city.TransactionCount</td>
+                                        <td class="text-right">@city.Percentage.ToString("F1")%</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No city-level breakdown available for this region.</p>
+                    }
+                </div>
+            }
+
+            <div class="data-table-section">
+                <h3>All Regions</h3>
+                <table class="location-data-table">
+                    <thead>
+                        <tr>
+                            <th>Region</th>
+                            <th class="text-right">Spending</th>
+                            <th class="text-right">Transactions</th>
+                            <th class="text-right">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var region in report.Regions.OrderByDescending(r => r.TotalSpending))
+                        {
+                            <tr class="@(selectedRegion?.RegionCode == region.RegionCode ? "selected" : "")"
+                                @onclick="() => SelectRegion(region)">
+                                <td>@region.RegionName</td>
+                                <td class="text-right text-expense">$@region.TotalSpending.ToString("N2")</td>
+                                <td class="text-right">@region.TransactionCount</td>
+                                <td class="text-right">@region.Percentage.ToString("F1")%</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "start")]
+    public string? QueryStart { get; set; }
+
+    [SupplyParameterFromQuery(Name = "end")]
+    public string? QueryEnd { get; set; }
+
+    private DateOnly rangeStart;
+    private DateOnly rangeEnd;
+    private LocationSpendingReportDto? report;
+    private RegionSpendingDto? selectedRegion;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isRetrying;
+
+    private IReadOnlyList<ExportOption> ExportOptions =>
+    [
+        new ExportOption
+        {
+            Label = "Export CSV",
+            Description = "Location spending for the selected range",
+            Href = $"/api/v1/exports/location?startDate={rangeStart:yyyy-MM-dd}&endDate={rangeEnd:yyyy-MM-dd}",
+        },
+    ];
+
+    /// <inheritdoc/>
+    protected override async Task OnInitializedAsync()
+    {
+        InitializeDateRange();
+        ScopeService.ScopeChanged += HandleScopeChanged;
+        await LoadReportAsync();
+    }
+
+    private void InitializeDateRange()
+    {
+        if (DateOnly.TryParse(QueryStart, out var start) && DateOnly.TryParse(QueryEnd, out var end) && end >= start)
+        {
+            rangeStart = start;
+            rangeEnd = end;
+        }
+        else
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            rangeStart = new DateOnly(today.Year, today.Month, 1);
+            rangeEnd = rangeStart.AddMonths(1).AddDays(-1);
+        }
+    }
+
+    private async void HandleScopeChanged(BudgetScope? scope)
+    {
+        await LoadReportAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleRangeChanged((DateOnly Start, DateOnly End) range)
+    {
+        rangeStart = range.Start;
+        rangeEnd = range.End;
+
+        Navigation.NavigateTo(
+            $"/reports/location?start={rangeStart:yyyy-MM-dd}&end={rangeEnd:yyyy-MM-dd}",
+            replace: true);
+
+        await LoadReportAsync();
+    }
+
+    private async Task LoadReportAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        selectedRegion = null;
+        StateHasChanged();
+
+        try
+        {
+            report = await ApiService.GetSpendingByLocationAsync(rangeStart, rangeEnd);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load report: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleRegionClick(string stateCode)
+    {
+        var regionCode = $"US-{stateCode}";
+        selectedRegion = report?.Regions.FirstOrDefault(r => r.RegionCode == regionCode);
+        StateHasChanged();
+    }
+
+    private void SelectRegion(RegionSpendingDto region)
+    {
+        selectedRegion = selectedRegion?.RegionCode == region.RegionCode ? null : region;
+    }
+
+    private async Task RetryLoad()
+    {
+        isRetrying = true;
+        StateHasChanged();
+        await LoadReportAsync();
+        isRetrying = false;
+    }
+
+    private void DismissError()
+    {
+        errorMessage = null;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        ScopeService.ScopeChanged -= HandleScopeChanged;
+    }
+}

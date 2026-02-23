@@ -126,6 +126,7 @@ builder.Services.AddScoped<IExportDownloadService, ExportDownloadService>();
 builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddScoped<IFormStateService, FormStateService>();
 builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<GeolocationService>();
 builder.Services.AddScoped<VersionService>();
 
 await builder.Build().RunAsync();

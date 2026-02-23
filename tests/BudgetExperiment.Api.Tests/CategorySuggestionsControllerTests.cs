@@ -130,8 +130,22 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
         Assert.False(results[0].Success); // Should fail for non-existent suggestion
     }
 
-    /// <summary>
-    /// GET /api/v1/category-suggestions/{id}/preview-rules returns 404 for non-existent suggestion.
+    /// <summary>    /// GET /api/v1/categorysuggestions/dismissed returns 200 OK with dismissed list.
+    /// </summary>
+    [Fact]
+    public async Task GetDismissed_Returns_200_WithList()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/categorysuggestions/dismissed");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var suggestions = await response.Content.ReadFromJsonAsync<List<CategorySuggestionDto>>();
+        Assert.NotNull(suggestions);
+        Assert.Empty(suggestions);
+    }
+
+    /// <summary>    /// GET /api/v1/category-suggestions/{id}/preview-rules returns 404 for non-existent suggestion.
     /// </summary>
     [Fact]
     public async Task PreviewRules_Returns_404_ForNonExistent()

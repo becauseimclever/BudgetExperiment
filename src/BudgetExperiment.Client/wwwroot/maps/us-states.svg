@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  US States map for choropleth visualization.
+  Simplified state boundaries for budget spending display.
+  Each state is a <path> with data-state="XX" (2-letter code).
+  Original work — stylized rectangles for clarity at small sizes.
+  Licensed under MIT.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-label="United States spending map">
+  <g id="states">
+    <!-- Row 1 -->
+    <path data-state="WA" d="M95,30 h65 v45 h-65z" />
+    <path data-state="OR" d="M95,80 h65 v45 h-65z" />
+    <path data-state="CA" d="M95,130 h65 v95 h-65z" />
+    <path data-state="NV" d="M165,105 h60 v70 h-60z" />
+    <path data-state="ID" d="M165,30 h60 v70 h-60z" />
+    <path data-state="MT" d="M230,30 h80 v45 h-80z" />
+    <path data-state="WY" d="M230,80 h80 v45 h-80z" />
+    <path data-state="UT" d="M165,180 h60 v45 h-60z" />
+    <path data-state="CO" d="M230,130 h80 v45 h-80z" />
+    <path data-state="AZ" d="M165,230 h60 v50 h-60z" />
+    <path data-state="NM" d="M230,205 h80 v75 h-80z" />
+    <!-- Row 2 -->
+    <path data-state="ND" d="M315,30 h70 v45 h-70z" />
+    <path data-state="SD" d="M315,80 h70 v45 h-70z" />
+    <path data-state="NE" d="M315,130 h70 v45 h-70z" />
+    <path data-state="KS" d="M315,180 h70 v45 h-70z" />
+    <path data-state="OK" d="M315,230 h70 v45 h-70z" />
+    <path data-state="TX" d="M315,280 h90 v100 h-90z" />
+    <!-- Row 3 -->
+    <path data-state="MN" d="M390,30 h65 v45 h-65z" />
+    <path data-state="IA" d="M390,80 h65 v45 h-65z" />
+    <path data-state="MO" d="M390,130 h65 v55 h-65z" />
+    <path data-state="AR" d="M390,190 h65 v50 h-65z" />
+    <path data-state="LA" d="M390,245 h65 v50 h-65z" />
+    <!-- Row 4 -->
+    <path data-state="WI" d="M460,30 h60 v45 h-60z" />
+    <path data-state="IL" d="M460,80 h60 v60 h-60z" />
+    <path data-state="MS" d="M460,195 h55 v50 h-55z" />
+    <path data-state="MI" d="M525,30 h55 v55 h-55z" />
+    <path data-state="IN" d="M525,90 h55 v50 h-55z" />
+    <path data-state="KY" d="M525,145 h70 v40 h-70z" />
+    <path data-state="TN" d="M525,190 h80 v35 h-80z" />
+    <path data-state="AL" d="M520,230 h55 v55 h-55z" />
+    <!-- Row 5 -->
+    <path data-state="OH" d="M585,80 h55 v55 h-55z" />
+    <path data-state="WV" d="M600,140 h45 v40 h-45z" />
+    <path data-state="VA" d="M610,185 h75 v30 h-75z" />
+    <path data-state="NC" d="M610,220 h85 v30 h-85z" />
+    <path data-state="SC" d="M630,255 h55 v35 h-55z" />
+    <path data-state="GA" d="M580,255 h45 v50 h-45z" />
+    <path data-state="FL" d="M580,310 h70 v70 h-70z" />
+    <!-- Row 6 — Northeast -->
+    <path data-state="PA" d="M645,80 h70 v40 h-70z" />
+    <path data-state="NY" d="M645,30 h80 v45 h-80z" />
+    <path data-state="VT" d="M730,30 h35 v30 h-35z" />
+    <path data-state="NH" d="M770,30 h35 v30 h-35z" />
+    <path data-state="ME" d="M810,15 h45 v50 h-45z" />
+    <path data-state="MA" d="M730,65 h75 v25 h-75z" />
+    <path data-state="RI" d="M810,70 h25 v20 h-25z" />
+    <path data-state="CT" d="M730,95 h50 v20 h-50z" />
+    <path data-state="NJ" d="M720,100 h30 v35 h-30z" />
+    <path data-state="DE" d="M700,125 h30 v25 h-30z" />
+    <path data-state="MD" d="M655,125 h40 v25 h-40z" />
+    <path data-state="DC" d="M650,153 h20 v12 h-20z" />
+    <!-- Non-contiguous -->
+    <path data-state="AK" d="M25,400 h100 v70 h-100z" />
+    <path data-state="HI" d="M200,430 h70 v40 h-70z" />
+  </g>
+</svg>

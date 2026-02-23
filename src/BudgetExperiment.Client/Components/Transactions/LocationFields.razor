@@ -1,0 +1,202 @@
+@* LocationFields.razor - Editable location input fields for transactions *@
+@using BudgetExperiment.Client.Services
+
+@if (IsEnabled)
+{
+    <div class="location-fields">
+        <h4>Location</h4>
+
+        @if (Location != null)
+        {
+            <div class="location-current">
+                <LocationDisplay Location="@Location" />
+            </div>
+        }
+
+        @if (gpsError != null)
+        {
+            <div class="location-gps-error">@gpsError</div>
+        }
+
+        <div class="form-actions form-actions-left">
+            <Button Variant="ButtonVariant.Secondary"
+                    OnClick="HandleUseCurrentLocation"
+                    type="button"
+                    Class="btn-use-location"
+                    disabled="@isLoadingGps">
+                @if (isLoadingGps)
+                {
+                    <span>Locating…</span>
+                }
+                else
+                {
+                    <Icon Name="map-pin" Size="14" />
+                    <span>Use Current Location</span>
+                }
+            </Button>
+        </div>
+
+        <form @onsubmit="HandleSave">
+            <FormField Label="City:" InputId="locCity">
+                <input id="locCity"
+                       type="text"
+                       class="form-control"
+                       @bind="city"
+                       placeholder="City" />
+            </FormField>
+            <FormField Label="State/Region:" InputId="locState">
+                <input id="locState"
+                       type="text"
+                       class="form-control"
+                       @bind="stateOrRegion"
+                       placeholder="State or region" />
+            </FormField>
+            <FormField Label="Country:" InputId="locCountry">
+                <input id="locCountry"
+                       type="text"
+                       class="form-control"
+                       @bind="country"
+                       placeholder="Country code (e.g., US)" />
+            </FormField>
+            <FormField Label="Postal Code:" InputId="locPostal">
+                <input id="locPostal"
+                       type="text"
+                       class="form-control"
+                       @bind="postalCode"
+                       placeholder="Postal code" />
+            </FormField>
+
+            <div class="form-actions form-actions-right">
+                @if (Location != null)
+                {
+                    <Button Variant="ButtonVariant.Danger"
+                            OnClick="HandleClear"
+                            type="button"
+                            Class="btn-clear-location">
+                        Clear Location
+                    </Button>
+                }
+                <Button Variant="ButtonVariant.Primary" type="submit">
+                    Save Location
+                </Button>
+            </div>
+        </form>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the current location data.
+    /// </summary>
+    [Parameter]
+    public TransactionLocationDto? Location { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether location features are enabled.
+    /// </summary>
+    [Parameter]
+    public bool IsEnabled { get; set; }
+
+    /// <summary>
+    /// Callback invoked when the user saves location data.
+    /// </summary>
+    [Parameter]
+    public EventCallback<TransactionLocationUpdateDto> OnSave { get; set; }
+
+    /// <summary>
+    /// Callback invoked when the user clears location data.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClear { get; set; }
+
+    /// <summary>
+    /// Gets or sets the geolocation service for GPS capture.
+    /// </summary>
+    [Parameter]
+    public GeolocationService? GeolocationService { get; set; }
+
+    /// <summary>
+    /// Gets or sets the budget API service for reverse geocoding.
+    /// </summary>
+    [Parameter]
+    public IBudgetApiService? BudgetApiService { get; set; }
+
+    private string? city;
+    private string? stateOrRegion;
+    private string? country;
+    private string? postalCode;
+    private bool isLoadingGps;
+    private string? gpsError;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        city = Location?.City;
+        stateOrRegion = Location?.StateOrRegion;
+        country = Location?.Country;
+        postalCode = Location?.PostalCode;
+    }
+
+    private async Task HandleSave()
+    {
+        var dto = new TransactionLocationUpdateDto
+        {
+            City = city,
+            StateOrRegion = stateOrRegion,
+            Country = country,
+            PostalCode = postalCode,
+        };
+
+        await OnSave.InvokeAsync(dto);
+    }
+
+    private async Task HandleClear()
+    {
+        await OnClear.InvokeAsync();
+    }
+
+    private async Task HandleUseCurrentLocation()
+    {
+        if (GeolocationService is null || BudgetApiService is null)
+        {
+            gpsError = "GPS services are not available.";
+            return;
+        }
+
+        isLoadingGps = true;
+        gpsError = null;
+
+        try
+        {
+            var position = await GeolocationService.GetCurrentPositionAsync();
+
+            if (!position.IsSuccess)
+            {
+                gpsError = position.ErrorMessage ?? "Failed to get location.";
+                return;
+            }
+
+            var geocoded = await BudgetApiService.ReverseGeocodeAsync(position.Latitude, position.Longitude);
+
+            if (geocoded != null)
+            {
+                city = geocoded.City;
+                stateOrRegion = geocoded.StateOrRegion;
+                country = geocoded.Country;
+                postalCode = geocoded.PostalCode;
+            }
+            else
+            {
+                gpsError = "Could not resolve address from coordinates.";
+            }
+        }
+        catch (Exception)
+        {
+            gpsError = "An error occurred while getting your location.";
+        }
+        finally
+        {
+            isLoadingGps = false;
+        }
+    }
+}

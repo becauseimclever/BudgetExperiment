@@ -325,6 +325,15 @@ internal sealed class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetAllWithLocationAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(this._context.Transactions)
+            .Where(t => t.Location != null)
+            .ToListAsync(cancellationToken);
+    }
+
     private IQueryable<Transaction> ApplyScopeFilter(IQueryable<Transaction> query)
     {
         var userId = this._userContext.UserIdAsGuid;

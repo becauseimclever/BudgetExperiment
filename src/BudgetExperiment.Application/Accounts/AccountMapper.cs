@@ -58,6 +58,31 @@ public static class AccountMapper
             RecurringInstanceDate = transaction.RecurringInstanceDate,
             RecurringTransferId = transaction.RecurringTransferId,
             RecurringTransferInstanceDate = transaction.RecurringTransferInstanceDate,
+            Location = ToLocationDto(transaction.Location),
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="TransactionLocation"/> to a <see cref="TransactionLocationDto"/>.
+    /// </summary>
+    /// <param name="location">The location value object (may be null).</param>
+    /// <returns>The mapped DTO, or null.</returns>
+    public static TransactionLocationDto? ToLocationDto(TransactionLocation? location)
+    {
+        if (location is null)
+        {
+            return null;
+        }
+
+        return new TransactionLocationDto
+        {
+            Latitude = location.Coordinates?.Latitude,
+            Longitude = location.Coordinates?.Longitude,
+            City = location.City,
+            StateOrRegion = location.StateOrRegion,
+            Country = location.Country,
+            PostalCode = location.PostalCode,
+            Source = location.Source.ToString(),
         };
     }
 

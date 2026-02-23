@@ -169,6 +169,11 @@ public sealed record ImportPreviewResult
     /// Gets the count of rows that would be auto-categorized by rules.
     /// </summary>
     public int AutoCategorizedCount { get; init; }
+
+    /// <summary>
+    /// Gets the count of rows enriched with parsed location data.
+    /// </summary>
+    public int LocationEnrichedCount { get; init; }
 }
 
 /// <summary>
@@ -250,6 +255,48 @@ public sealed record ImportPreviewRow
     /// Gets the potential recurring transaction match for this row (if any).
     /// </summary>
     public ImportRecurringMatchPreview? RecurringMatch { get; init; }
+
+    /// <summary>
+    /// Gets the parsed location preview for this row (if location parsing found a match).
+    /// </summary>
+    public ImportLocationPreview? ParsedLocation { get; init; }
+}
+
+/// <summary>
+/// Preview of a parsed location from a transaction description during import.
+/// </summary>
+public sealed record ImportLocationPreview
+{
+    /// <summary>
+    /// Gets the parsed city name.
+    /// </summary>
+    public string? City { get; init; }
+
+    /// <summary>
+    /// Gets the parsed state or region abbreviation.
+    /// </summary>
+    public string? StateOrRegion { get; init; }
+
+    /// <summary>
+    /// Gets the parsed country code (ISO 3166-1 alpha-2).
+    /// </summary>
+    public string? Country { get; init; }
+
+    /// <summary>
+    /// Gets the parsed postal code.
+    /// </summary>
+    public string? PostalCode { get; init; }
+
+    /// <summary>
+    /// Gets the confidence score (0.0 to 1.0) of the parsed location.
+    /// </summary>
+    public decimal Confidence { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether this parsed location is accepted for import.
+    /// Defaults to <see langword="true"/>. User can reject individual locations in the preview.
+    /// </summary>
+    public bool IsAccepted { get; init; } = true;
 }
 
 /// <summary>
@@ -364,6 +411,31 @@ public sealed record ImportTransactionData
     /// Gets the matched rule ID (if auto-categorized).
     /// </summary>
     public Guid? MatchedRuleId { get; init; }
+
+    /// <summary>
+    /// Gets the city parsed from the description for location enrichment.
+    /// </summary>
+    public string? LocationCity { get; init; }
+
+    /// <summary>
+    /// Gets the state/region parsed from the description.
+    /// </summary>
+    public string? LocationStateOrRegion { get; init; }
+
+    /// <summary>
+    /// Gets the country code for location enrichment.
+    /// </summary>
+    public string? LocationCountry { get; init; }
+
+    /// <summary>
+    /// Gets the postal code for location enrichment.
+    /// </summary>
+    public string? LocationPostalCode { get; init; }
+
+    /// <summary>
+    /// Gets the source of the location data (e.g., "Parsed").
+    /// </summary>
+    public string? LocationSource { get; init; }
 }
 
 /// <summary>
@@ -430,6 +502,11 @@ public sealed record ImportResult
     /// Gets the reconciliation match suggestions (if reconciliation was performed).
     /// </summary>
     public IReadOnlyList<ReconciliationMatchDto> MatchSuggestions { get; init; } = [];
+
+    /// <summary>
+    /// Gets the count of transactions enriched with location data.
+    /// </summary>
+    public int LocationEnrichedCount { get; init; }
 }
 
 /// <summary>

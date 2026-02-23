@@ -19,6 +19,11 @@ public sealed class AppSettingsDto
     /// Gets or sets how many days back to look for past-due items.
     /// </summary>
     public int PastDueLookbackDays { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether location data features are enabled.
+    /// </summary>
+    public bool EnableLocationData { get; set; }
 }
 
 /// <summary>
@@ -37,4 +42,10 @@ public sealed class AppSettingsUpdateDto
     /// Null means no change.
     /// </summary>
     public int? PastDueLookbackDays { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to enable location data features.
+    /// Null means no change.
+    /// </summary>
+    public bool? EnableLocationData { get; set; }
 }

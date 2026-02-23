@@ -47,6 +47,7 @@
                     <th>Description</th>
                     <th class="amount-col text-end">Amount</th>
                     <th>Category</th>
+                    <th class="location-col">Location</th>
                     <th class="match-col">Recurring Match</th>
                 </tr>
             </thead>
@@ -121,6 +122,47 @@
                                 <span class="text-secondary">Uncategorized</span>
                             }
                         </td>
+                        <td class="location-col">
+                            @if (row.ParsedLocation != null)
+                            {
+                                <div class="location-preview @(row.ParsedLocation.IsAccepted ? "" : "location-rejected")" title="Confidence: @row.ParsedLocation.Confidence.ToString("P0")">
+                                    <button class="location-toggle-btn"
+                                            title="@(row.ParsedLocation.IsAccepted ? "Reject location" : "Accept location")"
+                                            @onclick="() => ToggleLocation(row.RowIndex)">
+                                        @if (row.ParsedLocation.IsAccepted)
+                                        {
+                                            <Icon Name="map-pin" Size="12" />
+                                        }
+                                        else
+                                        {
+                                            <Icon Name="x" Size="12" />
+                                        }
+                                    </button>
+                                    <span class="location-text">
+                                        @FormatLocation(row.ParsedLocation)
+                                    </span>
+                                    @if (row.ParsedLocation.IsAccepted)
+                                    {
+                                        @if (row.ParsedLocation.Confidence >= 0.90m)
+                                        {
+                                            <span class="confidence-dot confidence-high" title="High confidence"></span>
+                                        }
+                                        else if (row.ParsedLocation.Confidence >= 0.80m)
+                                        {
+                                            <span class="confidence-dot confidence-medium" title="Medium confidence"></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="confidence-dot confidence-low" title="Low confidence"></span>
+                                        }
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">—</span>
+                            }
+                        </td>
                         <td class="match-col">
                             @if (row.RecurringMatch != null)
                             {
@@ -145,7 +187,7 @@
                     @if (!string.IsNullOrEmpty(row.StatusMessage) && row.Status != ImportRowStatus.Valid)
                     {
                         <tr class="status-message-row">
-                            <td colspan="8" class="ps-5 py-1">
+                            <td colspan="9" class="ps-5 py-1">
                                 <small class="@GetStatusMessageClass(row.Status)">
                                     <Icon Name="@GetStatusIcon(row.Status)" Size="12" />
                                     @row.StatusMessage
@@ -173,6 +215,13 @@
             <div class="text-secondary">
                 <Icon Name="sparkles" Size="14" />
                 @PreviewResult.AutoCategorizedCount rows auto-categorized by rules
+            </div>
+        }
+        @if (PreviewResult.LocationEnrichedCount > 0)
+        {
+            <div class="text-secondary">
+                <Icon Name="map-pin" Size="14" />
+                @PreviewResult.LocationEnrichedCount rows enriched with location
             </div>
         }
     </div>
@@ -331,6 +380,66 @@
     .import-preview-table .confidence-badge-sm.match-low {
         background: var(--danger);
     }
+
+    /* Location Column */
+    .import-preview-table .location-col {
+        width: 140px;
+    }
+
+    .import-preview-table .location-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .import-preview-table .location-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100px;
+    }
+
+    .import-preview-table .confidence-dot {
+        flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .import-preview-table .confidence-dot.confidence-high {
+        background: var(--success);
+    }
+
+    .import-preview-table .confidence-dot.confidence-medium {
+        background: var(--warning);
+    }
+
+    .import-preview-table .confidence-dot.confidence-low {
+        background: var(--danger);
+    }
+
+    .import-preview-table .location-toggle-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .import-preview-table .location-toggle-btn:hover {
+        color: var(--text-primary);
+    }
+
+    .import-preview-table .location-rejected {
+        opacity: 0.5;
+        text-decoration: line-through;
+    }
 </style>
 
 @code {
@@ -343,6 +452,13 @@
     [Parameter]
     public EventCallback<HashSet<int>> SelectedIndicesChanged { get; set; }
 
+    /// <summary>
+    /// Gets or sets the callback invoked when a location accept/reject toggle is clicked.
+    /// The parameter is the row index of the toggled row.
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnLocationToggle { get; set; }
+
     private bool IsAllSelected =>
         PreviewResult.Rows
             .Where(r => r.Status != ImportRowStatus.Error)
@@ -354,6 +470,14 @@
             .Sum(r => r.Amount!.Value);
 
     private bool IsRowSelected(int rowIndex) => SelectedIndices.Contains(rowIndex);
+
+    private async Task ToggleLocation(int rowIndex)
+    {
+        if (OnLocationToggle.HasDelegate)
+        {
+            await OnLocationToggle.InvokeAsync(rowIndex);
+        }
+    }
 
     private async Task ToggleRow(int rowIndex)
     {
@@ -456,5 +580,21 @@
     {
         var variance = match.ExpectedAmount - match.ExpectedAmount; // Will show actual variance when available
         return $"Match: {match.RecurringDescription}\nExpected: {match.ExpectedAmount:C}\nConfidence: {match.ConfidenceScore:P0}";
+    }
+
+    private static string FormatLocation(ImportLocationPreview location)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(location.City))
+        {
+            parts.Add(location.City);
+        }
+
+        if (!string.IsNullOrEmpty(location.StateOrRegion))
+        {
+            parts.Add(location.StateOrRegion);
+        }
+
+        return parts.Count > 0 ? string.Join(", ", parts) : location.Country ?? string.Empty;
     }
 }

@@ -1,0 +1,45 @@
+@* LocationDisplay.razor - Read-only formatted location display *@
+
+@if (Location != null && HasDisplayableContent())
+{
+    <span class="location-display">
+        <Icon Name="map-pin" Size="14" /> @FormatLocation()
+    </span>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the location data to display.
+    /// </summary>
+    [Parameter]
+    public TransactionLocationDto? Location { get; set; }
+
+    private string FormatLocation()
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(Location?.City))
+        {
+            parts.Add(Location.City);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Location?.StateOrRegion))
+        {
+            parts.Add(Location.StateOrRegion);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Location?.Country))
+        {
+            parts.Add(Location.Country);
+        }
+
+        return string.Join(", ", parts);
+    }
+
+    private bool HasDisplayableContent()
+    {
+        return !string.IsNullOrWhiteSpace(Location?.City)
+            || !string.IsNullOrWhiteSpace(Location?.StateOrRegion)
+            || !string.IsNullOrWhiteSpace(Location?.Country);
+    }
+}

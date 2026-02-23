@@ -11,7 +11,7 @@ using Microsoft.JSInterop;
 /// <summary>
 /// Service for managing application theme (light, dark, vscode-dark, system).
 /// </summary>
-public sealed class ThemeService : IAsyncDisposable
+public sealed class ThemeService : IAsyncDisposable, IDisposable
 {
     private const string StorageKey = "budget-experiment-theme";
     private const string DefaultTheme = "system";
@@ -191,6 +191,15 @@ public sealed class ThemeService : IAsyncDisposable
     public string GetThemedIcon(string iconName)
     {
         return ThemedIconRegistry.GetThemedIcon(this.currentTheme, iconName);
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        // Synchronous dispose is intentionally a no-op.
+        // In Blazor, DisposeAsync is always called for component cleanup.
+        // This implementation exists so the DI container can fall back to
+        // synchronous disposal without throwing (e.g., in test infrastructure).
     }
 
     /// <inheritdoc/>

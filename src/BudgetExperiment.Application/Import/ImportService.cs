@@ -43,6 +43,8 @@ public sealed class ImportService : IImportService
     private readonly IReconciliationService _reconciliationService;
     private readonly IUserContext _userContext;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILocationParserService _locationParser;
+    private readonly IAppSettingsRepository _settingsRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportService"/> class.
@@ -59,6 +61,8 @@ public sealed class ImportService : IImportService
     /// <param name="reconciliationService">Reconciliation service.</param>
     /// <param name="userContext">User context.</param>
     /// <param name="unitOfWork">Unit of work.</param>
+    /// <param name="locationParser">Location parser service.</param>
+    /// <param name="settingsRepository">App settings repository.</param>
     public ImportService(
         ITransactionRepository transactionRepository,
         ICategorizationRuleRepository ruleRepository,
@@ -71,7 +75,9 @@ public sealed class ImportService : IImportService
         ITransactionMatcher transactionMatcher,
         IReconciliationService reconciliationService,
         IUserContext userContext,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILocationParserService locationParser,
+        IAppSettingsRepository settingsRepository)
     {
         this._transactionRepository = transactionRepository;
         this._ruleRepository = ruleRepository;
@@ -85,6 +91,8 @@ public sealed class ImportService : IImportService
         this._reconciliationService = reconciliationService;
         this._userContext = userContext;
         this._unitOfWork = unitOfWork;
+        this._locationParser = locationParser;
+        this._settingsRepository = settingsRepository;
     }
 
     /// <inheritdoc />
@@ -150,12 +158,16 @@ public sealed class ImportService : IImportService
             previewRows = await this.EnrichWithRecurringMatchesAsync(previewRows, cancellationToken);
         }
 
+        // Enrich with location data if enabled
+        previewRows = await this.EnrichWithLocationDataAsync(previewRows, cancellationToken);
+
         // Calculate summary
         var validRows = previewRows.Where(r => r.Status == ImportRowStatus.Valid).ToList();
         var warningRows = previewRows.Where(r => r.Status == ImportRowStatus.Warning).ToList();
         var errorRows = previewRows.Where(r => r.Status == ImportRowStatus.Error).ToList();
         var duplicateRows = previewRows.Where(r => r.Status == ImportRowStatus.Duplicate).ToList();
         var autoCategorized = previewRows.Count(r => r.CategorySource == CategorySource.AutoRule);
+        var locationEnriched = previewRows.Count(r => r.ParsedLocation != null);
 
         return new ImportPreviewResult
         {
@@ -166,6 +178,7 @@ public sealed class ImportService : IImportService
             DuplicateCount = duplicateRows.Count,
             TotalAmount = validRows.Where(r => r.Amount.HasValue).Sum(r => r.Amount!.Value),
             AutoCategorizedCount = autoCategorized,
+            LocationEnrichedCount = locationEnriched,
         };
     }
 
@@ -213,6 +226,7 @@ public sealed class ImportService : IImportService
         int csvCategorized = 0;
         int uncategorized = 0;
         int skipped = 0;
+        int locationEnriched = 0;
 
         foreach (var txData in request.Transactions)
         {
@@ -229,6 +243,25 @@ public sealed class ImportService : IImportService
 
                 // Set import batch reference
                 transaction.SetImportBatch(batch.Id, txData.Reference);
+
+                // Set location if provided from preview enrichment
+                if (!string.IsNullOrEmpty(txData.LocationCity) || !string.IsNullOrEmpty(txData.LocationStateOrRegion))
+                {
+                    var locationSource = Enum.TryParse<LocationSource>(txData.LocationSource, true, out var src)
+                        ? src
+                        : LocationSource.Parsed;
+
+                    var location = TransactionLocation.Create(
+                        city: txData.LocationCity,
+                        stateOrRegion: txData.LocationStateOrRegion,
+                        country: txData.LocationCountry,
+                        postalCode: txData.LocationPostalCode,
+                        coordinates: null,
+                        source: locationSource);
+
+                    transaction.SetLocation(location);
+                    locationEnriched++;
+                }
 
                 await this._transactionRepository.AddAsync(transaction, cancellationToken);
                 createdIds.Add(transaction.Id);
@@ -305,6 +338,7 @@ public sealed class ImportService : IImportService
             AutoMatchedCount = autoMatchedCount,
             PendingMatchCount = pendingMatchCount,
             MatchSuggestions = matchSuggestions,
+            LocationEnrichedCount = locationEnriched,
         };
     }
 
@@ -459,6 +493,48 @@ public sealed class ImportService : IImportService
                 };
 
                 enrichedRows.Add(row with { RecurringMatch = matchPreview });
+            }
+            else
+            {
+                enrichedRows.Add(row);
+            }
+        }
+
+        return enrichedRows;
+    }
+
+    private async Task<List<ImportPreviewRow>> EnrichWithLocationDataAsync(
+        List<ImportPreviewRow> rows,
+        CancellationToken cancellationToken)
+    {
+        var settings = await this._settingsRepository.GetAsync(cancellationToken);
+        if (!settings.EnableLocationData)
+        {
+            return rows;
+        }
+
+        var descriptions = rows.Select(r => r.Description).ToList();
+        var parseResults = this._locationParser.ParseBatch(descriptions);
+
+        var enrichedRows = new List<ImportPreviewRow>();
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            var parseResult = parseResults[i];
+
+            if (parseResult.Location != null)
+            {
+                var locationPreview = new ImportLocationPreview
+                {
+                    City = parseResult.Location.City,
+                    StateOrRegion = parseResult.Location.StateOrRegion,
+                    Country = parseResult.Location.Country,
+                    PostalCode = parseResult.Location.PostalCode,
+                    Confidence = parseResult.Confidence,
+                    IsAccepted = true,
+                };
+
+                enrichedRows.Add(row with { ParsedLocation = locationPreview });
             }
             else
             {

@@ -142,6 +142,11 @@ public sealed class Transaction
     public bool IsFromImport => this.ImportBatchId.HasValue;
 
     /// <summary>
+    /// Gets the geographic location of the transaction (null if not set).
+    /// </summary>
+    public TransactionLocation? Location { get; private set; }
+
+    /// <summary>
     /// Maximum length for external reference.
     /// </summary>
     public const int MaxExternalReferenceLength = 100;
@@ -407,6 +412,25 @@ public sealed class Transaction
 
         this.RecurringTransactionId = recurringTransactionId;
         this.RecurringInstanceDate = instanceDate;
+        this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets or replaces the location of this transaction.
+    /// </summary>
+    /// <param name="location">The location to assign (may be null to clear).</param>
+    public void SetLocation(TransactionLocation? location)
+    {
+        this.Location = location;
+        this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Clears the location of this transaction.
+    /// </summary>
+    public void ClearLocation()
+    {
+        this.Location = null;
         this.UpdatedAt = DateTime.UtcNow;
     }
 

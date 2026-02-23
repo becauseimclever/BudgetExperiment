@@ -83,6 +83,14 @@ public sealed class AppSettings
     /// </summary>
     public bool AiIsEnabled { get; private set; } = true;
 
+    // ============ Location Settings ============
+
+    /// <summary>
+    /// Gets a value indicating whether location data features are enabled.
+    /// When disabled, all location-related UI and processing is hidden.
+    /// </summary>
+    public bool EnableLocationData { get; private set; }
+
     /// <summary>
     /// Creates a new default AppSettings instance.
     /// </summary>
@@ -95,6 +103,7 @@ public sealed class AppSettings
             Id = SingletonId,
             AutoRealizePastDueItems = false,
             PastDueLookbackDays = 30,
+            EnableLocationData = false,
             CreatedAtUtc = now,
             UpdatedAtUtc = now,
         };
@@ -175,6 +184,16 @@ public sealed class AppSettings
         AiMaxTokens = maxTokens;
         AiTimeoutSeconds = timeoutSeconds;
         AiIsEnabled = isEnabled;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the location data feature toggle.
+    /// </summary>
+    /// <param name="enabled">Whether to enable location data features.</param>
+    public void UpdateEnableLocationData(bool enabled)
+    {
+        EnableLocationData = enabled;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }

@@ -3,11 +3,14 @@
 @using BudgetExperiment.Client.Components.Common
 @using BudgetExperiment.Contracts.Dtos
 
-<div class="category-suggestion-card @(IsSelected ? "selected" : "")">
+<div class="category-suggestion-card @(IsSelected ? "selected" : "") @(IsDismissedView ? "dismissed-view" : "")">
     <div class="card-header">
-        <div class="selection-checkbox">
-            <input type="checkbox" checked="@IsSelected" @onchange="HandleSelect" />
-        </div>
+        @if (!IsDismissedView)
+        {
+            <div class="selection-checkbox">
+                <input type="checkbox" checked="@IsSelected" @onchange="HandleSelect" />
+            </div>
+        }
         <div class="suggestion-info">
             <h4 class="suggested-name">@Suggestion.SuggestedName</h4>
             <span class="status-badge @GetStatusClass()">@Suggestion.Status</span>
@@ -48,20 +51,23 @@
         }
     </div>
 
-    <div class="card-actions">
-        <button class="btn btn-success btn-sm" @onclick="HandleAccept" title="Accept and create category">
-            <Icon Name="check" Size="14" />
-            <span>Accept</span>
-        </button>
-        <button class="btn btn-secondary btn-sm" @onclick="HandleDismiss" title="Dismiss suggestion">
-            <Icon Name="x" Size="14" />
-            <span>Dismiss</span>
-        </button>
-        <button class="btn btn-ghost btn-sm" @onclick="HandlePreviewRules" title="Preview categorization rules">
-            <Icon Name="list" Size="14" />
-            <span>Preview Rules</span>
-        </button>
-    </div>
+    @if (!IsDismissedView)
+    {
+        <div class="card-actions">
+            <button class="btn btn-success btn-sm" @onclick="HandleAccept" title="Accept and create category">
+                <Icon Name="check" Size="14" />
+                <span>Accept</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" @onclick="HandleDismiss" title="Dismiss suggestion">
+                <Icon Name="x" Size="14" />
+                <span>Dismiss</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" @onclick="HandlePreviewRules" title="Preview categorization rules">
+                <Icon Name="list" Size="14" />
+                <span>Preview Rules</span>
+            </button>
+        </div>
+    }
 </div>
 
 @code {
@@ -101,6 +107,12 @@
     /// </summary>
     [Parameter]
     public EventCallback OnPreviewRules { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this card is shown in the dismissed view.
+    /// </summary>
+    [Parameter]
+    public bool IsDismissedView { get; set; }
 
     private async Task HandleSelect()
     {

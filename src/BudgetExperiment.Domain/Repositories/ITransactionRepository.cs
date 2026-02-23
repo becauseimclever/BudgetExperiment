@@ -153,4 +153,12 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     Task<IReadOnlyList<Transaction>> GetByImportBatchAsync(
         Guid batchId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all transactions that have location data set.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Transactions with non-null location.</returns>
+    Task<IReadOnlyList<Transaction>> GetAllWithLocationAsync(
+        CancellationToken cancellationToken = default);
 }

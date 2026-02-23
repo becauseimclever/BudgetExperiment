@@ -216,5 +216,50 @@ public sealed class TransactionsController : ControllerBase
         var result = await this._uncategorizedService.BulkCategorizeAsync(request, cancellationToken);
         return this.Ok(result);
     }
+
+    /// <summary>
+    /// Updates the location on a transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The location data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction.</returns>
+    [HttpPatch("{id:guid}/location")]
+    [ProducesResponseType<TransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateLocationAsync(
+        Guid id,
+        [FromBody] TransactionLocationUpdateDto dto,
+        CancellationToken cancellationToken)
+    {
+        var transaction = await this._service.UpdateLocationAsync(id, dto, cancellationToken);
+        if (transaction is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(transaction);
+    }
+
+    /// <summary>
+    /// Clears the location from a transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>204 No Content on success; 404 if not found.</returns>
+    [HttpDelete("{id:guid}/location")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteLocationAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var cleared = await this._service.ClearLocationAsync(id, cancellationToken);
+        if (!cleared)
+        {
+            return this.NotFound();
+        }
+
+        return this.NoContent();
+    }
 }
 

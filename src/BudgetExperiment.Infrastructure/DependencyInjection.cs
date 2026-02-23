@@ -1,5 +1,7 @@
+using BudgetExperiment.Application.Location;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure.ExternalServices.AI;
+using BudgetExperiment.Infrastructure.ExternalServices.Geocoding;
 using BudgetExperiment.Infrastructure.Persistence;
 using BudgetExperiment.Infrastructure.Persistence.Repositories;
 
@@ -57,6 +59,9 @@ public static class DependencyInjection
 
         // AI Service - HttpClient configured dynamically from database settings
         services.AddHttpClient<IAiService, OllamaAiService>();
+
+        // Geocoding Service - Nominatim (OpenStreetMap) reverse geocoding
+        services.AddHttpClient<IGeocodingService, NominatimGeocodingService>();
 
         return services;
     }

@@ -56,6 +56,9 @@ public sealed class TransactionDto
 
     /// <summary>Gets or sets the scheduled instance date from the recurring transfer (null if not from recurring transfer).</summary>
     public DateOnly? RecurringTransferInstanceDate { get; set; }
+
+    /// <summary>Gets or sets the geographic location of the transaction.</summary>
+    public TransactionLocationDto? Location { get; set; }
 }
 
 /// <summary>

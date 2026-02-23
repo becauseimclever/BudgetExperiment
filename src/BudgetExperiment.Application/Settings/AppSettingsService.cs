@@ -34,6 +34,7 @@ public sealed class AppSettingsService : IAppSettingsService
         {
             AutoRealizePastDueItems = settings.AutoRealizePastDueItems,
             PastDueLookbackDays = settings.PastDueLookbackDays,
+            EnableLocationData = settings.EnableLocationData,
         };
     }
 
@@ -54,12 +55,18 @@ public sealed class AppSettingsService : IAppSettingsService
             settings.UpdatePastDueLookbackDays(dto.PastDueLookbackDays.Value);
         }
 
+        if (dto.EnableLocationData.HasValue)
+        {
+            settings.UpdateEnableLocationData(dto.EnableLocationData.Value);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AppSettingsDto
         {
             AutoRealizePastDueItems = settings.AutoRealizePastDueItems,
             PastDueLookbackDays = settings.PastDueLookbackDays,
+            EnableLocationData = settings.EnableLocationData,
         };
     }
 

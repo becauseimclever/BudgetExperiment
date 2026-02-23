@@ -86,6 +86,29 @@ public interface IBudgetApiService
     Task<bool> DeleteTransactionAsync(Guid id);
 
     /// <summary>
+    /// Updates the location data for a transaction.
+    /// </summary>
+    /// <param name="id">The transaction ID.</param>
+    /// <param name="dto">The location update data.</param>
+    /// <returns>The updated transaction or null if not found.</returns>
+    Task<TransactionDto?> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto);
+
+    /// <summary>
+    /// Clears the location data for a transaction.
+    /// </summary>
+    /// <param name="id">The transaction ID.</param>
+    /// <returns>True if successfully cleared; false otherwise.</returns>
+    Task<bool> ClearTransactionLocationAsync(Guid id);
+
+    /// <summary>
+    /// Performs reverse geocoding to resolve GPS coordinates to an address.
+    /// </summary>
+    /// <param name="latitude">The latitude coordinate.</param>
+    /// <param name="longitude">The longitude coordinate.</param>
+    /// <returns>The geocoded address, or null if unavailable.</returns>
+    Task<ReverseGeocodeResponseDto?> ReverseGeocodeAsync(decimal latitude, decimal longitude);
+
+    /// <summary>
     /// Gets a complete calendar grid with all data pre-computed.
     /// </summary>
     /// <param name="year">The year.</param>
@@ -387,6 +410,12 @@ public interface IBudgetApiService
     /// <returns>The updated application settings.</returns>
     Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto);
 
+    /// <summary>
+    /// Deletes all location data from all transactions (bulk privacy operation).
+    /// </summary>
+    /// <returns>The result containing the count of cleared transactions, or null on failure.</returns>
+    Task<LocationDataClearedDto?> DeleteAllLocationDataAsync();
+
     // Paycheck Allocation Operations
 
     /// <summary>
@@ -633,6 +662,15 @@ public interface IBudgetApiService
     /// <param name="accountId">Optional account filter.</param>
     /// <returns>The day summary with income, spending, net, and top categories.</returns>
     Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null);
+
+    /// <summary>
+    /// Gets spending aggregated by geographic location for a date range.
+    /// </summary>
+    /// <param name="startDate">The start date (inclusive).</param>
+    /// <param name="endDate">The end date (inclusive).</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>The location spending report.</returns>
+    Task<LocationSpendingReportDto?> GetSpendingByLocationAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null);
 
     /// <summary>
     /// Gets all custom report layouts.

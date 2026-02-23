@@ -183,4 +183,55 @@ public class AppSettingsTests
         // Assert
         Assert.Equal(new Guid("00000000-0000-0000-0000-000000000001"), AppSettings.SingletonId);
     }
+
+    [Fact]
+    public void CreateDefault_Sets_EnableLocationData_To_False()
+    {
+        // Act
+        var settings = AppSettings.CreateDefault();
+
+        // Assert
+        Assert.False(settings.EnableLocationData);
+    }
+
+    [Fact]
+    public void UpdateEnableLocationData_Sets_True_When_Enabled()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+
+        // Act
+        settings.UpdateEnableLocationData(true);
+
+        // Assert
+        Assert.True(settings.EnableLocationData);
+    }
+
+    [Fact]
+    public void UpdateEnableLocationData_Sets_False_When_Disabled()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+        settings.UpdateEnableLocationData(true);
+
+        // Act
+        settings.UpdateEnableLocationData(false);
+
+        // Assert
+        Assert.False(settings.EnableLocationData);
+    }
+
+    [Fact]
+    public void UpdateEnableLocationData_Updates_UpdatedAtUtc()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+        var originalUpdatedAt = settings.UpdatedAtUtc;
+
+        // Act
+        settings.UpdateEnableLocationData(true);
+
+        // Assert
+        Assert.True(settings.UpdatedAtUtc >= originalUpdatedAt);
+    }
 }

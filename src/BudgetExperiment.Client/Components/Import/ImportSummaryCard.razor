@@ -77,6 +77,17 @@
                 }
             </div>
         </div>
+
+        @if (Result.LocationEnrichedCount > 0)
+        {
+            <div class="location-breakdown mb-4">
+                <h6 class="mb-3">Location Enrichment</h6>
+                <div class="d-flex align-items-center gap-2">
+                    <Icon Name="map-pin" Size="16" Class="text-info" />
+                    <span><strong>@Result.LocationEnrichedCount</strong> of @Result.ImportedCount transactions enriched with location</span>
+                </div>
+            </div>
+        }
     }
 
     <div class="import-actions d-flex flex-wrap justify-content-center gap-3">

@@ -59,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomReportLayoutService, CustomReportLayoutService>();
         services.AddScoped<IExportFormatter, CsvExportService>();
         services.AddScoped<IExportService, ExportService>();
+        services.AddScoped<ILocationParserService, LocationParserService>();
         return services;
     }
 }

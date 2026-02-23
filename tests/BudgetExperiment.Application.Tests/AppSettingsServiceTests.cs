@@ -30,6 +30,7 @@ public class AppSettingsServiceTests
         // Assert
         Assert.False(result.AutoRealizePastDueItems);
         Assert.Equal(30, result.PastDueLookbackDays);
+        Assert.False(result.EnableLocationData);
     }
 
     [Fact]
@@ -91,6 +92,28 @@ public class AppSettingsServiceTests
         // Assert
         Assert.False(result.AutoRealizePastDueItems);
         Assert.Equal(7, result.PastDueLookbackDays);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateSettingsAsync_Updates_EnableLocationData()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+        var repo = new Mock<IAppSettingsRepository>();
+        repo.Setup(r => r.GetAsync(default)).ReturnsAsync(settings);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new AppSettingsService(repo.Object, uow.Object);
+        var dto = new AppSettingsUpdateDto { EnableLocationData = true };
+
+        // Act
+        var result = await service.UpdateSettingsAsync(dto);
+
+        // Assert
+        Assert.True(result.EnableLocationData);
+        Assert.False(result.AutoRealizePastDueItems);
+        Assert.Equal(30, result.PastDueLookbackDays);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 

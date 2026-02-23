@@ -240,4 +240,206 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     }
 
     #endregion
+
+    #region Location Tests
+
+    /// <summary>
+    /// PATCH /api/v1/transactions/{id}/location returns 200 with populated location.
+    /// </summary>
+    [Fact]
+    public async Task PatchLocation_ValidCity_Returns200WithLocation()
+    {
+        // Arrange — create account + transaction
+        var accountDto = new AccountCreateDto { Name = "LocationTest", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -25.00m },
+            Date = new DateOnly(2026, 2, 20),
+            Description = "Coffee Shop",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var locationUpdate = new TransactionLocationUpdateDto
+        {
+            City = "Seattle",
+            StateOrRegion = "WA",
+            Country = "US",
+            PostalCode = "98101",
+        };
+
+        // Act
+        var patchResponse = await this._client.PatchAsJsonAsync(
+            $"/api/v1/transactions/{created.Id}/location",
+            locationUpdate);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, patchResponse.StatusCode);
+        var result = await patchResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(result);
+        Assert.NotNull(result.Location);
+        Assert.Equal("Seattle", result.Location.City);
+        Assert.Equal("WA", result.Location.StateOrRegion);
+        Assert.Equal("US", result.Location.Country);
+        Assert.Equal("98101", result.Location.PostalCode);
+        Assert.Equal("Manual", result.Location.Source);
+    }
+
+    /// <summary>
+    /// PATCH /api/v1/transactions/{id}/location returns 404 for non-existent transaction.
+    /// </summary>
+    [Fact]
+    public async Task PatchLocation_InvalidTransactionId_Returns404()
+    {
+        // Arrange
+        var locationUpdate = new TransactionLocationUpdateDto { City = "Seattle" };
+
+        // Act
+        var response = await this._client.PatchAsJsonAsync(
+            $"/api/v1/transactions/{Guid.NewGuid()}/location",
+            locationUpdate);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    /// <summary>
+    /// DELETE /api/v1/transactions/{id}/location returns 204 when transaction has location.
+    /// </summary>
+    [Fact]
+    public async Task DeleteLocation_ExistingTransaction_Returns204()
+    {
+        // Arrange — create account + transaction + set location
+        var accountDto = new AccountCreateDto { Name = "LocationDeleteTest", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -15.00m },
+            Date = new DateOnly(2026, 2, 20),
+            Description = "Lunch",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var locationUpdate = new TransactionLocationUpdateDto { City = "Portland", StateOrRegion = "OR", Country = "US" };
+        await this._client.PatchAsJsonAsync($"/api/v1/transactions/{created.Id}/location", locationUpdate);
+
+        // Act
+        var deleteResponse = await this._client.DeleteAsync($"/api/v1/transactions/{created.Id}/location");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        // Verify location is cleared
+        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var transaction = await getResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(transaction);
+        Assert.Null(transaction.Location);
+    }
+
+    /// <summary>
+    /// DELETE /api/v1/transactions/{id}/location returns 404 for non-existent transaction.
+    /// </summary>
+    [Fact]
+    public async Task DeleteLocation_NonExistentTransaction_Returns404()
+    {
+        // Act
+        var response = await this._client.DeleteAsync($"/api/v1/transactions/{Guid.NewGuid()}/location");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    /// <summary>
+    /// GET /api/v1/transactions/{id} includes location data when set.
+    /// </summary>
+    [Fact]
+    public async Task GetTransaction_WithLocation_IncludesLocationDto()
+    {
+        // Arrange — create account + transaction + set location with coordinates
+        var accountDto = new AccountCreateDto { Name = "LocationGetTest", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -50.00m },
+            Date = new DateOnly(2026, 2, 20),
+            Description = "Dinner",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var locationUpdate = new TransactionLocationUpdateDto
+        {
+            Latitude = 47.6062m,
+            Longitude = -122.3321m,
+            City = "Seattle",
+            StateOrRegion = "WA",
+            Country = "US",
+        };
+        await this._client.PatchAsJsonAsync($"/api/v1/transactions/{created.Id}/location", locationUpdate);
+
+        // Act
+        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var transaction = await getResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(transaction);
+        Assert.NotNull(transaction.Location);
+        Assert.Equal(47.6062m, transaction.Location.Latitude);
+        Assert.Equal(-122.3321m, transaction.Location.Longitude);
+        Assert.Equal("Seattle", transaction.Location.City);
+    }
+
+    /// <summary>
+    /// GET /api/v1/transactions/{id} returns null location when not set.
+    /// </summary>
+    [Fact]
+    public async Task GetTransaction_WithoutLocation_LocationIsNull()
+    {
+        // Arrange — create account + transaction (no location)
+        var accountDto = new AccountCreateDto { Name = "NoLocationTest", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -5.00m },
+            Date = new DateOnly(2026, 2, 20),
+            Description = "Snack",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        // Act
+        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var transaction = await getResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(transaction);
+        Assert.Null(transaction.Location);
+    }
+
+    #endregion
 }

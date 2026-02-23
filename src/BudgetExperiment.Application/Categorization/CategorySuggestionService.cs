@@ -129,6 +129,12 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<CategorySuggestion>> GetDismissedSuggestionsAsync(int skip, int take, CancellationToken cancellationToken = default)
+    {
+        return await _suggestionRepository.GetByStatusAsync(_userContext.UserId, SuggestionStatus.Dismissed, skip, take, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<CategorySuggestion?> GetSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _suggestionRepository.GetByIdAsync(id, cancellationToken);

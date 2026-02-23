@@ -515,6 +515,15 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         public Task<bool> DeleteTransactionAsync(Guid id) => Task.FromResult(false);
 
         /// <inheritdoc/>
+        public Task<TransactionDto?> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto) => Task.FromResult<TransactionDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<bool> ClearTransactionLocationAsync(Guid id) => Task.FromResult(false);
+
+        /// <inheritdoc/>
+        public Task<ReverseGeocodeResponseDto?> ReverseGeocodeAsync(decimal latitude, decimal longitude) => Task.FromResult<ReverseGeocodeResponseDto?>(null);
+
+        /// <inheritdoc/>
         public Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null) => Task.FromResult(new CalendarGridDto());
 
         /// <inheritdoc/>
@@ -626,6 +635,9 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         public Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto) => Task.FromResult<AppSettingsDto?>(null);
 
         /// <inheritdoc/>
+        public Task<LocationDataClearedDto?> DeleteAllLocationDataAsync() => Task.FromResult<LocationDataClearedDto?>(null);
+
+        /// <inheritdoc/>
         public Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null) => Task.FromResult<PaycheckAllocationSummaryDto?>(null);
 
         /// <inheritdoc/>
@@ -714,6 +726,9 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null) => Task.FromResult<DaySummaryDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<LocationSpendingReportDto?> GetSpendingByLocationAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<LocationSpendingReportDto?>(null);
 
         /// <inheritdoc/>
         public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId) => Task.FromResult<ImportPatternsDto?>(null);

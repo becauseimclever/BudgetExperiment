@@ -1,0 +1,214 @@
+@* ChoroplethMap.razor - SVG choropleth map colored by spending data *@
+
+@using BudgetExperiment.Contracts.Dtos
+
+@if (Regions == null || Regions.Count == 0)
+{
+    <div class="choropleth-empty" role="status">
+        <p>No location data available for the selected period.</p>
+    </div>
+}
+else
+{
+    <div class="choropleth-container">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             viewBox="0 0 960 600"
+             role="img"
+             aria-label="Spending by state map"
+             class="choropleth-svg">
+            <defs>
+                @* Colorblind-friendly pattern fills keyed to spending intensity *@
+                <pattern id="pattern-none" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="8" height="8" fill="#e5e7eb" />
+                </pattern>
+                <pattern id="pattern-low" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="8" height="8" fill="hsl(210, 65%, 82%)" />
+                    <circle cx="4" cy="4" r="1.5" fill="hsl(210, 70%, 65%)" />
+                </pattern>
+                <pattern id="pattern-medium" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="8" height="8" fill="hsl(210, 70%, 62%)" />
+                    <line x1="0" y1="0" x2="8" y2="8" stroke="hsl(210, 75%, 45%)" stroke-width="1.5" />
+                </pattern>
+                <pattern id="pattern-high" width="6" height="6" patternUnits="userSpaceOnUse">
+                    <rect width="6" height="6" fill="hsl(210, 75%, 45%)" />
+                    <line x1="0" y1="0" x2="6" y2="6" stroke="hsl(210, 80%, 30%)" stroke-width="1.5" />
+                    <line x1="6" y1="0" x2="0" y2="6" stroke="hsl(210, 80%, 30%)" stroke-width="1.5" />
+                </pattern>
+            </defs>
+            <g id="states">
+                @foreach (var state in AllStates)
+                {
+                    var spending = GetRegionSpending(state.Code);
+                    var fillColor = GetFillColor(spending);
+                    var patternId = GetPatternId(spending);
+                    var ariaLabel = GetAriaLabel(state.Code, state.Name, spending);
+
+                    <path data-state="@state.Code"
+                          d="@state.Path"
+                          style="fill: @fillColor"
+                          role="button"
+                          tabindex="0"
+                          aria-label="@ariaLabel"
+                          @onclick="() => HandleClick(state.Code)"
+                          @onkeydown="(e) => HandleKeyDown(e, state.Code)">
+                        <title>@ariaLabel</title>
+                    </path>
+                    <path d="@state.Path"
+                          style="fill: url(#@patternId)"
+                          class="pattern-overlay"
+                          aria-hidden="true"
+                          pointer-events="none" />
+                }
+            </g>
+        </svg>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the region spending data to display on the map.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<RegionSpendingDto>? Regions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked when a region is clicked.
+    /// The parameter is the two-letter state code (e.g., "WA").
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnRegionClick { get; set; }
+
+    private decimal maxSpending;
+
+    /// <inheritdoc/>
+    protected override void OnParametersSet()
+    {
+        maxSpending = Regions?.Count > 0
+            ? Regions.Max(r => r.TotalSpending)
+            : 0m;
+    }
+
+    private decimal GetRegionSpending(string stateCode)
+    {
+        if (Regions == null)
+        {
+            return 0m;
+        }
+
+        var regionCode = $"US-{stateCode}";
+        return Regions.FirstOrDefault(r => r.RegionCode == regionCode)?.TotalSpending ?? 0m;
+    }
+
+    private string GetFillColor(decimal spending)
+    {
+        if (spending <= 0 || maxSpending <= 0)
+        {
+            return "#e5e7eb"; // neutral gray for no data
+        }
+
+        // Interpolate from light (hsl 210 60% 90%) to dark (hsl 210 80% 35%)
+        var ratio = (double)(spending / maxSpending);
+        var lightness = 90 - (int)(ratio * 55); // 90% → 35%
+        var saturation = 60 + (int)(ratio * 20); // 60% → 80%
+        return $"hsl(210, {saturation}%, {lightness}%)";
+    }
+
+    private string GetPatternId(decimal spending)
+    {
+        if (spending <= 0 || maxSpending <= 0)
+        {
+            return "pattern-none";
+        }
+
+        var ratio = spending / maxSpending;
+        return ratio switch
+        {
+            >= 0.66m => "pattern-high",
+            >= 0.33m => "pattern-medium",
+            _ => "pattern-low",
+        };
+    }
+
+    private string GetAriaLabel(string stateCode, string stateName, decimal spending)
+    {
+        if (spending > 0)
+        {
+            return $"{stateName}: ${spending:F2}";
+        }
+
+        return $"{stateName}: no spending data";
+    }
+
+    private async Task HandleClick(string stateCode)
+    {
+        if (OnRegionClick.HasDelegate)
+        {
+            await OnRegionClick.InvokeAsync(stateCode);
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e, string stateCode)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            await HandleClick(stateCode);
+        }
+    }
+
+    private static readonly IReadOnlyList<StateInfo> AllStates =
+    [
+        new("WA", "Washington", "M95,30 h65 v45 h-65z"),
+        new("OR", "Oregon", "M95,80 h65 v45 h-65z"),
+        new("CA", "California", "M95,130 h65 v95 h-65z"),
+        new("NV", "Nevada", "M165,105 h60 v70 h-60z"),
+        new("ID", "Idaho", "M165,30 h60 v70 h-60z"),
+        new("MT", "Montana", "M230,30 h80 v45 h-80z"),
+        new("WY", "Wyoming", "M230,80 h80 v45 h-80z"),
+        new("UT", "Utah", "M165,180 h60 v45 h-60z"),
+        new("CO", "Colorado", "M230,130 h80 v45 h-80z"),
+        new("AZ", "Arizona", "M165,230 h60 v50 h-60z"),
+        new("NM", "New Mexico", "M230,230 h80 v50 h-80z"),
+        new("ND", "North Dakota", "M315,30 h75 v45 h-75z"),
+        new("SD", "South Dakota", "M315,80 h75 v45 h-75z"),
+        new("NE", "Nebraska", "M315,130 h75 v45 h-75z"),
+        new("KS", "Kansas", "M315,180 h75 v45 h-75z"),
+        new("OK", "Oklahoma", "M315,230 h75 v45 h-75z"),
+        new("TX", "Texas", "M315,280 h75 v70 h-75z"),
+        new("MN", "Minnesota", "M395,30 h70 v45 h-70z"),
+        new("IA", "Iowa", "M395,80 h70 v45 h-70z"),
+        new("MO", "Missouri", "M395,130 h70 v45 h-70z"),
+        new("AR", "Arkansas", "M395,180 h70 v45 h-70z"),
+        new("LA", "Louisiana", "M395,230 h70 v50 h-70z"),
+        new("WI", "Wisconsin", "M470,30 h65 v45 h-65z"),
+        new("IL", "Illinois", "M470,80 h65 v45 h-65z"),
+        new("MS", "Mississippi", "M470,180 h65 v45 h-65z"),
+        new("MI", "Michigan", "M540,30 h70 v55 h-70z"),
+        new("IN", "Indiana", "M540,90 h35 v45 h-35z"),
+        new("OH", "Ohio", "M580,90 h35 v45 h-35z"),
+        new("KY", "Kentucky", "M540,140 h80 v35 h-80z"),
+        new("TN", "Tennessee", "M540,180 h80 v35 h-80z"),
+        new("AL", "Alabama", "M540,220 h35 v50 h-35z"),
+        new("GA", "Georgia", "M580,220 h40 v50 h-40z"),
+        new("FL", "Florida", "M580,275 h50 v60 h-50z"),
+        new("SC", "South Carolina", "M625,210 h50 v30 h-50z"),
+        new("NC", "North Carolina", "M625,175 h70 v30 h-70z"),
+        new("VA", "Virginia", "M625,140 h70 v30 h-70z"),
+        new("WV", "West Virginia", "M620,110 h40 v30 h-40z"),
+        new("PA", "Pennsylvania", "M625,75 h70 v30 h-70z"),
+        new("NY", "New York", "M650,30 h70 v40 h-70z"),
+        new("NJ", "New Jersey", "M700,80 h30 v30 h-30z"),
+        new("DE", "Delaware", "M710,115 h20 v20 h-20z"),
+        new("MD", "Maryland", "M685,115 h25 v20 h-25z"),
+        new("CT", "Connecticut", "M735,55 h30 v20 h-30z"),
+        new("RI", "Rhode Island", "M740,40 h20 v15 h-20z"),
+        new("MA", "Massachusetts", "M735,25 h45 v15 h-45z"),
+        new("VT", "Vermont", "M725,10 h25 v20 h-25z"),
+        new("NH", "New Hampshire", "M755,10 h20 v25 h-20z"),
+        new("ME", "Maine", "M780,5 h35 v35 h-35z"),
+        new("HI", "Hawaii", "M230,350 h50 v30 h-50z"),
+        new("AK", "Alaska", "M95,330 h80 v60 h-80z"),
+        new("DC", "District of Columbia", "M695,138 h10 v10 h-10z"),
+    ];
+
+    private sealed record StateInfo(string Code, string Name, string Path);
+}

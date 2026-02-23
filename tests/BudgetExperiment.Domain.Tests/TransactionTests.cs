@@ -817,4 +817,61 @@ public class TransactionTests
         var ex = Assert.Throws<DomainException>(() => transaction.UnlinkFromRecurring());
         Assert.Contains("not linked", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void SetLocation_SetsLocationAndUpdatesTimestamp()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", -25.00m),
+            new DateOnly(2026, 2, 20),
+            "COFFEE SHOP");
+        var originalUpdatedAt = transaction.UpdatedAt;
+        var location = TransactionLocation.Create(
+            "Seattle", "WA", "US", "98101", null, LocationSource.Manual);
+
+        // Act
+        transaction.SetLocation(location);
+
+        // Assert
+        Assert.Equal(location, transaction.Location);
+        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void ClearLocation_NullsLocationAndUpdatesTimestamp()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", -25.00m),
+            new DateOnly(2026, 2, 20),
+            "COFFEE SHOP");
+        var location = TransactionLocation.Create(
+            "Seattle", "WA", "US", null, null, LocationSource.Manual);
+        transaction.SetLocation(location);
+        var originalUpdatedAt = transaction.UpdatedAt;
+
+        // Act
+        transaction.ClearLocation();
+
+        // Assert
+        Assert.Null(transaction.Location);
+        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void Create_HasNullLocation_ByDefault()
+    {
+        // Arrange & Act
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", -10.00m),
+            new DateOnly(2026, 2, 20),
+            "Test");
+
+        // Assert
+        Assert.Null(transaction.Location);
+    }
 }

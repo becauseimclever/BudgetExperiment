@@ -64,6 +64,25 @@ public sealed class CategorySuggestionsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets dismissed category suggestions for the current user.
+    /// </summary>
+    /// <param name="skip">Number of items to skip (default 0).</param>
+    /// <param name="take">Number of items to take (default 20).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of dismissed category suggestions.</returns>
+    [HttpGet("dismissed")]
+    [ProducesResponseType<IReadOnlyList<CategorySuggestionDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDismissedAsync(
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var suggestions = await _suggestionService.GetDismissedSuggestionsAsync(skip, take, cancellationToken);
+        var dtos = suggestions.Select(MapToDto).ToList();
+        return Ok(dtos);
+    }
+
+    /// <summary>
     /// Gets a specific category suggestion by ID.
     /// </summary>
     /// <param name="id">The suggestion identifier.</param>

@@ -77,6 +77,25 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<CategorySuggestionDto>> GetDismissedAsync(int skip = 0, int take = 20, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await this._httpClient.GetFromJsonAsync<List<CategorySuggestionDto>>($"{BaseUrl}/dismissed?skip={skip}&take={take}", JsonOptions, cancellationToken);
+            return result ?? new List<CategorySuggestionDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<CategorySuggestionDto>();
+        }
+        catch (HttpRequestException)
+        {
+            return new List<CategorySuggestionDto>();
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<CategorySuggestionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try

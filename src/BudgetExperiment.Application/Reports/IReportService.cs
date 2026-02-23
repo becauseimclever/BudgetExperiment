@@ -49,4 +49,14 @@ public interface IReportService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The day summary DTO.</returns>
     Task<DaySummaryDto> GetDaySummaryAsync(DateOnly date, Guid? accountId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets spending aggregated by geographic location for a date range.
+    /// </summary>
+    /// <param name="startDate">The start date (inclusive).</param>
+    /// <param name="endDate">The end date (inclusive).</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The location spending report DTO.</returns>
+    Task<LocationSpendingReportDto> GetSpendingByLocationAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default);
 }

@@ -217,6 +217,63 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<TransactionDto?> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto)
+    {
+        try
+        {
+            var response = await this._httpClient.PatchAsJsonAsync($"api/v1/transactions/{id}/location", dto, JsonOptions);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ClearTransactionLocationAsync(Guid id)
+    {
+        try
+        {
+            var response = await this._httpClient.DeleteAsync($"api/v1/transactions/{id}/location");
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<ReverseGeocodeResponseDto?> ReverseGeocodeAsync(decimal latitude, decimal longitude)
+    {
+        try
+        {
+            var request = new ReverseGeocodeRequestDto { Latitude = latitude, Longitude = longitude };
+            var response = await this._httpClient.PostAsJsonAsync("api/v1/geocoding/reverse", request, JsonOptions);
+
+            if (response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NoContent)
+            {
+                return await response.Content.ReadFromJsonAsync<ReverseGeocodeResponseDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null)
     {
         try
@@ -702,6 +759,26 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<LocationDataClearedDto?> DeleteAllLocationDataAsync()
+    {
+        try
+        {
+            var response = await this._httpClient.DeleteAsync("api/v1/settings/location-data");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<LocationDataClearedDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null)
     {
         var url = $"api/v1/allocations/paycheck?frequency={Uri.EscapeDataString(frequency)}";
@@ -1168,6 +1245,30 @@ public sealed class BudgetApiService : IBudgetApiService
             }
 
             return await this._httpClient.GetFromJsonAsync<DaySummaryDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<LocationSpendingReportDto?> GetSpendingByLocationAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
+    {
+        try
+        {
+            var url = $"api/v1/reports/spending-by-location?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            if (accountId.HasValue)
+            {
+                url += $"&accountId={accountId.Value}";
+            }
+
+            return await this._httpClient.GetFromJsonAsync<LocationSpendingReportDto>(url, JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {

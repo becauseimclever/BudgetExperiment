@@ -672,6 +672,15 @@ public class ChatServiceTests
 
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);
+
+        public Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, CancellationToken cancellationToken = default) =>
+            Task.FromResult<TransactionDto?>(null);
+
+        public Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
+
+        public Task<int> ClearAllLocationDataAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(0);
     }
 
     private sealed class MockUnitOfWork : IUnitOfWork

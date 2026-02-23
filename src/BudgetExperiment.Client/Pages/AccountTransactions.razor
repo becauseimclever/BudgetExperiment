@@ -11,6 +11,7 @@
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
 @inject IChatContextService ChatContext
+@inject GeolocationService GeolocationService
 
 <PageTitle>@(accountName ?? "Account") Transactions - Budget Experiment</PageTitle>
 
@@ -105,6 +106,16 @@
             ErrorMessage="@saveErrorMessage"
             OnSubmit="@SaveTransaction"
             OnCancel="@HideAddTransaction" />
+
+        @if (editingTransaction != null)
+        {
+            <LocationFields IsEnabled="@locationEnabled"
+                            Location="@editingTransaction.Location"
+                            OnSave="SaveLocation"
+                            OnClear="ClearLocation"
+                            GeolocationService="@GeolocationService"
+                            BudgetApiService="@ApiService" />
+        }
     </Modal>
 
     <ConfirmDialog IsVisible="@showDeleteConfirm"
@@ -195,6 +206,9 @@
     private bool showPastDueReview = false;
     private bool isLoadingPastDue = false;
 
+    // Location state
+    private bool locationEnabled = false;
+
     private Guid previousAccountId;
 
     /// <inheritdoc/>
@@ -213,6 +227,7 @@
             await LoadData();
             await LoadCategories();
             await LoadPastDueItems();
+            await LoadLocationSetting();
 
             // Update chat context with current account
             ChatContext.SetAccountContext(AccountId, accountName);
@@ -328,7 +343,7 @@
         showAddTransaction = true;
     }
 
-    private void EditTransaction(TransactionListItem item)
+    private async Task EditTransaction(TransactionListItem item)
     {
         // Can only edit actual transactions, not recurring instances
         if (item.IsRecurring)
@@ -336,8 +351,9 @@
             return;
         }
 
-        // Create a minimal DTO for editing
-        editingTransaction = new TransactionDto
+        // Fetch full transaction to get location data
+        var fullTransaction = await ApiService.GetTransactionAsync(item.Id);
+        editingTransaction = fullTransaction ?? new TransactionDto
         {
             Id = item.Id,
             Date = item.Date,
@@ -579,6 +595,63 @@
     private void GoBack()
     {
         Navigation.NavigateTo("/accounts");
+    }
+
+    // Location methods
+    private async Task LoadLocationSetting()
+    {
+        try
+        {
+            var settings = await ApiService.GetSettingsAsync();
+            locationEnabled = settings?.EnableLocationData ?? false;
+        }
+        catch
+        {
+            locationEnabled = false;
+        }
+    }
+
+    private async Task SaveLocation(TransactionLocationUpdateDto dto)
+    {
+        if (editingTransaction == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await ApiService.UpdateTransactionLocationAsync(editingTransaction.Id, dto);
+            if (result != null)
+            {
+                editingTransaction = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            saveErrorMessage = $"Failed to save location: {ex.Message}";
+        }
+    }
+
+    private async Task ClearLocation()
+    {
+        if (editingTransaction == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var cleared = await ApiService.ClearTransactionLocationAsync(editingTransaction.Id);
+            if (cleared)
+            {
+                editingTransaction.Location = null;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            saveErrorMessage = $"Failed to clear location: {ex.Message}";
+        }
     }
 
     // Past-due methods

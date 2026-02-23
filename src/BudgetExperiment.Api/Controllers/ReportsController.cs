@@ -200,4 +200,39 @@ public sealed class ReportsController : ControllerBase
         var summary = await this._budgetProgressService.GetMonthlySummaryAsync(year, month, cancellationToken);
         return this.Ok(summary);
     }
+
+    /// <summary>
+    /// Gets spending aggregated by geographic location for a date range.
+    /// </summary>
+    /// <param name="startDate">The start date, inclusive (format: yyyy-MM-dd).</param>
+    /// <param name="endDate">The end date, inclusive (format: yyyy-MM-dd).</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The location spending report with per-region aggregation.</returns>
+    /// <remarks>
+    /// Example: <c>GET /api/v1/reports/spending-by-location?startDate=2026-01-01&amp;endDate=2026-01-31</c>
+    /// Maximum range: 366 days.
+    /// </remarks>
+    [HttpGet("spending-by-location")]
+    [ProducesResponseType<LocationSpendingReportDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetSpendingByLocationAsync(
+        [FromQuery] DateOnly startDate,
+        [FromQuery] DateOnly endDate,
+        [FromQuery] Guid? accountId,
+        CancellationToken cancellationToken)
+    {
+        if (endDate < startDate)
+        {
+            return this.BadRequest("End date must be on or after start date.");
+        }
+
+        if (endDate.DayNumber - startDate.DayNumber > 366)
+        {
+            return this.BadRequest("Date range cannot exceed one year.");
+        }
+
+        var report = await this._reportService.GetSpendingByLocationAsync(startDate, endDate, accountId, cancellationToken);
+        return this.Ok(report);
+    }
 }

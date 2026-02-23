@@ -124,5 +124,36 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
 
         builder.HasIndex(t => t.ImportBatchId)
             .HasDatabaseName("IX_Transactions_ImportBatchId");
+
+        // Location owned type — columns added in VS-3 migration;
+        // configure as owned here so EF Core doesn't treat it as an entity.
+        builder.OwnsOne(t => t.Location, loc =>
+        {
+            loc.OwnsOne(l => l.Coordinates, coord =>
+            {
+                coord.Property(c => c.Latitude)
+                    .HasColumnName("Location_Latitude")
+                    .HasPrecision(9, 6);
+                coord.Property(c => c.Longitude)
+                    .HasColumnName("Location_Longitude")
+                    .HasPrecision(9, 6);
+            });
+
+            loc.Property(l => l.City)
+                .HasColumnName("Location_City")
+                .HasMaxLength(100);
+            loc.Property(l => l.StateOrRegion)
+                .HasColumnName("Location_StateOrRegion")
+                .HasMaxLength(100);
+            loc.Property(l => l.Country)
+                .HasColumnName("Location_Country")
+                .HasMaxLength(2);
+            loc.Property(l => l.PostalCode)
+                .HasColumnName("Location_PostalCode")
+                .HasMaxLength(20);
+            loc.Property(l => l.Source)
+                .HasColumnName("Location_Source")
+                .HasConversion<int>();
+        });
     }
 }

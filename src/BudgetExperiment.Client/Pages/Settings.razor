@@ -82,6 +82,69 @@
                 </section>
 
                 <section class="settings-section">
+                    <h3 class="settings-section-title">Location</h3>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label class="setting-label">Enable location data</label>
+                            <p class="setting-description">
+                                When enabled, transactions can include geographic location data
+                                such as city, state, and coordinates. Location features and
+                                reports become visible throughout the app.
+                            </p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox"
+                                       checked="@settings.EnableLocationData"
+                                       @onchange="OnEnableLocationDataChanged"
+                                       disabled="@isSaving" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    @if (settings.EnableLocationData)
+                    {
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Delete all location data</label>
+                                <p class="setting-description">
+                                    Permanently removes location data from all transactions.
+                                    This action cannot be undone.
+                                </p>
+                            </div>
+                            <div class="setting-control">
+                                @if (showDeleteLocationConfirm)
+                                {
+                                    <div class="confirm-actions">
+                                        <span class="confirm-warning">Are you sure? This cannot be undone.</span>
+                                        <button class="btn btn-danger btn-sm"
+                                                @onclick="ConfirmDeleteLocationData"
+                                                disabled="@isDeletingLocationData">
+                                            @(isDeletingLocationData ? "Deleting..." : "Yes, delete all")
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm"
+                                                @onclick="CancelDeleteLocationData"
+                                                disabled="@isDeletingLocationData">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            @onclick="OnDeleteLocationDataClicked"
+                                            disabled="@isSaving">
+                                        Delete All Location Data
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </section>
+
+                <section class="settings-section">
                     <h3 class="settings-section-title">About</h3>
 
                     <div class="setting-item">
@@ -209,6 +272,10 @@
     private bool isLoadingAiStatus = true;
     private bool isLoadingModels = true;
 
+    // Location bulk-delete state
+    private bool showDeleteLocationConfirm;
+    private bool isDeletingLocationData;
+
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
 
@@ -278,6 +345,54 @@
         if (int.TryParse(e.Value?.ToString(), out var days) && days >= 1 && days <= 365)
         {
             await SaveSettingAsync(new AppSettingsUpdateDto { PastDueLookbackDays = days });
+        }
+    }
+
+    private async Task OnEnableLocationDataChanged(ChangeEventArgs e)
+    {
+        if (e.Value is bool value)
+        {
+            await SaveSettingAsync(new AppSettingsUpdateDto { EnableLocationData = value });
+        }
+    }
+
+    private void OnDeleteLocationDataClicked()
+    {
+        showDeleteLocationConfirm = true;
+    }
+
+    private void CancelDeleteLocationData()
+    {
+        showDeleteLocationConfirm = false;
+    }
+
+    private async Task ConfirmDeleteLocationData()
+    {
+        isDeletingLocationData = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ApiService.DeleteAllLocationDataAsync();
+            if (result != null)
+            {
+                successMessage = $"Cleared location data from {result.ClearedCount} transaction{(result.ClearedCount == 1 ? "" : "s")}.";
+            }
+            else
+            {
+                errorMessage = "Failed to delete location data.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to delete location data: {ex.Message}";
+        }
+        finally
+        {
+            isDeletingLocationData = false;
+            showDeleteLocationConfirm = false;
+            StateHasChanged();
         }
     }
 

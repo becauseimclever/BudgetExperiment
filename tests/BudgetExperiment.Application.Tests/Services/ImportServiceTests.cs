@@ -27,6 +27,8 @@ public class ImportServiceTests
     private readonly Mock<IRecurringInstanceProjector> _projectorMock;
     private readonly Mock<ITransactionMatcher> _matcherMock;
     private readonly Mock<IReconciliationService> _reconciliationServiceMock;
+    private readonly Mock<ILocationParserService> _locationParserMock;
+    private readonly Mock<IAppSettingsRepository> _settingsRepoMock;
     private readonly ImportService _service;
 
     public ImportServiceTests()
@@ -43,6 +45,14 @@ public class ImportServiceTests
         this._projectorMock = new Mock<IRecurringInstanceProjector>();
         this._matcherMock = new Mock<ITransactionMatcher>();
         this._reconciliationServiceMock = new Mock<IReconciliationService>();
+        this._locationParserMock = new Mock<ILocationParserService>();
+        this._settingsRepoMock = new Mock<IAppSettingsRepository>();
+
+        // Default: location feature disabled (existing tests unaffected)
+        var defaultSettings = AppSettings.CreateDefault();
+        this._settingsRepoMock
+            .Setup(r => r.GetAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(defaultSettings);
 
         this._ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
@@ -73,7 +83,9 @@ public class ImportServiceTests
             this._matcherMock.Object,
             this._reconciliationServiceMock.Object,
             this._userContextMock.Object,
-            this._unitOfWorkMock.Object);
+            this._unitOfWorkMock.Object,
+            this._locationParserMock.Object,
+            this._settingsRepoMock.Object);
     }
 
     [Fact]

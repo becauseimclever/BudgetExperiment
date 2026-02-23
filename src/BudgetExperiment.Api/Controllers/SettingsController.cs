@@ -3,6 +3,7 @@
 // </copyright>
 
 
+using BudgetExperiment.Application.Accounts;
 using BudgetExperiment.Contracts.Dtos;
 
 using Microsoft.AspNetCore.Authorization;
@@ -20,14 +21,17 @@ namespace BudgetExperiment.Api.Controllers;
 public sealed class SettingsController : ControllerBase
 {
     private readonly IAppSettingsService _settingsService;
+    private readonly ITransactionService _transactionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsController"/> class.
     /// </summary>
     /// <param name="settingsService">The settings service.</param>
-    public SettingsController(IAppSettingsService settingsService)
+    /// <param name="transactionService">The transaction service.</param>
+    public SettingsController(IAppSettingsService settingsService, ITransactionService transactionService)
     {
         _settingsService = settingsService;
+        _transactionService = transactionService;
     }
 
     /// <summary>
@@ -58,5 +62,18 @@ public sealed class SettingsController : ControllerBase
     {
         var settings = await _settingsService.UpdateSettingsAsync(dto, cancellationToken);
         return Ok(settings);
+    }
+
+    /// <summary>
+    /// Deletes all location data from all transactions (bulk privacy operation).
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of transactions whose location was cleared.</returns>
+    [HttpDelete("location-data")]
+    [ProducesResponseType<LocationDataClearedDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteLocationDataAsync(CancellationToken cancellationToken)
+    {
+        var clearedCount = await _transactionService.ClearAllLocationDataAsync(cancellationToken);
+        return Ok(new LocationDataClearedDto { ClearedCount = clearedCount });
     }
 }

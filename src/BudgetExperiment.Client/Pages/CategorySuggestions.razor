@@ -32,11 +32,26 @@
         </div>
     }
 
+    <div class="suggestion-tabs" role="tablist">
+        <button class="tab-button @(ActiveTab == SuggestionTab.Pending ? "active" : "")"
+                role="tab"
+                aria-selected="@(ActiveTab == SuggestionTab.Pending)"
+                @onclick="@(() => SwitchTab(SuggestionTab.Pending))">
+            Pending
+        </button>
+        <button class="tab-button @(ActiveTab == SuggestionTab.Dismissed ? "active" : "")"
+                role="tab"
+                aria-selected="@(ActiveTab == SuggestionTab.Dismissed)"
+                @onclick="@(() => SwitchTab(SuggestionTab.Dismissed))">
+            Dismissed
+        </button>
+    </div>
+
     @if (IsLoading)
     {
         <LoadingSpinner Message="Loading suggestions..." />
     }
-    else if (Suggestions.Count == 0)
+    else if (ActiveTab == SuggestionTab.Pending && Suggestions.Count == 0)
     {
         <div class="empty-state">
             <Icon Name="lightbulb" Size="64" />
@@ -44,7 +59,15 @@
             <p>Click "Analyze Transactions" to have AI analyze your uncategorized transactions and suggest new categories.</p>
         </div>
     }
-    else
+    else if (ActiveTab == SuggestionTab.Dismissed && DismissedSuggestions.Count == 0)
+    {
+        <div class="empty-state">
+            <Icon Name="archive" Size="64" />
+            <h3>No Dismissed Suggestions</h3>
+            <p>Suggestions you dismiss will appear here.</p>
+        </div>
+    }
+    else if (ActiveTab == SuggestionTab.Pending)
     {
         <div class="suggestions-list">
             @foreach (var suggestion in Suggestions)
@@ -55,6 +78,16 @@
                                          OnAccept="@(() => ShowAcceptDialog(suggestion))"
                                          OnDismiss="@(() => DismissSuggestion(suggestion.Id))"
                                          OnPreviewRules="@(() => ShowRulesPreview(suggestion))" />
+            }
+        </div>
+    }
+    else if (ActiveTab == SuggestionTab.Dismissed)
+    {
+        <div class="suggestions-list dismissed-list">
+            @foreach (var suggestion in DismissedSuggestions)
+            {
+                <CategorySuggestionCard Suggestion="@suggestion"
+                                         IsDismissedView="true" />
             }
         </div>
     }
@@ -144,10 +177,14 @@
 </div>
 
 @code {
+    private enum SuggestionTab { Pending, Dismissed }
+
     private IReadOnlyList<CategorySuggestionDto> Suggestions { get; set; } = Array.Empty<CategorySuggestionDto>();
+    private IReadOnlyList<CategorySuggestionDto> DismissedSuggestions { get; set; } = Array.Empty<CategorySuggestionDto>();
     private IReadOnlyList<SuggestedCategoryRuleDto> PreviewRules { get; set; } = Array.Empty<SuggestedCategoryRuleDto>();
     private HashSet<Guid> SelectedSuggestions { get; } = new();
     private CategorySuggestionDto? AcceptingSuggestion { get; set; }
+    private SuggestionTab ActiveTab { get; set; } = SuggestionTab.Pending;
 
     private bool IsLoading { get; set; }
     private bool IsAnalyzing { get; set; }
@@ -193,7 +230,51 @@
     private async Task RefreshSuggestions()
     {
         SelectedSuggestions.Clear();
-        await LoadSuggestionsAsync();
+        if (ActiveTab == SuggestionTab.Dismissed)
+        {
+            await LoadDismissedSuggestionsAsync();
+        }
+        else
+        {
+            await LoadSuggestionsAsync();
+        }
+    }
+
+    private async Task SwitchTab(SuggestionTab tab)
+    {
+        if (ActiveTab == tab)
+        {
+            return;
+        }
+
+        ActiveTab = tab;
+        SelectedSuggestions.Clear();
+
+        if (tab == SuggestionTab.Dismissed && DismissedSuggestions.Count == 0)
+        {
+            await LoadDismissedSuggestionsAsync();
+        }
+    }
+
+    private async Task LoadDismissedSuggestionsAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            _cts = new CancellationTokenSource();
+            DismissedSuggestions = await SuggestionService.GetDismissedAsync(cancellationToken: _cts.Token);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load dismissed suggestions: {ex.Message}";
+            DismissedSuggestions = Array.Empty<CategorySuggestionDto>();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private async Task AnalyzeTransactions()
@@ -463,5 +544,38 @@
 
     .table-warning {
         background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .suggestion-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .tab-button {
+        padding: 0.5rem 1.25rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-button:hover {
+        color: var(--text-primary);
+    }
+
+    .tab-button.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        font-weight: 600;
+    }
+
+    .dismissed-list {
+        opacity: 0.75;
     }
 </style>

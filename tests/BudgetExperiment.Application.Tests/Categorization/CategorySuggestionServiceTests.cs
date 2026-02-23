@@ -349,6 +349,52 @@ public class CategorySuggestionServiceTests
 
     #endregion
 
+    #region GetDismissedSuggestionsAsync Tests
+
+    [Fact]
+    public async Task GetDismissedSuggestionsAsync_ReturnsDismissedSuggestions()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie");
+        suggestion.Dismiss();
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByStatusAsync(TestOwnerId, SuggestionStatus.Dismissed, 0, 20, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { suggestion });
+
+        // Act
+        var result = await _service.GetDismissedSuggestionsAsync(0, 20, CancellationToken.None);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal(SuggestionStatus.Dismissed, result[0].Status);
+        Assert.Equal("Entertainment", result[0].SuggestedName);
+    }
+
+    [Fact]
+    public async Task GetDismissedSuggestionsAsync_ReturnsEmpty_WhenNoDismissed()
+    {
+        // Arrange
+        _suggestionRepoMock
+            .Setup(r => r.GetByStatusAsync(TestOwnerId, SuggestionStatus.Dismissed, 0, 20, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CategorySuggestion>());
+
+        // Act
+        var result = await _service.GetDismissedSuggestionsAsync(0, 20, CancellationToken.None);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private static Account CreateTestAccount()

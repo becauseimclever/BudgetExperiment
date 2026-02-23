@@ -63,6 +63,11 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
             .HasDefaultValue(true)
             .IsRequired();
 
+        // Location Settings
+        builder.Property(s => s.EnableLocationData)
+            .HasDefaultValue(false)
+            .IsRequired();
+
         // Seed the singleton settings record
         builder.HasData(CreateSeedData());
     }
@@ -102,6 +107,10 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
             .SetValue(settings, 120);
         typeof(AppSettings).GetProperty(nameof(AppSettings.AiIsEnabled))!
             .SetValue(settings, true);
+
+        // Location Settings defaults
+        typeof(AppSettings).GetProperty(nameof(AppSettings.EnableLocationData))!
+            .SetValue(settings, false);
 
         return settings!;
     }

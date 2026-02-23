@@ -146,6 +146,15 @@
                             <span class="nav-text">Categories</span>
                         </NavLink>
                     </li>
+                    @if (locationEnabled)
+                    {
+                        <li>
+                            <NavLink class="nav-item nav-subitem" href="reports/location" title="Spending by Location" aria-label="Spending by Location Report">
+                                <span class="nav-icon" aria-hidden="true"><Icon Name="map-pin" Size="16" /></span>
+                                <span class="nav-text">Location</span>
+                            </NavLink>
+                        </li>
+                    }
                 </ul>
             }
         </li>
@@ -271,6 +280,7 @@
     private bool accountsExpanded = true;
     private bool aiToolsExpanded = true;
     private bool hasLoadedState;
+    private bool locationEnabled;
 
     private async Task ToggleReportsSection()
     {
@@ -314,6 +324,7 @@
         if (isAuthenticated)
         {
             await LoadAccountsAsync();
+            await LoadLocationSettingAsync();
             await AiAvailability.RefreshAsync();
         }
     }
@@ -359,10 +370,11 @@
         var wasAuthenticated = isAuthenticated;
         isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
 
-        // Reload accounts when user becomes authenticated
+        // Reload accounts and settings when user becomes authenticated
         if (isAuthenticated && !wasAuthenticated)
         {
             await LoadAccountsAsync();
+            await LoadLocationSettingAsync();
             await InvokeAsync(StateHasChanged);
         }
         else if (!isAuthenticated && wasAuthenticated)
@@ -384,6 +396,20 @@
         {
             // Silently fail - nav will just show without account links
             accounts = new List<AccountDto>();
+        }
+    }
+
+    private async Task LoadLocationSettingAsync()
+    {
+        try
+        {
+            var settings = await ApiService.GetSettingsAsync();
+            locationEnabled = settings?.EnableLocationData == true;
+        }
+        catch
+        {
+            // Silently fail - location link will just not show
+            locationEnabled = false;
         }
     }
 

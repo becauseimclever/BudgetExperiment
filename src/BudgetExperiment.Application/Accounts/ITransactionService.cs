@@ -53,4 +53,28 @@ public interface ITransactionService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the transaction was deleted; false if not found.</returns>
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates the location on a transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The location update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction DTO, or null if not found.</returns>
+    Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Clears the location from a transaction.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the transaction was found and location cleared; false if not found.</returns>
+    Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Clears location data from all transactions (bulk privacy operation).
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of transactions whose location was cleared.</returns>
+    Task<int> ClearAllLocationDataAsync(CancellationToken cancellationToken = default);
 }
