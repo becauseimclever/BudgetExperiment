@@ -349,6 +349,84 @@ public class CategorySuggestionServiceTests
 
     #endregion
 
+    #region RestoreSuggestionAsync Tests
+
+    [Fact]
+    public async Task RestoreSuggestionAsync_RestoresSuggestion_AndRemovesDismissedPatterns()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix", "hulu" },
+            5,
+            0.85m,
+            TestOwnerId);
+        suggestion.Dismiss();
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        var dismissedPattern = DismissedSuggestionPattern.Create("Entertainment", TestOwnerId);
+        _dismissedRepoMock
+            .Setup(r => r.GetByPatternAsync(TestOwnerId, "ENTERTAINMENT", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dismissedPattern);
+
+        // Act
+        var result = await _service.RestoreSuggestionAsync(suggestion.Id, CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        Assert.Equal(SuggestionStatus.Pending, suggestion.Status);
+        _dismissedRepoMock.Verify(
+            r => r.RemoveAsync(dismissedPattern, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RestoreSuggestionAsync_ReturnsFalse_WhenNotFound()
+    {
+        // Arrange
+        var invalidId = Guid.NewGuid();
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(invalidId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CategorySuggestion?)null);
+
+        // Act
+        var result = await _service.RestoreSuggestionAsync(invalidId, CancellationToken.None);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task RestoreSuggestionAsync_ReturnsFalse_WhenOwnedByDifferentUser()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            "different-user");
+        suggestion.Dismiss();
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        // Act
+        var result = await _service.RestoreSuggestionAsync(suggestion.Id, CancellationToken.None);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    #endregion
+
     #region GetDismissedSuggestionsAsync Tests
 
     [Fact]

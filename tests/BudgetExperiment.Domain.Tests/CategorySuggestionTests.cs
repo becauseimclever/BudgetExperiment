@@ -253,6 +253,47 @@ public class CategorySuggestionTests
 
     #endregion
 
+    #region Restore Tests
+
+    [Fact]
+    public void Restore_FromDismissed_SetsPending()
+    {
+        // Arrange
+        var suggestion = CreateValidSuggestion();
+        suggestion.Dismiss();
+
+        // Act
+        suggestion.Restore();
+
+        // Assert
+        Assert.Equal(SuggestionStatus.Pending, suggestion.Status);
+    }
+
+    [Fact]
+    public void Restore_FromPending_ThrowsDomainException()
+    {
+        // Arrange
+        var suggestion = CreateValidSuggestion();
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => suggestion.Restore());
+        Assert.Contains("dismissed", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Restore_FromAccepted_ThrowsDomainException()
+    {
+        // Arrange
+        var suggestion = CreateValidSuggestion();
+        suggestion.Accept();
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => suggestion.Restore());
+        Assert.Contains("dismissed", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    #endregion
+
     private static CategorySuggestion CreateValidSuggestion()
     {
         return CategorySuggestion.Create(

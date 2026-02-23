@@ -255,6 +255,44 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     }
 
     /// <inheritdoc />
+    public async Task<bool> RestoreSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken);
+        if (suggestion == null)
+        {
+            return false;
+        }
+
+        if (suggestion.OwnerId != _userContext.UserId)
+        {
+            return false;
+        }
+
+        if (suggestion.Status != SuggestionStatus.Dismissed)
+        {
+            return false;
+        }
+
+        // Restore suggestion to pending
+        suggestion.Restore();
+
+        // Remove dismissed pattern so re-analysis won't skip it
+        var dismissedPattern = await _dismissedRepository.GetByPatternAsync(
+            _userContext.UserId,
+            suggestion.SuggestedName.ToUpperInvariant(),
+            cancellationToken);
+
+        if (dismissedPattern != null)
+        {
+            await _dismissedRepository.RemoveAsync(dismissedPattern, cancellationToken);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<SuggestedRule>> GetSuggestedRulesAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken);

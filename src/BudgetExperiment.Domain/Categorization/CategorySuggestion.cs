@@ -161,6 +161,20 @@ public sealed class CategorySuggestion
         Status = SuggestionStatus.Dismissed;
     }
 
+    /// <summary>
+    /// Restores a dismissed suggestion back to pending status.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown if the suggestion is not dismissed.</exception>
+    public void Restore()
+    {
+        if (Status != SuggestionStatus.Dismissed)
+        {
+            throw new DomainException("Only dismissed suggestions can be restored.");
+        }
+
+        Status = SuggestionStatus.Pending;
+    }
+
     private static void ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

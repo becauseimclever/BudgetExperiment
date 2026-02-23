@@ -68,6 +68,15 @@
             </button>
         </div>
     }
+    else
+    {
+        <div class="card-actions">
+            <button class="btn btn-primary btn-sm" @onclick="HandleRestore" title="Restore suggestion to pending">
+                <Icon Name="rotate-ccw" Size="14" />
+                <span>Restore</span>
+            </button>
+        </div>
+    }
 </div>
 
 @code {
@@ -114,6 +123,12 @@
     [Parameter]
     public bool IsDismissedView { get; set; }
 
+    /// <summary>
+    /// Gets or sets the callback for restoring a dismissed suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnRestore { get; set; }
+
     private async Task HandleSelect()
     {
         await OnSelect.InvokeAsync();
@@ -132,6 +147,11 @@
     private async Task HandlePreviewRules()
     {
         await OnPreviewRules.InvokeAsync();
+    }
+
+    private async Task HandleRestore()
+    {
+        await OnRestore.InvokeAsync();
     }
 
     private string GetStatusClass()

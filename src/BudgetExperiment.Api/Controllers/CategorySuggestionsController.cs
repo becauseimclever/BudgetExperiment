@@ -168,6 +168,27 @@ public sealed class CategorySuggestionsController : ControllerBase
     }
 
     /// <summary>
+    /// Restores a dismissed category suggestion back to pending status.
+    /// </summary>
+    /// <param name="id">The suggestion identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The restored suggestion if successful.</returns>
+    [HttpPost("{id:guid}/restore")]
+    [ProducesResponseType<CategorySuggestionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RestoreAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var success = await _suggestionService.RestoreSuggestionAsync(id, cancellationToken);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        var suggestion = await _suggestionService.GetSuggestionAsync(id, cancellationToken);
+        return Ok(MapToDto(suggestion!));
+    }
+
+    /// <summary>
     /// Accepts multiple category suggestions in bulk.
     /// </summary>
     /// <param name="request">The bulk accept request.</param>

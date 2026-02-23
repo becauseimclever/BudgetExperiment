@@ -87,7 +87,8 @@
             @foreach (var suggestion in DismissedSuggestions)
             {
                 <CategorySuggestionCard Suggestion="@suggestion"
-                                         IsDismissedView="true" />
+                                         IsDismissedView="true"
+                                         OnRestore="@(() => RestoreSuggestion(suggestion.Id))" />
             }
         </div>
     }
@@ -403,6 +404,27 @@
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
+        }
+    }
+
+    private async Task RestoreSuggestion(Guid id)
+    {
+        try
+        {
+            var restored = await SuggestionService.RestoreAsync(id);
+            if (restored != null)
+            {
+                DismissedSuggestions = DismissedSuggestions.Where(s => s.Id != id).ToList();
+                SuccessMessage = $"Suggestion '{restored.SuggestedName}' restored to pending.";
+            }
+            else
+            {
+                ErrorMessage = "Failed to restore suggestion.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to restore suggestion: {ex.Message}";
         }
     }
 

@@ -156,4 +156,17 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    /// <summary>
+    /// POST /api/v1/categorysuggestions/{id}/restore returns 404 for non-existent suggestion.
+    /// </summary>
+    [Fact]
+    public async Task Restore_Returns_404_ForNonExistent()
+    {
+        // Act
+        var response = await _client.PostAsync($"/api/v1/categorysuggestions/{Guid.NewGuid()}/restore", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

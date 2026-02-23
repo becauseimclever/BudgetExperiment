@@ -166,6 +166,30 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     }
 
     /// <inheritdoc />
+    public async Task<CategorySuggestionDto?> RestoreAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await this._httpClient.PostAsync($"{BaseUrl}/{id}/restore", null, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<CategorySuggestionDto>(JsonOptions, cancellationToken);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<AcceptCategorySuggestionResultDto>> BulkAcceptAsync(
         IEnumerable<Guid> suggestionIds,
         CancellationToken cancellationToken = default)

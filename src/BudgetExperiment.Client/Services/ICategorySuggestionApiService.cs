@@ -63,6 +63,14 @@ public interface ICategorySuggestionApiService
     Task<bool> DismissAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Restores a dismissed category suggestion back to pending.
+    /// </summary>
+    /// <param name="id">The suggestion ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The restored suggestion, or null if failed.</returns>
+    Task<CategorySuggestionDto?> RestoreAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Accepts multiple suggestions in bulk.
     /// </summary>
     /// <param name="suggestionIds">The suggestion IDs to accept.</param>
