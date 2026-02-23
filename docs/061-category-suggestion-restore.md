@@ -1,5 +1,5 @@
 # Feature 061: Restore Dismissed Category Suggestions
-> **Status:** 🔜 Planned · **Priority:** Low · **Estimate:** 5–8 hours
+> **Status:** ✅ Done · **Priority:** Low · **Estimate:** 5–8 hours
 
 ## Problem
 
@@ -19,14 +19,14 @@ Three capabilities, delivered as independent vertical slices that each ship end-
 
 | Layer | What exists today | File |
 |-------|-------------------|------|
-| Domain entity | `CategorySuggestion` with `Accept()`, `Dismiss()` — no `Restore()` | `Domain/Categorization/CategorySuggestion.cs` |
+| Domain entity | `CategorySuggestion` with `Accept()`, `Dismiss()`, `Restore()` | `Domain/Categorization/CategorySuggestion.cs` |
 | Domain enum | `SuggestionStatus { Pending, Accepted, Dismissed }` | `Domain/Categorization/SuggestionStatus.cs` |
 | Domain entity | `DismissedSuggestionPattern` (pattern + ownerId + timestamp) | `Domain/Categorization/DismissedSuggestionPattern.cs` |
-| Repo interface | `ICategorySuggestionRepository` — has `GetByStatusAsync` but no dedicated dismissed helper | `Domain/Repositories/ICategorySuggestionRepository.cs` |
-| Repo interface | `IDismissedSuggestionPatternRepository` — has `GetByOwnerAsync`, no bulk-clear | `Domain/Repositories/IDismissedSuggestionPatternRepository.cs` |
-| Service | `ICategorySuggestionService` / `CategorySuggestionService` — no restore/dismissed methods | `Application/Categorization/` |
-| API | `CategorySuggestionsController` — no dismissed/restore/clear endpoints | `Api/Controllers/CategorySuggestionsController.cs` |
-| Client | `CategorySuggestions.razor` — pending-only view, no dismissed tab | `Client/Pages/CategorySuggestions.razor` |
+| Repo interface | `ICategorySuggestionRepository` — has `GetByStatusAsync` | `Domain/Repositories/ICategorySuggestionRepository.cs` |
+| Repo interface | `IDismissedSuggestionPatternRepository` — has `GetByOwnerAsync`, `GetByPatternAsync`, `ClearByOwnerAsync` | `Domain/Repositories/IDismissedSuggestionPatternRepository.cs` |
+| Service | `ICategorySuggestionService` — `GetDismissedSuggestionsAsync`, `RestoreSuggestionAsync`, `ClearDismissedPatternsAsync` | `Application/Categorization/` |
+| API | `CategorySuggestionsController` — `GET /dismissed`, `POST /{id}/restore`, `DELETE /dismissed-patterns` | `Api/Controllers/CategorySuggestionsController.cs` |
+| Client | `CategorySuggestions.razor` — Pending/Dismissed tabs, Restore button, Clear Dismissed History | `Client/Pages/CategorySuggestions.razor` |
 | DTOs | `CategorySuggestionDto` already contains `Status` field | `Contracts/Dtos/CategorySuggestionDtos.cs` |
 
 ---
@@ -72,10 +72,10 @@ Returns dismissed suggestions for the authenticated user, paginated via `?skip=0
 
 ### 1.6 Definition of Done
 
-- [ ] GET endpoint returns dismissed suggestions for current user
-- [ ] Client shows "Dismissed" tab with dismissed suggestions listed
-- [ ] Visual distinction from pending (muted/opacity)
-- [ ] All tests green
+- [x] GET endpoint returns dismissed suggestions for current user
+- [x] Client shows "Dismissed" tab with dismissed suggestions listed
+- [x] Visual distinction from pending (muted/opacity)
+- [x] All tests green
 
 ---
 
@@ -138,12 +138,12 @@ Removing the dismissed patterns on restore is critical — otherwise the next an
 
 ### 2.6 Definition of Done
 
-- [ ] `Restore()` enforces Dismissed → Pending transition only
-- [ ] Service removes matching `DismissedSuggestionPattern` entries on restore
-- [ ] POST endpoint returns restored suggestion with Pending status
-- [ ] Client "Restore" button works on dismissed tab
-- [ ] Restored suggestion reappears in pending list
-- [ ] All tests green
+- [x] `Restore()` enforces Dismissed → Pending transition only
+- [x] Service removes matching `DismissedSuggestionPattern` entries on restore
+- [x] POST endpoint returns restored suggestion with Pending status
+- [x] Client "Restore" button works on dismissed tab
+- [x] Restored suggestion reappears in pending list
+- [x] All tests green
 
 ---
 
@@ -196,11 +196,11 @@ Note: this does **not** change the status of existing dismissed `CategorySuggest
 
 ### 3.6 Definition of Done
 
-- [ ] Bulk delete removes dismissed patterns only for current user
-- [ ] Existing dismissed suggestions are NOT modified (status stays Dismissed)
-- [ ] Re-analysis after clearing can re-suggest previously dismissed categories
-- [ ] Confirmation dialog prevents accidental clearing
-- [ ] All tests green
+- [x] Bulk delete removes dismissed patterns only for current user
+- [x] Existing dismissed suggestions are NOT modified (status stays Dismissed)
+- [x] Re-analysis after clearing can re-suggest previously dismissed categories
+- [x] Confirmation dialog prevents accidental clearing
+- [x] All tests green
 
 ---
 
@@ -237,3 +237,4 @@ Each slice is independently deployable and testable. Slice 1 ships first; Slices
 |------|--------|--------|
 | 2026-02-01 | Created as enhancement extracted from Feature 032 | @github-copilot |
 | 2026-02-22 | Rewritten as vertical testable slices with TDD task breakdown | @github-copilot |
+| 2026-02-23 | All 3 slices implemented and shipped (commits a94f431, 4c809f3, facc776) | @github-copilot |
