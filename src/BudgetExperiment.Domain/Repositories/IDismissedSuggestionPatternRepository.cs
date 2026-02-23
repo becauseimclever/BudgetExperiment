@@ -34,4 +34,12 @@ public interface IDismissedSuggestionPatternRepository : IReadRepository<Dismiss
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The dismissed pattern or null if not found.</returns>
     Task<DismissedSuggestionPattern?> GetByPatternAsync(string ownerId, string pattern, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes all dismissed patterns for a user.
+    /// </summary>
+    /// <param name="ownerId">The owner user ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of deleted patterns.</returns>
+    Task<int> ClearByOwnerAsync(string ownerId, CancellationToken cancellationToken = default);
 }

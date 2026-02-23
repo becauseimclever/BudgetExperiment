@@ -93,6 +93,15 @@ public interface ICategorySuggestionService
     Task<bool> RestoreSuggestionAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Clears all dismissed suggestion patterns for the current user.
+    /// This does not change the status of existing dismissed suggestions;
+    /// it only removes the pattern memory so future analysis can re-suggest those categories.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of patterns cleared.</returns>
+    Task<int> ClearDismissedPatternsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets suggested categorization rules for an accepted suggestion.
     /// </summary>
     /// <param name="id">The suggestion ID.</param>

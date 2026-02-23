@@ -189,6 +189,21 @@ public sealed class CategorySuggestionsController : ControllerBase
     }
 
     /// <summary>
+    /// Clears all dismissed suggestion patterns for the current user.
+    /// This does not change the status of existing dismissed suggestions;
+    /// it only removes the pattern memory so future analysis can re-suggest those categories.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of patterns cleared.</returns>
+    [HttpDelete("dismissed-patterns")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ClearDismissedPatternsAsync(CancellationToken cancellationToken)
+    {
+        var clearedCount = await _suggestionService.ClearDismissedPatternsAsync(cancellationToken);
+        return Ok(new { clearedCount });
+    }
+
+    /// <summary>
     /// Accepts multiple category suggestions in bulk.
     /// </summary>
     /// <param name="request">The bulk accept request.</param>

@@ -190,6 +190,31 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     }
 
     /// <inheritdoc />
+    public async Task<int> ClearDismissedPatternsAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await this._httpClient.DeleteAsync($"{BaseUrl}/dismissed-patterns", cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ClearDismissedPatternsResponse>(JsonOptions, cancellationToken);
+                return result?.ClearedCount ?? 0;
+            }
+
+            return 0;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return 0;
+        }
+        catch (HttpRequestException)
+        {
+            return 0;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<AcceptCategorySuggestionResultDto>> BulkAcceptAsync(
         IEnumerable<Guid> suggestionIds,
         CancellationToken cancellationToken = default)

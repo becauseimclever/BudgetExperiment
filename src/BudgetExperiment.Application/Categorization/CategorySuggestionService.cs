@@ -293,6 +293,14 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     }
 
     /// <inheritdoc />
+    public async Task<int> ClearDismissedPatternsAsync(CancellationToken cancellationToken = default)
+    {
+        var clearedCount = await _dismissedRepository.ClearByOwnerAsync(_userContext.UserId, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return clearedCount;
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<SuggestedRule>> GetSuggestedRulesAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken);

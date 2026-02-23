@@ -83,4 +83,20 @@ internal sealed class DismissedSuggestionPatternRepository : IDismissedSuggestio
         return await _context.DismissedSuggestionPatterns
             .FirstOrDefaultAsync(p => p.OwnerId == ownerId && p.Pattern == normalizedPattern, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<int> ClearByOwnerAsync(string ownerId, CancellationToken cancellationToken = default)
+    {
+        var patterns = await _context.DismissedSuggestionPatterns
+            .Where(p => p.OwnerId == ownerId)
+            .ToListAsync(cancellationToken);
+
+        if (patterns.Count == 0)
+        {
+            return 0;
+        }
+
+        _context.DismissedSuggestionPatterns.RemoveRange(patterns);
+        return patterns.Count;
+    }
 }

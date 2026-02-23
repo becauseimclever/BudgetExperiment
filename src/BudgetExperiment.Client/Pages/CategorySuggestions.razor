@@ -83,6 +83,23 @@
     }
     else if (ActiveTab == SuggestionTab.Dismissed)
     {
+        @if (ShowClearPatternsConfirm)
+        {
+            <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
+                <span>Clear all dismissed patterns? Future analyses may re-suggest previously dismissed categories.</span>
+                <button class="btn btn-danger btn-sm" @onclick="ConfirmClearDismissedPatterns">Yes, Clear</button>
+                <button class="btn btn-secondary btn-sm" @onclick="CancelClearDismissedPatterns">Cancel</button>
+            </div>
+        }
+        else if (DismissedSuggestions.Count > 0)
+        {
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-outline-warning btn-sm" @onclick="RequestClearDismissedPatterns">
+                    🗑 Clear Dismissed History
+                </button>
+            </div>
+        }
+
         <div class="suggestions-list dismissed-list">
             @foreach (var suggestion in DismissedSuggestions)
             {
@@ -196,6 +213,7 @@
 
     private bool ShowAcceptModal { get; set; }
     private bool ShowRulesModal { get; set; }
+    private bool ShowClearPatternsConfirm { get; set; }
     private string AcceptCategoryName { get; set; } = string.Empty;
     private bool CreateRulesOnAccept { get; set; } = true;
 
@@ -425,6 +443,33 @@
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to restore suggestion: {ex.Message}";
+        }
+    }
+
+    private void RequestClearDismissedPatterns()
+    {
+        ShowClearPatternsConfirm = true;
+    }
+
+    private void CancelClearDismissedPatterns()
+    {
+        ShowClearPatternsConfirm = false;
+    }
+
+    private async Task ConfirmClearDismissedPatterns()
+    {
+        ShowClearPatternsConfirm = false;
+
+        try
+        {
+            var count = await SuggestionService.ClearDismissedPatternsAsync();
+            SuccessMessage = count > 0
+                ? $"Cleared {count} dismissed pattern(s). Future analyses may re-suggest those categories."
+                : "No dismissed patterns to clear.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to clear dismissed patterns: {ex.Message}";
         }
     }
 

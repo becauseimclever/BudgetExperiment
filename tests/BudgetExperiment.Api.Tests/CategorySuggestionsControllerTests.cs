@@ -169,4 +169,19 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    /// <summary>
+    /// DELETE /api/v1/categorysuggestions/dismissed-patterns returns 200.
+    /// </summary>
+    [Fact]
+    public async Task ClearDismissedPatterns_Returns_200()
+    {
+        // Act
+        var response = await _client.DeleteAsync("/api/v1/categorysuggestions/dismissed-patterns");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadAsStringAsync();
+        Assert.Contains("clearedCount", json);
+    }
 }

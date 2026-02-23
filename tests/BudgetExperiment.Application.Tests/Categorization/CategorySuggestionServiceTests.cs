@@ -473,6 +473,29 @@ public class CategorySuggestionServiceTests
 
     #endregion
 
+    #region ClearDismissedPatternsAsync Tests
+
+    [Fact]
+    public async Task ClearDismissedPatternsAsync_DelegatesToRepo_ReturnsCount()
+    {
+        // Arrange
+        _dismissedRepoMock
+            .Setup(r => r.ClearByOwnerAsync(TestOwnerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
+
+        // Act
+        var result = await _service.ClearDismissedPatternsAsync(CancellationToken.None);
+
+        // Assert
+        Assert.Equal(3, result);
+        _dismissedRepoMock.Verify(
+            r => r.ClearByOwnerAsync(TestOwnerId, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private static Account CreateTestAccount()

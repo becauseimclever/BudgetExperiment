@@ -71,6 +71,13 @@ public interface ICategorySuggestionApiService
     Task<CategorySuggestionDto?> RestoreAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Clears all dismissed suggestion patterns for the current user.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of patterns cleared.</returns>
+    Task<int> ClearDismissedPatternsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Accepts multiple suggestions in bulk.
     /// </summary>
     /// <param name="suggestionIds">The suggestion IDs to accept.</param>
