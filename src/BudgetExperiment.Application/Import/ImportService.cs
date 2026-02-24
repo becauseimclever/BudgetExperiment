@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Import;
 
@@ -45,6 +46,7 @@ public sealed class ImportService : IImportService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILocationParserService _locationParser;
     private readonly IAppSettingsRepository _settingsRepository;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportService"/> class.
@@ -63,6 +65,7 @@ public sealed class ImportService : IImportService
     /// <param name="unitOfWork">Unit of work.</param>
     /// <param name="locationParser">Location parser service.</param>
     /// <param name="settingsRepository">App settings repository.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public ImportService(
         ITransactionRepository transactionRepository,
         ICategorizationRuleRepository ruleRepository,
@@ -77,7 +80,8 @@ public sealed class ImportService : IImportService
         IUserContext userContext,
         IUnitOfWork unitOfWork,
         ILocationParserService locationParser,
-        IAppSettingsRepository settingsRepository)
+        IAppSettingsRepository settingsRepository,
+        ICurrencyProvider currencyProvider)
     {
         this._transactionRepository = transactionRepository;
         this._ruleRepository = ruleRepository;
@@ -93,6 +97,7 @@ public sealed class ImportService : IImportService
         this._unitOfWork = unitOfWork;
         this._locationParser = locationParser;
         this._settingsRepository = settingsRepository;
+        this._currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc />
@@ -227,12 +232,13 @@ public sealed class ImportService : IImportService
         int uncategorized = 0;
         int skipped = 0;
         int locationEnriched = 0;
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
 
         foreach (var txData in request.Transactions)
         {
             try
             {
-                var amount = MoneyValue.Create("USD", txData.Amount);
+                var amount = MoneyValue.Create(currency, txData.Amount);
 
                 // Use Account.AddTransaction to properly set scope
                 var transaction = account.AddTransaction(
@@ -456,6 +462,7 @@ public sealed class ImportService : IImportService
         }
 
         var tolerances = MatchingTolerances.Default;
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
 
         // Enrich each valid row with potential matches
         var enrichedRows = new List<ImportPreviewRow>();
@@ -473,7 +480,8 @@ public sealed class ImportService : IImportService
                 row.Amount.Value,
                 row.Date.Value,
                 allCandidates,
-                tolerances);
+                tolerances,
+                currency);
 
             if (bestMatch != null)
             {
@@ -550,14 +558,15 @@ public sealed class ImportService : IImportService
         decimal amount,
         DateOnly date,
         IReadOnlyList<RecurringInstanceInfo> candidates,
-        MatchingTolerances tolerances)
+        MatchingTolerances tolerances,
+        string currency)
     {
         TransactionMatchResult? best = null;
 
         foreach (var candidate in candidates)
         {
             var matchResult = this._transactionMatcher.CalculateMatch(
-                CreatePreviewTransaction(description, amount, date),
+                CreatePreviewTransaction(description, amount, date, currency),
                 candidate,
                 tolerances);
 
@@ -570,13 +579,13 @@ public sealed class ImportService : IImportService
         return best;
     }
 
-    private static Transaction CreatePreviewTransaction(string description, decimal amount, DateOnly date)
+    private static Transaction CreatePreviewTransaction(string description, decimal amount, DateOnly date, string currency)
     {
         // Create a temporary transaction for matching purposes
         // Using a new Guid since Guid.Empty fails domain validation
         return Transaction.Create(
             Guid.NewGuid(),
-            MoneyValue.Create("USD", amount),
+            MoneyValue.Create(currency, amount),
             date,
             description);
     }

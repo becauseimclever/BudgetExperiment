@@ -1,5 +1,7 @@
 using BudgetExperiment.Application.Export;
+using BudgetExperiment.Application.Settings;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +17,7 @@ public static class DependencyInjection
     /// <returns>Same collection for chaining.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddScoped<ICurrencyProvider, UserSettingsCurrencyProvider>();
         services.AddScoped<AccountService>();
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<TransactionService>(); // Also register concrete for backward compatibility

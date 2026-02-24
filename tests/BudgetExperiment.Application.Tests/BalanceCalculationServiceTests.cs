@@ -4,6 +4,7 @@
 
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -15,11 +16,14 @@ public class BalanceCalculationServiceTests
 {
     private readonly Mock<IAccountRepository> _accountRepo;
     private readonly Mock<ITransactionRepository> _transactionRepo;
+    private readonly Mock<ICurrencyProvider> _currencyProvider;
 
     public BalanceCalculationServiceTests()
     {
         _accountRepo = new Mock<IAccountRepository>();
         _transactionRepo = new Mock<ITransactionRepository>();
+        _currencyProvider = new Mock<ICurrencyProvider>();
+        _currencyProvider.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
         // Default setup - return empty collections
         _accountRepo
@@ -39,7 +43,7 @@ public class BalanceCalculationServiceTests
 
     private BalanceCalculationService CreateService()
     {
-        return new BalanceCalculationService(_accountRepo.Object, _transactionRepo.Object);
+        return new BalanceCalculationService(_accountRepo.Object, _transactionRepo.Object, _currencyProvider.Object);
     }
 
     [Fact]

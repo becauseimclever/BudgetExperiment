@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Budgeting;
 
@@ -15,6 +16,7 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
     private readonly IBudgetCategoryRepository _repository;
     private readonly IBudgetGoalRepository _goalRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetCategoryService"/> class.
@@ -22,14 +24,17 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
     /// <param name="repository">The budget category repository.</param>
     /// <param name="goalRepository">The budget goal repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public BudgetCategoryService(
         IBudgetCategoryRepository repository,
         IBudgetGoalRepository goalRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICurrencyProvider currencyProvider)
     {
         this._repository = repository;
         this._goalRepository = goalRepository;
         this._unitOfWork = unitOfWork;
+        this._currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -68,7 +73,8 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
         if (dto.InitialBudget != null && dto.InitialBudget.Amount > 0 && categoryType == CategoryType.Expense)
         {
             var now = DateTime.UtcNow;
-            var targetAmount = MoneyValue.Create(dto.InitialBudget.Currency ?? "USD", dto.InitialBudget.Amount);
+            var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+            var targetAmount = MoneyValue.Create(dto.InitialBudget.Currency ?? currency, dto.InitialBudget.Amount);
             var goal = BudgetGoal.Create(category.Id, now.Year, now.Month, targetAmount);
             await this._goalRepository.AddAsync(goal, cancellationToken);
         }

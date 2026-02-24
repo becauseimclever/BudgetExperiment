@@ -4,7 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
-
+using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -28,6 +28,7 @@ public class ImportServiceLocationTests
     private readonly Mock<IReconciliationService> _reconciliationServiceMock;
     private readonly Mock<ILocationParserService> _locationParserMock;
     private readonly Mock<IAppSettingsRepository> _settingsRepoMock;
+    private readonly Mock<ICurrencyProvider> _currencyProviderMock;
     private readonly ImportService _service;
 
     public ImportServiceLocationTests()
@@ -46,6 +47,8 @@ public class ImportServiceLocationTests
         this._reconciliationServiceMock = new Mock<IReconciliationService>();
         this._locationParserMock = new Mock<ILocationParserService>();
         this._settingsRepoMock = new Mock<IAppSettingsRepository>();
+        this._currencyProviderMock = new Mock<ICurrencyProvider>();
+        this._currencyProviderMock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
         this._ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
@@ -78,7 +81,8 @@ public class ImportServiceLocationTests
             this._userContextMock.Object,
             this._unitOfWorkMock.Object,
             this._locationParserMock.Object,
-            this._settingsRepoMock.Object);
+            this._settingsRepoMock.Object,
+            this._currencyProviderMock.Object);
     }
 
     private static ImportPreviewRequest CreatePreviewRequest(

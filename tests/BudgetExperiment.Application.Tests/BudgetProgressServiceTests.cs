@@ -4,6 +4,7 @@
 
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -13,6 +14,15 @@ namespace BudgetExperiment.Application.Tests;
 /// </summary>
 public class BudgetProgressServiceTests
 {
+    private static readonly Mock<ICurrencyProvider> DefaultCurrencyProvider = CreateCurrencyProviderMock();
+
+    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency = "USD")
+    {
+        var mock = new Mock<ICurrencyProvider>();
+        mock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
+        return mock;
+    }
+
     [Fact]
     public async Task GetProgressAsync_Returns_Progress_For_Category()
     {
@@ -27,7 +37,7 @@ public class BudgetProgressServiceTests
         var transactionRepo = new Mock<ITransactionRepository>();
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(categoryId, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 250m));
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetProgressAsync(categoryId, 2026, 1);
@@ -51,7 +61,7 @@ public class BudgetProgressServiceTests
         goalRepo.Setup(r => r.GetByCategoryAndMonthAsync(categoryId, 2026, 1, default)).ReturnsAsync((BudgetGoal?)null);
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         var transactionRepo = new Mock<ITransactionRepository>();
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetProgressAsync(categoryId, 2026, 1);
@@ -74,7 +84,7 @@ public class BudgetProgressServiceTests
         var transactionRepo = new Mock<ITransactionRepository>();
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(categoryId, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 85m));
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetProgressAsync(categoryId, 2026, 1);
@@ -99,7 +109,7 @@ public class BudgetProgressServiceTests
         var transactionRepo = new Mock<ITransactionRepository>();
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(categoryId, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 120m));
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetProgressAsync(categoryId, 2026, 1);
@@ -133,7 +143,7 @@ public class BudgetProgressServiceTests
             .ReturnsAsync(MoneyValue.Create("USD", 250m));
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(category2Id, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 150m));
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetMonthlySummaryAsync(2026, 1);
@@ -155,7 +165,7 @@ public class BudgetProgressServiceTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(new List<BudgetCategory>());
         var transactionRepo = new Mock<ITransactionRepository>();
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetMonthlySummaryAsync(2026, 1);
@@ -192,7 +202,7 @@ public class BudgetProgressServiceTests
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(categoryWithoutGoal.Id, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 0m));
 
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetMonthlySummaryAsync(2026, 1);
@@ -236,7 +246,7 @@ public class BudgetProgressServiceTests
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(It.IsAny<Guid>(), 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 100m));
 
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetMonthlySummaryAsync(2026, 1);
@@ -266,7 +276,7 @@ public class BudgetProgressServiceTests
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(expenseCategory.Id, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 0m));
 
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetMonthlySummaryAsync(2026, 1);
@@ -298,7 +308,7 @@ public class BudgetProgressServiceTests
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(activeCategory.Id, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 0m));
 
-        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object);
+        var service = new BudgetProgressService(goalRepo.Object, categoryRepo.Object, transactionRepo.Object, DefaultCurrencyProvider.Object);
 
         // Act
         var result = await service.GetMonthlySummaryAsync(2026, 1);

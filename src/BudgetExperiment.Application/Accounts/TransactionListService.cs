@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Accounts;
 
@@ -19,6 +20,7 @@ public sealed class TransactionListService : ITransactionListService
     private readonly IBalanceCalculationService _balanceCalculationService;
     private readonly IRecurringInstanceProjector _recurringInstanceProjector;
     private readonly IRecurringTransferInstanceProjector _recurringTransferInstanceProjector;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionListService"/> class.
@@ -30,6 +32,7 @@ public sealed class TransactionListService : ITransactionListService
     /// <param name="balanceCalculationService">The balance calculation service.</param>
     /// <param name="recurringInstanceProjector">The recurring instance projector.</param>
     /// <param name="recurringTransferInstanceProjector">The recurring transfer instance projector.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public TransactionListService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
@@ -37,7 +40,8 @@ public sealed class TransactionListService : ITransactionListService
         IAccountRepository accountRepository,
         IBalanceCalculationService balanceCalculationService,
         IRecurringInstanceProjector recurringInstanceProjector,
-        IRecurringTransferInstanceProjector recurringTransferInstanceProjector)
+        IRecurringTransferInstanceProjector recurringTransferInstanceProjector,
+        ICurrencyProvider currencyProvider)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -46,6 +50,7 @@ public sealed class TransactionListService : ITransactionListService
         _balanceCalculationService = balanceCalculationService;
         _recurringInstanceProjector = recurringInstanceProjector;
         _recurringTransferInstanceProjector = recurringTransferInstanceProjector;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -59,6 +64,8 @@ public sealed class TransactionListService : ITransactionListService
         // Get the account
         var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken)
             ?? throw new InvalidOperationException($"Account with ID {accountId} not found.");
+
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
 
         // Get transactions for date range
         var transactions = await _transactionRepository.GetByDateRangeAsync(
@@ -125,11 +132,11 @@ public sealed class TransactionListService : ITransactionListService
         foreach (var item in sortedForBalance)
         {
             runningBalance += item.Amount.Amount;
-            item.RunningBalance = new MoneyDto { Currency = "USD", Amount = runningBalance };
+            item.RunningBalance = new MoneyDto { Currency = currency, Amount = runningBalance };
         }
 
         // Calculate daily balance summaries
-        var dailyBalances = CalculateDailyBalances(sortedForBalance, balanceSeed);
+        var dailyBalances = CalculateDailyBalances(sortedForBalance, balanceSeed, currency);
 
         // Calculate summary
         var transactionCount = sortedItems.Count(i => i.Type == "transaction");
@@ -150,12 +157,12 @@ public sealed class TransactionListService : ITransactionListService
             Items = sortedItems,
             Summary = new TransactionListSummaryDto
             {
-                TotalAmount = new MoneyDto { Currency = "USD", Amount = totalAmount },
-                TotalIncome = new MoneyDto { Currency = "USD", Amount = totalIncome },
-                TotalExpenses = new MoneyDto { Currency = "USD", Amount = totalExpenses },
+                TotalAmount = new MoneyDto { Currency = currency, Amount = totalAmount },
+                TotalIncome = new MoneyDto { Currency = currency, Amount = totalIncome },
+                TotalExpenses = new MoneyDto { Currency = currency, Amount = totalExpenses },
                 TransactionCount = transactionCount,
                 RecurringCount = recurringCount,
-                CurrentBalance = new MoneyDto { Currency = "USD", Amount = currentBalance },
+                CurrentBalance = new MoneyDto { Currency = currency, Amount = currentBalance },
             },
             DailyBalances = dailyBalances.OrderByDescending(d => d.Date).ToList(),
             StartingBalance = new MoneyDto { Currency = startingBalance.Currency, Amount = balanceSeed },
@@ -261,7 +268,8 @@ public sealed class TransactionListService : ITransactionListService
 
     private static List<DailyBalanceSummaryDto> CalculateDailyBalances(
         List<TransactionListItemDto> sortedForBalance,
-        decimal startingBalanceAmount)
+        decimal startingBalanceAmount,
+        string currency)
     {
         var dailyBalances = new List<DailyBalanceSummaryDto>();
         var dayBalance = startingBalanceAmount;
@@ -275,9 +283,9 @@ public sealed class TransactionListService : ITransactionListService
             dailyBalances.Add(new DailyBalanceSummaryDto
             {
                 Date = dayGroup.Key,
-                StartingBalance = new MoneyDto { Currency = "USD", Amount = dayStart },
-                EndingBalance = new MoneyDto { Currency = "USD", Amount = dayBalance },
-                DayTotal = new MoneyDto { Currency = "USD", Amount = dayTotal },
+                StartingBalance = new MoneyDto { Currency = currency, Amount = dayStart },
+                EndingBalance = new MoneyDto { Currency = currency, Amount = dayBalance },
+                DayTotal = new MoneyDto { Currency = currency, Amount = dayTotal },
                 TransactionCount = dayGroup.Count(),
             });
         }

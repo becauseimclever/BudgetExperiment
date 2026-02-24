@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Budgeting;
 
@@ -15,6 +16,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
     private readonly IBudgetGoalRepository _goalRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetProgressService"/> class.
@@ -22,14 +24,17 @@ public sealed class BudgetProgressService : IBudgetProgressService
     /// <param name="goalRepository">The budget goal repository.</param>
     /// <param name="categoryRepository">The budget category repository.</param>
     /// <param name="transactionRepository">The transaction repository.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public BudgetProgressService(
         IBudgetGoalRepository goalRepository,
         IBudgetCategoryRepository categoryRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        ICurrencyProvider currencyProvider)
     {
         this._goalRepository = goalRepository;
         this._categoryRepository = categoryRepository;
         this._transactionRepository = transactionRepository;
+        this._currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -65,8 +70,9 @@ public sealed class BudgetProgressService : IBudgetProgressService
         var goals = await this._goalRepository.GetByMonthAsync(year, month, cancellationToken);
         var allExpenseCategories = await this._categoryRepository.GetByTypeAsync(CategoryType.Expense, cancellationToken);
         var categoryProgress = new List<BudgetProgressDto>();
-        var totalBudgeted = MoneyValue.Create("USD", 0m);
-        var totalSpent = MoneyValue.Create("USD", 0m);
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var totalBudgeted = MoneyValue.Create(currency, 0m);
+        var totalSpent = MoneyValue.Create(currency, 0m);
 
         // Create a lookup of goals by category ID
         var goalByCategoryId = goals.ToDictionary(g => g.CategoryId);

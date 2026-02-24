@@ -10,7 +10,7 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class MoneyDto
 {
     /// <summary>Gets or sets the currency code (ISO 4217).</summary>
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the amount.</summary>
     public decimal Amount { get; set; }

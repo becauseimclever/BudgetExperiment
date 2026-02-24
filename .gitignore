@@ -439,3 +439,6 @@ publish/
 budgetexperiment-image.tar
 
 # End of https://www.toptal.com/developers/gitignore/api/dotnetcore,visualstudio,visualstudiocode
+
+# JetBrains Rider
+.idea/

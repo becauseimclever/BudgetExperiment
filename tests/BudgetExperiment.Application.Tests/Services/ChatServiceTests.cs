@@ -5,6 +5,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Shouldly;
 using Xunit;
 
@@ -26,6 +27,7 @@ public class ChatServiceTests
     private readonly MockRecurringTransactionService _recurringTransactionService;
     private readonly MockRecurringTransferService _recurringTransferService;
     private readonly MockUnitOfWork _unitOfWork;
+    private readonly MockCurrencyProvider _currencyProvider;
     private readonly ChatService _service;
 
     public ChatServiceTests()
@@ -40,6 +42,7 @@ public class ChatServiceTests
         this._recurringTransactionService = new MockRecurringTransactionService();
         this._recurringTransferService = new MockRecurringTransferService();
         this._unitOfWork = new MockUnitOfWork();
+        this._currencyProvider = new MockCurrencyProvider();
 
         this._service = new ChatService(
             this._sessionRepo,
@@ -51,7 +54,8 @@ public class ChatServiceTests
             this._transferService,
             this._recurringTransactionService,
             this._recurringTransferService,
-            this._unitOfWork);
+            this._unitOfWork,
+            this._currencyProvider);
     }
 
     [Fact]
@@ -691,6 +695,16 @@ public class ChatServiceTests
         {
             this.SaveChangesCalled = true;
             return Task.FromResult(1);
+        }
+    }
+
+    private sealed class MockCurrencyProvider : ICurrencyProvider
+    {
+        public string Currency { get; set; } = "USD";
+
+        public Task<string> GetCurrencyAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(this.Currency);
         }
     }
 

@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Reports;
 
@@ -13,18 +14,22 @@ public sealed class ReportService : IReportService
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReportService"/> class.
     /// </summary>
     /// <param name="transactionRepository">The transaction repository.</param>
     /// <param name="categoryRepository">The category repository.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public ReportService(
         ITransactionRepository transactionRepository,
-        IBudgetCategoryRepository categoryRepository)
+        IBudgetCategoryRepository categoryRepository,
+        ICurrencyProvider currencyProvider)
     {
         this._transactionRepository = transactionRepository;
         this._categoryRepository = categoryRepository;
+        this._currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -36,15 +41,16 @@ public sealed class ReportService : IReportService
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var (totalSpending, totalIncome, categorySpending) = await this.BuildCategoryReportAsync(
-            startDate, endDate, accountId: null, cancellationToken);
+            startDate, endDate, accountId: null, currency, cancellationToken);
 
         return new MonthlyCategoryReportDto
         {
             Year = year,
             Month = month,
-            TotalSpending = new MoneyDto { Currency = "USD", Amount = totalSpending },
-            TotalIncome = new MoneyDto { Currency = "USD", Amount = totalIncome },
+            TotalSpending = new MoneyDto { Currency = currency, Amount = totalSpending },
+            TotalIncome = new MoneyDto { Currency = currency, Amount = totalIncome },
             Categories = categorySpending,
         };
     }
@@ -56,15 +62,16 @@ public sealed class ReportService : IReportService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var (totalSpending, totalIncome, categorySpending) = await this.BuildCategoryReportAsync(
-            startDate, endDate, accountId, cancellationToken);
+            startDate, endDate, accountId, currency, cancellationToken);
 
         return new DateRangeCategoryReportDto
         {
             StartDate = startDate,
             EndDate = endDate,
-            TotalSpending = new MoneyDto { Currency = "USD", Amount = totalSpending },
-            TotalIncome = new MoneyDto { Currency = "USD", Amount = totalIncome },
+            TotalSpending = new MoneyDto { Currency = currency, Amount = totalSpending },
+            TotalIncome = new MoneyDto { Currency = currency, Amount = totalIncome },
             Categories = categorySpending,
         };
     }
@@ -88,6 +95,7 @@ public sealed class ReportService : IReportService
         var startDate = new DateOnly(resolvedEndYear, resolvedEndMonth, 1)
             .AddMonths(-(months - 1));
 
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var transactions = await this._transactionRepository.GetByDateRangeAsync(
             startDate, endDate, accountId: null, cancellationToken);
 
@@ -125,9 +133,9 @@ public sealed class ReportService : IReportService
             {
                 Year = currentMonth.Year,
                 Month = currentMonth.Month,
-                TotalSpending = new MoneyDto { Currency = "USD", Amount = spending },
-                TotalIncome = new MoneyDto { Currency = "USD", Amount = income },
-                NetAmount = new MoneyDto { Currency = "USD", Amount = income - spending },
+                TotalSpending = new MoneyDto { Currency = currency, Amount = spending },
+                TotalIncome = new MoneyDto { Currency = currency, Amount = income },
+                NetAmount = new MoneyDto { Currency = currency, Amount = income - spending },
                 TransactionCount = monthTransactions.Count,
             });
 
@@ -148,8 +156,8 @@ public sealed class ReportService : IReportService
         return new SpendingTrendsReportDto
         {
             MonthlyData = monthlyData,
-            AverageMonthlySpending = new MoneyDto { Currency = "USD", Amount = avgSpending },
-            AverageMonthlyIncome = new MoneyDto { Currency = "USD", Amount = avgIncome },
+            AverageMonthlySpending = new MoneyDto { Currency = currency, Amount = avgSpending },
+            AverageMonthlyIncome = new MoneyDto { Currency = currency, Amount = avgIncome },
             TrendDirection = trendDirection,
             TrendPercentage = trendPercentage,
         };
@@ -161,6 +169,7 @@ public sealed class ReportService : IReportService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var transactions = await this._transactionRepository.GetByDateRangeAsync(
             date, date, accountId, cancellationToken);
 
@@ -197,16 +206,16 @@ public sealed class ReportService : IReportService
             topCategories.Add(new DayTopCategoryDto
             {
                 CategoryName = categoryName,
-                Amount = new MoneyDto { Currency = "USD", Amount = amount },
+                Amount = new MoneyDto { Currency = currency, Amount = amount },
             });
         }
 
         return new DaySummaryDto
         {
             Date = date,
-            TotalSpending = new MoneyDto { Currency = "USD", Amount = totalSpending },
-            TotalIncome = new MoneyDto { Currency = "USD", Amount = totalIncome },
-            NetAmount = new MoneyDto { Currency = "USD", Amount = totalIncome - totalSpending },
+            TotalSpending = new MoneyDto { Currency = currency, Amount = totalSpending },
+            TotalIncome = new MoneyDto { Currency = currency, Amount = totalIncome },
+            NetAmount = new MoneyDto { Currency = currency, Amount = totalIncome - totalSpending },
             TransactionCount = nonTransferTransactions.Count,
             TopCategories = topCategories,
         };
@@ -331,6 +340,7 @@ public sealed class ReportService : IReportService
         DateOnly startDate,
         DateOnly endDate,
         Guid? accountId,
+        string currency,
         CancellationToken cancellationToken)
     {
         var transactions = await this._transactionRepository.GetByDateRangeAsync(
@@ -397,7 +407,7 @@ public sealed class ReportService : IReportService
                 CategoryId = categoryId,
                 CategoryName = categoryName,
                 CategoryColor = categoryColor,
-                Amount = new MoneyDto { Currency = "USD", Amount = amount },
+                Amount = new MoneyDto { Currency = currency, Amount = amount },
                 Percentage = percentage,
                 TransactionCount = transactionCount,
             });

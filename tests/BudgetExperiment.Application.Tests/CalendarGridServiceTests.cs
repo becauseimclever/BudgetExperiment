@@ -4,6 +4,7 @@
 
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -20,6 +21,7 @@ public class CalendarGridServiceTests
     private readonly Mock<IRecurringInstanceProjector> _recurringInstanceProjector;
     private readonly Mock<IRecurringTransferInstanceProjector> _recurringTransferInstanceProjector;
     private readonly Mock<IAutoRealizeService> _autoRealizeService;
+    private readonly Mock<ICurrencyProvider> _currencyProvider;
 
     public CalendarGridServiceTests()
     {
@@ -30,6 +32,8 @@ public class CalendarGridServiceTests
         _recurringInstanceProjector = new Mock<IRecurringInstanceProjector>();
         _recurringTransferInstanceProjector = new Mock<IRecurringTransferInstanceProjector>();
         _autoRealizeService = new Mock<IAutoRealizeService>();
+        _currencyProvider = new Mock<ICurrencyProvider>();
+        _currencyProvider.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
         // Default setup for exceptions - return empty list
         _recurringRepo
@@ -297,7 +301,8 @@ public class CalendarGridServiceTests
             _balanceService.Object,
             _recurringInstanceProjector.Object,
             _recurringTransferInstanceProjector.Object,
-            _autoRealizeService.Object);
+            _autoRealizeService.Object,
+            _currencyProvider.Object);
     }
 
     private static RecurringTransaction CreateTestRecurringTransaction(Guid accountId, DateOnly startDate)

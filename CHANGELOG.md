@@ -6,6 +6,7 @@ All notable changes to Budget Experiment.
 
 ### Features
 
+- **domain:** `ICurrencyProvider` abstraction for global currency resolution — single interface in Domain layer with `UserSettingsCurrencyProvider` implementation in Application layer, falls back to USD when preference is unset or user is unauthenticated
 - **client:** Client-side CSV parsing — CSV files parsed entirely in Blazor WebAssembly with zero server round-trip, auto-delimiter detection, quote-aware parsing, and BOM removal
 - **client:** CSV injection sanitization — cells starting with formula-trigger characters (`=`, `@`, `+`, `-`, `\t`, `\r`) prefixed with `'` for safe display
 - **api:** Preview endpoint row count validation — rejects requests exceeding 10,000 rows (400 with ProblemDetails)
@@ -17,8 +18,14 @@ All notable changes to Budget Experiment.
 - **api:** Import execute validation — max 5,000 transactions, field length limits, date/amount range checks (400/422 with ProblemDetails)
 - **application:** Delete server-side `ICsvParserService` and `CsvParserService` — no file bytes reach the server
 
+### Refactoring
+
+- **application:** Replace 51 hardcoded `"USD"` strings across 11 Application services with `ICurrencyProvider` — all monetary values now derive currency from user's `PreferredCurrency` setting (Feature 064)
+- **contracts:** Change `MoneyDto.Currency` default from `"USD"` to `string.Empty` — all callers now set currency explicitly via `ICurrencyProvider`
+
 ### Documentation
 
+- **docs:** Feature 064 — global currency derivation (complete, all 6 slices)
 - **docs:** Feature 063 — secure file upload hardening (architecture docs, security analysis, all slices complete)
 
 ## [3.16.1] - 2026-02-22

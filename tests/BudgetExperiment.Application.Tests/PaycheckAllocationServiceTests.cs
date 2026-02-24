@@ -4,6 +4,7 @@
 
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -14,10 +15,13 @@ namespace BudgetExperiment.Application.Tests;
 public class PaycheckAllocationServiceTests
 {
     private readonly Mock<IRecurringTransactionRepository> _recurringRepo;
+    private readonly Mock<ICurrencyProvider> _currencyProvider;
 
     public PaycheckAllocationServiceTests()
     {
         this._recurringRepo = new Mock<IRecurringTransactionRepository>();
+        this._currencyProvider = new Mock<ICurrencyProvider>();
+        this._currencyProvider.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
         // Default setup - return empty collections
         this._recurringRepo
@@ -30,7 +34,7 @@ public class PaycheckAllocationServiceTests
 
     private PaycheckAllocationService CreateService()
     {
-        return new PaycheckAllocationService(this._recurringRepo.Object);
+        return new PaycheckAllocationService(this._recurringRepo.Object, this._currencyProvider.Object);
     }
 
     #region GetAllocationSummaryAsync Tests

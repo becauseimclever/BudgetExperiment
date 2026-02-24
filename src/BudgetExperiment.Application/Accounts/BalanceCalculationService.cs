@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Accounts;
 
@@ -13,18 +14,22 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BalanceCalculationService"/> class.
     /// </summary>
     /// <param name="accountRepository">The account repository.</param>
     /// <param name="transactionRepository">The transaction repository.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public BalanceCalculationService(
         IAccountRepository accountRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        ICurrencyProvider currencyProvider)
     {
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -33,11 +38,12 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var accounts = await GetAccountsAsync(accountId, cancellationToken);
 
         if (accounts.Count == 0)
         {
-            return MoneyValue.Zero("USD");
+            return MoneyValue.Zero(currency);
         }
 
         // Sum initial balances only for accounts that started before the target date
@@ -59,7 +65,7 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
             transactionSum += transactions.Sum(t => t.Amount.Amount);
         }
 
-        return MoneyValue.Create("USD", initialBalanceSum + transactionSum);
+        return MoneyValue.Create(currency, initialBalanceSum + transactionSum);
     }
 
     /// <inheritdoc/>
@@ -68,11 +74,12 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var accounts = await GetAccountsAsync(accountId, cancellationToken);
 
         if (accounts.Count == 0)
         {
-            return MoneyValue.Zero("USD");
+            return MoneyValue.Zero(currency);
         }
 
         // Sum initial balances for accounts that started on or before the target date
@@ -94,7 +101,7 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
             transactionSum += transactions.Sum(t => t.Amount.Amount);
         }
 
-        return MoneyValue.Create("USD", initialBalanceSum + transactionSum);
+        return MoneyValue.Create(currency, initialBalanceSum + transactionSum);
     }
 
     /// <inheritdoc/>
@@ -103,11 +110,12 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var accounts = await GetAccountsAsync(accountId, cancellationToken);
 
         if (accounts.Count == 0)
         {
-            return MoneyValue.Zero("USD");
+            return MoneyValue.Zero(currency);
         }
 
         // Include initial balances for accounts that started BEFORE this date
@@ -130,7 +138,7 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
             transactionSum += transactions.Sum(t => t.Amount.Amount);
         }
 
-        return MoneyValue.Create("USD", initialBalanceSum + transactionSum);
+        return MoneyValue.Create(currency, initialBalanceSum + transactionSum);
     }
 
     /// <inheritdoc/>

@@ -5,6 +5,7 @@
 using BudgetExperiment.Application.Recurring;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Calendar;
 
@@ -21,6 +22,7 @@ public sealed class PastDueService : IPastDueService
     private readonly IAccountRepository _accountRepo;
     private readonly IRecurringTransactionRealizationService _transactionRealizationService;
     private readonly IRecurringTransferRealizationService _transferRealizationService;
+    private readonly ICurrencyProvider _currencyProvider;
     private readonly Func<DateOnly> _todayProvider;
 
     /// <summary>
@@ -32,6 +34,7 @@ public sealed class PastDueService : IPastDueService
     /// <param name="accountRepo">The account repository.</param>
     /// <param name="transactionRealizationService">The recurring transaction realization service.</param>
     /// <param name="transferRealizationService">The recurring transfer realization service.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     /// <param name="todayProvider">Optional function to provide current date (for testing).</param>
     public PastDueService(
         IRecurringTransactionRepository recurringTransactionRepo,
@@ -40,6 +43,7 @@ public sealed class PastDueService : IPastDueService
         IAccountRepository accountRepo,
         IRecurringTransactionRealizationService transactionRealizationService,
         IRecurringTransferRealizationService transferRealizationService,
+        ICurrencyProvider currencyProvider,
         Func<DateOnly>? todayProvider = null)
     {
         this._recurringTransactionRepo = recurringTransactionRepo;
@@ -48,6 +52,7 @@ public sealed class PastDueService : IPastDueService
         this._accountRepo = accountRepo;
         this._transactionRealizationService = transactionRealizationService;
         this._transferRealizationService = transferRealizationService;
+        this._currencyProvider = currencyProvider;
         this._todayProvider = todayProvider ?? (() => DateOnly.FromDateTime(DateTime.UtcNow));
     }
 
@@ -148,7 +153,8 @@ public sealed class PastDueService : IPastDueService
         // Sort by instance date (oldest first)
         var sortedItems = items.OrderBy(i => i.InstanceDate).ToList();
 
-        // Calculate total amount (only for same currency - default to USD for now)
+        // Calculate total amount using global currency
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var totalAmount = items.Count > 0
             ? items.Sum(i => i.Amount.Amount)
             : 0m;
@@ -159,7 +165,7 @@ public sealed class PastDueService : IPastDueService
             TotalCount = sortedItems.Count,
             OldestDate = sortedItems.Count > 0 ? sortedItems[0].InstanceDate : null,
             TotalAmount = sortedItems.Count > 0
-                ? new MoneyDto { Currency = "USD", Amount = totalAmount }
+                ? new MoneyDto { Currency = currency, Amount = totalAmount }
                 : null,
         };
     }

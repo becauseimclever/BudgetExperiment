@@ -5,7 +5,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
-
+using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -29,6 +29,7 @@ public class ImportServiceTests
     private readonly Mock<IReconciliationService> _reconciliationServiceMock;
     private readonly Mock<ILocationParserService> _locationParserMock;
     private readonly Mock<IAppSettingsRepository> _settingsRepoMock;
+    private readonly Mock<ICurrencyProvider> _currencyProviderMock;
     private readonly ImportService _service;
 
     public ImportServiceTests()
@@ -47,6 +48,8 @@ public class ImportServiceTests
         this._reconciliationServiceMock = new Mock<IReconciliationService>();
         this._locationParserMock = new Mock<ILocationParserService>();
         this._settingsRepoMock = new Mock<IAppSettingsRepository>();
+        this._currencyProviderMock = new Mock<ICurrencyProvider>();
+        this._currencyProviderMock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
         // Default: location feature disabled (existing tests unaffected)
         var defaultSettings = AppSettings.CreateDefault();
@@ -85,7 +88,8 @@ public class ImportServiceTests
             this._userContextMock.Object,
             this._unitOfWorkMock.Object,
             this._locationParserMock.Object,
-            this._settingsRepoMock.Object);
+            this._settingsRepoMock.Object,
+            this._currencyProviderMock.Object);
     }
 
     [Fact]

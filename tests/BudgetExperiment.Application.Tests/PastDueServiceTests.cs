@@ -5,6 +5,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Moq;
 using Xunit;
 
@@ -21,6 +22,7 @@ public sealed class PastDueServiceTests
     private readonly Mock<IAccountRepository> _accountRepo;
     private readonly Mock<IRecurringTransactionRealizationService> _transactionRealizationService;
     private readonly Mock<IRecurringTransferRealizationService> _transferRealizationService;
+    private readonly Mock<ICurrencyProvider> _currencyProvider;
     private readonly PastDueService _service;
 
     /// <summary>
@@ -34,6 +36,8 @@ public sealed class PastDueServiceTests
         this._accountRepo = new Mock<IAccountRepository>();
         this._transactionRealizationService = new Mock<IRecurringTransactionRealizationService>();
         this._transferRealizationService = new Mock<IRecurringTransferRealizationService>();
+        this._currencyProvider = new Mock<ICurrencyProvider>();
+        this._currencyProvider.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
         this._service = new PastDueService(
             this._recurringTransactionRepo.Object,
@@ -42,6 +46,7 @@ public sealed class PastDueServiceTests
             this._accountRepo.Object,
             this._transactionRealizationService.Object,
             this._transferRealizationService.Object,
+            this._currencyProvider.Object,
             () => new DateOnly(2026, 1, 11)); // Fixed "today" for testing
     }
 

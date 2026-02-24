@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Calendar;
 
@@ -18,6 +19,7 @@ public sealed class DayDetailService : IDayDetailService
     private readonly IAccountRepository _accountRepository;
     private readonly IRecurringInstanceProjector _recurringInstanceProjector;
     private readonly IRecurringTransferInstanceProjector _recurringTransferInstanceProjector;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DayDetailService"/> class.
@@ -28,13 +30,15 @@ public sealed class DayDetailService : IDayDetailService
     /// <param name="accountRepository">The account repository.</param>
     /// <param name="recurringInstanceProjector">The recurring instance projector.</param>
     /// <param name="recurringTransferInstanceProjector">The recurring transfer instance projector.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public DayDetailService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
         IRecurringTransferRepository recurringTransferRepository,
         IAccountRepository accountRepository,
         IRecurringInstanceProjector recurringInstanceProjector,
-        IRecurringTransferInstanceProjector recurringTransferInstanceProjector)
+        IRecurringTransferInstanceProjector recurringTransferInstanceProjector,
+        ICurrencyProvider currencyProvider)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -42,6 +46,7 @@ public sealed class DayDetailService : IDayDetailService
         _accountRepository = accountRepository;
         _recurringInstanceProjector = recurringInstanceProjector;
         _recurringTransferInstanceProjector = recurringTransferInstanceProjector;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -50,6 +55,8 @@ public sealed class DayDetailService : IDayDetailService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
+
         // Fetch data sequentially (DbContext is not thread-safe for concurrent operations)
         var transactions = await _transactionRepository.GetByDateRangeAsync(date, date, accountId, cancellationToken);
         var accounts = await _accountRepository.GetAllAsync(cancellationToken);
@@ -167,9 +174,9 @@ public sealed class DayDetailService : IDayDetailService
             Items = items.OrderBy(i => i.Type).ThenBy(i => i.CreatedAt ?? DateTime.MaxValue).ToList(),
             Summary = new DayDetailSummaryDto
             {
-                TotalActual = new MoneyDto { Currency = "USD", Amount = actualTotal },
-                TotalProjected = new MoneyDto { Currency = "USD", Amount = projectedTotal },
-                CombinedTotal = new MoneyDto { Currency = "USD", Amount = actualTotal + projectedTotal },
+                TotalActual = new MoneyDto { Currency = currency, Amount = actualTotal },
+                TotalProjected = new MoneyDto { Currency = currency, Amount = projectedTotal },
+                CombinedTotal = new MoneyDto { Currency = currency, Amount = actualTotal + projectedTotal },
                 ItemCount = items.Count,
             },
         };

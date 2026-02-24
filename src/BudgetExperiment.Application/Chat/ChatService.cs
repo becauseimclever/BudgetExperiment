@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Chat;
 
@@ -22,6 +23,7 @@ public sealed class ChatService : IChatService
     private readonly IRecurringTransactionService _recurringTransactionService;
     private readonly IRecurringTransferService _recurringTransferService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChatService"/> class.
@@ -36,6 +38,7 @@ public sealed class ChatService : IChatService
     /// <param name="recurringTransactionService">The recurring transaction service.</param>
     /// <param name="recurringTransferService">The recurring transfer service.</param>
     /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public ChatService(
         IChatSessionRepository sessionRepository,
         IChatMessageRepository messageRepository,
@@ -46,7 +49,8 @@ public sealed class ChatService : IChatService
         ITransferService transferService,
         IRecurringTransactionService recurringTransactionService,
         IRecurringTransferService recurringTransferService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICurrencyProvider currencyProvider)
     {
         this._sessionRepository = sessionRepository;
         this._messageRepository = messageRepository;
@@ -58,6 +62,7 @@ public sealed class ChatService : IChatService
         this._recurringTransactionService = recurringTransactionService;
         this._recurringTransferService = recurringTransferService;
         this._unitOfWork = unitOfWork;
+        this._currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc />
@@ -296,10 +301,11 @@ public sealed class ChatService : IChatService
         CreateTransactionAction action,
         CancellationToken cancellationToken)
     {
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var dto = new TransactionCreateDto
         {
             AccountId = action.AccountId,
-            Amount = new MoneyDto { Currency = "USD", Amount = action.Amount },
+            Amount = new MoneyDto { Currency = currency, Amount = action.Amount },
             Date = action.Date,
             Description = action.Description,
             CategoryId = action.CategoryId,
@@ -317,12 +323,13 @@ public sealed class ChatService : IChatService
         CreateTransferAction action,
         CancellationToken cancellationToken)
     {
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var request = new CreateTransferRequest
         {
             SourceAccountId = action.FromAccountId,
             DestinationAccountId = action.ToAccountId,
             Amount = action.Amount,
-            Currency = "USD",
+            Currency = currency,
             Date = action.Date,
             Description = action.Description,
         };
@@ -339,11 +346,12 @@ public sealed class ChatService : IChatService
         CreateRecurringTransactionAction action,
         CancellationToken cancellationToken)
     {
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var dto = new RecurringTransactionCreateDto
         {
             AccountId = action.AccountId,
             Description = action.Description,
-            Amount = new MoneyDto { Currency = "USD", Amount = action.Amount },
+            Amount = new MoneyDto { Currency = currency, Amount = action.Amount },
             Frequency = action.Recurrence.Frequency.ToString(),
             Interval = action.Recurrence.Interval,
             DayOfMonth = action.Recurrence.DayOfMonth,
@@ -364,12 +372,13 @@ public sealed class ChatService : IChatService
         CreateRecurringTransferAction action,
         CancellationToken cancellationToken)
     {
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
         var dto = new RecurringTransferCreateDto
         {
             SourceAccountId = action.FromAccountId,
             DestinationAccountId = action.ToAccountId,
             Description = action.Description ?? "Recurring transfer",
-            Amount = new MoneyDto { Currency = "USD", Amount = action.Amount },
+            Amount = new MoneyDto { Currency = currency, Amount = action.Amount },
             Frequency = action.Recurrence.Frequency.ToString(),
             Interval = action.Recurrence.Interval,
             DayOfMonth = action.Recurrence.DayOfMonth,

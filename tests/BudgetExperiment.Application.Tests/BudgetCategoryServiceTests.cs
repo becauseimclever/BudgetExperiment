@@ -5,6 +5,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -14,15 +15,26 @@ namespace BudgetExperiment.Application.Tests;
 /// </summary>
 public class BudgetCategoryServiceTests
 {
+    private static readonly Mock<ICurrencyProvider> DefaultCurrencyProvider = CreateCurrencyProviderMock();
+
+    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency = "USD")
+    {
+        var mock = new Mock<ICurrencyProvider>();
+        mock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
+        return mock;
+    }
+
     private static BudgetCategoryService CreateService(
         Mock<IBudgetCategoryRepository>? categoryRepo = null,
         Mock<IBudgetGoalRepository>? goalRepo = null,
-        Mock<IUnitOfWork>? uow = null)
+        Mock<IUnitOfWork>? uow = null,
+        Mock<ICurrencyProvider>? currencyProvider = null)
     {
         return new BudgetCategoryService(
             categoryRepo?.Object ?? new Mock<IBudgetCategoryRepository>().Object,
             goalRepo?.Object ?? new Mock<IBudgetGoalRepository>().Object,
-            uow?.Object ?? new Mock<IUnitOfWork>().Object);
+            uow?.Object ?? new Mock<IUnitOfWork>().Object,
+            currencyProvider?.Object ?? DefaultCurrencyProvider.Object);
     }
 
     [Fact]

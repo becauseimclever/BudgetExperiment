@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Calendar;
 
@@ -21,6 +22,7 @@ public sealed class CalendarGridService : ICalendarGridService
     private readonly IRecurringInstanceProjector _recurringInstanceProjector;
     private readonly IRecurringTransferInstanceProjector _recurringTransferInstanceProjector;
     private readonly IAutoRealizeService _autoRealizeService;
+    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CalendarGridService"/> class.
@@ -32,6 +34,7 @@ public sealed class CalendarGridService : ICalendarGridService
     /// <param name="recurringInstanceProjector">The recurring instance projector.</param>
     /// <param name="recurringTransferInstanceProjector">The recurring transfer instance projector.</param>
     /// <param name="autoRealizeService">The auto-realize service.</param>
+    /// <param name="currencyProvider">The currency provider.</param>
     public CalendarGridService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
@@ -39,7 +42,8 @@ public sealed class CalendarGridService : ICalendarGridService
         IBalanceCalculationService balanceCalculationService,
         IRecurringInstanceProjector recurringInstanceProjector,
         IRecurringTransferInstanceProjector recurringTransferInstanceProjector,
-        IAutoRealizeService autoRealizeService)
+        IAutoRealizeService autoRealizeService,
+        ICurrencyProvider currencyProvider)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -48,6 +52,7 @@ public sealed class CalendarGridService : ICalendarGridService
         _recurringInstanceProjector = recurringInstanceProjector;
         _recurringTransferInstanceProjector = recurringTransferInstanceProjector;
         _autoRealizeService = autoRealizeService;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -88,7 +93,8 @@ public sealed class CalendarGridService : ICalendarGridService
             cancellationToken);
 
         // Build grid days
-        var days = BuildGridDays(gridStartDate, year, month, today, dailyTotals, recurringByDate, recurringTransfersByDate);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
+        var days = BuildGridDays(gridStartDate, year, month, today, dailyTotals, recurringByDate, recurringTransfersByDate, currency);
 
         // Calculate starting balance (opening balance for grid start date)
         // This includes initial balances for accounts starting BEFORE grid start,
@@ -106,10 +112,10 @@ public sealed class CalendarGridService : ICalendarGridService
             accountId,
             cancellationToken);
 
-        CalculateRunningBalances(days, startingBalance.Amount, initialBalancesInGrid);
+        CalculateRunningBalances(days, startingBalance.Amount, initialBalancesInGrid, currency);
 
         // Calculate month summary (only for current month days)
-        var monthSummary = CalculateMonthSummary(days);
+        var monthSummary = CalculateMonthSummary(days, currency);
 
         return new CalendarGridDto
         {
@@ -128,7 +134,8 @@ public sealed class CalendarGridService : ICalendarGridService
         DateOnly today,
         Dictionary<DateOnly, DailyTotal> dailyTotals,
         Dictionary<DateOnly, List<RecurringInstanceInfo>> recurringByDate,
-        Dictionary<DateOnly, List<RecurringTransferInstanceInfo>> recurringTransfersByDate)
+        Dictionary<DateOnly, List<RecurringTransferInstanceInfo>> recurringTransfersByDate,
+        string currency)
     {
         var days = new List<CalendarDaySummaryDto>(GridDays);
 
@@ -152,9 +159,9 @@ public sealed class CalendarGridService : ICalendarGridService
                 Date = date,
                 IsCurrentMonth = isCurrentMonth,
                 IsToday = isToday,
-                ActualTotal = new MoneyDto { Currency = "USD", Amount = actualAmount },
-                ProjectedTotal = new MoneyDto { Currency = "USD", Amount = projectedAmount },
-                CombinedTotal = new MoneyDto { Currency = "USD", Amount = actualAmount + projectedAmount },
+                ActualTotal = new MoneyDto { Currency = currency, Amount = actualAmount },
+                ProjectedTotal = new MoneyDto { Currency = currency, Amount = projectedAmount },
+                CombinedTotal = new MoneyDto { Currency = currency, Amount = actualAmount + projectedAmount },
                 TransactionCount = dailyTotal?.TransactionCount ?? 0,
                 RecurringCount = recurringCount,
                 HasRecurring = recurringCount > 0,
@@ -167,7 +174,8 @@ public sealed class CalendarGridService : ICalendarGridService
     private static void CalculateRunningBalances(
         List<CalendarDaySummaryDto> days,
         decimal startingBalance,
-        Dictionary<DateOnly, decimal> initialBalancesInGrid)
+        Dictionary<DateOnly, decimal> initialBalancesInGrid,
+        string currency)
     {
         var runningBalance = startingBalance;
         foreach (var day in days)
@@ -179,12 +187,12 @@ public sealed class CalendarGridService : ICalendarGridService
             }
 
             runningBalance += day.CombinedTotal.Amount;
-            day.EndOfDayBalance = new MoneyDto { Currency = "USD", Amount = runningBalance };
+            day.EndOfDayBalance = new MoneyDto { Currency = currency, Amount = runningBalance };
             day.IsBalanceNegative = runningBalance < 0;
         }
     }
 
-    private static CalendarMonthSummaryDto CalculateMonthSummary(List<CalendarDaySummaryDto> days)
+    private static CalendarMonthSummaryDto CalculateMonthSummary(List<CalendarDaySummaryDto> days, string currency)
     {
         var currentMonthDays = days.Where(d => d.IsCurrentMonth).ToList();
 
@@ -206,11 +214,11 @@ public sealed class CalendarGridService : ICalendarGridService
 
         return new CalendarMonthSummaryDto
         {
-            TotalIncome = new MoneyDto { Currency = "USD", Amount = totalIncome },
-            TotalExpenses = new MoneyDto { Currency = "USD", Amount = totalExpenses },
-            NetChange = new MoneyDto { Currency = "USD", Amount = totalIncome + totalExpenses },
-            ProjectedIncome = new MoneyDto { Currency = "USD", Amount = projectedIncome },
-            ProjectedExpenses = new MoneyDto { Currency = "USD", Amount = projectedExpenses },
+            TotalIncome = new MoneyDto { Currency = currency, Amount = totalIncome },
+            TotalExpenses = new MoneyDto { Currency = currency, Amount = totalExpenses },
+            NetChange = new MoneyDto { Currency = currency, Amount = totalIncome + totalExpenses },
+            ProjectedIncome = new MoneyDto { Currency = currency, Amount = projectedIncome },
+            ProjectedExpenses = new MoneyDto { Currency = currency, Amount = projectedExpenses },
         };
     }
 
