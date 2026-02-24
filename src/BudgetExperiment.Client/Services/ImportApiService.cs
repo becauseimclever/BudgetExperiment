@@ -35,32 +35,6 @@ public sealed class ImportApiService : IImportApiService
     }
 
     /// <inheritdoc />
-    public async Task<CsvParseResultModel?> ParseCsvAsync(Stream fileContent, string fileName, int rowsToSkip = 0)
-    {
-        try
-        {
-            using var content = new MultipartFormDataContent();
-            using var streamContent = new StreamContent(fileContent);
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
-            content.Add(streamContent, "file", fileName);
-
-            var url = $"api/v1/import/parse?rowsToSkip={rowsToSkip}";
-            var response = await this._httpClient.PostAsync(url, content);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<CsvParseResultModel>(JsonOptions);
-            }
-
-            return null;
-        }
-        catch (AccessTokenNotAvailableException ex)
-        {
-            ex.Redirect();
-            return null;
-        }
-    }
-
-    /// <inheritdoc />
     public async Task<IReadOnlyList<ImportMappingDto>> GetMappingsAsync()
     {
         try

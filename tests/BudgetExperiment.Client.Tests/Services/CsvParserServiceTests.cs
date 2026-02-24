@@ -4,11 +4,12 @@
 
 using System.Text;
 
+using BudgetExperiment.Client.Services;
 
-namespace BudgetExperiment.Application.Tests;
+namespace BudgetExperiment.Client.Tests.Services;
 
 /// <summary>
-/// Unit tests for the CsvParserService.
+/// Unit tests for the client-side CsvParserService.
 /// </summary>
 public class CsvParserServiceTests
 {
@@ -376,7 +377,7 @@ public class CsvParserServiceTests
     }
 
     [Fact]
-    public async Task ParseAsync_Negative_Amounts_Preserved()
+    public async Task ParseAsync_Negative_Amounts_Sanitized_For_Display()
     {
         // Arrange
         var csv = "Date,Description,Amount\n01/15/2026,WALMART,-45.99\n01/16/2026,Refund,+29.99";
@@ -385,10 +386,14 @@ public class CsvParserServiceTests
         // Act
         var result = await _sut.ParseAsync(stream, "test.csv");
 
-        // Assert
+        // Assert — trigger chars '-' and '+' are sanitized; use UnsanitizeForParsing for amount parsing
         Assert.True(result.Success);
-        Assert.Equal("-45.99", result.Rows[0][2]);
-        Assert.Equal("+29.99", result.Rows[1][2]);
+        Assert.Equal("'-45.99", result.Rows[0][2]);
+        Assert.Equal("'+29.99", result.Rows[1][2]);
+
+        // Verify unsanitize round-trip restores original values for parsing
+        Assert.Equal("-45.99", CsvSanitizer.UnsanitizeForParsing(result.Rows[0][2]));
+        Assert.Equal("+29.99", CsvSanitizer.UnsanitizeForParsing(result.Rows[1][2]));
     }
 
     [Fact]
@@ -572,7 +577,7 @@ public class CsvParserServiceTests
         using var stream = CreateStream(csv);
 
         // Act - skip 6 rows (5 metadata + 1 empty)
-        var result = await this._sut.ParseAsync(stream, "boa.csv", rowsToSkip: 6);
+        var result = await _sut.ParseAsync(stream, "boa.csv", rowsToSkip: 6);
 
         // Assert
         Assert.True(result.Success);
@@ -597,7 +602,7 @@ public class CsvParserServiceTests
         using var stream = CreateStream(csv);
 
         // Act - no skip needed
-        var result = await this._sut.ParseAsync(stream, "capone.csv", rowsToSkip: 0);
+        var result = await _sut.ParseAsync(stream, "capone.csv", rowsToSkip: 0);
 
         // Assert
         Assert.True(result.Success);
@@ -614,7 +619,7 @@ public class CsvParserServiceTests
 }
 
 /// <summary>
-/// Unit tests for the CsvParseResult record.
+/// Unit tests for the client-side CsvParseResult record.
 /// </summary>
 public class CsvParseResultTests
 {
@@ -629,7 +634,7 @@ public class CsvParseResultTests
         };
 
         // Act
-        var result = CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true);
+        var result = Models.CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true);
 
         // Assert
         Assert.True(result.Success);
@@ -653,7 +658,7 @@ public class CsvParseResultTests
         };
 
         // Act
-        var result = CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true, rowsSkipped: 5);
+        var result = Models.CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true, rowsSkipped: 5);
 
         // Assert
         Assert.True(result.Success);
@@ -664,7 +669,7 @@ public class CsvParseResultTests
     public void CreateFailure_Returns_Failed_Result()
     {
         // Act
-        var result = CsvParseResult.CreateFailure("File is empty");
+        var result = Models.CsvParseResult.CreateFailure("File is empty");
 
         // Assert
         Assert.False(result.Success);

@@ -1,27 +1,11 @@
-// <copyright file="ICsvParserService.cs" company="BecauseImClever">
+// <copyright file="CsvParseResult.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Application.Import;
+namespace BudgetExperiment.Client.Models;
 
 /// <summary>
-/// Service for parsing CSV files.
-/// </summary>
-public interface ICsvParserService
-{
-    /// <summary>
-    /// Parses a CSV file and returns the raw data with detected settings.
-    /// </summary>
-    /// <param name="fileStream">The file stream to parse.</param>
-    /// <param name="fileName">The name of the file (for error messages).</param>
-    /// <param name="rowsToSkip">Number of rows to skip before the header row (default 0).</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>The parse result containing headers and rows.</returns>
-    Task<CsvParseResult> ParseAsync(Stream fileStream, string fileName, int rowsToSkip = 0, CancellationToken ct = default);
-}
-
-/// <summary>
-/// Result of parsing a CSV file.
+/// Result of parsing a CSV file on the client side.
 /// </summary>
 public sealed record CsvParseResult
 {
@@ -68,11 +52,11 @@ public sealed record CsvParseResult
     /// <summary>
     /// Creates a successful parse result.
     /// </summary>
-    /// <param name="headers">The column headers.</param>
-    /// <param name="rows">The data rows.</param>
-    /// <param name="delimiter">The detected delimiter.</param>
-    /// <param name="hasHeaderRow">Whether the file has a header row.</param>
-    /// <param name="rowsSkipped">Number of rows that were skipped before the header.</param>
+    /// <param name="headers">The parsed column headers.</param>
+    /// <param name="rows">The parsed data rows.</param>
+    /// <param name="delimiter">The detected delimiter character.</param>
+    /// <param name="hasHeaderRow">Whether a header row was detected.</param>
+    /// <param name="rowsSkipped">The number of rows skipped before the header.</param>
     /// <returns>A successful <see cref="CsvParseResult"/>.</returns>
     public static CsvParseResult CreateSuccess(
         IReadOnlyList<string> headers,
@@ -96,7 +80,7 @@ public sealed record CsvParseResult
     /// <summary>
     /// Creates a failed parse result.
     /// </summary>
-    /// <param name="errorMessage">The error message.</param>
+    /// <param name="errorMessage">The error message describing the failure.</param>
     /// <returns>A failed <see cref="CsvParseResult"/>.</returns>
     public static CsvParseResult CreateFailure(string errorMessage)
     {

@@ -120,6 +120,7 @@ builder.Services.AddScoped<IAiAvailabilityService, AiAvailabilityService>();
 builder.Services.AddScoped<ICategorySuggestionApiService, CategorySuggestionApiService>();
 builder.Services.AddScoped<IChatApiService, ChatApiService>();
 builder.Services.AddScoped<IChatContextService, ChatContextService>();
+builder.Services.AddScoped<ICsvParserService, CsvParserService>();
 builder.Services.AddScoped<IImportApiService, ImportApiService>();
 builder.Services.AddScoped<IReconciliationApiService, ReconciliationApiService>();
 builder.Services.AddScoped<IExportDownloadService, ExportDownloadService>();

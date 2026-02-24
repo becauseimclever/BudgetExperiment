@@ -3,6 +3,7 @@
 // </copyright>
 
 
+using BudgetExperiment.Application.Import;
 using BudgetExperiment.Contracts.Dtos;
 
 using Microsoft.AspNetCore.Authorization;
@@ -20,97 +21,20 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class ImportController : ControllerBase
 {
-    private const int MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
-
-    private readonly ICsvParserService _csvParserService;
     private readonly IImportMappingService _mappingService;
     private readonly IImportService _importService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportController"/> class.
     /// </summary>
-    /// <param name="csvParserService">The CSV parser service.</param>
     /// <param name="mappingService">The import mapping service.</param>
     /// <param name="importService">The import service.</param>
     public ImportController(
-        ICsvParserService csvParserService,
         IImportMappingService mappingService,
         IImportService importService)
     {
-        this._csvParserService = csvParserService;
         this._mappingService = mappingService;
         this._importService = importService;
-    }
-
-    /// <summary>
-    /// Parses an uploaded CSV file and returns headers and rows.
-    /// </summary>
-    /// <param name="file">The CSV file to parse.</param>
-    /// <param name="rowsToSkip">Number of rows to skip before the header row (e.g., for bank metadata). Defaults to 0.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The parsed CSV data.</returns>
-    [HttpPost("parse")]
-    [ProducesResponseType<CsvParseResultDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
-    [RequestSizeLimit(MaxFileSizeBytes)]
-    public async Task<IActionResult> ParseAsync(
-        IFormFile file,
-        [FromQuery] int rowsToSkip = 0,
-        CancellationToken cancellationToken = default)
-    {
-        if (rowsToSkip < 0)
-        {
-            return this.BadRequest(new ProblemDetails
-            {
-                Title = "Invalid Parameter",
-                Detail = "The rowsToSkip parameter cannot be negative.",
-                Status = StatusCodes.Status400BadRequest,
-            });
-        }
-
-        if (file is null || file.Length == 0)
-        {
-            return this.BadRequest(new ProblemDetails
-            {
-                Title = "File Required",
-                Detail = "A CSV file is required for parsing.",
-                Status = StatusCodes.Status400BadRequest,
-            });
-        }
-
-        if (file.Length > MaxFileSizeBytes)
-        {
-            return this.StatusCode(StatusCodes.Status413PayloadTooLarge, new ProblemDetails
-            {
-                Title = "File Too Large",
-                Detail = $"File size exceeds the maximum allowed size of {MaxFileSizeBytes / 1024 / 1024} MB.",
-                Status = StatusCodes.Status413PayloadTooLarge,
-            });
-        }
-
-        using var stream = file.OpenReadStream();
-        var result = await this._csvParserService.ParseAsync(stream, file.FileName, rowsToSkip: rowsToSkip, ct: cancellationToken);
-
-        if (!result.Success)
-        {
-            return this.BadRequest(new ProblemDetails
-            {
-                Title = "Parse Failed",
-                Detail = result.ErrorMessage,
-                Status = StatusCodes.Status400BadRequest,
-            });
-        }
-
-        return this.Ok(new CsvParseResultDto
-        {
-            Headers = result.Headers,
-            Rows = result.Rows,
-            DetectedDelimiter = result.DetectedDelimiter.ToString(),
-            HasHeaderRow = result.HasHeaderRow,
-            RowCount = result.RowCount,
-            RowsSkipped = result.RowsSkipped,
-        });
     }
 
     /// <summary>
@@ -225,30 +149,68 @@ public sealed class ImportController : ControllerBase
 
     /// <summary>
     /// Previews an import with validation and categorization.
+    /// Accepts pre-parsed CSV rows (parsed client-side in Blazor WASM).
+    /// Rejects requests exceeding 10,000 rows (400) or 10 MB body size (413).
     /// </summary>
     /// <param name="request">The preview request with rows and mappings.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The preview result with validation status.</returns>
     [HttpPost("preview")]
+    [RequestSizeLimit(ImportValidationConstants.PreviewRequestSizeLimitBytes)]
     [ProducesResponseType<ImportPreviewResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PreviewAsync([FromBody] ImportPreviewRequest request, CancellationToken cancellationToken)
     {
+        if (request.Rows.Count > ImportValidationConstants.MaxPreviewRows)
+        {
+            return this.StatusCode(
+                StatusCodes.Status400BadRequest,
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Bad Request",
+                    Detail = $"Preview exceeds maximum of {ImportValidationConstants.MaxPreviewRows} rows.",
+                    Extensions = { ["traceId"] = this.HttpContext.TraceIdentifier },
+                });
+        }
+
         var result = await this._importService.PreviewAsync(request, cancellationToken);
         return this.Ok(result);
     }
 
     /// <summary>
     /// Executes an import, creating transactions.
+    /// Validates transaction count (max 5,000), field lengths, date range, and amount range.
+    /// Rejects invalid requests with 400 (structural) or 422 (field-level) errors.
     /// </summary>
     /// <param name="request">The execution request with validated transactions.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The import result with counts and created IDs.</returns>
     [HttpPost("execute")]
+    [RequestSizeLimit(ImportValidationConstants.ExecuteRequestSizeLimitBytes)]
     [ProducesResponseType<ImportResult>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ExecuteAsync([FromBody] ImportExecuteRequest request, CancellationToken cancellationToken)
     {
+        var validationResult = ImportExecuteRequestValidator.Validate(request);
+        if (!validationResult.IsValid)
+        {
+            var statusCode = validationResult.IsBadRequest
+                ? StatusCodes.Status400BadRequest
+                : StatusCodes.Status422UnprocessableEntity;
+
+            return this.StatusCode(
+                statusCode,
+                new ProblemDetails
+                {
+                    Status = statusCode,
+                    Title = validationResult.IsBadRequest ? "Bad Request" : "Unprocessable Entity",
+                    Detail = string.Join("; ", validationResult.Errors),
+                    Extensions = { ["traceId"] = this.HttpContext.TraceIdentifier },
+                });
+        }
+
         var result = await this._importService.ExecuteAsync(request, cancellationToken);
         return this.CreatedAtAction("GetBatchById", new { id = result.BatchId }, result);
     }
@@ -306,42 +268,6 @@ public sealed class ImportController : ControllerBase
 
         return this.Ok(new DeleteBatchResult { DeletedCount = count });
     }
-}
-
-/// <summary>
-/// DTO for CSV parse result returned by API.
-/// </summary>
-public sealed record CsvParseResultDto
-{
-    /// <summary>
-    /// Gets the column headers.
-    /// </summary>
-    public IReadOnlyList<string> Headers { get; init; } = [];
-
-    /// <summary>
-    /// Gets the data rows.
-    /// </summary>
-    public IReadOnlyList<IReadOnlyList<string>> Rows { get; init; } = [];
-
-    /// <summary>
-    /// Gets the detected delimiter as a string.
-    /// </summary>
-    public string DetectedDelimiter { get; init; } = ",";
-
-    /// <summary>
-    /// Gets a value indicating whether a header row was detected.
-    /// </summary>
-    public bool HasHeaderRow { get; init; }
-
-    /// <summary>
-    /// Gets the total row count.
-    /// </summary>
-    public int RowCount { get; init; }
-
-    /// <summary>
-    /// Gets the number of rows that were skipped before the header row.
-    /// </summary>
-    public int RowsSkipped { get; init; }
 }
 
 /// <summary>

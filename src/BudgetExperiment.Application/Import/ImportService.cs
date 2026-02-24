@@ -103,7 +103,7 @@ public sealed class ImportService : IImportService
             return new ImportPreviewResult();
         }
 
-        // RowsToSkip is applied during CSV parsing (CsvParserService.ParseAsync)
+        // RowsToSkip is applied during client-side CSV parsing (Blazor WASM)
         // which already strips metadata rows before the header. The rows arriving
         // here are post-skip data rows, so we must NOT skip again. RowsToSkip is
         // only used for display-offset calculation in row index numbering below.

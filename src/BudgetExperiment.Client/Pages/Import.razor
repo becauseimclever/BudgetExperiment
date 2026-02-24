@@ -3,6 +3,7 @@
 @using BudgetExperiment.Domain
 
 @inject IImportApiService ImportApi
+@inject ICsvParserService CsvParser
 @inject IBudgetApiService BudgetApi
 @inject NavigationManager Navigation
 
@@ -437,17 +438,17 @@
             uploadedFileContent = memoryStream.ToArray();
             uploadedFileName = file.Name;
 
-            // Parse with current skip rows value (usually 0 for initial parse)
+            // Parse locally in the browser — no server call needed
             memoryStream.Position = 0;
-            var result = await ImportApi.ParseCsvAsync(memoryStream, file.Name, wizardState.RowsToSkip);
-            if (result != null)
+            var parseResult = await CsvParser.ParseAsync(memoryStream, file.Name, wizardState.RowsToSkip);
+            if (parseResult.Success)
             {
-                wizardState.ParseResult = result;
+                wizardState.ParseResult = MapToModel(parseResult);
                 wizardState.FileName = file.Name;
                 InitializeColumnMappings();
 
                 // Try to suggest a saved mapping
-                var suggestedMapping = await ImportApi.SuggestMappingAsync(result.Headers);
+                var suggestedMapping = await ImportApi.SuggestMappingAsync(wizardState.ParseResult.Headers);
                 if (suggestedMapping != null)
                 {
                     ApplySavedMapping(suggestedMapping.Id);
@@ -455,12 +456,12 @@
             }
             else
             {
-                errorMessage = "Failed to parse the CSV file. Please ensure it's a valid CSV format.";
+                errorMessage = parseResult.ErrorMessage ?? "Failed to parse the CSV file. Please ensure it's a valid CSV format.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error uploading file: {ex.Message}";
+            errorMessage = $"Error reading file: {ex.Message}";
         }
         finally
         {
@@ -578,7 +579,7 @@
 
     private async Task HandleSkipRowsChanged(int newSkipRows)
     {
-        // Re-parse the CSV with the new skip rows value
+        // Re-parse the CSV locally with the new skip rows value
         if (uploadedFileContent == null || string.IsNullOrEmpty(uploadedFileName))
         {
             return;
@@ -591,11 +592,11 @@
         try
         {
             using var memoryStream = new MemoryStream(uploadedFileContent);
-            var result = await ImportApi.ParseCsvAsync(memoryStream, uploadedFileName, newSkipRows);
+            var parseResult = await CsvParser.ParseAsync(memoryStream, uploadedFileName, newSkipRows);
 
-            if (result != null)
+            if (parseResult.Success)
             {
-                wizardState.ParseResult = result;
+                wizardState.ParseResult = MapToModel(parseResult);
                 wizardState.RowsToSkip = newSkipRows;
                 InitializeColumnMappings();
 
@@ -604,7 +605,7 @@
             }
             else
             {
-                errorMessage = "Failed to re-parse the CSV file with the new skip rows setting. The value may be too high.";
+                errorMessage = parseResult.ErrorMessage ?? "Failed to re-parse the CSV file with the new skip rows setting. The value may be too high.";
             }
         }
         catch (Exception ex)
@@ -1070,5 +1071,18 @@
         }
 
         return null;
+    }
+
+    private static CsvParseResultModel MapToModel(Models.CsvParseResult parseResult)
+    {
+        return new CsvParseResultModel
+        {
+            Headers = parseResult.Headers,
+            Rows = parseResult.Rows,
+            DetectedDelimiter = parseResult.DetectedDelimiter.ToString(),
+            HasHeaderRow = parseResult.HasHeaderRow,
+            RowCount = parseResult.RowCount,
+            RowsSkipped = parseResult.RowsSkipped,
+        };
     }
 }

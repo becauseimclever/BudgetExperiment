@@ -4,6 +4,23 @@ All notable changes to Budget Experiment.
 
 ## [Unreleased]
 
+### Features
+
+- **client:** Client-side CSV parsing — CSV files parsed entirely in Blazor WebAssembly with zero server round-trip, auto-delimiter detection, quote-aware parsing, and BOM removal
+- **client:** CSV injection sanitization — cells starting with formula-trigger characters (`=`, `@`, `+`, `-`, `\t`, `\r`) prefixed with `'` for safe display
+- **api:** Preview endpoint row count validation — rejects requests exceeding 10,000 rows (400 with ProblemDetails)
+
+### Security
+
+- **api:** Remove server-side CSV parse endpoint (`POST /api/v1/import/parse`) — eliminates file upload attack surface entirely (**BREAKING**)
+- **api:** Request size limits on import endpoints — 5 MB execute, 10 MB preview (413 on oversized requests)
+- **api:** Import execute validation — max 5,000 transactions, field length limits, date/amount range checks (400/422 with ProblemDetails)
+- **application:** Delete server-side `ICsvParserService` and `CsvParserService` — no file bytes reach the server
+
+### Documentation
+
+- **docs:** Feature 063 — secure file upload hardening (architecture docs, security analysis, all slices complete)
+
 ## [3.16.1] - 2026-02-22
 
 ### Bug Fixes

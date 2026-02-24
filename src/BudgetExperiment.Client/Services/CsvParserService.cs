@@ -4,14 +4,17 @@
 
 using System.Text;
 
-namespace BudgetExperiment.Application.Import;
+using BudgetExperiment.Client.Models;
+
+namespace BudgetExperiment.Client.Services;
 
 /// <summary>
-/// Service for parsing CSV files with automatic delimiter detection.
+/// Client-side service for parsing CSV files with automatic delimiter detection.
+/// Runs entirely in the browser via Blazor WebAssembly.
 /// </summary>
 public class CsvParserService : ICsvParserService
 {
-    private static readonly char[] _supportedDelimiters = { ',', ';', '\t', '|' };
+    private static readonly char[] SupportedDelimiters = [',', ';', '\t', '|'];
 
     /// <inheritdoc/>
     public async Task<CsvParseResult> ParseAsync(Stream fileStream, string fileName, int rowsToSkip = 0, CancellationToken ct = default)
@@ -143,7 +146,7 @@ public class CsvParserService : ICsvParserService
     {
         var delimiterCounts = new Dictionary<char, int>();
 
-        foreach (var delimiter in _supportedDelimiters)
+        foreach (var delimiter in SupportedDelimiters)
         {
             delimiterCounts[delimiter] = CountDelimiterOccurrences(line, delimiter);
         }
@@ -232,7 +235,7 @@ public class CsvParserService : ICsvParserService
                 }
                 else if (c == delimiter)
                 {
-                    fields.Add(currentField.ToString().Trim());
+                    fields.Add(CsvSanitizer.SanitizeForDisplay(currentField.ToString().Trim()));
                     currentField.Clear();
                 }
                 else
@@ -245,7 +248,7 @@ public class CsvParserService : ICsvParserService
         }
 
         // Add last field
-        fields.Add(currentField.ToString().Trim());
+        fields.Add(CsvSanitizer.SanitizeForDisplay(currentField.ToString().Trim()));
 
         return fields;
     }
