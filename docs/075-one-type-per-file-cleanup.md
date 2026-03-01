@@ -192,14 +192,14 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 **Risk: Low** — more files to create but still purely mechanical.
 
 **Files (6):**
-- [ ] `UncategorizedTransactionDtos.cs` → 4 files
-- [ ] `UserDto.cs` → 4 files
-- [ ] `BudgetGoalDto.cs` → 4 files
-- [ ] `TransferDto.cs` → 4 files
-- [ ] `RecurringTransferDto.cs` → 5 files
-- [ ] `RecurringTransactionDto.cs` → 6 files
+- [x] `UncategorizedTransactionDtos.cs` → 4 files (original deleted — no type matched filename)
+- [x] `UserDto.cs` → 4 files (original deleted — no type matched filename)
+- [x] `BudgetGoalDto.cs` → 4 files
+- [x] `TransferDto.cs` → 4 files (original deleted — no type matched filename)
+- [x] `RecurringTransferDto.cs` → 5 files
+- [x] `RecurringTransactionDto.cs` → 6 files
 
-**Verification:** Build + test.
+**Verification:** Build + test. ✅ Done
 
 ### Slice 4: Contracts — Large DTO Files (7+ types)
 
@@ -313,3 +313,4 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 | 2026-02-28 | Comprehensive re-audit: expanded to 39 files / ~175 types across all layers; restructured into 8 vertical slices ordered by risk | @copilot |
 | 2026-02-28 | Slice 1 complete: split 4 small (2-type) Contracts DTO files | @copilot |
 | 2026-02-28 | Slice 2 complete: split 4 CRUD (3-type) Contracts DTO files | @copilot |
+| 2026-02-28 | Slice 3 complete: split 6 medium (4–6 type) Contracts DTO files; 3 originals deleted (filename ≠ type name) | @copilot |
