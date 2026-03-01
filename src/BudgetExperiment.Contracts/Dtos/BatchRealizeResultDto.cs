@@ -18,21 +18,3 @@ public sealed class BatchRealizeResultDto
     /// <summary>Gets or sets the list of failures with details.</summary>
     public IReadOnlyList<BatchRealizeFailure> Failures { get; set; } = [];
 }
-
-/// <summary>
-/// Details about a failed batch realize item.
-/// </summary>
-public sealed class BatchRealizeFailure
-{
-    /// <summary>Gets or sets the recurring item identifier.</summary>
-    public Guid Id { get; set; }
-
-    /// <summary>Gets or sets the type of recurring item.</summary>
-    public string Type { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the instance date.</summary>
-    public DateOnly InstanceDate { get; set; }
-
-    /// <summary>Gets or sets the error message.</summary>
-    public string Error { get; set; } = string.Empty;
-}
