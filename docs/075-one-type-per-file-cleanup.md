@@ -221,16 +221,16 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 **Risk: Low-Medium** — helper types alongside interfaces are used across the Application layer, but splitting is still purely structural.
 
 **Files (7):**
-- [ ] `IAiService.cs` → `IAiService.cs` + `AiServiceStatus.cs` + `AiModelInfo.cs` + `AiPrompt.cs` + `AiResponse.cs`
-- [ ] `INaturalLanguageParser.cs` → 5 files
-- [ ] `ICategorySuggestionService.cs` → 3 files
-- [ ] `IMerchantMappingService.cs` → 3 files
-- [ ] `IRuleSuggestionService.cs` → 3 files
-- [ ] `IChatService.cs` → 3 files
-- [ ] `ImportExecuteRequestValidator.cs` → 2 files
-- [ ] `IAppSettingsService.cs` → 2 files
+- [x] `IAiService.cs` → `IAiService.cs` + `AiServiceStatus.cs` + `AiModelInfo.cs` + `AiPrompt.cs` + `AiResponse.cs`
+- [x] `INaturalLanguageParser.cs` → 5 files
+- [x] `ICategorySuggestionService.cs` → 3 files
+- [x] `IMerchantMappingService.cs` → 4 files
+- [x] `IRuleSuggestionService.cs` → 3 files
+- [x] `IChatService.cs` → 3 files
+- [x] `ImportExecuteRequestValidator.cs` → 2 files
+- [x] `IAppSettingsService.cs` → 2 files
 
-**Verification:** Build + test.
+**Verification:** Build + test. ✅ Done
 
 ### Slice 6: Client — Enums, Models & Services
 
@@ -315,3 +315,4 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 | 2026-02-28 | Slice 2 complete: split 4 CRUD (3-type) Contracts DTO files | @copilot |
 | 2026-02-28 | Slice 3 complete: split 6 medium (4–6 type) Contracts DTO files; 3 originals deleted (filename ≠ type name) | @copilot |
 | 2026-02-28 | Slice 4 complete: split 7 large (7–15 type) Contracts DTO files; 54 new files, 6 originals deleted, 1 trimmed | @copilot |
+| 2026-02-28 | Slice 5 complete: split 8 Application service interface files; 19 new files, 8 originals trimmed | @copilot |

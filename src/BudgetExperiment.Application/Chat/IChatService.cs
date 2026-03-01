@@ -82,31 +82,3 @@ public interface IChatService
     /// <returns>True if the session was closed, false if not found.</returns>
     Task<bool> CloseSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
 }
-
-/// <summary>
-/// The result of processing a chat message.
-/// </summary>
-/// <param name="Success">Whether the message was processed successfully.</param>
-/// <param name="UserMessage">The user's message that was saved.</param>
-/// <param name="AssistantMessage">The assistant's response message.</param>
-/// <param name="ErrorMessage">Error message if processing failed.</param>
-public sealed record ChatResult(
-    bool Success,
-    ChatMessage? UserMessage,
-    ChatMessage? AssistantMessage,
-    string? ErrorMessage = null);
-
-/// <summary>
-/// The result of executing a chat action.
-/// </summary>
-/// <param name="Success">Whether the action executed successfully.</param>
-/// <param name="ActionType">The type of action that was executed.</param>
-/// <param name="CreatedEntityId">The ID of any created entity.</param>
-/// <param name="Message">A descriptive message about the result.</param>
-/// <param name="ErrorMessage">Error message if execution failed.</param>
-public sealed record ActionExecutionResult(
-    bool Success,
-    ChatActionType ActionType,
-    Guid? CreatedEntityId,
-    string Message,
-    string? ErrorMessage = null);
