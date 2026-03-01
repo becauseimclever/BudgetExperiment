@@ -206,15 +206,15 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 **Risk: Low-Medium** — largest number of new files; higher chance of a typo or missed reference.
 
 **Files (7):**
-- [ ] `ImportDtos.cs` → 15 files
-- [ ] `ReconciliationDtos.cs` → 10 files
-- [ ] `CategorizationRuleDto.cs` → 8 files
-- [ ] `AiDtos.cs` → 7 files
-- [ ] `ChatDtos.cs` → 7 files
-- [ ] `ReportDtos.cs` → 7 files
-- [ ] `CategorySuggestionDtos.cs` → 7 files
+- [x] `ImportDtos.cs` → 15 files (original deleted — filename ≠ type name)
+- [x] `ReconciliationDtos.cs` → 10 files (original deleted — filename ≠ type name)
+- [x] `CategorizationRuleDto.cs` → 8 files (original trimmed to keep `CategorizationRuleDto`)
+- [x] `AiDtos.cs` → 7 files (original deleted — filename ≠ type name)
+- [x] `ChatDtos.cs` → 7 files (original deleted — filename ≠ type name)
+- [x] `ReportDtos.cs` → 7 files (original deleted — filename ≠ type name)
+- [x] `CategorySuggestionDtos.cs` → 7 files (original deleted — filename ≠ type name)
 
-**Verification:** Build + test.
+**Verification:** Build + test. ✅ Done
 
 ### Slice 5: Application — Service Interfaces
 
@@ -314,3 +314,4 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 | 2026-02-28 | Slice 1 complete: split 4 small (2-type) Contracts DTO files | @copilot |
 | 2026-02-28 | Slice 2 complete: split 4 CRUD (3-type) Contracts DTO files | @copilot |
 | 2026-02-28 | Slice 3 complete: split 6 medium (4–6 type) Contracts DTO files; 3 originals deleted (filename ≠ type name) | @copilot |
+| 2026-02-28 | Slice 4 complete: split 7 large (7–15 type) Contracts DTO files; 54 new files, 6 originals deleted, 1 trimmed | @copilot |
