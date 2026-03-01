@@ -1,0 +1,41 @@
+// <copyright file="OidcConfigDto.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+namespace BudgetExperiment.Contracts.Dtos;
+
+/// <summary>
+/// OIDC provider configuration.
+/// </summary>
+public sealed class OidcConfigDto
+{
+    /// <summary>
+    /// Gets or sets the OIDC authority URL (issuer).
+    /// </summary>
+    public required string Authority { get; init; }
+
+    /// <summary>
+    /// Gets or sets the OAuth2 client ID (public identifier, NOT a secret for PKCE flows).
+    /// </summary>
+    public required string ClientId { get; init; }
+
+    /// <summary>
+    /// Gets or sets the OAuth2 response type (typically "code" for PKCE).
+    /// </summary>
+    public string ResponseType { get; init; } = "code";
+
+    /// <summary>
+    /// Gets or sets the scopes to request during authentication.
+    /// </summary>
+    public IReadOnlyList<string> Scopes { get; init; } = ["openid", "profile", "email"];
+
+    /// <summary>
+    /// Gets or sets the redirect URI after logout.
+    /// </summary>
+    public string PostLogoutRedirectUri { get; init; } = "/";
+
+    /// <summary>
+    /// Gets or sets the redirect URI after login callback.
+    /// </summary>
+    public string RedirectUri { get; init; } = "authentication/login-callback";
+}

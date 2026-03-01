@@ -168,24 +168,24 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 **Risk: Minimal** — smallest files, fewest consumers, easy to verify.
 
 **Files (4):**
-- [ ] `AppSettingsDto.cs` → `AppSettingsDto.cs` + `AppSettingsUpdateDto.cs`
-- [ ] `BatchRealizeRequest.cs` → `BatchRealizeRequest.cs` + `BatchRealizeItemRequest.cs`
-- [ ] `BatchRealizeResultDto.cs` → `BatchRealizeResultDto.cs` + `BatchRealizeFailure.cs`
-- [ ] `BudgetProgressDto.cs` → `BudgetProgressDto.cs` + `BudgetSummaryDto.cs`
+- [x] `AppSettingsDto.cs` → `AppSettingsDto.cs` + `AppSettingsUpdateDto.cs`
+- [x] `BatchRealizeRequest.cs` → `BatchRealizeRequest.cs` + `BatchRealizeItemRequest.cs`
+- [x] `BatchRealizeResultDto.cs` → `BatchRealizeResultDto.cs` + `BatchRealizeFailure.cs`
+- [x] `BudgetProgressDto.cs` → `BudgetProgressDto.cs` + `BudgetSummaryDto.cs`
 
-**Verification:** `dotnet build` + `dotnet test` (full solution).
+**Verification:** `dotnet build` + `dotnet test` (full solution). ✅ Done (commit 81ff8e1)
 
 ### Slice 2: Contracts — CRUD DTO Files (3 types each)
 
 **Risk: Low** — standard Create/Update/Read pattern, no cross-cutting references.
 
 **Files (4):**
-- [ ] `AccountDto.cs` → `AccountDto.cs` + `AccountCreateDto.cs` + `AccountUpdateDto.cs`
-- [ ] `BudgetCategoryDto.cs` → 3 files
-- [ ] `TransactionDto.cs` → 3 files
-- [ ] `ClientConfigDto.cs` → `ClientConfigDto.cs` + `AuthenticationConfigDto.cs` + `OidcConfigDto.cs`
+- [x] `AccountDto.cs` → `AccountDto.cs` + `AccountCreateDto.cs` + `AccountUpdateDto.cs`
+- [x] `BudgetCategoryDto.cs` → `BudgetCategoryDto.cs` + `BudgetCategoryCreateDto.cs` + `BudgetCategoryUpdateDto.cs`
+- [x] `TransactionDto.cs` → `TransactionDto.cs` + `TransactionCreateDto.cs` + `TransactionUpdateDto.cs`
+- [x] `ClientConfigDto.cs` → `ClientConfigDto.cs` + `AuthenticationConfigDto.cs` + `OidcConfigDto.cs`
 
-**Verification:** Build + test.
+**Verification:** Build + test. ✅ Done
 
 ### Slice 3: Contracts — Medium DTO Files (4–6 types)
 
@@ -311,3 +311,5 @@ Each slice is a self-contained commit that leaves the solution in a buildable, t
 |------|--------|--------|
 | 2026-02-26 | Initial draft from codebase audit (9 files identified) | @copilot |
 | 2026-02-28 | Comprehensive re-audit: expanded to 39 files / ~175 types across all layers; restructured into 8 vertical slices ordered by risk | @copilot |
+| 2026-02-28 | Slice 1 complete: split 4 small (2-type) Contracts DTO files | @copilot |
+| 2026-02-28 | Slice 2 complete: split 4 CRUD (3-type) Contracts DTO files | @copilot |
