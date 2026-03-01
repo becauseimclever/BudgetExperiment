@@ -416,6 +416,27 @@ public interface IBudgetApiService
     /// <returns>The result containing the count of cleared transactions, or null on failure.</returns>
     Task<LocationDataClearedDto?> DeleteAllLocationDataAsync();
 
+    // User Settings Operations
+
+    /// <summary>
+    /// Gets the current user's settings (currency, first day of week, onboarding status).
+    /// </summary>
+    /// <returns>The user settings.</returns>
+    Task<UserSettingsDto?> GetUserSettingsAsync();
+
+    /// <summary>
+    /// Updates the current user's settings.
+    /// </summary>
+    /// <param name="dto">The settings update data.</param>
+    /// <returns>The updated user settings.</returns>
+    Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto);
+
+    /// <summary>
+    /// Completes the onboarding wizard for the current user.
+    /// </summary>
+    /// <returns>The updated user settings.</returns>
+    Task<UserSettingsDto?> CompleteOnboardingAsync();
+
     // Paycheck Allocation Operations
 
     /// <summary>

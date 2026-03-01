@@ -133,6 +133,74 @@ public sealed class UserControllerTests
     }
 
     /// <summary>
+    /// GET /api/v1/user/settings returns new onboarding fields with defaults.
+    /// </summary>
+    [Fact]
+    public async Task GetSettings_Returns_OnboardingFieldDefaults()
+    {
+        // Arrange
+        using var factory = new CustomWebApplicationFactory();
+        var client = factory.CreateApiClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/user/settings");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var settings = await response.Content.ReadFromJsonAsync<UserSettingsDto>();
+        Assert.NotNull(settings);
+        Assert.Equal(DayOfWeek.Sunday, settings.FirstDayOfWeek);
+        Assert.False(settings.IsOnboarded);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/user/settings updates FirstDayOfWeek.
+    /// </summary>
+    [Fact]
+    public async Task UpdateSettings_Updates_FirstDayOfWeek()
+    {
+        // Arrange
+        using var factory = new CustomWebApplicationFactory();
+        var client = factory.CreateApiClient();
+        await client.GetAsync("/api/v1/user/settings");
+
+        var updateDto = new UserSettingsUpdateDto
+        {
+            FirstDayOfWeek = DayOfWeek.Monday,
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var settings = await response.Content.ReadFromJsonAsync<UserSettingsDto>();
+        Assert.NotNull(settings);
+        Assert.Equal(DayOfWeek.Monday, settings.FirstDayOfWeek);
+    }
+
+    /// <summary>
+    /// POST /api/v1/user/settings/complete-onboarding sets IsOnboarded to true.
+    /// </summary>
+    [Fact]
+    public async Task CompleteOnboarding_Returns_200_WithOnboardedTrue()
+    {
+        // Arrange
+        using var factory = new CustomWebApplicationFactory();
+        var client = factory.CreateApiClient();
+        await client.GetAsync("/api/v1/user/settings");
+
+        // Act
+        var response = await client.PostAsync("/api/v1/user/settings/complete-onboarding", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var settings = await response.Content.ReadFromJsonAsync<UserSettingsDto>();
+        Assert.NotNull(settings);
+        Assert.True(settings.IsOnboarded);
+    }
+
+    /// <summary>
     /// PUT /api/v1/user/scope with invalid scope returns 400 Bad Request.
     /// </summary>
     [Fact]

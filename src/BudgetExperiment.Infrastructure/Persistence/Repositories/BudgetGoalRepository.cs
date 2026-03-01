@@ -89,6 +89,11 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-scope data leaks.
+    /// See Feature 065 for the audit that established this rule.
+    /// </summary>
     private IQueryable<BudgetGoal> ApplyScopeFilter(IQueryable<BudgetGoal> query)
     {
         var userId = this._userContext.UserIdAsGuid;

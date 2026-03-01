@@ -779,6 +779,43 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<UserSettingsDto?> GetUserSettingsAsync()
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<UserSettingsDto>("api/v1/user/settings", JsonOptions);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto)
+    {
+        var response = await this._httpClient.PutAsJsonAsync("api/v1/user/settings", dto, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<UserSettingsDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<UserSettingsDto?> CompleteOnboardingAsync()
+    {
+        var response = await this._httpClient.PostAsync("api/v1/user/settings/complete-onboarding", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<UserSettingsDto>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
     public async Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null)
     {
         var url = $"api/v1/allocations/paycheck?frequency={Uri.EscapeDataString(frequency)}";

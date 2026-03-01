@@ -86,13 +86,6 @@ namespace BudgetExperiment.Infrastructure.Persistence.Migrations
                     table.PrimaryKey("PK_CustomReportLayouts", x => x.Id);
                 });
 
-            migrationBuilder.UpdateData(
-                table: "AppSettings",
-                keyColumn: "Id",
-                keyValue: new Guid("00000000-0000-0000-0000-000000000001"),
-                columns: new string[0],
-                values: new object[0]);
-
             migrationBuilder.CreateIndex(
                 name: "IX_CustomReportLayouts_CreatedByUserId",
                 table: "CustomReportLayouts",

@@ -117,6 +117,22 @@ Use `--filter "Category=X"` to run specific test categories:
 | `Orientation` | Portrait/landscape orientation changes |
 | `Functional` | Consolidated functional user-flow suite (Feature 062) |
 | `LocalOnly` | Mutating tests; intended for local environment only |
+| `LocalCritical` | Core create-flow tests for local development (Feature 068) |
+
+### Running Local Critical Flow Tests (Feature 068)
+
+These tests validate the three most important create flows (transaction, account, category) against
+the locally-running API. They are **not** executed in GitHub Actions CI.
+
+```powershell
+# Prerequisites: start the API locally first
+dotnet run --project c:\ws\BudgetExperiment\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
+
+# In a separate terminal, run the critical create-flow tests
+$env:RUN_E2E_TESTS = "true"
+$env:BUDGET_APP_URL = "http://localhost:5099"
+dotnet test c:\ws\BudgetExperiment\tests\BudgetExperiment.E2E.Tests\BudgetExperiment.E2E.Tests.csproj --filter "Category=LocalCritical"
+```
 
 ### Running Performance Tests
 
@@ -194,6 +210,16 @@ BudgetExperiment.E2E.Tests/
 │   └── PerformanceThresholds.cs       # Performance threshold constants
 ├── Tests/
 │   ├── AccessibilityTests.cs          # Desktop WCAG compliance
+│   ├── FunctionalTests/
+│   │   ├── AccountCreateTests.cs      # Critical: account creation flow (068)
+│   │   ├── AccountTests.cs            # Account management & filtering (062)
+│   │   ├── CalendarTests.cs           # Calendar navigation & balances (062)
+│   │   ├── CategoryCreateTests.cs     # Critical: category creation flow (068)
+│   │   ├── CsvImportTests.cs          # CSV import workflow (062)
+│   │   ├── NoAuthModeTests.cs         # No-auth mode tests (062)
+│   │   ├── SessionExpiryTests.cs      # Session expiry tests (062)
+│   │   ├── TransactionCreateTests.cs  # Critical: transaction creation flow (068)
+│   │   └── TransactionTests.cs        # Transaction CRUD workflow (062)
 │   ├── MobileAccessibilityTests.cs    # Mobile WCAG compliance (axe-core)
 │   ├── MobileAiChatTests.cs           # AI chat bottom sheet on mobile
 │   ├── MobileCalendarTests.cs         # Calendar week/month view on mobile

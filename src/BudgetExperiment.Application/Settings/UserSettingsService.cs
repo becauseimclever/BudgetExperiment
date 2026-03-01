@@ -97,6 +97,26 @@ public sealed class UserSettingsService : IUserSettingsService
             settings.UpdateTimeZoneId(dto.TimeZoneId);
         }
 
+        if (dto.FirstDayOfWeek.HasValue)
+        {
+            settings.UpdateFirstDayOfWeek(dto.FirstDayOfWeek.Value);
+        }
+
+        await this._repository.SaveAsync(settings, cancellationToken);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return this.ToDto(settings);
+    }
+
+    /// <inheritdoc />
+    public async Task<UserSettingsDto> CompleteOnboardingAsync(CancellationToken cancellationToken = default)
+    {
+        var userId = this._userContext.UserIdAsGuid
+            ?? throw new DomainException("User is not authenticated.");
+
+        var settings = await this._repository.GetByUserIdAsync(userId, cancellationToken);
+        settings.CompleteOnboarding();
+
         await this._repository.SaveAsync(settings, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -140,6 +160,8 @@ public sealed class UserSettingsService : IUserSettingsService
             PastDueLookbackDays = settings.PastDueLookbackDays,
             PreferredCurrency = settings.PreferredCurrency,
             TimeZoneId = settings.TimeZoneId,
+            FirstDayOfWeek = settings.FirstDayOfWeek,
+            IsOnboarded = settings.IsOnboarded,
         };
     }
 }

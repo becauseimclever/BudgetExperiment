@@ -75,6 +75,20 @@ public sealed class UserController : ControllerBase
     }
 
     /// <summary>
+    /// Completes the onboarding wizard for the current user.
+    /// Sets IsOnboarded to true so the wizard does not reappear.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated user settings.</returns>
+    [HttpPost("settings/complete-onboarding")]
+    [ProducesResponseType<UserSettingsDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CompleteOnboardingAsync(CancellationToken cancellationToken)
+    {
+        var settings = await this._service.CompleteOnboardingAsync(cancellationToken);
+        return this.Ok(settings);
+    }
+
+    /// <summary>
     /// Gets the current session's budget scope.
     /// </summary>
     /// <returns>The current scope selection.</returns>

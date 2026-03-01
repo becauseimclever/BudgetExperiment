@@ -168,6 +168,11 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
         this._context.RecurringTransferExceptions.RemoveRange(exceptionsToRemove);
     }
 
+    /// <summary>
+    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-scope data leaks.
+    /// See Feature 065 for the audit that established this rule.
+    /// </summary>
     private IQueryable<RecurringTransfer> ApplyScopeFilter(IQueryable<RecurringTransfer> query)
     {
         var userId = this._userContext.UserIdAsGuid;

@@ -47,6 +47,12 @@ public sealed class UserSettingsDto
 
     /// <summary>Gets or sets the user's time zone ID (IANA format).</summary>
     public string? TimeZoneId { get; set; }
+
+    /// <summary>Gets or sets the user's preferred first day of the week.</summary>
+    public DayOfWeek FirstDayOfWeek { get; set; } = DayOfWeek.Sunday;
+
+    /// <summary>Gets or sets a value indicating whether the user has completed onboarding.</summary>
+    public bool IsOnboarded { get; set; }
 }
 
 /// <summary>
@@ -68,6 +74,9 @@ public sealed class UserSettingsUpdateDto
 
     /// <summary>Gets or sets the user's time zone ID (IANA format).</summary>
     public string? TimeZoneId { get; set; }
+
+    /// <summary>Gets or sets the user's preferred first day of the week.</summary>
+    public DayOfWeek? FirstDayOfWeek { get; set; }
 }
 
 /// <summary>

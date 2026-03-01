@@ -1,0 +1,241 @@
+@page "/onboarding"
+@layout EmptyLayout
+
+@inject IBudgetApiService ApiService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Welcome - Budget Experiment</PageTitle>
+
+<div class="onboarding-overlay">
+    <div class="onboarding-card">
+        @* Step indicators *@
+        <div class="onboarding-steps" role="progressbar" aria-valuenow="@currentStep" aria-valuemin="1" aria-valuemax="4">
+            @for (var i = 1; i <= 4; i++)
+            {
+                var stepClass = i < currentStep ? "completed" : (i == currentStep ? "active" : "");
+                <div class="onboarding-step-dot @stepClass" aria-hidden="true"></div>
+            }
+        </div>
+
+        @switch (currentStep)
+        {
+            case 1:
+                <div class="onboarding-header">
+                    <h1>Welcome to Budget Experiment</h1>
+                    <p>Let's set up a couple of preferences so everything works the way you expect.</p>
+                </div>
+
+                <div class="onboarding-actions">
+                    <button class="btn-skip" @onclick="SkipOnboarding">Skip setup</button>
+                    <button class="btn btn-primary" @onclick="NextStep">Get Started</button>
+                </div>
+                break;
+
+            case 2:
+                <div class="onboarding-header">
+                    <h1>Choose Your Currency</h1>
+                    <p>All monetary values in the app will display in this currency.</p>
+                </div>
+
+                <div class="onboarding-field">
+                    <label for="currency-search">Currency</label>
+                    <div class="currency-search-wrapper">
+                        <input id="currency-search"
+                               type="text"
+                               class="form-control"
+                               placeholder="Search currencies..."
+                               @bind="currencySearch"
+                               @bind:event="oninput"
+                               @onfocus="() => showCurrencyDropdown = true"
+                               autocomplete="off" />
+                        @if (showCurrencyDropdown)
+                        {
+                            <div class="currency-dropdown">
+                                @foreach (var currency in FilteredCurrencies)
+                                {
+                                    <button class="currency-option @(selectedCurrency == currency.Code ? "selected" : "")"
+                                            @onclick="() => SelectCurrency(currency)">
+                                        <span class="currency-code">@currency.Code</span>
+                                        <span class="currency-symbol">@currency.Symbol</span>
+                                        <span class="currency-name">@currency.Name</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(selectedCurrency))
+                    {
+                        var selected = CurrencyList.Currencies.FirstOrDefault(c => c.Code == selectedCurrency);
+                        if (selected != null)
+                        {
+                            <div class="selected-currency" @onclick="() => { showCurrencyDropdown = true; currencySearch = string.Empty; }">
+                                <strong>@selected.Code</strong> — @selected.Symbol @selected.Name
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="onboarding-actions">
+                    <button class="btn-skip" @onclick="SkipOnboarding">Skip</button>
+                    <div>
+                        <button class="btn btn-secondary" @onclick="PreviousStep">Back</button>
+                        <button class="btn btn-primary" @onclick="NextStep">Next</button>
+                    </div>
+                </div>
+                break;
+
+            case 3:
+                <div class="onboarding-header">
+                    <h1>First Day of the Week</h1>
+                    <p>Choose which day your week starts on. This affects calendar views and weekly reports.</p>
+                </div>
+
+                <div class="onboarding-field">
+                    <label>Week starts on</label>
+                    <div class="dow-toggle-group">
+                        <button class="dow-toggle @(selectedFirstDay == DayOfWeek.Sunday ? "active" : "")"
+                                @onclick="() => selectedFirstDay = DayOfWeek.Sunday">
+                            Sunday
+                        </button>
+                        <button class="dow-toggle @(selectedFirstDay == DayOfWeek.Monday ? "active" : "")"
+                                @onclick="() => selectedFirstDay = DayOfWeek.Monday">
+                            Monday
+                        </button>
+                    </div>
+                </div>
+
+                <div class="onboarding-actions">
+                    <button class="btn-skip" @onclick="SkipOnboarding">Skip</button>
+                    <div>
+                        <button class="btn btn-secondary" @onclick="PreviousStep">Back</button>
+                        <button class="btn btn-primary" @onclick="NextStep">Next</button>
+                    </div>
+                </div>
+                break;
+
+            case 4:
+                <div class="onboarding-header">
+                    <h1>You're All Set!</h1>
+                    <p>Here's a summary of your choices. You can change these anytime in Settings.</p>
+                </div>
+
+                <div class="onboarding-summary">
+                    <div class="onboarding-summary-item">
+                        <span class="onboarding-summary-label">Currency</span>
+                        <span class="onboarding-summary-value">@GetCurrencyDisplay()</span>
+                    </div>
+                    <div class="onboarding-summary-item">
+                        <span class="onboarding-summary-label">Week starts on</span>
+                        <span class="onboarding-summary-value">@selectedFirstDay</span>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger">@errorMessage</div>
+                }
+
+                <div class="onboarding-actions">
+                    <button class="btn btn-secondary" @onclick="PreviousStep" disabled="@isSaving">Back</button>
+                    <button class="btn btn-primary" @onclick="CompleteOnboarding" disabled="@isSaving">
+                        @(isSaving ? "Saving..." : "Get Started!")
+                    </button>
+                </div>
+                break;
+        }
+    </div>
+</div>
+
+@code {
+    private int currentStep = 1;
+    private string selectedCurrency = "USD";
+    private DayOfWeek selectedFirstDay = DayOfWeek.Sunday;
+    private string currencySearch = string.Empty;
+    private bool showCurrencyDropdown;
+    private bool isSaving;
+    private string? errorMessage;
+
+    private IEnumerable<CurrencyOption> FilteredCurrencies =>
+        string.IsNullOrWhiteSpace(currencySearch)
+            ? CurrencyList.Currencies
+            : CurrencyList.Currencies.Where(c =>
+                c.Code.Contains(currencySearch, StringComparison.OrdinalIgnoreCase) ||
+                c.Name.Contains(currencySearch, StringComparison.OrdinalIgnoreCase));
+
+    private void NextStep()
+    {
+        if (currentStep < 4)
+        {
+            currentStep++;
+        }
+    }
+
+    private void PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+        }
+    }
+
+    private void SelectCurrency(CurrencyOption currency)
+    {
+        selectedCurrency = currency.Code;
+        currencySearch = string.Empty;
+        showCurrencyDropdown = false;
+    }
+
+    private string GetCurrencyDisplay()
+    {
+        var currency = CurrencyList.Currencies.FirstOrDefault(c => c.Code == selectedCurrency);
+        return currency != null ? $"{currency.Code} — {currency.Symbol} {currency.Name}" : selectedCurrency;
+    }
+
+    private async Task SkipOnboarding()
+    {
+        isSaving = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Apply defaults (USD, Sunday) and mark onboarding complete
+            await ApiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
+            {
+                PreferredCurrency = "USD",
+                FirstDayOfWeek = DayOfWeek.Sunday,
+            });
+            await ApiService.CompleteOnboardingAsync();
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save: {ex.Message}";
+            isSaving = false;
+        }
+    }
+
+    private async Task CompleteOnboarding()
+    {
+        isSaving = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Save user preferences
+            await ApiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
+            {
+                PreferredCurrency = selectedCurrency,
+                FirstDayOfWeek = selectedFirstDay,
+            });
+            await ApiService.CompleteOnboardingAsync();
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save: {ex.Message}";
+            isSaving = false;
+        }
+    }
+}

@@ -543,4 +543,138 @@ public class TransactionRepositoryTests
     }
 
     #endregion
+
+    #region GetByDateRangeAsync Scope Filtering Tests
+
+    [Fact]
+    public async Task GetByDateRangeAsync_Personal_Scope_Excludes_Shared_Transactions()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var userId = FakeUserContext.DefaultUserId;
+        var defaultUserContext = FakeUserContext.CreateDefault();
+        var accountRepo = new AccountRepository(context, defaultUserContext);
+
+        var personalAccount = Account.CreatePersonal("Personal Acct", AccountType.Checking, userId);
+        personalAccount.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 3, 15), "Personal Trans");
+
+        var sharedAccount = Account.CreateShared("Shared Acct", AccountType.Checking, userId);
+        sharedAccount.AddTransaction(MoneyValue.Create("USD", 200m), new DateOnly(2026, 3, 15), "Shared Trans");
+
+        await accountRepo.AddAsync(personalAccount);
+        await accountRepo.AddAsync(sharedAccount);
+        await context.SaveChangesAsync();
+
+        // Act — query with Personal scope
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var personalContext = FakeUserContext.CreateForPersonalScope(userId);
+        var transactionRepo = new TransactionRepository(verifyContext, personalContext);
+        var results = await transactionRepo.GetByDateRangeAsync(
+            new DateOnly(2026, 3, 1),
+            new DateOnly(2026, 3, 31));
+
+        // Assert
+        Assert.Single(results);
+        Assert.Equal("Personal Trans", results[0].Description);
+    }
+
+    [Fact]
+    public async Task GetByDateRangeAsync_Shared_Scope_Excludes_Personal_Transactions()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var userId = FakeUserContext.DefaultUserId;
+        var defaultUserContext = FakeUserContext.CreateDefault();
+        var accountRepo = new AccountRepository(context, defaultUserContext);
+
+        var personalAccount = Account.CreatePersonal("Personal Acct", AccountType.Checking, userId);
+        personalAccount.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 4, 15), "Personal Trans");
+
+        var sharedAccount = Account.CreateShared("Shared Acct", AccountType.Checking, userId);
+        sharedAccount.AddTransaction(MoneyValue.Create("USD", 200m), new DateOnly(2026, 4, 15), "Shared Trans");
+
+        await accountRepo.AddAsync(personalAccount);
+        await accountRepo.AddAsync(sharedAccount);
+        await context.SaveChangesAsync();
+
+        // Act — query with Shared scope
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var sharedContext = FakeUserContext.CreateForSharedScope();
+        var transactionRepo = new TransactionRepository(verifyContext, sharedContext);
+        var results = await transactionRepo.GetByDateRangeAsync(
+            new DateOnly(2026, 4, 1),
+            new DateOnly(2026, 4, 30));
+
+        // Assert
+        Assert.Single(results);
+        Assert.Equal("Shared Trans", results[0].Description);
+    }
+
+    [Fact]
+    public async Task GetByDateRangeAsync_All_Scope_Returns_Both_Personal_And_Shared()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var userId = FakeUserContext.DefaultUserId;
+        var defaultUserContext = FakeUserContext.CreateDefault();
+        var accountRepo = new AccountRepository(context, defaultUserContext);
+
+        var personalAccount = Account.CreatePersonal("Personal Acct", AccountType.Checking, userId);
+        personalAccount.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 5, 15), "Personal Trans");
+
+        var sharedAccount = Account.CreateShared("Shared Acct", AccountType.Checking, userId);
+        sharedAccount.AddTransaction(MoneyValue.Create("USD", 200m), new DateOnly(2026, 5, 15), "Shared Trans");
+
+        await accountRepo.AddAsync(personalAccount);
+        await accountRepo.AddAsync(sharedAccount);
+        await context.SaveChangesAsync();
+
+        // Act — query with null scope (All)
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var allContext = FakeUserContext.CreateDefault(); // null scope = show all
+        var transactionRepo = new TransactionRepository(verifyContext, allContext);
+        var results = await transactionRepo.GetByDateRangeAsync(
+            new DateOnly(2026, 5, 1),
+            new DateOnly(2026, 5, 31));
+
+        // Assert
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, t => t.Description == "Personal Trans");
+        Assert.Contains(results, t => t.Description == "Shared Trans");
+    }
+
+    [Fact]
+    public async Task GetByDateRangeAsync_Personal_Scope_Excludes_Other_Users_Personal_Transactions()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var userId = FakeUserContext.DefaultUserId;
+        var otherUserId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        var defaultUserContext = FakeUserContext.CreateDefault();
+        var accountRepo = new AccountRepository(context, defaultUserContext);
+
+        var myPersonalAccount = Account.CreatePersonal("My Personal", AccountType.Checking, userId);
+        myPersonalAccount.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 6, 15), "My Trans");
+
+        var otherPersonalAccount = Account.CreatePersonal("Other Personal", AccountType.Checking, otherUserId);
+        otherPersonalAccount.AddTransaction(MoneyValue.Create("USD", 200m), new DateOnly(2026, 6, 15), "Other Trans");
+
+        await accountRepo.AddAsync(myPersonalAccount);
+        await accountRepo.AddAsync(otherPersonalAccount);
+        await context.SaveChangesAsync();
+
+        // Act — query with Personal scope for default user
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var personalContext = FakeUserContext.CreateForPersonalScope(userId);
+        var transactionRepo = new TransactionRepository(verifyContext, personalContext);
+        var results = await transactionRepo.GetByDateRangeAsync(
+            new DateOnly(2026, 6, 1),
+            new DateOnly(2026, 6, 30));
+
+        // Assert
+        Assert.Single(results);
+        Assert.Equal("My Trans", results[0].Description);
+    }
+
+    #endregion
 }

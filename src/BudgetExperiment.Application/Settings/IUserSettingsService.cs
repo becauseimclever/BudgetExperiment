@@ -33,6 +33,13 @@ public interface IUserSettingsService
     Task<UserSettingsDto> UpdateCurrentUserSettingsAsync(UserSettingsUpdateDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Completes the onboarding wizard for the current user.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated user settings DTO.</returns>
+    Task<UserSettingsDto> CompleteOnboardingAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets the current session scope.
     /// </summary>
     /// <returns>The scope DTO.</returns>

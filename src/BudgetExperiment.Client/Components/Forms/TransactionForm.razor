@@ -161,7 +161,11 @@
     private decimal AmountValue
     {
         get => Model.Amount.Amount;
-        set => Model.Amount = new MoneyDto { Amount = value, Currency = Model.Amount.Currency ?? "USD" };
+        set
+        {
+            var currency = string.IsNullOrWhiteSpace(Model.Amount.Currency) ? "USD" : Model.Amount.Currency;
+            Model.Amount = new MoneyDto { Amount = value, Currency = currency };
+        }
     }
 
     private DateOnly? _lastAppliedInitialDate;
@@ -186,6 +190,12 @@
             if (InitialAmount != 0)
             {
                 Model.Amount = new MoneyDto { Amount = InitialAmount, Currency = "USD" };
+            }
+
+            // Ensure currency is always set (MoneyDto defaults to empty string)
+            if (string.IsNullOrWhiteSpace(Model.Amount.Currency))
+            {
+                Model.Amount = new MoneyDto { Amount = Model.Amount.Amount, Currency = "USD" };
             }
 
             if (InitialCategoryId.HasValue)

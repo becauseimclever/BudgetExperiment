@@ -119,6 +119,7 @@
     private IReadOnlyList<AccountDto> quickAddAccounts = Array.Empty<AccountDto>();
     private IReadOnlyList<BudgetCategoryDto> quickAddCategories = Array.Empty<BudgetCategoryDto>();
     private QuickAddForm? quickAddFormRef;
+    private bool onboardingChecked;
 
     /// <inheritdoc />
     protected override void OnInitialized()
@@ -144,6 +145,24 @@
             catch
             {
                 // Ignore storage errors - use default state
+            }
+
+            // Check onboarding status once after first render
+            if (!onboardingChecked)
+            {
+                onboardingChecked = true;
+                try
+                {
+                    var userSettings = await ApiService.GetUserSettingsAsync();
+                    if (userSettings is { IsOnboarded: false })
+                    {
+                        NavigationManager.NavigateTo("/onboarding");
+                    }
+                }
+                catch
+                {
+                    // Silently ignore — don't block normal usage if check fails
+                }
             }
         }
     }

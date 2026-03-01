@@ -39,7 +39,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     {
         // RecurringTransaction doesn't have a navigation property to exceptions,
         // so we fetch them separately if needed. For now, just return the entity.
-        return await this._context.RecurringTransactions
+        return await this.ApplyScopeFilter(this._context.RecurringTransactions)
             .Include(r => r.Category)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
@@ -156,6 +156,11 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
         this._context.RecurringTransactionExceptions.RemoveRange(exceptionsToRemove);
     }
 
+    /// <summary>
+    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-scope data leaks.
+    /// See Feature 065 for the audit that established this rule.
+    /// </summary>
     private IQueryable<RecurringTransaction> ApplyScopeFilter(IQueryable<RecurringTransaction> query)
     {
         var userId = this._userContext.UserIdAsGuid;

@@ -59,7 +59,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = this._context.Transactions
+        var query = this.ApplyScopeFilter(this._context.Transactions)
             .Include(t => t.Category)
             .Where(t => t.Date >= startDate && t.Date <= endDate);
 
@@ -334,6 +334,11 @@ internal sealed class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-scope data leaks.
+    /// See Feature 065 for the audit that established this rule.
+    /// </summary>
     private IQueryable<Transaction> ApplyScopeFilter(IQueryable<Transaction> query)
     {
         var userId = this._userContext.UserIdAsGuid;

@@ -44,6 +44,14 @@ internal sealed class UserSettingsConfiguration : IEntityTypeConfiguration<UserS
         builder.Property(u => u.TimeZoneId)
             .HasMaxLength(100);
 
+        builder.Property(u => u.FirstDayOfWeek)
+            .IsRequired()
+            .HasDefaultValue(DayOfWeek.Sunday);
+
+        builder.Property(u => u.IsOnboarded)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(u => u.CreatedAtUtc)
             .IsRequired();
 

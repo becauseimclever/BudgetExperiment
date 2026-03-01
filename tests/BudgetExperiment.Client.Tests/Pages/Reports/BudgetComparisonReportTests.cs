@@ -751,6 +751,15 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<bool> DeleteCustomReportLayoutAsync(Guid id) => Task.FromResult(false);
+
+        /// <inheritdoc/>
+        public Task<UserSettingsDto?> GetUserSettingsAsync() => Task.FromResult<UserSettingsDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto) => Task.FromResult<UserSettingsDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<UserSettingsDto?> CompleteOnboardingAsync() => Task.FromResult<UserSettingsDto?>(null);
     }
 
     private sealed class StubExportDownloadService : IExportDownloadService

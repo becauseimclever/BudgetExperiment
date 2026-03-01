@@ -26,6 +26,8 @@ public class UserSettingsTests
         Assert.Equal(30, settings.PastDueLookbackDays);
         Assert.Null(settings.PreferredCurrency);
         Assert.Null(settings.TimeZoneId);
+        Assert.Equal(DayOfWeek.Sunday, settings.FirstDayOfWeek);
+        Assert.False(settings.IsOnboarded);
         Assert.NotEqual(default, settings.CreatedAtUtc);
         Assert.NotEqual(default, settings.UpdatedAtUtc);
     }
@@ -143,5 +145,77 @@ public class UserSettingsTests
 
         // Assert
         Assert.Null(settings.TimeZoneId);
+    }
+
+    [Fact]
+    public void UpdateFirstDayOfWeek_With_Sunday_Succeeds()
+    {
+        // Arrange
+        var settings = UserSettings.CreateDefault(Guid.NewGuid());
+
+        // Act
+        settings.UpdateFirstDayOfWeek(DayOfWeek.Sunday);
+
+        // Assert
+        Assert.Equal(DayOfWeek.Sunday, settings.FirstDayOfWeek);
+    }
+
+    [Fact]
+    public void UpdateFirstDayOfWeek_With_Monday_Succeeds()
+    {
+        // Arrange
+        var settings = UserSettings.CreateDefault(Guid.NewGuid());
+
+        // Act
+        settings.UpdateFirstDayOfWeek(DayOfWeek.Monday);
+
+        // Assert
+        Assert.Equal(DayOfWeek.Monday, settings.FirstDayOfWeek);
+    }
+
+    [Theory]
+    [InlineData(DayOfWeek.Tuesday)]
+    [InlineData(DayOfWeek.Wednesday)]
+    [InlineData(DayOfWeek.Thursday)]
+    [InlineData(DayOfWeek.Friday)]
+    [InlineData(DayOfWeek.Saturday)]
+    public void UpdateFirstDayOfWeek_With_Invalid_Day_Throws(DayOfWeek day)
+    {
+        // Arrange
+        var settings = UserSettings.CreateDefault(Guid.NewGuid());
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() => settings.UpdateFirstDayOfWeek(day));
+        Assert.Contains("Sunday or Monday", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CompleteOnboarding_Sets_IsOnboarded_True()
+    {
+        // Arrange
+        var settings = UserSettings.CreateDefault(Guid.NewGuid());
+        Assert.False(settings.IsOnboarded);
+        var beforeUpdate = settings.UpdatedAtUtc;
+
+        // Act
+        settings.CompleteOnboarding();
+
+        // Assert
+        Assert.True(settings.IsOnboarded);
+        Assert.True(settings.UpdatedAtUtc >= beforeUpdate);
+    }
+
+    [Fact]
+    public void CompleteOnboarding_IsIdempotent()
+    {
+        // Arrange
+        var settings = UserSettings.CreateDefault(Guid.NewGuid());
+
+        // Act
+        settings.CompleteOnboarding();
+        settings.CompleteOnboarding();
+
+        // Assert
+        Assert.True(settings.IsOnboarded);
     }
 }

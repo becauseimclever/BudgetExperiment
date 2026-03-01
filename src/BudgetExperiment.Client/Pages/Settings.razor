@@ -145,6 +145,54 @@
                 </section>
 
                 <section class="settings-section">
+                    <h3 class="settings-section-title">User Preferences</h3>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label class="setting-label">Preferred currency</label>
+                            <p class="setting-description">
+                                All monetary values in the app display in this currency.
+                            </p>
+                        </div>
+                        <div class="setting-control">
+                            <select class="form-control"
+                                    value="@(userSettings?.PreferredCurrency ?? "USD")"
+                                    @onchange="OnCurrencyChanged"
+                                    disabled="@isSavingUserPrefs"
+                                    style="width: 200px;">
+                                @foreach (var c in CurrencyList.Currencies)
+                                {
+                                    <option value="@c.Code">@c.Code — @c.Symbol @c.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label class="setting-label">First day of the week</label>
+                            <p class="setting-description">
+                                Controls how calendar views and weekly reports are laid out.
+                            </p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="dow-toggle-group">
+                                <button class="dow-toggle @(userSettings?.FirstDayOfWeek == DayOfWeek.Sunday ? "active" : "")"
+                                        @onclick="() => OnFirstDayChanged(DayOfWeek.Sunday)"
+                                        disabled="@isSavingUserPrefs">
+                                    Sun
+                                </button>
+                                <button class="dow-toggle @(userSettings?.FirstDayOfWeek == DayOfWeek.Monday ? "active" : "")"
+                                        @onclick="() => OnFirstDayChanged(DayOfWeek.Monday)"
+                                        disabled="@isSavingUserPrefs">
+                                    Mon
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-section">
                     <h3 class="settings-section-title">About</h3>
 
                     <div class="setting-item">
@@ -260,8 +308,10 @@
 
 @code {
     private AppSettingsDto? settings;
+    private UserSettingsDto? userSettings;
     private bool isLoading = true;
     private bool isSaving = false;
+    private bool isSavingUserPrefs = false;
     private string? errorMessage;
     private string? successMessage;
     private string activeTab = "general";
@@ -308,7 +358,12 @@
 
         try
         {
-            settings = await ApiService.GetSettingsAsync();
+            var appSettingsTask = ApiService.GetSettingsAsync();
+            var userSettingsTask = ApiService.GetUserSettingsAsync();
+            await Task.WhenAll(appSettingsTask, userSettingsTask);
+
+            settings = await appSettingsTask;
+            userSettings = await userSettingsTask;
         }
         catch (Exception ex)
         {
@@ -413,6 +468,41 @@
         finally
         {
             isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnCurrencyChanged(ChangeEventArgs e)
+    {
+        var code = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(code))
+        {
+            await SaveUserPrefAsync(new UserSettingsUpdateDto { PreferredCurrency = code });
+        }
+    }
+
+    private async Task OnFirstDayChanged(DayOfWeek day)
+    {
+        await SaveUserPrefAsync(new UserSettingsUpdateDto { FirstDayOfWeek = day });
+    }
+
+    private async Task SaveUserPrefAsync(UserSettingsUpdateDto update)
+    {
+        isSavingUserPrefs = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            userSettings = await ApiService.UpdateUserSettingsAsync(update);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save preference: {ex.Message}";
+        }
+        finally
+        {
+            isSavingUserPrefs = false;
             StateHasChanged();
         }
     }

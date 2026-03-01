@@ -1,0 +1,260 @@
+/* ==========================================================================
+   Onboarding Wizard Styles
+   ========================================================================== */
+
+.onboarding-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--color-background);
+    padding: var(--space-4);
+}
+
+.onboarding-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    max-width: 520px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+}
+
+.onboarding-header {
+    text-align: center;
+    margin-bottom: var(--space-6);
+}
+
+.onboarding-header h1 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.onboarding-header p {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: var(--line-height-relaxed);
+}
+
+/* Step Indicator */
+.onboarding-steps {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.onboarding-step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-border);
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.onboarding-step-dot.active {
+    background: var(--color-brand-primary);
+    transform: scale(1.2);
+}
+
+.onboarding-step-dot.completed {
+    background: var(--color-success);
+}
+
+/* Form Fields */
+.onboarding-field {
+    margin-bottom: var(--space-5);
+}
+
+.onboarding-field label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.onboarding-field .form-control {
+    width: 100%;
+}
+
+/* Currency Search */
+.currency-search-wrapper {
+    position: relative;
+}
+
+.currency-search-wrapper .form-control {
+    padding-right: var(--space-8);
+}
+
+.currency-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+}
+
+.currency-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+}
+
+.currency-option:hover,
+.currency-option.selected {
+    background: var(--color-surface-hover);
+}
+
+.currency-option .currency-code {
+    font-weight: var(--font-weight-semibold);
+    min-width: 40px;
+}
+
+.currency-option .currency-symbol {
+    color: var(--color-text-secondary);
+    min-width: 24px;
+}
+
+.currency-option .currency-name {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.selected-currency {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.selected-currency:hover {
+    border-color: var(--color-brand-primary);
+}
+
+/* Day of Week Toggle */
+.dow-toggle-group {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.dow-toggle {
+    flex: 1;
+    padding: var(--space-3) var(--space-4);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color var(--transition-fast),
+                background var(--transition-fast),
+                color var(--transition-fast);
+}
+
+.dow-toggle:hover {
+    border-color: var(--color-brand-primary);
+}
+
+.dow-toggle.active {
+    border-color: var(--color-brand-primary);
+    background: var(--color-brand-primary);
+    color: white;
+}
+
+/* Summary */
+.onboarding-summary {
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.onboarding-summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) 0;
+}
+
+.onboarding-summary-item:not(:last-child) {
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.onboarding-summary-label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.onboarding-summary-value {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+/* Action Buttons */
+.onboarding-actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: space-between;
+    margin-top: var(--space-6);
+}
+
+.onboarding-actions .btn {
+    min-width: 100px;
+}
+
+.onboarding-actions .btn-skip {
+    color: var(--color-text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    padding: var(--space-2) var(--space-3);
+}
+
+.onboarding-actions .btn-skip:hover {
+    color: var(--color-text-primary);
+}
+
+@media (max-width: 600px) {
+    .onboarding-card {
+        padding: var(--space-5);
+        margin: var(--space-2);
+    }
+
+    .onboarding-header h1 {
+        font-size: var(--font-size-xl);
+    }
+
+    .dow-toggle-group {
+        flex-direction: column;
+    }
+}

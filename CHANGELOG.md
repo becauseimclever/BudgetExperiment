@@ -6,27 +6,50 @@ All notable changes to Budget Experiment.
 
 ### Features
 
-- **domain:** `ICurrencyProvider` abstraction for global currency resolution — single interface in Domain layer with `UserSettingsCurrencyProvider` implementation in Application layer, falls back to USD when preference is unset or user is unauthenticated
-- **client:** Client-side CSV parsing — CSV files parsed entirely in Blazor WebAssembly with zero server round-trip, auto-delimiter detection, quote-aware parsing, and BOM removal
-- **client:** CSV injection sanitization — cells starting with formula-trigger characters (`=`, `@`, `+`, `-`, `\t`, `\r`) prefixed with `'` for safe display
-- **api:** Preview endpoint row count validation — rejects requests exceeding 10,000 rows (400 with ProblemDetails)
+- **domain:** `ICurrencyProvider` abstraction for global currency resolution — single interface in Domain layer with `UserSettingsCurrencyProvider` implementation in Application layer, falls back to USD when preference is unset or user is unauthenticated (Feature 064)
+- **domain:** Add `FirstDayOfWeek` and `IsOnboarded` to `UserSettings` — restricted to Sunday/Monday, domain validation via `DomainException` (Feature 066)
+- **client:** Client-side CSV parsing — CSV files parsed entirely in Blazor WebAssembly with zero server round-trip, auto-delimiter detection, quote-aware parsing, and BOM removal (Feature 063)
+- **client:** CSV injection sanitization — cells starting with formula-trigger characters (`=`, `@`, `+`, `-`, `\t`, `\r`) prefixed with `'` for safe display (Feature 063)
+- **client:** First-run onboarding wizard — step-based wizard (Welcome → Currency → First Day of Week → Confirm) with skip option and onboarding guard redirect (Feature 066)
+- **client:** Settings page user preferences — currency dropdown and first-day-of-week toggle editable post-onboarding (Feature 066)
+- **api:** Preview endpoint row count validation — rejects requests exceeding 10,000 rows (400 with ProblemDetails) (Feature 063)
+- **api:** `POST api/v1/user/settings/complete-onboarding` convenience endpoint (Feature 066)
+- **api:** Restore dismissed category suggestions — `GET /dismissed`, `POST /{id}/restore`, `DELETE /dismissed-patterns` endpoints (Feature 061)
+
+### Bug Fixes
+
+- **infrastructure:** Fix scope filtering in `GetByDateRangeAsync` and `GetByIdWithExceptionsAsync` — reports now respect Personal/Shared/All budget scope (Feature 065)
+- **application:** Fix CSV import double-skip bug — `RowsToSkip` was applied twice (parser and preview service), causing silent data loss (Feature 069)
+- **application:** Fix AI suggestions JSON extraction — `ExtractJson()` method handles markdown code blocks and preamble text in AI responses, restoring non-functional Smart Insights feature (Feature 070)
+- **client:** Fix `TransactionForm.razor` currency default — `MoneyDto.Currency` empty string not caught by null check; now uses `string.IsNullOrWhiteSpace()` (Feature 068)
+- **client:** Align Reports donut chart `StrokeWidth` from 50 to 20 for consistent ring proportions with Calendar (Feature 067)
+- **client:** Pass actual currency to Reports donut chart instead of defaulting to `"USD"` (Feature 067)
+- **client:** Standardize donut chart fallback color to `#6b7280` and filter/sort segment data consistently (Feature 067)
 
 ### Security
 
-- **api:** Remove server-side CSV parse endpoint (`POST /api/v1/import/parse`) — eliminates file upload attack surface entirely (**BREAKING**)
-- **api:** Request size limits on import endpoints — 5 MB execute, 10 MB preview (413 on oversized requests)
-- **api:** Import execute validation — max 5,000 transactions, field length limits, date/amount range checks (400/422 with ProblemDetails)
-- **application:** Delete server-side `ICsvParserService` and `CsvParserService` — no file bytes reach the server
+- **api:** Remove server-side CSV parse endpoint (`POST /api/v1/import/parse`) — eliminates file upload attack surface entirely (**BREAKING**) (Feature 063)
+- **api:** Request size limits on import endpoints — 5 MB execute, 10 MB preview (413 on oversized requests) (Feature 063)
+- **api:** Import execute validation — max 5,000 transactions, field length limits, date/amount range checks (400/422 with ProblemDetails) (Feature 063)
+- **application:** Delete server-side `ICsvParserService` and `CsvParserService` — no file bytes reach the server (Feature 063)
 
 ### Refactoring
 
 - **application:** Replace 51 hardcoded `"USD"` strings across 11 Application services with `ICurrencyProvider` — all monetary values now derive currency from user's `PreferredCurrency` setting (Feature 064)
-- **contracts:** Change `MoneyDto.Currency` default from `"USD"` to `string.Empty` — all callers now set currency explicitly via `ICurrencyProvider`
+- **contracts:** Change `MoneyDto.Currency` default from `"USD"` to `string.Empty` — all callers now set currency explicitly via `ICurrencyProvider` (Feature 064)
+
+### Testing
+
+- **e2e:** Functional Playwright test suite — calendar navigation, transaction CRUD, account management, CSV import flow (Feature 062)
+- **e2e:** Local critical Playwright tests — 6 tests for transaction, account, and category creation flows with `LocalCritical` trait (Feature 068)
+- **infrastructure:** 4 integration tests for scope filtering isolation in `TransactionRepository` (Feature 065)
+- **application:** Regression test for CSV import double-skip bug (Feature 069)
+- **application:** 6 unit tests + 2 integration tests for AI JSON extraction (Feature 070)
+- **client:** Unit tests for donut chart segment filtering, sorting, and fallback color (Feature 067)
 
 ### Documentation
 
-- **docs:** Feature 064 — global currency derivation (complete, all 6 slices)
-- **docs:** Feature 063 — secure file upload hardening (architecture docs, security analysis, all slices complete)
+- **docs:** Consolidate features 061–070 into archive
 
 ## [3.16.1] - 2026-02-22
 

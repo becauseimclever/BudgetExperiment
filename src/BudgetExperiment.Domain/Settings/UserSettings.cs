@@ -56,6 +56,16 @@ public sealed class UserSettings
     public string? TimeZoneId { get; private set; }
 
     /// <summary>
+    /// Gets the user's preferred first day of the week (Sunday or Monday).
+    /// </summary>
+    public DayOfWeek FirstDayOfWeek { get; private set; } = DayOfWeek.Sunday;
+
+    /// <summary>
+    /// Gets a value indicating whether the user has completed the initial onboarding wizard.
+    /// </summary>
+    public bool IsOnboarded { get; private set; }
+
+    /// <summary>
     /// Gets the UTC timestamp when the settings were created.
     /// </summary>
     public DateTime CreatedAtUtc { get; private set; }
@@ -88,6 +98,8 @@ public sealed class UserSettings
             PastDueLookbackDays = 30,
             PreferredCurrency = null,
             TimeZoneId = null,
+            FirstDayOfWeek = DayOfWeek.Sunday,
+            IsOnboarded = false,
             CreatedAtUtc = now,
             UpdatedAtUtc = now,
         };
@@ -146,6 +158,31 @@ public sealed class UserSettings
     public void UpdateTimeZoneId(string? timeZoneId)
     {
         this.TimeZoneId = timeZoneId?.Trim();
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the first day of the week preference.
+    /// </summary>
+    /// <param name="firstDayOfWeek">The first day of the week (Sunday or Monday only).</param>
+    /// <exception cref="DomainException">Thrown when the day is not Sunday or Monday.</exception>
+    public void UpdateFirstDayOfWeek(DayOfWeek firstDayOfWeek)
+    {
+        if (firstDayOfWeek != DayOfWeek.Sunday && firstDayOfWeek != DayOfWeek.Monday)
+        {
+            throw new DomainException("First day of the week must be Sunday or Monday.");
+        }
+
+        this.FirstDayOfWeek = firstDayOfWeek;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Marks the user's onboarding as complete. This is a one-way operation.
+    /// </summary>
+    public void CompleteOnboarding()
+    {
+        this.IsOnboarded = true;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 }
