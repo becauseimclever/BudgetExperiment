@@ -122,7 +122,7 @@ public class ImportServiceLocationTests
         // Arrange
         SetupLocationEnabled(true);
 
-        var parsedLocation = TransactionLocation.CreateFromParsed("Seattle", "WA");
+        var parsedLocation = TransactionLocationValue.CreateFromParsed("Seattle", "WA");
         this._locationParserMock
             .Setup(p => p.ParseBatch(It.IsAny<IEnumerable<string>>()))
             .Returns(new List<LocationParseResult>
@@ -206,7 +206,7 @@ public class ImportServiceLocationTests
         // Arrange
         SetupLocationEnabled(true);
 
-        var parsedLocation = TransactionLocation.CreateFromParsed("Portland", "OR");
+        var parsedLocation = TransactionLocationValue.CreateFromParsed("Portland", "OR");
         this._locationParserMock
             .Setup(p => p.ParseBatch(It.IsAny<IEnumerable<string>>()))
             .Returns(new List<LocationParseResult>

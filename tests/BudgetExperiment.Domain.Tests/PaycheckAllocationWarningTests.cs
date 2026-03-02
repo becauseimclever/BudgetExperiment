@@ -7,7 +7,7 @@ using BudgetExperiment.Domain;
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the <see cref="PaycheckAllocationWarning"/> value object.
+/// Unit tests for the <see cref="PaycheckAllocationWarningValue"/> value object.
 /// </summary>
 public class PaycheckAllocationWarningTests
 {
@@ -18,7 +18,7 @@ public class PaycheckAllocationWarningTests
         var shortfall = MoneyValue.Create("USD", 500m);
 
         // Act
-        var warning = PaycheckAllocationWarning.InsufficientIncome(shortfall);
+        var warning = PaycheckAllocationWarningValue.InsufficientIncome(shortfall);
 
         // Assert
         Assert.Equal(AllocationWarningType.InsufficientIncome, warning.Type);
@@ -34,7 +34,7 @@ public class PaycheckAllocationWarningTests
         var annualIncome = MoneyValue.Create("USD", 50000m);
 
         // Act
-        var warning = PaycheckAllocationWarning.CannotReconcile(annualBills, annualIncome);
+        var warning = PaycheckAllocationWarningValue.CannotReconcile(annualBills, annualIncome);
 
         // Assert
         Assert.Equal(AllocationWarningType.CannotReconcile, warning.Type);
@@ -47,7 +47,7 @@ public class PaycheckAllocationWarningTests
     public void NoBillsConfigured_CreatesWarningWithCorrectType()
     {
         // Act
-        var warning = PaycheckAllocationWarning.NoBillsConfigured();
+        var warning = PaycheckAllocationWarningValue.NoBillsConfigured();
 
         // Assert
         Assert.Equal(AllocationWarningType.NoBillsConfigured, warning.Type);
@@ -59,7 +59,7 @@ public class PaycheckAllocationWarningTests
     public void NoIncomeConfigured_CreatesWarningWithCorrectType()
     {
         // Act
-        var warning = PaycheckAllocationWarning.NoIncomeConfigured();
+        var warning = PaycheckAllocationWarningValue.NoIncomeConfigured();
 
         // Assert
         Assert.Equal(AllocationWarningType.NoIncomeConfigured, warning.Type);
@@ -76,7 +76,7 @@ public class PaycheckAllocationWarningTests
         var amount = MoneyValue.Create("USD", 100m);
 
         // Act
-        var warning = PaycheckAllocationWarning.Create(type, message, amount);
+        var warning = PaycheckAllocationWarningValue.Create(type, message, amount);
 
         // Assert
         Assert.Equal(type, warning.Type);
@@ -92,7 +92,7 @@ public class PaycheckAllocationWarningTests
     {
         // Act & Assert
         var ex = Assert.Throws<DomainException>(
-            () => PaycheckAllocationWarning.Create(AllocationWarningType.InsufficientIncome, message!));
+            () => PaycheckAllocationWarningValue.Create(AllocationWarningType.InsufficientIncome, message!));
         Assert.Contains("message", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -100,8 +100,8 @@ public class PaycheckAllocationWarningTests
     public void Warning_RecordEquality_WorksCorrectly()
     {
         // Arrange
-        var warning1 = PaycheckAllocationWarning.NoBillsConfigured();
-        var warning2 = PaycheckAllocationWarning.NoBillsConfigured();
+        var warning1 = PaycheckAllocationWarningValue.NoBillsConfigured();
+        var warning2 = PaycheckAllocationWarningValue.NoBillsConfigured();
 
         // Act & Assert
         Assert.Equal(warning1, warning2);

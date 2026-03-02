@@ -257,7 +257,7 @@ public sealed class ImportService : IImportService
                         ? src
                         : LocationSource.Parsed;
 
-                    var location = TransactionLocation.Create(
+                    var location = TransactionLocationValue.Create(
                         city: txData.LocationCity,
                         stateOrRegion: txData.LocationStateOrRegion,
                         country: txData.LocationCountry,
@@ -461,7 +461,7 @@ public sealed class ImportService : IImportService
             return rows;
         }
 
-        var tolerances = MatchingTolerances.Default;
+        var tolerances = MatchingTolerancesValue.Default;
         var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
 
         // Enrich each valid row with potential matches
@@ -553,15 +553,15 @@ public sealed class ImportService : IImportService
         return enrichedRows;
     }
 
-    private TransactionMatchResult? FindBestMatchForPreviewRow(
+    private TransactionMatchResultValue? FindBestMatchForPreviewRow(
         string description,
         decimal amount,
         DateOnly date,
-        IReadOnlyList<RecurringInstanceInfo> candidates,
-        MatchingTolerances tolerances,
+        IReadOnlyList<RecurringInstanceInfoValue> candidates,
+        MatchingTolerancesValue tolerances,
         string currency)
     {
-        TransactionMatchResult? best = null;
+        TransactionMatchResultValue? best = null;
 
         foreach (var candidate in candidates)
         {

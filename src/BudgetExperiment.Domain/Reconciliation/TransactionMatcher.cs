@@ -41,10 +41,10 @@ public sealed class TransactionMatcher : ITransactionMatcher
     private const decimal PatternMatchConfidence = 0.98m;
 
     /// <inheritdoc/>
-    public IReadOnlyList<TransactionMatchResult> FindMatches(
+    public IReadOnlyList<TransactionMatchResultValue> FindMatches(
         Transaction transaction,
-        IEnumerable<RecurringInstanceInfo> candidates,
-        MatchingTolerances tolerances)
+        IEnumerable<RecurringInstanceInfoValue> candidates,
+        MatchingTolerancesValue tolerances)
     {
         if (transaction is null)
         {
@@ -61,7 +61,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
             throw new ArgumentNullException(nameof(tolerances));
         }
 
-        var matches = new List<TransactionMatchResult>();
+        var matches = new List<TransactionMatchResultValue>();
 
         foreach (var candidate in candidates)
         {
@@ -78,10 +78,10 @@ public sealed class TransactionMatcher : ITransactionMatcher
     }
 
     /// <inheritdoc/>
-    public TransactionMatchResult? CalculateMatch(
+    public TransactionMatchResultValue? CalculateMatch(
         Transaction transaction,
-        RecurringInstanceInfo candidate,
-        MatchingTolerances tolerances)
+        RecurringInstanceInfoValue candidate,
+        MatchingTolerancesValue tolerances)
     {
         if (transaction is null)
         {
@@ -152,7 +152,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
 
         var confidenceLevel = DetermineConfidenceLevel(confidenceScore);
 
-        return new TransactionMatchResult(
+        return new TransactionMatchResultValue(
             RecurringTransactionId: candidate.RecurringTransactionId,
             InstanceDate: candidate.InstanceDate,
             ConfidenceScore: confidenceScore,
@@ -177,7 +177,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
         return MatchConfidenceLevel.Low;
     }
 
-    private bool MatchesImportPatterns(string transactionDescription, IReadOnlyCollection<ImportPattern>? patterns)
+    private bool MatchesImportPatterns(string transactionDescription, IReadOnlyCollection<ImportPatternValue>? patterns)
     {
         if (patterns is null || patterns.Count == 0)
         {
@@ -190,7 +190,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
     private bool IsAmountWithinTolerance(
         decimal actualAmount,
         decimal expectedAmount,
-        MatchingTolerances tolerances)
+        MatchingTolerancesValue tolerances)
     {
         var difference = Math.Abs(actualAmount - expectedAmount);
 
@@ -233,7 +233,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
     private decimal CalculateAmountScore(
         decimal actualAmount,
         decimal expectedAmount,
-        MatchingTolerances tolerances)
+        MatchingTolerancesValue tolerances)
     {
         var difference = Math.Abs(actualAmount - expectedAmount);
 

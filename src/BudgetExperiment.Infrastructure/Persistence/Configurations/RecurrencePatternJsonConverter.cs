@@ -9,12 +9,12 @@ using BudgetExperiment.Domain;
 namespace BudgetExperiment.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// JSON converter for <see cref="RecurrencePattern"/> which has a private constructor.
+/// JSON converter for <see cref="RecurrencePatternValue"/> which has a private constructor.
 /// </summary>
-internal sealed class RecurrencePatternJsonConverter : JsonConverter<RecurrencePattern>
+internal sealed class RecurrencePatternJsonConverter : JsonConverter<RecurrencePatternValue>
 {
     /// <inheritdoc />
-    public override RecurrencePattern? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override RecurrencePatternValue? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
         {
@@ -39,18 +39,18 @@ internal sealed class RecurrencePatternJsonConverter : JsonConverter<RecurrenceP
         // Use the appropriate factory method based on frequency
         return frequency switch
         {
-            RecurrenceFrequency.Daily => RecurrencePattern.CreateDaily(interval),
-            RecurrenceFrequency.Weekly when dayOfWeek.HasValue => RecurrencePattern.CreateWeekly(interval, dayOfWeek.Value),
-            RecurrenceFrequency.BiWeekly when dayOfWeek.HasValue => RecurrencePattern.CreateBiWeekly(dayOfWeek.Value),
-            RecurrenceFrequency.Monthly when dayOfMonth.HasValue => RecurrencePattern.CreateMonthly(interval, dayOfMonth.Value),
-            RecurrenceFrequency.Quarterly when dayOfMonth.HasValue => RecurrencePattern.CreateQuarterly(dayOfMonth.Value),
-            RecurrenceFrequency.Yearly when dayOfMonth.HasValue && monthOfYear.HasValue => RecurrencePattern.CreateYearly(monthOfYear.Value, dayOfMonth.Value),
-            _ => RecurrencePattern.CreateDaily(1), // Default fallback
+            RecurrenceFrequency.Daily => RecurrencePatternValue.CreateDaily(interval),
+            RecurrenceFrequency.Weekly when dayOfWeek.HasValue => RecurrencePatternValue.CreateWeekly(interval, dayOfWeek.Value),
+            RecurrenceFrequency.BiWeekly when dayOfWeek.HasValue => RecurrencePatternValue.CreateBiWeekly(dayOfWeek.Value),
+            RecurrenceFrequency.Monthly when dayOfMonth.HasValue => RecurrencePatternValue.CreateMonthly(interval, dayOfMonth.Value),
+            RecurrenceFrequency.Quarterly when dayOfMonth.HasValue => RecurrencePatternValue.CreateQuarterly(dayOfMonth.Value),
+            RecurrenceFrequency.Yearly when dayOfMonth.HasValue && monthOfYear.HasValue => RecurrencePatternValue.CreateYearly(monthOfYear.Value, dayOfMonth.Value),
+            _ => RecurrencePatternValue.CreateDaily(1), // Default fallback
         };
     }
 
     /// <inheritdoc />
-    public override void Write(Utf8JsonWriter writer, RecurrencePattern value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, RecurrencePatternValue value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
         writer.WriteString("frequency", value.Frequency.ToString());

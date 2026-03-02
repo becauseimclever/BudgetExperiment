@@ -28,13 +28,13 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
     }
 
     /// <inheritdoc/>
-    public async Task<Dictionary<DateOnly, List<RecurringInstanceInfo>>> GetInstancesByDateRangeAsync(
+    public async Task<Dictionary<DateOnly, List<RecurringInstanceInfoValue>>> GetInstancesByDateRangeAsync(
         IReadOnlyList<RecurringTransaction> recurringTransactions,
         DateOnly fromDate,
         DateOnly toDate,
         CancellationToken cancellationToken = default)
     {
-        var result = new Dictionary<DateOnly, List<RecurringInstanceInfo>>();
+        var result = new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>();
         var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
@@ -57,7 +57,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
                     continue;
                 }
 
-                var instance = new RecurringInstanceInfo(
+                var instance = new RecurringInstanceInfoValue(
                     RecurringTransactionId: recurring.Id,
                     InstanceDate: date,
                     AccountId: recurring.AccountId,
@@ -71,7 +71,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
 
                 if (!result.TryGetValue(date, out var list))
                 {
-                    list = new List<RecurringInstanceInfo>();
+                    list = new List<RecurringInstanceInfoValue>();
                     result[date] = list;
                 }
 
@@ -83,12 +83,12 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
     }
 
     /// <inheritdoc/>
-    public async Task<List<RecurringInstanceInfo>> GetInstancesForDateAsync(
+    public async Task<List<RecurringInstanceInfoValue>> GetInstancesForDateAsync(
         IReadOnlyList<RecurringTransaction> recurringTransactions,
         DateOnly date,
         CancellationToken cancellationToken = default)
     {
-        var result = new List<RecurringInstanceInfo>();
+        var result = new List<RecurringInstanceInfoValue>();
         var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
@@ -102,7 +102,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
 
             var exception = await _recurringRepository.GetExceptionAsync(recurring.Id, date, cancellationToken);
 
-            result.Add(new RecurringInstanceInfo(
+            result.Add(new RecurringInstanceInfoValue(
                 RecurringTransactionId: recurring.Id,
                 InstanceDate: date,
                 AccountId: recurring.AccountId,

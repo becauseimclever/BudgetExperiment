@@ -83,7 +83,7 @@ public sealed class PastDueServiceTests
             accountId,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 5),
+            RecurrencePatternValue.CreateMonthly(1, 5),
             new DateOnly(2026, 1, 5), // Started on Jan 5
             null);
 
@@ -129,7 +129,7 @@ public sealed class PastDueServiceTests
             accountId,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 5),
+            RecurrencePatternValue.CreateMonthly(1, 5),
             new DateOnly(2026, 1, 5),
             null);
 
@@ -161,7 +161,7 @@ public sealed class PastDueServiceTests
             accountId,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 5),
+            RecurrencePatternValue.CreateMonthly(1, 5),
             new DateOnly(2026, 1, 5),
             null);
 
@@ -202,7 +202,7 @@ public sealed class PastDueServiceTests
             accountId,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15), // Future date
             null);
 
@@ -232,7 +232,7 @@ public sealed class PastDueServiceTests
             destAccountId,
             "Savings Transfer",
             MoneyValue.Create("USD", 500m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1),
             null);
 
@@ -280,7 +280,7 @@ public sealed class PastDueServiceTests
             accountId,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2025, 11, 1), // Started Nov 1
             new DateOnly(2025, 11, 30)); // Ended Nov 30 - no occurrences in Dec-Jan
 
@@ -310,7 +310,7 @@ public sealed class PastDueServiceTests
             targetAccountId,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 5),
+            RecurrencePatternValue.CreateMonthly(1, 5),
             new DateOnly(2026, 1, 5),
             null);
 
@@ -348,7 +348,7 @@ public sealed class PastDueServiceTests
             accountId,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 5),
+            RecurrencePatternValue.CreateMonthly(1, 5),
             new DateOnly(2026, 1, 5),
             null);
 
@@ -356,7 +356,7 @@ public sealed class PastDueServiceTests
             accountId,
             "Gym",
             MoneyValue.Create("USD", -29.99m),
-            RecurrencePattern.CreateMonthly(1, 8),
+            RecurrencePatternValue.CreateMonthly(1, 8),
             new DateOnly(2026, 1, 8),
             null);
 

@@ -1,4 +1,4 @@
-// <copyright file="RecurrencePattern.cs" company="BecauseImClever">
+// <copyright file="RecurrencePatternValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,17 +7,17 @@ namespace BudgetExperiment.Domain.Recurring;
 /// <summary>
 /// Immutable value object representing a recurrence pattern for recurring transactions.
 /// </summary>
-public sealed record RecurrencePattern
+public sealed record RecurrencePatternValue
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="RecurrencePattern"/> class.
+    /// Initializes a new instance of the <see cref="RecurrencePatternValue"/> class.
     /// </summary>
     /// <param name="frequency">The recurrence frequency.</param>
     /// <param name="interval">The interval between occurrences.</param>
     /// <param name="dayOfMonth">The day of month for monthly/quarterly/yearly patterns.</param>
     /// <param name="dayOfWeek">The day of week for weekly/biweekly patterns.</param>
     /// <param name="monthOfYear">The month of year for yearly patterns.</param>
-    private RecurrencePattern(
+    private RecurrencePatternValue(
         RecurrenceFrequency frequency,
         int interval,
         int? dayOfMonth,
@@ -60,12 +60,12 @@ public sealed record RecurrencePattern
     /// Creates a daily recurrence pattern.
     /// </summary>
     /// <param name="interval">The interval in days (default 1).</param>
-    /// <returns>A new daily <see cref="RecurrencePattern"/>.</returns>
+    /// <returns>A new daily <see cref="RecurrencePatternValue"/>.</returns>
     /// <exception cref="DomainException">Thrown when interval is less than 1.</exception>
-    public static RecurrencePattern CreateDaily(int interval = 1)
+    public static RecurrencePatternValue CreateDaily(int interval = 1)
     {
         ValidateInterval(interval);
-        return new RecurrencePattern(RecurrenceFrequency.Daily, interval, null, null, null);
+        return new RecurrencePatternValue(RecurrenceFrequency.Daily, interval, null, null, null);
     }
 
     /// <summary>
@@ -73,22 +73,22 @@ public sealed record RecurrencePattern
     /// </summary>
     /// <param name="interval">The interval in weeks (default 1).</param>
     /// <param name="dayOfWeek">The day of week for the occurrence.</param>
-    /// <returns>A new weekly <see cref="RecurrencePattern"/>.</returns>
+    /// <returns>A new weekly <see cref="RecurrencePatternValue"/>.</returns>
     /// <exception cref="DomainException">Thrown when interval is less than 1.</exception>
-    public static RecurrencePattern CreateWeekly(int interval, DayOfWeek dayOfWeek)
+    public static RecurrencePatternValue CreateWeekly(int interval, DayOfWeek dayOfWeek)
     {
         ValidateInterval(interval);
-        return new RecurrencePattern(RecurrenceFrequency.Weekly, interval, null, dayOfWeek, null);
+        return new RecurrencePatternValue(RecurrenceFrequency.Weekly, interval, null, dayOfWeek, null);
     }
 
     /// <summary>
     /// Creates a biweekly (every 2 weeks) recurrence pattern.
     /// </summary>
     /// <param name="dayOfWeek">The day of week for the occurrence.</param>
-    /// <returns>A new biweekly <see cref="RecurrencePattern"/>.</returns>
-    public static RecurrencePattern CreateBiWeekly(DayOfWeek dayOfWeek)
+    /// <returns>A new biweekly <see cref="RecurrencePatternValue"/>.</returns>
+    public static RecurrencePatternValue CreateBiWeekly(DayOfWeek dayOfWeek)
     {
-        return new RecurrencePattern(RecurrenceFrequency.BiWeekly, 2, null, dayOfWeek, null);
+        return new RecurrencePatternValue(RecurrenceFrequency.BiWeekly, 2, null, dayOfWeek, null);
     }
 
     /// <summary>
@@ -96,25 +96,25 @@ public sealed record RecurrencePattern
     /// </summary>
     /// <param name="interval">The interval in months (default 1).</param>
     /// <param name="dayOfMonth">The day of month (1-31).</param>
-    /// <returns>A new monthly <see cref="RecurrencePattern"/>.</returns>
+    /// <returns>A new monthly <see cref="RecurrencePatternValue"/>.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static RecurrencePattern CreateMonthly(int interval, int dayOfMonth)
+    public static RecurrencePatternValue CreateMonthly(int interval, int dayOfMonth)
     {
         ValidateInterval(interval);
         ValidateDayOfMonth(dayOfMonth);
-        return new RecurrencePattern(RecurrenceFrequency.Monthly, interval, dayOfMonth, null, null);
+        return new RecurrencePatternValue(RecurrenceFrequency.Monthly, interval, dayOfMonth, null, null);
     }
 
     /// <summary>
     /// Creates a quarterly (every 3 months) recurrence pattern.
     /// </summary>
     /// <param name="dayOfMonth">The day of month (1-31).</param>
-    /// <returns>A new quarterly <see cref="RecurrencePattern"/>.</returns>
+    /// <returns>A new quarterly <see cref="RecurrencePatternValue"/>.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static RecurrencePattern CreateQuarterly(int dayOfMonth)
+    public static RecurrencePatternValue CreateQuarterly(int dayOfMonth)
     {
         ValidateDayOfMonth(dayOfMonth);
-        return new RecurrencePattern(RecurrenceFrequency.Quarterly, 3, dayOfMonth, null, null);
+        return new RecurrencePatternValue(RecurrenceFrequency.Quarterly, 3, dayOfMonth, null, null);
     }
 
     /// <summary>
@@ -122,13 +122,13 @@ public sealed record RecurrencePattern
     /// </summary>
     /// <param name="dayOfMonth">The day of month (1-31).</param>
     /// <param name="monthOfYear">The month of year (1-12).</param>
-    /// <returns>A new yearly <see cref="RecurrencePattern"/>.</returns>
+    /// <returns>A new yearly <see cref="RecurrencePatternValue"/>.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static RecurrencePattern CreateYearly(int dayOfMonth, int monthOfYear)
+    public static RecurrencePatternValue CreateYearly(int dayOfMonth, int monthOfYear)
     {
         ValidateDayOfMonth(dayOfMonth);
         ValidateMonthOfYear(monthOfYear);
-        return new RecurrencePattern(RecurrenceFrequency.Yearly, 1, dayOfMonth, null, monthOfYear);
+        return new RecurrencePatternValue(RecurrenceFrequency.Yearly, 1, dayOfMonth, null, monthOfYear);
     }
 
     /// <summary>

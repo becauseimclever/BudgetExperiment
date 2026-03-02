@@ -46,11 +46,11 @@ public static class ReconciliationMapper
     }
 
     /// <summary>
-    /// Maps a <see cref="MatchingTolerances"/> to a <see cref="MatchingTolerancesDto"/>.
+    /// Maps a <see cref="MatchingTolerancesValue"/> to a <see cref="MatchingTolerancesDto"/>.
     /// </summary>
     /// <param name="tolerances">The matching tolerances value object.</param>
     /// <returns>The mapped DTO.</returns>
-    public static MatchingTolerancesDto ToDto(MatchingTolerances tolerances)
+    public static MatchingTolerancesDto ToDto(MatchingTolerancesValue tolerances)
     {
         return new MatchingTolerancesDto
         {
@@ -63,13 +63,13 @@ public static class ReconciliationMapper
     }
 
     /// <summary>
-    /// Maps a <see cref="MatchingTolerancesDto"/> to a <see cref="MatchingTolerances"/>.
+    /// Maps a <see cref="MatchingTolerancesDto"/> to a <see cref="MatchingTolerancesValue"/>.
     /// </summary>
     /// <param name="dto">The tolerances DTO.</param>
     /// <returns>The domain value object.</returns>
-    public static MatchingTolerances ToDomain(MatchingTolerancesDto dto)
+    public static MatchingTolerancesValue ToDomain(MatchingTolerancesDto dto)
     {
-        return MatchingTolerances.Create(
+        return MatchingTolerancesValue.Create(
             dto.DateToleranceDays,
             dto.AmountTolerancePercent,
             dto.AmountToleranceAbsolute,

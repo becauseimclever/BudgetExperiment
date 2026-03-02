@@ -50,7 +50,7 @@ public class RecurringTransferInstanceServiceTests
             this._destAccount.Id,
             "Skip Instance",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
         var instanceDate = new DateOnly(2026, 3, 1);
 
@@ -90,7 +90,7 @@ public class RecurringTransferInstanceServiceTests
             this._destAccount.Id,
             "Modify Instance",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
         var instanceDate = new DateOnly(2026, 2, 1);
 

@@ -28,14 +28,14 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
     }
 
     /// <inheritdoc/>
-    public async Task<Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>> GetInstancesByDateRangeAsync(
+    public async Task<Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>>> GetInstancesByDateRangeAsync(
         IReadOnlyList<RecurringTransfer> recurringTransfers,
         DateOnly fromDate,
         DateOnly toDate,
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = new Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>();
+        var result = new Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>>();
         var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
@@ -65,7 +65,7 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
                 // Add source account entry (outgoing - negative amount)
                 if (!accountId.HasValue || accountId.Value == transfer.SourceAccountId)
                 {
-                    var sourceInstance = new RecurringTransferInstanceInfo(
+                    var sourceInstance = new RecurringTransferInstanceInfoValue(
                         RecurringTransferId: transfer.Id,
                         InstanceDate: date,
                         AccountId: transfer.SourceAccountId,
@@ -78,7 +78,7 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
 
                     if (!result.TryGetValue(date, out var sourceList))
                     {
-                        sourceList = new List<RecurringTransferInstanceInfo>();
+                        sourceList = new List<RecurringTransferInstanceInfoValue>();
                         result[date] = sourceList;
                     }
 
@@ -88,7 +88,7 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
                 // Add destination account entry (incoming - positive amount)
                 if (!accountId.HasValue || accountId.Value == transfer.DestinationAccountId)
                 {
-                    var destInstance = new RecurringTransferInstanceInfo(
+                    var destInstance = new RecurringTransferInstanceInfoValue(
                         RecurringTransferId: transfer.Id,
                         InstanceDate: date,
                         AccountId: transfer.DestinationAccountId,
@@ -101,7 +101,7 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
 
                     if (!result.TryGetValue(date, out var destList))
                     {
-                        destList = new List<RecurringTransferInstanceInfo>();
+                        destList = new List<RecurringTransferInstanceInfoValue>();
                         result[date] = destList;
                     }
 
@@ -114,13 +114,13 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
     }
 
     /// <inheritdoc/>
-    public async Task<List<RecurringTransferInstanceInfo>> GetInstancesForDateAsync(
+    public async Task<List<RecurringTransferInstanceInfoValue>> GetInstancesForDateAsync(
         IReadOnlyList<RecurringTransfer> recurringTransfers,
         DateOnly date,
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = new List<RecurringTransferInstanceInfo>();
+        var result = new List<RecurringTransferInstanceInfoValue>();
         var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
@@ -141,7 +141,7 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
             // Add source account entry (outgoing - negative amount)
             if (!accountId.HasValue || accountId.Value == transfer.SourceAccountId)
             {
-                result.Add(new RecurringTransferInstanceInfo(
+                result.Add(new RecurringTransferInstanceInfoValue(
                     RecurringTransferId: transfer.Id,
                     InstanceDate: date,
                     AccountId: transfer.SourceAccountId,
@@ -156,7 +156,7 @@ public sealed class RecurringTransferInstanceProjector : IRecurringTransferInsta
             // Add destination account entry (incoming - positive amount)
             if (!accountId.HasValue || accountId.Value == transfer.DestinationAccountId)
             {
-                result.Add(new RecurringTransferInstanceInfo(
+                result.Add(new RecurringTransferInstanceInfoValue(
                     RecurringTransferId: transfer.Id,
                     InstanceDate: date,
                     AccountId: transfer.DestinationAccountId,

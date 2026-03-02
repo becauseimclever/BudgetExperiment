@@ -44,13 +44,13 @@ public class ReconciliationServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>());
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>());
         _transactionMatcher
             .Setup(m => m.FindMatches(
                 It.IsAny<Transaction>(),
-                It.IsAny<IEnumerable<RecurringInstanceInfo>>(),
-                It.IsAny<MatchingTolerances>()))
-            .Returns(new List<TransactionMatchResult>());
+                It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
+                It.IsAny<MatchingTolerancesValue>()))
+            .Returns(new List<TransactionMatchResultValue>());
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
@@ -127,7 +127,7 @@ public class ReconciliationServiceTests
         var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, instanceDate);
         var recurring = CreateTestRecurringTransaction(recurringId, accountId, "Netflix", -15.99m, instanceDate);
 
-        var instance = new RecurringInstanceInfo(
+        var instance = new RecurringInstanceInfoValue(
             recurringId,
             instanceDate,
             accountId,
@@ -139,7 +139,7 @@ public class ReconciliationServiceTests
             false,
             false);
 
-        var matchResult = new TransactionMatchResult(
+        var matchResult = new TransactionMatchResultValue(
             recurringId,
             instanceDate,
             0.95m,
@@ -163,16 +163,16 @@ public class ReconciliationServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
-                { instanceDate, new List<RecurringInstanceInfo> { instance } },
+                { instanceDate, new List<RecurringInstanceInfoValue> { instance } },
             });
         _transactionMatcher
             .Setup(m => m.FindMatches(
                 transaction,
-                It.IsAny<IEnumerable<RecurringInstanceInfo>>(),
-                It.IsAny<MatchingTolerances>()))
-            .Returns(new List<TransactionMatchResult> { matchResult });
+                It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
+                It.IsAny<MatchingTolerancesValue>()))
+            .Returns(new List<TransactionMatchResultValue> { matchResult });
         _matchRepository
             .Setup(r => r.ExistsAsync(
                 transactionId,
@@ -223,7 +223,7 @@ public class ReconciliationServiceTests
         var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, instanceDate);
         var recurring = CreateTestRecurringTransaction(recurringId, accountId, "Netflix", -15.99m, instanceDate);
 
-        var instance = new RecurringInstanceInfo(
+        var instance = new RecurringInstanceInfoValue(
             recurringId,
             instanceDate,
             accountId,
@@ -235,7 +235,7 @@ public class ReconciliationServiceTests
             false,
             false);
 
-        var matchResult = new TransactionMatchResult(
+        var matchResult = new TransactionMatchResultValue(
             recurringId,
             instanceDate,
             0.95m,
@@ -256,16 +256,16 @@ public class ReconciliationServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
-                { instanceDate, new List<RecurringInstanceInfo> { instance } },
+                { instanceDate, new List<RecurringInstanceInfoValue> { instance } },
             });
         _transactionMatcher
             .Setup(m => m.FindMatches(
                 transaction,
-                It.IsAny<IEnumerable<RecurringInstanceInfo>>(),
-                It.IsAny<MatchingTolerances>()))
-            .Returns(new List<TransactionMatchResult> { matchResult });
+                It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
+                It.IsAny<MatchingTolerancesValue>()))
+            .Returns(new List<TransactionMatchResultValue> { matchResult });
         _matchRepository
             .Setup(r => r.ExistsAsync(
                 transactionId,
@@ -503,7 +503,7 @@ public class ReconciliationServiceTests
 
         var recurring = CreateTestRecurringTransaction(recurringId, accountId, "Netflix", -15.99m, jan15);
 
-        var instance = new RecurringInstanceInfo(
+        var instance = new RecurringInstanceInfoValue(
             recurringId,
             jan15,
             accountId,
@@ -524,9 +524,9 @@ public class ReconciliationServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
-                { jan15, new List<RecurringInstanceInfo> { instance } },
+                { jan15, new List<RecurringInstanceInfoValue> { instance } },
             });
         _matchRepository
             .Setup(r => r.GetByPeriodAsync(2026, 1, It.IsAny<CancellationToken>()))
@@ -851,7 +851,7 @@ public class ReconciliationServiceTests
             accountId,
             description,
             MoneyValue.Create("USD", amount),
-            RecurrencePattern.CreateMonthly(1, startDate.Day),
+            RecurrencePatternValue.CreateMonthly(1, startDate.Day),
             startDate);
         typeof(RecurringTransaction).GetProperty(nameof(RecurringTransaction.Id))!.SetValue(recurring, id);
         return recurring;
@@ -913,7 +913,7 @@ public class ReconciliationServiceTests
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurring });
 
-        var instance = new RecurringInstanceInfo(
+        var instance = new RecurringInstanceInfoValue(
             RecurringTransactionId: recurringId,
             InstanceDate: transactionDate,
             AccountId: accountId,
@@ -931,9 +931,9 @@ public class ReconciliationServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
-                { transactionDate, new List<RecurringInstanceInfo> { instance } },
+                { transactionDate, new List<RecurringInstanceInfoValue> { instance } },
             });
 
         _matchRepository
@@ -943,11 +943,11 @@ public class ReconciliationServiceTests
         _transactionMatcher
             .Setup(m => m.FindMatches(
                 transaction,
-                It.IsAny<IEnumerable<RecurringInstanceInfo>>(),
-                It.IsAny<MatchingTolerances>()))
-            .Returns(new List<TransactionMatchResult>
+                It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
+                It.IsAny<MatchingTolerancesValue>()))
+            .Returns(new List<TransactionMatchResultValue>
             {
-                new TransactionMatchResult(
+                new TransactionMatchResultValue(
                     RecurringTransactionId: recurringId,
                     InstanceDate: transactionDate,
                     ConfidenceScore: 0.95m,

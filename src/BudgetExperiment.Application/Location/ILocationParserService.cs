@@ -13,8 +13,8 @@ public interface ILocationParserService
     /// Attempts to parse a location from a single transaction description.
     /// </summary>
     /// <param name="description">The raw transaction description text.</param>
-    /// <returns>A parsed <see cref="TransactionLocation"/> if found; otherwise <see langword="null"/>.</returns>
-    TransactionLocation? ParseFromDescription(string description);
+    /// <returns>A parsed <see cref="TransactionLocationValue"/> if found; otherwise <see langword="null"/>.</returns>
+    TransactionLocationValue? ParseFromDescription(string description);
 
     /// <summary>
     /// Parses locations from a batch of transaction descriptions.

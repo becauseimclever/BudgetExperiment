@@ -46,7 +46,7 @@ public sealed partial class LocationParserService : ILocationParserService
     ];
 
     /// <inheritdoc/>
-    public TransactionLocation? ParseFromDescription(string description)
+    public TransactionLocationValue? ParseFromDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
         {
@@ -72,7 +72,7 @@ public sealed partial class LocationParserService : ILocationParserService
                 var country = UsStateData.GetCountryCode(state);
                 if (country is not null && !string.IsNullOrWhiteSpace(city) && IsPlausibleCity(city))
                 {
-                    return TransactionLocation.Create(
+                    return TransactionLocationValue.Create(
                         city: NormalizeCity(city),
                         stateOrRegion: state,
                         country: country,

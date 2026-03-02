@@ -17,7 +17,7 @@ public class ImportMappingTests
         // Arrange
         var userId = Guid.NewGuid();
         var name = "Chase Checking Export";
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Description", TargetField = ImportField.Description },
@@ -45,7 +45,7 @@ public class ImportMappingTests
     {
         // Arrange
         var name = "Test Mapping";
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -60,7 +60,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -75,7 +75,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -103,7 +103,7 @@ public class ImportMappingTests
         // Arrange
         var userId = Guid.NewGuid();
         var name = "Test Mapping";
-        var mappings = new List<ColumnMapping>();
+        var mappings = new List<ColumnMappingValue>();
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() => ImportMapping.Create(userId, name, mappings));
@@ -116,7 +116,7 @@ public class ImportMappingTests
         // Arrange
         var userId = Guid.NewGuid();
         var name = "  Chase Export  ";
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -134,7 +134,7 @@ public class ImportMappingTests
         // Arrange
         var userId = Guid.NewGuid();
         var name = new string('A', 201); // Max is 200
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -149,14 +149,14 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Original Name", mappings);
         var originalUpdatedAt = importMapping.UpdatedAtUtc;
 
-        var newMappings = new List<ColumnMapping>
+        var newMappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Transaction Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Memo", TargetField = ImportField.Description },
@@ -178,7 +178,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -194,14 +194,14 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Original", mappings);
 
         // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => importMapping.Update("Updated", new List<ColumnMapping>(), "MM/dd/yyyy", AmountParseMode.NegativeIsExpense));
+        var ex = Assert.Throws<DomainException>(() => importMapping.Update("Updated", new List<ColumnMappingValue>(), "MM/dd/yyyy", AmountParseMode.NegativeIsExpense));
         Assert.Contains("mapping", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -210,14 +210,14 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Test", mappings);
         var originalUpdatedAt = importMapping.UpdatedAtUtc;
 
-        var newSettings = new DuplicateDetectionSettings
+        var newSettings = new DuplicateDetectionSettingsValue
         {
             Enabled = true,
             LookbackDays = 30,
@@ -239,7 +239,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -255,7 +255,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -275,7 +275,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -295,7 +295,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -304,8 +304,8 @@ public class ImportMappingTests
         var importMapping = ImportMapping.Create(userId, "Test", mappings);
 
         // Assert
-        Assert.NotNull(importMapping.SkipRowsSettings);
-        Assert.Equal(0, importMapping.SkipRowsSettings.RowsToSkip);
+        Assert.NotNull(importMapping.SkipRowsSettingsValue);
+        Assert.Equal(0, importMapping.SkipRowsSettingsValue.RowsToSkip);
     }
 
     [Fact]
@@ -313,7 +313,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -331,19 +331,19 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Test", mappings);
         var originalUpdatedAt = importMapping.UpdatedAtUtc;
-        var skipRowsSettings = SkipRowsSettings.Create(5);
+        var skipRowsSettings = SkipRowsSettingsValue.Create(5);
 
         // Act
         importMapping.UpdateSkipRowsSettings(skipRowsSettings);
 
         // Assert
-        Assert.Equal(5, importMapping.SkipRowsSettings.RowsToSkip);
+        Assert.Equal(5, importMapping.SkipRowsSettingsValue.RowsToSkip);
         Assert.True(importMapping.UpdatedAtUtc >= originalUpdatedAt);
     }
 
@@ -352,7 +352,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -367,7 +367,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Amount", TargetField = ImportField.Amount },
@@ -376,7 +376,7 @@ public class ImportMappingTests
         var importMapping = ImportMapping.Create(userId, "Test", mappings);
         importMapping.SetAmountMode(AmountParseMode.IndicatorColumn);
 
-        var indicatorSettings = DebitCreditIndicatorSettings.Create(
+        var indicatorSettings = DebitCreditIndicatorSettingsValue.Create(
             2,
             new List<string> { "Debit" },
             new List<string> { "Credit" });
@@ -394,14 +394,14 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Test", mappings);
         // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
 
-        var indicatorSettings = DebitCreditIndicatorSettings.Create(
+        var indicatorSettings = DebitCreditIndicatorSettingsValue.Create(
             2,
             new List<string> { "Debit" },
             new List<string> { "Credit" });
@@ -416,7 +416,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -424,7 +424,7 @@ public class ImportMappingTests
         // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
 
         // Act
-        importMapping.UpdateIndicatorSettings(DebitCreditIndicatorSettings.Disabled);
+        importMapping.UpdateIndicatorSettings(DebitCreditIndicatorSettingsValue.Disabled);
 
         // Assert
         Assert.False(importMapping.IndicatorSettings.IsEnabled);
@@ -435,7 +435,7 @@ public class ImportMappingTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -447,7 +447,7 @@ public class ImportMappingTests
 }
 
 /// <summary>
-/// Unit tests for the ColumnMapping record.
+/// Unit tests for the ColumnMappingValue record.
 /// </summary>
 public class ColumnMappingTests
 {
@@ -455,7 +455,7 @@ public class ColumnMappingTests
     public void ColumnMapping_Properties_Are_Set_Correctly()
     {
         // Arrange & Act
-        var mapping = new ColumnMapping
+        var mapping = new ColumnMappingValue
         {
             ColumnIndex = 2,
             ColumnHeader = "Transaction Date",
@@ -474,7 +474,7 @@ public class ColumnMappingTests
     public void ColumnMapping_With_TransformExpression()
     {
         // Arrange & Act
-        var mapping = new ColumnMapping
+        var mapping = new ColumnMappingValue
         {
             ColumnIndex = 1,
             ColumnHeader = "Desc1",
@@ -490,9 +490,9 @@ public class ColumnMappingTests
     public void ColumnMapping_Equality()
     {
         // Arrange
-        var mapping1 = new ColumnMapping { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date };
-        var mapping2 = new ColumnMapping { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date };
-        var mapping3 = new ColumnMapping { ColumnIndex = 1, ColumnHeader = "Date", TargetField = ImportField.Date };
+        var mapping1 = new ColumnMappingValue { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date };
+        var mapping2 = new ColumnMappingValue { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date };
+        var mapping3 = new ColumnMappingValue { ColumnIndex = 1, ColumnHeader = "Date", TargetField = ImportField.Date };
 
         // Assert
         Assert.Equal(mapping1, mapping2);
@@ -501,7 +501,7 @@ public class ColumnMappingTests
 }
 
 /// <summary>
-/// Unit tests for the DuplicateDetectionSettings record.
+/// Unit tests for the DuplicateDetectionSettingsValue record.
 /// </summary>
 public class DuplicateDetectionSettingsTests
 {
@@ -509,7 +509,7 @@ public class DuplicateDetectionSettingsTests
     public void Default_Values_Are_Correct()
     {
         // Arrange & Act
-        var settings = new DuplicateDetectionSettings();
+        var settings = new DuplicateDetectionSettingsValue();
 
         // Assert
         Assert.True(settings.Enabled);
@@ -521,7 +521,7 @@ public class DuplicateDetectionSettingsTests
     public void Custom_Values_Are_Set_Correctly()
     {
         // Arrange & Act
-        var settings = new DuplicateDetectionSettings
+        var settings = new DuplicateDetectionSettingsValue
         {
             Enabled = false,
             LookbackDays = 60,
@@ -538,9 +538,9 @@ public class DuplicateDetectionSettingsTests
     public void DuplicateDetectionSettings_Equality()
     {
         // Arrange
-        var settings1 = new DuplicateDetectionSettings { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
-        var settings2 = new DuplicateDetectionSettings { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
-        var settings3 = new DuplicateDetectionSettings { Enabled = true, LookbackDays = 60, DescriptionMatch = DescriptionMatchMode.Exact };
+        var settings1 = new DuplicateDetectionSettingsValue { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
+        var settings2 = new DuplicateDetectionSettingsValue { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
+        var settings3 = new DuplicateDetectionSettingsValue { Enabled = true, LookbackDays = 60, DescriptionMatch = DescriptionMatchMode.Exact };
 
         // Assert
         Assert.Equal(settings1, settings2);

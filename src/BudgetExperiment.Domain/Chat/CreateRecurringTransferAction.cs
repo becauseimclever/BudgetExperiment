@@ -47,7 +47,7 @@ public sealed record CreateRecurringTransferAction : ChatAction
     /// <summary>
     /// Gets the recurrence pattern.
     /// </summary>
-    public RecurrencePattern Recurrence { get; init; } = null!;
+    public RecurrencePatternValue Recurrence { get; init; } = null!;
 
     /// <summary>
     /// Gets the start date for the recurrence.

@@ -43,7 +43,7 @@ public class RecurringTransferRepositoryTests
             destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 2, 1));
 
         // Act
@@ -62,8 +62,8 @@ public class RecurringTransferRepositoryTests
         Assert.Equal("Monthly Savings", retrieved.Description);
         Assert.Equal(500m, retrieved.Amount.Amount);
         Assert.Equal("USD", retrieved.Amount.Currency);
-        Assert.Equal(RecurrenceFrequency.Monthly, retrieved.RecurrencePattern.Frequency);
-        Assert.Equal(1, retrieved.RecurrencePattern.DayOfMonth);
+        Assert.Equal(RecurrenceFrequency.Monthly, retrieved.RecurrencePatternValue.Frequency);
+        Assert.Equal(1, retrieved.RecurrencePatternValue.DayOfMonth);
         Assert.True(retrieved.IsActive);
     }
 
@@ -88,7 +88,7 @@ public class RecurringTransferRepositoryTests
             account2.Id,
             "Transfer A to B",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var transfer2 = RecurringTransfer.Create(
@@ -96,7 +96,7 @@ public class RecurringTransferRepositoryTests
             account1.Id,
             "Transfer C to A",
             MoneyValue.Create("USD", 200m),
-            RecurrencePattern.CreateWeekly(1, DayOfWeek.Friday),
+            RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Friday),
             new DateOnly(2026, 1, 10));
 
         var transfer3 = RecurringTransfer.Create(
@@ -104,7 +104,7 @@ public class RecurringTransferRepositoryTests
             account3.Id,
             "Transfer B to C",
             MoneyValue.Create("USD", 300m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         await repository.AddAsync(transfer1);
@@ -145,7 +145,7 @@ public class RecurringTransferRepositoryTests
             dest1.Id,
             "Outgoing 1",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var transferOut2 = RecurringTransfer.Create(
@@ -153,7 +153,7 @@ public class RecurringTransferRepositoryTests
             dest2.Id,
             "Outgoing 2",
             MoneyValue.Create("USD", 200m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         var transferIn = RecurringTransfer.Create(
@@ -161,7 +161,7 @@ public class RecurringTransferRepositoryTests
             source.Id,
             "Incoming",
             MoneyValue.Create("USD", 50m),
-            RecurrencePattern.CreateWeekly(1, DayOfWeek.Monday),
+            RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Monday),
             new DateOnly(2026, 1, 6));
 
         await repository.AddAsync(transferOut1);
@@ -202,7 +202,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Incoming 1",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var transferIn2 = RecurringTransfer.Create(
@@ -210,7 +210,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Incoming 2",
             MoneyValue.Create("USD", 200m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         var transferOut = RecurringTransfer.Create(
@@ -218,7 +218,7 @@ public class RecurringTransferRepositoryTests
             src1.Id,
             "Outgoing",
             MoneyValue.Create("USD", 50m),
-            RecurrencePattern.CreateWeekly(1, DayOfWeek.Friday),
+            RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Friday),
             new DateOnly(2026, 1, 10));
 
         await repository.AddAsync(transferIn1);
@@ -257,7 +257,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Active Transfer",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var pausedTransfer = RecurringTransfer.Create(
@@ -265,7 +265,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Paused Transfer",
             MoneyValue.Create("USD", 200m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
         pausedTransfer.Pause();
 
@@ -302,7 +302,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "B Transfer",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var transferA = RecurringTransfer.Create(
@@ -310,7 +310,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "A Transfer",
             MoneyValue.Create("USD", 200m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         var transferC = RecurringTransfer.Create(
@@ -318,7 +318,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "C Transfer",
             MoneyValue.Create("USD", 300m),
-            RecurrencePattern.CreateWeekly(1, DayOfWeek.Monday),
+            RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Monday),
             new DateOnly(2026, 1, 6));
 
         await repository.AddAsync(transferB);
@@ -359,7 +359,7 @@ public class RecurringTransferRepositoryTests
                 dest.Id,
                 $"Transfer {i:D2}",
                 MoneyValue.Create("USD", i * 100m),
-                RecurrencePattern.CreateMonthly(1, i),
+                RecurrencePatternValue.CreateMonthly(1, i),
                 new DateOnly(2026, 1, i));
             await repository.AddAsync(transfer);
         }
@@ -401,7 +401,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Count Transfer 1",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var transfer2 = RecurringTransfer.Create(
@@ -409,7 +409,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Count Transfer 2",
             MoneyValue.Create("USD", 200m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         await repository.AddAsync(transfer1);
@@ -442,7 +442,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "To Remove",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         await repository.AddAsync(transfer);
@@ -478,7 +478,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Exception Test",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
         await repository.AddAsync(transfer);
         await context.SaveChangesAsync();
@@ -525,7 +525,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Range Test",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
         await repository.AddAsync(transfer);
         await context.SaveChangesAsync();
@@ -574,7 +574,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "RemoveEx Test",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
         await repository.AddAsync(transfer);
         await context.SaveChangesAsync();
@@ -613,7 +613,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Future Test",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
         await repository.AddAsync(transfer);
         await context.SaveChangesAsync();
@@ -681,7 +681,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "NonExistent Test",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
         await repository.AddAsync(transfer);
         await context.SaveChangesAsync();
@@ -712,7 +712,7 @@ public class RecurringTransferRepositoryTests
             dest.Id,
             "Cascade Test",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
         await repository.AddAsync(transfer);
         await context.SaveChangesAsync();

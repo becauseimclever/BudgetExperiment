@@ -14,9 +14,9 @@ public sealed class PaycheckAllocationCalculator
     /// </summary>
     /// <param name="bill">The bill to calculate allocation for.</param>
     /// <param name="paycheckFrequency">The paycheck frequency.</param>
-    /// <returns>The calculated <see cref="PaycheckAllocation"/>.</returns>
+    /// <returns>The calculated <see cref="PaycheckAllocationValue"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when bill is null.</exception>
-    public PaycheckAllocation CalculateAllocation(BillInfo bill, RecurrenceFrequency paycheckFrequency)
+    public PaycheckAllocationValue CalculateAllocation(BillInfoValue bill, RecurrenceFrequency paycheckFrequency)
     {
         ArgumentNullException.ThrowIfNull(bill);
 
@@ -26,7 +26,7 @@ public sealed class PaycheckAllocationCalculator
         var annualAmount = bill.Amount.Amount * annualMultiplier;
         var amountPerPaycheck = Math.Round(annualAmount / periodsPerYear, 2, MidpointRounding.AwayFromZero);
 
-        return PaycheckAllocation.Create(
+        return PaycheckAllocationValue.Create(
             bill,
             MoneyValue.Create(bill.Amount.Currency, amountPerPaycheck),
             MoneyValue.Create(bill.Amount.Currency, annualAmount));
@@ -38,26 +38,26 @@ public sealed class PaycheckAllocationCalculator
     /// <param name="bills">The bills to calculate allocations for.</param>
     /// <param name="paycheckFrequency">The paycheck frequency.</param>
     /// <param name="paycheckAmount">Optional paycheck amount for income calculations.</param>
-    /// <returns>The calculated <see cref="PaycheckAllocationSummary"/>.</returns>
+    /// <returns>The calculated <see cref="PaycheckAllocationSummaryValue"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when bills is null.</exception>
-    public PaycheckAllocationSummary CalculateAllocationSummary(
-        IEnumerable<BillInfo> bills,
+    public PaycheckAllocationSummaryValue CalculateAllocationSummary(
+        IEnumerable<BillInfoValue> bills,
         RecurrenceFrequency paycheckFrequency,
         MoneyValue? paycheckAmount = null)
     {
         ArgumentNullException.ThrowIfNull(bills);
 
         var billsList = bills.ToList();
-        var warnings = new List<PaycheckAllocationWarning>();
+        var warnings = new List<PaycheckAllocationWarningValue>();
         var currency = paycheckAmount?.Currency ?? "USD";
 
         // Handle empty bills
         if (billsList.Count == 0)
         {
-            warnings.Add(PaycheckAllocationWarning.NoBillsConfigured());
+            warnings.Add(PaycheckAllocationWarningValue.NoBillsConfigured());
 
-            return PaycheckAllocationSummary.Create(
-                Array.Empty<PaycheckAllocation>(),
+            return PaycheckAllocationSummaryValue.Create(
+                Array.Empty<PaycheckAllocationValue>(),
                 MoneyValue.Zero(currency),
                 MoneyValue.Zero(currency),
                 paycheckFrequency,
@@ -92,23 +92,23 @@ public sealed class PaycheckAllocationCalculator
             // Check for cannot reconcile (annual bills > annual income)
             if (totalAnnualBills.Amount > totalAnnualIncome.Amount)
             {
-                warnings.Add(PaycheckAllocationWarning.CannotReconcile(totalAnnualBills, totalAnnualIncome));
+                warnings.Add(PaycheckAllocationWarningValue.CannotReconcile(totalAnnualBills, totalAnnualIncome));
             }
 
             // Check for insufficient income per paycheck
             if (totalPerPaycheck.Amount > paycheckAmount.Amount)
             {
                 var shortfall = MoneyValue.Create(currency, totalPerPaycheck.Amount - paycheckAmount.Amount);
-                warnings.Add(PaycheckAllocationWarning.InsufficientIncome(shortfall));
+                warnings.Add(PaycheckAllocationWarningValue.InsufficientIncome(shortfall));
             }
         }
         else
         {
             // No income configured warning
-            warnings.Add(PaycheckAllocationWarning.NoIncomeConfigured());
+            warnings.Add(PaycheckAllocationWarningValue.NoIncomeConfigured());
         }
 
-        return PaycheckAllocationSummary.Create(
+        return PaycheckAllocationSummaryValue.Create(
             allocations,
             totalPerPaycheck,
             totalAnnualBills,

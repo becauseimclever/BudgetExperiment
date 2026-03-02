@@ -50,7 +50,7 @@ public class RecurringTransferRealizationServiceTests
             this._destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
@@ -103,7 +103,7 @@ public class RecurringTransferRealizationServiceTests
             this._destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
@@ -142,7 +142,7 @@ public class RecurringTransferRealizationServiceTests
             this._destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
@@ -179,7 +179,7 @@ public class RecurringTransferRealizationServiceTests
             this._destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);

@@ -1,4 +1,4 @@
-// <copyright file="MatchingTolerances.cs" company="BecauseImClever">
+// <copyright file="MatchingTolerancesValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,13 +7,13 @@ namespace BudgetExperiment.Domain.Reconciliation;
 /// <summary>
 /// Configuration for how strictly to match imported transactions to recurring instances.
 /// </summary>
-public sealed class MatchingTolerances : IEquatable<MatchingTolerances>
+public sealed class MatchingTolerancesValue : IEquatable<MatchingTolerancesValue>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="MatchingTolerances"/> class.
+    /// Initializes a new instance of the <see cref="MatchingTolerancesValue"/> class.
     /// Private constructor for factory method.
     /// </summary>
-    private MatchingTolerances()
+    private MatchingTolerancesValue()
     {
     }
 
@@ -45,7 +45,7 @@ public sealed class MatchingTolerances : IEquatable<MatchingTolerances>
     /// <summary>
     /// Gets the default matching tolerances with sensible out-of-box behavior.
     /// </summary>
-    public static MatchingTolerances Default => new()
+    public static MatchingTolerancesValue Default => new()
     {
         DateToleranceDays = 7,
         AmountTolerancePercent = 0.10m,
@@ -62,9 +62,9 @@ public sealed class MatchingTolerances : IEquatable<MatchingTolerances>
     /// <param name="amountToleranceAbsolute">Maximum absolute amount variance.</param>
     /// <param name="descriptionSimilarityThreshold">Minimum description similarity (0.0 to 1.0).</param>
     /// <param name="autoMatchThreshold">Minimum confidence for auto-matching (0.0 to 1.0).</param>
-    /// <returns>A new <see cref="MatchingTolerances"/> instance.</returns>
+    /// <returns>A new <see cref="MatchingTolerancesValue"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static MatchingTolerances Create(
+    public static MatchingTolerancesValue Create(
         int dateToleranceDays,
         decimal amountTolerancePercent,
         decimal amountToleranceAbsolute,
@@ -96,7 +96,7 @@ public sealed class MatchingTolerances : IEquatable<MatchingTolerances>
             throw new DomainException("Auto match threshold must be between 0 and 1.");
         }
 
-        return new MatchingTolerances
+        return new MatchingTolerancesValue
         {
             DateToleranceDays = dateToleranceDays,
             AmountTolerancePercent = amountTolerancePercent,
@@ -107,7 +107,7 @@ public sealed class MatchingTolerances : IEquatable<MatchingTolerances>
     }
 
     /// <inheritdoc/>
-    public bool Equals(MatchingTolerances? other)
+    public bool Equals(MatchingTolerancesValue? other)
     {
         if (other is null)
         {
@@ -129,7 +129,7 @@ public sealed class MatchingTolerances : IEquatable<MatchingTolerances>
     /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
-        return this.Equals(obj as MatchingTolerances);
+        return this.Equals(obj as MatchingTolerancesValue);
     }
 
     /// <inheritdoc/>

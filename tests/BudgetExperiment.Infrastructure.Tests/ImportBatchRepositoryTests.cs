@@ -280,7 +280,7 @@ public class ImportBatchRepositoryTests
 
     private async Task<ImportMapping> CreateMappingAsync(BudgetDbContext context, string name)
     {
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };

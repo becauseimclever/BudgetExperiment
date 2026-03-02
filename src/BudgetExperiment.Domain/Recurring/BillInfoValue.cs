@@ -1,4 +1,4 @@
-// <copyright file="BillInfo.cs" company="BecauseImClever">
+// <copyright file="BillInfoValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,12 +7,12 @@ namespace BudgetExperiment.Domain.Recurring;
 /// <summary>
 /// Lightweight representation of a bill for allocation calculation.
 /// </summary>
-public sealed record BillInfo
+public sealed record BillInfoValue
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BillInfo"/> class.
+    /// Initializes a new instance of the <see cref="BillInfoValue"/> class.
     /// </summary>
-    private BillInfo()
+    private BillInfoValue()
     {
     }
 
@@ -37,16 +37,16 @@ public sealed record BillInfo
     public Guid? SourceRecurringTransactionId { get; private init; }
 
     /// <summary>
-    /// Creates a new <see cref="BillInfo"/> instance.
+    /// Creates a new <see cref="BillInfoValue"/> instance.
     /// </summary>
     /// <param name="description">The bill description.</param>
     /// <param name="amount">The bill amount.</param>
     /// <param name="frequency">The recurrence frequency.</param>
     /// <param name="sourceRecurringTransactionId">Optional source recurring transaction ID.</param>
-    /// <returns>A new <see cref="BillInfo"/> instance.</returns>
+    /// <returns>A new <see cref="BillInfoValue"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when description is empty.</exception>
     /// <exception cref="ArgumentNullException">Thrown when amount is null.</exception>
-    public static BillInfo Create(
+    public static BillInfoValue Create(
         string description,
         MoneyValue amount,
         RecurrenceFrequency frequency,
@@ -59,7 +59,7 @@ public sealed record BillInfo
             throw new DomainException("Bill description is required.");
         }
 
-        return new BillInfo
+        return new BillInfoValue
         {
             Description = description.Trim(),
             Amount = amount.Abs(),
@@ -69,20 +69,20 @@ public sealed record BillInfo
     }
 
     /// <summary>
-    /// Creates a <see cref="BillInfo"/> from a <see cref="RecurringTransaction"/>.
+    /// Creates a <see cref="BillInfoValue"/> from a <see cref="RecurringTransaction"/>.
     /// </summary>
     /// <param name="recurring">The recurring transaction.</param>
-    /// <returns>A new <see cref="BillInfo"/> instance.</returns>
+    /// <returns>A new <see cref="BillInfoValue"/> instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when recurring is null.</exception>
-    public static BillInfo FromRecurringTransaction(RecurringTransaction recurring)
+    public static BillInfoValue FromRecurringTransaction(RecurringTransaction recurring)
     {
         ArgumentNullException.ThrowIfNull(recurring);
 
-        return new BillInfo
+        return new BillInfoValue
         {
             Description = recurring.Description,
             Amount = recurring.Amount.Abs(),
-            Frequency = recurring.RecurrencePattern.Frequency,
+            Frequency = recurring.RecurrencePatternValue.Frequency,
             SourceRecurringTransactionId = recurring.Id,
         };
     }

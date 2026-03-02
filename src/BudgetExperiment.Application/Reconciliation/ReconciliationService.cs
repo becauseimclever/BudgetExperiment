@@ -51,7 +51,7 @@ public sealed class ReconciliationService : IReconciliationService
     {
         var tolerances = request.Tolerances != null
             ? ReconciliationMapper.ToDomain(request.Tolerances)
-            : MatchingTolerances.Default;
+            : MatchingTolerancesValue.Default;
 
         var matchesByTransaction = new Dictionary<Guid, IReadOnlyList<ReconciliationMatchDto>>();
         var totalMatches = 0;
@@ -492,7 +492,7 @@ public sealed class ReconciliationService : IReconciliationService
                 var matchResults = this._transactionMatcher.FindMatches(
                     transaction,
                     [instance],
-                    MatchingTolerances.Default);
+                    MatchingTolerancesValue.Default);
                 var matchResult = matchResults.FirstOrDefault();
                 if (matchResult != null)
                 {

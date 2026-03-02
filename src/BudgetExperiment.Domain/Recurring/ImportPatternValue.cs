@@ -1,4 +1,4 @@
-// <copyright file="ImportPattern.cs" company="BecauseImClever">
+// <copyright file="ImportPatternValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -8,13 +8,13 @@ namespace BudgetExperiment.Domain.Recurring;
 /// Value object representing an import description pattern for matching transactions.
 /// Supports exact matching and wildcard patterns (prefix *, suffix *, or both).
 /// </summary>
-public sealed record ImportPattern
+public sealed record ImportPatternValue
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ImportPattern"/> class.
+    /// Initializes a new instance of the <see cref="ImportPatternValue"/> class.
     /// </summary>
     /// <param name="pattern">The normalized pattern string.</param>
-    private ImportPattern(string pattern)
+    private ImportPatternValue(string pattern)
     {
         this.Pattern = pattern;
     }
@@ -28,9 +28,9 @@ public sealed record ImportPattern
     /// Creates a new import pattern with validation and normalization.
     /// </summary>
     /// <param name="pattern">The pattern string. Can contain * as prefix and/or suffix wildcards.</param>
-    /// <returns>A new <see cref="ImportPattern"/> instance.</returns>
+    /// <returns>A new <see cref="ImportPatternValue"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when pattern is null or empty.</exception>
-    public static ImportPattern Create(string pattern)
+    public static ImportPatternValue Create(string pattern)
     {
         if (string.IsNullOrWhiteSpace(pattern))
         {
@@ -38,7 +38,7 @@ public sealed record ImportPattern
         }
 
         var normalized = pattern.Trim().ToUpperInvariant();
-        return new ImportPattern(normalized);
+        return new ImportPatternValue(normalized);
     }
 
     /// <summary>

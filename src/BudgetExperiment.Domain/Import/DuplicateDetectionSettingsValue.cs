@@ -1,4 +1,4 @@
-// <copyright file="DuplicateDetectionSettings.cs" company="BecauseImClever">
+// <copyright file="DuplicateDetectionSettingsValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,7 +7,7 @@ namespace BudgetExperiment.Domain.Import;
 /// <summary>
 /// Settings for detecting duplicate transactions during import.
 /// </summary>
-public sealed record DuplicateDetectionSettings
+public sealed record DuplicateDetectionSettingsValue
 {
     /// <summary>
     /// Gets a value indicating whether duplicate detection is enabled.

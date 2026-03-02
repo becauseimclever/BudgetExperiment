@@ -51,11 +51,11 @@ internal sealed class ImportMappingConfiguration : IEntityTypeConfiguration<Impo
             .HasColumnType("jsonb")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, JsonOptions),
-                v => JsonSerializer.Deserialize<List<ColumnMapping>>(v, JsonOptions) ?? new List<ColumnMapping>(),
-                new ValueComparer<IReadOnlyList<ColumnMapping>>(
+                v => JsonSerializer.Deserialize<List<ColumnMappingValue>>(v, JsonOptions) ?? new List<ColumnMappingValue>(),
+                new ValueComparer<IReadOnlyList<ColumnMappingValue>>(
                     (c1, c2) => JsonSerializer.Serialize(c1, JsonOptions) == JsonSerializer.Serialize(c2, JsonOptions),
                     c => JsonSerializer.Serialize(c, JsonOptions).GetHashCode(),
-                    c => JsonSerializer.Deserialize<List<ColumnMapping>>(JsonSerializer.Serialize(c, JsonOptions), JsonOptions) ?? new List<ColumnMapping>()));
+                    c => JsonSerializer.Deserialize<List<ColumnMappingValue>>(JsonSerializer.Serialize(c, JsonOptions), JsonOptions) ?? new List<ColumnMappingValue>()));
 
         builder.Property(m => m.DateFormat)
             .IsRequired()
@@ -72,23 +72,23 @@ internal sealed class ImportMappingConfiguration : IEntityTypeConfiguration<Impo
             .HasColumnType("jsonb")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, JsonOptions),
-                v => JsonSerializer.Deserialize<DuplicateDetectionSettings>(v, JsonOptions) ?? new DuplicateDetectionSettings(),
-                new ValueComparer<DuplicateDetectionSettings>(
+                v => JsonSerializer.Deserialize<DuplicateDetectionSettingsValue>(v, JsonOptions) ?? new DuplicateDetectionSettingsValue(),
+                new ValueComparer<DuplicateDetectionSettingsValue>(
                     (s1, s2) => JsonSerializer.Serialize(s1, JsonOptions) == JsonSerializer.Serialize(s2, JsonOptions),
                     s => JsonSerializer.Serialize(s, JsonOptions).GetHashCode(),
-                    s => JsonSerializer.Deserialize<DuplicateDetectionSettings>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? new DuplicateDetectionSettings()));
+                    s => JsonSerializer.Deserialize<DuplicateDetectionSettingsValue>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? new DuplicateDetectionSettingsValue()));
 
-        // Store SkipRowsSettings as JSON
-        builder.Property(m => m.SkipRowsSettings)
+        // Store SkipRowsSettingsValue as JSON
+        builder.Property(m => m.SkipRowsSettingsValue)
             .HasColumnName("SkipRowsSettingsJson")
             .HasColumnType("jsonb")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, JsonOptions),
-                v => JsonSerializer.Deserialize<SkipRowsSettings>(v, JsonOptions) ?? SkipRowsSettings.Default,
-                new ValueComparer<SkipRowsSettings>(
+                v => JsonSerializer.Deserialize<SkipRowsSettingsValue>(v, JsonOptions) ?? SkipRowsSettingsValue.Default,
+                new ValueComparer<SkipRowsSettingsValue>(
                     (s1, s2) => JsonSerializer.Serialize(s1, JsonOptions) == JsonSerializer.Serialize(s2, JsonOptions),
                     s => JsonSerializer.Serialize(s, JsonOptions).GetHashCode(),
-                    s => JsonSerializer.Deserialize<SkipRowsSettings>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? SkipRowsSettings.Default));
+                    s => JsonSerializer.Deserialize<SkipRowsSettingsValue>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? SkipRowsSettingsValue.Default));
 
         // Store IndicatorSettings as JSON
         builder.Property(m => m.IndicatorSettings)
@@ -96,11 +96,11 @@ internal sealed class ImportMappingConfiguration : IEntityTypeConfiguration<Impo
             .HasColumnType("jsonb")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, JsonOptions),
-                v => JsonSerializer.Deserialize<DebitCreditIndicatorSettings>(v, JsonOptions) ?? DebitCreditIndicatorSettings.Disabled,
-                new ValueComparer<DebitCreditIndicatorSettings>(
+                v => JsonSerializer.Deserialize<DebitCreditIndicatorSettingsValue>(v, JsonOptions) ?? DebitCreditIndicatorSettingsValue.Disabled,
+                new ValueComparer<DebitCreditIndicatorSettingsValue>(
                     (s1, s2) => JsonSerializer.Serialize(s1, JsonOptions) == JsonSerializer.Serialize(s2, JsonOptions),
                     s => JsonSerializer.Serialize(s, JsonOptions).GetHashCode(),
-                    s => JsonSerializer.Deserialize<DebitCreditIndicatorSettings>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? DebitCreditIndicatorSettings.Disabled));
+                    s => JsonSerializer.Deserialize<DebitCreditIndicatorSettingsValue>(JsonSerializer.Serialize(s, JsonOptions), JsonOptions) ?? DebitCreditIndicatorSettingsValue.Disabled));
 
         // Indexes
         builder.HasIndex(m => m.UserId)

@@ -42,7 +42,7 @@ public sealed class RecurringTransaction
     /// <summary>
     /// Gets the recurrence pattern defining the schedule.
     /// </summary>
-    public RecurrencePattern RecurrencePattern { get; private set; } = null!;
+    public RecurrencePatternValue RecurrencePatternValue { get; private set; } = null!;
 
     /// <summary>
     /// Gets the start date for the recurring transaction.
@@ -107,12 +107,12 @@ public sealed class RecurringTransaction
     /// <summary>
     /// Gets the import patterns used to match imported transactions.
     /// </summary>
-    public IReadOnlyCollection<ImportPattern> ImportPatterns => this._importPatterns.AsReadOnly();
+    public IReadOnlyCollection<ImportPatternValue> ImportPatterns => this._importPatterns.AsReadOnly();
 
     /// <summary>
     /// Backing field for import patterns.
     /// </summary>
-    private readonly List<ImportPattern> _importPatterns = new();
+    private readonly List<ImportPatternValue> _importPatterns = new();
 
     /// <summary>
     /// Creates a new recurring transaction.
@@ -130,7 +130,7 @@ public sealed class RecurringTransaction
         Guid accountId,
         string description,
         MoneyValue amount,
-        RecurrencePattern recurrencePattern,
+        RecurrencePatternValue recurrencePattern,
         DateOnly startDate,
         DateOnly? endDate = null,
         Guid? categoryId = null)
@@ -167,7 +167,7 @@ public sealed class RecurringTransaction
             AccountId = accountId,
             Description = description.Trim(),
             Amount = amount,
-            RecurrencePattern = recurrencePattern,
+            RecurrencePatternValue = recurrencePattern,
             StartDate = startDate,
             EndDate = endDate,
             CategoryId = categoryId,
@@ -191,7 +191,7 @@ public sealed class RecurringTransaction
     public void Update(
         string description,
         MoneyValue amount,
-        RecurrencePattern recurrencePattern,
+        RecurrencePatternValue recurrencePattern,
         DateOnly? endDate,
         Guid? categoryId)
     {
@@ -217,7 +217,7 @@ public sealed class RecurringTransaction
 
         this.Description = description.Trim();
         this.Amount = amount;
-        this.RecurrencePattern = recurrencePattern;
+        this.RecurrencePatternValue = recurrencePattern;
         this.EndDate = endDate;
         this.CategoryId = categoryId;
         this.UpdatedAtUtc = DateTime.UtcNow;
@@ -247,7 +247,7 @@ public sealed class RecurringTransaction
     public void AdvanceNextOccurrence()
     {
         this.LastGeneratedDate = this.NextOccurrence;
-        this.NextOccurrence = this.RecurrencePattern.CalculateNextOccurrence(this.NextOccurrence);
+        this.NextOccurrence = this.RecurrencePatternValue.CalculateNextOccurrence(this.NextOccurrence);
         this.UpdatedAtUtc = DateTime.UtcNow;
 
         // If the new next occurrence is past the end date, deactivate
@@ -275,7 +275,7 @@ public sealed class RecurringTransaction
         // Find the first occurrence that's >= from
         while (current < from && (!this.EndDate.HasValue || current <= this.EndDate.Value))
         {
-            current = this.RecurrencePattern.CalculateNextOccurrence(current);
+            current = this.RecurrencePatternValue.CalculateNextOccurrence(current);
         }
 
         // If starting point is before StartDate, use StartDate
@@ -292,7 +292,7 @@ public sealed class RecurringTransaction
                 yield return current;
             }
 
-            current = this.RecurrencePattern.CalculateNextOccurrence(current);
+            current = this.RecurrencePatternValue.CalculateNextOccurrence(current);
         }
     }
 
@@ -301,7 +301,7 @@ public sealed class RecurringTransaction
     /// </summary>
     /// <param name="pattern">The pattern to add.</param>
     /// <exception cref="DomainException">Thrown when pattern is null or already exists.</exception>
-    public void AddImportPattern(ImportPattern pattern)
+    public void AddImportPattern(ImportPatternValue pattern)
     {
         if (pattern is null)
         {
@@ -322,7 +322,7 @@ public sealed class RecurringTransaction
     /// </summary>
     /// <param name="pattern">The pattern to remove.</param>
     /// <exception cref="DomainException">Thrown when pattern is not found.</exception>
-    public void RemoveImportPattern(ImportPattern pattern)
+    public void RemoveImportPattern(ImportPatternValue pattern)
     {
         if (!this._importPatterns.Remove(pattern))
         {

@@ -1,4 +1,4 @@
-// <copyright file="ColumnMapping.cs" company="BecauseImClever">
+// <copyright file="ColumnMappingValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,7 +7,7 @@ namespace BudgetExperiment.Domain.Import;
 /// <summary>
 /// Represents a mapping from a CSV column to a transaction field.
 /// </summary>
-public sealed record ColumnMapping
+public sealed record ColumnMappingValue
 {
     /// <summary>
     /// Gets the zero-based index of the column in the CSV file.

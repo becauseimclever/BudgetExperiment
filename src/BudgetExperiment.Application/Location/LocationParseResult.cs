@@ -17,7 +17,7 @@ public sealed class LocationParseResult
     /// <summary>
     /// Gets or sets the parsed location, or <see langword="null"/> if no location was found.
     /// </summary>
-    public TransactionLocation? Location { get; init; }
+    public TransactionLocationValue? Location { get; init; }
 
     /// <summary>
     /// Gets or sets the confidence score (0.0 – 1.0) of the parse result.

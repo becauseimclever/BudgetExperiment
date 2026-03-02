@@ -496,7 +496,7 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
         };
     }
 
-    private static RecurrencePattern? ParseRecurrencePattern(JsonElement data)
+    private static RecurrencePatternValue? ParseRecurrencePattern(JsonElement data)
     {
         var frequencyStr = data.TryGetProperty("frequency", out var freqProp)
             ? freqProp.GetString()?.ToLowerInvariant() ?? "monthly"
@@ -515,18 +515,18 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
 
         return frequencyStr switch
         {
-            "daily" => RecurrencePattern.CreateDaily(interval),
-            "weekly" when dayOfWeek.HasValue => RecurrencePattern.CreateWeekly(interval, dayOfWeek.Value),
-            "weekly" => RecurrencePattern.CreateWeekly(interval, DayOfWeek.Monday),
-            "biweekly" when dayOfWeek.HasValue => RecurrencePattern.CreateBiWeekly(dayOfWeek.Value),
-            "biweekly" => RecurrencePattern.CreateBiWeekly(DayOfWeek.Friday),
-            "monthly" when dayOfMonth.HasValue => RecurrencePattern.CreateMonthly(interval, dayOfMonth.Value),
-            "monthly" => RecurrencePattern.CreateMonthly(interval, 1),
-            "quarterly" when dayOfMonth.HasValue => RecurrencePattern.CreateQuarterly(dayOfMonth.Value),
-            "quarterly" => RecurrencePattern.CreateQuarterly(1),
-            "yearly" when dayOfMonth.HasValue => RecurrencePattern.CreateYearly(1, dayOfMonth.Value),
-            "yearly" => RecurrencePattern.CreateYearly(1, 1),
-            _ => RecurrencePattern.CreateMonthly(1, 1),
+            "daily" => RecurrencePatternValue.CreateDaily(interval),
+            "weekly" when dayOfWeek.HasValue => RecurrencePatternValue.CreateWeekly(interval, dayOfWeek.Value),
+            "weekly" => RecurrencePatternValue.CreateWeekly(interval, DayOfWeek.Monday),
+            "biweekly" when dayOfWeek.HasValue => RecurrencePatternValue.CreateBiWeekly(dayOfWeek.Value),
+            "biweekly" => RecurrencePatternValue.CreateBiWeekly(DayOfWeek.Friday),
+            "monthly" when dayOfMonth.HasValue => RecurrencePatternValue.CreateMonthly(interval, dayOfMonth.Value),
+            "monthly" => RecurrencePatternValue.CreateMonthly(interval, 1),
+            "quarterly" when dayOfMonth.HasValue => RecurrencePatternValue.CreateQuarterly(dayOfMonth.Value),
+            "quarterly" => RecurrencePatternValue.CreateQuarterly(1),
+            "yearly" when dayOfMonth.HasValue => RecurrencePatternValue.CreateYearly(1, dayOfMonth.Value),
+            "yearly" => RecurrencePatternValue.CreateYearly(1, 1),
+            _ => RecurrencePatternValue.CreateMonthly(1, 1),
         };
     }
 

@@ -265,7 +265,7 @@ public class ReportServiceLocationTests
             MoneyValue.Create("USD", amount),
             date,
             "Test transaction");
-        transaction.SetLocation(TransactionLocation.Create(city, state, country, null, null, LocationSource.Manual));
+        transaction.SetLocation(TransactionLocationValue.Create(city, state, country, null, null, LocationSource.Manual));
         return transaction;
     }
 
@@ -283,7 +283,7 @@ public class ReportServiceLocationTests
             "Transfer",
             Guid.NewGuid(),
             TransferDirection.Source);
-        transfer.SetLocation(TransactionLocation.Create(city, state, country, null, null, LocationSource.Manual));
+        transfer.SetLocation(TransactionLocationValue.Create(city, state, country, null, null, LocationSource.Manual));
         return transfer;
     }
 }

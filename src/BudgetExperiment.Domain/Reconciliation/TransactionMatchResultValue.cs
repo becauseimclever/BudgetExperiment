@@ -1,4 +1,4 @@
-// <copyright file="TransactionMatchResult.cs" company="BecauseImClever">
+// <copyright file="TransactionMatchResultValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -14,7 +14,7 @@ namespace BudgetExperiment.Domain.Reconciliation;
 /// <param name="AmountVariance">The variance between expected and actual amount (expected - actual).</param>
 /// <param name="DateOffsetDays">The offset in days between actual and scheduled date (actual - scheduled).</param>
 /// <param name="DescriptionSimilarity">The similarity score between descriptions (0 to 1).</param>
-public sealed record TransactionMatchResult(
+public sealed record TransactionMatchResultValue(
     Guid RecurringTransactionId,
     DateOnly InstanceDate,
     decimal ConfidenceScore,

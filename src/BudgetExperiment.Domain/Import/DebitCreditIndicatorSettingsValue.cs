@@ -1,4 +1,4 @@
-// <copyright file="DebitCreditIndicatorSettings.cs" company="BecauseImClever">
+// <copyright file="DebitCreditIndicatorSettingsValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,7 +7,7 @@ namespace BudgetExperiment.Domain.Import;
 /// <summary>
 /// Settings for interpreting a debit/credit indicator column.
 /// </summary>
-public sealed record DebitCreditIndicatorSettings
+public sealed record DebitCreditIndicatorSettingsValue
 {
     /// <summary>
     /// Gets the column index of the indicator column (-1 if not used).
@@ -43,9 +43,9 @@ public sealed record DebitCreditIndicatorSettings
     /// <param name="debitIndicators">Values indicating debit transactions.</param>
     /// <param name="creditIndicators">Values indicating credit transactions.</param>
     /// <param name="caseSensitive">Whether matching is case-sensitive.</param>
-    /// <returns>A new <see cref="DebitCreditIndicatorSettings"/> instance.</returns>
+    /// <returns>A new <see cref="DebitCreditIndicatorSettingsValue"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static DebitCreditIndicatorSettings Create(
+    public static DebitCreditIndicatorSettingsValue Create(
         int columnIndex,
         IReadOnlyList<string> debitIndicators,
         IReadOnlyList<string> creditIndicators,
@@ -79,7 +79,7 @@ public sealed record DebitCreditIndicatorSettings
             throw new DomainException("Debit and credit indicators cannot overlap.");
         }
 
-        return new DebitCreditIndicatorSettings
+        return new DebitCreditIndicatorSettingsValue
         {
             IndicatorColumnIndex = columnIndex,
             DebitIndicators = debitIndicators.Select(d => d.Trim()).ToList(),
@@ -91,7 +91,7 @@ public sealed record DebitCreditIndicatorSettings
     /// <summary>
     /// Gets disabled settings (no indicator column).
     /// </summary>
-    public static DebitCreditIndicatorSettings Disabled => new();
+    public static DebitCreditIndicatorSettingsValue Disabled => new();
 
     /// <summary>
     /// Determines the sign multiplier for an indicator value.

@@ -239,7 +239,7 @@ public class ChatMessageRepositoryTests
             AccountName = "Checking",
             Amount = 1800m,
             Description = "Rent",
-            Recurrence = RecurrencePattern.CreateMonthly(1, 1),
+            Recurrence = RecurrencePatternValue.CreateMonthly(1, 1),
             StartDate = new DateOnly(2026, 2, 1),
             EndDate = new DateOnly(2027, 1, 1),
         };

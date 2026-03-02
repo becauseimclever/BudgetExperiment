@@ -47,7 +47,7 @@ public sealed class RecurringTransfer
     /// <summary>
     /// Gets the recurrence pattern defining the schedule.
     /// </summary>
-    public RecurrencePattern RecurrencePattern { get; private set; } = null!;
+    public RecurrencePatternValue RecurrencePatternValue { get; private set; } = null!;
 
     /// <summary>
     /// Gets the start date for the recurring transfer.
@@ -116,7 +116,7 @@ public sealed class RecurringTransfer
         Guid destinationAccountId,
         string description,
         MoneyValue amount,
-        RecurrencePattern recurrencePattern,
+        RecurrencePatternValue recurrencePattern,
         DateOnly startDate,
         DateOnly? endDate = null)
     {
@@ -168,7 +168,7 @@ public sealed class RecurringTransfer
             DestinationAccountId = destinationAccountId,
             Description = description.Trim(),
             Amount = amount,
-            RecurrencePattern = recurrencePattern,
+            RecurrencePatternValue = recurrencePattern,
             StartDate = startDate,
             EndDate = endDate,
             NextOccurrence = startDate,
@@ -190,7 +190,7 @@ public sealed class RecurringTransfer
     public void Update(
         string description,
         MoneyValue amount,
-        RecurrencePattern recurrencePattern,
+        RecurrencePatternValue recurrencePattern,
         DateOnly? endDate)
     {
         if (string.IsNullOrWhiteSpace(description))
@@ -220,7 +220,7 @@ public sealed class RecurringTransfer
 
         this.Description = description.Trim();
         this.Amount = amount;
-        this.RecurrencePattern = recurrencePattern;
+        this.RecurrencePatternValue = recurrencePattern;
         this.EndDate = endDate;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
@@ -246,7 +246,7 @@ public sealed class RecurringTransfer
         }
 
         this.IsActive = true;
-        this.NextOccurrence = this.RecurrencePattern.CalculateNextOccurrence(fromDate);
+        this.NextOccurrence = this.RecurrencePatternValue.CalculateNextOccurrence(fromDate);
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
@@ -262,7 +262,7 @@ public sealed class RecurringTransfer
         }
 
         this.LastGeneratedDate = this.NextOccurrence;
-        var nextDate = this.RecurrencePattern.CalculateNextOccurrence(this.NextOccurrence);
+        var nextDate = this.RecurrencePatternValue.CalculateNextOccurrence(this.NextOccurrence);
 
         if (this.EndDate.HasValue && nextDate > this.EndDate.Value)
         {
@@ -287,7 +287,7 @@ public sealed class RecurringTransfer
             throw new DomainException("Cannot skip occurrence for inactive recurring transfer.");
         }
 
-        var nextDate = this.RecurrencePattern.CalculateNextOccurrence(this.NextOccurrence);
+        var nextDate = this.RecurrencePatternValue.CalculateNextOccurrence(this.NextOccurrence);
 
         if (this.EndDate.HasValue && nextDate > this.EndDate.Value)
         {
@@ -313,7 +313,7 @@ public sealed class RecurringTransfer
         }
 
         this.LastGeneratedDate = this.NextOccurrence;
-        var nextDate = this.RecurrencePattern.CalculateNextOccurrence(this.NextOccurrence);
+        var nextDate = this.RecurrencePatternValue.CalculateNextOccurrence(this.NextOccurrence);
 
         if (this.EndDate.HasValue && nextDate > this.EndDate.Value)
         {
@@ -345,7 +345,7 @@ public sealed class RecurringTransfer
         // Find the first occurrence that's >= from
         while (current < from && (!this.EndDate.HasValue || current <= this.EndDate.Value))
         {
-            current = this.RecurrencePattern.CalculateNextOccurrence(current);
+            current = this.RecurrencePatternValue.CalculateNextOccurrence(current);
         }
 
         // If starting point is before StartDate, use StartDate
@@ -362,7 +362,7 @@ public sealed class RecurringTransfer
                 yield return current;
             }
 
-            current = this.RecurrencePattern.CalculateNextOccurrence(current);
+            current = this.RecurrencePatternValue.CalculateNextOccurrence(current);
         }
     }
 }

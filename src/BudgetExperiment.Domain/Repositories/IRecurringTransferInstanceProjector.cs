@@ -19,7 +19,7 @@ public interface IRecurringTransferInstanceProjector
     /// <param name="accountId">Optional account filter. When provided, only returns instances involving this account.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A dictionary mapping dates to lists of recurring transfer instances for that date.</returns>
-    Task<Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>> GetInstancesByDateRangeAsync(
+    Task<Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>>> GetInstancesByDateRangeAsync(
         IReadOnlyList<RecurringTransfer> recurringTransfers,
         DateOnly fromDate,
         DateOnly toDate,
@@ -35,7 +35,7 @@ public interface IRecurringTransferInstanceProjector
     /// <param name="accountId">Optional account filter. When provided, only returns instances involving this account.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of recurring transfer instances for the specified date.</returns>
-    Task<List<RecurringTransferInstanceInfo>> GetInstancesForDateAsync(
+    Task<List<RecurringTransferInstanceInfoValue>> GetInstancesForDateAsync(
         IReadOnlyList<RecurringTransfer> recurringTransfers,
         DateOnly date,
         Guid? accountId = null,

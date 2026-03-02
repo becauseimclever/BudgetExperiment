@@ -5,7 +5,7 @@
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the <see cref="TransactionLocation"/> value object.
+/// Unit tests for the <see cref="TransactionLocationValue"/> value object.
 /// </summary>
 public class TransactionLocationTests
 {
@@ -13,7 +13,7 @@ public class TransactionLocationTests
     public void Create_WithCity_ReturnsInstance()
     {
         // Arrange & Act
-        var location = TransactionLocation.Create(
+        var location = TransactionLocationValue.Create(
             city: "Seattle",
             stateOrRegion: "WA",
             country: "US",
@@ -35,7 +35,7 @@ public class TransactionLocationTests
     {
         // Arrange & Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            TransactionLocation.Create(null, null, null, null, null, LocationSource.Manual));
+            TransactionLocationValue.Create(null, null, null, null, null, LocationSource.Manual));
         Assert.Contains("At least one location field", ex.Message);
     }
 
@@ -43,7 +43,7 @@ public class TransactionLocationTests
     public void Create_NormalizesCountryToUpperCase()
     {
         // Arrange & Act
-        var location = TransactionLocation.Create(
+        var location = TransactionLocationValue.Create(
             city: "Berlin",
             stateOrRegion: null,
             country: "de",
@@ -59,7 +59,7 @@ public class TransactionLocationTests
     public void Create_TrimsWhitespace()
     {
         // Arrange & Act
-        var location = TransactionLocation.Create(
+        var location = TransactionLocationValue.Create(
             city: "  Seattle  ",
             stateOrRegion: " WA ",
             country: " us ",
@@ -78,10 +78,10 @@ public class TransactionLocationTests
     public void Create_WithOnlyCoordinates_ReturnsInstance()
     {
         // Arrange
-        var coords = GeoCoordinate.Create(47.6062m, -122.3321m);
+        var coords = GeoCoordinateValue.Create(47.6062m, -122.3321m);
 
         // Act
-        var location = TransactionLocation.Create(
+        var location = TransactionLocationValue.Create(
             city: null,
             stateOrRegion: null,
             country: null,
@@ -99,7 +99,7 @@ public class TransactionLocationTests
     public void CreateFromParsed_SetsSourceToParsed()
     {
         // Arrange & Act
-        var location = TransactionLocation.CreateFromParsed("Seattle", "WA");
+        var location = TransactionLocationValue.CreateFromParsed("Seattle", "WA");
 
         // Assert
         Assert.Equal("Seattle", location.City);
@@ -113,10 +113,10 @@ public class TransactionLocationTests
     public void CreateFromGps_SetsSourceToGps()
     {
         // Arrange
-        var coords = GeoCoordinate.Create(47.6062m, -122.3321m);
+        var coords = GeoCoordinateValue.Create(47.6062m, -122.3321m);
 
         // Act
-        var location = TransactionLocation.CreateFromGps(coords);
+        var location = TransactionLocationValue.CreateFromGps(coords);
 
         // Assert
         Assert.Equal(coords, location.Coordinates);
@@ -131,7 +131,7 @@ public class TransactionLocationTests
         // Arrange & Act & Assert
         // PostalCode alone is not sufficient — need city, stateOrRegion, country, or coordinates
         var ex = Assert.Throws<DomainException>(() =>
-            TransactionLocation.Create(null, null, null, "98101", null, LocationSource.Manual));
+            TransactionLocationValue.Create(null, null, null, "98101", null, LocationSource.Manual));
         Assert.Contains("At least one location field", ex.Message);
     }
 }

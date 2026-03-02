@@ -11,7 +11,7 @@ public class RecurringTransactionTests
 {
     private readonly Guid _validAccountId = Guid.NewGuid();
     private readonly MoneyValue _validAmount = MoneyValue.Create("USD", -100m);
-    private readonly RecurrencePattern _validPattern = RecurrencePattern.CreateMonthly(1, 15);
+    private readonly RecurrencePatternValue _validPattern = RecurrencePatternValue.CreateMonthly(1, 15);
     private readonly DateOnly _validStartDate = new(2026, 1, 15);
 
     [Fact]
@@ -28,7 +28,7 @@ public class RecurringTransactionTests
         Assert.Equal(this._validAccountId, result.AccountId);
         Assert.Equal("Monthly Rent", result.Description);
         Assert.Equal(this._validAmount, result.Amount);
-        Assert.Equal(this._validPattern, result.RecurrencePattern);
+        Assert.Equal(this._validPattern, result.RecurrencePatternValue);
         Assert.Equal(this._validStartDate, result.StartDate);
         Assert.Null(result.EndDate);
         Assert.Equal(this._validStartDate, result.NextOccurrence);
@@ -242,7 +242,7 @@ public class RecurringTransactionTests
             this._validStartDate);
 
         var newAmount = MoneyValue.Create("USD", -1500m);
-        var newPattern = RecurrencePattern.CreateMonthly(1, 1);
+        var newPattern = RecurrencePatternValue.CreateMonthly(1, 1);
         var newEndDate = new DateOnly(2027, 12, 31);
 
         recurring.Update(
@@ -254,7 +254,7 @@ public class RecurringTransactionTests
 
         Assert.Equal("New Monthly Rent", recurring.Description);
         Assert.Equal(newAmount, recurring.Amount);
-        Assert.Equal(newPattern, recurring.RecurrencePattern);
+        Assert.Equal(newPattern, recurring.RecurrencePatternValue);
         Assert.Equal(newEndDate, recurring.EndDate);
     }
 
@@ -451,7 +451,7 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        var pattern = ImportPattern.Create("*ACME CORP PAYROLL*");
+        var pattern = ImportPatternValue.Create("*ACME CORP PAYROLL*");
 
         // Act
         recurring.AddImportPattern(pattern);
@@ -471,8 +471,8 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        var pattern1 = ImportPattern.Create("*ACME CORP PAYROLL*");
-        var pattern2 = ImportPattern.Create("ACH DEPOSIT ACME*");
+        var pattern1 = ImportPatternValue.Create("*ACME CORP PAYROLL*");
+        var pattern2 = ImportPatternValue.Create("ACH DEPOSIT ACME*");
 
         // Act
         recurring.AddImportPattern(pattern1);
@@ -492,12 +492,12 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        var pattern = ImportPattern.Create("*ACME CORP*");
+        var pattern = ImportPatternValue.Create("*ACME CORP*");
         recurring.AddImportPattern(pattern);
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            recurring.AddImportPattern(ImportPattern.Create("*ACME CORP*")));
+            recurring.AddImportPattern(ImportPatternValue.Create("*ACME CORP*")));
         Assert.Contains("already exists", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -528,7 +528,7 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        var pattern = ImportPattern.Create("*ACME CORP*");
+        var pattern = ImportPatternValue.Create("*ACME CORP*");
         recurring.AddImportPattern(pattern);
 
         // Act
@@ -548,7 +548,7 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        var pattern = ImportPattern.Create("*ACME CORP*");
+        var pattern = ImportPatternValue.Create("*ACME CORP*");
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
@@ -566,7 +566,7 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        recurring.AddImportPattern(ImportPattern.Create("*ACME CORP PAYROLL*"));
+        recurring.AddImportPattern(ImportPatternValue.Create("*ACME CORP PAYROLL*"));
 
         // Act
         var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL 01/15");
@@ -603,7 +603,7 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        recurring.AddImportPattern(ImportPattern.Create("*OTHER COMPANY*"));
+        recurring.AddImportPattern(ImportPatternValue.Create("*OTHER COMPANY*"));
 
         // Act
         var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL");
@@ -622,8 +622,8 @@ public class RecurringTransactionTests
             this._validAmount,
             this._validPattern,
             this._validStartDate);
-        recurring.AddImportPattern(ImportPattern.Create("*OTHER COMPANY*"));
-        recurring.AddImportPattern(ImportPattern.Create("*ACME CORP*"));
+        recurring.AddImportPattern(ImportPatternValue.Create("*OTHER COMPANY*"));
+        recurring.AddImportPattern(ImportPatternValue.Create("*ACME CORP*"));
 
         // Act
         var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL");
@@ -648,7 +648,7 @@ public class RecurringTransactionTests
         System.Threading.Thread.Sleep(10);
 
         // Act
-        recurring.AddImportPattern(ImportPattern.Create("*ACME*"));
+        recurring.AddImportPattern(ImportPatternValue.Create("*ACME*"));
 
         // Assert
         Assert.True(recurring.UpdatedAtUtc > originalUpdatedAt);

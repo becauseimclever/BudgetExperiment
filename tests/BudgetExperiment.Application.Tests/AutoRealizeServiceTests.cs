@@ -339,7 +339,7 @@ public class AutoRealizeServiceTests
     private static RecurringTransaction CreateTestRecurringTransaction(Guid accountId, DateOnly startDate)
     {
         var amount = MoneyValue.Create("USD", -50.00m);
-        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
         var recurring = RecurringTransaction.Create(accountId, "Test Recurring", amount, pattern, startDate);
 
         // Set the Id for testing
@@ -353,7 +353,7 @@ public class AutoRealizeServiceTests
     private static RecurringTransfer CreateTestRecurringTransfer(Guid fromAccountId, Guid toAccountId, DateOnly startDate)
     {
         var amount = MoneyValue.Create("USD", 100.00m);
-        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
         var transfer = RecurringTransfer.Create(fromAccountId, toAccountId, "Test Transfer", amount, pattern, startDate);
 
         // Set the Id for testing

@@ -7,7 +7,7 @@ using BudgetExperiment.Domain;
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the DebitCreditIndicatorSettings value object.
+/// Unit tests for the DebitCreditIndicatorSettingsValue value object.
 /// </summary>
 public class DebitCreditIndicatorSettingsTests
 {
@@ -19,7 +19,7 @@ public class DebitCreditIndicatorSettingsTests
         var creditIndicators = new List<string> { "Credit", "CR" };
 
         // Act
-        var settings = DebitCreditIndicatorSettings.Create(0, debitIndicators, creditIndicators);
+        var settings = DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, creditIndicators);
 
         // Assert
         Assert.Equal(0, settings.IndicatorColumnIndex);
@@ -38,7 +38,7 @@ public class DebitCreditIndicatorSettingsTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            DebitCreditIndicatorSettings.Create(-1, debitIndicators, creditIndicators));
+            DebitCreditIndicatorSettingsValue.Create(-1, debitIndicators, creditIndicators));
         Assert.Contains("non-negative", ex.Message);
     }
 
@@ -51,7 +51,7 @@ public class DebitCreditIndicatorSettingsTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            DebitCreditIndicatorSettings.Create(0, debitIndicators, creditIndicators));
+            DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, creditIndicators));
         Assert.Contains("debit indicator", ex.Message);
     }
 
@@ -63,7 +63,7 @@ public class DebitCreditIndicatorSettingsTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            DebitCreditIndicatorSettings.Create(0, null!, creditIndicators));
+            DebitCreditIndicatorSettingsValue.Create(0, null!, creditIndicators));
         Assert.Contains("debit indicator", ex.Message);
     }
 
@@ -76,7 +76,7 @@ public class DebitCreditIndicatorSettingsTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            DebitCreditIndicatorSettings.Create(0, debitIndicators, creditIndicators));
+            DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, creditIndicators));
         Assert.Contains("credit indicator", ex.Message);
     }
 
@@ -88,7 +88,7 @@ public class DebitCreditIndicatorSettingsTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            DebitCreditIndicatorSettings.Create(0, debitIndicators, null!));
+            DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, null!));
         Assert.Contains("credit indicator", ex.Message);
     }
 
@@ -101,7 +101,7 @@ public class DebitCreditIndicatorSettingsTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            DebitCreditIndicatorSettings.Create(0, debitIndicators, creditIndicators));
+            DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, creditIndicators));
         Assert.Contains("overlap", ex.Message);
     }
 
@@ -114,7 +114,7 @@ public class DebitCreditIndicatorSettingsTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            DebitCreditIndicatorSettings.Create(0, debitIndicators, creditIndicators, caseSensitive: false));
+            DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, creditIndicators, caseSensitive: false));
         Assert.Contains("overlap", ex.Message);
     }
 
@@ -126,7 +126,7 @@ public class DebitCreditIndicatorSettingsTests
         var creditIndicators = new List<string> { "debit" };
 
         // Act
-        var settings = DebitCreditIndicatorSettings.Create(0, debitIndicators, creditIndicators, caseSensitive: true);
+        var settings = DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, creditIndicators, caseSensitive: true);
 
         // Assert
         Assert.True(settings.CaseSensitive);
@@ -141,7 +141,7 @@ public class DebitCreditIndicatorSettingsTests
         var creditIndicators = new List<string> { "  Credit  " };
 
         // Act
-        var settings = DebitCreditIndicatorSettings.Create(0, debitIndicators, creditIndicators);
+        var settings = DebitCreditIndicatorSettingsValue.Create(0, debitIndicators, creditIndicators);
 
         // Assert
         Assert.Equal("Debit", settings.DebitIndicators[0]);
@@ -152,7 +152,7 @@ public class DebitCreditIndicatorSettingsTests
     public void Disabled_Returns_Settings_With_IsEnabled_False()
     {
         // Arrange & Act
-        var settings = DebitCreditIndicatorSettings.Disabled;
+        var settings = DebitCreditIndicatorSettingsValue.Disabled;
 
         // Assert
         Assert.False(settings.IsEnabled);
@@ -165,7 +165,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Returns_Negative_For_DebitIndicator()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Create(
+        var settings = DebitCreditIndicatorSettingsValue.Create(
             0,
             new List<string> { "Debit", "DR" },
             new List<string> { "Credit", "CR" });
@@ -181,7 +181,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Returns_Positive_For_CreditIndicator()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Create(
+        var settings = DebitCreditIndicatorSettingsValue.Create(
             0,
             new List<string> { "Debit", "DR" },
             new List<string> { "Credit", "CR" });
@@ -197,7 +197,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Returns_Null_For_Unknown_Indicator()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Create(
+        var settings = DebitCreditIndicatorSettingsValue.Create(
             0,
             new List<string> { "Debit" },
             new List<string> { "Credit" });
@@ -213,7 +213,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Returns_Null_For_Empty_Value()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Create(
+        var settings = DebitCreditIndicatorSettingsValue.Create(
             0,
             new List<string> { "Debit" },
             new List<string> { "Credit" });
@@ -229,7 +229,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Returns_Null_When_Disabled()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Disabled;
+        var settings = DebitCreditIndicatorSettingsValue.Disabled;
 
         // Act
         var result = settings.GetSignMultiplier("Debit");
@@ -242,7 +242,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Is_Case_Insensitive_By_Default()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Create(
+        var settings = DebitCreditIndicatorSettingsValue.Create(
             0,
             new List<string> { "Debit" },
             new List<string> { "Credit" });
@@ -260,7 +260,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Is_Case_Sensitive_When_Configured()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Create(
+        var settings = DebitCreditIndicatorSettingsValue.Create(
             0,
             new List<string> { "Debit" },
             new List<string> { "Credit" },
@@ -279,7 +279,7 @@ public class DebitCreditIndicatorSettingsTests
     public void GetSignMultiplier_Trims_Input_Value()
     {
         // Arrange
-        var settings = DebitCreditIndicatorSettings.Create(
+        var settings = DebitCreditIndicatorSettingsValue.Create(
             0,
             new List<string> { "Debit" },
             new List<string> { "Credit" });

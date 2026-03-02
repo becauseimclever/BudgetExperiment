@@ -1,4 +1,4 @@
-// <copyright file="GeoCoordinate.cs" company="BecauseImClever">
+// <copyright file="GeoCoordinateValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,14 +7,14 @@ namespace BudgetExperiment.Domain.Common;
 /// <summary>
 /// Immutable geographic coordinate value object (latitude/longitude, 6 decimal precision).
 /// </summary>
-public sealed record GeoCoordinate
+public sealed record GeoCoordinateValue
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="GeoCoordinate"/> class.
+    /// Initializes a new instance of the <see cref="GeoCoordinateValue"/> class.
     /// </summary>
     /// <param name="latitude">Latitude value.</param>
     /// <param name="longitude">Longitude value.</param>
-    private GeoCoordinate(decimal latitude, decimal longitude)
+    private GeoCoordinateValue(decimal latitude, decimal longitude)
     {
         this.Latitude = latitude;
         this.Longitude = longitude;
@@ -31,13 +31,13 @@ public sealed record GeoCoordinate
     public decimal Longitude { get; init; }
 
     /// <summary>
-    /// Creates a validated <see cref="GeoCoordinate"/> with 6 decimal place precision.
+    /// Creates a validated <see cref="GeoCoordinateValue"/> with 6 decimal place precision.
     /// </summary>
     /// <param name="latitude">Latitude (-90 to 90).</param>
     /// <param name="longitude">Longitude (-180 to 180).</param>
-    /// <returns>A new <see cref="GeoCoordinate"/> instance.</returns>
+    /// <returns>A new <see cref="GeoCoordinateValue"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when coordinates are out of range.</exception>
-    public static GeoCoordinate Create(decimal latitude, decimal longitude)
+    public static GeoCoordinateValue Create(decimal latitude, decimal longitude)
     {
         if (latitude < -90m || latitude > 90m)
         {
@@ -49,7 +49,7 @@ public sealed record GeoCoordinate
             throw new DomainException("Longitude must be between -180 and 180.");
         }
 
-        return new GeoCoordinate(
+        return new GeoCoordinateValue(
             decimal.Round(latitude, 6, MidpointRounding.AwayFromZero),
             decimal.Round(longitude, 6, MidpointRounding.AwayFromZero));
     }

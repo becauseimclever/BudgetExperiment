@@ -1,4 +1,4 @@
-// <copyright file="PaycheckAllocationWarning.cs" company="BecauseImClever">
+// <copyright file="PaycheckAllocationWarningValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -9,12 +9,12 @@ namespace BudgetExperiment.Domain.Paycheck;
 /// <summary>
 /// Represents a warning about paycheck allocation issues.
 /// </summary>
-public sealed record PaycheckAllocationWarning
+public sealed record PaycheckAllocationWarningValue
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="PaycheckAllocationWarning"/> class.
+    /// Initializes a new instance of the <see cref="PaycheckAllocationWarningValue"/> class.
     /// </summary>
-    private PaycheckAllocationWarning()
+    private PaycheckAllocationWarningValue()
     {
     }
 
@@ -39,16 +39,16 @@ public sealed record PaycheckAllocationWarning
     /// <param name="type">The warning type.</param>
     /// <param name="message">The warning message.</param>
     /// <param name="amount">Optional associated amount.</param>
-    /// <returns>A new <see cref="PaycheckAllocationWarning"/> instance.</returns>
+    /// <returns>A new <see cref="PaycheckAllocationWarningValue"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when message is empty.</exception>
-    public static PaycheckAllocationWarning Create(AllocationWarningType type, string message, MoneyValue? amount = null)
+    public static PaycheckAllocationWarningValue Create(AllocationWarningType type, string message, MoneyValue? amount = null)
     {
         if (string.IsNullOrWhiteSpace(message))
         {
             throw new DomainException("Warning message is required.");
         }
 
-        return new PaycheckAllocationWarning
+        return new PaycheckAllocationWarningValue
         {
             Type = type,
             Message = message.Trim(),
@@ -60,8 +60,8 @@ public sealed record PaycheckAllocationWarning
     /// Creates an insufficient income warning.
     /// </summary>
     /// <param name="shortfall">The shortfall amount per paycheck.</param>
-    /// <returns>A new <see cref="PaycheckAllocationWarning"/> instance.</returns>
-    public static PaycheckAllocationWarning InsufficientIncome(MoneyValue shortfall)
+    /// <returns>A new <see cref="PaycheckAllocationWarningValue"/> instance.</returns>
+    public static PaycheckAllocationWarningValue InsufficientIncome(MoneyValue shortfall)
     {
         var message = string.Format(
             CultureInfo.InvariantCulture,
@@ -69,7 +69,7 @@ public sealed record PaycheckAllocationWarning
             shortfall.Currency,
             shortfall.Amount);
 
-        return new PaycheckAllocationWarning
+        return new PaycheckAllocationWarningValue
         {
             Type = AllocationWarningType.InsufficientIncome,
             Message = message,
@@ -82,8 +82,8 @@ public sealed record PaycheckAllocationWarning
     /// </summary>
     /// <param name="annualBills">The total annual bills.</param>
     /// <param name="annualIncome">The total annual income.</param>
-    /// <returns>A new <see cref="PaycheckAllocationWarning"/> instance.</returns>
-    public static PaycheckAllocationWarning CannotReconcile(MoneyValue annualBills, MoneyValue annualIncome)
+    /// <returns>A new <see cref="PaycheckAllocationWarningValue"/> instance.</returns>
+    public static PaycheckAllocationWarningValue CannotReconcile(MoneyValue annualBills, MoneyValue annualIncome)
     {
         var shortfall = annualBills - annualIncome;
         var message = string.Format(
@@ -93,7 +93,7 @@ public sealed record PaycheckAllocationWarning
             annualBills.Amount,
             annualIncome.Amount);
 
-        return new PaycheckAllocationWarning
+        return new PaycheckAllocationWarningValue
         {
             Type = AllocationWarningType.CannotReconcile,
             Message = message,
@@ -104,10 +104,10 @@ public sealed record PaycheckAllocationWarning
     /// <summary>
     /// Creates a warning indicating no bills are configured.
     /// </summary>
-    /// <returns>A new <see cref="PaycheckAllocationWarning"/> instance.</returns>
-    public static PaycheckAllocationWarning NoBillsConfigured()
+    /// <returns>A new <see cref="PaycheckAllocationWarningValue"/> instance.</returns>
+    public static PaycheckAllocationWarningValue NoBillsConfigured()
     {
-        return new PaycheckAllocationWarning
+        return new PaycheckAllocationWarningValue
         {
             Type = AllocationWarningType.NoBillsConfigured,
             Message = "No recurring bills are configured. Add recurring transactions to see allocation suggestions.",
@@ -118,10 +118,10 @@ public sealed record PaycheckAllocationWarning
     /// <summary>
     /// Creates a warning indicating no income amount was provided.
     /// </summary>
-    /// <returns>A new <see cref="PaycheckAllocationWarning"/> instance.</returns>
-    public static PaycheckAllocationWarning NoIncomeConfigured()
+    /// <returns>A new <see cref="PaycheckAllocationWarningValue"/> instance.</returns>
+    public static PaycheckAllocationWarningValue NoIncomeConfigured()
     {
-        return new PaycheckAllocationWarning
+        return new PaycheckAllocationWarningValue
         {
             Type = AllocationWarningType.NoIncomeConfigured,
             Message = "Enter your paycheck amount to see income-related warnings and remaining balance calculations.",

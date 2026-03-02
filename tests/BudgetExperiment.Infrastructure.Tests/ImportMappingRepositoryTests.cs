@@ -31,7 +31,7 @@ public class ImportMappingRepositoryTests
         await using var context = this._fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Description", TargetField = ImportField.Description },
@@ -80,7 +80,7 @@ public class ImportMappingRepositoryTests
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
 
-        var mappings1 = new List<ColumnMapping>
+        var mappings1 = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -110,7 +110,7 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -136,7 +136,7 @@ public class ImportMappingRepositoryTests
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -160,7 +160,7 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -186,7 +186,7 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -211,7 +211,7 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Trans Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Memo", TargetField = ImportField.Description },
@@ -249,12 +249,12 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Settings Test", mappings);
-        importMapping.UpdateDuplicateSettings(new DuplicateDetectionSettings
+        importMapping.UpdateDuplicateSettings(new DuplicateDetectionSettingsValue
         {
             Enabled = false,
             LookbackDays = 60,
@@ -285,7 +285,7 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -294,7 +294,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        var newMappings = new List<ColumnMapping>
+        var newMappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Transaction Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Desc", TargetField = ImportField.Description },
@@ -322,13 +322,13 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Amount", TargetField = ImportField.Amount },
         };
         var importMapping = ImportMapping.Create(userId, "Test Mapping With Skip Rows", mappings);
-        importMapping.UpdateSkipRowsSettings(SkipRowsSettings.Create(5));
+        importMapping.UpdateSkipRowsSettings(SkipRowsSettingsValue.Create(5));
 
         // Act
         await repository.AddAsync(importMapping);
@@ -340,8 +340,8 @@ public class ImportMappingRepositoryTests
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 
         Assert.NotNull(retrieved);
-        Assert.NotNull(retrieved.SkipRowsSettings);
-        Assert.Equal(5, retrieved.SkipRowsSettings.RowsToSkip);
+        Assert.NotNull(retrieved.SkipRowsSettingsValue);
+        Assert.Equal(5, retrieved.SkipRowsSettingsValue.RowsToSkip);
     }
 
     [Fact]
@@ -352,7 +352,7 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
             new() { ColumnIndex = 1, ColumnHeader = "Amount", TargetField = ImportField.Amount },
@@ -360,7 +360,7 @@ public class ImportMappingRepositoryTests
         };
         var importMapping = ImportMapping.Create(userId, "Test Mapping With Indicator", mappings);
         importMapping.SetAmountMode(AmountParseMode.IndicatorColumn);
-        importMapping.UpdateIndicatorSettings(DebitCreditIndicatorSettings.Create(
+        importMapping.UpdateIndicatorSettings(DebitCreditIndicatorSettingsValue.Create(
             2,
             new List<string> { "Debit", "DR" },
             new List<string> { "Credit", "CR" },
@@ -396,7 +396,7 @@ public class ImportMappingRepositoryTests
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
-        var mappings = new List<ColumnMapping>
+        var mappings = new List<ColumnMappingValue>
         {
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
@@ -412,8 +412,8 @@ public class ImportMappingRepositoryTests
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 
         Assert.NotNull(retrieved);
-        Assert.NotNull(retrieved.SkipRowsSettings);
-        Assert.Equal(0, retrieved.SkipRowsSettings.RowsToSkip);
+        Assert.NotNull(retrieved.SkipRowsSettingsValue);
+        Assert.Equal(0, retrieved.SkipRowsSettingsValue.RowsToSkip);
         Assert.NotNull(retrieved.IndicatorSettings);
         Assert.False(retrieved.IndicatorSettings.IsEnabled);
     }

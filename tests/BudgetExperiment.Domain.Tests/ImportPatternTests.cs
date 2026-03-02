@@ -7,7 +7,7 @@ using BudgetExperiment.Domain;
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the ImportPattern value object.
+/// Unit tests for the ImportPatternValue value object.
 /// </summary>
 public class ImportPatternTests
 {
@@ -18,7 +18,7 @@ public class ImportPatternTests
         var pattern = "ACME CORP PAYROLL";
 
         // Act
-        var importPattern = ImportPattern.Create(pattern);
+        var importPattern = ImportPatternValue.Create(pattern);
 
         // Assert
         Assert.Equal("ACME CORP PAYROLL", importPattern.Pattern);
@@ -31,7 +31,7 @@ public class ImportPatternTests
         var pattern = "  ACME CORP  ";
 
         // Act
-        var importPattern = ImportPattern.Create(pattern);
+        var importPattern = ImportPatternValue.Create(pattern);
 
         // Assert
         Assert.Equal("ACME CORP", importPattern.Pattern);
@@ -44,7 +44,7 @@ public class ImportPatternTests
         var pattern = "acme corp";
 
         // Act
-        var importPattern = ImportPattern.Create(pattern);
+        var importPattern = ImportPatternValue.Create(pattern);
 
         // Assert
         Assert.Equal("ACME CORP", importPattern.Pattern);
@@ -57,7 +57,7 @@ public class ImportPatternTests
     public void Create_With_Empty_Pattern_Throws(string? pattern)
     {
         // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => ImportPattern.Create(pattern!));
+        var ex = Assert.Throws<DomainException>(() => ImportPatternValue.Create(pattern!));
         Assert.Contains("pattern", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -65,7 +65,7 @@ public class ImportPatternTests
     public void Matches_Exact_Text_Returns_True()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("ACME CORP");
+        var importPattern = ImportPatternValue.Create("ACME CORP");
 
         // Act
         var result = importPattern.Matches("ACME CORP");
@@ -78,7 +78,7 @@ public class ImportPatternTests
     public void Matches_Is_Case_Insensitive()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("ACME CORP");
+        var importPattern = ImportPatternValue.Create("ACME CORP");
 
         // Act
         var result = importPattern.Matches("acme corp");
@@ -91,7 +91,7 @@ public class ImportPatternTests
     public void Matches_Wildcard_Prefix_Returns_True()
     {
         // Arrange - Pattern with wildcard prefix
-        var importPattern = ImportPattern.Create("*ACME CORP");
+        var importPattern = ImportPatternValue.Create("*ACME CORP");
 
         // Act
         var result = importPattern.Matches("DIRECT DEP ACME CORP");
@@ -104,7 +104,7 @@ public class ImportPatternTests
     public void Matches_Wildcard_Suffix_Returns_True()
     {
         // Arrange - Pattern with wildcard suffix
-        var importPattern = ImportPattern.Create("ACME CORP*");
+        var importPattern = ImportPatternValue.Create("ACME CORP*");
 
         // Act
         var result = importPattern.Matches("ACME CORP PAYROLL 01/15");
@@ -117,7 +117,7 @@ public class ImportPatternTests
     public void Matches_Wildcard_Both_Returns_True()
     {
         // Arrange - Pattern with wildcards on both ends
-        var importPattern = ImportPattern.Create("*ACME CORP*");
+        var importPattern = ImportPatternValue.Create("*ACME CORP*");
 
         // Act
         var result = importPattern.Matches("DIRECT DEP ACME CORP PAYROLL 01/15");
@@ -130,7 +130,7 @@ public class ImportPatternTests
     public void Matches_Wildcard_Prefix_No_Match_Returns_False()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("*ACME CORP");
+        var importPattern = ImportPatternValue.Create("*ACME CORP");
 
         // Act
         var result = importPattern.Matches("DIRECT DEP ACME");
@@ -143,7 +143,7 @@ public class ImportPatternTests
     public void Matches_Wildcard_Suffix_No_Match_Returns_False()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("ACME CORP*");
+        var importPattern = ImportPatternValue.Create("ACME CORP*");
 
         // Act
         var result = importPattern.Matches("OTHER COMPANY PAYROLL");
@@ -156,7 +156,7 @@ public class ImportPatternTests
     public void Matches_Exact_Pattern_No_Match_Returns_False()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("ACME CORP");
+        var importPattern = ImportPatternValue.Create("ACME CORP");
 
         // Act
         var result = importPattern.Matches("ACME CORPORATION");
@@ -169,7 +169,7 @@ public class ImportPatternTests
     public void Matches_With_Null_Description_Returns_False()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("ACME CORP");
+        var importPattern = ImportPatternValue.Create("ACME CORP");
 
         // Act
         var result = importPattern.Matches(null!);
@@ -182,7 +182,7 @@ public class ImportPatternTests
     public void Matches_With_Empty_Description_Returns_False()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("ACME CORP");
+        var importPattern = ImportPatternValue.Create("ACME CORP");
 
         // Act
         var result = importPattern.Matches(string.Empty);
@@ -195,8 +195,8 @@ public class ImportPatternTests
     public void Two_ImportPatterns_With_Same_Pattern_Are_Equal()
     {
         // Arrange
-        var pattern1 = ImportPattern.Create("ACME CORP");
-        var pattern2 = ImportPattern.Create("acme corp");
+        var pattern1 = ImportPatternValue.Create("ACME CORP");
+        var pattern2 = ImportPatternValue.Create("acme corp");
 
         // Act & Assert
         Assert.Equal(pattern1, pattern2);
@@ -206,7 +206,7 @@ public class ImportPatternTests
     public void ToString_Returns_Pattern()
     {
         // Arrange
-        var importPattern = ImportPattern.Create("*ACME CORP*");
+        var importPattern = ImportPatternValue.Create("*ACME CORP*");
 
         // Act
         var result = importPattern.ToString();

@@ -822,7 +822,7 @@ public class ImportServiceTests
         batch.Complete(8, 2, 0);
 
         var account = CreateAccount(accountId, "Checking Account", userId);
-        var mapping = ImportMapping.Create(userId, "Bank CSV", [new ColumnMapping { ColumnIndex = 0, TargetField = ImportField.Date }]);
+        var mapping = ImportMapping.Create(userId, "Bank CSV", [new ColumnMappingValue { ColumnIndex = 0, TargetField = ImportField.Date }]);
 
         // Use reflection to set mapping ID
         typeof(ImportMapping).GetProperty("Id")!.SetValue(mapping, mappingId);

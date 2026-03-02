@@ -12,7 +12,7 @@ public class RecurringTransferTests
     private readonly Guid _validSourceAccountId = Guid.NewGuid();
     private readonly Guid _validDestinationAccountId = Guid.NewGuid();
     private readonly MoneyValue _validAmount = MoneyValue.Create("USD", 500m);
-    private readonly RecurrencePattern _validPattern = RecurrencePattern.CreateMonthly(1, 1);
+    private readonly RecurrencePatternValue _validPattern = RecurrencePatternValue.CreateMonthly(1, 1);
     private readonly DateOnly _validStartDate = new(2026, 2, 1);
 
     [Fact]
@@ -31,7 +31,7 @@ public class RecurringTransferTests
         Assert.Equal(this._validDestinationAccountId, result.DestinationAccountId);
         Assert.Equal("Monthly Savings", result.Description);
         Assert.Equal(this._validAmount, result.Amount);
-        Assert.Equal(this._validPattern, result.RecurrencePattern);
+        Assert.Equal(this._validPattern, result.RecurrencePatternValue);
         Assert.Equal(this._validStartDate, result.StartDate);
         Assert.Null(result.EndDate);
         Assert.Equal(this._validStartDate, result.NextOccurrence);
@@ -241,14 +241,14 @@ public class RecurringTransferTests
             this._validStartDate);
 
         var newAmount = MoneyValue.Create("USD", 750m);
-        var newPattern = RecurrencePattern.CreateMonthly(1, 15);
+        var newPattern = RecurrencePatternValue.CreateMonthly(1, 15);
         var newEndDate = new DateOnly(2028, 12, 31);
 
         recurringTransfer.Update("Increased Savings", newAmount, newPattern, newEndDate);
 
         Assert.Equal("Increased Savings", recurringTransfer.Description);
         Assert.Equal(newAmount, recurringTransfer.Amount);
-        Assert.Equal(newPattern, recurringTransfer.RecurrencePattern);
+        Assert.Equal(newPattern, recurringTransfer.RecurrencePatternValue);
         Assert.Equal(newEndDate, recurringTransfer.EndDate);
     }
 

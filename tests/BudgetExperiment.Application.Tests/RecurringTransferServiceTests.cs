@@ -50,7 +50,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 2, 1));
 
         this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
@@ -91,7 +91,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "Transfer A",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         var transfer2 = RecurringTransfer.Create(
@@ -99,7 +99,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "Transfer B",
             MoneyValue.Create("USD", 200m),
-            RecurrencePattern.CreateWeekly(1, DayOfWeek.Friday),
+            RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Friday),
             new DateOnly(2026, 1, 3));
 
         this._repository.Setup(r => r.GetAllAsync(default))
@@ -205,7 +205,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "Original",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
@@ -261,7 +261,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "To Delete",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
@@ -299,7 +299,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "To Pause",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
@@ -325,7 +325,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "To Resume",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
         transfer.Pause();
 
@@ -352,7 +352,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "To Skip",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
         var originalNextOccurrence = transfer.NextOccurrence;
 
@@ -382,7 +382,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "Account Transfer",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         this._repository.Setup(r => r.GetByAccountIdAsync(this._sourceAccount.Id, default))
@@ -407,7 +407,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "Active",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
 
         this._repository.Setup(r => r.GetActiveAsync(default))
@@ -433,7 +433,7 @@ public class RecurringTransferServiceTests
             this._destAccount.Id,
             "Original",
             MoneyValue.Create("USD", 100m),
-            RecurrencePattern.CreateMonthly(1, 1),
+            RecurrencePatternValue.CreateMonthly(1, 1),
             new DateOnly(2026, 1, 1));
         var instanceDate = new DateOnly(2026, 3, 1);
 

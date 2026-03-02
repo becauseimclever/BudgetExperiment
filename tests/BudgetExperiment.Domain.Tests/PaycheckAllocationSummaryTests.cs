@@ -7,7 +7,7 @@ using BudgetExperiment.Domain;
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the <see cref="PaycheckAllocationSummary"/> value object.
+/// Unit tests for the <see cref="PaycheckAllocationSummaryValue"/> value object.
 /// </summary>
 public class PaycheckAllocationSummaryTests
 {
@@ -15,14 +15,14 @@ public class PaycheckAllocationSummaryTests
     public void Create_WithValidInputs_CreatesSummary()
     {
         // Arrange
-        var allocations = new List<PaycheckAllocation>();
+        var allocations = new List<PaycheckAllocationValue>();
         var totalPerPaycheck = MoneyValue.Create("USD", 646.16m);
         var totalAnnualBills = MoneyValue.Create("USD", 16800m);
         var paycheckFrequency = RecurrenceFrequency.BiWeekly;
-        var warnings = new List<PaycheckAllocationWarning>();
+        var warnings = new List<PaycheckAllocationWarningValue>();
 
         // Act
-        var summary = PaycheckAllocationSummary.Create(
+        var summary = PaycheckAllocationSummaryValue.Create(
             allocations,
             totalPerPaycheck,
             totalAnnualBills,
@@ -45,21 +45,21 @@ public class PaycheckAllocationSummaryTests
     public void Create_WithPaycheckAmount_CalculatesRemainingAndShortfall()
     {
         // Arrange
-        var bill = BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
-        var allocation = PaycheckAllocation.Create(
+        var bill = BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
+        var allocation = PaycheckAllocationValue.Create(
             bill,
             MoneyValue.Create("USD", 553.85m),
             MoneyValue.Create("USD", 14400m));
-        var allocations = new List<PaycheckAllocation> { allocation };
+        var allocations = new List<PaycheckAllocationValue> { allocation };
         var totalPerPaycheck = MoneyValue.Create("USD", 553.85m);
         var totalAnnualBills = MoneyValue.Create("USD", 14400m);
         var paycheckFrequency = RecurrenceFrequency.BiWeekly;
         var paycheckAmount = MoneyValue.Create("USD", 2000m);
         var totalAnnualIncome = MoneyValue.Create("USD", 52000m);
-        var warnings = new List<PaycheckAllocationWarning>();
+        var warnings = new List<PaycheckAllocationWarningValue>();
 
         // Act
-        var summary = PaycheckAllocationSummary.Create(
+        var summary = PaycheckAllocationSummaryValue.Create(
             allocations,
             totalPerPaycheck,
             totalAnnualBills,
@@ -79,21 +79,21 @@ public class PaycheckAllocationSummaryTests
     public void Create_WithInsufficientIncome_ShowsShortfall()
     {
         // Arrange
-        var bill = BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
-        var allocation = PaycheckAllocation.Create(
+        var bill = BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
+        var allocation = PaycheckAllocationValue.Create(
             bill,
             MoneyValue.Create("USD", 553.85m),
             MoneyValue.Create("USD", 14400m));
-        var allocations = new List<PaycheckAllocation> { allocation };
+        var allocations = new List<PaycheckAllocationValue> { allocation };
         var totalPerPaycheck = MoneyValue.Create("USD", 553.85m);
         var totalAnnualBills = MoneyValue.Create("USD", 14400m);
         var paycheckFrequency = RecurrenceFrequency.BiWeekly;
         var paycheckAmount = MoneyValue.Create("USD", 400m); // Less than allocation
         var totalAnnualIncome = MoneyValue.Create("USD", 10400m);
-        var warnings = new List<PaycheckAllocationWarning>();
+        var warnings = new List<PaycheckAllocationWarningValue>();
 
         // Act
-        var summary = PaycheckAllocationSummary.Create(
+        var summary = PaycheckAllocationSummaryValue.Create(
             allocations,
             totalPerPaycheck,
             totalAnnualBills,
@@ -114,14 +114,14 @@ public class PaycheckAllocationSummaryTests
         var totalPerPaycheck = MoneyValue.Create("USD", 0m);
         var totalAnnualBills = MoneyValue.Create("USD", 0m);
         var paycheckFrequency = RecurrenceFrequency.BiWeekly;
-        var warnings = new List<PaycheckAllocationWarning>
+        var warnings = new List<PaycheckAllocationWarningValue>
         {
-            PaycheckAllocationWarning.NoBillsConfigured(),
+            PaycheckAllocationWarningValue.NoBillsConfigured(),
         };
 
         // Act
-        var summary = PaycheckAllocationSummary.Create(
-            new List<PaycheckAllocation>(),
+        var summary = PaycheckAllocationSummaryValue.Create(
+            new List<PaycheckAllocationValue>(),
             totalPerPaycheck,
             totalAnnualBills,
             paycheckFrequency,
@@ -141,14 +141,14 @@ public class PaycheckAllocationSummaryTests
         var paycheckFrequency = RecurrenceFrequency.BiWeekly;
         var paycheckAmount = MoneyValue.Create("USD", 2000m);
         var totalAnnualIncome = MoneyValue.Create("USD", 52000m); // Less than bills
-        var cannotReconcileWarning = PaycheckAllocationWarning.CannotReconcile(
+        var cannotReconcileWarning = PaycheckAllocationWarningValue.CannotReconcile(
             totalAnnualBills,
             totalAnnualIncome);
-        var warnings = new List<PaycheckAllocationWarning> { cannotReconcileWarning };
+        var warnings = new List<PaycheckAllocationWarningValue> { cannotReconcileWarning };
 
         // Act
-        var summary = PaycheckAllocationSummary.Create(
-            new List<PaycheckAllocation>(),
+        var summary = PaycheckAllocationSummaryValue.Create(
+            new List<PaycheckAllocationValue>(),
             totalPerPaycheck,
             totalAnnualBills,
             paycheckFrequency,
@@ -164,23 +164,23 @@ public class PaycheckAllocationSummaryTests
     public void Allocations_IsImmutableCollection()
     {
         // Arrange
-        var bill = BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
-        var allocation = PaycheckAllocation.Create(
+        var bill = BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
+        var allocation = PaycheckAllocationValue.Create(
             bill,
             MoneyValue.Create("USD", 553.85m),
             MoneyValue.Create("USD", 14400m));
-        var originalList = new List<PaycheckAllocation> { allocation };
+        var originalList = new List<PaycheckAllocationValue> { allocation };
         var totalPerPaycheck = MoneyValue.Create("USD", 553.85m);
         var totalAnnualBills = MoneyValue.Create("USD", 14400m);
         var paycheckFrequency = RecurrenceFrequency.BiWeekly;
 
         // Act
-        var summary = PaycheckAllocationSummary.Create(
+        var summary = PaycheckAllocationSummaryValue.Create(
             originalList,
             totalPerPaycheck,
             totalAnnualBills,
             paycheckFrequency,
-            new List<PaycheckAllocationWarning>());
+            new List<PaycheckAllocationWarningValue>());
 
         // Modify the original list
         originalList.Clear();
@@ -198,32 +198,32 @@ public class PaycheckAllocationSummaryTests
         var paycheckFrequency = RecurrenceFrequency.BiWeekly;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => PaycheckAllocationSummary.Create(
+        Assert.Throws<ArgumentNullException>(() => PaycheckAllocationSummaryValue.Create(
             null!,
             totalPerPaycheck,
             totalAnnualBills,
             paycheckFrequency,
-            new List<PaycheckAllocationWarning>()));
+            new List<PaycheckAllocationWarningValue>()));
     }
 
     [Fact]
     public void Create_WithNullTotalPerPaycheck_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => PaycheckAllocationSummary.Create(
-            new List<PaycheckAllocation>(),
+        Assert.Throws<ArgumentNullException>(() => PaycheckAllocationSummaryValue.Create(
+            new List<PaycheckAllocationValue>(),
             null!,
             MoneyValue.Create("USD", 0m),
             RecurrenceFrequency.BiWeekly,
-            new List<PaycheckAllocationWarning>()));
+            new List<PaycheckAllocationWarningValue>()));
     }
 
     [Fact]
     public void Create_WithNullWarnings_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => PaycheckAllocationSummary.Create(
-            new List<PaycheckAllocation>(),
+        Assert.Throws<ArgumentNullException>(() => PaycheckAllocationSummaryValue.Create(
+            new List<PaycheckAllocationValue>(),
             MoneyValue.Create("USD", 0m),
             MoneyValue.Create("USD", 0m),
             RecurrenceFrequency.BiWeekly,

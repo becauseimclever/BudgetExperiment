@@ -93,14 +93,14 @@ public class CalendarGridServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>());
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>());
 
         _recurringInstanceProjector
             .Setup(p => p.GetInstancesForDateAsync(
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringInstanceInfo>());
+            .ReturnsAsync(new List<RecurringInstanceInfoValue>());
 
         _recurringTransferInstanceProjector
             .Setup(p => p.GetInstancesByDateRangeAsync(
@@ -109,7 +109,7 @@ public class CalendarGridServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>());
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>>());
 
         _recurringTransferInstanceProjector
             .Setup(p => p.GetInstancesForDateAsync(
@@ -117,7 +117,7 @@ public class CalendarGridServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransferInstanceInfo>());
+            .ReturnsAsync(new List<RecurringTransferInstanceInfoValue>());
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public class CalendarGridServiceTests
         // Arrange
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -148,7 +148,7 @@ public class CalendarGridServiceTests
         // Arrange
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -176,7 +176,7 @@ public class CalendarGridServiceTests
         // Arrange
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -199,7 +199,7 @@ public class CalendarGridServiceTests
         // Arrange
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -220,7 +220,7 @@ public class CalendarGridServiceTests
     public async Task GetCalendarGridAsync_Includes_ActualTotal_From_Transactions()
     {
         // Arrange
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(new DateOnly(2026, 1, 15), MoneyValue.Create("USD", -150.00m), 3),
         };
@@ -249,7 +249,7 @@ public class CalendarGridServiceTests
         var accountId = Guid.NewGuid();
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(2026, 1, accountId, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetByAccountIdAsync(accountId, default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -268,7 +268,7 @@ public class CalendarGridServiceTests
     public async Task GetCalendarGridAsync_Calculates_MonthSummary_Income_Expenses()
     {
         // Arrange
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(new DateOnly(2026, 1, 1), MoneyValue.Create("USD", 5000.00m), 1), // Income
             new(new DateOnly(2026, 1, 5), MoneyValue.Create("USD", -1500.00m), 2), // Expense
@@ -308,7 +308,7 @@ public class CalendarGridServiceTests
     private static RecurringTransaction CreateTestRecurringTransaction(Guid accountId, DateOnly startDate)
     {
         var amount = MoneyValue.Create("USD", -50.00m);
-        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
         var recurring = RecurringTransaction.Create(accountId, "Test Recurring", amount, pattern, startDate);
 
         // Set the Id for testing
@@ -335,7 +335,7 @@ public class CalendarGridServiceTests
 
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -364,7 +364,7 @@ public class CalendarGridServiceTests
 
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -393,7 +393,7 @@ public class CalendarGridServiceTests
         // January 2026 grid starts on December 28, 2025 (Sunday)
         var gridStartDate = new DateOnly(2025, 12, 28);
 
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(gridStartDate, MoneyValue.Create("USD", 500m), 1), // +500 on first grid day
             new(gridStartDate.AddDays(2), MoneyValue.Create("USD", -200m), 1), // -200 on third grid day
@@ -436,7 +436,7 @@ public class CalendarGridServiceTests
 
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
 
         var accountId = Guid.NewGuid();
         var recurringTransaction = CreateTestRecurringTransaction(accountId, new DateOnly(2026, 1, 15));
@@ -454,12 +454,12 @@ public class CalendarGridServiceTests
                 gridStartDate,
                 gridEndDate,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
                 {
-                    jan15, new List<RecurringInstanceInfo>
+                    jan15, new List<RecurringInstanceInfoValue>
                     {
-                        new RecurringInstanceInfo(
+                        new RecurringInstanceInfoValue(
                             Guid.NewGuid(),
                             jan15,
                             accountId,
@@ -499,7 +499,7 @@ public class CalendarGridServiceTests
             .ReturnsAsync(startingBalance);
 
         var gridStartDate = new DateOnly(2025, 12, 28);
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(gridStartDate, MoneyValue.Create("USD", -200m), 1), // -200 on first grid day
         };
@@ -535,7 +535,7 @@ public class CalendarGridServiceTests
 
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(new List<RecurringTransaction>());
@@ -564,7 +564,7 @@ public class CalendarGridServiceTests
 
         _transactionRepo
             .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), accountId, default))
-            .ReturnsAsync(new List<DailyTotal>());
+            .ReturnsAsync(new List<DailyTotalValue>());
         _recurringRepo
             .Setup(r => r.GetByAccountIdAsync(accountId, default))
             .ReturnsAsync(new List<RecurringTransaction>());

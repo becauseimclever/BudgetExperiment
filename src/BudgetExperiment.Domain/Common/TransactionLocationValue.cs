@@ -1,4 +1,4 @@
-// <copyright file="TransactionLocation.cs" company="BecauseImClever">
+// <copyright file="TransactionLocationValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,19 +7,19 @@ namespace BudgetExperiment.Domain.Common;
 /// <summary>
 /// Immutable value object representing the geographic location of a transaction.
 /// </summary>
-public sealed record TransactionLocation
+public sealed record TransactionLocationValue
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="TransactionLocation"/> class.
+    /// Initializes a new instance of the <see cref="TransactionLocationValue"/> class.
     /// </summary>
-    private TransactionLocation()
+    private TransactionLocationValue()
     {
     }
 
     /// <summary>
     /// Gets the geographic coordinates (latitude/longitude), if available.
     /// </summary>
-    public GeoCoordinate? Coordinates { get; init; }
+    public GeoCoordinateValue? Coordinates { get; init; }
 
     /// <summary>
     /// Gets the city name.
@@ -47,7 +47,7 @@ public sealed record TransactionLocation
     public LocationSource Source { get; init; }
 
     /// <summary>
-    /// Creates a validated <see cref="TransactionLocation"/> with normalized fields.
+    /// Creates a validated <see cref="TransactionLocationValue"/> with normalized fields.
     /// </summary>
     /// <param name="city">City name.</param>
     /// <param name="stateOrRegion">State or region name.</param>
@@ -55,14 +55,14 @@ public sealed record TransactionLocation
     /// <param name="postalCode">Postal code.</param>
     /// <param name="coordinates">Geographic coordinates.</param>
     /// <param name="source">How the location was determined.</param>
-    /// <returns>A new <see cref="TransactionLocation"/> instance.</returns>
+    /// <returns>A new <see cref="TransactionLocationValue"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when no meaningful location field is provided.</exception>
-    public static TransactionLocation Create(
+    public static TransactionLocationValue Create(
         string? city,
         string? stateOrRegion,
         string? country,
         string? postalCode,
-        GeoCoordinate? coordinates,
+        GeoCoordinateValue? coordinates,
         LocationSource source)
     {
         if (city is null && stateOrRegion is null && country is null && coordinates is null)
@@ -70,7 +70,7 @@ public sealed record TransactionLocation
             throw new DomainException("At least one location field must be provided.");
         }
 
-        return new TransactionLocation
+        return new TransactionLocationValue
         {
             Coordinates = coordinates,
             City = city?.Trim(),
@@ -86,15 +86,15 @@ public sealed record TransactionLocation
     /// </summary>
     /// <param name="city">Parsed city name.</param>
     /// <param name="stateOrRegion">Parsed state abbreviation.</param>
-    /// <returns>A new <see cref="TransactionLocation"/> with <see cref="LocationSource.Parsed"/> source.</returns>
-    public static TransactionLocation CreateFromParsed(string city, string stateOrRegion)
+    /// <returns>A new <see cref="TransactionLocationValue"/> with <see cref="LocationSource.Parsed"/> source.</returns>
+    public static TransactionLocationValue CreateFromParsed(string city, string stateOrRegion)
         => Create(city, stateOrRegion, "US", null, null, LocationSource.Parsed);
 
     /// <summary>
     /// Creates a location from GPS coordinates.
     /// </summary>
     /// <param name="coordinates">GPS coordinates.</param>
-    /// <returns>A new <see cref="TransactionLocation"/> with <see cref="LocationSource.Gps"/> source.</returns>
-    public static TransactionLocation CreateFromGps(GeoCoordinate coordinates)
+    /// <returns>A new <see cref="TransactionLocationValue"/> with <see cref="LocationSource.Gps"/> source.</returns>
+    public static TransactionLocationValue CreateFromGps(GeoCoordinateValue coordinates)
         => Create(null, null, null, null, coordinates, LocationSource.Gps);
 }

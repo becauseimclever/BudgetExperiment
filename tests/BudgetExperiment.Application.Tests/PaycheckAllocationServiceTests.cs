@@ -317,13 +317,13 @@ public class PaycheckAllocationServiceTests
     {
         var pattern = frequency switch
         {
-            RecurrenceFrequency.Daily => RecurrencePattern.CreateDaily(),
-            RecurrenceFrequency.Weekly => RecurrencePattern.CreateWeekly(1, DayOfWeek.Monday),
-            RecurrenceFrequency.BiWeekly => RecurrencePattern.CreateBiWeekly(DayOfWeek.Friday),
-            RecurrenceFrequency.Monthly => RecurrencePattern.CreateMonthly(1, 15),
-            RecurrenceFrequency.Quarterly => RecurrencePattern.CreateQuarterly(15),
-            RecurrenceFrequency.Yearly => RecurrencePattern.CreateYearly(15, 1),
-            _ => RecurrencePattern.CreateMonthly(1, 15),
+            RecurrenceFrequency.Daily => RecurrencePatternValue.CreateDaily(),
+            RecurrenceFrequency.Weekly => RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Monday),
+            RecurrenceFrequency.BiWeekly => RecurrencePatternValue.CreateBiWeekly(DayOfWeek.Friday),
+            RecurrenceFrequency.Monthly => RecurrencePatternValue.CreateMonthly(1, 15),
+            RecurrenceFrequency.Quarterly => RecurrencePatternValue.CreateQuarterly(15),
+            RecurrenceFrequency.Yearly => RecurrencePatternValue.CreateYearly(15, 1),
+            _ => RecurrencePatternValue.CreateMonthly(1, 15),
         };
 
         return RecurringTransaction.Create(

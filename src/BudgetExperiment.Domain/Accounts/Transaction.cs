@@ -144,7 +144,7 @@ public sealed class Transaction
     /// <summary>
     /// Gets the geographic location of the transaction (null if not set).
     /// </summary>
-    public TransactionLocation? Location { get; private set; }
+    public TransactionLocationValue? Location { get; private set; }
 
     /// <summary>
     /// Maximum length for external reference.
@@ -419,7 +419,7 @@ public sealed class Transaction
     /// Sets or replaces the location of this transaction.
     /// </summary>
     /// <param name="location">The location to assign (may be null to clear).</param>
-    public void SetLocation(TransactionLocation? location)
+    public void SetLocation(TransactionLocationValue? location)
     {
         this.Location = location;
         this.UpdatedAt = DateTime.UtcNow;

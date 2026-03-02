@@ -14,7 +14,7 @@ public sealed class ImportMapping
     /// </summary>
     public const int MaxNameLength = 200;
 
-    private List<ColumnMapping> _columnMappings = new();
+    private List<ColumnMappingValue> _columnMappings = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportMapping"/> class.
@@ -57,7 +57,7 @@ public sealed class ImportMapping
     /// <summary>
     /// Gets the column mappings configuration.
     /// </summary>
-    public IReadOnlyList<ColumnMapping> ColumnMappings => this._columnMappings.AsReadOnly();
+    public IReadOnlyList<ColumnMappingValue> ColumnMappings => this._columnMappings.AsReadOnly();
 
     /// <summary>
     /// Gets the date format string for parsing dates.
@@ -72,17 +72,17 @@ public sealed class ImportMapping
     /// <summary>
     /// Gets the duplicate detection settings.
     /// </summary>
-    public DuplicateDetectionSettings DuplicateSettings { get; private set; } = new();
+    public DuplicateDetectionSettingsValue DuplicateSettings { get; private set; } = new();
 
     /// <summary>
     /// Gets the skip rows settings for this mapping.
     /// </summary>
-    public SkipRowsSettings SkipRowsSettings { get; private set; } = SkipRowsSettings.Default;
+    public SkipRowsSettingsValue SkipRowsSettingsValue { get; private set; } = SkipRowsSettingsValue.Default;
 
     /// <summary>
     /// Gets the debit/credit indicator settings for this mapping.
     /// </summary>
-    public DebitCreditIndicatorSettings IndicatorSettings { get; private set; } = DebitCreditIndicatorSettings.Disabled;
+    public DebitCreditIndicatorSettingsValue IndicatorSettings { get; private set; } = DebitCreditIndicatorSettingsValue.Disabled;
 
     /// <summary>
     /// Creates a new import mapping configuration.
@@ -92,7 +92,7 @@ public sealed class ImportMapping
     /// <param name="mappings">The column mappings.</param>
     /// <returns>A new <see cref="ImportMapping"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static ImportMapping Create(Guid userId, string name, IReadOnlyList<ColumnMapping> mappings)
+    public static ImportMapping Create(Guid userId, string name, IReadOnlyList<ColumnMappingValue> mappings)
     {
         if (userId == Guid.Empty)
         {
@@ -136,7 +136,7 @@ public sealed class ImportMapping
     /// <param name="dateFormat">The new date format.</param>
     /// <param name="amountMode">The new amount parse mode.</param>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public void Update(string name, IReadOnlyList<ColumnMapping> mappings, string dateFormat, AmountParseMode amountMode)
+    public void Update(string name, IReadOnlyList<ColumnMappingValue> mappings, string dateFormat, AmountParseMode amountMode)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -171,7 +171,7 @@ public sealed class ImportMapping
     /// </summary>
     /// <param name="settings">The new duplicate detection settings.</param>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public void UpdateDuplicateSettings(DuplicateDetectionSettings settings)
+    public void UpdateDuplicateSettings(DuplicateDetectionSettingsValue settings)
     {
         if (settings is null)
         {
@@ -217,7 +217,7 @@ public sealed class ImportMapping
     /// </summary>
     /// <param name="mappings">The new column mappings.</param>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public void UpdateMappings(IReadOnlyList<ColumnMapping> mappings)
+    public void UpdateMappings(IReadOnlyList<ColumnMappingValue> mappings)
     {
         if (mappings is null || mappings.Count == 0)
         {
@@ -258,7 +258,7 @@ public sealed class ImportMapping
     /// </summary>
     /// <param name="settings">The duplicate detection settings.</param>
     /// <exception cref="DomainException">Thrown when settings is null.</exception>
-    public void SetDuplicateSettings(DuplicateDetectionSettings settings)
+    public void SetDuplicateSettings(DuplicateDetectionSettingsValue settings)
     {
         if (settings is null)
         {
@@ -274,10 +274,10 @@ public sealed class ImportMapping
     /// </summary>
     /// <param name="settings">The new skip rows settings.</param>
     /// <exception cref="ArgumentNullException">Thrown when settings is null.</exception>
-    public void UpdateSkipRowsSettings(SkipRowsSettings settings)
+    public void UpdateSkipRowsSettings(SkipRowsSettingsValue settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        this.SkipRowsSettings = settings;
+        this.SkipRowsSettingsValue = settings;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
@@ -287,7 +287,7 @@ public sealed class ImportMapping
     /// <param name="settings">The new indicator settings.</param>
     /// <exception cref="ArgumentNullException">Thrown when settings is null.</exception>
     /// <exception cref="DomainException">Thrown when indicator settings are enabled but AmountMode is not IndicatorColumn.</exception>
-    public void UpdateIndicatorSettings(DebitCreditIndicatorSettings settings)
+    public void UpdateIndicatorSettings(DebitCreditIndicatorSettingsValue settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
 

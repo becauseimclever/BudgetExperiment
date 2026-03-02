@@ -83,14 +83,14 @@ public class TransactionListServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>());
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>());
 
         _recurringInstanceProjector
             .Setup(p => p.GetInstancesForDateAsync(
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringInstanceInfo>());
+            .ReturnsAsync(new List<RecurringInstanceInfoValue>());
 
         _recurringTransferInstanceProjector
             .Setup(p => p.GetInstancesByDateRangeAsync(
@@ -99,7 +99,7 @@ public class TransactionListServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>());
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>>());
 
         _recurringTransferInstanceProjector
             .Setup(p => p.GetInstancesForDateAsync(
@@ -107,7 +107,7 @@ public class TransactionListServiceTests
                 It.IsAny<DateOnly>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransferInstanceInfo>());
+            .ReturnsAsync(new List<RecurringTransferInstanceInfoValue>());
     }
 
     [Fact]
@@ -444,12 +444,12 @@ public class TransactionListServiceTests
                 startDate,
                 endDate,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
                 {
-                    targetDate, new List<RecurringInstanceInfo>
+                    targetDate, new List<RecurringInstanceInfoValue>
                     {
-                        new RecurringInstanceInfo(
+                        new RecurringInstanceInfoValue(
                             recurringTransactionId,
                             targetDate,
                             checkingId,
@@ -471,12 +471,12 @@ public class TransactionListServiceTests
                 endDate,
                 checkingId,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>>
             {
                 {
-                    targetDate, new List<RecurringTransferInstanceInfo>
+                    targetDate, new List<RecurringTransferInstanceInfoValue>
                     {
-                        new RecurringTransferInstanceInfo(
+                        new RecurringTransferInstanceInfoValue(
                             recurringTransferId,
                             targetDate,
                             checkingId,
@@ -918,12 +918,12 @@ public class TransactionListServiceTests
                 new DateOnly(2026, 1, 10),
                 new DateOnly(2026, 1, 20),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfo>>
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
                 {
-                    jan15, new List<RecurringInstanceInfo>
+                    jan15, new List<RecurringInstanceInfoValue>
                     {
-                        new RecurringInstanceInfo(
+                        new RecurringInstanceInfoValue(
                             Guid.NewGuid(),
                             jan15,
                             accountId,
@@ -1336,14 +1336,14 @@ public class TransactionListServiceTests
         DateOnly startDate)
     {
         var money = MoneyValue.Create("USD", amount);
-        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
         return RecurringTransaction.Create(accountId, description, money, pattern, startDate);
     }
 
     private static RecurringTransaction CreateTestRecurringTransactionForDate(Guid accountId, DateOnly startDate)
     {
         var amount = MoneyValue.Create("USD", -50.00m);
-        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
         var recurring = RecurringTransaction.Create(accountId, "Test Recurring", amount, pattern, startDate);
 
         // Set the Id for testing
@@ -1362,7 +1362,7 @@ public class TransactionListServiceTests
         DateOnly startDate)
     {
         var money = MoneyValue.Create("USD", amount);
-        var pattern = RecurrencePattern.CreateMonthly(1, startDate.Day);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
         return RecurringTransfer.Create(sourceAccountId, destinationAccountId, description, money, pattern, startDate);
     }
 

@@ -1,4 +1,4 @@
-// <copyright file="PaycheckAllocationSummary.cs" company="BecauseImClever">
+// <copyright file="PaycheckAllocationSummaryValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -7,19 +7,19 @@ namespace BudgetExperiment.Domain.Paycheck;
 /// <summary>
 /// Complete summary of all paycheck allocations.
 /// </summary>
-public sealed record PaycheckAllocationSummary
+public sealed record PaycheckAllocationSummaryValue
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="PaycheckAllocationSummary"/> class.
+    /// Initializes a new instance of the <see cref="PaycheckAllocationSummaryValue"/> class.
     /// </summary>
-    private PaycheckAllocationSummary()
+    private PaycheckAllocationSummaryValue()
     {
     }
 
     /// <summary>
     /// Gets the individual allocations.
     /// </summary>
-    public IReadOnlyList<PaycheckAllocation> Allocations { get; private init; } = Array.Empty<PaycheckAllocation>();
+    public IReadOnlyList<PaycheckAllocationValue> Allocations { get; private init; } = Array.Empty<PaycheckAllocationValue>();
 
     /// <summary>
     /// Gets the total amount to allocate per paycheck.
@@ -54,7 +54,7 @@ public sealed record PaycheckAllocationSummary
     /// <summary>
     /// Gets the warnings.
     /// </summary>
-    public IReadOnlyList<PaycheckAllocationWarning> Warnings { get; private init; } = Array.Empty<PaycheckAllocationWarning>();
+    public IReadOnlyList<PaycheckAllocationWarningValue> Warnings { get; private init; } = Array.Empty<PaycheckAllocationWarningValue>();
 
     /// <summary>
     /// Gets a value indicating whether there are any warnings.
@@ -72,7 +72,7 @@ public sealed record PaycheckAllocationSummary
     public RecurrenceFrequency PaycheckFrequency { get; private init; }
 
     /// <summary>
-    /// Creates a new <see cref="PaycheckAllocationSummary"/> instance.
+    /// Creates a new <see cref="PaycheckAllocationSummaryValue"/> instance.
     /// </summary>
     /// <param name="allocations">The individual allocations.</param>
     /// <param name="totalPerPaycheck">The total per paycheck.</param>
@@ -81,14 +81,14 @@ public sealed record PaycheckAllocationSummary
     /// <param name="warnings">The warnings.</param>
     /// <param name="paycheckAmount">Optional paycheck amount.</param>
     /// <param name="totalAnnualIncome">Optional total annual income.</param>
-    /// <returns>A new <see cref="PaycheckAllocationSummary"/> instance.</returns>
+    /// <returns>A new <see cref="PaycheckAllocationSummaryValue"/> instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when required parameters are null.</exception>
-    public static PaycheckAllocationSummary Create(
-        IEnumerable<PaycheckAllocation> allocations,
+    public static PaycheckAllocationSummaryValue Create(
+        IEnumerable<PaycheckAllocationValue> allocations,
         MoneyValue totalPerPaycheck,
         MoneyValue totalAnnualBills,
         RecurrenceFrequency paycheckFrequency,
-        IEnumerable<PaycheckAllocationWarning> warnings,
+        IEnumerable<PaycheckAllocationWarningValue> warnings,
         MoneyValue? paycheckAmount = null,
         MoneyValue? totalAnnualIncome = null)
     {
@@ -124,7 +124,7 @@ public sealed record PaycheckAllocationSummary
             shortfall = MoneyValue.Zero(currency);
         }
 
-        return new PaycheckAllocationSummary
+        return new PaycheckAllocationSummaryValue
         {
             Allocations = allocationsList,
             TotalPerPaycheck = totalPerPaycheck,

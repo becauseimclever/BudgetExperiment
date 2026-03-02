@@ -149,13 +149,13 @@ public sealed class TransactionService : ITransactionService
             return null;
         }
 
-        GeoCoordinate? coordinates = null;
+        GeoCoordinateValue? coordinates = null;
         if (dto.Latitude.HasValue && dto.Longitude.HasValue)
         {
-            coordinates = GeoCoordinate.Create(dto.Latitude.Value, dto.Longitude.Value);
+            coordinates = GeoCoordinateValue.Create(dto.Latitude.Value, dto.Longitude.Value);
         }
 
-        var location = TransactionLocation.Create(
+        var location = TransactionLocationValue.Create(
             dto.City,
             dto.StateOrRegion,
             dto.Country,

@@ -1,4 +1,4 @@
-// <copyright file="RecurringInstanceInfo.cs" company="BecauseImClever">
+// <copyright file="RecurringInstanceInfoValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -18,7 +18,7 @@ namespace BudgetExperiment.Domain.Recurring;
 /// <param name="IsModified">Whether this instance has been modified via exception.</param>
 /// <param name="IsSkipped">Whether this instance has been skipped via exception.</param>
 /// <param name="ImportPatterns">Optional import patterns for pattern-based matching.</param>
-public sealed record RecurringInstanceInfo(
+public sealed record RecurringInstanceInfoValue(
     Guid RecurringTransactionId,
     DateOnly InstanceDate,
     Guid AccountId,
@@ -29,4 +29,4 @@ public sealed record RecurringInstanceInfo(
     string? CategoryName,
     bool IsModified,
     bool IsSkipped,
-    IReadOnlyCollection<ImportPattern>? ImportPatterns = null);
+    IReadOnlyCollection<ImportPatternValue>? ImportPatterns = null);

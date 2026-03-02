@@ -44,7 +44,7 @@ public class RecurringTransactionRealizationServiceTests
             this._account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
@@ -96,7 +96,7 @@ public class RecurringTransactionRealizationServiceTests
             this._account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
@@ -129,7 +129,7 @@ public class RecurringTransactionRealizationServiceTests
             this._account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
@@ -166,7 +166,7 @@ public class RecurringTransactionRealizationServiceTests
             this._account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
@@ -206,7 +206,7 @@ public class RecurringTransactionRealizationServiceTests
             this._account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);

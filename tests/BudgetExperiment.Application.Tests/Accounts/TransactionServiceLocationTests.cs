@@ -21,8 +21,8 @@ public class TransactionServiceLocationTests
         var t2 = account.AddTransaction(MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 2), "Store B");
         var t3 = account.AddTransaction(MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 3), "Store C");
 
-        t1.SetLocation(TransactionLocation.CreateFromParsed("Seattle", "WA"));
-        t2.SetLocation(TransactionLocation.CreateFromParsed("Portland", "OR"));
+        t1.SetLocation(TransactionLocationValue.CreateFromParsed("Seattle", "WA"));
+        t2.SetLocation(TransactionLocationValue.CreateFromParsed("Portland", "OR"));
         // t3 has no location — should remain unaffected
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -51,7 +51,7 @@ public class TransactionServiceLocationTests
         // Arrange
         var account = Account.Create("Test", AccountType.Checking);
         var t1 = account.AddTransaction(MoneyValue.Create("USD", -10m), new DateOnly(2026, 2, 1), "Gas Station");
-        t1.SetLocation(TransactionLocation.CreateFromParsed("Denver", "CO"));
+        t1.SetLocation(TransactionLocationValue.CreateFromParsed("Denver", "CO"));
 
         var transactionRepo = new Mock<ITransactionRepository>();
         transactionRepo.Setup(r => r.GetAllWithLocationAsync(default))

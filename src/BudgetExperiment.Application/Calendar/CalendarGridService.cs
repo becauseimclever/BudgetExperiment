@@ -132,9 +132,9 @@ public sealed class CalendarGridService : ICalendarGridService
         int year,
         int month,
         DateOnly today,
-        Dictionary<DateOnly, DailyTotal> dailyTotals,
-        Dictionary<DateOnly, List<RecurringInstanceInfo>> recurringByDate,
-        Dictionary<DateOnly, List<RecurringTransferInstanceInfo>> recurringTransfersByDate,
+        Dictionary<DateOnly, DailyTotalValue> dailyTotals,
+        Dictionary<DateOnly, List<RecurringInstanceInfoValue>> recurringByDate,
+        Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>> recurringTransfersByDate,
         string currency)
     {
         var days = new List<CalendarDaySummaryDto>(GridDays);

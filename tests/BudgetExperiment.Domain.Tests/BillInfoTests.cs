@@ -7,7 +7,7 @@ using BudgetExperiment.Domain;
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the <see cref="BillInfo"/> value object.
+/// Unit tests for the <see cref="BillInfoValue"/> value object.
 /// </summary>
 public class BillInfoTests
 {
@@ -20,7 +20,7 @@ public class BillInfoTests
         var frequency = RecurrenceFrequency.Monthly;
 
         // Act
-        var bill = BillInfo.Create(description, amount, frequency);
+        var bill = BillInfoValue.Create(description, amount, frequency);
 
         // Assert
         Assert.Equal(description, bill.Description);
@@ -39,7 +39,7 @@ public class BillInfoTests
         var sourceId = Guid.NewGuid();
 
         // Act
-        var bill = BillInfo.Create(description, amount, frequency, sourceId);
+        var bill = BillInfoValue.Create(description, amount, frequency, sourceId);
 
         // Assert
         Assert.Equal(description, bill.Description);
@@ -59,7 +59,7 @@ public class BillInfoTests
         var frequency = RecurrenceFrequency.Monthly;
 
         // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => BillInfo.Create(description!, amount, frequency));
+        var ex = Assert.Throws<DomainException>(() => BillInfoValue.Create(description!, amount, frequency));
         Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -71,7 +71,7 @@ public class BillInfoTests
         var frequency = RecurrenceFrequency.Monthly;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => BillInfo.Create(description, null!, frequency));
+        Assert.Throws<ArgumentNullException>(() => BillInfoValue.Create(description, null!, frequency));
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class BillInfoTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var pattern = RecurrencePattern.CreateMonthly(1, 15);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, 15);
         var recurring = RecurringTransaction.Create(
             accountId,
             "Netflix Subscription",
@@ -88,7 +88,7 @@ public class BillInfoTests
             DateOnly.FromDateTime(DateTime.UtcNow));
 
         // Act
-        var bill = BillInfo.FromRecurringTransaction(recurring);
+        var bill = BillInfoValue.FromRecurringTransaction(recurring);
 
         // Assert
         Assert.Equal("Netflix Subscription", bill.Description);
@@ -101,7 +101,7 @@ public class BillInfoTests
     public void FromRecurringTransaction_WithNullTransaction_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => BillInfo.FromRecurringTransaction(null!));
+        Assert.Throws<ArgumentNullException>(() => BillInfoValue.FromRecurringTransaction(null!));
     }
 
     [Fact]
@@ -109,8 +109,8 @@ public class BillInfoTests
     {
         // Arrange
         var amount = MoneyValue.Create("USD", 500m);
-        var bill1 = BillInfo.Create("Electric Bill", amount, RecurrenceFrequency.Monthly);
-        var bill2 = BillInfo.Create("Electric Bill", amount, RecurrenceFrequency.Monthly);
+        var bill1 = BillInfoValue.Create("Electric Bill", amount, RecurrenceFrequency.Monthly);
+        var bill2 = BillInfoValue.Create("Electric Bill", amount, RecurrenceFrequency.Monthly);
 
         // Act & Assert - record equality
         Assert.Equal(bill1, bill2);
@@ -121,8 +121,8 @@ public class BillInfoTests
     {
         // Arrange
         var amount = MoneyValue.Create("USD", 500m);
-        var bill1 = BillInfo.Create("Electric Bill", amount, RecurrenceFrequency.Monthly);
-        var bill2 = BillInfo.Create("Gas Bill", amount, RecurrenceFrequency.Monthly);
+        var bill1 = BillInfoValue.Create("Electric Bill", amount, RecurrenceFrequency.Monthly);
+        var bill2 = BillInfoValue.Create("Gas Bill", amount, RecurrenceFrequency.Monthly);
 
         // Act & Assert
         Assert.NotEqual(bill1, bill2);

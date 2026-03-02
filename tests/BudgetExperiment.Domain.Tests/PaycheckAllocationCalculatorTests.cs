@@ -19,7 +19,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_MonthlyBill_BiweeklyPaycheck_CalculatesCorrectly()
     {
         // Arrange - Example 1 from spec: $1,200/month rent with biweekly paycheck
-        var bill = BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
+        var bill = BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
@@ -33,7 +33,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_QuarterlyBill_BiweeklyPaycheck_CalculatesCorrectly()
     {
         // Arrange - Example 2 from spec: $600/quarter insurance with biweekly paycheck
-        var bill = BillInfo.Create("Car Insurance", MoneyValue.Create("USD", 600m), RecurrenceFrequency.Quarterly);
+        var bill = BillInfoValue.Create("Car Insurance", MoneyValue.Create("USD", 600m), RecurrenceFrequency.Quarterly);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
@@ -47,7 +47,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_WeeklyBill_BiweeklyPaycheck_CalculatesCorrectly()
     {
         // Arrange - Example 3 from spec: $200/week groceries with biweekly paycheck
-        var bill = BillInfo.Create("Groceries", MoneyValue.Create("USD", 200m), RecurrenceFrequency.Weekly);
+        var bill = BillInfoValue.Create("Groceries", MoneyValue.Create("USD", 200m), RecurrenceFrequency.Weekly);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
@@ -61,7 +61,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_YearlyBill_MonthlyPaycheck_CalculatesCorrectly()
     {
         // Arrange - Annual property tax with monthly salary
-        var bill = BillInfo.Create("Property Tax", MoneyValue.Create("USD", 3600m), RecurrenceFrequency.Yearly);
+        var bill = BillInfoValue.Create("Property Tax", MoneyValue.Create("USD", 3600m), RecurrenceFrequency.Yearly);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Monthly);
@@ -75,7 +75,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_DailyBill_WeeklyPaycheck_CalculatesCorrectly()
     {
         // Arrange - Daily expense with weekly paycheck
-        var bill = BillInfo.Create("Coffee", MoneyValue.Create("USD", 5m), RecurrenceFrequency.Daily);
+        var bill = BillInfoValue.Create("Coffee", MoneyValue.Create("USD", 5m), RecurrenceFrequency.Daily);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Weekly);
@@ -89,7 +89,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_MonthlyBill_MonthlyPaycheck_CalculatesCorrectly()
     {
         // Arrange - Same frequency (monthly-monthly)
-        var bill = BillInfo.Create("Netflix", MoneyValue.Create("USD", 15.99m), RecurrenceFrequency.Monthly);
+        var bill = BillInfoValue.Create("Netflix", MoneyValue.Create("USD", 15.99m), RecurrenceFrequency.Monthly);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Monthly);
@@ -117,8 +117,8 @@ public class PaycheckAllocationCalculatorTests
         // Arrange
         var bills = new[]
         {
-            BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
-            BillInfo.Create("Car Insurance", MoneyValue.Create("USD", 600m), RecurrenceFrequency.Quarterly),
+            BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
+            BillInfoValue.Create("Car Insurance", MoneyValue.Create("USD", 600m), RecurrenceFrequency.Quarterly),
         };
 
         // Act
@@ -139,7 +139,7 @@ public class PaycheckAllocationCalculatorTests
         // Arrange
         var bills = new[]
         {
-            BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
+            BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
         };
 
         // Act
@@ -162,7 +162,7 @@ public class PaycheckAllocationCalculatorTests
         // Arrange
         var bills = new[]
         {
-            BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
+            BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
         };
         var paycheckAmount = MoneyValue.Create("USD", 400m); // Less than $553.85 required
 
@@ -185,7 +185,7 @@ public class PaycheckAllocationCalculatorTests
         // Arrange - Annual bills exceed annual income
         var bills = new[]
         {
-            BillInfo.Create("Rent", MoneyValue.Create("USD", 5000m), RecurrenceFrequency.Monthly), // $60,000/year
+            BillInfoValue.Create("Rent", MoneyValue.Create("USD", 5000m), RecurrenceFrequency.Monthly), // $60,000/year
         };
         var paycheckAmount = MoneyValue.Create("USD", 2000m); // $52,000/year
 
@@ -204,7 +204,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocationSummary_EmptyBills_GeneratesNoBillsWarning()
     {
         // Arrange
-        var bills = Array.Empty<BillInfo>();
+        var bills = Array.Empty<BillInfoValue>();
 
         // Act
         var summary = this._calculator.CalculateAllocationSummary(
@@ -225,7 +225,7 @@ public class PaycheckAllocationCalculatorTests
         // Arrange
         var bills = new[]
         {
-            BillInfo.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
+            BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly),
         };
 
         // Act
@@ -254,7 +254,7 @@ public class PaycheckAllocationCalculatorTests
     {
         // Arrange
         var sourceId = Guid.NewGuid();
-        var bill = BillInfo.Create(
+        var bill = BillInfoValue.Create(
             "Subscription",
             MoneyValue.Create("USD", 10m),
             RecurrenceFrequency.Monthly,
@@ -284,7 +284,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_VerifyAnnualMultipliers(RecurrenceFrequency frequency, int expectedMultiplier)
     {
         // Arrange
-        var bill = BillInfo.Create("Test", MoneyValue.Create("USD", 100m), frequency);
+        var bill = BillInfoValue.Create("Test", MoneyValue.Create("USD", 100m), frequency);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Yearly);
@@ -304,7 +304,7 @@ public class PaycheckAllocationCalculatorTests
     public void CalculateAllocation_VerifyPeriodsPerYear(RecurrenceFrequency paycheckFrequency, int expectedPeriods)
     {
         // Arrange - Use yearly bill so annual = $1200
-        var bill = BillInfo.Create("Annual Bill", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Yearly);
+        var bill = BillInfoValue.Create("Annual Bill", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Yearly);
 
         // Act
         var allocation = this._calculator.CalculateAllocation(bill, paycheckFrequency);

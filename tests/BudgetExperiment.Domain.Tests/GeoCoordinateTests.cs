@@ -5,7 +5,7 @@
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the <see cref="GeoCoordinate"/> value object.
+/// Unit tests for the <see cref="GeoCoordinateValue"/> value object.
 /// </summary>
 public class GeoCoordinateTests
 {
@@ -13,7 +13,7 @@ public class GeoCoordinateTests
     public void Create_WithValidCoordinates_ReturnsInstance()
     {
         // Arrange & Act
-        var coord = GeoCoordinate.Create(40.7128m, -74.0060m);
+        var coord = GeoCoordinateValue.Create(40.7128m, -74.0060m);
 
         // Assert
         Assert.Equal(40.7128m, coord.Latitude);
@@ -28,7 +28,7 @@ public class GeoCoordinateTests
     public void Create_WithLatitudeOutOfRange_ThrowsDomainException(double latitude)
     {
         // Arrange & Act & Assert
-        var ex = Assert.Throws<DomainException>(() => GeoCoordinate.Create((decimal)latitude, 0m));
+        var ex = Assert.Throws<DomainException>(() => GeoCoordinateValue.Create((decimal)latitude, 0m));
         Assert.Contains("Latitude", ex.Message);
     }
 
@@ -40,7 +40,7 @@ public class GeoCoordinateTests
     public void Create_WithLongitudeOutOfRange_ThrowsDomainException(double longitude)
     {
         // Arrange & Act & Assert
-        var ex = Assert.Throws<DomainException>(() => GeoCoordinate.Create(0m, (decimal)longitude));
+        var ex = Assert.Throws<DomainException>(() => GeoCoordinateValue.Create(0m, (decimal)longitude));
         Assert.Contains("Longitude", ex.Message);
     }
 
@@ -48,7 +48,7 @@ public class GeoCoordinateTests
     public void Create_RoundsTo6DecimalPlaces()
     {
         // Arrange & Act
-        var coord = GeoCoordinate.Create(40.71284567m, -74.00604321m);
+        var coord = GeoCoordinateValue.Create(40.71284567m, -74.00604321m);
 
         // Assert
         Assert.Equal(40.712846m, coord.Latitude);
@@ -59,8 +59,8 @@ public class GeoCoordinateTests
     public void Create_WithBoundaryValues_ReturnsInstance()
     {
         // Arrange & Act
-        var min = GeoCoordinate.Create(-90m, -180m);
-        var max = GeoCoordinate.Create(90m, 180m);
+        var min = GeoCoordinateValue.Create(-90m, -180m);
+        var max = GeoCoordinateValue.Create(90m, 180m);
 
         // Assert
         Assert.Equal(-90m, min.Latitude);
@@ -73,8 +73,8 @@ public class GeoCoordinateTests
     public void EqualityByValue_SameCoordinates_AreEqual()
     {
         // Arrange
-        var coord1 = GeoCoordinate.Create(40.7128m, -74.0060m);
-        var coord2 = GeoCoordinate.Create(40.7128m, -74.0060m);
+        var coord1 = GeoCoordinateValue.Create(40.7128m, -74.0060m);
+        var coord2 = GeoCoordinateValue.Create(40.7128m, -74.0060m);
 
         // Assert
         Assert.Equal(coord1, coord2);
@@ -84,8 +84,8 @@ public class GeoCoordinateTests
     public void EqualityByValue_DifferentCoordinates_AreNotEqual()
     {
         // Arrange
-        var coord1 = GeoCoordinate.Create(40.7128m, -74.0060m);
-        var coord2 = GeoCoordinate.Create(34.0522m, -118.2437m);
+        var coord1 = GeoCoordinateValue.Create(40.7128m, -74.0060m);
+        var coord2 = GeoCoordinateValue.Create(34.0522m, -118.2437m);
 
         // Assert
         Assert.NotEqual(coord1, coord2);

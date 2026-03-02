@@ -7,7 +7,7 @@ using BudgetExperiment.Domain;
 namespace BudgetExperiment.Domain.Tests;
 
 /// <summary>
-/// Unit tests for the MatchingTolerances value object.
+/// Unit tests for the MatchingTolerancesValue value object.
 /// </summary>
 public class MatchingTolerancesTests
 {
@@ -15,7 +15,7 @@ public class MatchingTolerancesTests
     public void Default_Returns_Valid_Configuration()
     {
         // Act
-        var tolerances = MatchingTolerances.Default;
+        var tolerances = MatchingTolerancesValue.Default;
 
         // Assert
         Assert.Equal(7, tolerances.DateToleranceDays);
@@ -29,7 +29,7 @@ public class MatchingTolerancesTests
     public void Create_With_Valid_Values_Creates_Instance()
     {
         // Act
-        var tolerances = MatchingTolerances.Create(
+        var tolerances = MatchingTolerancesValue.Create(
             dateToleranceDays: 5,
             amountTolerancePercent: 0.15m,
             amountToleranceAbsolute: 20.00m,
@@ -49,7 +49,7 @@ public class MatchingTolerancesTests
     {
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            MatchingTolerances.Create(
+            MatchingTolerancesValue.Create(
                 dateToleranceDays: -1,
                 amountTolerancePercent: 0.10m,
                 amountToleranceAbsolute: 10.00m,
@@ -64,7 +64,7 @@ public class MatchingTolerancesTests
     {
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            MatchingTolerances.Create(
+            MatchingTolerancesValue.Create(
                 dateToleranceDays: 7,
                 amountTolerancePercent: -0.10m,
                 amountToleranceAbsolute: 10.00m,
@@ -79,7 +79,7 @@ public class MatchingTolerancesTests
     {
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            MatchingTolerances.Create(
+            MatchingTolerancesValue.Create(
                 dateToleranceDays: 7,
                 amountTolerancePercent: 1.5m,
                 amountToleranceAbsolute: 10.00m,
@@ -94,7 +94,7 @@ public class MatchingTolerancesTests
     {
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            MatchingTolerances.Create(
+            MatchingTolerancesValue.Create(
                 dateToleranceDays: 7,
                 amountTolerancePercent: 0.10m,
                 amountToleranceAbsolute: -5.00m,
@@ -111,7 +111,7 @@ public class MatchingTolerancesTests
     {
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            MatchingTolerances.Create(
+            MatchingTolerancesValue.Create(
                 dateToleranceDays: 7,
                 amountTolerancePercent: 0.10m,
                 amountToleranceAbsolute: 10.00m,
@@ -128,7 +128,7 @@ public class MatchingTolerancesTests
     {
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            MatchingTolerances.Create(
+            MatchingTolerancesValue.Create(
                 dateToleranceDays: 7,
                 amountTolerancePercent: 0.10m,
                 amountToleranceAbsolute: 10.00m,
@@ -142,7 +142,7 @@ public class MatchingTolerancesTests
     public void Create_With_Zero_DateToleranceDays_Is_Valid()
     {
         // Act
-        var tolerances = MatchingTolerances.Create(
+        var tolerances = MatchingTolerancesValue.Create(
             dateToleranceDays: 0,
             amountTolerancePercent: 0.10m,
             amountToleranceAbsolute: 10.00m,
@@ -157,7 +157,7 @@ public class MatchingTolerancesTests
     public void Create_With_Zero_AmountTolerancePercent_Is_Valid()
     {
         // Act
-        var tolerances = MatchingTolerances.Create(
+        var tolerances = MatchingTolerancesValue.Create(
             dateToleranceDays: 7,
             amountTolerancePercent: 0m,
             amountToleranceAbsolute: 10.00m,
@@ -172,7 +172,7 @@ public class MatchingTolerancesTests
     public void Create_With_Zero_AmountToleranceAbsolute_Is_Valid()
     {
         // Act
-        var tolerances = MatchingTolerances.Create(
+        var tolerances = MatchingTolerancesValue.Create(
             dateToleranceDays: 7,
             amountTolerancePercent: 0.10m,
             amountToleranceAbsolute: 0m,
@@ -187,8 +187,8 @@ public class MatchingTolerancesTests
     public void Two_Instances_With_Same_Values_Are_Equal()
     {
         // Arrange
-        var tolerances1 = MatchingTolerances.Create(5, 0.15m, 20.00m, 0.7m, 0.90m);
-        var tolerances2 = MatchingTolerances.Create(5, 0.15m, 20.00m, 0.7m, 0.90m);
+        var tolerances1 = MatchingTolerancesValue.Create(5, 0.15m, 20.00m, 0.7m, 0.90m);
+        var tolerances2 = MatchingTolerancesValue.Create(5, 0.15m, 20.00m, 0.7m, 0.90m);
 
         // Assert
         Assert.Equal(tolerances1, tolerances2);
@@ -199,8 +199,8 @@ public class MatchingTolerancesTests
     public void Two_Instances_With_Different_Values_Are_Not_Equal()
     {
         // Arrange
-        var tolerances1 = MatchingTolerances.Create(5, 0.15m, 20.00m, 0.7m, 0.90m);
-        var tolerances2 = MatchingTolerances.Create(7, 0.15m, 20.00m, 0.7m, 0.90m);
+        var tolerances1 = MatchingTolerancesValue.Create(5, 0.15m, 20.00m, 0.7m, 0.90m);
+        var tolerances2 = MatchingTolerancesValue.Create(7, 0.15m, 20.00m, 0.7m, 0.90m);
 
         // Assert
         Assert.NotEqual(tolerances1, tolerances2);

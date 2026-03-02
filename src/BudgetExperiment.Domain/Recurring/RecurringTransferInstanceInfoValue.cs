@@ -1,4 +1,4 @@
-// <copyright file="RecurringTransferInstanceInfo.cs" company="BecauseImClever">
+// <copyright file="RecurringTransferInstanceInfoValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -16,7 +16,7 @@ namespace BudgetExperiment.Domain.Recurring;
 /// <param name="IsModified">Whether this instance has been modified via exception.</param>
 /// <param name="IsSkipped">Whether this instance has been skipped via exception.</param>
 /// <param name="TransferDirection">The direction of the transfer (Source or Destination).</param>
-public sealed record RecurringTransferInstanceInfo(
+public sealed record RecurringTransferInstanceInfoValue(
     Guid RecurringTransferId,
     DateOnly InstanceDate,
     Guid AccountId,

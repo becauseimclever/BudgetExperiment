@@ -63,11 +63,11 @@ public static class AccountMapper
     }
 
     /// <summary>
-    /// Maps a <see cref="TransactionLocation"/> to a <see cref="TransactionLocationDto"/>.
+    /// Maps a <see cref="TransactionLocationValue"/> to a <see cref="TransactionLocationDto"/>.
     /// </summary>
     /// <param name="location">The location value object (may be null).</param>
     /// <returns>The mapped DTO, or null.</returns>
-    public static TransactionLocationDto? ToLocationDto(TransactionLocation? location)
+    public static TransactionLocationDto? ToLocationDto(TransactionLocationValue? location)
     {
         if (location is null)
         {
@@ -87,11 +87,11 @@ public static class AccountMapper
     }
 
     /// <summary>
-    /// Maps a <see cref="DailyTotal"/> to a <see cref="DailyTotalDto"/>.
+    /// Maps a <see cref="DailyTotalValue"/> to a <see cref="DailyTotalDto"/>.
     /// </summary>
     /// <param name="dailyTotal">The daily total record.</param>
     /// <returns>The mapped DTO.</returns>
-    public static DailyTotalDto ToDto(DailyTotal dailyTotal)
+    public static DailyTotalDto ToDto(DailyTotalValue dailyTotal)
     {
         return new DailyTotalDto
         {

@@ -12,7 +12,7 @@ namespace BudgetExperiment.Domain.Tests;
 public class TransactionMatcherTests
 {
     private readonly TransactionMatcher _matcher = new();
-    private readonly MatchingTolerances _defaultTolerances = MatchingTolerances.Default;
+    private readonly MatchingTolerancesValue _defaultTolerances = MatchingTolerancesValue.Default;
     private readonly Guid _accountId = Guid.NewGuid();
 
     #region Description Matching Tests
@@ -51,7 +51,7 @@ public class TransactionMatcherTests
     public void CalculateMatch_PartialDescriptionMatch_ReturnsModerateSimilarity()
     {
         // Arrange - Use loose tolerances for partial description matching
-        var looseTolerances = MatchingTolerances.Create(7, 0.10m, 10.00m, 0.30m, 0.85m);
+        var looseTolerances = MatchingTolerancesValue.Create(7, 0.10m, 10.00m, 0.30m, 0.85m);
         var transaction = this.CreateTransaction("NETFLIX.COM 800-123-4567", 15.99m, new DateOnly(2026, 1, 15));
         var candidate = this.CreateCandidate("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15));
 
@@ -115,7 +115,7 @@ public class TransactionMatcherTests
     public void CalculateMatch_AmountExceedsPercentTolerance_ReturnsNull()
     {
         // Arrange - 20% difference, exceeds default 10% tolerance
-        var tolerances = MatchingTolerances.Create(7, 0.10m, 0m, 0.6m, 0.85m); // No absolute tolerance
+        var tolerances = MatchingTolerancesValue.Create(7, 0.10m, 0m, 0.6m, 0.85m); // No absolute tolerance
         var transaction = this.CreateTransaction("Electric Bill", 120.00m, new DateOnly(2026, 1, 15));
         var candidate = this.CreateCandidate("Electric Bill", 100.00m, new DateOnly(2026, 1, 15));
 
@@ -286,7 +286,7 @@ public class TransactionMatcherTests
     {
         // Arrange
         var transaction = this.CreateTransaction("Netflix", 15.99m, new DateOnly(2026, 1, 15));
-        var candidates = Array.Empty<RecurringInstanceInfo>();
+        var candidates = Array.Empty<RecurringInstanceInfoValue>();
 
         // Act
         var results = this._matcher.FindMatches(transaction, candidates, this._defaultTolerances);
@@ -360,9 +360,9 @@ public class TransactionMatcherTests
             description);
     }
 
-    private RecurringInstanceInfo CreateCandidate(string description, decimal amount, DateOnly instanceDate)
+    private RecurringInstanceInfoValue CreateCandidate(string description, decimal amount, DateOnly instanceDate)
     {
-        return new RecurringInstanceInfo(
+        return new RecurringInstanceInfoValue(
             RecurringTransactionId: Guid.NewGuid(),
             InstanceDate: instanceDate,
             AccountId: this._accountId,
@@ -375,9 +375,9 @@ public class TransactionMatcherTests
             IsSkipped: false);
     }
 
-    private RecurringInstanceInfo CreateCandidateWithDescription(string description, decimal amount, DateOnly instanceDate)
+    private RecurringInstanceInfoValue CreateCandidateWithDescription(string description, decimal amount, DateOnly instanceDate)
     {
-        return new RecurringInstanceInfo(
+        return new RecurringInstanceInfoValue(
             RecurringTransactionId: Guid.NewGuid(),
             InstanceDate: instanceDate,
             AccountId: this._accountId,
@@ -390,13 +390,13 @@ public class TransactionMatcherTests
             IsSkipped: false);
     }
 
-    private RecurringInstanceInfo CreateCandidateWithPatterns(
+    private RecurringInstanceInfoValue CreateCandidateWithPatterns(
         string description,
         decimal amount,
         DateOnly instanceDate,
-        IReadOnlyCollection<ImportPattern> patterns)
+        IReadOnlyCollection<ImportPatternValue> patterns)
     {
-        return new RecurringInstanceInfo(
+        return new RecurringInstanceInfoValue(
             RecurringTransactionId: Guid.NewGuid(),
             InstanceDate: instanceDate,
             AccountId: this._accountId,
@@ -418,7 +418,7 @@ public class TransactionMatcherTests
     public void CalculateMatch_WithMatchingImportPattern_ReturnsHighConfidence()
     {
         // Arrange
-        var patterns = new[] { ImportPattern.Create("*ACME CORP PAYROLL*") };
+        var patterns = new[] { ImportPatternValue.Create("*ACME CORP PAYROLL*") };
         var transaction = this.CreateTransaction("DIRECT DEP ACME CORP PAYROLL 01/15", 1500.00m, new DateOnly(2026, 1, 15));
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
 
@@ -435,7 +435,7 @@ public class TransactionMatcherTests
     public void CalculateMatch_WithMatchingImportPattern_BypassesDescriptionThreshold()
     {
         // Arrange - Without pattern, these descriptions wouldn't match (too different)
-        var patterns = new[] { ImportPattern.Create("*NETFLIX*") };
+        var patterns = new[] { ImportPatternValue.Create("*NETFLIX*") };
         var transaction = this.CreateTransaction("NETFLIX.COM 800-123-4567", 15.99m, new DateOnly(2026, 1, 15));
         var candidate = this.CreateCandidateWithPatterns("Netflix Subscription Monthly", 15.99m, new DateOnly(2026, 1, 15), patterns);
 
@@ -451,7 +451,7 @@ public class TransactionMatcherTests
     public void CalculateMatch_WithNonMatchingImportPattern_FallsBackToFuzzyMatching()
     {
         // Arrange - Pattern won't match, but descriptions are similar enough for fuzzy matching
-        var patterns = new[] { ImportPattern.Create("*OTHER COMPANY*") };
+        var patterns = new[] { ImportPatternValue.Create("*OTHER COMPANY*") };
         var transaction = this.CreateTransaction("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15));
         var candidate = this.CreateCandidateWithPatterns("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15), patterns);
 
@@ -469,8 +469,8 @@ public class TransactionMatcherTests
         // Arrange
         var patterns = new[]
         {
-            ImportPattern.Create("*OTHER COMPANY*"),
-            ImportPattern.Create("*ACME CORP*"),
+            ImportPatternValue.Create("*OTHER COMPANY*"),
+            ImportPatternValue.Create("*ACME CORP*"),
         };
         var transaction = this.CreateTransaction("DIRECT DEP ACME CORP PAYROLL", 1500.00m, new DateOnly(2026, 1, 15));
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
@@ -487,7 +487,7 @@ public class TransactionMatcherTests
     public void CalculateMatch_ImportPatternMatch_StillChecksDateTolerance()
     {
         // Arrange - Pattern matches but date is way out of tolerance
-        var patterns = new[] { ImportPattern.Create("*ACME CORP*") };
+        var patterns = new[] { ImportPatternValue.Create("*ACME CORP*") };
         var transaction = this.CreateTransaction("DIRECT DEP ACME CORP", 1500.00m, new DateOnly(2026, 2, 15)); // 1 month later
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
 
@@ -502,7 +502,7 @@ public class TransactionMatcherTests
     public void CalculateMatch_ImportPatternMatch_StillChecksAmountTolerance()
     {
         // Arrange - Pattern matches but amount is way off
-        var patterns = new[] { ImportPattern.Create("*ACME CORP*") };
+        var patterns = new[] { ImportPatternValue.Create("*ACME CORP*") };
         var transaction = this.CreateTransaction("DIRECT DEP ACME CORP", 5000.00m, new DateOnly(2026, 1, 15));
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
 
@@ -517,8 +517,8 @@ public class TransactionMatcherTests
     public void FindMatches_WithImportPatterns_PrioritizesPatternMatches()
     {
         // Arrange - Use loose tolerances so both candidates can match
-        var looseTolerances = MatchingTolerances.Create(7, 0.10m, 10.00m, 0.20m, 0.85m);
-        var patternsForPaycheck = new[] { ImportPattern.Create("*ACME CORP PAYROLL*") };
+        var looseTolerances = MatchingTolerancesValue.Create(7, 0.10m, 10.00m, 0.20m, 0.85m);
+        var patternsForPaycheck = new[] { ImportPatternValue.Create("*ACME CORP PAYROLL*") };
         var transaction = this.CreateTransaction("DIRECT DEP ACME CORP PAYROLL", 1500.00m, new DateOnly(2026, 1, 15));
 
         var candidates = new[]

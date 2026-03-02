@@ -35,6 +35,7 @@ All notable changes to Budget Experiment.
 
 ### Refactoring
 
+- **domain:** Rename 17 value objects with `Value` suffix per §5 naming convention — `GeoCoordinateValue`, `TransactionLocationValue`, `MatchingTolerancesValue`, `DailyTotalValue`, `ColumnMappingValue`, `SkipRowsSettingsValue`, `DebitCreditIndicatorSettingsValue`, `DuplicateDetectionSettingsValue`, `BillInfoValue`, `RecurrencePatternValue`, `RecurringInstanceInfoValue`, `RecurringTransferInstanceInfoValue`, `ImportPatternValue`, `PaycheckAllocationValue`, `PaycheckAllocationSummaryValue`, `PaycheckAllocationWarningValue`, `TransactionMatchResultValue` (Feature 076)
 - **application:** Replace 51 hardcoded `"USD"` strings across 11 Application services with `ICurrencyProvider` — all monetary values now derive currency from user's `PreferredCurrency` setting (Feature 064)
 - **contracts:** Change `MoneyDto.Currency` default from `"USD"` to `string.Empty` — all callers now set currency explicitly via `ICurrencyProvider` (Feature 064)
 

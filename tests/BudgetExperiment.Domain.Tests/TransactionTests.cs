@@ -828,7 +828,7 @@ public class TransactionTests
             new DateOnly(2026, 2, 20),
             "COFFEE SHOP");
         var originalUpdatedAt = transaction.UpdatedAt;
-        var location = TransactionLocation.Create(
+        var location = TransactionLocationValue.Create(
             "Seattle", "WA", "US", "98101", null, LocationSource.Manual);
 
         // Act
@@ -848,7 +848,7 @@ public class TransactionTests
             MoneyValue.Create("USD", -25.00m),
             new DateOnly(2026, 2, 20),
             "COFFEE SHOP");
-        var location = TransactionLocation.Create(
+        var location = TransactionLocationValue.Create(
             "Seattle", "WA", "US", null, null, LocationSource.Manual);
         transaction.SetLocation(location);
         var originalUpdatedAt = transaction.UpdatedAt;

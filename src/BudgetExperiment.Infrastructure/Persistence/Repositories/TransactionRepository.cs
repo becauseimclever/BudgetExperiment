@@ -75,7 +75,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<DailyTotal>> GetDailyTotalsAsync(
+    public async Task<IReadOnlyList<DailyTotalValue>> GetDailyTotalsAsync(
         int year,
         int month,
         Guid? accountId = null,
@@ -108,7 +108,7 @@ internal sealed class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
 
         return dailyTotals
-            .Select(d => new DailyTotal(
+            .Select(d => new DailyTotalValue(
                 d.Date,
                 MoneyValue.Create(d.Currency, d.TotalAmount),
                 d.Count))

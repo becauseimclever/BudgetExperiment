@@ -17,7 +17,7 @@ public class CalendarServiceTests
     public async Task GetMonthlySummaryAsync_Returns_DailyTotals()
     {
         // Arrange
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(new DateOnly(2026, 1, 5), MoneyValue.Create("USD", 100.00m), 2),
             new(new DateOnly(2026, 1, 15), MoneyValue.Create("USD", 250.50m), 3),
@@ -44,7 +44,7 @@ public class CalendarServiceTests
     {
         // Arrange
         var repo = new Mock<ITransactionRepository>();
-        repo.Setup(r => r.GetDailyTotalsAsync(2026, 2, null, default)).ReturnsAsync(new List<DailyTotal>());
+        repo.Setup(r => r.GetDailyTotalsAsync(2026, 2, null, default)).ReturnsAsync(new List<DailyTotalValue>());
         var service = new CalendarService(repo.Object);
 
         // Act
@@ -59,7 +59,7 @@ public class CalendarServiceTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(new DateOnly(2026, 3, 10), MoneyValue.Create("USD", 75.00m), 1),
         };
@@ -82,7 +82,7 @@ public class CalendarServiceTests
         // Arrange
         var date = new DateOnly(2026, 4, 20);
         var money = MoneyValue.Create("EUR", 999.99m);
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(date, money, 5),
         };
@@ -106,7 +106,7 @@ public class CalendarServiceTests
     public async Task GetMonthlySummaryAsync_Handles_Negative_Totals()
     {
         // Arrange
-        var dailyTotals = new List<DailyTotal>
+        var dailyTotals = new List<DailyTotalValue>
         {
             new(new DateOnly(2026, 5, 1), MoneyValue.Create("USD", -150.00m), 4),
         };
@@ -129,7 +129,7 @@ public class CalendarServiceTests
         var cts = new CancellationTokenSource();
         var token = cts.Token;
         var repo = new Mock<ITransactionRepository>();
-        repo.Setup(r => r.GetDailyTotalsAsync(2026, 6, null, token)).ReturnsAsync(new List<DailyTotal>());
+        repo.Setup(r => r.GetDailyTotalsAsync(2026, 6, null, token)).ReturnsAsync(new List<DailyTotalValue>());
         var service = new CalendarService(repo.Object);
 
         // Act

@@ -102,7 +102,7 @@ public class ChatActionTests
             AccountName = "Checking",
             Amount = 1800.00m,
             Description = "Rent",
-            Recurrence = RecurrencePattern.CreateMonthly(1, 1),
+            Recurrence = RecurrencePatternValue.CreateMonthly(1, 1),
             StartDate = new DateOnly(2026, 2, 1),
         };
 
@@ -120,7 +120,7 @@ public class ChatActionTests
             AccountName = "Checking",
             Amount = 1800.00m,
             Description = "Rent",
-            Recurrence = RecurrencePattern.CreateMonthly(1, 1),
+            Recurrence = RecurrencePatternValue.CreateMonthly(1, 1),
             StartDate = new DateOnly(2026, 2, 1),
         };
 
@@ -144,7 +144,7 @@ public class ChatActionTests
             ToAccountId = Guid.NewGuid(),
             ToAccountName = "Savings",
             Amount = 200.00m,
-            Recurrence = RecurrencePattern.CreateWeekly(1, DayOfWeek.Friday),
+            Recurrence = RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Friday),
             StartDate = new DateOnly(2026, 1, 24),
         };
 
@@ -163,7 +163,7 @@ public class ChatActionTests
             ToAccountId = Guid.NewGuid(),
             ToAccountName = "Savings",
             Amount = 200.00m,
-            Recurrence = RecurrencePattern.CreateWeekly(1, DayOfWeek.Friday),
+            Recurrence = RecurrencePatternValue.CreateWeekly(1, DayOfWeek.Friday),
             StartDate = new DateOnly(2026, 1, 24),
         };
 

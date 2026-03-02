@@ -46,7 +46,7 @@ public sealed class PaycheckAllocationService : IPaycheckAllocationService
         // Filter to only active bills (negative amounts, not income)
         var bills = recurringTransactions
             .Where(r => r.IsActive && r.Amount.Amount < 0)
-            .Select(BillInfo.FromRecurringTransaction)
+            .Select(BillInfoValue.FromRecurringTransaction)
             .ToList();
 
         // Convert paycheck amount to MoneyValue if provided

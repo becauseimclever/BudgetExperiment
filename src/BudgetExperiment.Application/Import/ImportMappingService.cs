@@ -92,7 +92,7 @@ public sealed class ImportMappingService : IImportMappingService
 
         if (request.RowsToSkip > 0)
         {
-            mapping.UpdateSkipRowsSettings(SkipRowsSettings.Create(request.RowsToSkip));
+            mapping.UpdateSkipRowsSettings(SkipRowsSettingsValue.Create(request.RowsToSkip));
         }
 
         if (request.IndicatorSettings is not null && request.IndicatorSettings.ColumnIndex >= 0)
@@ -152,7 +152,7 @@ public sealed class ImportMappingService : IImportMappingService
 
         if (request.RowsToSkip.HasValue)
         {
-            mapping.UpdateSkipRowsSettings(SkipRowsSettings.Create(request.RowsToSkip.Value));
+            mapping.UpdateSkipRowsSettings(SkipRowsSettingsValue.Create(request.RowsToSkip.Value));
         }
 
         if (request.IndicatorSettings is not null)
@@ -204,7 +204,7 @@ public sealed class ImportMappingService : IImportMappingService
         return null;
     }
 
-    private static bool HeadersMatch(IReadOnlyList<ColumnMapping> mappings, IReadOnlyList<string> headers)
+    private static bool HeadersMatch(IReadOnlyList<ColumnMappingValue> mappings, IReadOnlyList<string> headers)
     {
         // Check if all mapped column headers exist in the provided headers
         var headerSet = new HashSet<string>(headers, StringComparer.OrdinalIgnoreCase);
@@ -234,7 +234,7 @@ public sealed class ImportMappingService : IImportMappingService
             DuplicateSettings = mapping.DuplicateSettings is not null
                 ? ToDto(mapping.DuplicateSettings)
                 : null,
-            RowsToSkip = mapping.SkipRowsSettings.RowsToSkip,
+            RowsToSkip = mapping.SkipRowsSettingsValue.RowsToSkip,
             IndicatorSettings = mapping.IndicatorSettings.IsEnabled
                 ? ToDto(mapping.IndicatorSettings)
                 : null,
@@ -243,7 +243,7 @@ public sealed class ImportMappingService : IImportMappingService
         };
     }
 
-    private static ColumnMappingDto ToDto(ColumnMapping mapping)
+    private static ColumnMappingDto ToDto(ColumnMappingValue mapping)
     {
         return new ColumnMappingDto
         {
@@ -254,7 +254,7 @@ public sealed class ImportMappingService : IImportMappingService
         };
     }
 
-    private static DuplicateDetectionSettingsDto ToDto(DuplicateDetectionSettings settings)
+    private static DuplicateDetectionSettingsDto ToDto(DuplicateDetectionSettingsValue settings)
     {
         return new DuplicateDetectionSettingsDto
         {
@@ -264,9 +264,9 @@ public sealed class ImportMappingService : IImportMappingService
         };
     }
 
-    private static ColumnMapping ToDomain(ColumnMappingDto dto)
+    private static ColumnMappingValue ToDomain(ColumnMappingDto dto)
     {
-        return new ColumnMapping
+        return new ColumnMappingValue
         {
             ColumnIndex = dto.ColumnIndex,
             ColumnHeader = dto.ColumnHeader ?? string.Empty,
@@ -275,9 +275,9 @@ public sealed class ImportMappingService : IImportMappingService
         };
     }
 
-    private static DuplicateDetectionSettings ToDomain(DuplicateDetectionSettingsDto dto)
+    private static DuplicateDetectionSettingsValue ToDomain(DuplicateDetectionSettingsDto dto)
     {
-        return new DuplicateDetectionSettings
+        return new DuplicateDetectionSettingsValue
         {
             Enabled = dto.Enabled,
             LookbackDays = dto.LookbackDays,
@@ -285,7 +285,7 @@ public sealed class ImportMappingService : IImportMappingService
         };
     }
 
-    private static DebitCreditIndicatorSettingsDto ToDto(DebitCreditIndicatorSettings settings)
+    private static DebitCreditIndicatorSettingsDto ToDto(DebitCreditIndicatorSettingsValue settings)
     {
         return new DebitCreditIndicatorSettingsDto
         {
@@ -296,11 +296,11 @@ public sealed class ImportMappingService : IImportMappingService
         };
     }
 
-    private static DebitCreditIndicatorSettings ToDomain(DebitCreditIndicatorSettingsDto dto)
+    private static DebitCreditIndicatorSettingsValue ToDomain(DebitCreditIndicatorSettingsDto dto)
     {
         if (dto.ColumnIndex < 0)
         {
-            return DebitCreditIndicatorSettings.Disabled;
+            return DebitCreditIndicatorSettingsValue.Disabled;
         }
 
         var debitIndicators = dto.DebitIndicators
@@ -313,10 +313,10 @@ public sealed class ImportMappingService : IImportMappingService
 
         if (debitIndicators.Count == 0 || creditIndicators.Count == 0)
         {
-            return DebitCreditIndicatorSettings.Disabled;
+            return DebitCreditIndicatorSettingsValue.Disabled;
         }
 
-        return DebitCreditIndicatorSettings.Create(
+        return DebitCreditIndicatorSettingsValue.Create(
             dto.ColumnIndex,
             debitIndicators,
             creditIndicators,

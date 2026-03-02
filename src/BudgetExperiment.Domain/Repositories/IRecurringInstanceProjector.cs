@@ -17,7 +17,7 @@ public interface IRecurringInstanceProjector
     /// <param name="toDate">End of the date range (inclusive).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A dictionary mapping dates to lists of recurring instances for that date.</returns>
-    Task<Dictionary<DateOnly, List<RecurringInstanceInfo>>> GetInstancesByDateRangeAsync(
+    Task<Dictionary<DateOnly, List<RecurringInstanceInfoValue>>> GetInstancesByDateRangeAsync(
         IReadOnlyList<RecurringTransaction> recurringTransactions,
         DateOnly fromDate,
         DateOnly toDate,
@@ -30,7 +30,7 @@ public interface IRecurringInstanceProjector
     /// <param name="date">The date to get instances for.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of recurring instances for the specified date.</returns>
-    Task<List<RecurringInstanceInfo>> GetInstancesForDateAsync(
+    Task<List<RecurringInstanceInfoValue>> GetInstancesForDateAsync(
         IReadOnlyList<RecurringTransaction> recurringTransactions,
         DateOnly date,
         CancellationToken cancellationToken = default);

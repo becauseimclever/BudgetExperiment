@@ -368,7 +368,7 @@ public class ReconciliationMatchRepositoryTests
             account.Id,
             "Netflix Subscription",
             MoneyValue.Create("USD", 15.99m),
-            RecurrencePattern.CreateMonthly(1, 15),
+            RecurrencePatternValue.CreateMonthly(1, 15),
             new DateOnly(2026, 1, 1));
 
         context.Accounts.Add(account);

@@ -12,11 +12,11 @@ namespace BudgetExperiment.Application.Paycheck;
 public static class PaycheckMapper
 {
     /// <summary>
-    /// Maps a <see cref="PaycheckAllocation"/> to a <see cref="PaycheckAllocationDto"/>.
+    /// Maps a <see cref="PaycheckAllocationValue"/> to a <see cref="PaycheckAllocationDto"/>.
     /// </summary>
     /// <param name="allocation">The allocation.</param>
     /// <returns>The mapped DTO.</returns>
-    public static PaycheckAllocationDto ToDto(PaycheckAllocation allocation)
+    public static PaycheckAllocationDto ToDto(PaycheckAllocationValue allocation)
     {
         return new PaycheckAllocationDto
         {
@@ -30,11 +30,11 @@ public static class PaycheckMapper
     }
 
     /// <summary>
-    /// Maps a <see cref="PaycheckAllocationWarning"/> to a <see cref="PaycheckAllocationWarningDto"/>.
+    /// Maps a <see cref="PaycheckAllocationWarningValue"/> to a <see cref="PaycheckAllocationWarningDto"/>.
     /// </summary>
     /// <param name="warning">The warning.</param>
     /// <returns>The mapped DTO.</returns>
-    public static PaycheckAllocationWarningDto ToDto(PaycheckAllocationWarning warning)
+    public static PaycheckAllocationWarningDto ToDto(PaycheckAllocationWarningValue warning)
     {
         return new PaycheckAllocationWarningDto
         {
@@ -45,11 +45,11 @@ public static class PaycheckMapper
     }
 
     /// <summary>
-    /// Maps a <see cref="PaycheckAllocationSummary"/> to a <see cref="PaycheckAllocationSummaryDto"/>.
+    /// Maps a <see cref="PaycheckAllocationSummaryValue"/> to a <see cref="PaycheckAllocationSummaryDto"/>.
     /// </summary>
     /// <param name="summary">The summary.</param>
     /// <returns>The mapped DTO.</returns>
-    public static PaycheckAllocationSummaryDto ToDto(PaycheckAllocationSummary summary)
+    public static PaycheckAllocationSummaryDto ToDto(PaycheckAllocationSummaryValue summary)
     {
         return new PaycheckAllocationSummaryDto
         {

@@ -47,8 +47,8 @@ internal sealed class RecurringTransferConfiguration : IEntityTypeConfiguration<
                 .IsRequired();
         });
 
-        // RecurrencePattern as owned type
-        builder.OwnsOne(r => r.RecurrencePattern, pattern =>
+        // RecurrencePatternValue as owned type
+        builder.OwnsOne(r => r.RecurrencePatternValue, pattern =>
         {
             pattern.Property(p => p.Frequency)
                 .HasColumnName("Frequency")

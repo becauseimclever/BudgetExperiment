@@ -33,7 +33,7 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     /// <param name="accountId">Optional account filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Daily totals as (date, total amount).</returns>
-    Task<IReadOnlyList<DailyTotal>> GetDailyTotalsAsync(
+    Task<IReadOnlyList<DailyTotalValue>> GetDailyTotalsAsync(
         int year,
         int month,
         Guid? accountId = null,

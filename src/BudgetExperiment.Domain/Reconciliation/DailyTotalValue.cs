@@ -1,4 +1,4 @@
-// <copyright file="DailyTotal.cs" company="BecauseImClever">
+// <copyright file="DailyTotalValue.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -11,4 +11,4 @@ namespace BudgetExperiment.Domain.Reconciliation;
 /// <param name="Date">The date.</param>
 /// <param name="Total">The total amount for the day.</param>
 /// <param name="TransactionCount">Number of transactions on that day.</param>
-public sealed record DailyTotal(DateOnly Date, MoneyValue Total, int TransactionCount);
+public sealed record DailyTotalValue(DateOnly Date, MoneyValue Total, int TransactionCount);
