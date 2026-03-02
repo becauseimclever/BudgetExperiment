@@ -2,7 +2,7 @@
 > **Status:** Planning
 > **Priority:** High (maintainability / SRP)
 > **Estimated Effort:** Large (10-12 days)
-> **Dependencies:** Write missing unit tests for RecurringTransactionService (prerequisite)
+> **Dependencies:** ~~Write missing unit tests for RecurringTransactionService~~ ✅ Done (36 tests added)
 
 ## Overview
 
@@ -32,8 +32,10 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 |--------|------|-------|
 | `ProcessRow` | `ImportService.cs` | ~248 |
 | `ExecuteAsync` | `ImportService.cs` | ~160 |
-| `GetReconciliationStatusAsync` | `ReconciliationService.cs` | ~111 |
+| `GetReconciliationStatusAsync` | `ReconciliationService.cs` | ~109 |
 | `FindMatchesAsync` | `ReconciliationService.cs` | ~104 |
+| `CreateConflictSuggestion` | `RuleSuggestionService.cs` | ~119 |
+| `EnrichWithRecurringMatchesAsync` | `ImportService.cs` | ~86 |
 | `GetSpendingTrendsAsync` | `ReportService.cs` | ~86 |
 | `PreviewAsync` | `ImportService.cs` | ~86 |
 | `BuildCategoryReportAsync` | `ReportService.cs` | ~85 |
@@ -41,8 +43,16 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 | `ParseAiResponse` | `NaturalLanguageParser.cs` | ~80 |
 | `GetSpendingByLocationAsync` | `ReportService.cs` | ~77 |
 | `Create` | `RecurringTransfer.cs` (Domain) | ~75 |
+| `AnalyzeTransactionsAsync` | `CategorySuggestionService.cs` | ~73 |
+| `GetLinkableInstancesAsync` | `ReconciliationService.cs` | ~71 |
+| `ParseRecurringTransferAction` | `NaturalLanguageParser.cs` | ~69 |
 | `ConfirmActionAsync` | `ChatService.cs` | ~67 |
+| `CreateManualMatchAsync` | `ReconciliationService.cs` | ~64 |
+| `ParseRecurringTransactionAction` | `NaturalLanguageParser.cs` | ~58 |
+| `ParseTransferAction` | `NaturalLanguageParser.cs` | ~61 |
+| `GetDaySummaryAsync` | `ReportService.cs` | ~56 |
 | `SendMessageAsync` | `ChatService.cs` | ~56 |
+| `ParseTransactionAction` | `NaturalLanguageParser.cs` | ~54 |
 
 ### Target State
 
@@ -122,7 +132,7 @@ ReportService (facade/dispatcher)
 
 ### MerchantKnowledgeBase
 
-This is 332 lines of static data (merchant → category mappings), not logic. Consider:
+This is 362 lines of static data (merchant → category mappings), not logic. Consider:
 - Moving to a configuration file or embedded resource
 - Keeping as-is with documentation justifying the size (data, not logic)
 
@@ -189,6 +199,25 @@ Refs: #080"
 
 ## Testing Strategy
 
+### Current Test Coverage (Safety Net for Refactoring)
+
+| Service | Unit Tests | Methods Covered | Gaps | Refactor Safety |
+|---------|-----------|-----------------|------|-----------------|
+| ImportService | 65 | 4/4 | — | ✅ Safe |
+| RuleSuggestionService | 42 | 8/8 | — | ✅ Safe |
+| ReportService | 35 | 5/5 | — | ✅ Safe |
+| TransactionMatcher | 27 | 2/2 | — | ✅ Safe |
+| NaturalLanguageParser | 23 | 1/1 | — | ✅ Safe |
+| ReconciliationService | 21 | 9/10 | `GetMatchesForRecurringTransactionAsync` | ✅ Safe |
+| ChatService | 17 | 5/6 | `GetUserSessionsAsync` | ✅ Safe |
+| RecurringTransactionService | 36 | 12/12 | — | ✅ Safe |
+| RecurringTransferService | 16 | 11/11 | — | ✅ Safe |
+| CategorySuggestionService | 15 | 8/11 | `GetSuggestionAsync`, `AcceptSuggestionsAsync`, `GetSuggestedRulesAsync` | ⚠️ Partial |
+| MerchantKnowledgeBase | — | — | Static data, not logic | N/A |
+
+**Total: 297 unit tests + 63 API integration tests = 360 tests**
+
+### Plan
 ### Unit Tests
 - [ ] New tests for each extracted service/component
 - [ ] Existing tests updated to test through new interfaces
@@ -222,4 +251,6 @@ Refs: #080"
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-02-26 | Initial draft from codebase audit | @copilot |
+| 2026-03-01 | Updated line counts to actuals (all grew 30-139 lines since audit), added TransactionMatcher (372 lines), corrected effort estimate to 10-12 days, added prerequisite for RecurringTransactionService tests | @copilot |
+| 2026-03-01 | Prerequisite satisfied: 36 unit tests for RecurringTransactionService committed | @copilot |
 | 2026-03-01 | Updated line counts to actuals (all grew 30-139 lines since audit), added TransactionMatcher (372 lines), corrected effort estimate to 10-12 days, added prerequisite for RecurringTransactionService tests | @copilot |
