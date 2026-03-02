@@ -3,6 +3,7 @@
 // </copyright>
 
 
+using BudgetExperiment.Api.Models;
 using BudgetExperiment.Application.Import;
 using BudgetExperiment.Contracts.Dtos;
 
@@ -268,26 +269,4 @@ public sealed class ImportController : ControllerBase
 
         return this.Ok(new DeleteBatchResult { DeletedCount = count });
     }
-}
-
-/// <summary>
-/// Request for suggesting a mapping based on headers.
-/// </summary>
-public sealed record SuggestMappingRequest
-{
-    /// <summary>
-    /// Gets the CSV headers to match against existing mappings.
-    /// </summary>
-    public IReadOnlyList<string> Headers { get; init; } = [];
-}
-
-/// <summary>
-/// Result of deleting an import batch.
-/// </summary>
-public sealed record DeleteBatchResult
-{
-    /// <summary>
-    /// Gets the number of transactions deleted.
-    /// </summary>
-    public int DeletedCount { get; init; }
 }

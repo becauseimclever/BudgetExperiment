@@ -1,0 +1,16 @@
+// <copyright file="ScopeOption.cs" company="Budget Experiment">
+// Copyright (c) Budget Experiment. All rights reserved.
+// </copyright>
+
+namespace BudgetExperiment.Client.Services;
+
+using BudgetExperiment.Domain;
+
+/// <summary>
+/// Represents a scope option for the UI.
+/// </summary>
+/// <param name="Scope">The budget scope value (null for All).</param>
+/// <param name="DisplayName">The display name.</param>
+/// <param name="IconName">The icon name.</param>
+/// <param name="Description">The description tooltip.</param>
+public sealed record ScopeOption(BudgetScope? Scope, string DisplayName, string IconName, string Description);

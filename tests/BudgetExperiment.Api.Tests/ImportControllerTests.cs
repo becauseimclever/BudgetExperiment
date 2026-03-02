@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Api.Controllers;
+using BudgetExperiment.Api.Models;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 

@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Api.Models;
 using BudgetExperiment.Application.Categorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -97,61 +98,4 @@ public class MerchantMappingsController : ControllerBase
             UpdatedAtUtc = mapping.UpdatedAtUtc,
         };
     }
-}
-
-/// <summary>
-/// DTO representing a learned merchant mapping.
-/// </summary>
-public sealed record LearnedMerchantMappingDto
-{
-    /// <summary>
-    /// Gets the mapping ID.
-    /// </summary>
-    public required Guid Id { get; init; }
-
-    /// <summary>
-    /// Gets the merchant pattern.
-    /// </summary>
-    public required string MerchantPattern { get; init; }
-
-    /// <summary>
-    /// Gets the category ID.
-    /// </summary>
-    public required Guid CategoryId { get; init; }
-
-    /// <summary>
-    /// Gets the category name.
-    /// </summary>
-    public required string CategoryName { get; init; }
-
-    /// <summary>
-    /// Gets the number of times this mapping has been learned.
-    /// </summary>
-    public required int LearnCount { get; init; }
-
-    /// <summary>
-    /// Gets the creation timestamp.
-    /// </summary>
-    public required DateTime CreatedAtUtc { get; init; }
-
-    /// <summary>
-    /// Gets the last update timestamp.
-    /// </summary>
-    public required DateTime UpdatedAtUtc { get; init; }
-}
-
-/// <summary>
-/// Request to learn a merchant mapping.
-/// </summary>
-public sealed record LearnMerchantMappingRequest
-{
-    /// <summary>
-    /// Gets the transaction description to learn from.
-    /// </summary>
-    public required string Description { get; init; }
-
-    /// <summary>
-    /// Gets the category ID to map to.
-    /// </summary>
-    public required Guid CategoryId { get; init; }
 }
