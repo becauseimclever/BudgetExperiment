@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Chat;
+namespace BudgetExperiment.Shared.Chat;
 
 /// <summary>
 /// Defines the role of a chat message sender.

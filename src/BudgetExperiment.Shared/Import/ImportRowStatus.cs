@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Import;
+namespace BudgetExperiment.Shared.Import;
 
 /// <summary>
 /// Status of a row during import preview validation.

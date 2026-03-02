@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Import;
+namespace BudgetExperiment.Shared.Import;
 
 /// <summary>
 /// Specifies how amounts should be interpreted during CSV import.

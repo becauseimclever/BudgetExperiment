@@ -3,7 +3,6 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Client.Models;
 

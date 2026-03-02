@@ -5,7 +5,6 @@
 using BudgetExperiment.Client.Components.Chat;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Domain;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 

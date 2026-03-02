@@ -15,3 +15,9 @@ global using BudgetExperiment.Domain.Recurring;
 global using BudgetExperiment.Domain.Repositories;
 global using BudgetExperiment.Domain.Services;
 global using BudgetExperiment.Domain.Settings;
+
+// Shared enum namespaces
+global using BudgetExperiment.Shared.Budgeting;
+global using BudgetExperiment.Shared.Categorization;
+global using BudgetExperiment.Shared.Chat;
+global using BudgetExperiment.Shared.Import;

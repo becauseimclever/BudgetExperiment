@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Import;
+namespace BudgetExperiment.Shared.Import;
 
 /// <summary>
 /// Represents the status of an import batch.

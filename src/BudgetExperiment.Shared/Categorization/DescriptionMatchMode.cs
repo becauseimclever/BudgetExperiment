@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Categorization;
+namespace BudgetExperiment.Shared.Categorization;
 
 /// <summary>
 /// Specifies how transaction descriptions are matched for duplicate detection.

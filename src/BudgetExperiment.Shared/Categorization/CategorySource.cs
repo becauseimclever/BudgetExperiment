@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Categorization;
+namespace BudgetExperiment.Shared.Categorization;
 
 /// <summary>
 /// Indicates the source of a category assignment during import.

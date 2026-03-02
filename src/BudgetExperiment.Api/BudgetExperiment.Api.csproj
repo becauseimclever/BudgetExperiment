@@ -26,6 +26,7 @@
     <ProjectReference Include="..\BudgetExperiment.Infrastructure\BudgetExperiment.Infrastructure.csproj" />
   <ProjectReference Include="..\BudgetExperiment.Client\BudgetExperiment.Client.csproj" />
   <ProjectReference Include="..\BudgetExperiment.Contracts\BudgetExperiment.Contracts.csproj" />
+  <ProjectReference Include="..\BudgetExperiment.Shared\BudgetExperiment.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

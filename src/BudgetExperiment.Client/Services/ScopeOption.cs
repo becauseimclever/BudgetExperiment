@@ -2,8 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Domain;
-
 namespace BudgetExperiment.Client.Services;
 
 /// <summary>

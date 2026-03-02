@@ -18,8 +18,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\BudgetExperiment.Domain\BudgetExperiment.Domain.csproj" />
 		<ProjectReference Include="..\BudgetExperiment.Contracts\BudgetExperiment.Contracts.csproj" />
+		<ProjectReference Include="..\BudgetExperiment.Shared\BudgetExperiment.Shared.csproj" />
 	</ItemGroup>
 
 </Project>

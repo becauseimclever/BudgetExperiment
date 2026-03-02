@@ -16,3 +16,7 @@ global using BudgetExperiment.Domain.Reports;
 global using BudgetExperiment.Domain.Repositories;
 global using BudgetExperiment.Domain.Services;
 global using BudgetExperiment.Domain.Settings;
+global using BudgetExperiment.Shared.Budgeting;
+global using BudgetExperiment.Shared.Categorization;
+global using BudgetExperiment.Shared.Chat;
+global using BudgetExperiment.Shared.Import;

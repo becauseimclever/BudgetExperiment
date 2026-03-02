@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BudgetExperiment.Domain\BudgetExperiment.Domain.csproj" />
+    <ProjectReference Include="..\..\src\BudgetExperiment.Shared\BudgetExperiment.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

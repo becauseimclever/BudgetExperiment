@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\BudgetExperiment.Application\BudgetExperiment.Application.csproj" />
     <ProjectReference Include="..\..\src\BudgetExperiment.Contracts\BudgetExperiment.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\BudgetExperiment.Shared\BudgetExperiment.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

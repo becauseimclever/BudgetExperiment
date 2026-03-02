@@ -4,8 +4,6 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-using BudgetExperiment.Domain;
-
 using Microsoft.JSInterop;
 
 namespace BudgetExperiment.Client.Services;

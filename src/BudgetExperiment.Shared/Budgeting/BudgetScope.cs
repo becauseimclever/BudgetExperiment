@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Budgeting;
+namespace BudgetExperiment.Shared.Budgeting;
 
 /// <summary>
 /// Represents the scope of budget-related entities.
