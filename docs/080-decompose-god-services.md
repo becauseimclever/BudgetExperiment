@@ -1,12 +1,12 @@
 # Feature 080: Decompose God Services
 > **Status:** Planning
 > **Priority:** High (maintainability / SRP)
-> **Estimated Effort:** Large (5-7 days)
-> **Dependencies:** None
+> **Estimated Effort:** Large (10-12 days)
+> **Dependencies:** Write missing unit tests for RecurringTransactionService (prerequisite)
 
 ## Overview
 
-The coding standard (§24) forbids "god services" exceeding ~300 lines or having too many responsibilities. An audit found **10 service files** that exceed or border this threshold, with `ImportService` at **948 lines** (3× the limit) being the worst offender. Several methods also exceed the ~20-line target (§8), with `ImportService.ProcessRow` at **~248 lines**.
+The coding standard (§24) forbids "god services" exceeding ~300 lines or having too many responsibilities. An audit found **11 service files** that exceed this threshold, with `ImportService` at **1,076 lines** (3.5× the limit) being the worst offender. Several methods also exceed the ~20-line target (§8), with `ImportService.ProcessRow` at **~248 lines**.
 
 ## Problem Statement
 
@@ -14,16 +14,17 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 
 | Service | Lines | Responsibilities | Severity |
 |---------|-------|-----------------|----------|
-| `ImportService.cs` | 948 | CSV parsing, row processing, amount parsing, date parsing, duplicate detection, categorization, location enrichment, batch management, reconciliation, Levenshtein distance | **Critical** |
-| `RuleSuggestionService.cs` | 718 | Rule suggestion generation, AI response parsing, pattern analysis, confidence scoring, transaction grouping | **Critical** |
-| `NaturalLanguageParser.cs` | 493 | AI prompt building, response parsing, JSON extraction, action type mapping, parameter extraction | **High** |
-| `ReconciliationService.cs` | 467 | Match finding, status calculation, bulk operations, tolerance management, instance linking | **High** |
-| `ChatService.cs` | 358 | Message handling, AI integration, action confirmation, session management | **Moderate** |
-| `ReportService.cs` | 356 | Category reports, trend reports, location reports, date range processing | **Moderate** |
-| `MerchantKnowledgeBase.cs` | 332 | Static merchant-to-category mappings (data, not logic) | **Moderate** |
-| `RecurringTransactionService.cs` | 307 | CRUD, realization, instance projection | **Borderline** |
-| `CategorySuggestionService.cs` | 303 | suggestion generation, batch operations, rule creation | **Borderline** |
-| `RecurringTransferService.cs` | 303 | CRUD, realization, instance projection | **Borderline** |
+| `ImportService.cs` | 1,076 | CSV parsing, row processing, amount parsing, date parsing, duplicate detection, categorization, location enrichment, batch management, reconciliation, Levenshtein distance | **Critical** |
+| `RuleSuggestionService.cs` | 857 | Rule suggestion generation, AI response parsing, pattern analysis, confidence scoring, transaction grouping | **Critical** |
+| `NaturalLanguageParser.cs` | 556 | AI prompt building, response parsing, JSON extraction, action type mapping, parameter extraction | **High** |
+| `ReconciliationService.cs` | 545 | Match finding, status calculation, bulk operations, tolerance management, instance linking | **High** |
+| `ReportService.cs` | 423 | Category reports, trend reports, location reports, date range processing | **High** |
+| `ChatService.cs` | 397 | Message handling, AI integration, action confirmation, session management | **Moderate** |
+| `TransactionMatcher.cs` (Domain) | 372 | Match scoring, description similarity, Levenshtein distance, amount/date tolerance | **Moderate** |
+| `CategorySuggestionService.cs` | 366 | Suggestion generation, batch operations, rule creation | **Moderate** |
+| `MerchantKnowledgeBase.cs` | 362 | Static merchant-to-category mappings (data, not logic) | **Moderate** |
+| `RecurringTransactionService.cs` | 355 | CRUD, pause/resume, skip, import patterns | **Borderline** |
+| `RecurringTransferService.cs` | 348 | CRUD, pause/resume, skip, import patterns | **Borderline** |
 
 ### Long Methods (>30 lines)
 
@@ -221,3 +222,4 @@ Refs: #080"
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-02-26 | Initial draft from codebase audit | @copilot |
+| 2026-03-01 | Updated line counts to actuals (all grew 30-139 lines since audit), added TransactionMatcher (372 lines), corrected effort estimate to 10-12 days, added prerequisite for RecurringTransactionService tests | @copilot |
