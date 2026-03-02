@@ -52,6 +52,9 @@ public static class DependencyInjection
         services.AddScoped<ICategorySuggestionService, CategorySuggestionService>();
         services.AddScoped<IUncategorizedTransactionService, UncategorizedTransactionService>();
         services.AddScoped<IImportMappingService, ImportMappingService>();
+        services.AddScoped<IImportDuplicateDetector, ImportDuplicateDetector>();
+        services.AddScoped<IImportRowProcessor, ImportRowProcessor>();
+        services.AddScoped<IImportPreviewEnricher, ImportPreviewEnricher>();
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<INaturalLanguageParser, NaturalLanguageParser>();
         services.AddScoped<IChatService, ChatService>();

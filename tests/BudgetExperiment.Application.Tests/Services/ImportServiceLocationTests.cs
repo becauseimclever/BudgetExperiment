@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.Import;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
@@ -22,9 +23,6 @@ public class ImportServiceLocationTests
     private readonly Mock<IAccountRepository> _accountRepoMock;
     private readonly Mock<IUserContext> _userContextMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IRecurringTransactionRepository> _recurringRepoMock;
-    private readonly Mock<IRecurringInstanceProjector> _projectorMock;
-    private readonly Mock<ITransactionMatcher> _matcherMock;
     private readonly Mock<IReconciliationService> _reconciliationServiceMock;
     private readonly Mock<ILocationParserService> _locationParserMock;
     private readonly Mock<IAppSettingsRepository> _settingsRepoMock;
@@ -41,9 +39,6 @@ public class ImportServiceLocationTests
         this._accountRepoMock = new Mock<IAccountRepository>();
         this._userContextMock = new Mock<IUserContext>();
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._recurringRepoMock = new Mock<IRecurringTransactionRepository>();
-        this._projectorMock = new Mock<IRecurringInstanceProjector>();
-        this._matcherMock = new Mock<ITransactionMatcher>();
         this._reconciliationServiceMock = new Mock<IReconciliationService>();
         this._locationParserMock = new Mock<ILocationParserService>();
         this._settingsRepoMock = new Mock<IAppSettingsRepository>();
@@ -63,25 +58,27 @@ public class ImportServiceLocationTests
                 It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Transaction>());
 
-        this._recurringRepoMock
-            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction>());
+        // Use real ImportPreviewEnricher so preview enrichment tests work end-to-end
+        var previewEnricher = new ImportPreviewEnricher(
+            new Mock<IRecurringTransactionRepository>().Object,
+            new Mock<IRecurringInstanceProjector>().Object,
+            new Mock<ITransactionMatcher>().Object,
+            this._locationParserMock.Object,
+            this._settingsRepoMock.Object,
+            this._currencyProviderMock.Object);
 
         this._service = new ImportService(
+            new ImportRowProcessor(new ImportDuplicateDetector()),
+            previewEnricher,
             this._transactionRepoMock.Object,
             this._ruleRepoMock.Object,
             this._categoryRepoMock.Object,
             this._batchRepoMock.Object,
             this._mappingRepoMock.Object,
             this._accountRepoMock.Object,
-            this._recurringRepoMock.Object,
-            this._projectorMock.Object,
-            this._matcherMock.Object,
             this._reconciliationServiceMock.Object,
             this._userContextMock.Object,
             this._unitOfWorkMock.Object,
-            this._locationParserMock.Object,
-            this._settingsRepoMock.Object,
             this._currencyProviderMock.Object);
     }
 

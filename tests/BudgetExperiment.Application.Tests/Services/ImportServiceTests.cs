@@ -2,9 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.Import;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
-using BudgetExperiment.Domain.Settings;
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -22,12 +22,8 @@ public class ImportServiceTests
     private readonly Mock<IAccountRepository> _accountRepoMock;
     private readonly Mock<IUserContext> _userContextMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IRecurringTransactionRepository> _recurringRepoMock;
-    private readonly Mock<IRecurringInstanceProjector> _projectorMock;
-    private readonly Mock<ITransactionMatcher> _matcherMock;
     private readonly Mock<IReconciliationService> _reconciliationServiceMock;
-    private readonly Mock<ILocationParserService> _locationParserMock;
-    private readonly Mock<IAppSettingsRepository> _settingsRepoMock;
+    private readonly Mock<IImportPreviewEnricher> _previewEnricherMock;
     private readonly Mock<ICurrencyProvider> _currencyProviderMock;
     private readonly ImportService _service;
 
@@ -41,20 +37,23 @@ public class ImportServiceTests
         this._accountRepoMock = new Mock<IAccountRepository>();
         this._userContextMock = new Mock<IUserContext>();
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._recurringRepoMock = new Mock<IRecurringTransactionRepository>();
-        this._projectorMock = new Mock<IRecurringInstanceProjector>();
-        this._matcherMock = new Mock<ITransactionMatcher>();
         this._reconciliationServiceMock = new Mock<IReconciliationService>();
-        this._locationParserMock = new Mock<ILocationParserService>();
-        this._settingsRepoMock = new Mock<IAppSettingsRepository>();
+        this._previewEnricherMock = new Mock<IImportPreviewEnricher>();
         this._currencyProviderMock = new Mock<ICurrencyProvider>();
         this._currencyProviderMock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
-        // Default: location feature disabled (existing tests unaffected)
-        var defaultSettings = AppSettings.CreateDefault();
-        this._settingsRepoMock
-            .Setup(r => r.GetAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(defaultSettings);
+        // Default: enricher passes rows through unchanged
+        this._previewEnricherMock
+            .Setup(e => e.EnrichWithRecurringMatchesAsync(
+                It.IsAny<List<ImportPreviewRow>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<List<ImportPreviewRow>, CancellationToken>((rows, _) => Task.FromResult(rows));
+
+        this._previewEnricherMock
+            .Setup(e => e.EnrichWithLocationDataAsync(
+                It.IsAny<List<ImportPreviewRow>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<List<ImportPreviewRow>, CancellationToken>((rows, _) => Task.FromResult(rows));
 
         this._ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
@@ -68,26 +67,18 @@ public class ImportServiceTests
             .Setup(r => r.GetForDuplicateDetectionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Transaction>());
 
-        // Setup default empty returns for recurring transaction matching
-        this._recurringRepoMock
-            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction>());
-
         this._service = new ImportService(
+            new ImportRowProcessor(new ImportDuplicateDetector()),
+            this._previewEnricherMock.Object,
             this._transactionRepoMock.Object,
             this._ruleRepoMock.Object,
             this._categoryRepoMock.Object,
             this._batchRepoMock.Object,
             this._mappingRepoMock.Object,
             this._accountRepoMock.Object,
-            this._recurringRepoMock.Object,
-            this._projectorMock.Object,
-            this._matcherMock.Object,
             this._reconciliationServiceMock.Object,
             this._userContextMock.Object,
             this._unitOfWorkMock.Object,
-            this._locationParserMock.Object,
-            this._settingsRepoMock.Object,
             this._currencyProviderMock.Object);
     }
 
