@@ -14,6 +14,8 @@ namespace BudgetExperiment.Application.Tests.Categorization;
 /// </summary>
 public class CategorySuggestionServiceTests
 {
+    private const string TestOwnerId = "user-123";
+
     private readonly Mock<ITransactionRepository> _transactionRepoMock;
     private readonly Mock<IBudgetCategoryRepository> _categoryRepoMock;
     private readonly Mock<ICategorySuggestionRepository> _suggestionRepoMock;
@@ -22,8 +24,6 @@ public class CategorySuggestionServiceTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IUserContext> _userContextMock;
     private readonly CategorySuggestionService _service;
-
-    private const string TestOwnerId = "user-123";
 
     public CategorySuggestionServiceTests()
     {
@@ -46,8 +46,6 @@ public class CategorySuggestionServiceTests
             _unitOfWorkMock.Object,
             _userContextMock.Object);
     }
-
-    #region AnalyzeTransactionsAsync Tests
 
     [Fact]
     public async Task AnalyzeTransactionsAsync_With_No_Uncategorized_Returns_Empty()
@@ -232,10 +230,6 @@ public class CategorySuggestionServiceTests
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    #endregion
-
-    #region GetPendingSuggestionsAsync Tests
-
     [Fact]
     public async Task GetPendingSuggestionsAsync_Returns_Pending_Suggestions()
     {
@@ -260,10 +254,6 @@ public class CategorySuggestionServiceTests
         Assert.Single(result);
         Assert.Equal("Entertainment", result[0].SuggestedName);
     }
-
-    #endregion
-
-    #region AcceptSuggestionAsync Tests
 
     [Fact]
     public async Task AcceptSuggestionAsync_Creates_Category_And_Updates_Suggestion()
@@ -311,10 +301,6 @@ public class CategorySuggestionServiceTests
         Assert.Contains("not found", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region DismissSuggestionAsync Tests
-
     [Fact]
     public async Task DismissSuggestionAsync_Updates_Status_And_Creates_Dismissed_Pattern()
     {
@@ -346,10 +332,6 @@ public class CategorySuggestionServiceTests
             Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
-
-    #endregion
-
-    #region RestoreSuggestionAsync Tests
 
     [Fact]
     public async Task RestoreSuggestionAsync_RestoresSuggestion_AndRemovesDismissedPatterns()
@@ -425,10 +407,6 @@ public class CategorySuggestionServiceTests
         Assert.False(result);
     }
 
-    #endregion
-
-    #region GetDismissedSuggestionsAsync Tests
-
     [Fact]
     public async Task GetDismissedSuggestionsAsync_ReturnsDismissedSuggestions()
     {
@@ -471,10 +449,6 @@ public class CategorySuggestionServiceTests
         Assert.Empty(result);
     }
 
-    #endregion
-
-    #region ClearDismissedPatternsAsync Tests
-
     [Fact]
     public async Task ClearDismissedPatternsAsync_DelegatesToRepo_ReturnsCount()
     {
@@ -493,10 +467,6 @@ public class CategorySuggestionServiceTests
             Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
-
-    #endregion
-
-    #region Helper Methods
 
     private static Account CreateTestAccount()
     {
@@ -517,6 +487,4 @@ public class CategorySuggestionServiceTests
     {
         return BudgetCategory.Create(name, type, null, null);
     }
-
-    #endregion
 }

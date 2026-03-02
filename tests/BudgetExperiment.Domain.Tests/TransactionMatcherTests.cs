@@ -15,8 +15,6 @@ public class TransactionMatcherTests
     private readonly MatchingTolerancesValue _defaultTolerances = MatchingTolerancesValue.Default;
     private readonly Guid _accountId = Guid.NewGuid();
 
-    #region Description Matching Tests
-
     [Fact]
     public void CalculateMatch_ExactDescriptionMatch_ReturnsHighSimilarity()
     {
@@ -76,10 +74,6 @@ public class TransactionMatcherTests
         // Assert - Low similarity should result in no match if below threshold
         Assert.Null(result);
     }
-
-    #endregion
-
-    #region Amount Matching Tests
 
     [Fact]
     public void CalculateMatch_ExactAmountMatch_ReturnsMatch()
@@ -156,10 +150,6 @@ public class TransactionMatcherTests
         Assert.Equal(0m, result.AmountVariance);
     }
 
-    #endregion
-
-    #region Date Matching Tests
-
     [Fact]
     public void CalculateMatch_ExactDateMatch_ReturnsMatch()
     {
@@ -220,10 +210,6 @@ public class TransactionMatcherTests
         Assert.Null(result);
     }
 
-    #endregion
-
-    #region Confidence Score Tests
-
     [Fact]
     public void CalculateMatch_PerfectMatch_ReturnsHighConfidence()
     {
@@ -252,14 +238,11 @@ public class TransactionMatcherTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.ConfidenceScore >= 0.60m && result.ConfidenceScore < 0.85m,
+        Assert.True(
+            result.ConfidenceScore >= 0.60m && result.ConfidenceScore < 0.85m,
             $"Expected medium confidence 0.60-0.85, got {result.ConfidenceScore}");
         Assert.Equal(MatchConfidenceLevel.Medium, result.ConfidenceLevel);
     }
-
-    #endregion
-
-    #region FindMatches Tests
 
     [Fact]
     public void FindMatches_MultipleMatchingCandidates_ReturnsOrderedByConfidence()
@@ -313,10 +296,6 @@ public class TransactionMatcherTests
         Assert.Empty(results);
     }
 
-    #endregion
-
-    #region Edge Cases
-
     [Fact]
     public void CalculateMatch_EmptyDescriptions_HandlesGracefully()
     {
@@ -346,73 +325,6 @@ public class TransactionMatcherTests
         Assert.NotNull(result);
         Assert.Equal(0m, result.AmountVariance);
     }
-
-    #endregion
-
-    #region Helper Methods
-
-    private Transaction CreateTransaction(string description, decimal amount, DateOnly date)
-    {
-        return Transaction.Create(
-            this._accountId,
-            MoneyValue.Create("USD", amount),
-            date,
-            description);
-    }
-
-    private RecurringInstanceInfoValue CreateCandidate(string description, decimal amount, DateOnly instanceDate)
-    {
-        return new RecurringInstanceInfoValue(
-            RecurringTransactionId: Guid.NewGuid(),
-            InstanceDate: instanceDate,
-            AccountId: this._accountId,
-            AccountName: "Test Account",
-            Description: description,
-            Amount: MoneyValue.Create("USD", amount),
-            CategoryId: null,
-            CategoryName: null,
-            IsModified: false,
-            IsSkipped: false);
-    }
-
-    private RecurringInstanceInfoValue CreateCandidateWithDescription(string description, decimal amount, DateOnly instanceDate)
-    {
-        return new RecurringInstanceInfoValue(
-            RecurringTransactionId: Guid.NewGuid(),
-            InstanceDate: instanceDate,
-            AccountId: this._accountId,
-            AccountName: "Test Account",
-            Description: description,
-            Amount: MoneyValue.Create("USD", amount),
-            CategoryId: null,
-            CategoryName: null,
-            IsModified: false,
-            IsSkipped: false);
-    }
-
-    private RecurringInstanceInfoValue CreateCandidateWithPatterns(
-        string description,
-        decimal amount,
-        DateOnly instanceDate,
-        IReadOnlyCollection<ImportPatternValue> patterns)
-    {
-        return new RecurringInstanceInfoValue(
-            RecurringTransactionId: Guid.NewGuid(),
-            InstanceDate: instanceDate,
-            AccountId: this._accountId,
-            AccountName: "Test Account",
-            Description: description,
-            Amount: MoneyValue.Create("USD", amount),
-            CategoryId: null,
-            CategoryName: null,
-            IsModified: false,
-            IsSkipped: false,
-            ImportPatterns: patterns);
-    }
-
-    #endregion
-
-    #region Import Pattern Matching Tests
 
     [Fact]
     public void CalculateMatch_WithMatchingImportPattern_ReturnsHighConfidence()
@@ -535,5 +447,62 @@ public class TransactionMatcherTests
         Assert.True(results[0].ConfidenceScore >= results[1].ConfidenceScore);
     }
 
-    #endregion
+    private Transaction CreateTransaction(string description, decimal amount, DateOnly date)
+    {
+        return Transaction.Create(
+            this._accountId,
+            MoneyValue.Create("USD", amount),
+            date,
+            description);
+    }
+
+    private RecurringInstanceInfoValue CreateCandidate(string description, decimal amount, DateOnly instanceDate)
+    {
+        return new RecurringInstanceInfoValue(
+            RecurringTransactionId: Guid.NewGuid(),
+            InstanceDate: instanceDate,
+            AccountId: this._accountId,
+            AccountName: "Test Account",
+            Description: description,
+            Amount: MoneyValue.Create("USD", amount),
+            CategoryId: null,
+            CategoryName: null,
+            IsModified: false,
+            IsSkipped: false);
+    }
+
+    private RecurringInstanceInfoValue CreateCandidateWithDescription(string description, decimal amount, DateOnly instanceDate)
+    {
+        return new RecurringInstanceInfoValue(
+            RecurringTransactionId: Guid.NewGuid(),
+            InstanceDate: instanceDate,
+            AccountId: this._accountId,
+            AccountName: "Test Account",
+            Description: description,
+            Amount: MoneyValue.Create("USD", amount),
+            CategoryId: null,
+            CategoryName: null,
+            IsModified: false,
+            IsSkipped: false);
+    }
+
+    private RecurringInstanceInfoValue CreateCandidateWithPatterns(
+        string description,
+        decimal amount,
+        DateOnly instanceDate,
+        IReadOnlyCollection<ImportPatternValue> patterns)
+    {
+        return new RecurringInstanceInfoValue(
+            RecurringTransactionId: Guid.NewGuid(),
+            InstanceDate: instanceDate,
+            AccountId: this._accountId,
+            AccountName: "Test Account",
+            Description: description,
+            Amount: MoneyValue.Create("USD", amount),
+            CategoryId: null,
+            CategoryName: null,
+            IsModified: false,
+            IsSkipped: false,
+            ImportPatterns: patterns);
+    }
 }

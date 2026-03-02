@@ -28,6 +28,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// GET /api/v1/accounts returns 200 OK with empty list when no accounts exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_Returns_200_WithAccountList()
     {
@@ -45,6 +46,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// POST /api/v1/accounts creates an account and returns 201 Created.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Create_Returns_201_WithCreatedAccount()
     {
@@ -66,6 +68,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// GET /api/v1/accounts/{id} returns 404 for non-existent account.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -79,6 +82,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// DELETE /api/v1/accounts/{id} returns 404 for non-existent account.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_404_WhenNotFound()
     {
@@ -92,6 +96,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// POST /api/v1/accounts creates account with initial balance.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Create_With_InitialBalance_Returns_201()
     {
@@ -121,6 +126,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// PUT /api/v1/accounts/{id} updates account and returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_200_WithUpdatedAccount()
     {
@@ -151,6 +157,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// PUT /api/v1/accounts/{id} returns 404 for non-existent account.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_404_WhenNotFound()
     {
@@ -167,6 +174,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// GET /api/v1/accounts/{id} returns account with initial balance fields.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_Account_With_InitialBalance()
     {

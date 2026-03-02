@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="ThemeOption.cs" company="Budget Experiment">
-//     Copyright (c) Budget Experiment. All rights reserved.
+// <copyright file="ThemeOption.cs" company="BecauseImClever">
+//     Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 

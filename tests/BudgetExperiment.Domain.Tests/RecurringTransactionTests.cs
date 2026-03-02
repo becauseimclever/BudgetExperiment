@@ -270,7 +270,7 @@ public class RecurringTransactionTests
 
         var ex = Assert.Throws<DomainException>(() =>
             recurring.Update(
-                "",
+                string.Empty,
                 this._validAmount,
                 this._validPattern,
                 null,

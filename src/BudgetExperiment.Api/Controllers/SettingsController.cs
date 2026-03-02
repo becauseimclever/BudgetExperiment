@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Application.Accounts;
 using BudgetExperiment.Contracts.Dtos;
 

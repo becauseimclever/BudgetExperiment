@@ -30,6 +30,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// GET /api/v1/recurring-transactions returns 200 OK with empty list when no recurring transactions exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_Returns_200_WithEmptyList()
     {
@@ -45,6 +46,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// GET /api/v1/recurring-transactions/{id} returns 404 for non-existent recurring transaction.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -58,6 +60,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// POST /api/v1/recurring-transactions returns 404 when account does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Create_Returns_404_WhenAccountNotFound()
     {
@@ -81,6 +84,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// DELETE /api/v1/recurring-transactions/{id} returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_404_WhenNotFound()
     {
@@ -94,6 +98,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// PUT /api/v1/recurring-transactions/{id} returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_404_WhenNotFound()
     {
@@ -114,6 +119,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// POST /api/v1/recurring-transactions/{id}/pause returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Pause_Returns_404_WhenNotFound()
     {
@@ -127,6 +133,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// POST /api/v1/recurring-transactions/{id}/resume returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Resume_Returns_404_WhenNotFound()
     {
@@ -140,6 +147,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// POST /api/v1/recurring-transactions/{id}/skip returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SkipNext_Returns_404_WhenNotFound()
     {
@@ -153,6 +161,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// GET /api/v1/recurring-transactions/projected returns 200 OK with valid date range.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProjected_Returns_200_WithValidRange()
     {
@@ -168,6 +177,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// GET /api/v1/recurring-transactions/projected returns 400 when from is after to.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProjected_Returns_400_WhenFromAfterTo()
     {
@@ -181,6 +191,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// GET /api/v1/recurring-transactions/{id}/instances returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetInstances_Returns_404_WhenNotFound()
     {
@@ -194,6 +205,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// PUT /api/v1/recurring-transactions/{id}/instances/{date} returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ModifyInstance_Returns_404_WhenNotFound()
     {
@@ -214,6 +226,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// DELETE /api/v1/recurring-transactions/{id}/instances/{date} returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SkipInstance_Returns_404_WhenNotFound()
     {
@@ -227,6 +240,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// PUT /api/v1/recurring-transactions/{id}/instances/{date}/future returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateFuture_Returns_404_WhenNotFound()
     {
@@ -247,6 +261,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// GET /api/v1/recurring-transactions/{id}/import-patterns returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetImportPatterns_Returns_404_WhenNotFound()
     {
@@ -260,6 +275,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <summary>
     /// PUT /api/v1/recurring-transactions/{id}/import-patterns returns 404 when recurring transaction does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateImportPatterns_Returns_404_WhenNotFound()
     {

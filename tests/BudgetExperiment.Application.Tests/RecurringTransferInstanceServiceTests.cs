@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Moq;
@@ -63,9 +62,11 @@ public class RecurringTransferInstanceServiceTests
 
         // Assert
         Assert.True(result);
-        this._repository.Verify(r => r.AddExceptionAsync(
+        this._repository.Verify(
+            r => r.AddExceptionAsync(
             It.Is<RecurringTransferException>(e => e.OriginalDate == instanceDate && e.ExceptionType == ExceptionType.Skipped),
-            default), Times.Once);
+            default),
+            Times.Once);
     }
 
     [Fact]
@@ -114,9 +115,11 @@ public class RecurringTransferInstanceServiceTests
         Assert.Equal(200m, result.Amount.Amount);
         Assert.Equal("Extra this month", result.Description);
         Assert.True(result.IsModified);
-        this._repository.Verify(r => r.AddExceptionAsync(
+        this._repository.Verify(
+            r => r.AddExceptionAsync(
             It.Is<RecurringTransferException>(e => e.OriginalDate == instanceDate && e.ExceptionType == ExceptionType.Modified),
-            default), Times.Once);
+            default),
+            Times.Once);
     }
 
     [Fact]

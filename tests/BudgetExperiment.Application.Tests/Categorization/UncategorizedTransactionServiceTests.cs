@@ -16,8 +16,6 @@ namespace BudgetExperiment.Application.Tests.Categorization;
 /// </summary>
 public class UncategorizedTransactionServiceTests
 {
-    #region GetPagedAsync Tests
-
     [Fact]
     public async Task GetPagedAsync_Returns_Paged_Transactions()
     {
@@ -91,7 +89,8 @@ public class UncategorizedTransactionServiceTests
         await service.GetPagedAsync(filter);
 
         // Assert
-        transactionRepo.Verify(r => r.GetUncategorizedPagedAsync(
+        transactionRepo.Verify(
+            r => r.GetUncategorizedPagedAsync(
             filter.StartDate,
             filter.EndDate,
             filter.MinAmount,
@@ -102,7 +101,8 @@ public class UncategorizedTransactionServiceTests
             filter.SortDescending,
             25, // skip = (page - 1) * pageSize
             25, // take = pageSize
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -134,8 +134,20 @@ public class UncategorizedTransactionServiceTests
         await service.GetPagedAsync(filter);
 
         // Assert - should clamp to 100
-        transactionRepo.Verify(r => r.GetUncategorizedPagedAsync(
-            null, null, null, null, null, null, "Date", true, 0, 100, It.IsAny<CancellationToken>()), Times.Once);
+        transactionRepo.Verify(
+            r => r.GetUncategorizedPagedAsync(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "Date",
+            true,
+            0,
+            100,
+            It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -167,13 +179,21 @@ public class UncategorizedTransactionServiceTests
         await service.GetPagedAsync(filter);
 
         // Assert - should default to page 1, skip 0
-        transactionRepo.Verify(r => r.GetUncategorizedPagedAsync(
-            null, null, null, null, null, null, "Date", true, 0, 50, It.IsAny<CancellationToken>()), Times.Once);
+        transactionRepo.Verify(
+            r => r.GetUncategorizedPagedAsync(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "Date",
+            true,
+            0,
+            50,
+            It.IsAny<CancellationToken>()),
+            Times.Once);
     }
-
-    #endregion
-
-    #region BulkCategorizeAsync Tests
 
     [Fact]
     public async Task BulkCategorizeAsync_Updates_All_Transactions()
@@ -309,6 +329,4 @@ public class UncategorizedTransactionServiceTests
         Assert.Empty(result.Errors);
         unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
-
-    #endregion
 }

@@ -2,9 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Charts;
+using Bunit;
 
 namespace BudgetExperiment.Client.Tests.Components;
 

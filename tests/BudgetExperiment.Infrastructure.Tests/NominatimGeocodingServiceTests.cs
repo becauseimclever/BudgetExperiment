@@ -38,6 +38,7 @@ public sealed class NominatimGeocodingServiceTests : IDisposable
     /// <summary>
     /// Valid coordinates should return a populated address.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ReverseGeocode_ValidCoordinates_ReturnsAddress()
     {
@@ -72,6 +73,7 @@ public sealed class NominatimGeocodingServiceTests : IDisposable
     /// <summary>
     /// When the API returns an error status, the service should return null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ReverseGeocode_ApiError_ReturnsNull()
     {
@@ -91,6 +93,7 @@ public sealed class NominatimGeocodingServiceTests : IDisposable
     /// <summary>
     /// When the API returns empty address data, the service should still return non-null with available fields.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ReverseGeocode_EmptyAddress_ReturnsResponseWithNulls()
     {
@@ -118,6 +121,7 @@ public sealed class NominatimGeocodingServiceTests : IDisposable
     /// <summary>
     /// Nominatim uses 'town' or 'village' when 'city' is absent.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ReverseGeocode_TownFallback_ReturnsTownAsCity()
     {
@@ -148,6 +152,7 @@ public sealed class NominatimGeocodingServiceTests : IDisposable
     /// <summary>
     /// The correct query string is sent to Nominatim.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ReverseGeocode_SendsCorrectRequestUrl()
     {
@@ -172,33 +177,5 @@ public sealed class NominatimGeocodingServiceTests : IDisposable
     private NominatimGeocodingService CreateService()
     {
         return new NominatimGeocodingService(_httpClient, NullLogger<NominatimGeocodingService>.Instance);
-    }
-}
-
-/// <summary>
-/// A fake <see cref="HttpMessageHandler"/> that returns canned responses.
-/// </summary>
-internal sealed class FakeHttpMessageHandler : HttpMessageHandler
-{
-    /// <summary>Gets or sets the response content to return.</summary>
-    public string ResponseContent { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the HTTP status code to return.</summary>
-    public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.OK;
-
-    /// <summary>Gets the URI of the last request sent.</summary>
-    public Uri? LastRequestUri { get; private set; }
-
-    /// <inheritdoc />
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        LastRequestUri = request.RequestUri;
-
-        var response = new HttpResponseMessage(StatusCode)
-        {
-            Content = new StringContent(ResponseContent, System.Text.Encoding.UTF8, "application/json"),
-        };
-
-        return Task.FromResult(response);
     }
 }

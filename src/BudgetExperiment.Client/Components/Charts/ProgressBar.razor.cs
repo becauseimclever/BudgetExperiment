@@ -54,6 +54,13 @@ public partial class ProgressBar
     [Parameter]
     public string AriaLabel { get; set; } = "Progress";
 
+    private static IReadOnlyList<ThresholdColor> DefaultThresholds =>
+    [
+        new ThresholdColor { MinPercent = 0m, Color = "#22c55e", Label = "On track" },
+        new ThresholdColor { MinPercent = 70m, Color = "#f59e0b", Label = "Warning" },
+        new ThresholdColor { MinPercent = 90m, Color = "#ef4444", Label = "Over" },
+    ];
+
     private decimal Percent
     {
         get
@@ -73,6 +80,11 @@ public partial class ProgressBar
 
     private string FillColor => ResolveThresholdColor();
 
+    private static string F(decimal value)
+    {
+        return value.ToString("0", CultureInfo.InvariantCulture);
+    }
+
     private string ResolveThresholdColor()
     {
         var thresholds = Thresholds ?? DefaultThresholds;
@@ -81,17 +93,5 @@ public partial class ProgressBar
             .LastOrDefault(t => Percent >= t.MinPercent);
 
         return selected?.Color ?? "#6b7280";
-    }
-
-    private static IReadOnlyList<ThresholdColor> DefaultThresholds =>
-    [
-        new ThresholdColor { MinPercent = 0m, Color = "#22c55e", Label = "On track" },
-        new ThresholdColor { MinPercent = 70m, Color = "#f59e0b", Label = "Warning" },
-        new ThresholdColor { MinPercent = 90m, Color = "#ef4444", Label = "Over" },
-    ];
-
-    private static string F(decimal value)
-    {
-        return value.ToString("0", CultureInfo.InvariantCulture);
     }
 }

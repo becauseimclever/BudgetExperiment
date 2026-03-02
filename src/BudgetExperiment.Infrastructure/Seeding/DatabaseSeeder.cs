@@ -161,10 +161,11 @@ public static class DatabaseSeeder
 
         await context.SaveChangesAsync();
 
+        var totalTransactionCount = checking.Transactions.Count + savings.Transactions.Count +
+            creditCard.Transactions.Count + cash.Transactions.Count;
         logger?.LogInformation(
             "Database seeded with {AccountCount} accounts and {TransactionCount} transactions.",
             4,
-            checking.Transactions.Count + savings.Transactions.Count +
-            creditCard.Transactions.Count + cash.Transactions.Count);
+            totalTransactionCount);
     }
 }

@@ -13,8 +13,6 @@ public class CategorizationRuleTests
 {
     private static readonly Guid ValidCategoryId = Guid.NewGuid();
 
-    #region Create Tests
-
     [Fact]
     public void Create_With_Valid_Data_Creates_Rule()
     {
@@ -169,10 +167,6 @@ public class CategorizationRuleTests
         Assert.Contains("priority", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region Update Tests
-
     [Fact]
     public void Update_Changes_Properties_And_UpdatedAtUtc()
     {
@@ -249,10 +243,6 @@ public class CategorizationRuleTests
         Assert.Contains("regex", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region SetPriority Tests
-
     [Fact]
     public void SetPriority_Changes_Priority_And_UpdatedAtUtc()
     {
@@ -291,10 +281,6 @@ public class CategorizationRuleTests
         // Assert
         Assert.Equal(0, rule.Priority);
     }
-
-    #endregion
-
-    #region Activate/Deactivate Tests
 
     [Fact]
     public void Deactivate_Sets_IsActive_False()
@@ -354,10 +340,6 @@ public class CategorizationRuleTests
         Assert.True(rule.UpdatedAtUtc >= originalUpdatedAt);
     }
 
-    #endregion
-
-    #region Matches Tests - Exact
-
     [Fact]
     public void Matches_Exact_Returns_True_When_Description_Equals_Pattern()
     {
@@ -399,10 +381,6 @@ public class CategorizationRuleTests
         Assert.False(rule.Matches("walmart"));
         Assert.True(rule.Matches("WALMART"));
     }
-
-    #endregion
-
-    #region Matches Tests - Contains
 
     [Fact]
     public void Matches_Contains_Returns_True_When_Description_Contains_Pattern()
@@ -447,10 +425,6 @@ public class CategorizationRuleTests
         Assert.True(rule.Matches("Purchase at WALMART store"));
     }
 
-    #endregion
-
-    #region Matches Tests - StartsWith
-
     [Fact]
     public void Matches_StartsWith_Returns_True_When_Description_Starts_With_Pattern()
     {
@@ -494,10 +468,6 @@ public class CategorizationRuleTests
         Assert.True(rule.Matches("WALMART store"));
     }
 
-    #endregion
-
-    #region Matches Tests - EndsWith
-
     [Fact]
     public void Matches_EndsWith_Returns_True_When_Description_Ends_With_Pattern()
     {
@@ -540,10 +510,6 @@ public class CategorizationRuleTests
         Assert.False(rule.Matches("Walmart grocery"));
         Assert.True(rule.Matches("Walmart GROCERY"));
     }
-
-    #endregion
-
-    #region Matches Tests - Regex
 
     [Fact]
     public void Matches_Regex_Returns_True_When_Description_Matches_Pattern()
@@ -599,10 +565,6 @@ public class CategorizationRuleTests
         Assert.True(rule.Matches("CHECK 1234 DEPOSIT"));
     }
 
-    #endregion
-
-    #region Matches Tests - Edge Cases
-
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -645,6 +607,4 @@ public class CategorizationRuleTests
         Assert.True(rule.Matches("SAMPLE TEST (ABC) DATA"));
         Assert.False(rule.Matches("SAMPLE TEST ABC DATA"));
     }
-
-    #endregion
 }

@@ -46,6 +46,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// <summary>
     /// An unauthenticated GET to /api/v1/config returns 200 when auth is off.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_ReturnsOk_WhenAuthDisabled()
     {
@@ -59,6 +60,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// <summary>
     /// The /api/v1/config endpoint returns mode="none" when auth is disabled.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_ReturnsModeNone()
     {
@@ -73,6 +75,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// <summary>
     /// The /api/v1/config endpoint does not expose OIDC settings when mode is none.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_OidcIsNull_WhenModeNone()
     {
@@ -88,6 +91,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// A request to an authenticated endpoint (e.g., /api/v1/user/me) succeeds
     /// without any Authorization header when auth is disabled.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task AuthenticatedEndpoint_ReturnsOk_WithoutAuthorizationHeader()
     {
@@ -102,6 +106,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// <summary>
     /// The user context returns the family user ID for requests in no-auth mode.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UserEndpoint_ReturnsFamilyUserId()
     {
@@ -116,6 +121,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// <summary>
     /// The user context returns "Family" as the display name in no-auth mode.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UserEndpoint_ReturnsFamilyDisplayName()
     {
@@ -130,6 +136,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// <summary>
     /// The user context returns the family email in no-auth mode.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UserEndpoint_ReturnsFamilyEmail()
     {
@@ -144,6 +151,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// <summary>
     /// The user context returns "Family" as username in no-auth mode.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UserEndpoint_ReturnsFamilyUsername()
     {

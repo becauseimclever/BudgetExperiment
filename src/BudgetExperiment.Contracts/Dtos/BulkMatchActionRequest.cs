@@ -10,7 +10,7 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed record BulkMatchActionRequest
 {
     /// <summary>
-    /// Gets or sets the match IDs to process.
+    /// Gets the match IDs to process.
     /// </summary>
     public IReadOnlyList<Guid> MatchIds { get; init; } = [];
 }

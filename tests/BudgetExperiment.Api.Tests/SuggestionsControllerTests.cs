@@ -27,6 +27,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/ai/suggestions returns 200 OK with suggestion list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPending_Returns_200_WithSuggestionList()
     {
@@ -42,6 +43,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/ai/suggestions?type=NewRule returns 200 OK with filtered suggestions.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPending_WithTypeFilter_Returns_200()
     {
@@ -57,6 +59,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/ai/suggestions/{id} returns 404 when suggestion not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -73,6 +76,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <remarks>
     /// When AI is unavailable, may return 503 or 200 with empty results.
     /// </remarks>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Generate_Returns_ValidResponse()
     {
@@ -102,6 +106,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// POST /api/v1/ai/suggestions/generate with invalid type returns 400.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Generate_Returns_400_ForInvalidType()
     {
@@ -125,6 +130,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// POST /api/v1/ai/suggestions/{id}/accept returns 404 when suggestion not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Accept_Returns_404_WhenNotFound()
     {
@@ -138,6 +144,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// POST /api/v1/ai/suggestions/{id}/dismiss returns 404 when suggestion not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Dismiss_Returns_404_WhenNotFound()
     {
@@ -154,6 +161,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// POST /api/v1/ai/suggestions/{id}/feedback returns 404 when suggestion not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Feedback_Returns_404_WhenNotFound()
     {

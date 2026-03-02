@@ -73,12 +73,16 @@ public class TransferServiceTests
         Assert.Equal("Monthly savings", result.Description);
 
         // Verify both transactions were added
-        this._transactionRepo.Verify(r => r.AddAsync(
+        this._transactionRepo.Verify(
+            r => r.AddAsync(
             It.Is<Transaction>(t => t.TransferDirection == TransferDirection.Source && t.Amount.Amount == -500m),
-            default), Times.Once);
-        this._transactionRepo.Verify(r => r.AddAsync(
+            default),
+            Times.Once);
+        this._transactionRepo.Verify(
+            r => r.AddAsync(
             It.Is<Transaction>(t => t.TransferDirection == TransferDirection.Destination && t.Amount.Amount == 500m),
-            default), Times.Once);
+            default),
+            Times.Once);
         this._uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 
@@ -395,8 +399,10 @@ public class TransferServiceTests
 
         // Assert
         Assert.Null(result.Description); // Extracted description should be null for default
-        this._transactionRepo.Verify(r => r.AddAsync(
+        this._transactionRepo.Verify(
+            r => r.AddAsync(
             It.Is<Transaction>(t => t.Description.Contains("Transfer")),
-            default), Times.Exactly(2));
+            default),
+            Times.Exactly(2));
     }
 }

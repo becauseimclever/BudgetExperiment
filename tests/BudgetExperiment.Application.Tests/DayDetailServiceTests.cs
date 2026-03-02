@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 using Moq;
@@ -171,8 +170,6 @@ public class DayDetailServiceTests
         Assert.Equal(-80.00m, result.Summary.CombinedTotal.Amount);
         Assert.Equal(2, result.Summary.ItemCount);
     }
-
-    #region Unified Transaction Display Tests (Feature 014)
 
     [Fact]
     public async Task GetDayDetailAsync_Shows_All_Four_Item_Types_On_Same_Day()
@@ -615,20 +612,6 @@ public class DayDetailServiceTests
         Assert.Equal(3, result.Summary.ItemCount);
     }
 
-    #endregion
-
-    private DayDetailService CreateService()
-    {
-        return new DayDetailService(
-            _transactionRepo.Object,
-            _recurringRepo.Object,
-            _recurringTransferRepo.Object,
-            _accountRepo.Object,
-            _recurringInstanceProjector.Object,
-            _recurringTransferInstanceProjector.Object,
-            _currencyProvider.Object);
-    }
-
     private static Account CreateTestAccount(Guid id, string name)
     {
         // Use reflection to create account for testing since factory may not allow setting ID
@@ -726,5 +709,17 @@ public class DayDetailServiceTests
     {
         var idProperty = typeof(T).GetProperty("Id");
         idProperty?.SetValue(entity, id);
+    }
+
+    private DayDetailService CreateService()
+    {
+        return new DayDetailService(
+            _transactionRepo.Object,
+            _recurringRepo.Object,
+            _recurringTransferRepo.Object,
+            _accountRepo.Object,
+            _recurringInstanceProjector.Object,
+            _recurringTransferInstanceProjector.Object,
+            _currencyProvider.Object);
     }
 }

@@ -2,22 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-// Domain namespaces
-global using BudgetExperiment.Domain.Accounts;
-global using BudgetExperiment.Domain.Budgeting;
-global using BudgetExperiment.Domain.Categorization;
-global using BudgetExperiment.Domain.Chat;
-global using BudgetExperiment.Domain.Common;
-global using BudgetExperiment.Domain.Identity;
-global using BudgetExperiment.Domain.Import;
-global using BudgetExperiment.Domain.Paycheck;
-global using BudgetExperiment.Domain.Reconciliation;
-global using BudgetExperiment.Domain.Recurring;
-global using BudgetExperiment.Domain.Repositories;
-global using BudgetExperiment.Domain.Reports;
-global using BudgetExperiment.Domain.Services;
-global using BudgetExperiment.Domain.Settings;
-
 // Application namespaces
 global using BudgetExperiment.Application.Accounts;
 global using BudgetExperiment.Application.Ai;
@@ -33,3 +17,19 @@ global using BudgetExperiment.Application.Reconciliation;
 global using BudgetExperiment.Application.Recurring;
 global using BudgetExperiment.Application.Reports;
 global using BudgetExperiment.Application.Settings;
+
+// Domain namespaces
+global using BudgetExperiment.Domain.Accounts;
+global using BudgetExperiment.Domain.Budgeting;
+global using BudgetExperiment.Domain.Categorization;
+global using BudgetExperiment.Domain.Chat;
+global using BudgetExperiment.Domain.Common;
+global using BudgetExperiment.Domain.Identity;
+global using BudgetExperiment.Domain.Import;
+global using BudgetExperiment.Domain.Paycheck;
+global using BudgetExperiment.Domain.Reconciliation;
+global using BudgetExperiment.Domain.Recurring;
+global using BudgetExperiment.Domain.Reports;
+global using BudgetExperiment.Domain.Repositories;
+global using BudgetExperiment.Domain.Services;
+global using BudgetExperiment.Domain.Settings;

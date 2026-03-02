@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Moq;
@@ -55,19 +54,6 @@ public class ReconciliationServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
     }
-
-    private ReconciliationService CreateService()
-    {
-        return new ReconciliationService(
-            _matchRepository.Object,
-            _recurringRepository.Object,
-            _transactionRepository.Object,
-            _instanceProjector.Object,
-            _transactionMatcher.Object,
-            _unitOfWork.Object);
-    }
-
-    #region FindMatchesAsync Tests
 
     [Fact]
     public async Task FindMatchesAsync_NoTransactions_ReturnsEmptyResult()
@@ -204,7 +190,8 @@ public class ReconciliationServiceTests
         match.ConfidenceScore.ShouldBe(0.95m);
         match.Status.ShouldBe("AutoMatched");
 
-        _matchRepository.Verify(r => r.AddAsync(
+        _matchRepository.Verify(
+            r => r.AddAsync(
             It.Is<ReconciliationMatch>(m => m.ImportedTransactionId == transactionId),
             It.IsAny<CancellationToken>()),
             Times.Once);
@@ -287,15 +274,12 @@ public class ReconciliationServiceTests
 
         // Assert
         result.TotalMatchesFound.ShouldBe(0);
-        _matchRepository.Verify(r => r.AddAsync(
+        _matchRepository.Verify(
+            r => r.AddAsync(
             It.IsAny<ReconciliationMatch>(),
             It.IsAny<CancellationToken>()),
             Times.Never);
     }
-
-    #endregion
-
-    #region AcceptMatchAsync Tests
 
     [Fact]
     public async Task AcceptMatchAsync_MatchNotFound_ReturnsNull()
@@ -362,10 +346,6 @@ public class ReconciliationServiceTests
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    #endregion
-
-    #region RejectMatchAsync Tests
-
     [Fact]
     public async Task RejectMatchAsync_MatchNotFound_ReturnsNull()
     {
@@ -415,10 +395,6 @@ public class ReconciliationServiceTests
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    #endregion
-
-    #region GetPendingMatchesAsync Tests
-
     [Fact]
     public async Task GetPendingMatchesAsync_ReturnsEnrichedMatches()
     {
@@ -463,10 +439,6 @@ public class ReconciliationServiceTests
         result[0].ExpectedAmount.ShouldNotBeNull();
         result[0].ImportedTransaction.ShouldNotBeNull();
     }
-
-    #endregion
-
-    #region GetReconciliationStatusAsync Tests
 
     [Fact]
     public async Task GetReconciliationStatusAsync_NoRecurringTransactions_ReturnsEmptyStatus()
@@ -545,10 +517,6 @@ public class ReconciliationServiceTests
         result.Instances.Count.ShouldBe(1);
         result.Instances[0].Status.ShouldBe("Missing");
     }
-
-    #endregion
-
-    #region CreateManualMatchAsync Tests
 
     [Fact]
     public async Task CreateManualMatchAsync_TransactionNotFound_ReturnsNull()
@@ -643,7 +611,8 @@ public class ReconciliationServiceTests
         transaction.RecurringTransactionId.ShouldBe(recurringId);
         transaction.RecurringInstanceDate.ShouldBe(instanceDate);
 
-        _matchRepository.Verify(r => r.AddAsync(
+        _matchRepository.Verify(
+            r => r.AddAsync(
             It.Is<ReconciliationMatch>(m => m.Status == ReconciliationMatchStatus.Accepted),
             It.IsAny<CancellationToken>()),
             Times.Once);
@@ -684,15 +653,12 @@ public class ReconciliationServiceTests
         await service.CreateManualMatchAsync(request);
 
         // Assert
-        _matchRepository.Verify(r => r.AddAsync(
+        _matchRepository.Verify(
+            r => r.AddAsync(
             It.Is<ReconciliationMatch>(m => m.Source == MatchSource.Manual),
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
-
-    #endregion
-
-    #region UnlinkMatchAsync Tests
 
     [Fact]
     public async Task UnlinkMatchAsync_MatchNotFound_ReturnsNull()
@@ -782,10 +748,6 @@ public class ReconciliationServiceTests
         transaction.RecurringTransactionId.ShouldBeNull();
     }
 
-    #endregion
-
-    #region BulkAcceptMatchesAsync Tests
-
     [Fact]
     public async Task BulkAcceptMatchesAsync_AcceptsMultipleMatches()
     {
@@ -829,52 +791,6 @@ public class ReconciliationServiceTests
         result.Count.ShouldBe(2);
         result.All(m => m.Status == "Accepted").ShouldBeTrue();
     }
-
-    #endregion
-
-    #region Helper Methods
-
-    private static Transaction CreateTestTransaction(Guid id, Guid accountId, string description, decimal amount, DateOnly date)
-    {
-        var transaction = Transaction.Create(
-            accountId,
-            MoneyValue.Create("USD", amount),
-            date,
-            description);
-        typeof(Transaction).GetProperty(nameof(Transaction.Id))!.SetValue(transaction, id);
-        return transaction;
-    }
-
-    private static RecurringTransaction CreateTestRecurringTransaction(Guid id, Guid accountId, string description, decimal amount, DateOnly startDate)
-    {
-        var recurring = RecurringTransaction.Create(
-            accountId,
-            description,
-            MoneyValue.Create("USD", amount),
-            RecurrencePatternValue.CreateMonthly(1, startDate.Day),
-            startDate);
-        typeof(RecurringTransaction).GetProperty(nameof(RecurringTransaction.Id))!.SetValue(recurring, id);
-        return recurring;
-    }
-
-    private static ReconciliationMatch CreateTestMatch(Guid id, Guid transactionId, Guid recurringId, DateOnly instanceDate)
-    {
-        var match = ReconciliationMatch.Create(
-            transactionId,
-            recurringId,
-            instanceDate,
-            0.85m,
-            0m,
-            0,
-            BudgetScope.Shared,
-            null);
-        typeof(ReconciliationMatch).GetProperty(nameof(ReconciliationMatch.Id))!.SetValue(match, id);
-        return match;
-    }
-
-    #endregion
-
-    #region GetLinkableInstancesAsync Tests
 
     [Fact]
     public async Task GetLinkableInstancesAsync_TransactionNotFound_ReturnsEmptyList()
@@ -971,5 +887,52 @@ public class ReconciliationServiceTests
         result[0].SuggestedConfidence.ShouldBe(0.95m);
     }
 
-    #endregion
+    private static Transaction CreateTestTransaction(Guid id, Guid accountId, string description, decimal amount, DateOnly date)
+    {
+        var transaction = Transaction.Create(
+            accountId,
+            MoneyValue.Create("USD", amount),
+            date,
+            description);
+        typeof(Transaction).GetProperty(nameof(Transaction.Id))!.SetValue(transaction, id);
+        return transaction;
+    }
+
+    private static RecurringTransaction CreateTestRecurringTransaction(Guid id, Guid accountId, string description, decimal amount, DateOnly startDate)
+    {
+        var recurring = RecurringTransaction.Create(
+            accountId,
+            description,
+            MoneyValue.Create("USD", amount),
+            RecurrencePatternValue.CreateMonthly(1, startDate.Day),
+            startDate);
+        typeof(RecurringTransaction).GetProperty(nameof(RecurringTransaction.Id))!.SetValue(recurring, id);
+        return recurring;
+    }
+
+    private static ReconciliationMatch CreateTestMatch(Guid id, Guid transactionId, Guid recurringId, DateOnly instanceDate)
+    {
+        var match = ReconciliationMatch.Create(
+            transactionId,
+            recurringId,
+            instanceDate,
+            0.85m,
+            0m,
+            0,
+            BudgetScope.Shared,
+            null);
+        typeof(ReconciliationMatch).GetProperty(nameof(ReconciliationMatch.Id))!.SetValue(match, id);
+        return match;
+    }
+
+    private ReconciliationService CreateService()
+    {
+        return new ReconciliationService(
+            _matchRepository.Object,
+            _recurringRepository.Object,
+            _transactionRepository.Object,
+            _instanceProjector.Object,
+            _transactionMatcher.Object,
+            _unitOfWork.Object);
+    }
 }

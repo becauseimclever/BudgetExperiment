@@ -28,6 +28,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/category-suggestions/analyze returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Analyze_Returns_200_Ok()
     {
@@ -43,6 +44,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// GET /api/v1/category-suggestions returns 200 OK with list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPending_Returns_200_WithList()
     {
@@ -58,6 +60,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// GET /api/v1/category-suggestions/{id} returns 404 for non-existent suggestion.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_ForNonExistent()
     {
@@ -71,6 +74,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/category-suggestions/{id}/accept returns 404 for non-existent suggestion.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Accept_Returns_404_ForNonExistent()
     {
@@ -86,6 +90,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/category-suggestions/{id}/dismiss returns 404 for non-existent suggestion.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Dismiss_Returns_404_ForNonExistent()
     {
@@ -99,6 +104,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/category-suggestions/bulk-accept returns 400 for empty list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkAccept_Returns_400_ForEmptyList()
     {
@@ -114,6 +120,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/category-suggestions/bulk-accept returns 200 with results for valid IDs.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkAccept_Returns_200_WithResults()
     {
@@ -132,6 +139,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
 
     /// <summary>    /// GET /api/v1/categorysuggestions/dismissed returns 200 OK with dismissed list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetDismissed_Returns_200_WithList()
     {
@@ -147,6 +155,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
 
     /// <summary>    /// GET /api/v1/category-suggestions/{id}/preview-rules returns 404 for non-existent suggestion.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task PreviewRules_Returns_404_ForNonExistent()
     {
@@ -160,6 +169,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/categorysuggestions/{id}/restore returns 404 for non-existent suggestion.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Restore_Returns_404_ForNonExistent()
     {
@@ -173,6 +183,7 @@ public sealed class CategorySuggestionsControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// DELETE /api/v1/categorysuggestions/dismissed-patterns returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ClearDismissedPatterns_Returns_200()
     {

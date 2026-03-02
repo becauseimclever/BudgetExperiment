@@ -20,6 +20,11 @@ public sealed record SkipRowsSettingsValue
     public int RowsToSkip { get; init; }
 
     /// <summary>
+    /// Gets default settings (no rows skipped).
+    /// </summary>
+    public static SkipRowsSettingsValue Default => new() { RowsToSkip = 0 };
+
+    /// <summary>
     /// Creates skip rows settings.
     /// </summary>
     /// <param name="rowsToSkip">Number of rows to skip (0-100).</param>
@@ -34,9 +39,4 @@ public sealed record SkipRowsSettingsValue
 
         return new SkipRowsSettingsValue { RowsToSkip = rowsToSkip };
     }
-
-    /// <summary>
-    /// Gets default settings (no rows skipped).
-    /// </summary>
-    public static SkipRowsSettingsValue Default => new() { RowsToSkip = 0 };
 }

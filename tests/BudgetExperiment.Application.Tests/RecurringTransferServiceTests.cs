@@ -366,9 +366,11 @@ public class RecurringTransferServiceTests
 
         // Assert
         Assert.NotNull(result);
-        this._repository.Verify(r => r.AddExceptionAsync(
+        this._repository.Verify(
+            r => r.AddExceptionAsync(
             It.Is<RecurringTransferException>(e => e.OriginalDate == originalNextOccurrence && e.ExceptionType == ExceptionType.Skipped),
-            default), Times.Once);
+            default),
+            Times.Once);
         Assert.Equal(new DateOnly(2026, 2, 1), transfer.NextOccurrence);
         this._uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }

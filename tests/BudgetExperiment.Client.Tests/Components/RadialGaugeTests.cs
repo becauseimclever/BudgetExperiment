@@ -2,8 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
 using BudgetExperiment.Client.Components.Charts;
+using Bunit;
 
 namespace BudgetExperiment.Client.Tests.Components;
 
@@ -72,7 +72,7 @@ public class RadialGaugeTests : BunitContext
         var progress = cut.Find(".radial-gauge-progress");
         var dashOffset = double.Parse(progress.GetAttribute("stroke-dashoffset") ?? "0", System.Globalization.CultureInfo.InvariantCulture);
 
-        var radius = (size - strokeWidth) / 2d - 2d;
+        var radius = ((size - strokeWidth) / 2d) - 2d;
         var circumference = 2 * Math.PI * radius;
         var expected = circumference * (1 - (double)(value / max));
 

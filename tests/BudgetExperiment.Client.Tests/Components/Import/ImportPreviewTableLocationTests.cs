@@ -2,12 +2,10 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Import;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-
+using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -194,46 +192,6 @@ public class ImportPreviewTableLocationTests : BunitContext
         Assert.DoesNotContain("enriched with location", cut.Markup);
     }
 
-    private static ImportPreviewResult CreatePreviewResult(
-        ImportLocationPreview? parsedLocation = null,
-        int? locationEnrichedCount = null)
-    {
-        return new ImportPreviewResult
-        {
-            Rows =
-            [
-                new ImportPreviewRow
-                {
-                    RowIndex = 1,
-                    Date = new DateOnly(2025, 1, 15),
-                    Description = "STARBUCKS SEATTLE WA",
-                    Amount = -5.50m,
-                    Status = ImportRowStatus.Valid,
-                    ParsedLocation = parsedLocation,
-                },
-            ],
-            ValidCount = 1,
-            LocationEnrichedCount = locationEnrichedCount ?? (parsedLocation != null ? 1 : 0),
-        };
-    }
-
-    private IRenderedComponent<ImportPreviewTable> RenderTable(
-        ImportPreviewResult preview,
-        EventCallback<int>? onLocationToggle = null)
-    {
-        return Render<ImportPreviewTable>(parameters =>
-        {
-            parameters
-                .Add(p => p.PreviewResult, preview)
-                .Add(p => p.SelectedIndices, new HashSet<int> { 1 });
-
-            if (onLocationToggle.HasValue)
-            {
-                parameters.Add(p => p.OnLocationToggle, onLocationToggle.Value);
-            }
-        });
-    }
-
     /// <summary>
     /// When a location row has IsAccepted true, a map-pin icon toggle button is shown.
     /// </summary>
@@ -330,5 +288,45 @@ public class ImportPreviewTableLocationTests : BunitContext
         // Assert
         var dots = cut.FindAll(".confidence-dot");
         Assert.Empty(dots);
+    }
+
+    private static ImportPreviewResult CreatePreviewResult(
+        ImportLocationPreview? parsedLocation = null,
+        int? locationEnrichedCount = null)
+    {
+        return new ImportPreviewResult
+        {
+            Rows =
+            [
+                new ImportPreviewRow
+                {
+                    RowIndex = 1,
+                    Date = new DateOnly(2025, 1, 15),
+                    Description = "STARBUCKS SEATTLE WA",
+                    Amount = -5.50m,
+                    Status = ImportRowStatus.Valid,
+                    ParsedLocation = parsedLocation,
+                },
+            ],
+            ValidCount = 1,
+            LocationEnrichedCount = locationEnrichedCount ?? (parsedLocation != null ? 1 : 0),
+        };
+    }
+
+    private IRenderedComponent<ImportPreviewTable> RenderTable(
+        ImportPreviewResult preview,
+        EventCallback<int>? onLocationToggle = null)
+    {
+        return Render<ImportPreviewTable>(parameters =>
+        {
+            parameters
+                .Add(p => p.PreviewResult, preview)
+                .Add(p => p.SelectedIndices, new HashSet<int> { 1 });
+
+            if (onLocationToggle.HasValue)
+            {
+                parameters.Add(p => p.OnLocationToggle, onLocationToggle.Value);
+            }
+        });
     }
 }

@@ -43,7 +43,7 @@ public sealed class TransactionListItemDto
     /// <summary>Gets or sets the recurring transfer ID (for recurring transfer items).</summary>
     public Guid? RecurringTransferId { get; set; }
 
-    /// <summary>Gets or sets whether this transaction is part of a transfer.</summary>
+    /// <summary>Gets or sets a value indicating whether this transaction is part of a transfer.</summary>
     public bool IsTransfer { get; set; }
 
     /// <summary>Gets or sets the transfer identifier (null if not a transfer).</summary>

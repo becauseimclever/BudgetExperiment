@@ -145,7 +145,7 @@ public class AccountTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => account.AddTransaction(amount, date, ""));
+        var ex = Assert.Throws<DomainException>(() => account.AddTransaction(amount, date, string.Empty));
         Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 

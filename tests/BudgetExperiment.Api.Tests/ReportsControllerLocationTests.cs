@@ -28,6 +28,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
     /// <summary>
     /// GET spending-by-location returns 200 with valid date range.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_ValidDateRange_Returns200()
     {
@@ -49,6 +50,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
     /// <summary>
     /// GET spending-by-location returns 400 when end date is before start date.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_InvalidDateRange_Returns400()
     {
@@ -63,6 +65,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
     /// <summary>
     /// GET spending-by-location returns location data for transactions with locations.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_WithLocationData_ReturnsRegions()
     {

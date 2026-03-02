@@ -10,32 +10,32 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class OidcConfigDto
 {
     /// <summary>
-    /// Gets or sets the OIDC authority URL (issuer).
+    /// Gets the OIDC authority URL (issuer).
     /// </summary>
     public required string Authority { get; init; }
 
     /// <summary>
-    /// Gets or sets the OAuth2 client ID (public identifier, NOT a secret for PKCE flows).
+    /// Gets the OAuth2 client ID (public identifier, NOT a secret for PKCE flows).
     /// </summary>
     public required string ClientId { get; init; }
 
     /// <summary>
-    /// Gets or sets the OAuth2 response type (typically "code" for PKCE).
+    /// Gets the OAuth2 response type (typically "code" for PKCE).
     /// </summary>
     public string ResponseType { get; init; } = "code";
 
     /// <summary>
-    /// Gets or sets the scopes to request during authentication.
+    /// Gets the scopes to request during authentication.
     /// </summary>
     public IReadOnlyList<string> Scopes { get; init; } = ["openid", "profile", "email"];
 
     /// <summary>
-    /// Gets or sets the redirect URI after logout.
+    /// Gets the redirect URI after logout.
     /// </summary>
     public string PostLogoutRedirectUri { get; init; } = "/";
 
     /// <summary>
-    /// Gets or sets the redirect URI after login callback.
+    /// Gets the redirect URI after login callback.
     /// </summary>
     public string RedirectUri { get; init; } = "authentication/login-callback";
 }

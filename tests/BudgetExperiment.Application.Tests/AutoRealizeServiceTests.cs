@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using Moq;
 
@@ -53,16 +52,6 @@ public class AutoRealizeServiceTests
             .ReturnsAsync(new List<RecurringTransfer>());
     }
 
-    private AutoRealizeService CreateService()
-    {
-        return new AutoRealizeService(
-            _transactionRepo.Object,
-            _recurringRepo.Object,
-            _recurringTransferRepo.Object,
-            _settingsRepo.Object,
-            _unitOfWork.Object);
-    }
-
     [Fact]
     public async Task AutoRealizePastDueItemsIfEnabledAsync_DoesNothing_WhenSettingDisabled()
     {
@@ -72,6 +61,7 @@ public class AutoRealizeServiceTests
         var pastDueDate = today.AddDays(-5);
 
         var settings = AppSettings.CreateDefault();
+
         // AutoRealizePastDueItems is false by default
         _settingsRepo.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(settings);
 
@@ -362,5 +352,15 @@ public class AutoRealizeServiceTests
         idProperty?.SetValue(transfer, id);
 
         return transfer;
+    }
+
+    private AutoRealizeService CreateService()
+    {
+        return new AutoRealizeService(
+            _transactionRepo.Object,
+            _recurringRepo.Object,
+            _recurringTransferRepo.Object,
+            _settingsRepo.Object,
+            _unitOfWork.Object);
     }
 }

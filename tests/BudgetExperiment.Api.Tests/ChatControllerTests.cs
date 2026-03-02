@@ -34,6 +34,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/sessions creates a new session and returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetOrCreateSession_Returns_200_WithNewSession()
     {
@@ -51,6 +52,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// GET /api/v1/chat/sessions/{id} returns 200 OK when session exists.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSession_Returns_200_WhenSessionExists()
     {
@@ -71,6 +73,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// GET /api/v1/chat/sessions/{id} returns 404 for non-existent session.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSession_Returns_404_WhenNotFound()
     {
@@ -84,6 +87,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// GET /api/v1/chat/sessions/{id}/messages returns 200 OK with empty list for new session.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMessages_Returns_200_WithEmptyListForNewSession()
     {
@@ -104,6 +108,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// GET /api/v1/chat/sessions/{id}/messages returns 404 for non-existent session.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMessages_Returns_404_WhenSessionNotFound()
     {
@@ -117,6 +122,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/sessions/{id}/messages with empty content returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendMessage_Returns_400_WhenContentEmpty()
     {
@@ -136,6 +142,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/sessions/{id}/messages with whitespace content returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendMessage_Returns_400_WhenContentWhitespace()
     {
@@ -155,6 +162,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/sessions/{id}/messages passes context to chat service.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendMessage_PassesContextToService()
     {
@@ -196,6 +204,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/sessions/{id}/messages allows null context.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendMessage_AllowsNullContext()
     {
@@ -223,6 +232,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/messages/{id}/confirm returns 404 for non-existent message.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfirmAction_Returns_404_WhenMessageNotFound()
     {
@@ -236,6 +246,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/messages/{id}/cancel returns 404 for non-existent message.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CancelAction_Returns_404_WhenMessageNotFound()
     {
@@ -249,6 +260,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/sessions/{id}/close returns 204 No Content when session exists.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CloseSession_Returns_204_WhenSessionExists()
     {
@@ -266,6 +278,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// POST /api/v1/chat/sessions/{id}/close returns 404 for non-existent session.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CloseSession_Returns_404_WhenNotFound()
     {
@@ -279,6 +292,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <summary>
     /// Closing a session marks it as inactive.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CloseSession_MarksSessionAsInactive()
     {

@@ -14,8 +14,6 @@ namespace BudgetExperiment.E2E.Tests.Tests;
 [Collection("Playwright")]
 public class ZeroFlashAuthTests
 {
-    private readonly PlaywrightFixture _fixture;
-
     /// <summary>
     /// Forbidden text that should never be visible during page load.
     /// These indicate incomplete auth state handling or flash content.
@@ -29,6 +27,8 @@ public class ZeroFlashAuthTests
         "Please wait...",
         "Initializing...",
     ];
+
+    private readonly PlaywrightFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ZeroFlashAuthTests"/> class.
@@ -89,10 +89,11 @@ public class ZeroFlashAuthTests
                 var foundFlash = capturedTexts.Any(t =>
                     t.Contains(forbiddenText, StringComparison.OrdinalIgnoreCase));
 
-                Assert.False(
-                    foundFlash,
+                var flashMessage =
                     $"Flash message detected during load: '{forbiddenText}'. " +
-                    $"Captured texts: [{string.Join(", ", capturedTexts.Take(10))}]");
+                    $"Captured texts: [{string.Join(", ", capturedTexts.Take(10))}]";
+
+                Assert.False(foundFlash, flashMessage);
             }
 
             // Also verify current page state doesn't show flash content

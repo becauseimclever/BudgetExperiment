@@ -12,10 +12,10 @@ namespace BudgetExperiment.Client.Services;
 public class ChatContextService : IChatContextService
 {
     /// <inheritdoc />
-    public ChatPageContext CurrentContext { get; } = new();
+    public event EventHandler? ContextChanged;
 
     /// <inheritdoc />
-    public event EventHandler? ContextChanged;
+    public ChatPageContext CurrentContext { get; } = new();
 
     /// <inheritdoc />
     public void SetAccountContext(Guid? accountId, string? accountName)

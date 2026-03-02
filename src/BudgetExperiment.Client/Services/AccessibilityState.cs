@@ -1,5 +1,5 @@
-// <copyright file="AccessibilityState.cs" company="Budget Experiment">
-// Copyright (c) Budget Experiment. All rights reserved.
+// <copyright file="AccessibilityState.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
 namespace BudgetExperiment.Client.Services;

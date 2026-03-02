@@ -27,11 +27,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         this._client = factory.CreateApiClient();
     }
 
-    #region GET /api/v1/reconciliation/status Tests
-
     /// <summary>
     /// GET /api/v1/reconciliation/status returns 200 OK with empty status when no recurring transactions exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetStatus_Returns_200_WithEmptyStatus()
     {
@@ -50,6 +49,8 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     /// <summary>
     /// GET /api/v1/reconciliation/status returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -66,6 +67,8 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     /// <summary>
     /// GET /api/v1/reconciliation/status returns 400 for invalid year.
     /// </summary>
+    /// <param name="year">The invalid year value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(1999)]
     [InlineData(2101)]
@@ -78,13 +81,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    #endregion
-
-    #region GET /api/v1/reconciliation/pending Tests
-
     /// <summary>
     /// GET /api/v1/reconciliation/pending returns 200 OK with empty list when no pending matches.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPending_Returns_200_WithEmptyList()
     {
@@ -97,13 +97,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.NotNull(matches);
     }
 
-    #endregion
-
-    #region POST /api/v1/reconciliation/find-matches Tests
-
     /// <summary>
     /// POST /api/v1/reconciliation/find-matches returns 400 for empty transaction list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task FindMatches_Returns_400_ForEmptyTransactionList()
     {
@@ -125,6 +122,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     /// <summary>
     /// POST /api/v1/reconciliation/find-matches returns 400 when start date is after end date.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task FindMatches_Returns_400_WhenStartAfterEnd()
     {
@@ -146,6 +144,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     /// <summary>
     /// POST /api/v1/reconciliation/find-matches returns 200 with empty result for non-existent transactions.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task FindMatches_Returns_200_WithEmptyResult_ForNonExistentTransactions()
     {
@@ -167,13 +166,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.Equal(0, result.TotalMatchesFound);
     }
 
-    #endregion
-
-    #region POST /api/v1/reconciliation/match Tests
-
     /// <summary>
     /// POST /api/v1/reconciliation/match returns 404 when transaction not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ManualMatch_Returns_404_WhenTransactionNotFound()
     {
@@ -192,13 +188,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    #endregion
-
-    #region POST /api/v1/reconciliation/accept/{matchId} Tests
-
     /// <summary>
     /// POST /api/v1/reconciliation/accept/{matchId} returns 404 when match not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task AcceptMatch_Returns_404_WhenMatchNotFound()
     {
@@ -209,13 +202,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    #endregion
-
-    #region POST /api/v1/reconciliation/reject/{matchId} Tests
-
     /// <summary>
     /// POST /api/v1/reconciliation/reject/{matchId} returns 404 when match not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RejectMatch_Returns_404_WhenMatchNotFound()
     {
@@ -226,13 +216,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    #endregion
-
-    #region POST /api/v1/reconciliation/bulk-accept Tests
-
     /// <summary>
     /// POST /api/v1/reconciliation/bulk-accept returns 400 for empty match list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkAccept_Returns_400_ForEmptyMatchList()
     {
@@ -249,6 +236,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     /// <summary>
     /// POST /api/v1/reconciliation/bulk-accept returns 200 with empty result for non-existent matches.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkAccept_Returns_200_WithEmptyResult_ForNonExistentMatches()
     {
@@ -265,13 +253,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.Empty(matches);
     }
 
-    #endregion
-
-    #region GET /api/v1/reconciliation/recurring/{id} Tests
-
     /// <summary>
     /// GET /api/v1/reconciliation/recurring/{id} returns 200 OK with empty list when no matches exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMatchesForRecurringTransaction_Returns_200_WithEmptyList()
     {
@@ -284,13 +269,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.NotNull(matches);
     }
 
-    #endregion
-
-    #region DELETE /api/v1/reconciliation/matches/{matchId} Tests
-
     /// <summary>
     /// DELETE /api/v1/reconciliation/matches/{matchId} returns 404 when match not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UnlinkMatch_Returns_404_WhenMatchNotFound()
     {
@@ -301,13 +283,10 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    #endregion
-
-    #region GET /api/v1/reconciliation/linkable-instances Tests
-
     /// <summary>
     /// GET /api/v1/reconciliation/linkable-instances returns 200 OK with empty list for non-existent transaction.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetLinkableInstances_Returns_200_WithEmptyList_ForNonExistentTransaction()
     {
@@ -319,6 +298,4 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         var instances = await response.Content.ReadFromJsonAsync<List<LinkableInstanceDto>>();
         Assert.NotNull(instances);
     }
-
-    #endregion
 }

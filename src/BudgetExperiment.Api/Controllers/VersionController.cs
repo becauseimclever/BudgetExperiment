@@ -1,5 +1,5 @@
-// <copyright file="VersionController.cs" company="Fortinbra">
-// Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
+// <copyright file="VersionController.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
 using System.Reflection;
@@ -18,9 +18,9 @@ namespace BudgetExperiment.Api.Controllers;
 [Route("api/[controller]")]
 public class VersionController : ControllerBase
 {
-    private readonly IHostEnvironment _environment;
     private static readonly DateTime BuildDateUtc = ExtractBuildDate();
     private static readonly string AppVersion = ExtractVersion();
+    private readonly IHostEnvironment _environment;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="VersionController"/> class.

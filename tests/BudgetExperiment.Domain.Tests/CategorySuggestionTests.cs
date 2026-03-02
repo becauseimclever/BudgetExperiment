@@ -11,8 +11,6 @@ public class CategorySuggestionTests
 {
     private const string ValidOwnerId = "user-123";
 
-    #region Create Tests
-
     [Fact]
     public void Create_With_Valid_Data_Creates_Suggestion()
     {
@@ -169,10 +167,6 @@ public class CategorySuggestionTests
         Assert.Contains("owner", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region Accept Tests
-
     [Fact]
     public void Accept_Sets_Status_To_Accepted()
     {
@@ -209,10 +203,6 @@ public class CategorySuggestionTests
         var ex = Assert.Throws<DomainException>(() => suggestion.Accept());
         Assert.Contains("pending", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    #endregion
-
-    #region Dismiss Tests
 
     [Fact]
     public void Dismiss_Sets_Status_To_Dismissed()
@@ -251,10 +241,6 @@ public class CategorySuggestionTests
         Assert.Contains("pending", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region Restore Tests
-
     [Fact]
     public void Restore_FromDismissed_SetsPending()
     {
@@ -291,8 +277,6 @@ public class CategorySuggestionTests
         var ex = Assert.Throws<DomainException>(() => suggestion.Restore());
         Assert.Contains("dismissed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    #endregion
 
     private static CategorySuggestion CreateValidSuggestion()
     {

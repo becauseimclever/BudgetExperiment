@@ -20,6 +20,9 @@ public class ReconciliationApiServiceTests
     /// <summary>
     /// Tests that GetStatusAsync builds the correct URL with year and month parameters.
     /// </summary>
+    /// <param name="year">The year to query.</param>
+    /// <param name="month">The month to query.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(2026, 1)]
     [InlineData(2026, 12)]
@@ -64,6 +67,7 @@ public class ReconciliationApiServiceTests
     /// <summary>
     /// Tests that GetStatusAsync includes accountId in URL when provided.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetStatusAsync_IncludesAccountId_WhenProvided()
     {
@@ -106,6 +110,7 @@ public class ReconciliationApiServiceTests
     /// <summary>
     /// Tests that GetStatusAsync returns null on HTTP error.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetStatusAsync_ReturnsNull_WhenHttpRequestFails()
     {
@@ -129,6 +134,7 @@ public class ReconciliationApiServiceTests
     /// <summary>
     /// Tests that UnlinkMatchAsync calls the correct DELETE endpoint.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UnlinkMatchAsync_CallsCorrectEndpoint()
     {
@@ -161,6 +167,7 @@ public class ReconciliationApiServiceTests
     /// <summary>
     /// Tests that UnlinkMatchAsync returns false on HTTP error.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UnlinkMatchAsync_ReturnsFalse_WhenRequestFails()
     {
@@ -185,6 +192,7 @@ public class ReconciliationApiServiceTests
     /// <summary>
     /// Tests that GetLinkableInstancesAsync calls the correct endpoint with transactionId.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetLinkableInstancesAsync_CallsCorrectEndpoint()
     {
@@ -229,6 +237,7 @@ public class ReconciliationApiServiceTests
     /// <summary>
     /// Tests that GetLinkableInstancesAsync returns empty list on HTTP error.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetLinkableInstancesAsync_ReturnsEmptyList_WhenRequestFails()
     {

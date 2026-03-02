@@ -26,6 +26,9 @@ public sealed class AiAvailabilityService : IAiAvailabilityService
     }
 
     /// <inheritdoc/>
+    public event Action? StatusChanged;
+
+    /// <inheritdoc/>
     public AiAvailabilityState State => this._state;
 
     /// <inheritdoc/>
@@ -39,9 +42,6 @@ public sealed class AiAvailabilityService : IAiAvailabilityService
 
     /// <inheritdoc/>
     public string? ErrorMessage => this._errorMessage;
-
-    /// <inheritdoc/>
-    public event Action? StatusChanged;
 
     /// <inheritdoc/>
     public async Task RefreshAsync()

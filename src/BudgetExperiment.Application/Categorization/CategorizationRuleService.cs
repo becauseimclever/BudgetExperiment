@@ -166,50 +166,6 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         return conflicts;
     }
 
-    /// <summary>
-    /// Generates a human-readable rule name from a pattern.
-    /// </summary>
-    private static string GenerateRuleName(string pattern)
-    {
-        // Capitalize and clean up the pattern for a rule name
-        if (string.IsNullOrWhiteSpace(pattern))
-        {
-            return "New Rule";
-        }
-
-        var name = pattern.Trim();
-        if (name.Length > 0)
-        {
-            name = char.ToUpperInvariant(name[0]) + name.Substring(1).ToLowerInvariant();
-        }
-
-        return $"Auto: {name}";
-    }
-
-    /// <summary>
-    /// Determines if two patterns might overlap in their matches.
-    /// </summary>
-    private static bool PatternsMightOverlap(string pattern1, string pattern2, string matchType1, string matchType2)
-    {
-        var p1 = pattern1.ToUpperInvariant();
-        var p2 = pattern2.ToUpperInvariant();
-
-        // If patterns are the same, they definitely overlap
-        if (p1 == p2)
-        {
-            return true;
-        }
-
-        // If one pattern contains the other, they might overlap
-        if (p1.Contains(p2, StringComparison.OrdinalIgnoreCase) ||
-            p2.Contains(p1, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
     /// <inheritdoc/>
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -298,5 +254,49 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
             Errors = result.Errors,
             ErrorMessages = result.ErrorMessages,
         };
+    }
+
+    /// <summary>
+    /// Generates a human-readable rule name from a pattern.
+    /// </summary>
+    private static string GenerateRuleName(string pattern)
+    {
+        // Capitalize and clean up the pattern for a rule name
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return "New Rule";
+        }
+
+        var name = pattern.Trim();
+        if (name.Length > 0)
+        {
+            name = char.ToUpperInvariant(name[0]) + name.Substring(1).ToLowerInvariant();
+        }
+
+        return $"Auto: {name}";
+    }
+
+    /// <summary>
+    /// Determines if two patterns might overlap in their matches.
+    /// </summary>
+    private static bool PatternsMightOverlap(string pattern1, string pattern2, string matchType1, string matchType2)
+    {
+        var p1 = pattern1.ToUpperInvariant();
+        var p2 = pattern2.ToUpperInvariant();
+
+        // If patterns are the same, they definitely overlap
+        if (p1 == p2)
+        {
+            return true;
+        }
+
+        // If one pattern contains the other, they might overlap
+        if (p1.Contains(p2, StringComparison.OrdinalIgnoreCase) ||
+            p2.Contains(p1, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -25,7 +25,7 @@ public sealed class PatternMatch
     public required string Icon { get; init; }
 
     /// <summary>
-    /// Gets the count of transactions matching this pattern.
+    /// Gets or sets the count of transactions matching this pattern.
     /// </summary>
     public int TransactionCount { get; set; }
 

@@ -1,5 +1,5 @@
-// <copyright file="ThemedIconRegistryTests.cs" company="Budget Experiment">
-// Copyright (c) Budget Experiment. All rights reserved.
+// <copyright file="ThemedIconRegistryTests.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
 using BudgetExperiment.Client.Services;
@@ -84,6 +84,7 @@ public class ThemedIconRegistryTests
     /// <summary>
     /// Tests that empty theme returns fallback.
     /// </summary>
+    /// <param name="theme">The theme name to test.</param>
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -102,6 +103,7 @@ public class ThemedIconRegistryTests
     /// <summary>
     /// Tests that empty icon name returns empty.
     /// </summary>
+    /// <param name="iconName">The icon name to test.</param>
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -154,6 +156,8 @@ public class ThemedIconRegistryTests
     /// <summary>
     /// Tests that HasCustomIcons returns true for themes with custom icons.
     /// </summary>
+    /// <param name="theme">The theme name to test.</param>
+    /// <param name="expected">The expected result.</param>
     [Theory]
     [InlineData("win95", true)]
     [InlineData("geocities", true)]
@@ -189,6 +193,8 @@ public class ThemedIconRegistryTests
     /// <summary>
     /// Tests all Windows 95 icons are registered and accessible.
     /// </summary>
+    /// <param name="iconName">The base icon name to look up.</param>
+    /// <param name="expectedThemedIcon">The expected themed icon name.</param>
     [Theory]
     [InlineData("calendar", "win95-calendar")]
     [InlineData("home", "win95-home")]

@@ -31,6 +31,7 @@ public sealed class UserSettingsCurrencyProviderTests
     /// <summary>
     /// Returns the user's preferred currency when it is set.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCurrencyAsync_WhenPreferredCurrencyIsSet_ReturnsThatCurrency()
     {
@@ -55,6 +56,7 @@ public sealed class UserSettingsCurrencyProviderTests
     /// <summary>
     /// Returns USD when preferred currency is null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCurrencyAsync_WhenPreferredCurrencyIsNull_ReturnsUsd()
     {
@@ -78,6 +80,7 @@ public sealed class UserSettingsCurrencyProviderTests
     /// <summary>
     /// Returns USD when preferred currency is whitespace.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCurrencyAsync_WhenPreferredCurrencyIsWhitespace_ReturnsUsd()
     {
@@ -102,6 +105,7 @@ public sealed class UserSettingsCurrencyProviderTests
     /// <summary>
     /// Returns USD when user is not authenticated.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCurrencyAsync_WhenUserIsNotAuthenticated_ReturnsUsd()
     {

@@ -29,6 +29,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that SaveAllAsync saves registered form data to localStorage.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SaveAllAsync_SavesRegisteredFormData()
     {
@@ -49,6 +50,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that SaveAllAsync skips forms that return null data.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SaveAllAsync_SkipsNullData()
     {
@@ -65,6 +67,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that SaveAllAsync saves multiple registered forms.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SaveAllAsync_SavesMultipleForms()
     {
@@ -84,6 +87,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that UnregisterForm prevents future saves for that form.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UnregisterForm_PreventsFormFromBeingSaved()
     {
@@ -101,6 +105,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that RestoreAsync returns deserialized data from localStorage.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RestoreAsync_ReturnsDeserializedData()
     {
@@ -121,6 +126,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that RestoreAsync returns default when no data is saved.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RestoreAsync_ReturnsDefault_WhenNoDataSaved()
     {
@@ -134,6 +140,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that ClearAsync removes saved data from localStorage.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ClearAsync_RemovesSavedData()
     {
@@ -150,6 +157,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that HasSavedStateAsync returns true when data exists.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HasSavedStateAsync_ReturnsTrue_WhenDataExists()
     {
@@ -166,6 +174,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that HasSavedStateAsync returns false when no data exists.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HasSavedStateAsync_ReturnsFalse_WhenNoData()
     {
@@ -179,6 +188,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that registering duplicate keys replaces the previous provider.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RegisterForm_DuplicateKey_ReplacesProvider()
     {
@@ -197,6 +207,7 @@ public sealed class FormStateServiceTests
     /// <summary>
     /// Verifies that SaveAllAsync handles exceptions from data providers gracefully.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SaveAllAsync_HandlesProviderException_Gracefully()
     {

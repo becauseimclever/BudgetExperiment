@@ -2,11 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Common;
 using BudgetExperiment.Client.Services;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
@@ -83,6 +81,7 @@ public sealed class SwipeContainerTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that OnSwipedLeft fires when OnSwipeLeft JSInvokable is called.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task OnSwipeLeft_InvokesOnSwipedLeftCallback()
     {
@@ -102,6 +101,7 @@ public sealed class SwipeContainerTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that OnSwipedRight fires when OnSwipeRight JSInvokable is called.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task OnSwipeRight_InvokesOnSwipedRightCallback()
     {
@@ -164,6 +164,7 @@ public sealed class SwipeContainerTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that swipe callbacks don't fire when not wired.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task OnSwipeLeft_WhenNoCallback_DoesNotThrow()
     {
@@ -178,6 +179,7 @@ public sealed class SwipeContainerTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that dispose can be called without errors.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Dispose_CanBeCalledSafely()
     {

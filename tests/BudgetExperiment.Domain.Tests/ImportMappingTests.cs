@@ -399,8 +399,8 @@ public class ImportMappingTests
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Test", mappings);
-        // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
 
+        // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
         var indicatorSettings = DebitCreditIndicatorSettingsValue.Create(
             2,
             new List<string> { "Debit" },
@@ -421,8 +421,8 @@ public class ImportMappingTests
             new() { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date },
         };
         var importMapping = ImportMapping.Create(userId, "Test", mappings);
-        // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
 
+        // AmountMode defaults to NegativeIsExpense, not IndicatorColumn
         // Act
         importMapping.UpdateIndicatorSettings(DebitCreditIndicatorSettingsValue.Disabled);
 
@@ -443,162 +443,5 @@ public class ImportMappingTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => importMapping.UpdateIndicatorSettings(null!));
-    }
-}
-
-/// <summary>
-/// Unit tests for the ColumnMappingValue record.
-/// </summary>
-public class ColumnMappingTests
-{
-    [Fact]
-    public void ColumnMapping_Properties_Are_Set_Correctly()
-    {
-        // Arrange & Act
-        var mapping = new ColumnMappingValue
-        {
-            ColumnIndex = 2,
-            ColumnHeader = "Transaction Date",
-            TargetField = ImportField.Date,
-            TransformExpression = null,
-        };
-
-        // Assert
-        Assert.Equal(2, mapping.ColumnIndex);
-        Assert.Equal("Transaction Date", mapping.ColumnHeader);
-        Assert.Equal(ImportField.Date, mapping.TargetField);
-        Assert.Null(mapping.TransformExpression);
-    }
-
-    [Fact]
-    public void ColumnMapping_With_TransformExpression()
-    {
-        // Arrange & Act
-        var mapping = new ColumnMappingValue
-        {
-            ColumnIndex = 1,
-            ColumnHeader = "Desc1",
-            TargetField = ImportField.Description,
-            TransformExpression = "concat(Desc1, ' - ', Desc2)",
-        };
-
-        // Assert
-        Assert.Equal("concat(Desc1, ' - ', Desc2)", mapping.TransformExpression);
-    }
-
-    [Fact]
-    public void ColumnMapping_Equality()
-    {
-        // Arrange
-        var mapping1 = new ColumnMappingValue { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date };
-        var mapping2 = new ColumnMappingValue { ColumnIndex = 0, ColumnHeader = "Date", TargetField = ImportField.Date };
-        var mapping3 = new ColumnMappingValue { ColumnIndex = 1, ColumnHeader = "Date", TargetField = ImportField.Date };
-
-        // Assert
-        Assert.Equal(mapping1, mapping2);
-        Assert.NotEqual(mapping1, mapping3);
-    }
-}
-
-/// <summary>
-/// Unit tests for the DuplicateDetectionSettingsValue record.
-/// </summary>
-public class DuplicateDetectionSettingsTests
-{
-    [Fact]
-    public void Default_Values_Are_Correct()
-    {
-        // Arrange & Act
-        var settings = new DuplicateDetectionSettingsValue();
-
-        // Assert
-        Assert.True(settings.Enabled);
-        Assert.Equal(30, settings.LookbackDays);
-        Assert.Equal(DescriptionMatchMode.Exact, settings.DescriptionMatch);
-    }
-
-    [Fact]
-    public void Custom_Values_Are_Set_Correctly()
-    {
-        // Arrange & Act
-        var settings = new DuplicateDetectionSettingsValue
-        {
-            Enabled = false,
-            LookbackDays = 60,
-            DescriptionMatch = DescriptionMatchMode.Contains,
-        };
-
-        // Assert
-        Assert.False(settings.Enabled);
-        Assert.Equal(60, settings.LookbackDays);
-        Assert.Equal(DescriptionMatchMode.Contains, settings.DescriptionMatch);
-    }
-
-    [Fact]
-    public void DuplicateDetectionSettings_Equality()
-    {
-        // Arrange
-        var settings1 = new DuplicateDetectionSettingsValue { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
-        var settings2 = new DuplicateDetectionSettingsValue { Enabled = true, LookbackDays = 30, DescriptionMatch = DescriptionMatchMode.Exact };
-        var settings3 = new DuplicateDetectionSettingsValue { Enabled = true, LookbackDays = 60, DescriptionMatch = DescriptionMatchMode.Exact };
-
-        // Assert
-        Assert.Equal(settings1, settings2);
-        Assert.NotEqual(settings1, settings3);
-    }
-}
-
-/// <summary>
-/// Unit tests for the ImportField enum.
-/// </summary>
-public class ImportFieldTests
-{
-    [Theory]
-    [InlineData(ImportField.Ignore, 0)]
-    [InlineData(ImportField.Date, 1)]
-    [InlineData(ImportField.Description, 2)]
-    [InlineData(ImportField.Amount, 3)]
-    [InlineData(ImportField.DebitAmount, 4)]
-    [InlineData(ImportField.CreditAmount, 5)]
-    [InlineData(ImportField.Category, 6)]
-    [InlineData(ImportField.Reference, 7)]
-    [InlineData(ImportField.DebitCreditIndicator, 8)]
-    public void ImportField_Has_Expected_Values(ImportField field, int expectedValue)
-    {
-        Assert.Equal(expectedValue, (int)field);
-    }
-}
-
-/// <summary>
-/// Unit tests for the AmountParseMode enum.
-/// </summary>
-public class AmountParseModeTests
-{
-    [Theory]
-    [InlineData(AmountParseMode.NegativeIsExpense, 0)]
-    [InlineData(AmountParseMode.PositiveIsExpense, 1)]
-    [InlineData(AmountParseMode.SeparateColumns, 2)]
-    [InlineData(AmountParseMode.AbsoluteExpense, 3)]
-    [InlineData(AmountParseMode.AbsoluteIncome, 4)]
-    [InlineData(AmountParseMode.IndicatorColumn, 5)]
-    public void AmountParseMode_Has_Expected_Values(AmountParseMode mode, int expectedValue)
-    {
-        Assert.Equal(expectedValue, (int)mode);
-    }
-}
-
-/// <summary>
-/// Unit tests for the DescriptionMatchMode enum.
-/// </summary>
-public class DescriptionMatchModeTests
-{
-    [Theory]
-    [InlineData(DescriptionMatchMode.Exact, 0)]
-    [InlineData(DescriptionMatchMode.Contains, 1)]
-    [InlineData(DescriptionMatchMode.StartsWith, 2)]
-    [InlineData(DescriptionMatchMode.Fuzzy, 3)]
-    public void DescriptionMatchMode_Has_Expected_Values(DescriptionMatchMode mode, int expectedValue)
-    {
-        Assert.Equal(expectedValue, (int)mode);
     }
 }

@@ -2,13 +2,11 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Display;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components;

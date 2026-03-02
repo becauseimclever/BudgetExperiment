@@ -104,6 +104,19 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
         return true;
     }
 
+    private static CustomReportLayoutDto ToDto(CustomReportLayout layout)
+    {
+        return new CustomReportLayoutDto
+        {
+            Id = layout.Id,
+            Name = layout.Name,
+            LayoutJson = layout.LayoutJson,
+            Scope = layout.Scope.ToString(),
+            CreatedAtUtc = layout.CreatedAtUtc,
+            UpdatedAtUtc = layout.UpdatedAtUtc,
+        };
+    }
+
     private BudgetScope ResolveScope(string? scope)
     {
         if (!string.IsNullOrWhiteSpace(scope))
@@ -117,18 +130,5 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
         }
 
         return this._userContext.CurrentScope ?? BudgetScope.Shared;
-    }
-
-    private static CustomReportLayoutDto ToDto(CustomReportLayout layout)
-    {
-        return new CustomReportLayoutDto
-        {
-            Id = layout.Id,
-            Name = layout.Name,
-            LayoutJson = layout.LayoutJson,
-            Scope = layout.Scope.ToString(),
-            CreatedAtUtc = layout.CreatedAtUtc,
-            UpdatedAtUtc = layout.UpdatedAtUtc,
-        };
     }
 }

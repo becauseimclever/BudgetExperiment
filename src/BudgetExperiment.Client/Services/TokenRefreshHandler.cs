@@ -81,37 +81,6 @@ public sealed class TokenRefreshHandler : DelegatingHandler
         return response;
     }
 
-    private async Task<string?> TryRefreshTokenAsync(CancellationToken cancellationToken)
-    {
-        await _refreshLock.WaitAsync(cancellationToken);
-        try
-        {
-            // If another thread already refreshed, return the cached token
-            if (_isRefreshing)
-            {
-                return _lastRefreshedToken;
-            }
-
-            _isRefreshing = true;
-
-            var result = await _tokenProvider.RequestAccessToken();
-
-            if (result.TryGetToken(out var token))
-            {
-                _lastRefreshedToken = token.Value;
-                return token.Value;
-            }
-
-            _lastRefreshedToken = null;
-            return null;
-        }
-        finally
-        {
-            _isRefreshing = false;
-            _refreshLock.Release();
-        }
-    }
-
     private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage original)
     {
         var clone = new HttpRequestMessage(original.Method, original.RequestUri);
@@ -143,5 +112,36 @@ public sealed class TokenRefreshHandler : DelegatingHandler
         clone.Version = original.Version;
 
         return clone;
+    }
+
+    private async Task<string?> TryRefreshTokenAsync(CancellationToken cancellationToken)
+    {
+        await _refreshLock.WaitAsync(cancellationToken);
+        try
+        {
+            // If another thread already refreshed, return the cached token
+            if (_isRefreshing)
+            {
+                return _lastRefreshedToken;
+            }
+
+            _isRefreshing = true;
+
+            var result = await _tokenProvider.RequestAccessToken();
+
+            if (result.TryGetToken(out var token))
+            {
+                _lastRefreshedToken = token.Value;
+                return token.Value;
+            }
+
+            _lastRefreshedToken = null;
+            return null;
+        }
+        finally
+        {
+            _isRefreshing = false;
+            _refreshLock.Release();
+        }
     }
 }

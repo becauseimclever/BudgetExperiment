@@ -32,6 +32,7 @@ public sealed partial class LocationParserService : ILocationParserService
     /// </summary>
     private static readonly (Regex Regex, string PatternName, decimal Confidence)[] Patterns =
     [
+
         // Highest confidence: City, ST ZIP — unambiguous pattern
         (CityCommaStateZipRegex(), CityCommaStateZipPatternName, 0.95m),
 

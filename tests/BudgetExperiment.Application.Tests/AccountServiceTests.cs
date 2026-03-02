@@ -16,15 +16,6 @@ public class AccountServiceTests
 {
     private static readonly Guid TestUserId = new("11111111-1111-1111-1111-111111111111");
 
-    private static Mock<IUserContext> CreateMockUserContext()
-    {
-        var userContext = new Mock<IUserContext>();
-        userContext.Setup(u => u.UserIdAsGuid).Returns(TestUserId);
-        userContext.Setup(u => u.UserId).Returns(TestUserId.ToString());
-        userContext.Setup(u => u.IsAuthenticated).Returns(true);
-        return userContext;
-    }
-
     [Fact]
     public async Task CreateAsync_Creates_SharedAccount()
     {
@@ -280,5 +271,14 @@ public class AccountServiceTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<DomainException>(() => service.CreateAsync(dto));
         Assert.Contains("Invalid scope", ex.Message);
+    }
+
+    private static Mock<IUserContext> CreateMockUserContext()
+    {
+        var userContext = new Mock<IUserContext>();
+        userContext.Setup(u => u.UserIdAsGuid).Returns(TestUserId);
+        userContext.Setup(u => u.UserId).Returns(TestUserId.ToString());
+        userContext.Setup(u => u.IsAuthenticated).Returns(true);
+        return userContext;
     }
 }

@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Moq;

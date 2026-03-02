@@ -31,7 +31,7 @@ public class TransactionServiceTests
             AccountId = account.Id,
             Amount = new MoneyDto { Currency = "USD", Amount = 10m },
             Date = new DateOnly(2026, 1, 9),
-            Description = "Test Transaction"
+            Description = "Test Transaction",
         };
 
         // Act
@@ -59,7 +59,7 @@ public class TransactionServiceTests
             AccountId = Guid.NewGuid(),
             Amount = new MoneyDto { Currency = "USD", Amount = 10m },
             Date = new DateOnly(2026, 1, 9),
-            Description = "Test Transaction"
+            Description = "Test Transaction",
         };
 
         // Act & Assert

@@ -10,6 +10,11 @@ namespace BudgetExperiment.Domain.Recurring;
 public sealed class RecurringTransaction
 {
     /// <summary>
+    /// Backing field for import patterns.
+    /// </summary>
+    private readonly List<ImportPatternValue> _importPatterns = new();
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="RecurringTransaction"/> class.
     /// </summary>
     /// <remarks>
@@ -108,11 +113,6 @@ public sealed class RecurringTransaction
     /// Gets the import patterns used to match imported transactions.
     /// </summary>
     public IReadOnlyCollection<ImportPatternValue> ImportPatterns => this._importPatterns.AsReadOnly();
-
-    /// <summary>
-    /// Backing field for import patterns.
-    /// </summary>
-    private readonly List<ImportPatternValue> _importPatterns = new();
 
     /// <summary>
     /// Creates a new recurring transaction.

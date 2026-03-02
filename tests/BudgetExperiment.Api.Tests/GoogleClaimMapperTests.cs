@@ -27,7 +27,8 @@ public sealed class GoogleClaimMapperTests
             new Claim("sub", "google-uid-123"),
             new Claim("email", "user@gmail.com"),
             new Claim("name", "Test User"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -51,7 +52,8 @@ public sealed class GoogleClaimMapperTests
             new Claim("sub", "google-uid-123"),
             new Claim("email", "user@gmail.com"),
             new Claim("preferred_username", "existing-username"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -74,7 +76,8 @@ public sealed class GoogleClaimMapperTests
         [
             new Claim("sub", "google-uid-123"),
             new Claim("name", "Test User"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -120,7 +123,8 @@ public sealed class GoogleClaimMapperTests
             new Claim("email", "user@gmail.com"),
             new Claim("name", "Test User"),
             new Claim("picture", "https://example.com/photo.jpg"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -144,7 +148,8 @@ public sealed class GoogleClaimMapperTests
         [
             new Claim("sub", "google-uid-123"),
             new Claim("email", string.Empty),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act

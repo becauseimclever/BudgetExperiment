@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
@@ -53,6 +52,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync returns empty when no recurring items exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_NoRecurringItems_ReturnsEmpty()
     {
@@ -74,6 +74,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync returns past-due recurring transaction.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_RecurringTransactionPastDue_ReturnsItem()
     {
@@ -120,6 +121,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync excludes skipped instances.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_SkippedInstance_ExcludesItem()
     {
@@ -152,6 +154,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync excludes already realized instances.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_RealizedInstance_ExcludesItem()
     {
@@ -193,6 +196,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync excludes future instances.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_FutureInstance_ExcludesItem()
     {
@@ -221,6 +225,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync returns past-due recurring transfer.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_RecurringTransferPastDue_ReturnsItem()
     {
@@ -270,6 +275,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync respects 30-day lookback window.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_OlderThan30Days_ExcludesItem()
     {
@@ -299,6 +305,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync filters by accountId when provided.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_WithAccountFilter_FiltersResults()
     {
@@ -338,6 +345,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// GetPastDueItemsAsync calculates total amount correctly.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPastDueItemsAsync_MultipleItems_CalculatesTotalAmount()
     {
@@ -390,6 +398,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// RealizeBatchAsync realizes mixed transaction and transfer items successfully.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RealizeBatchAsync_MixedItems_ReturnsAllSuccess()
     {
@@ -431,6 +440,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// RealizeBatchAsync reports failure for unknown item type.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RealizeBatchAsync_UnknownType_ReturnsFailure()
     {
@@ -458,6 +468,7 @@ public sealed class PastDueServiceTests
     /// <summary>
     /// RealizeBatchAsync handles partial failure when one item throws.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RealizeBatchAsync_PartialFailure_ReportsSuccessAndFailure()
     {

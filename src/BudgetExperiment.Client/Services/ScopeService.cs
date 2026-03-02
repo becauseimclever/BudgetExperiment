@@ -1,14 +1,14 @@
 // -----------------------------------------------------------------------
-// <copyright file="ScopeService.cs" company="Budget Experiment">
-//     Copyright (c) Budget Experiment. All rights reserved.
+// <copyright file="ScopeService.cs" company="BecauseImClever">
+//     Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
-
-namespace BudgetExperiment.Client.Services;
 
 using BudgetExperiment.Domain;
 
 using Microsoft.JSInterop;
+
+namespace BudgetExperiment.Client.Services;
 
 /// <summary>
 /// Service for managing the current budget scope selection (Shared, Personal, or All).
@@ -36,11 +36,6 @@ public sealed class ScopeService : IAsyncDisposable
     public event Action<BudgetScope?>? ScopeChanged;
 
     /// <summary>
-    /// Gets the current scope. Null means "All" (both Shared and Personal).
-    /// </summary>
-    public BudgetScope? CurrentScope => this.currentScope;
-
-    /// <summary>
     /// Gets the available scope options.
     /// </summary>
     public static IReadOnlyList<ScopeOption> AvailableScopes { get; } = new List<ScopeOption>
@@ -49,6 +44,11 @@ public sealed class ScopeService : IAsyncDisposable
         new(BudgetScope.Personal, "Personal", "user", "Your private budget"),
         new(null, "All", "layers", "View both shared and personal items"),
     };
+
+    /// <summary>
+    /// Gets the current scope. Null means "All" (both Shared and Personal).
+    /// </summary>
+    public BudgetScope? CurrentScope => this.currentScope;
 
     /// <summary>
     /// Initializes the scope service by loading the saved scope from localStorage.
@@ -137,5 +137,3 @@ public sealed class ScopeService : IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 }
-
-

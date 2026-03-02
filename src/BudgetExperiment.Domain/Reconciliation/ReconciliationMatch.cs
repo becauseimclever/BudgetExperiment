@@ -164,39 +164,6 @@ public sealed class ReconciliationMatch
     }
 
     /// <summary>
-    /// Accepts this match, linking the transaction to the recurring instance.
-    /// </summary>
-    /// <exception cref="DomainException">Thrown when match is already resolved.</exception>
-    public void Accept()
-    {
-        this.EnsureNotResolved();
-        this.Status = ReconciliationMatchStatus.Accepted;
-        this.ResolvedAtUtc = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Rejects this match, leaving the transaction unlinked.
-    /// </summary>
-    /// <exception cref="DomainException">Thrown when match is already resolved.</exception>
-    public void Reject()
-    {
-        this.EnsureNotResolved();
-        this.Status = ReconciliationMatchStatus.Rejected;
-        this.ResolvedAtUtc = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Auto-matches this match due to high confidence score.
-    /// </summary>
-    /// <exception cref="DomainException">Thrown when match is already resolved.</exception>
-    public void AutoMatch()
-    {
-        this.EnsureNotResolved();
-        this.Status = ReconciliationMatchStatus.AutoMatched;
-        this.ResolvedAtUtc = DateTime.UtcNow;
-    }
-
-    /// <summary>
     /// Creates a manual link between a transaction and a recurring instance.
     /// Manual links are immediately accepted with full confidence.
     /// </summary>
@@ -251,6 +218,39 @@ public sealed class ReconciliationMatch
             Scope = scope,
             OwnerUserId = ownerUserId,
         };
+    }
+
+    /// <summary>
+    /// Accepts this match, linking the transaction to the recurring instance.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when match is already resolved.</exception>
+    public void Accept()
+    {
+        this.EnsureNotResolved();
+        this.Status = ReconciliationMatchStatus.Accepted;
+        this.ResolvedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Rejects this match, leaving the transaction unlinked.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when match is already resolved.</exception>
+    public void Reject()
+    {
+        this.EnsureNotResolved();
+        this.Status = ReconciliationMatchStatus.Rejected;
+        this.ResolvedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Auto-matches this match due to high confidence score.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when match is already resolved.</exception>
+    public void AutoMatch()
+    {
+        this.EnsureNotResolved();
+        this.Status = ReconciliationMatchStatus.AutoMatched;
+        this.ResolvedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>

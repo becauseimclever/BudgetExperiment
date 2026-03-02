@@ -3,12 +3,9 @@
 // </copyright>
 
 using AngleSharp.Dom;
-
-using Bunit;
-
 using BudgetExperiment.Client.Components.Reports;
 using BudgetExperiment.Contracts.Dtos;
-
+using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 

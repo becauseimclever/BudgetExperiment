@@ -75,6 +75,30 @@ public sealed class CustomReportLayoutDefinition
         widget.Layouts[breakpoint] = clamped;
     }
 
+    private static ReportWidgetLayoutPosition Clamp(
+        ReportWidgetLayoutPosition layout,
+        int columns,
+        ReportWidgetConstraints? constraints)
+    {
+        var minWidth = constraints?.MinWidth ?? DefaultMinSize;
+        var minHeight = constraints?.MinHeight ?? DefaultMinSize;
+        var maxWidth = constraints?.MaxWidth ?? DefaultMaxSize;
+        var maxHeight = constraints?.MaxHeight ?? DefaultMaxSize;
+
+        var width = Math.Clamp(layout.Width, minWidth, Math.Min(maxWidth, columns));
+        var height = Math.Clamp(layout.Height, minHeight, maxHeight);
+        var x = Math.Clamp(layout.X, 1, Math.Max(1, columns - width + 1));
+        var y = Math.Max(1, layout.Y);
+
+        return new ReportWidgetLayoutPosition
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Height = height,
+        };
+    }
+
     private int GetNextRow(string breakpoint)
     {
         var nextY = 1;
@@ -122,30 +146,6 @@ public sealed class CustomReportLayoutDefinition
             Y = nextY,
             Width = width,
             Height = DefaultWidgetHeight,
-        };
-    }
-
-    private static ReportWidgetLayoutPosition Clamp(
-        ReportWidgetLayoutPosition layout,
-        int columns,
-        ReportWidgetConstraints? constraints)
-    {
-        var minWidth = constraints?.MinWidth ?? DefaultMinSize;
-        var minHeight = constraints?.MinHeight ?? DefaultMinSize;
-        var maxWidth = constraints?.MaxWidth ?? DefaultMaxSize;
-        var maxHeight = constraints?.MaxHeight ?? DefaultMaxSize;
-
-        var width = Math.Clamp(layout.Width, minWidth, Math.Min(maxWidth, columns));
-        var height = Math.Clamp(layout.Height, minHeight, maxHeight);
-        var x = Math.Clamp(layout.X, 1, Math.Max(1, columns - width + 1));
-        var y = Math.Max(1, layout.Y);
-
-        return new ReportWidgetLayoutPosition
-        {
-            X = x,
-            Y = y,
-            Width = width,
-            Height = height,
         };
     }
 }

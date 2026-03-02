@@ -4,6 +4,7 @@
 
 using BudgetExperiment.E2E.Tests.Fixtures;
 using BudgetExperiment.E2E.Tests.Helpers;
+
 namespace BudgetExperiment.E2E.Tests.Tests.FunctionalTests;
 
 /// <summary>

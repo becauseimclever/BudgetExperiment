@@ -10,17 +10,17 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed record ManualMatchRequest
 {
     /// <summary>
-    /// Gets or sets the transaction ID to match.
+    /// Gets the transaction ID to match.
     /// </summary>
     public Guid TransactionId { get; init; }
 
     /// <summary>
-    /// Gets or sets the recurring transaction ID.
+    /// Gets the recurring transaction ID.
     /// </summary>
     public Guid RecurringTransactionId { get; init; }
 
     /// <summary>
-    /// Gets or sets the instance date to match.
+    /// Gets the instance date to match.
     /// </summary>
     public DateOnly InstanceDate { get; init; }
 }

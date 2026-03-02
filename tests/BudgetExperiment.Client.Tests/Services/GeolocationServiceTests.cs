@@ -3,11 +3,8 @@
 // </copyright>
 
 using System.Text.Json;
-
-using Bunit;
-
 using BudgetExperiment.Client.Services;
-
+using Bunit;
 using Microsoft.JSInterop;
 
 namespace BudgetExperiment.Client.Tests.Services;
@@ -28,6 +25,7 @@ public class GeolocationServiceTests : BunitContext
     /// <summary>
     /// GetCurrentPosition invokes the JS interop getCurrentPosition function.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCurrentPosition_InvokesJsInterop()
     {
@@ -50,6 +48,7 @@ public class GeolocationServiceTests : BunitContext
     /// <summary>
     /// When JS interop throws (permission denied), returns failure result.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCurrentPosition_WhenDenied_ReturnsFailure()
     {
@@ -71,6 +70,7 @@ public class GeolocationServiceTests : BunitContext
     /// <summary>
     /// IsSupported returns true when the JS module reports support.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task IsSupported_WhenAvailable_ReturnsTrue()
     {

@@ -2,11 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Common;
 using BudgetExperiment.Client.Services;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
@@ -218,6 +216,8 @@ public class ModalTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that the modal renders with the correct size class.
     /// </summary>
+    /// <param name="size">The modal size to test.</param>
+    /// <param name="expectedClass">The expected CSS class for the given size.</param>
     [Theory]
     [InlineData(ModalSize.Small, "modal-dialog-sm")]
     [InlineData(ModalSize.Large, "modal-dialog-lg")]

@@ -1,14 +1,14 @@
-// <copyright file="MobileFabTests.cs" company="Jason Awbrey">
-// Copyright (c) Jason Awbrey. All rights reserved.
+// <copyright file="MobileFabTests.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Client.Tests.Components;
-
-using Bunit;
 using BudgetExperiment.Client.Components;
 using BudgetExperiment.Client.Services;
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+
+namespace BudgetExperiment.Client.Tests.Components;
 
 /// <summary>
 /// Unit tests for the <see cref="MobileFab"/> component.

@@ -212,27 +212,39 @@ public sealed class LocationParserServiceTests
     [Theory]
     [InlineData(
         "CONSUMER CELLULAR INC 09/30 PURCHASE XXX-XX91237 OR",
-        null, null, null,
+        null,
+        null,
+        null,
         "State-only at end with no city — should not match")]
     [InlineData(
         "AMAZON MKTPL*AB3CD5EF0 10/01 PURCHASE Amzn.com/bill WA",
-        null, null, null,
+        null,
+        null,
+        null,
         "WA after URL-like text — should not match")]
     [InlineData(
         "CULVERS OF ANYTOWN 10/05 PURCHASE ANYTOWN MO",
-        "ANYTOWN", "MO", "US",
+        "ANYTOWN",
+        "MO",
+        "US",
         "City + state near end of BoA description")]
     [InlineData(
         "VENMO* John 10/04 PMNT SENT Visa Direct NY",
-        null, null, null,
+        null,
+        null,
+        null,
         "NY after 'Visa Direct' — no city before state")]
     [InlineData(
         "Debit Card Purchase - RESTAURANT A CITY ST",
-        null, null, null,
+        null,
+        null,
+        null,
         "Placeholder 'CITY ST' — ST is not a US state")]
     [InlineData(
         "Debit Card Purchase - AMAZON MKTPL AMZN COM BIL WA",
-        null, null, null,
+        null,
+        null,
+        null,
         "WA after abbreviated merchant name — no clear city")]
     public void Parse_RealWorldSamples(
         string input,

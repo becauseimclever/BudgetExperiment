@@ -27,6 +27,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/accounts returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAccounts_Unauthenticated_Returns_401()
     {
@@ -40,6 +41,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Authenticated request to /api/v1/accounts returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAccounts_Authenticated_Returns_200()
     {
@@ -53,6 +55,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/transactions returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetTransactions_Unauthenticated_Returns_401()
     {
@@ -66,6 +69,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/categories returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCategories_Unauthenticated_Returns_401()
     {
@@ -79,6 +83,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/recurring-transactions returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetRecurringTransactions_Unauthenticated_Returns_401()
     {
@@ -92,6 +97,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/recurring-transfers returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetRecurringTransfers_Unauthenticated_Returns_401()
     {
@@ -105,6 +111,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/transfers returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetTransfers_Unauthenticated_Returns_401()
     {
@@ -118,6 +125,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/settings returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSettings_Unauthenticated_Returns_401()
     {
@@ -131,6 +139,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/budgets returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetBudgets_Unauthenticated_Returns_401()
     {
@@ -144,6 +153,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/calendar/grid returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCalendar_Unauthenticated_Returns_401()
     {
@@ -157,6 +167,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/allocations/paycheck returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAllocations_Unauthenticated_Returns_401()
     {
@@ -170,6 +181,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Health endpoint does NOT require authentication.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HealthEndpoint_Unauthenticated_Returns_200()
     {
@@ -183,6 +195,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/user/me returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUserProfile_Unauthenticated_Returns_401()
     {
@@ -196,6 +209,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/user/settings returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUserSettings_Unauthenticated_Returns_401()
     {
@@ -209,6 +223,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <summary>
     /// Unauthenticated request to /api/v1/user/scope returns 401 Unauthorized.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUserScope_Unauthenticated_Returns_401()
     {

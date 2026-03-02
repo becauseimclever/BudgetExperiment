@@ -74,6 +74,11 @@ public partial class SparkLine
 
     private string LineColor => ResolveLineColor();
 
+    private static string F(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
     private string BuildPoints()
     {
         if (Values.Count == 0)
@@ -157,10 +162,5 @@ public partial class SparkLine
         }
 
         return NeutralColor;
-    }
-
-    private static string F(double value)
-    {
-        return value.ToString(CultureInfo.InvariantCulture);
     }
 }

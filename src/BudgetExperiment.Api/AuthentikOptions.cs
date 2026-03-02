@@ -1,5 +1,5 @@
-// <copyright file="AuthentikOptions.cs" company="Fortinbra">
-// Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
+// <copyright file="AuthentikOptions.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
 namespace BudgetExperiment.Api;
@@ -22,7 +22,7 @@ public sealed class AuthentikOptions
 
     /// <summary>
     /// Gets or sets the authority URL (Authentik provider URL).
-    /// Example: https://auth.example.com/application/o/budget-experiment/
+    /// Example: <c>https://auth.example.com/application/o/budget-experiment/</c>.
     /// </summary>
     public string Authority { get; set; } = string.Empty;
 

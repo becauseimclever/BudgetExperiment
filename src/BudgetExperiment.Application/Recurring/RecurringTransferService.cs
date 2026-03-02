@@ -51,7 +51,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         }
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
     }
 
     /// <summary>
@@ -213,7 +213,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
     }
 
     /// <summary>
@@ -234,7 +234,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
     }
 
     /// <summary>
@@ -260,7 +260,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
     }
 
     /// <summary>
@@ -294,17 +294,7 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.sourceName, accounts.destName);
-    }
-
-    private async Task<(string sourceName, string destName)> GetAccountNamesAsync(
-        Guid sourceAccountId,
-        Guid destAccountId,
-        CancellationToken cancellationToken)
-    {
-        var sourceAccount = await this._accountRepository.GetByIdAsync(sourceAccountId, cancellationToken);
-        var destAccount = await this._accountRepository.GetByIdAsync(destAccountId, cancellationToken);
-        return (sourceAccount?.Name ?? string.Empty, destAccount?.Name ?? string.Empty);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
     }
 
     private static RecurrencePatternValue CreateRecurrencePattern(
@@ -344,5 +334,15 @@ public sealed class RecurringTransferService : IRecurringTransferService
         }
 
         return dow;
+    }
+
+    private async Task<(string SourceName, string DestName)> GetAccountNamesAsync(
+        Guid sourceAccountId,
+        Guid destAccountId,
+        CancellationToken cancellationToken)
+    {
+        var sourceAccount = await this._accountRepository.GetByIdAsync(sourceAccountId, cancellationToken);
+        var destAccount = await this._accountRepository.GetByIdAsync(destAccountId, cancellationToken);
+        return (sourceAccount?.Name ?? string.Empty, destAccount?.Name ?? string.Empty);
     }
 }

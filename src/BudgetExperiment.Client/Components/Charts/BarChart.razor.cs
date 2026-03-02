@@ -42,12 +42,6 @@ public partial class BarChart
     [Parameter]
     public EventCallback<BarChartClickInfo> OnBarClick { get; set; }
 
-    private string? HoveredSeriesName { get; set; }
-
-    private string? HoveredGroupLabel { get; set; }
-
-    private decimal HoveredValue { get; set; }
-
     private static double MarginLeft => 45;
 
     private static double MarginRight => 10;
@@ -57,6 +51,12 @@ public partial class BarChart
     private static double MarginBottom => 24;
 
     private static double ViewBoxHeight => 180;
+
+    private string? HoveredSeriesName { get; set; }
+
+    private string? HoveredGroupLabel { get; set; }
+
+    private decimal HoveredValue { get; set; }
 
     private double ChartAreaBottom => ViewBoxHeight - MarginBottom;
 

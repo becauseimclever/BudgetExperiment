@@ -2,12 +2,10 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Calendar;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Calendar;
@@ -91,7 +89,11 @@ public class CalendarViewToggleTests : BunitContext, IAsyncLifetime
         CalendarViewMode? newMode = null;
         var cut = Render<CalendarViewToggle>(p => p
             .Add(x => x.CurrentView, CalendarViewMode.Month)
-            .Add(x => x.CurrentViewChanged, mode => { newMode = mode; return Task.CompletedTask; }));
+            .Add(x => x.CurrentViewChanged, mode =>
+            {
+                newMode = mode;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.FindAll(".toggle-btn")[1].Click(); // Week button
@@ -110,7 +112,11 @@ public class CalendarViewToggleTests : BunitContext, IAsyncLifetime
         CalendarViewMode? newMode = null;
         var cut = Render<CalendarViewToggle>(p => p
             .Add(x => x.CurrentView, CalendarViewMode.Week)
-            .Add(x => x.CurrentViewChanged, mode => { newMode = mode; return Task.CompletedTask; }));
+            .Add(x => x.CurrentViewChanged, mode =>
+            {
+                newMode = mode;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.FindAll(".toggle-btn")[0].Click(); // Month button
@@ -129,7 +135,11 @@ public class CalendarViewToggleTests : BunitContext, IAsyncLifetime
         CalendarViewMode? newMode = null;
         var cut = Render<CalendarViewToggle>(p => p
             .Add(x => x.CurrentView, CalendarViewMode.Month)
-            .Add(x => x.CurrentViewChanged, mode => { newMode = mode; return Task.CompletedTask; }));
+            .Add(x => x.CurrentViewChanged, mode =>
+            {
+                newMode = mode;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.FindAll(".toggle-btn")[0].Click(); // Month is already active
@@ -181,6 +191,7 @@ public class CalendarViewToggleTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies LoadPreferenceAsync loads saved view from localStorage.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Toggle_LoadPreference_SetsViewFromLocalStorage()
     {
@@ -191,7 +202,11 @@ public class CalendarViewToggleTests : BunitContext, IAsyncLifetime
         CalendarViewMode? newMode = null;
         var cut = Render<CalendarViewToggle>(p => p
             .Add(x => x.CurrentView, CalendarViewMode.Month)
-            .Add(x => x.CurrentViewChanged, mode => { newMode = mode; return Task.CompletedTask; }));
+            .Add(x => x.CurrentViewChanged, mode =>
+            {
+                newMode = mode;
+                return Task.CompletedTask;
+            }));
 
         // Act
         await cut.Instance.LoadPreferenceAsync();

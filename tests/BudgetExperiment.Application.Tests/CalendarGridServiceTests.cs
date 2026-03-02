@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 using Moq;
@@ -292,35 +291,6 @@ public class CalendarGridServiceTests
         Assert.Equal(3000.00m, result.MonthSummary.NetChange.Amount);
     }
 
-    private CalendarGridService CreateService()
-    {
-        return new CalendarGridService(
-            _transactionRepo.Object,
-            _recurringRepo.Object,
-            _recurringTransferRepo.Object,
-            _balanceService.Object,
-            _recurringInstanceProjector.Object,
-            _recurringTransferInstanceProjector.Object,
-            _autoRealizeService.Object,
-            _currencyProvider.Object);
-    }
-
-    private static RecurringTransaction CreateTestRecurringTransaction(Guid accountId, DateOnly startDate)
-    {
-        var amount = MoneyValue.Create("USD", -50.00m);
-        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
-        var recurring = RecurringTransaction.Create(accountId, "Test Recurring", amount, pattern, startDate);
-
-        // Set the Id for testing
-        var id = Guid.NewGuid();
-        var idProperty = typeof(RecurringTransaction).GetProperty(nameof(RecurringTransaction.Id));
-        idProperty?.SetValue(recurring, id);
-
-        return recurring;
-    }
-
-    #region Running Balance Tests
-
     [Fact]
     public async Task GetCalendarGridAsync_IncludesStartingBalance()
     {
@@ -414,10 +384,13 @@ public class CalendarGridServiceTests
         // Assert
         // Day 0: 1000 + 500 = 1500
         Assert.Equal(1500m, result.Days[0].EndOfDayBalance.Amount);
+
         // Day 1: 1500 + 0 = 1500
         Assert.Equal(1500m, result.Days[1].EndOfDayBalance.Amount);
+
         // Day 2: 1500 - 200 = 1300
         Assert.Equal(1300m, result.Days[2].EndOfDayBalance.Amount);
+
         // Day 3: 1300 + 0 = 1300
         Assert.Equal(1300m, result.Days[3].EndOfDayBalance.Amount);
     }
@@ -584,5 +557,30 @@ public class CalendarGridServiceTests
         Assert.Equal(2000m, result.StartingBalance.Amount);
     }
 
-    #endregion
+    private static RecurringTransaction CreateTestRecurringTransaction(Guid accountId, DateOnly startDate)
+    {
+        var amount = MoneyValue.Create("USD", -50.00m);
+        var pattern = RecurrencePatternValue.CreateMonthly(1, startDate.Day);
+        var recurring = RecurringTransaction.Create(accountId, "Test Recurring", amount, pattern, startDate);
+
+        // Set the Id for testing
+        var id = Guid.NewGuid();
+        var idProperty = typeof(RecurringTransaction).GetProperty(nameof(RecurringTransaction.Id));
+        idProperty?.SetValue(recurring, id);
+
+        return recurring;
+    }
+
+    private CalendarGridService CreateService()
+    {
+        return new CalendarGridService(
+            _transactionRepo.Object,
+            _recurringRepo.Object,
+            _recurringTransferRepo.Object,
+            _balanceService.Object,
+            _recurringInstanceProjector.Object,
+            _recurringTransferInstanceProjector.Object,
+            _autoRealizeService.Object,
+            _currencyProvider.Object);
+    }
 }

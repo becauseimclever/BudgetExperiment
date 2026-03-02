@@ -68,6 +68,7 @@ dotnet_diagnostic.SA1633.severity = none   # File header requirement
 dotnet_diagnostic.SA1636.severity = none   # File header company name text
 dotnet_diagnostic.SA1639.severity = none   # File header must have summary tag (if triggered)
 dotnet_diagnostic.SA1309.severity = none   # Allow private fields to start with underscore per project convention
+dotnet_diagnostic.SA1101.severity = none   # Project uses _camelCase fields; this. prefix is redundant
 dotnet_diagnostic.SA1412.severity = none   # Ignore BOM requirement
 dotnet_diagnostic.SA1600.severity = none   # Temporarily disable element documentation requirement
 dotnet_diagnostic.SA1609.severity = none   # Temporarily disable <value> doc requirement for properties

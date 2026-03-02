@@ -24,6 +24,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that non-401 responses are returned unchanged.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_NonUnauthorized_ReturnsResponseUnchanged()
     {
@@ -43,6 +44,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that a 401 response triggers a token refresh attempt.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_Unauthorized_AttemptsTokenRefresh()
     {
@@ -64,6 +66,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that a successful refresh retries the original request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_RefreshSucceeds_RetriesOriginalRequest()
     {
@@ -89,6 +92,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that a failed token refresh shows session expired toast and redirects.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_RefreshFails_ShowsToastAndRedirects()
     {
@@ -111,6 +115,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that authentication routes are skipped (no refresh attempted).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_OnAuthenticationRoute_SkipsRefresh()
     {
@@ -132,6 +137,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that concurrent 401 responses only trigger one refresh attempt.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_ConcurrentUnauthorized_OnlyOneRefreshAttempt()
     {
@@ -154,6 +160,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that the retry request includes the refreshed token in Authorization header.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_RefreshSucceeds_RetryIncludesNewToken()
     {
@@ -183,6 +190,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that a failed refresh saves form state before showing toast.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_RefreshFails_SavesFormState()
     {
@@ -202,6 +210,7 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// <summary>
     /// Verifies that a successful refresh does not save form state.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SendAsync_RefreshSucceeds_DoesNotSaveFormState()
     {
@@ -383,6 +392,9 @@ public sealed class TokenRefreshHandlerTests : IDisposable
     /// </summary>
     private sealed class StubToastService : IToastService
     {
+        /// <inheritdoc/>
+        public event Action? OnChange;
+
         /// <summary>
         /// Gets a value indicating whether a warning was shown.
         /// </summary>
@@ -392,9 +404,6 @@ public sealed class TokenRefreshHandlerTests : IDisposable
         /// Gets the last message shown.
         /// </summary>
         public string? LastMessage { get; private set; }
-
-        /// <inheritdoc/>
-        public event Action? OnChange;
 
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];

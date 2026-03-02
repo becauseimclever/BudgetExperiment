@@ -26,7 +26,7 @@ public static class AiPrompts
 
     /// <summary>
     /// User prompt template for suggesting new categorization rules.
-    /// Placeholders: {categories}, {existingRules}, {descriptions}
+    /// Placeholders: {categories}, {existingRules}, {descriptions}.
     /// </summary>
     public const string NewRuleSuggestionPrompt = """
         Analyze these uncategorized transaction descriptions and suggest categorization rules.
@@ -69,7 +69,7 @@ public static class AiPrompts
 
     /// <summary>
     /// User prompt template for suggesting rule optimizations.
-    /// Placeholders: {rules}, {matchStats}
+    /// Placeholders: {rules}, {matchStats}.
     /// </summary>
     public const string OptimizationPrompt = """
         Analyze these categorization rules and suggest optimizations.
@@ -110,7 +110,7 @@ public static class AiPrompts
 
     /// <summary>
     /// User prompt template for detecting rule conflicts.
-    /// Placeholders: {rules}
+    /// Placeholders: {rules}.
     /// </summary>
     public const string ConflictDetectionPrompt = """
         Analyze these categorization rules for conflicts and overlaps.

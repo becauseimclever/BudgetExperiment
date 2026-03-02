@@ -12,14 +12,14 @@ namespace BudgetExperiment.Client.Services;
 public interface IChatContextService
 {
     /// <summary>
-    /// Gets the current page context.
-    /// </summary>
-    ChatPageContext CurrentContext { get; }
-
-    /// <summary>
     /// Occurs when the context changes.
     /// </summary>
     event EventHandler? ContextChanged;
+
+    /// <summary>
+    /// Gets the current page context.
+    /// </summary>
+    ChatPageContext CurrentContext { get; }
 
     /// <summary>
     /// Sets the current account context.

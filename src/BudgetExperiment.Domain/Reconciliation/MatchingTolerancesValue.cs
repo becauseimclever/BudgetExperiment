@@ -18,6 +18,18 @@ public sealed class MatchingTolerancesValue : IEquatable<MatchingTolerancesValue
     }
 
     /// <summary>
+    /// Gets the default matching tolerances with sensible out-of-box behavior.
+    /// </summary>
+    public static MatchingTolerancesValue Default => new()
+    {
+        DateToleranceDays = 7,
+        AmountTolerancePercent = 0.10m,
+        AmountToleranceAbsolute = 10.00m,
+        DescriptionSimilarityThreshold = 0.6m,
+        AutoMatchThreshold = 0.85m,
+    };
+
+    /// <summary>
     /// Gets the maximum days before/after scheduled date to consider a match.
     /// </summary>
     public int DateToleranceDays { get; private set; }
@@ -41,18 +53,6 @@ public sealed class MatchingTolerancesValue : IEquatable<MatchingTolerancesValue
     /// Gets the minimum confidence score for automatic matching without review.
     /// </summary>
     public decimal AutoMatchThreshold { get; private set; }
-
-    /// <summary>
-    /// Gets the default matching tolerances with sensible out-of-box behavior.
-    /// </summary>
-    public static MatchingTolerancesValue Default => new()
-    {
-        DateToleranceDays = 7,
-        AmountTolerancePercent = 0.10m,
-        AmountToleranceAbsolute = 10.00m,
-        DescriptionSimilarityThreshold = 0.6m,
-        AutoMatchThreshold = 0.85m,
-    };
 
     /// <summary>
     /// Creates a new instance of matching tolerances with the specified values.

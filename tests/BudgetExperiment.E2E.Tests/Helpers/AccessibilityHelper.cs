@@ -147,7 +147,9 @@ public static class AccessibilityHelper
             if (violation.Nodes != null && violation.Nodes.Length > 0)
             {
                 sb.AppendLine($"  Affected elements ({violation.Nodes.Length}):");
-                foreach (var node in violation.Nodes.Take(5)) // Limit to first 5 for readability
+
+                // Limit to first 5 for readability
+                foreach (var node in violation.Nodes.Take(5))
                 {
                     var target = node.Target?.ToString() ?? "unknown";
                     sb.AppendLine($"    - {target}");

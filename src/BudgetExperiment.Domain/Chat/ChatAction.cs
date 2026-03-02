@@ -20,4 +20,3 @@ public abstract record ChatAction
     /// <returns>A formatted summary string.</returns>
     public abstract string GetPreviewSummary();
 }
-

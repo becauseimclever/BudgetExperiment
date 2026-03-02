@@ -2,12 +2,10 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Calendar;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Calendar;
@@ -104,7 +102,11 @@ public class CalendarWeekViewTests : BunitContext, IAsyncLifetime
         var cut = Render<CalendarWeekView>(p => p
             .Add(x => x.Days, days)
             .Add(x => x.WeekIndex, 0)
-            .Add(x => x.OnDaySelected, date => { selectedDate = date; return Task.CompletedTask; }));
+            .Add(x => x.OnDaySelected, date =>
+            {
+                selectedDate = date;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.FindAll(".week-day")[2].Click();
@@ -127,7 +129,11 @@ public class CalendarWeekViewTests : BunitContext, IAsyncLifetime
         var cut = Render<CalendarWeekView>(p => p
             .Add(x => x.Days, days)
             .Add(x => x.WeekIndex, 2)
-            .Add(x => x.WeekIndexChanged, idx => { newIndex = idx; return Task.CompletedTask; }));
+            .Add(x => x.WeekIndexChanged, idx =>
+            {
+                newIndex = idx;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.Find("[aria-label='Next week']").Click();
@@ -149,7 +155,11 @@ public class CalendarWeekViewTests : BunitContext, IAsyncLifetime
         var cut = Render<CalendarWeekView>(p => p
             .Add(x => x.Days, days)
             .Add(x => x.WeekIndex, 3)
-            .Add(x => x.WeekIndexChanged, idx => { newIndex = idx; return Task.CompletedTask; }));
+            .Add(x => x.WeekIndexChanged, idx =>
+            {
+                newIndex = idx;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.Find("[aria-label='Previous week']").Click();
@@ -171,7 +181,11 @@ public class CalendarWeekViewTests : BunitContext, IAsyncLifetime
         var cut = Render<CalendarWeekView>(p => p
             .Add(x => x.Days, days)
             .Add(x => x.WeekIndex, 5) // last week (index 5 of 6 weeks)
-            .Add(x => x.OnWeekOverflow, date => { overflowDate = date; return Task.CompletedTask; }));
+            .Add(x => x.OnWeekOverflow, date =>
+            {
+                overflowDate = date;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.Find("[aria-label='Next week']").Click();
@@ -193,7 +207,11 @@ public class CalendarWeekViewTests : BunitContext, IAsyncLifetime
         var cut = Render<CalendarWeekView>(p => p
             .Add(x => x.Days, days)
             .Add(x => x.WeekIndex, 0)
-            .Add(x => x.OnWeekOverflow, date => { overflowDate = date; return Task.CompletedTask; }));
+            .Add(x => x.OnWeekOverflow, date =>
+            {
+                overflowDate = date;
+                return Task.CompletedTask;
+            }));
 
         // Act
         cut.Find("[aria-label='Previous week']").Click();

@@ -103,6 +103,46 @@ public partial class StackedBarChart
 
     private HoveredSegmentInfo? HoveredSegment { get; set; }
 
+    private static decimal CalculateNiceStep(decimal max)
+    {
+        if (max <= 0)
+        {
+            return 1m;
+        }
+
+        var rough = max / 5m;
+        var magnitude = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)rough)));
+        var residual = rough / magnitude;
+
+        return residual switch
+        {
+            < 1.5m => 1m * magnitude,
+            < 3m => 2m * magnitude,
+            < 7m => 5m * magnitude,
+            _ => 10m * magnitude,
+        };
+    }
+
+    private static string FormatAxisValue(decimal value)
+    {
+        return value switch
+        {
+            >= 1000000m => $"{value / 1000000m:N1}M",
+            >= 1000m => $"{value / 1000m:N0}k",
+            _ => value.ToString("N0", CultureInfo.CurrentCulture),
+        };
+    }
+
+    private static string FormatValue(decimal value)
+    {
+        return value.ToString("C2", CultureInfo.CurrentCulture);
+    }
+
+    private static string F(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
     private IReadOnlyList<string> ResolveSeriesOrder()
     {
         if (Series.Count > 0)
@@ -219,41 +259,6 @@ public partial class StackedBarChart
         return MarginTop + ChartAreaHeight - (ratio * ChartAreaHeight);
     }
 
-    private static decimal CalculateNiceStep(decimal max)
-    {
-        if (max <= 0)
-        {
-            return 1m;
-        }
-
-        var rough = max / 5m;
-        var magnitude = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)rough)));
-        var residual = rough / magnitude;
-
-        return residual switch
-        {
-            < 1.5m => 1m * magnitude,
-            < 3m => 2m * magnitude,
-            < 7m => 5m * magnitude,
-            _ => 10m * magnitude,
-        };
-    }
-
-    private static string FormatAxisValue(decimal value)
-    {
-        return value switch
-        {
-            >= 1000000m => $"{value / 1000000m:N1}M",
-            >= 1000m => $"{value / 1000m:N0}k",
-            _ => value.ToString("N0", CultureInfo.CurrentCulture),
-        };
-    }
-
-    private static string FormatValue(decimal value)
-    {
-        return value.ToString("C2", CultureInfo.CurrentCulture);
-    }
-
     private string GetSeriesLabel(string seriesId)
     {
         return Series.FirstOrDefault(s => s.Id == seriesId)?.Label ?? seriesId;
@@ -262,11 +267,6 @@ public partial class StackedBarChart
     private string GetSeriesColor(string seriesId)
     {
         return Series.FirstOrDefault(s => s.Id == seriesId)?.Color ?? "#6366f1";
-    }
-
-    private static string F(double value)
-    {
-        return value.ToString(CultureInfo.InvariantCulture);
     }
 
     private MarkupString RenderSvgText(double x, double y, string cssClass, string textAnchor, string fontSize, string content)

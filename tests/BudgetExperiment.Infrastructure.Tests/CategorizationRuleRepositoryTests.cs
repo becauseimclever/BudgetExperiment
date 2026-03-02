@@ -312,4 +312,3 @@ public class CategorizationRuleRepositoryTests
         return category;
     }
 }
-

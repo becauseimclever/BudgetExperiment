@@ -35,12 +35,12 @@ public sealed class ReportWidgetConfigDefinition
     public string Orientation { get; set; } = "vertical";
 
     /// <summary>
-    /// Gets or sets whether to show values in charts.
+    /// Gets or sets a value indicating whether to show values in charts.
     /// </summary>
     public bool ShowValues { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to show labels in charts.
+    /// Gets or sets a value indicating whether to show labels in charts.
     /// </summary>
     public bool ShowLabels { get; set; } = true;
 

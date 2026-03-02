@@ -10,22 +10,22 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed record AcceptCategorySuggestionRequest
 {
     /// <summary>
-    /// Gets or sets the custom name to use instead of the suggested name.
+    /// Gets the custom name to use instead of the suggested name.
     /// </summary>
     public string? CustomName { get; init; }
 
     /// <summary>
-    /// Gets or sets the custom icon to use.
+    /// Gets the custom icon to use.
     /// </summary>
     public string? CustomIcon { get; init; }
 
     /// <summary>
-    /// Gets or sets the custom color to use.
+    /// Gets the custom color to use.
     /// </summary>
     public string? CustomColor { get; init; }
 
     /// <summary>
-    /// Gets or sets whether to auto-create categorization rules.
+    /// Gets a value indicating whether to auto-create categorization rules.
     /// </summary>
     public bool CreateRules { get; init; } = true;
 }

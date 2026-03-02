@@ -23,8 +23,8 @@ public class TransactionServiceLocationTests
 
         t1.SetLocation(TransactionLocationValue.CreateFromParsed("Seattle", "WA"));
         t2.SetLocation(TransactionLocationValue.CreateFromParsed("Portland", "OR"));
-        // t3 has no location — should remain unaffected
 
+        // t3 has no location — should remain unaffected
         var transactionRepo = new Mock<ITransactionRepository>();
         transactionRepo.Setup(r => r.GetAllWithLocationAsync(default))
             .ReturnsAsync(new List<Transaction> { t1, t2 });

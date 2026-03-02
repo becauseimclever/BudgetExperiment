@@ -3,11 +3,8 @@
 // </copyright>
 
 using System.Security.Claims;
-
-using Bunit;
-
 using BudgetExperiment.Client.Components.Auth;
-
+using Bunit;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;

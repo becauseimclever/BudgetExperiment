@@ -1,12 +1,12 @@
 // -----------------------------------------------------------------------
-// <copyright file="ThemeService.cs" company="Budget Experiment">
-//     Copyright (c) Budget Experiment. All rights reserved.
+// <copyright file="ThemeService.cs" company="BecauseImClever">
+//     Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace BudgetExperiment.Client.Services;
-
 using Microsoft.JSInterop;
+
+namespace BudgetExperiment.Client.Services;
 
 /// <summary>
 /// Service for managing application theme (light, dark, vscode-dark, system).
@@ -36,11 +36,6 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     public event Action<string>? ThemeChanged;
 
     /// <summary>
-    /// Gets the current theme name.
-    /// </summary>
-    public string CurrentTheme => this.currentTheme;
-
-    /// <summary>
     /// Gets the available theme options.
     /// </summary>
     public static IReadOnlyList<ThemeOption> AvailableThemes { get; } = new List<ThemeOption>
@@ -56,6 +51,11 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
         new("geocities", "GeoCities", "sparkles"),
         new("crayons", "Crayon Box", "palette"),
     };
+
+    /// <summary>
+    /// Gets the current theme name.
+    /// </summary>
+    public string CurrentTheme => this.currentTheme;
 
     /// <summary>
     /// Initializes the theme service by loading the saved theme from localStorage.

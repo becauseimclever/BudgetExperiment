@@ -5,7 +5,6 @@
 using BudgetExperiment.Application.Categorization;
 using BudgetExperiment.Contracts.Dtos;
 
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -262,4 +261,3 @@ public sealed class TransactionsController : ControllerBase
         return this.NoContent();
     }
 }
-

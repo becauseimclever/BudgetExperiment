@@ -1,8 +1,8 @@
 {
   "settings": {
     "documentationRules": {
-      "companyName": "Fortinbra",
-      "copyrightText": "Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.",
+      "companyName": "BecauseImClever",
+      "copyrightText": "Copyright (c) BecauseImClever. All rights reserved.",
       "documentInterfaces": true,
       "documentInternalElements": false,
       "documentPrivateElements": false,

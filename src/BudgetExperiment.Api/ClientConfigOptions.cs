@@ -2,9 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Api;
-
 using BudgetExperiment.Contracts.Dtos;
+
+namespace BudgetExperiment.Api;
 
 /// <summary>
 /// Strongly-typed options for client configuration.

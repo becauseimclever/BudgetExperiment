@@ -36,7 +36,7 @@ public sealed class TransactionDto
     /// <summary>Gets or sets the last update timestamp (UTC).</summary>
     public DateTime UpdatedAt { get; set; }
 
-    /// <summary>Gets or sets whether this transaction is part of a transfer.</summary>
+    /// <summary>Gets or sets a value indicating whether this transaction is part of a transfer.</summary>
     public bool IsTransfer { get; set; }
 
     /// <summary>Gets or sets the transfer identifier (null if not a transfer).</summary>

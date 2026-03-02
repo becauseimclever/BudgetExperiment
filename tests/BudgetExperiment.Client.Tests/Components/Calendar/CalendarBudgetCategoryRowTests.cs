@@ -3,13 +3,10 @@
 // </copyright>
 
 using System.Globalization;
-
-using Bunit;
-
 using BudgetExperiment.Client.Components.Calendar;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-
+using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 

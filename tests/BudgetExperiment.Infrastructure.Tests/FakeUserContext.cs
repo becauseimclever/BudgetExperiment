@@ -52,12 +52,6 @@ internal sealed class FakeUserContext : IUserContext
     /// <inheritdoc />
     public BudgetScope? CurrentScope { get; private set; }
 
-    /// <inheritdoc />
-    public void SetScope(BudgetScope? scope)
-    {
-        this.CurrentScope = scope;
-    }
-
     /// <summary>
     /// Creates a FakeUserContext with the default user ID and null scope (show all).
     /// </summary>
@@ -77,4 +71,10 @@ internal sealed class FakeUserContext : IUserContext
     /// <returns>A new FakeUserContext instance.</returns>
     public static FakeUserContext CreateForPersonalScope(Guid? userId = null) =>
         new(userId: userId ?? DefaultUserId, currentScope: BudgetScope.Personal);
+
+    /// <inheritdoc />
+    public void SetScope(BudgetScope? scope)
+    {
+        this.CurrentScope = scope;
+    }
 }

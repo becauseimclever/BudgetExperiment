@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using Moq;
 
@@ -16,8 +15,6 @@ public class CategorizationEngineTests
     private static readonly Guid GroceryCategoryId = Guid.NewGuid();
     private static readonly Guid TransportCategoryId = Guid.NewGuid();
     private static readonly Guid EntertainmentCategoryId = Guid.NewGuid();
-
-    #region FindMatchingCategoryAsync Tests
 
     [Fact]
     public async Task FindMatchingCategoryAsync_Returns_CategoryId_When_Rule_Matches()
@@ -100,10 +97,6 @@ public class CategorizationEngineTests
         // Assert
         Assert.Null(result);
     }
-
-    #endregion
-
-    #region ApplyRulesAsync Tests
 
     [Fact]
     public async Task ApplyRulesAsync_Categorizes_Uncategorized_Transactions()
@@ -233,10 +226,6 @@ public class CategorizationEngineTests
         Assert.Equal(2, result.Categorized);
     }
 
-    #endregion
-
-    #region TestPatternAsync Tests
-
     [Fact]
     public async Task TestPatternAsync_Returns_Matching_Descriptions()
     {
@@ -328,8 +317,6 @@ public class CategorizationEngineTests
         Assert.Single(result);
         Assert.Equal("WALMART STORE", result[0]);
     }
-
-    #endregion
 
     private static (CategorizationEngine Engine, Mock<ICategorizationRuleRepository> RuleRepo, Mock<ITransactionRepository> TransactionRepo)
         CreateEngine(List<CategorizationRule> rules, List<Transaction>? transactions = null)

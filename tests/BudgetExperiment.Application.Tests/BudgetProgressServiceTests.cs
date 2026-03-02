@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 using Moq;
@@ -15,13 +14,6 @@ namespace BudgetExperiment.Application.Tests;
 public class BudgetProgressServiceTests
 {
     private static readonly Mock<ICurrencyProvider> DefaultCurrencyProvider = CreateCurrencyProviderMock();
-
-    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency = "USD")
-    {
-        var mock = new Mock<ICurrencyProvider>();
-        mock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
-        return mock;
-    }
 
     [Fact]
     public async Task GetProgressAsync_Returns_Progress_For_Category()
@@ -316,5 +308,12 @@ public class BudgetProgressServiceTests
         // Assert
         Assert.Single(result.CategoryProgress);
         Assert.Equal("Groceries", result.CategoryProgress.First().CategoryName);
+    }
+
+    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency = "USD")
+    {
+        var mock = new Mock<ICurrencyProvider>();
+        mock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
+        return mock;
     }
 }

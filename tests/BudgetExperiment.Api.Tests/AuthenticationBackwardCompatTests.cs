@@ -29,6 +29,7 @@ public sealed class AuthenticationBackwardCompatTests
     /// Existing Authentik config (Authority + Audience only, no Mode/Provider)
     /// continues to produce a working OIDC-mode application.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ExistingAuthentikConfig_ContinuesToWork()
     {
@@ -56,6 +57,7 @@ public sealed class AuthenticationBackwardCompatTests
     /// <summary>
     /// Setting Authentication:Authentik:Enabled=false disables auth (backward compat).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task AuthentikEnabled_False_DisablesAuth()
     {
@@ -118,6 +120,7 @@ public sealed class AuthenticationBackwardCompatTests
     /// Config endpoint response shape is unchanged for existing Authentik deployments.
     /// The response includes authentication.mode and authentication.oidc with all expected fields.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_BackwardCompatShape()
     {
@@ -148,6 +151,7 @@ public sealed class AuthenticationBackwardCompatTests
     /// <summary>
     /// Simulates the full set of env vars from docker-compose.pi.yml and verifies config binds correctly.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DockerComposePi_EnvVars_BindCorrectly()
     {

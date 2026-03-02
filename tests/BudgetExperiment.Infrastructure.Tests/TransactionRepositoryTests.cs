@@ -222,8 +222,6 @@ public class TransactionRepositoryTests
         Assert.Equal(1, newCount);
     }
 
-    #region GetUncategorizedPagedAsync Tests
-
     [Fact]
     public async Task GetUncategorizedPagedAsync_Returns_Only_Uncategorized_Transactions()
     {
@@ -542,10 +540,6 @@ public class TransactionRepositoryTests
         Assert.Empty(items);
     }
 
-    #endregion
-
-    #region GetByDateRangeAsync Scope Filtering Tests
-
     [Fact]
     public async Task GetByDateRangeAsync_Personal_Scope_Excludes_Shared_Transactions()
     {
@@ -675,6 +669,4 @@ public class TransactionRepositoryTests
         Assert.Single(results);
         Assert.Equal("My Trans", results[0].Description);
     }
-
-    #endregion
 }

@@ -15,7 +15,7 @@ public sealed record AcceptCategorySuggestionResultDto
     public required Guid SuggestionId { get; init; }
 
     /// <summary>
-    /// Gets whether the accept was successful.
+    /// Gets a value indicating whether the accept was successful.
     /// </summary>
     public required bool Success { get; init; }
 

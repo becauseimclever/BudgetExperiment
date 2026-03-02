@@ -10,6 +10,11 @@ namespace BudgetExperiment.Client.Services;
 public interface IAiAvailabilityService
 {
     /// <summary>
+    /// Event raised when the AI availability status changes.
+    /// </summary>
+    event Action? StatusChanged;
+
+    /// <summary>
     /// Gets the current AI availability state.
     /// </summary>
     AiAvailabilityState State { get; }
@@ -34,11 +39,6 @@ public interface IAiAvailabilityService
     /// Gets the error message when AI is unavailable (for tooltip display).
     /// </summary>
     string? ErrorMessage { get; }
-
-    /// <summary>
-    /// Event raised when the AI availability status changes.
-    /// </summary>
-    event Action? StatusChanged;
 
     /// <summary>
     /// Refreshes the AI availability status from the API.

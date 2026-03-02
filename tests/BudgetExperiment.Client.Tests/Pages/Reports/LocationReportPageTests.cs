@@ -3,13 +3,10 @@
 // </copyright>
 
 using System.Globalization;
-
-using Bunit;
-
 using BudgetExperiment.Client.Pages.Reports;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Pages.Reports;

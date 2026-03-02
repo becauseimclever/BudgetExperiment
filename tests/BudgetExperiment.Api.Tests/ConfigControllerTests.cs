@@ -30,6 +30,7 @@ public sealed class ConfigControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/config returns 200 OK without authentication.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Get_Returns_200_WithoutAuthentication()
     {
@@ -46,6 +47,7 @@ public sealed class ConfigControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/config returns valid ClientConfigDto.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Get_Returns_ValidClientConfigDto()
     {
@@ -65,6 +67,7 @@ public sealed class ConfigControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/config returns cache headers.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Get_Returns_CacheHeaders()
     {
@@ -81,6 +84,7 @@ public sealed class ConfigControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/config returns OIDC config when mode is oidc.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Get_WhenOidcMode_Returns_OidcConfig()
     {

@@ -83,6 +83,26 @@ public static class AuthenticationHelper
     }
 
     /// <summary>
+    /// Checks if the current page shows an authenticated state.
+    /// </summary>
+    /// <param name="page">The Playwright page instance.</param>
+    /// <returns>True if the user appears to be logged in.</returns>
+    public static async Task<bool> IsLoggedInAsync(IPage page)
+    {
+        // Check if navigation menu is visible (indicates authenticated state)
+        var navMenu = page.Locator("nav.nav-menu");
+        try
+        {
+            await navMenu.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 2000 });
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Performs the actual Authentik login flow.
     /// </summary>
     private static async Task PerformAuthentikLoginAsync(IPage page, string baseUrl)
@@ -175,25 +195,5 @@ public static class AuthenticationHelper
 
         // Also wait for network to settle
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-    }
-
-    /// <summary>
-    /// Checks if the current page shows an authenticated state.
-    /// </summary>
-    /// <param name="page">The Playwright page instance.</param>
-    /// <returns>True if the user appears to be logged in.</returns>
-    public static async Task<bool> IsLoggedInAsync(IPage page)
-    {
-        // Check if navigation menu is visible (indicates authenticated state)
-        var navMenu = page.Locator("nav.nav-menu");
-        try
-        {
-            await navMenu.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 2000 });
-            return true;
-        }
-        catch (TimeoutException)
-        {
-            return false;
-        }
     }
 }

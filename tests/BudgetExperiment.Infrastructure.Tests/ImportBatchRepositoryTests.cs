@@ -290,4 +290,3 @@ public class ImportBatchRepositoryTests
         return mapping;
     }
 }
-

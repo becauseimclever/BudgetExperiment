@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
@@ -199,8 +198,8 @@ public class ImportServiceTests
             AccountId = Guid.NewGuid(),
             Rows =
             [
-                ["01/15/2026", "Expense", "100.00", ""],
-                ["01/16/2026", "Income", "", "200.00"],
+                ["01/15/2026", "Expense", "100.00", string.Empty],
+                ["01/16/2026", "Income", string.Empty, "200.00"],
             ],
             Mappings =
             [
@@ -278,7 +277,7 @@ public class ImportServiceTests
         var request = new ImportPreviewRequest
         {
             AccountId = Guid.NewGuid(),
-            Rows = [["", "Test Transaction", "-50.00"]],
+            Rows = [[string.Empty, "Test Transaction", "-50.00"]],
             Mappings =
             [
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
@@ -329,7 +328,7 @@ public class ImportServiceTests
         var request = new ImportPreviewRequest
         {
             AccountId = Guid.NewGuid(),
-            Rows = [["01/15/2026", "", "-50.00"]],
+            Rows = [["01/15/2026", string.Empty, "-50.00"]],
             Mappings =
             [
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
@@ -597,8 +596,6 @@ public class ImportServiceTests
         Assert.Equal(ImportRowStatus.Valid, result.Rows[0].Status);
     }
 
-    #region ExecuteAsync Tests
-
     [Fact]
     public async Task ExecuteAsync_WithNoUser_ThrowsDomainException()
     {
@@ -780,10 +777,6 @@ public class ImportServiceTests
         Assert.Equal(reference, savedTransaction.ExternalReference);
     }
 
-    #endregion
-
-    #region GetImportHistoryAsync Tests
-
     [Fact]
     public async Task GetImportHistoryAsync_WithNoUser_ThrowsDomainException()
     {
@@ -871,10 +864,6 @@ public class ImportServiceTests
         Assert.Null(result[0].MappingName);
     }
 
-    #endregion
-
-    #region DeleteImportBatchAsync Tests
-
     [Fact]
     public async Task DeleteImportBatchAsync_WithNoUser_ThrowsDomainException()
     {
@@ -953,10 +942,6 @@ public class ImportServiceTests
         this._transactionRepoMock.Verify(r => r.RemoveAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
-    #endregion
-
-    #region Reconciliation Integration Tests
-
     [Fact]
     public async Task ExecuteAsync_WithRunReconciliationTrue_CallsReconciliationService()
     {
@@ -1006,7 +991,8 @@ public class ImportServiceTests
         Assert.Equal(2, result.ReconciliationMatchCount);
         Assert.Equal(1, result.AutoMatchedCount);
         Assert.Equal(1, result.PendingMatchCount);
-        this._reconciliationServiceMock.Verify(r => r.FindMatchesAsync(
+        this._reconciliationServiceMock.Verify(
+            r => r.FindMatchesAsync(
             It.Is<FindMatchesRequest>(req => req.TransactionIds.Count == 2),
             It.IsAny<CancellationToken>()),
             Times.Once);
@@ -1043,10 +1029,6 @@ public class ImportServiceTests
             r => r.FindMatchesAsync(It.IsAny<FindMatchesRequest>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
-
-    #endregion
-
-    #region Skip Rows Tests
 
     [Fact]
     public async Task PreviewAsync_WithSkipRows_ProcessesAllRowsAndOffsetsRowIndex()
@@ -1141,10 +1123,6 @@ public class ImportServiceTests
         // Assert
         Assert.Equal(2, result.Rows.Count);
     }
-
-    #endregion
-
-    #region Indicator Column Tests
 
     [Fact]
     public async Task PreviewAsync_WithIndicatorColumn_AppliesDebitSign()
@@ -1287,10 +1265,6 @@ public class ImportServiceTests
         Assert.Contains("Unrecognized indicator", result.Rows[0].StatusMessage);
     }
 
-    #endregion
-
-    #region RowsToSkip should NOT double-skip
-
     [Fact]
     public async Task PreviewAsync_WithRowsToSkip_DoesNotDoubleSkipAlreadyParsedRows()
     {
@@ -1325,8 +1299,6 @@ public class ImportServiceTests
         // Assert - All 7 rows should be processed, none double-skipped
         Assert.Equal(7, result.Rows.Count);
     }
-
-    #endregion
 
     private static BudgetCategory CreateCategory(Guid id, string name)
     {

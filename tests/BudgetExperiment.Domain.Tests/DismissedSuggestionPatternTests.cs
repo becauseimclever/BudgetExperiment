@@ -11,8 +11,6 @@ public class DismissedSuggestionPatternTests
 {
     private const string ValidOwnerId = "user-123";
 
-    #region Create Tests
-
     [Fact]
     public void Create_With_Valid_Data_Creates_Pattern()
     {
@@ -84,6 +82,4 @@ public class DismissedSuggestionPatternTests
             DismissedSuggestionPattern.Create("pattern", ownerId!));
         Assert.Contains("owner", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    #endregion
 }

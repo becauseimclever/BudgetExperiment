@@ -32,6 +32,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/execute with more than 5000 transactions returns 400.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Execute_WithTooManyTransactions_Returns_400()
     {
@@ -65,6 +66,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/execute with 0 transactions returns 400.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Execute_WithZeroTransactions_Returns_400()
     {
@@ -89,6 +91,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/execute with description exceeding 500 characters returns 422.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Execute_WithDescriptionTooLong_Returns_422()
     {
@@ -122,6 +125,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/execute with date too far in the future returns 422.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Execute_WithDateTooFarInFuture_Returns_422()
     {
@@ -155,6 +159,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/execute with amount exceeding maximum returns 422.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Execute_WithAmountOutOfRange_Returns_422()
     {
@@ -187,6 +192,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/execute with all valid data returns 201.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Execute_WithValidRequest_Returns_201()
     {
@@ -217,6 +223,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// ProblemDetails responses include traceId.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Execute_ValidationError_IncludesTraceId()
     {

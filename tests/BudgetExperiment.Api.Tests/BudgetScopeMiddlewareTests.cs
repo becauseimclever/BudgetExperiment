@@ -1,5 +1,5 @@
-// <copyright file="BudgetScopeMiddlewareTests.cs" company="Fortinbra">
-// Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
+// <copyright file="BudgetScopeMiddlewareTests.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
 using BudgetExperiment.Api.Middleware;

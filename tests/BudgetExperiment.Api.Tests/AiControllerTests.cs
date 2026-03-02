@@ -27,6 +27,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     /// <summary>
     /// GET /api/v1/ai/status returns 200 OK with status information.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetStatus_Returns_200_WithStatusInfo()
     {
@@ -43,6 +44,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     /// <summary>
     /// GET /api/v1/ai/models returns 200 OK with model list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetModels_Returns_200_WithModelList()
     {
@@ -53,12 +55,14 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var models = await response.Content.ReadFromJsonAsync<List<AiModelDto>>();
         Assert.NotNull(models);
+
         // May be empty if AI service is not available during tests
     }
 
     /// <summary>
     /// GET /api/v1/ai/settings returns 200 OK with settings.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSettings_Returns_200_WithSettings()
     {
@@ -76,6 +80,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     /// <summary>
     /// PUT /api/v1/ai/settings returns 200 OK with updated settings.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateSettings_Returns_200_WithSettings()
     {
@@ -107,6 +112,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     /// When AI is unavailable, the service methods return empty results
     /// which results in a valid response with zero counts.
     /// </remarks>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Analyze_Returns_200_WithAnalysisResponse()
     {
@@ -136,6 +142,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     /// This tests that the endpoint is configured to return 504 for timeout scenarios.
     /// The actual timeout behavior is tested in unit tests with mocked dependencies.
     /// </remarks>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Analyze_Returns_ExpectedStatusCodes()
     {

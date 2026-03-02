@@ -30,6 +30,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers returns 200 OK with empty list when no recurring transfers exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_Returns_200_WithEmptyList()
     {
@@ -45,6 +46,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers with isActive=true returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_WithActiveFilter_Returns_200()
     {
@@ -60,6 +62,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers with accountId filter returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_WithAccountIdFilter_Returns_200()
     {
@@ -75,6 +78,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers/{id} returns 404 for non-existent recurring transfer.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -88,6 +92,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// POST /api/v1/recurring-transfers returns 404 when source account does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Create_Returns_404_WhenSourceAccountNotFound()
     {
@@ -112,6 +117,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// DELETE /api/v1/recurring-transfers/{id} returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_404_WhenNotFound()
     {
@@ -125,6 +131,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// PUT /api/v1/recurring-transfers/{id} returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_404_WhenNotFound()
     {
@@ -146,6 +153,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// POST /api/v1/recurring-transfers/{id}/pause returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Pause_Returns_404_WhenNotFound()
     {
@@ -159,6 +167,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// POST /api/v1/recurring-transfers/{id}/resume returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Resume_Returns_404_WhenNotFound()
     {
@@ -172,6 +181,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// POST /api/v1/recurring-transfers/{id}/skip returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SkipNext_Returns_404_WhenNotFound()
     {
@@ -185,6 +195,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers/projected returns 200 OK with valid date range.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProjected_Returns_200_WithValidRange()
     {
@@ -200,6 +211,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers/projected returns 400 when from is after to.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProjected_Returns_400_WhenFromAfterTo()
     {
@@ -213,6 +225,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers/projected with accountId filter returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProjected_WithAccountIdFilter_Returns_200()
     {
@@ -226,6 +239,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers/{id}/instances returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetInstances_Returns_404_WhenNotFound()
     {
@@ -239,6 +253,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// GET /api/v1/recurring-transfers/{id}/instances returns 400 when from is after to.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetInstances_Returns_400_WhenFromAfterTo()
     {
@@ -252,6 +267,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// PUT /api/v1/recurring-transfers/{id}/instances/{date} returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ModifyInstance_Returns_404_WhenNotFound()
     {
@@ -272,6 +288,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// DELETE /api/v1/recurring-transfers/{id}/instances/{date} returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SkipInstance_Returns_404_WhenNotFound()
     {
@@ -285,6 +302,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <summary>
     /// PUT /api/v1/recurring-transfers/{id}/instances/{date}/future returns 404 when recurring transfer does not exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateFuture_Returns_404_WhenNotFound()
     {

@@ -28,6 +28,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <summary>
     /// Switching from Authentik to Google changes the authority in /api/v1/config.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SwitchingToGoogle_ChangesAuthorityToGoogle()
     {
@@ -52,6 +53,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <summary>
     /// Switching from Authentik to Microsoft changes the authority in /api/v1/config.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SwitchingToMicrosoft_ChangesAuthorityToMicrosoft()
     {
@@ -76,6 +78,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <summary>
     /// Switching from Authentik to generic OIDC uses the configured authority.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SwitchingToGenericOidc_UsesConfiguredAuthority()
     {
@@ -100,6 +103,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <summary>
     /// Switching from OIDC to None removes OIDC settings from config.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SwitchingToNone_RemovesOidcSettings()
     {
@@ -119,6 +123,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <summary>
     /// Switching from None back to Authentik restores OIDC settings.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SwitchingFromNoneToAuthentik_RestoresOidcSettings()
     {
@@ -142,6 +147,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <summary>
     /// Provider is case-insensitive (e.g., "google" works same as "Google").
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ProviderIsCaseInsensitive()
     {
@@ -165,6 +171,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <summary>
     /// Mode is case-insensitive (e.g., "none" works same as "None").
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ModeIsCaseInsensitive()
     {
@@ -187,6 +194,7 @@ public sealed class ProviderSwitchingIntegrationTests
     /// <param name="provider">The provider name.</param>
     /// <param name="extraKey">An extra config key needed by the provider.</param>
     /// <param name="extraValue">The value for the extra config key.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData("Authentik", "Authentication:Authentik:Authority", "https://auth.example.com/")]
     [InlineData("Google", "Authentication:Google:ClientId", "google-id")]

@@ -1,10 +1,10 @@
-// <copyright file="ScopeOption.cs" company="Budget Experiment">
-// Copyright (c) Budget Experiment. All rights reserved.
+// <copyright file="ScopeOption.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Client.Services;
-
 using BudgetExperiment.Domain;
+
+namespace BudgetExperiment.Client.Services;
 
 /// <summary>
 /// Represents a scope option for the UI.

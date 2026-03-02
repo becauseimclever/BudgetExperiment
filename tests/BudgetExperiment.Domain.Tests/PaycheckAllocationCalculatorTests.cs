@@ -13,8 +13,6 @@ public class PaycheckAllocationCalculatorTests
 {
     private readonly PaycheckAllocationCalculator _calculator = new();
 
-    #region CalculateAllocation Tests
-
     [Fact]
     public void CalculateAllocation_MonthlyBill_BiweeklyPaycheck_CalculatesCorrectly()
     {
@@ -106,10 +104,6 @@ public class PaycheckAllocationCalculatorTests
         Assert.Throws<ArgumentNullException>(
             () => this._calculator.CalculateAllocation(null!, RecurrenceFrequency.BiWeekly));
     }
-
-    #endregion
-
-    #region CalculateAllocationSummary Tests
 
     [Fact]
     public void CalculateAllocationSummary_MultipleBills_CalculatesTotalCorrectly()
@@ -270,10 +264,6 @@ public class PaycheckAllocationCalculatorTests
         Assert.Equal(sourceId, summary.Allocations[0].Bill.SourceRecurringTransactionId);
     }
 
-    #endregion
-
-    #region GetAnnualMultiplier Tests (verified through allocation calculations)
-
     [Theory]
     [InlineData(RecurrenceFrequency.Daily, 365)]
     [InlineData(RecurrenceFrequency.Weekly, 52)]
@@ -293,10 +283,6 @@ public class PaycheckAllocationCalculatorTests
         Assert.Equal(100m * expectedMultiplier, allocation.AnnualAmount.Amount);
     }
 
-    #endregion
-
-    #region GetPeriodsPerYear Tests (verified through allocation calculations)
-
     [Theory]
     [InlineData(RecurrenceFrequency.Weekly, 52)]
     [InlineData(RecurrenceFrequency.BiWeekly, 26)]
@@ -313,6 +299,4 @@ public class PaycheckAllocationCalculatorTests
         var expectedPerPaycheck = Math.Round(1200m / expectedPeriods, 2, MidpointRounding.AwayFromZero);
         Assert.Equal(expectedPerPaycheck, allocation.AmountPerPaycheck.Amount);
     }
-
-    #endregion
 }

@@ -17,6 +17,7 @@ public class CategorySuggestionApiServiceClearPatternsTests
     /// <summary>
     /// Verifies that ClearDismissedPatternsAsync sends a DELETE request to the correct URL.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ClearDismissedPatternsAsync_SendsDeleteToCorrectUrl()
     {
@@ -52,6 +53,7 @@ public class CategorySuggestionApiServiceClearPatternsTests
     /// <summary>
     /// Verifies that ClearDismissedPatternsAsync returns zero when server returns non-success.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ClearDismissedPatternsAsync_ReturnsZero_WhenServerReturnsError()
     {
@@ -78,6 +80,7 @@ public class CategorySuggestionApiServiceClearPatternsTests
     /// <summary>
     /// Verifies that ClearDismissedPatternsAsync returns zero on HTTP exception.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ClearDismissedPatternsAsync_ReturnsZero_OnHttpException()
     {

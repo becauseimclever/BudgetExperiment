@@ -20,6 +20,7 @@ public class BudgetApiServiceUncategorizedTests
     /// <summary>
     /// Tests that GetUncategorizedTransactionsAsync builds the correct URL with filter params.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUncategorizedTransactionsAsync_BuildsCorrectUrl_WithDefaultFilter()
     {
@@ -63,6 +64,7 @@ public class BudgetApiServiceUncategorizedTests
     /// <summary>
     /// Tests that GetUncategorizedTransactionsAsync includes all filter parameters.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUncategorizedTransactionsAsync_IncludesAllFilterParams()
     {
@@ -118,6 +120,7 @@ public class BudgetApiServiceUncategorizedTests
     /// <summary>
     /// Tests that GetUncategorizedTransactionsAsync returns empty page on HTTP error.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUncategorizedTransactionsAsync_ReturnsEmptyPage_OnHttpError()
     {
@@ -143,6 +146,7 @@ public class BudgetApiServiceUncategorizedTests
     /// <summary>
     /// Tests that BulkCategorizeTransactionsAsync calls the correct POST endpoint.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkCategorizeTransactionsAsync_CallsCorrectEndpoint()
     {
@@ -188,6 +192,7 @@ public class BudgetApiServiceUncategorizedTests
     /// <summary>
     /// Tests that BulkCategorizeTransactionsAsync returns error response on HTTP failure.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkCategorizeTransactionsAsync_ReturnsErrorResponse_OnHttpFailure()
     {
@@ -220,6 +225,7 @@ public class BudgetApiServiceUncategorizedTests
     /// <summary>
     /// Tests that BulkCategorizeTransactionsAsync returns success response.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkCategorizeTransactionsAsync_ReturnsSuccessResponse()
     {

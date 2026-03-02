@@ -12,8 +12,6 @@ public class LearnedMerchantMappingTests
     private const string ValidOwnerId = "user-123";
     private static readonly Guid ValidCategoryId = Guid.NewGuid();
 
-    #region Create Tests
-
     [Fact]
     public void Create_With_Valid_Data_Creates_Mapping()
     {
@@ -119,10 +117,6 @@ public class LearnedMerchantMappingTests
         Assert.Contains("owner", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region IncrementLearnCount Tests
-
     [Fact]
     public void IncrementLearnCount_Increases_Count()
     {
@@ -152,10 +146,6 @@ public class LearnedMerchantMappingTests
         Assert.True(mapping.UpdatedAtUtc >= originalUpdatedAt);
     }
 
-    #endregion
-
-    #region UpdateCategory Tests
-
     [Fact]
     public void UpdateCategory_Changes_CategoryId()
     {
@@ -181,6 +171,4 @@ public class LearnedMerchantMappingTests
         var ex = Assert.Throws<DomainException>(() => mapping.UpdateCategory(Guid.Empty));
         Assert.Contains("category", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    #endregion
 }

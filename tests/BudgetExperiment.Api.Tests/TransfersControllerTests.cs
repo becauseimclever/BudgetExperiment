@@ -28,6 +28,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// POST /api/v1/transfers creates a transfer and returns 201.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CreateTransfer_Returns_201_WithTransfer()
     {
@@ -64,6 +65,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// POST /api/v1/transfers returns 400 when source and destination are the same.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CreateTransfer_Returns_400_WhenSameAccount()
     {
@@ -87,6 +89,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// POST /api/v1/transfers returns 400 when amount is zero.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CreateTransfer_Returns_400_WhenAmountZero()
     {
@@ -109,6 +112,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// GET /api/v1/transfers/{id} returns the transfer when found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_200_WhenFound()
     {
@@ -141,6 +145,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// GET /api/v1/transfers/{id} returns 404 for non-existent transfer.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -154,6 +159,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// GET /api/v1/transfers returns list of transfers.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task List_Returns_200_WithTransfers()
     {
@@ -169,6 +175,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// PUT /api/v1/transfers/{id} updates the transfer.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_200_WhenSuccessful()
     {
@@ -211,6 +218,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// PUT /api/v1/transfers/{id} returns 404 when transfer not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_404_WhenNotFound()
     {
@@ -232,6 +240,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// DELETE /api/v1/transfers/{id} deletes the transfer.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_204_WhenSuccessful()
     {
@@ -265,6 +274,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// DELETE /api/v1/transfers/{id} returns 404 when transfer not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_404_WhenNotFound()
     {

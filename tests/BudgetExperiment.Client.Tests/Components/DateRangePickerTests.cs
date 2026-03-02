@@ -2,10 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Reports;
-
+using Bunit;
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Tests.Components;

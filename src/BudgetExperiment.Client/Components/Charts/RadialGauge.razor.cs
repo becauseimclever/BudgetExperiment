@@ -66,13 +66,20 @@ public partial class RadialGauge
     [Parameter]
     public string AriaLabel { get; set; } = "Radial gauge";
 
+    private static IReadOnlyList<ThresholdColor> DefaultThresholds =>
+    [
+        new ThresholdColor { MinPercent = 0m, Color = "#22c55e", Label = "On track" },
+        new ThresholdColor { MinPercent = 70m, Color = "#f59e0b", Label = "Warning" },
+        new ThresholdColor { MinPercent = 90m, Color = "#ef4444", Label = "Over" },
+    ];
+
     private bool HasData => MaxValue > 0;
 
     private decimal Percent => MaxValue > 0 ? Math.Clamp((Value / MaxValue) * 100m, 0m, 100m) : 0m;
 
     private double Center => Size / 2d;
 
-    private double Radius => (Size - StrokeWidth) / 2d - 2d;
+    private double Radius => ((Size - StrokeWidth) / 2d) - 2d;
 
     private double Circumference => 2 * Math.PI * Radius;
 
@@ -86,6 +93,11 @@ public partial class RadialGauge
 
     private string LabelText => ShowLabel ? Label : string.Empty;
 
+    private static string F(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
     private string ResolveThresholdColor()
     {
         var thresholds = Thresholds ?? DefaultThresholds;
@@ -94,18 +106,6 @@ public partial class RadialGauge
             .LastOrDefault(t => Percent >= t.MinPercent);
 
         return selected?.Color ?? "#6b7280";
-    }
-
-    private static IReadOnlyList<ThresholdColor> DefaultThresholds =>
-    [
-        new ThresholdColor { MinPercent = 0m, Color = "#22c55e", Label = "On track" },
-        new ThresholdColor { MinPercent = 70m, Color = "#f59e0b", Label = "Warning" },
-        new ThresholdColor { MinPercent = 90m, Color = "#ef4444", Label = "Over" },
-    ];
-
-    private static string F(double value)
-    {
-        return value.ToString(CultureInfo.InvariantCulture);
     }
 
     private MarkupString RenderSvgText(double x, double y, string cssClass, string textAnchor, string fontSize, string content)

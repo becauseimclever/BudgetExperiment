@@ -123,7 +123,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
 
         // Calculate description similarity (for non-pattern matches or as secondary signal)
         var descriptionSimilarity = hasPatternMatch
-            ? 1.0m  // Pattern match implies full description match
+            ? 1.0m // Pattern match implies full description match
             : this.CalculateDescriptionSimilarity(transaction.Description, candidate.Description);
 
         // Check description threshold only if no pattern match
@@ -140,7 +140,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
         if (hasPatternMatch)
         {
             // Pattern matches get high confidence, with slight adjustment for date/amount
-            confidenceScore = PatternMatchConfidence * ((dateScore + amountScore) / 2 * 0.02m + 0.98m);
+            confidenceScore = PatternMatchConfidence * ((((dateScore + amountScore) / 2) * 0.02m) + 0.98m);
         }
         else
         {
@@ -175,6 +175,27 @@ public sealed class TransactionMatcher : ITransactionMatcher
         }
 
         return MatchConfidenceLevel.Low;
+    }
+
+    private static string NormalizeDescription(string description)
+    {
+        // Remove common noise, normalize whitespace, lowercase
+        var normalized = description
+            .ToUpperInvariant()
+            .Replace(".", string.Empty)
+            .Replace(",", string.Empty)
+            .Replace("-", " ")
+            .Replace("_", " ")
+            .Replace("*", string.Empty)
+            .Replace("#", string.Empty);
+
+        // Normalize multiple spaces to single space
+        while (normalized.Contains("  ", StringComparison.Ordinal))
+        {
+            normalized = normalized.Replace("  ", " ");
+        }
+
+        return normalized.Trim();
     }
 
     private bool MatchesImportPatterns(string transactionDescription, IReadOnlyCollection<ImportPatternValue>? patterns)
@@ -303,27 +324,6 @@ public sealed class TransactionMatcher : ITransactionMatcher
 
         var similarity = 1.0m - ((decimal)distance / maxLength);
         return Math.Max(0, similarity);
-    }
-
-    private static string NormalizeDescription(string description)
-    {
-        // Remove common noise, normalize whitespace, lowercase
-        var normalized = description
-            .ToUpperInvariant()
-            .Replace(".", string.Empty)
-            .Replace(",", string.Empty)
-            .Replace("-", " ")
-            .Replace("_", " ")
-            .Replace("*", string.Empty)
-            .Replace("#", string.Empty);
-
-        // Normalize multiple spaces to single space
-        while (normalized.Contains("  ", StringComparison.Ordinal))
-        {
-            normalized = normalized.Replace("  ", " ");
-        }
-
-        return normalized.Trim();
     }
 
     private int CalculateLevenshteinDistance(string source, string target)

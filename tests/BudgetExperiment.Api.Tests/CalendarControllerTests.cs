@@ -28,6 +28,7 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// GET /api/v1/calendar/summary with valid year/month returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMonthlySummary_Returns_200_WithValidYearMonth()
     {
@@ -45,6 +46,7 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// GET /api/v1/calendar/summary returns 400 for invalid month.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMonthlySummary_Returns_400_ForInvalidMonth()
     {
@@ -58,6 +60,7 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// GET /api/v1/calendar/summary returns 400 for month 0.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMonthlySummary_Returns_400_ForMonthZero()
     {

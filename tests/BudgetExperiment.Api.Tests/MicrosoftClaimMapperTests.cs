@@ -27,7 +27,8 @@ public sealed class MicrosoftClaimMapperTests
             new Claim("sub", "ms-uid-123"),
             new Claim("email", "user@contoso.com"),
             new Claim("name", "Test User"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -52,7 +53,8 @@ public sealed class MicrosoftClaimMapperTests
             new Claim("sub", "ms-uid-123"),
             new Claim("email", "user@contoso.com"),
             new Claim("preferred_username", "existing@contoso.com"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -75,7 +77,8 @@ public sealed class MicrosoftClaimMapperTests
         [
             new Claim("sub", "ms-uid-123"),
             new Claim("name", "Test User"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -122,7 +125,8 @@ public sealed class MicrosoftClaimMapperTests
             new Claim("email", "user@contoso.com"),
             new Claim("name", "Test User"),
             new Claim("tid", "tenant-id-789"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act
@@ -147,7 +151,8 @@ public sealed class MicrosoftClaimMapperTests
         [
             new Claim("sub", "ms-uid-123"),
             new Claim("email", string.Empty),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act

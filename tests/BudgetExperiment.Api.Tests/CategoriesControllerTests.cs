@@ -28,6 +28,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// GET /api/v1/categories returns 200 OK with empty list when no categories exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_Returns_200_WithCategoryList()
     {
@@ -43,6 +44,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// GET /api/v1/categories?activeOnly=true returns only active categories.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_WithActiveOnly_Returns_200_WithActiveCategories()
     {
@@ -72,6 +74,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// POST /api/v1/categories creates a category and returns 201 Created.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Create_Returns_201_WithCreatedCategory()
     {
@@ -102,6 +105,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// GET /api/v1/categories/{id} returns 200 with category when found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_200_WhenFound()
     {
@@ -124,6 +128,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// GET /api/v1/categories/{id} returns 404 for non-existent category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -137,6 +142,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// PUT /api/v1/categories/{id} updates category and returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_200_WithUpdatedCategory()
     {
@@ -169,6 +175,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// PUT /api/v1/categories/{id} returns 404 for non-existent category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_404_WhenNotFound()
     {
@@ -185,6 +192,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// DELETE /api/v1/categories/{id} deletes category and returns 204.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_204_WhenDeleted()
     {
@@ -207,6 +215,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// DELETE /api/v1/categories/{id} returns 404 for non-existent category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_404_WhenNotFound()
     {
@@ -220,6 +229,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// POST /api/v1/categories/{id}/activate activates a deactivated category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Activate_Returns_204_WhenActivated()
     {
@@ -250,6 +260,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// POST /api/v1/categories/{id}/activate returns 404 for non-existent category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Activate_Returns_404_WhenNotFound()
     {
@@ -263,6 +274,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// POST /api/v1/categories/{id}/deactivate deactivates a category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Deactivate_Returns_204_WhenDeactivated()
     {
@@ -286,6 +298,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// POST /api/v1/categories/{id}/deactivate returns 404 for non-existent category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Deactivate_Returns_404_WhenNotFound()
     {
@@ -299,6 +312,8 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <summary>
     /// POST /api/v1/categories creates different category types.
     /// </summary>
+    /// <param name="categoryType">The category type to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData("Expense")]
     [InlineData("Income")]

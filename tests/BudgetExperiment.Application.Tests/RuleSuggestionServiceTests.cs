@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using Moq;
 
@@ -15,8 +14,6 @@ public class RuleSuggestionServiceTests
 {
     private static readonly Guid GroceryCategoryId = Guid.NewGuid();
     private static readonly Guid RestaurantCategoryId = Guid.NewGuid();
-
-    #region SuggestNewRulesAsync Tests
 
     [Fact]
     public async Task SuggestNewRulesAsync_Returns_Empty_When_No_Uncategorized_Transactions()
@@ -318,10 +315,6 @@ public class RuleSuggestionServiceTests
         Assert.Equal(RuleMatchType.Regex, result[0].SuggestedMatchType);
     }
 
-    #endregion
-
-    #region GetPendingSuggestionsAsync Tests
-
     [Fact]
     public async Task GetPendingSuggestionsAsync_Returns_All_Pending_When_No_Filter()
     {
@@ -365,10 +358,6 @@ public class RuleSuggestionServiceTests
         Assert.Single(result);
         suggestionRepo.Verify(r => r.GetPendingByTypeAsync(SuggestionType.NewRule, It.IsAny<CancellationToken>()), Times.Once);
     }
-
-    #endregion
-
-    #region AcceptSuggestionAsync Tests
 
     [Fact]
     public async Task AcceptSuggestionAsync_Creates_Rule_From_Suggestion()
@@ -434,10 +423,6 @@ public class RuleSuggestionServiceTests
         await Assert.ThrowsAsync<DomainException>(() => service.AcceptSuggestionAsync(Guid.NewGuid()));
     }
 
-    #endregion
-
-    #region DismissSuggestionAsync Tests
-
     [Fact]
     public async Task DismissSuggestionAsync_Marks_Suggestion_As_Dismissed()
     {
@@ -457,10 +442,6 @@ public class RuleSuggestionServiceTests
         Assert.Equal("Not needed", suggestion.DismissalReason);
     }
 
-    #endregion
-
-    #region ProvideFeedbackAsync Tests
-
     [Fact]
     public async Task ProvideFeedbackAsync_Records_Positive_Feedback()
     {
@@ -479,10 +460,6 @@ public class RuleSuggestionServiceTests
         // Assert
         Assert.True(suggestion.UserFeedbackPositive);
     }
-
-    #endregion
-
-    #region SuggestOptimizationsAsync Tests
 
     [Fact]
     public async Task SuggestOptimizationsAsync_Returns_Empty_When_No_Rules()
@@ -681,10 +658,6 @@ public class RuleSuggestionServiceTests
             Times.Once);
     }
 
-    #endregion
-
-    #region DetectConflictsAsync Tests
-
     [Fact]
     public async Task DetectConflictsAsync_Returns_Empty_When_No_Rules()
     {
@@ -848,10 +821,6 @@ public class RuleSuggestionServiceTests
             Times.Once);
     }
 
-    #endregion
-
-    #region AnalyzeAllAsync Tests
-
     [Fact]
     public async Task AnalyzeAllAsync_Runs_All_Analysis_Types()
     {
@@ -952,10 +921,6 @@ public class RuleSuggestionServiceTests
         Assert.Equal(1, result.RulesAnalyzed);
     }
 
-    #endregion
-
-    #region AcceptSuggestionAsync Extended Tests
-
     [Fact]
     public async Task AcceptSuggestionAsync_For_OptimizationSuggestion_Updates_Rule_Pattern()
     {
@@ -1035,9 +1000,175 @@ public class RuleSuggestionServiceTests
         await Assert.ThrowsAsync<DomainException>(() => service.AcceptSuggestionAsync(suggestion.Id));
     }
 
-    #endregion
+    [Fact]
+    public void ExtractJson_Returns_Pure_Json_Unchanged()
+    {
+        // Arrange
+        var json = """{"suggestions": []}""";
 
-    #region Helper Methods
+        // Act
+        var result = RuleSuggestionService.ExtractJson(json);
+
+        // Assert
+        Assert.Equal(json, result);
+    }
+
+    [Fact]
+    public void ExtractJson_Strips_Markdown_Code_Block_Wrapping()
+    {
+        // Arrange
+        var content = """
+            ```json
+            {"suggestions": [{"pattern": "WALMART"}]}
+            ```
+            """;
+
+        // Act
+        var result = RuleSuggestionService.ExtractJson(content);
+
+        // Assert
+        Assert.StartsWith("{", result);
+        Assert.EndsWith("}", result);
+        Assert.Contains("WALMART", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Strips_Preamble_Text()
+    {
+        // Arrange
+        var content = """
+            Here is the JSON response:
+            {"suggestions": [{"pattern": "TARGET"}]}
+            """;
+
+        // Act
+        var result = RuleSuggestionService.ExtractJson(content);
+
+        // Assert
+        Assert.StartsWith("{", result);
+        Assert.Contains("TARGET", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Strips_Trailing_Text()
+    {
+        // Arrange
+        var content = """
+            {"suggestions": []}
+            Hope this helps!
+            """;
+
+        // Act
+        var result = RuleSuggestionService.ExtractJson(content);
+
+        // Assert
+        Assert.Equal("""{"suggestions": []}""", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Throws_JsonException_When_No_Json_Found()
+    {
+        // Arrange
+        var content = "Sorry, I cannot help with that.";
+
+        // Act & Assert
+        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(content));
+    }
+
+    [Fact]
+    public void ExtractJson_Throws_JsonException_For_Empty_Content()
+    {
+        // Act & Assert
+        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(string.Empty));
+    }
+
+    [Fact]
+    public async Task SuggestNewRulesAsync_Parses_Markdown_Wrapped_Json_Response()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "WALMART STORE #123", "WALMART SUPERCENTER");
+        SetupCategories(categoryRepo, ("Groceries", GroceryCategoryId));
+        SetupExistingRules(ruleRepo);
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // AI response wrapped in markdown code block — the exact scenario that caused the bug
+        var aiResponse = """
+            ```json
+            {
+              "suggestions": [
+                {
+                  "pattern": "WALMART",
+                  "matchType": "Contains",
+                  "categoryName": "Groceries",
+                  "confidence": 0.95,
+                  "reasoning": "Both contain WALMART",
+                  "sampleMatches": ["WALMART STORE #123", "WALMART SUPERCENTER"]
+                }
+              ]
+            }
+            ```
+            """;
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.SuggestNewRulesAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("WALMART", result[0].SuggestedPattern);
+        Assert.Equal(GroceryCategoryId, result[0].SuggestedCategoryId);
+    }
+
+    [Fact]
+    public async Task SuggestNewRulesAsync_Parses_Response_With_Preamble_Text()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "TARGET STORE #789");
+        SetupCategories(categoryRepo, ("Groceries", GroceryCategoryId));
+        SetupExistingRules(ruleRepo);
+        SetupAiAvailable(aiService);
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // AI response with preamble text before JSON
+        var aiResponse = """
+            Here are my suggestions based on the transaction data:
+            {
+              "suggestions": [
+                {
+                  "pattern": "TARGET",
+                  "matchType": "Contains",
+                  "categoryName": "Groceries",
+                  "confidence": 0.90,
+                  "reasoning": "Target is a grocery store",
+                  "sampleMatches": ["TARGET STORE #789"]
+                }
+              ]
+            }
+            """;
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
+
+        // Act
+        var result = await service.SuggestNewRulesAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("TARGET", result[0].SuggestedPattern);
+    }
 
     private static (
         RuleSuggestionService Service,
@@ -1090,6 +1221,7 @@ public class RuleSuggestionServiceTests
         var categoryList = categories.Select(c =>
         {
             var category = BudgetCategory.Create(c.Name, CategoryType.Expense);
+
             // Use reflection to set ID since it's normally set by the factory
             typeof(BudgetCategory)
                 .GetProperty("Id")!
@@ -1214,184 +1346,4 @@ public class RuleSuggestionServiceTests
         typeof(CategorizationRule).GetProperty("Id")!.SetValue(rule, ruleId);
         return rule;
     }
-
-    #endregion
-
-    #region ExtractJson Tests
-
-    [Fact]
-    public void ExtractJson_Returns_Pure_Json_Unchanged()
-    {
-        // Arrange
-        var json = """{"suggestions": []}""";
-
-        // Act
-        var result = RuleSuggestionService.ExtractJson(json);
-
-        // Assert
-        Assert.Equal(json, result);
-    }
-
-    [Fact]
-    public void ExtractJson_Strips_Markdown_Code_Block_Wrapping()
-    {
-        // Arrange
-        var content = """
-            ```json
-            {"suggestions": [{"pattern": "WALMART"}]}
-            ```
-            """;
-
-        // Act
-        var result = RuleSuggestionService.ExtractJson(content);
-
-        // Assert
-        Assert.StartsWith("{", result);
-        Assert.EndsWith("}", result);
-        Assert.Contains("WALMART", result);
-    }
-
-    [Fact]
-    public void ExtractJson_Strips_Preamble_Text()
-    {
-        // Arrange
-        var content = """
-            Here is the JSON response:
-            {"suggestions": [{"pattern": "TARGET"}]}
-            """;
-
-        // Act
-        var result = RuleSuggestionService.ExtractJson(content);
-
-        // Assert
-        Assert.StartsWith("{", result);
-        Assert.Contains("TARGET", result);
-    }
-
-    [Fact]
-    public void ExtractJson_Strips_Trailing_Text()
-    {
-        // Arrange
-        var content = """
-            {"suggestions": []}
-            Hope this helps!
-            """;
-
-        // Act
-        var result = RuleSuggestionService.ExtractJson(content);
-
-        // Assert
-        Assert.Equal("""{"suggestions": []}""", result);
-    }
-
-    [Fact]
-    public void ExtractJson_Throws_JsonException_When_No_Json_Found()
-    {
-        // Arrange
-        var content = "Sorry, I cannot help with that.";
-
-        // Act & Assert
-        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(content));
-    }
-
-    [Fact]
-    public void ExtractJson_Throws_JsonException_For_Empty_Content()
-    {
-        // Act & Assert
-        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(string.Empty));
-    }
-
-    #endregion
-
-    #region Markdown-Wrapped AI Response Integration Tests
-
-    [Fact]
-    public async Task SuggestNewRulesAsync_Parses_Markdown_Wrapped_Json_Response()
-    {
-        // Arrange
-        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
-        SetupUncategorizedTransactions(transactionRepo, "WALMART STORE #123", "WALMART SUPERCENTER");
-        SetupCategories(categoryRepo, ("Groceries", GroceryCategoryId));
-        SetupExistingRules(ruleRepo);
-        SetupAiAvailable(aiService);
-
-        suggestionRepo
-            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        // AI response wrapped in markdown code block — the exact scenario that caused the bug
-        var aiResponse = """
-            ```json
-            {
-              "suggestions": [
-                {
-                  "pattern": "WALMART",
-                  "matchType": "Contains",
-                  "categoryName": "Groceries",
-                  "confidence": 0.95,
-                  "reasoning": "Both contain WALMART",
-                  "sampleMatches": ["WALMART STORE #123", "WALMART SUPERCENTER"]
-                }
-              ]
-            }
-            ```
-            """;
-
-        aiService
-            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
-
-        // Act
-        var result = await service.SuggestNewRulesAsync();
-
-        // Assert
-        Assert.Single(result);
-        Assert.Equal("WALMART", result[0].SuggestedPattern);
-        Assert.Equal(GroceryCategoryId, result[0].SuggestedCategoryId);
-    }
-
-    [Fact]
-    public async Task SuggestNewRulesAsync_Parses_Response_With_Preamble_Text()
-    {
-        // Arrange
-        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
-        SetupUncategorizedTransactions(transactionRepo, "TARGET STORE #789");
-        SetupCategories(categoryRepo, ("Groceries", GroceryCategoryId));
-        SetupExistingRules(ruleRepo);
-        SetupAiAvailable(aiService);
-
-        suggestionRepo
-            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        // AI response with preamble text before JSON
-        var aiResponse = """
-            Here are my suggestions based on the transaction data:
-            {
-              "suggestions": [
-                {
-                  "pattern": "TARGET",
-                  "matchType": "Contains",
-                  "categoryName": "Groceries",
-                  "confidence": 0.90,
-                  "reasoning": "Target is a grocery store",
-                  "sampleMatches": ["TARGET STORE #789"]
-                }
-              ]
-            }
-            """;
-
-        aiService
-            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiResponse(true, aiResponse, null, 200, TimeSpan.FromSeconds(2)));
-
-        // Act
-        var result = await service.SuggestNewRulesAsync();
-
-        // Assert
-        Assert.Single(result);
-        Assert.Equal("TARGET", result[0].SuggestedPattern);
-    }
-
-    #endregion
 }

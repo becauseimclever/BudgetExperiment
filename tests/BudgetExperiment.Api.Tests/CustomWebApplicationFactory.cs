@@ -24,14 +24,14 @@ namespace BudgetExperiment.Api.Tests;
 public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     /// <summary>
-    /// The test user ID used for authenticated requests.
-    /// </summary>
-    public static readonly Guid TestUserId = new("22222222-2222-2222-2222-222222222222");
-
-    /// <summary>
     /// The test username used for authenticated requests.
     /// </summary>
     public const string TestUsername = "integrationuser";
+
+    /// <summary>
+    /// The test user ID used for authenticated requests.
+    /// </summary>
+    public static readonly Guid TestUserId = new("22222222-2222-2222-2222-222222222222");
 
     private readonly string _dbName = "TestDb_" + Guid.NewGuid().ToString();
 
@@ -100,45 +100,5 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             })
             .AddScheme<AuthenticationSchemeOptions, AutoAuthenticatingTestHandler>("TestAuto", options => { });
         });
-    }
-}
-
-/// <summary>
-/// Test authentication handler that auto-authenticates all requests.
-/// Used for backward-compatible integration tests that don't need to test auth specifically.
-/// </summary>
-public sealed class AutoAuthenticatingTestHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-{
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AutoAuthenticatingTestHandler"/> class.
-    /// </summary>
-    /// <param name="options">The authentication scheme options.</param>
-    /// <param name="logger">The logger factory.</param>
-    /// <param name="encoder">The URL encoder.</param>
-    public AutoAuthenticatingTestHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder)
-        : base(options, logger, encoder)
-    {
-    }
-
-    /// <inheritdoc />
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-    {
-        // Auto-authenticate all requests with a test user
-        var claims = new[]
-        {
-            new Claim("sub", CustomWebApplicationFactory.TestUserId.ToString()),
-            new Claim("preferred_username", CustomWebApplicationFactory.TestUsername),
-            new Claim(ClaimTypes.NameIdentifier, CustomWebApplicationFactory.TestUserId.ToString()),
-            new Claim(ClaimTypes.Name, CustomWebApplicationFactory.TestUsername),
-        };
-
-        var identity = new ClaimsIdentity(claims, "TestAuto");
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, "TestAuto");
-
-        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }

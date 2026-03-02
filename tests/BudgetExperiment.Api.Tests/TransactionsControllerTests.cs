@@ -28,6 +28,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// GET /api/v1/transactions with valid date range returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetByDateRange_Returns_200_WithValidDateRange()
     {
@@ -45,6 +46,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// GET /api/v1/transactions returns 400 when startDate is after endDate.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetByDateRange_Returns_400_WhenStartDateAfterEndDate()
     {
@@ -58,6 +60,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// GET /api/v1/transactions/{id} returns 404 for non-existent transaction.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -71,6 +74,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// DELETE /api/v1/transactions/{id} returns 404 for non-existent transaction.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_404_WhenNotFound()
     {
@@ -84,6 +88,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// DELETE /api/v1/transactions/{id} returns 204 when transaction exists.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_204_WhenTransactionExists()
     {
@@ -116,11 +121,10 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
-    #region Uncategorized Transactions Tests
-
     /// <summary>
     /// GET /api/v1/transactions/uncategorized returns 200 OK with paged response.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUncategorized_Returns_200_WithPagedResponse()
     {
@@ -139,6 +143,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// GET /api/v1/transactions/uncategorized returns pagination header.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUncategorized_Returns_PaginationHeader()
     {
@@ -156,6 +161,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// GET /api/v1/transactions/uncategorized accepts filter parameters.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetUncategorized_AcceptsFilterParameters()
     {
@@ -176,6 +182,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// POST /api/v1/transactions/bulk-categorize returns 400 when CategoryId is empty.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkCategorize_Returns_400_WhenCategoryIdEmpty()
     {
@@ -196,6 +203,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// POST /api/v1/transactions/bulk-categorize returns 400 when TransactionIds is empty.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkCategorize_Returns_400_WhenTransactionIdsEmpty()
     {
@@ -216,6 +224,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// POST /api/v1/transactions/bulk-categorize returns 200 with response when category not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BulkCategorize_Returns_200_WithErrorWhenCategoryNotFound()
     {
@@ -239,13 +248,10 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         Assert.NotEmpty(result.Errors);
     }
 
-    #endregion
-
-    #region Location Tests
-
     /// <summary>
     /// PATCH /api/v1/transactions/{id}/location returns 200 with populated location.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task PatchLocation_ValidCity_Returns200WithLocation()
     {
@@ -295,6 +301,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// PATCH /api/v1/transactions/{id}/location returns 404 for non-existent transaction.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task PatchLocation_InvalidTransactionId_Returns404()
     {
@@ -313,6 +320,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// DELETE /api/v1/transactions/{id}/location returns 204 when transaction has location.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DeleteLocation_ExistingTransaction_Returns204()
     {
@@ -352,6 +360,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// DELETE /api/v1/transactions/{id}/location returns 404 for non-existent transaction.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DeleteLocation_NonExistentTransaction_Returns404()
     {
@@ -365,6 +374,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// GET /api/v1/transactions/{id} includes location data when set.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetTransaction_WithLocation_IncludesLocationDto()
     {
@@ -411,6 +421,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <summary>
     /// GET /api/v1/transactions/{id} returns null location when not set.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetTransaction_WithoutLocation_LocationIsNull()
     {
@@ -440,6 +451,4 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         Assert.NotNull(transaction);
         Assert.Null(transaction.Location);
     }
-
-    #endregion
 }

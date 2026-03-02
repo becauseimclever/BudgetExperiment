@@ -378,4 +378,3 @@ public class ReconciliationMatchRepositoryTests
         return (account.Id, transaction.Id, recurring.Id);
     }
 }
-

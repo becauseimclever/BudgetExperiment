@@ -12,8 +12,6 @@ public class RuleSuggestionTests
     private static readonly Guid ValidCategoryId = Guid.NewGuid();
     private static readonly Guid ValidRuleId = Guid.NewGuid();
 
-    #region CreateNewRuleSuggestion Tests
-
     [Fact]
     public void CreateNewRuleSuggestion_With_Valid_Data_Creates_Suggestion()
     {
@@ -221,10 +219,6 @@ public class RuleSuggestionTests
         Assert.Equal("Trimmed Title", suggestion.Title);
     }
 
-    #endregion
-
-    #region CreateOptimizationSuggestion Tests
-
     [Fact]
     public void CreateOptimizationSuggestion_With_Valid_Data_Creates_Suggestion()
     {
@@ -292,10 +286,6 @@ public class RuleSuggestionTests
         Assert.Contains("pattern", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region CreateConflictSuggestion Tests
-
     [Fact]
     public void CreateConflictSuggestion_With_Valid_Data_Creates_Suggestion()
     {
@@ -351,10 +341,6 @@ public class RuleSuggestionTests
         Assert.Contains("two", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region CreateUnusedRuleSuggestion Tests
-
     [Fact]
     public void CreateUnusedRuleSuggestion_With_Valid_Data_Creates_Suggestion()
     {
@@ -390,10 +376,6 @@ public class RuleSuggestionTests
                 Guid.Empty));
         Assert.Contains("target", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    #endregion
-
-    #region CreateConsolidationSuggestion Tests
 
     [Fact]
     public void CreateConsolidationSuggestion_With_Valid_Data_Creates_Suggestion()
@@ -437,10 +419,6 @@ public class RuleSuggestionTests
                 "PATTERN"));
         Assert.Contains("two", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    #endregion
-
-    #region Accept Tests
 
     [Fact]
     public void Accept_Changes_Status_To_Accepted()
@@ -506,10 +484,6 @@ public class RuleSuggestionTests
         var ex = Assert.Throws<DomainException>(() => suggestion.Accept());
         Assert.Contains("pending", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    #endregion
-
-    #region Dismiss Tests
 
     [Fact]
     public void Dismiss_Changes_Status_To_Dismissed()
@@ -601,10 +575,6 @@ public class RuleSuggestionTests
         Assert.Contains("pending", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    #endregion
-
-    #region ProvideFeedback Tests
-
     [Fact]
     public void ProvideFeedback_Positive_Sets_Flag()
     {
@@ -694,6 +664,4 @@ public class RuleSuggestionTests
         // Assert
         Assert.False(suggestion.UserFeedbackPositive);
     }
-
-    #endregion
 }

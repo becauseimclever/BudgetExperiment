@@ -230,7 +230,7 @@ public class PerformanceTests
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Act - Measure time to navigate between routes
-        var navTimes = new List<(string route, double timeMs)>();
+        var navTimes = new List<(string Route, double TimeMs)>();
 
         var routes = new[] { "recurring", "categories", "budget", "reports", string.Empty };
 
@@ -265,7 +265,7 @@ public class PerformanceTests
         }
 
         // Assert - SPA navigation should be fast (under 1 second)
-        var maxNavTime = navTimes.Max(n => n.timeMs);
+        var maxNavTime = navTimes.Max(n => n.TimeMs);
         Assert.True(
             maxNavTime < 2000,
             $"SPA navigation took {maxNavTime:F0}ms which exceeds 2000ms threshold");

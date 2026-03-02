@@ -17,6 +17,7 @@ public class AiAvailabilityServiceTests
     /// <summary>
     /// Tests that State returns Disabled when AI feature flag is off.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RefreshAsync_WhenAiDisabled_StateIsDisabled()
     {
@@ -46,6 +47,7 @@ public class AiAvailabilityServiceTests
     /// <summary>
     /// Tests that State returns Unavailable when AI is enabled but Ollama is not connected.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RefreshAsync_WhenAiEnabledButNotConnected_StateIsUnavailable()
     {
@@ -77,6 +79,7 @@ public class AiAvailabilityServiceTests
     /// <summary>
     /// Tests that State returns Available when AI is enabled and connected.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RefreshAsync_WhenAiEnabledAndConnected_StateIsAvailable()
     {
@@ -108,6 +111,7 @@ public class AiAvailabilityServiceTests
     /// <summary>
     /// Tests that State defaults to Disabled when API returns null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RefreshAsync_WhenApiReturnsNull_StateIsDisabled()
     {
@@ -131,6 +135,7 @@ public class AiAvailabilityServiceTests
     /// <summary>
     /// Tests that State returns Unavailable when API throws exception (graceful handling).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RefreshAsync_WhenApiThrows_StateIsUnavailable()
     {
@@ -156,6 +161,7 @@ public class AiAvailabilityServiceTests
     /// <summary>
     /// Tests that StatusChanged event is raised when status changes.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task RefreshAsync_WhenStatusChanges_RaisesStatusChangedEvent()
     {
@@ -184,6 +190,7 @@ public class AiAvailabilityServiceTests
     /// <summary>
     /// Tests that cached status is returned without API call within cache duration.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task State_ReturnsCachedValue_WithinCacheDuration()
     {

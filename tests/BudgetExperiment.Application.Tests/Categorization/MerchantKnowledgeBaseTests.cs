@@ -11,8 +11,6 @@ namespace BudgetExperiment.Application.Tests.Categorization;
 /// </summary>
 public class MerchantKnowledgeBaseTests
 {
-    #region TryGetMapping Tests
-
     [Theory]
     [InlineData("NETFLIX.COM", "Entertainment", "movie")]
     [InlineData("netflix", "Entertainment", "movie")]
@@ -66,10 +64,6 @@ public class MerchantKnowledgeBaseTests
         Assert.Equal(mappingLower, mappingMixed);
     }
 
-    #endregion
-
-    #region GetAllMappings Tests
-
     [Fact]
     public void GetAllMappings_Returns_All_Mappings()
     {
@@ -101,10 +95,6 @@ public class MerchantKnowledgeBaseTests
         Assert.Contains("Travel", categories);
     }
 
-    #endregion
-
-    #region GetCategoryType Tests
-
     [Theory]
     [InlineData("Entertainment", CategoryType.Expense)]
     [InlineData("Dining", CategoryType.Expense)]
@@ -131,6 +121,4 @@ public class MerchantKnowledgeBaseTests
         // Assert
         Assert.Equal(CategoryType.Expense, result);
     }
-
-    #endregion
 }

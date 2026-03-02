@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 using Moq;
@@ -39,11 +38,6 @@ public class BalanceCalculationServiceTests
                 It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Transaction>());
-    }
-
-    private BalanceCalculationService CreateService()
-    {
-        return new BalanceCalculationService(_accountRepo.Object, _transactionRepo.Object, _currencyProvider.Object);
     }
 
     [Fact]
@@ -373,7 +367,6 @@ public class BalanceCalculationServiceTests
     }
 
     // ========== GetBalanceAsOfDateAsync Tests ==========
-
     [Fact]
     public async Task GetBalanceAsOfDateAsync_NoAccounts_ReturnsZero()
     {
@@ -531,7 +524,6 @@ public class BalanceCalculationServiceTests
     // This method is for calendar use: includes initial balances for accounts
     // starting BEFORE the date, plus transactions BEFORE the date.
     // Accounts starting ON the date are handled separately via GetInitialBalancesByDateRangeAsync.
-
     [Fact]
     public async Task GetOpeningBalanceForDateAsync_NoAccounts_ReturnsZero()
     {
@@ -714,7 +706,6 @@ public class BalanceCalculationServiceTests
     }
 
     // ========== GetInitialBalancesByDateRangeAsync Tests ==========
-
     [Fact]
     public async Task GetInitialBalancesByDateRangeAsync_NoAccountsInRange_ReturnsEmptyDictionary()
     {
@@ -830,5 +821,10 @@ public class BalanceCalculationServiceTests
         Assert.Equal(2, result.Count);
         Assert.Equal(1000m, result[new DateOnly(2026, 1, 10)]);
         Assert.Equal(2000m, result[new DateOnly(2026, 1, 20)]);
+    }
+
+    private BalanceCalculationService CreateService()
+    {
+        return new BalanceCalculationService(_accountRepo.Object, _transactionRepo.Object, _currencyProvider.Object);
     }
 }

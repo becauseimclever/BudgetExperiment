@@ -30,16 +30,16 @@ public sealed class TransactionListItem
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
-    /// <summary>Gets or sets whether this is a recurring transaction instance (not yet realized).</summary>
+    /// <summary>Gets or sets a value indicating whether this is a recurring transaction instance (not yet realized).</summary>
     public bool IsRecurring { get; set; }
 
-    /// <summary>Gets or sets whether this recurring instance has been modified from the series default.</summary>
+    /// <summary>Gets or sets a value indicating whether this recurring instance has been modified from the series default.</summary>
     public bool IsModified { get; set; }
 
     /// <summary>Gets or sets the creation timestamp for actual transactions.</summary>
     public DateTime? CreatedAt { get; set; }
 
-    /// <summary>Gets or sets whether this transaction is part of a transfer.</summary>
+    /// <summary>Gets or sets a value indicating whether this transaction is part of a transfer.</summary>
     public bool IsTransfer { get; set; }
 
     /// <summary>Gets or sets the transfer identifier (null if not a transfer).</summary>
@@ -48,7 +48,7 @@ public sealed class TransactionListItem
     /// <summary>Gets or sets the transfer direction (null if not a transfer).</summary>
     public string? TransferDirection { get; set; }
 
-    /// <summary>Gets or sets whether this is a recurring transfer instance.</summary>
+    /// <summary>Gets or sets a value indicating whether this is a recurring transfer instance.</summary>
     public bool IsRecurringTransfer { get; set; }
 
     /// <summary>Gets or sets the recurring transfer ID (if from recurring transfer).</summary>

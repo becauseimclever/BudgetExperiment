@@ -16,15 +16,10 @@ public class ReportServiceLocationTests
 {
     private static readonly Mock<ICurrencyProvider> DefaultCurrencyProvider = CreateCurrencyProviderMock("USD");
 
-    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency)
-    {
-        var mock = new Mock<ICurrencyProvider>();
-        mock.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
-        return mock;
-    }
     /// <summary>
     /// Returns an empty report when no transactions exist in the date range.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_NoTransactions_ReturnsEmptyReport()
     {
@@ -53,6 +48,7 @@ public class ReportServiceLocationTests
     /// <summary>
     /// Groups transactions by state/region and returns region-level aggregation.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_GroupsByState_ReturnsRegions()
     {
@@ -94,6 +90,7 @@ public class ReportServiceLocationTests
     /// <summary>
     /// Calculates percentage of total spending for each region.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_CalculatesPercentages()
     {
@@ -124,6 +121,7 @@ public class ReportServiceLocationTests
     /// <summary>
     /// Excludes transfers from the location spending report.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_ExcludesTransfers()
     {
@@ -152,6 +150,7 @@ public class ReportServiceLocationTests
     /// <summary>
     /// Respects the date range by passing it to the repository.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_RespectsDateRange()
     {
@@ -177,6 +176,7 @@ public class ReportServiceLocationTests
     /// <summary>
     /// Includes city-level drill-down within each region.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_IncludesCityDrillDown()
     {
@@ -216,6 +216,7 @@ public class ReportServiceLocationTests
     /// <summary>
     /// Skips transactions without location data (they still count in totals but not regions).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingByLocation_SkipsTransactionsWithoutLocation()
     {
@@ -285,5 +286,12 @@ public class ReportServiceLocationTests
             TransferDirection.Source);
         transfer.SetLocation(TransactionLocationValue.Create(city, state, country, null, null, LocationSource.Manual));
         return transfer;
+    }
+
+    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency)
+    {
+        var mock = new Mock<ICurrencyProvider>();
+        mock.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
+        return mock;
     }
 }

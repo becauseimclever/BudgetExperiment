@@ -25,6 +25,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/exports/categories/monthly returns CSV for empty data.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ExportMonthlyCategoryReport_Returns_Csv()
     {
@@ -42,6 +43,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/exports/categories/range returns CSV for date range.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ExportCategoryReportByRange_Returns_Csv()
     {
@@ -59,6 +61,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/exports/trends returns CSV for monthly trends.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ExportSpendingTrends_Returns_Csv()
     {
@@ -76,6 +79,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/exports/budget-comparison returns CSV for budget comparison.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ExportBudgetComparison_Returns_Csv()
     {

@@ -97,19 +97,6 @@ public sealed class ExportDownloadService : IExportDownloadService, IAsyncDispos
         }
     }
 
-    private async Task EnsureModuleAsync(CancellationToken cancellationToken)
-    {
-        if (this.module != null)
-        {
-            return;
-        }
-
-        this.module = await this.jsRuntime.InvokeAsync<IJSObjectReference>(
-            "import",
-            cancellationToken,
-            "./js/file-download.js");
-    }
-
     private static string? GetFileName(HttpResponseMessage response)
     {
         var contentDisposition = response.Content.Headers.ContentDisposition;
@@ -129,5 +116,18 @@ public sealed class ExportDownloadService : IExportDownloadService, IAsyncDispos
         }
 
         return null;
+    }
+
+    private async Task EnsureModuleAsync(CancellationToken cancellationToken)
+    {
+        if (this.module != null)
+        {
+            return;
+        }
+
+        this.module = await this.jsRuntime.InvokeAsync<IJSObjectReference>(
+            "import",
+            cancellationToken,
+            "./js/file-download.js");
     }
 }

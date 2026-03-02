@@ -28,6 +28,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// GET /api/v1/categorizationrules returns 200 OK with rule list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_Returns_200_WithRuleList()
     {
@@ -43,6 +44,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/categorizationrules creates a rule and returns 201 Created.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Create_Returns_201_WithCreatedRule()
     {
@@ -79,6 +81,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// GET /api/v1/categorizationrules/{id} returns 200 when found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_200_WhenFound()
     {
@@ -111,6 +114,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// GET /api/v1/categorizationrules/{id} returns 404 when not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
@@ -124,6 +128,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// PUT /api/v1/categorizationrules/{id} updates a rule and returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Update_Returns_200_WithUpdatedRule()
     {
@@ -167,6 +172,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// DELETE /api/v1/categorizationrules/{id} deletes a rule and returns 204.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_Returns_204_WhenDeleted()
     {
@@ -199,6 +205,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/categorizationrules/{id}/activate activates a rule.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Activate_Returns_204_WhenSuccessful()
     {
@@ -235,6 +242,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/categorizationrules/{id}/deactivate deactivates a rule.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Deactivate_Returns_204_WhenSuccessful()
     {
@@ -268,6 +276,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/categorizationrules/test tests a pattern.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task TestPattern_Returns_200_WithMatchingDescriptions()
     {
@@ -293,6 +302,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// POST /api/v1/categorizationrules/apply applies rules to uncategorized transactions.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ApplyRules_Returns_200_WithResult()
     {
@@ -315,6 +325,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// PUT /api/v1/categorizationrules/reorder reorders rule priorities.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Reorder_Returns_204_WhenSuccessful()
     {
@@ -366,6 +377,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <summary>
     /// GET /api/v1/categorizationrules?activeOnly=true returns only active rules.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetAll_WithActiveOnly_Returns_200_WithActiveRules()
     {

@@ -16,13 +16,6 @@ public class ReportServiceTests
 {
     private static readonly Mock<ICurrencyProvider> DefaultCurrencyProvider = CreateCurrencyProviderMock("USD");
 
-    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency)
-    {
-        var mock = new Mock<ICurrencyProvider>();
-        mock.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
-        return mock;
-    }
-
     [Fact]
     public async Task GetMonthlyCategoryReportAsync_Uses_Currency_From_Provider()
     {
@@ -345,15 +338,16 @@ public class ReportServiceTests
         Assert.Equal(2, result.Month);
 
         // Verify the correct date range was used
-        transactionRepo.Verify(r => r.GetByDateRangeAsync(
+        transactionRepo.Verify(
+            r => r.GetByDateRangeAsync(
             new DateOnly(2026, 2, 1),
             new DateOnly(2026, 2, 28),
             null,
-            default), Times.Once);
+            default),
+            Times.Once);
     }
 
     // ===== GetCategoryReportByRangeAsync Tests =====
-
     [Fact]
     public async Task GetCategoryReportByRangeAsync_Returns_Empty_Report_When_No_Transactions()
     {
@@ -468,7 +462,6 @@ public class ReportServiceTests
     }
 
     // ===== GetSpendingTrendsAsync Tests =====
-
     [Fact]
     public async Task GetSpendingTrendsAsync_Returns_Empty_Data_When_No_Transactions()
     {
@@ -715,7 +708,6 @@ public class ReportServiceTests
     }
 
     // ===== GetDaySummaryAsync Tests =====
-
     [Fact]
     public async Task GetDaySummaryAsync_Returns_Empty_Summary_When_No_Transactions()
     {
@@ -905,5 +897,12 @@ public class ReportServiceTests
             "Transfer",
             transferId,
             TransferDirection.Source);
+    }
+
+    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency)
+    {
+        var mock = new Mock<ICurrencyProvider>();
+        mock.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
+        return mock;
     }
 }

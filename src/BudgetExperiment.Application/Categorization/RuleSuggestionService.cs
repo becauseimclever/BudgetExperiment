@@ -50,6 +50,28 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Extracts the first complete JSON object from raw AI response text.
+    /// AI models frequently wrap JSON in markdown code blocks or add preamble
+    /// text despite being instructed not to. This method strips that wrapping
+    /// so <see cref="JsonSerializer"/> can parse the content.
+    /// </summary>
+    /// <param name="content">The raw AI response text.</param>
+    /// <returns>The extracted JSON string.</returns>
+    /// <exception cref="JsonException">Thrown when no JSON object is found in the content.</exception>
+    public static string ExtractJson(string content)
+    {
+        var jsonStart = content.IndexOf('{');
+        var jsonEnd = content.LastIndexOf('}');
+
+        if (jsonStart < 0 || jsonEnd < 0 || jsonEnd <= jsonStart)
+        {
+            throw new JsonException("No JSON object found in AI response.");
+        }
+
+        return content.Substring(jsonStart, jsonEnd - jsonStart + 1);
+    }
+
     /// <inheritdoc/>
     public async Task<IReadOnlyList<RuleSuggestion>> SuggestNewRulesAsync(
         int maxSuggestions = 10,
@@ -296,69 +318,6 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         return rule;
     }
 
-    private async Task<CategorizationRule> AcceptNewRuleSuggestion(RuleSuggestion suggestion, CancellationToken ct)
-    {
-        if (suggestion.SuggestedPattern is null ||
-            suggestion.SuggestedMatchType is null ||
-            suggestion.SuggestedCategoryId is null)
-        {
-            throw new DomainException("Suggestion is missing required fields for rule creation");
-        }
-
-        // Get next priority
-        var priority = await _ruleRepository.GetNextPriorityAsync(ct);
-
-        // Create the rule
-        var rule = CategorizationRule.Create(
-            name: suggestion.Title,
-            matchType: suggestion.SuggestedMatchType.Value,
-            pattern: suggestion.SuggestedPattern,
-            categoryId: suggestion.SuggestedCategoryId.Value,
-            priority: priority);
-
-        await _ruleRepository.AddAsync(rule, ct);
-
-        return rule;
-    }
-
-    private async Task<CategorizationRule> AcceptPatternOptimizationSuggestion(RuleSuggestion suggestion, CancellationToken ct)
-    {
-        if (suggestion.TargetRuleId is null ||
-            suggestion.OptimizedPattern is null)
-        {
-            throw new DomainException("Suggestion is missing required fields for pattern optimization");
-        }
-
-        var rule = await _ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, ct)
-            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found");
-
-        // Update the rule with the optimized pattern
-        rule.Update(
-            name: rule.Name,
-            matchType: rule.MatchType,
-            pattern: suggestion.OptimizedPattern,
-            categoryId: rule.CategoryId,
-            caseSensitive: rule.CaseSensitive);
-
-        return rule;
-    }
-
-    private async Task<CategorizationRule> AcceptUnusedRuleSuggestion(RuleSuggestion suggestion, CancellationToken ct)
-    {
-        if (suggestion.TargetRuleId is null)
-        {
-            throw new DomainException("Suggestion is missing required target rule ID");
-        }
-
-        var rule = await _ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, ct)
-            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found");
-
-        // Deactivate the unused rule
-        rule.Deactivate();
-
-        return rule;
-    }
-
     /// <inheritdoc/>
     public async Task DismissSuggestionAsync(
         Guid suggestionId,
@@ -459,100 +418,6 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         }
     }
 
-    /// <summary>
-    /// DTO for parsing AI responses for new rule suggestions.
-    /// </summary>
-    private sealed record NewRuleSuggestionResponse
-    {
-        public IReadOnlyList<NewRuleSuggestionItem>? Suggestions { get; init; }
-    }
-
-    /// <summary>
-    /// DTO for a single suggestion item in the AI response.
-    /// </summary>
-    private sealed record NewRuleSuggestionItem
-    {
-        public string? Pattern { get; init; }
-
-        public string? MatchType { get; init; }
-
-        public string? CategoryName { get; init; }
-
-        public decimal Confidence { get; init; }
-
-        public string? Reasoning { get; init; }
-
-        public IReadOnlyList<string>? SampleMatches { get; init; }
-    }
-
-    /// <summary>
-    /// DTO for parsing AI responses for optimization suggestions.
-    /// </summary>
-    private sealed record OptimizationSuggestionResponse
-    {
-        public IReadOnlyList<OptimizationSuggestionItem>? Suggestions { get; init; }
-    }
-
-    /// <summary>
-    /// DTO for a single optimization suggestion item.
-    /// </summary>
-    private sealed record OptimizationSuggestionItem
-    {
-        public string? Type { get; init; }
-
-        public string? TargetRuleId { get; init; }
-
-        public IReadOnlyList<string>? TargetRuleIds { get; init; }
-
-        public string? SuggestedPattern { get; init; }
-
-        public string? Reasoning { get; init; }
-    }
-
-    /// <summary>
-    /// DTO for parsing AI responses for conflict detection.
-    /// </summary>
-    private sealed record ConflictDetectionResponse
-    {
-        public IReadOnlyList<ConflictItem>? Conflicts { get; init; }
-    }
-
-    /// <summary>
-    /// DTO for a single conflict item.
-    /// </summary>
-    private sealed record ConflictItem
-    {
-        public IReadOnlyList<string>? RuleIds { get; init; }
-
-        public string? ConflictType { get; init; }
-
-        public string? Description { get; init; }
-
-        public string? Resolution { get; init; }
-    }
-
-    /// <summary>
-    /// Extracts the first complete JSON object from raw AI response text.
-    /// AI models frequently wrap JSON in markdown code blocks or add preamble
-    /// text despite being instructed not to. This method strips that wrapping
-    /// so <see cref="JsonSerializer"/> can parse the content.
-    /// </summary>
-    /// <param name="content">The raw AI response text.</param>
-    /// <returns>The extracted JSON string.</returns>
-    /// <exception cref="JsonException">Thrown when no JSON object is found in the content.</exception>
-    public static string ExtractJson(string content)
-    {
-        var jsonStart = content.IndexOf('{');
-        var jsonEnd = content.LastIndexOf('}');
-
-        if (jsonStart < 0 || jsonEnd < 0 || jsonEnd <= jsonStart)
-        {
-            throw new JsonException("No JSON object found in AI response.");
-        }
-
-        return content.Substring(jsonStart, jsonEnd - jsonStart + 1);
-    }
-
     private static IReadOnlyList<(string RuleName, int MatchCount)> CalculateMatchStats(
         IReadOnlyList<CategorizationRule> rules,
         IReadOnlyList<string> descriptions)
@@ -612,6 +477,69 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
             UserPrompt: userPrompt,
             Temperature: 0.3m,
             MaxTokens: 2000);
+    }
+
+    private async Task<CategorizationRule> AcceptNewRuleSuggestion(RuleSuggestion suggestion, CancellationToken ct)
+    {
+        if (suggestion.SuggestedPattern is null ||
+            suggestion.SuggestedMatchType is null ||
+            suggestion.SuggestedCategoryId is null)
+        {
+            throw new DomainException("Suggestion is missing required fields for rule creation");
+        }
+
+        // Get next priority
+        var priority = await _ruleRepository.GetNextPriorityAsync(ct);
+
+        // Create the rule
+        var rule = CategorizationRule.Create(
+            name: suggestion.Title,
+            matchType: suggestion.SuggestedMatchType.Value,
+            pattern: suggestion.SuggestedPattern,
+            categoryId: suggestion.SuggestedCategoryId.Value,
+            priority: priority);
+
+        await _ruleRepository.AddAsync(rule, ct);
+
+        return rule;
+    }
+
+    private async Task<CategorizationRule> AcceptPatternOptimizationSuggestion(RuleSuggestion suggestion, CancellationToken ct)
+    {
+        if (suggestion.TargetRuleId is null ||
+            suggestion.OptimizedPattern is null)
+        {
+            throw new DomainException("Suggestion is missing required fields for pattern optimization");
+        }
+
+        var rule = await _ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, ct)
+            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found");
+
+        // Update the rule with the optimized pattern
+        rule.Update(
+            name: rule.Name,
+            matchType: rule.MatchType,
+            pattern: suggestion.OptimizedPattern,
+            categoryId: rule.CategoryId,
+            caseSensitive: rule.CaseSensitive);
+
+        return rule;
+    }
+
+    private async Task<CategorizationRule> AcceptUnusedRuleSuggestion(RuleSuggestion suggestion, CancellationToken ct)
+    {
+        if (suggestion.TargetRuleId is null)
+        {
+            throw new DomainException("Suggestion is missing required target rule ID");
+        }
+
+        var rule = await _ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, ct)
+            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found");
+
+        // Deactivate the unused rule
+        rule.Deactivate();
+
+        return rule;
     }
 
     private async Task<IReadOnlyList<RuleSuggestion>> ParseOptimizationSuggestions(
@@ -853,5 +781,77 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
             description: item.Description ?? $"Rules '{string.Join("', '", ruleNames)}' may conflict.",
             reasoning: item.Resolution ?? "Review these rules and adjust patterns or priorities.",
             conflictingRuleIds: ruleIds);
+    }
+
+    /// <summary>
+    /// DTO for parsing AI responses for new rule suggestions.
+    /// </summary>
+    private sealed record NewRuleSuggestionResponse
+    {
+        public IReadOnlyList<NewRuleSuggestionItem>? Suggestions { get; init; }
+    }
+
+    /// <summary>
+    /// DTO for a single suggestion item in the AI response.
+    /// </summary>
+    private sealed record NewRuleSuggestionItem
+    {
+        public string? Pattern { get; init; }
+
+        public string? MatchType { get; init; }
+
+        public string? CategoryName { get; init; }
+
+        public decimal Confidence { get; init; }
+
+        public string? Reasoning { get; init; }
+
+        public IReadOnlyList<string>? SampleMatches { get; init; }
+    }
+
+    /// <summary>
+    /// DTO for parsing AI responses for optimization suggestions.
+    /// </summary>
+    private sealed record OptimizationSuggestionResponse
+    {
+        public IReadOnlyList<OptimizationSuggestionItem>? Suggestions { get; init; }
+    }
+
+    /// <summary>
+    /// DTO for a single optimization suggestion item.
+    /// </summary>
+    private sealed record OptimizationSuggestionItem
+    {
+        public string? Type { get; init; }
+
+        public string? TargetRuleId { get; init; }
+
+        public IReadOnlyList<string>? TargetRuleIds { get; init; }
+
+        public string? SuggestedPattern { get; init; }
+
+        public string? Reasoning { get; init; }
+    }
+
+    /// <summary>
+    /// DTO for parsing AI responses for conflict detection.
+    /// </summary>
+    private sealed record ConflictDetectionResponse
+    {
+        public IReadOnlyList<ConflictItem>? Conflicts { get; init; }
+    }
+
+    /// <summary>
+    /// DTO for a single conflict item.
+    /// </summary>
+    private sealed record ConflictItem
+    {
+        public IReadOnlyList<string>? RuleIds { get; init; }
+
+        public string? ConflictType { get; init; }
+
+        public string? Description { get; init; }
+
+        public string? Resolution { get; init; }
     }
 }

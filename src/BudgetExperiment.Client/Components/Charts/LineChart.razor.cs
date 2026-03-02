@@ -110,8 +110,6 @@ public partial class LineChart
     [Parameter]
     public EventCallback<LineData> OnPointClick { get; set; }
 
-    private ChartPoint? HoveredPoint { get; set; }
-
     private static double MarginLeft => 46;
 
     private static double MarginRight => 12;
@@ -121,6 +119,8 @@ public partial class LineChart
     private static double MarginBottom => 30;
 
     private static double ViewBoxHeight => 200;
+
+    private ChartPoint? HoveredPoint { get; set; }
 
     private double ChartAreaBottom => ViewBoxHeight - MarginBottom;
 
@@ -329,6 +329,59 @@ public partial class LineChart
         }
     }
 
+    private static decimal CalculateNiceStep(decimal range)
+    {
+        if (range <= 0)
+        {
+            return 1m;
+        }
+
+        var rough = range / 4m;
+        var magnitude = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)rough)));
+        var residual = rough / magnitude;
+
+        return residual switch
+        {
+            < 1.5m => 1m * magnitude,
+            < 3m => 2m * magnitude,
+            < 7m => 5m * magnitude,
+            _ => 10m * magnitude,
+        };
+    }
+
+    private static string FormatAxisValue(decimal value)
+    {
+        return value switch
+        {
+            >= 1000000m => $"{value / 1000000m:N1}M",
+            >= 1000m => $"{value / 1000m:N0}k",
+            _ => value.ToString("N0", CultureInfo.CurrentCulture),
+        };
+    }
+
+    private static string FormatValue(decimal value)
+    {
+        return value.ToString("C2", CultureInfo.CurrentCulture);
+    }
+
+    private static string F(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static string BuildGradientId(string seriesId, int index)
+    {
+        var sanitized = string.Concat(seriesId
+            .Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
+            .Select(ch => char.ToLowerInvariant(ch)));
+        if (string.IsNullOrWhiteSpace(sanitized))
+        {
+            sanitized = "series";
+        }
+
+        return $"line-area-{sanitized}-{index}";
+    }
+
     private bool TryGetValue(LineData data, string seriesId, out decimal value)
     {
         if (Series is null || Series.Count == 0)
@@ -392,46 +445,6 @@ public partial class LineChart
         return MarginTop + ChartAreaHeight - (ratio * ChartAreaHeight);
     }
 
-    private static decimal CalculateNiceStep(decimal range)
-    {
-        if (range <= 0)
-        {
-            return 1m;
-        }
-
-        var rough = range / 4m;
-        var magnitude = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)rough)));
-        var residual = rough / magnitude;
-
-        return residual switch
-        {
-            < 1.5m => 1m * magnitude,
-            < 3m => 2m * magnitude,
-            < 7m => 5m * magnitude,
-            _ => 10m * magnitude,
-        };
-    }
-
-    private static string FormatAxisValue(decimal value)
-    {
-        return value switch
-        {
-            >= 1000000m => $"{value / 1000000m:N1}M",
-            >= 1000m => $"{value / 1000m:N0}k",
-            _ => value.ToString("N0", CultureInfo.CurrentCulture),
-        };
-    }
-
-    private static string FormatValue(decimal value)
-    {
-        return value.ToString("C2", CultureInfo.CurrentCulture);
-    }
-
-    private static string F(double value)
-    {
-        return value.ToString(CultureInfo.InvariantCulture);
-    }
-
     private MarkupString RenderSvgText(double x, double y, string cssClass, string textAnchor, string fontSize, string content)
     {
         var xStr = F(x);
@@ -439,20 +452,6 @@ public partial class LineChart
         return new MarkupString(
             $"<text x=\"{xStr}\" y=\"{yStr}\" class=\"{cssClass}\" text-anchor=\"{textAnchor}\" font-size=\"{fontSize}\">{content}</text>");
     }
-
-    private static string BuildGradientId(string seriesId, int index)
-    {
-        var sanitized = string.Concat(seriesId
-            .Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
-            .Select(ch => char.ToLowerInvariant(ch)));
-        if (string.IsNullOrWhiteSpace(sanitized))
-        {
-            sanitized = "series";
-        }
-
-        return $"line-area-{sanitized}-{index}";
-    }
-
 
     private string BuildPath(IReadOnlyList<ChartPoint> points)
     {
@@ -494,10 +493,10 @@ public partial class LineChart
             var p2 = points[i + 1];
             var p3 = i + 2 < points.Count ? points[i + 2] : p2;
 
-            var cp1x = p1.X + (p2.X - p0.X) / 6;
-            var cp1y = p1.Y + (p2.Y - p0.Y) / 6;
-            var cp2x = p2.X - (p3.X - p1.X) / 6;
-            var cp2y = p2.Y - (p3.Y - p1.Y) / 6;
+            var cp1x = p1.X + ((p2.X - p0.X) / 6);
+            var cp1y = p1.Y + ((p2.Y - p0.Y) / 6);
+            var cp2x = p2.X - ((p3.X - p1.X) / 6);
+            var cp2y = p2.Y - ((p3.Y - p1.Y) / 6);
 
             sb.Append($" C {F(cp1x)} {F(cp1y)}, {F(cp2x)} {F(cp2y)}, {F(p2.X)} {F(p2.Y)}");
         }

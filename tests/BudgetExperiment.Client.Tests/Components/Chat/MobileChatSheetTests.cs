@@ -2,13 +2,11 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Chat;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Chat;
@@ -187,6 +185,7 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies the close callback fires when OnClose is triggered.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Sheet_OnClose_FiresCallback()
     {
@@ -202,7 +201,11 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
 
         var cut = Render<MobileChatSheet>(p => p
             .Add(x => x.IsVisible, true)
-            .Add(x => x.OnClose, () => { closed = true; return Task.CompletedTask; }));
+            .Add(x => x.OnClose, () =>
+            {
+                closed = true;
+                return Task.CompletedTask;
+            }));
 
         // Act - find and click the close button on the BottomSheet
         var closeBtn = cut.Find(".bottom-sheet__close");
@@ -350,9 +353,9 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     {
         private readonly ChatPageContext context = new();
 
-        public ChatPageContext CurrentContext => this.context;
-
         public event EventHandler? ContextChanged;
+
+        public ChatPageContext CurrentContext => this.context;
 
         public void SetAccountContext(Guid? accountId, string? accountName)
         {

@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 using Moq;
@@ -31,13 +30,6 @@ public class PaycheckAllocationServiceTests
             .Setup(r => r.GetByAccountIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction>());
     }
-
-    private PaycheckAllocationService CreateService()
-    {
-        return new PaycheckAllocationService(this._recurringRepo.Object, this._currencyProvider.Object);
-    }
-
-    #region GetAllocationSummaryAsync Tests
 
     [Fact]
     public async Task GetAllocationSummaryAsync_NoRecurringTransactions_ReturnsEmptyWithWarning()
@@ -305,10 +297,6 @@ public class PaycheckAllocationServiceTests
         Assert.Single(result.Allocations);
     }
 
-    #endregion
-
-    #region Helper Methods
-
     private static RecurringTransaction CreateRecurringTransaction(
         Guid accountId,
         string description,
@@ -334,5 +322,8 @@ public class PaycheckAllocationServiceTests
             DateOnly.FromDateTime(DateTime.UtcNow));
     }
 
-    #endregion
+    private PaycheckAllocationService CreateService()
+    {
+        return new PaycheckAllocationService(this._recurringRepo.Object, this._currencyProvider.Object);
+    }
 }

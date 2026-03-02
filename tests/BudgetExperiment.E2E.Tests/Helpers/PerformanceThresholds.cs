@@ -10,6 +10,46 @@ namespace BudgetExperiment.E2E.Tests.Helpers;
 public static class PerformanceThresholds
 {
     /// <summary>
+    /// Gets a rating string for a given FCP value.
+    /// </summary>
+    /// <param name="fcpMs">FCP in milliseconds.</param>
+    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
+    public static string GetFcpRating(double fcpMs) =>
+        fcpMs <= Fcp.GoodMs ? "Good" :
+        fcpMs <= Fcp.WarningMs ? "Needs Improvement" :
+        "Poor";
+
+    /// <summary>
+    /// Gets a rating string for a given LCP value.
+    /// </summary>
+    /// <param name="lcpMs">LCP in milliseconds.</param>
+    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
+    public static string GetLcpRating(double lcpMs) =>
+        lcpMs <= Lcp.GoodMs ? "Good" :
+        lcpMs <= Lcp.WarningMs ? "Needs Improvement" :
+        "Poor";
+
+    /// <summary>
+    /// Gets a rating string for a given TTI value.
+    /// </summary>
+    /// <param name="ttiMs">TTI in milliseconds.</param>
+    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
+    public static string GetTtiRating(double ttiMs) =>
+        ttiMs <= Tti.GoodMs ? "Good" :
+        ttiMs <= Tti.WarningMs ? "Needs Improvement" :
+        "Poor";
+
+    /// <summary>
+    /// Gets a rating string for a given CLS value.
+    /// </summary>
+    /// <param name="cls">CLS score.</param>
+    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
+    public static string GetClsRating(double cls) =>
+        cls <= Cls.Good ? "Good" :
+        cls <= Cls.Warning ? "Needs Improvement" :
+        "Poor";
+
+    /// <summary>
     /// First Contentful Paint thresholds in milliseconds.
     /// Good: &lt; 1000ms, Warning: 1000-1500ms, Fail: &gt; 1500ms.
     /// </summary>
@@ -96,44 +136,4 @@ public static class PerformanceThresholds
         /// </summary>
         public const double Fail = 0.1;
     }
-
-    /// <summary>
-    /// Gets a rating string for a given FCP value.
-    /// </summary>
-    /// <param name="fcpMs">FCP in milliseconds.</param>
-    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
-    public static string GetFcpRating(double fcpMs) =>
-        fcpMs <= Fcp.GoodMs ? "Good" :
-        fcpMs <= Fcp.WarningMs ? "Needs Improvement" :
-        "Poor";
-
-    /// <summary>
-    /// Gets a rating string for a given LCP value.
-    /// </summary>
-    /// <param name="lcpMs">LCP in milliseconds.</param>
-    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
-    public static string GetLcpRating(double lcpMs) =>
-        lcpMs <= Lcp.GoodMs ? "Good" :
-        lcpMs <= Lcp.WarningMs ? "Needs Improvement" :
-        "Poor";
-
-    /// <summary>
-    /// Gets a rating string for a given TTI value.
-    /// </summary>
-    /// <param name="ttiMs">TTI in milliseconds.</param>
-    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
-    public static string GetTtiRating(double ttiMs) =>
-        ttiMs <= Tti.GoodMs ? "Good" :
-        ttiMs <= Tti.WarningMs ? "Needs Improvement" :
-        "Poor";
-
-    /// <summary>
-    /// Gets a rating string for a given CLS value.
-    /// </summary>
-    /// <param name="cls">CLS score.</param>
-    /// <returns>Rating: "Good", "Needs Improvement", or "Poor".</returns>
-    public static string GetClsRating(double cls) =>
-        cls <= Cls.Good ? "Good" :
-        cls <= Cls.Warning ? "Needs Improvement" :
-        "Poor";
 }

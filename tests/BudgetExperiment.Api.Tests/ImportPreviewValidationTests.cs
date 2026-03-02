@@ -32,6 +32,7 @@ public sealed class ImportPreviewValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/preview with more than 10,000 rows returns 400.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Preview_WithTooManyRows_Returns_400()
     {
@@ -65,6 +66,7 @@ public sealed class ImportPreviewValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/preview with exactly 10,000 rows returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Preview_WithExactlyMaxRows_Returns_200()
     {
@@ -96,6 +98,7 @@ public sealed class ImportPreviewValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// POST /api/v1/import/preview with a normal number of rows returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Preview_WithNormalRowCount_Returns_200()
     {
@@ -127,6 +130,7 @@ public sealed class ImportPreviewValidationTests : IClassFixture<CustomWebApplic
     /// <summary>
     /// ProblemDetails responses from preview validation include traceId.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Preview_ValidationError_IncludesTraceId()
     {

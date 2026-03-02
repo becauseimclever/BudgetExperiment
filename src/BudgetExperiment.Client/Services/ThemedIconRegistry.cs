@@ -1,12 +1,12 @@
 // -----------------------------------------------------------------------
-// <copyright file="ThemedIconRegistry.cs" company="Budget Experiment">
-//     Copyright (c) Budget Experiment. All rights reserved.
+// <copyright file="ThemedIconRegistry.cs" company="BecauseImClever">
+//     Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 // -----------------------------------------------------------------------
 
-namespace BudgetExperiment.Client.Services;
-
 using System.Collections.Frozen;
+
+namespace BudgetExperiment.Client.Services;
 
 /// <summary>
 /// Registry that maps themes to custom icon sets.

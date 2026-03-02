@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
@@ -16,26 +15,6 @@ namespace BudgetExperiment.Application.Tests;
 public class BudgetCategoryServiceTests
 {
     private static readonly Mock<ICurrencyProvider> DefaultCurrencyProvider = CreateCurrencyProviderMock();
-
-    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency = "USD")
-    {
-        var mock = new Mock<ICurrencyProvider>();
-        mock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
-        return mock;
-    }
-
-    private static BudgetCategoryService CreateService(
-        Mock<IBudgetCategoryRepository>? categoryRepo = null,
-        Mock<IBudgetGoalRepository>? goalRepo = null,
-        Mock<IUnitOfWork>? uow = null,
-        Mock<ICurrencyProvider>? currencyProvider = null)
-    {
-        return new BudgetCategoryService(
-            categoryRepo?.Object ?? new Mock<IBudgetCategoryRepository>().Object,
-            goalRepo?.Object ?? new Mock<IBudgetGoalRepository>().Object,
-            uow?.Object ?? new Mock<IUnitOfWork>().Object,
-            currencyProvider?.Object ?? DefaultCurrencyProvider.Object);
-    }
 
     [Fact]
     public async Task GetByIdAsync_Returns_CategoryDto()
@@ -176,11 +155,15 @@ public class BudgetCategoryServiceTests
 
         // Assert
         Assert.Equal("Groceries", result.Name);
-        goalRepo.Verify(r => r.AddAsync(It.Is<BudgetGoal>(g =>
+        goalRepo.Verify(
+            r => r.AddAsync(
+            It.Is<BudgetGoal>(g =>
             g.TargetAmount.Amount == 500m &&
             g.TargetAmount.Currency == "USD" &&
             g.Year == DateTime.UtcNow.Year &&
-            g.Month == DateTime.UtcNow.Month), default), Times.Once);
+            g.Month == DateTime.UtcNow.Month),
+            default),
+            Times.Once);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 
@@ -350,5 +333,25 @@ public class BudgetCategoryServiceTests
         // Assert
         Assert.False(result);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
+    }
+
+    private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency = "USD")
+    {
+        var mock = new Mock<ICurrencyProvider>();
+        mock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
+        return mock;
+    }
+
+    private static BudgetCategoryService CreateService(
+        Mock<IBudgetCategoryRepository>? categoryRepo = null,
+        Mock<IBudgetGoalRepository>? goalRepo = null,
+        Mock<IUnitOfWork>? uow = null,
+        Mock<ICurrencyProvider>? currencyProvider = null)
+    {
+        return new BudgetCategoryService(
+            categoryRepo?.Object ?? new Mock<IBudgetCategoryRepository>().Object,
+            goalRepo?.Object ?? new Mock<IBudgetGoalRepository>().Object,
+            uow?.Object ?? new Mock<IUnitOfWork>().Object,
+            currencyProvider?.Object ?? DefaultCurrencyProvider.Object);
     }
 }

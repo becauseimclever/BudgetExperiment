@@ -18,6 +18,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// GET /api/v1/user/me returns 200 OK with user profile.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProfile_Returns_200_WithProfile()
     {
@@ -39,6 +40,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// GET /api/v1/user/settings returns 200 OK and provisions default settings.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSettings_Returns_200_AndProvisionsDefaults()
     {
@@ -61,6 +63,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// PUT /api/v1/user/settings updates settings and returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateSettings_Returns_200_WithUpdatedSettings()
     {
@@ -93,6 +96,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// GET /api/v1/user/scope returns 200 OK with current scope.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetScope_Returns_200_WithScope()
     {
@@ -114,6 +118,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// PUT /api/v1/user/scope sets the scope and returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SetScope_Returns_200_WithScope()
     {
@@ -135,6 +140,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// GET /api/v1/user/settings returns new onboarding fields with defaults.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSettings_Returns_OnboardingFieldDefaults()
     {
@@ -156,6 +162,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// PUT /api/v1/user/settings updates FirstDayOfWeek.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateSettings_Updates_FirstDayOfWeek()
     {
@@ -182,6 +189,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// POST /api/v1/user/settings/complete-onboarding sets IsOnboarded to true.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CompleteOnboarding_Returns_200_WithOnboardedTrue()
     {
@@ -203,6 +211,7 @@ public sealed class UserControllerTests
     /// <summary>
     /// PUT /api/v1/user/scope with invalid scope returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SetScope_WithInvalidScope_Returns_400()
     {

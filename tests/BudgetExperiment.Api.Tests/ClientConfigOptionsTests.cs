@@ -66,6 +66,7 @@ public sealed class ClientConfigOptionsTests
     /// <summary>
     /// ToDto is case-insensitive for oidc mode.
     /// </summary>
+    /// <param name="mode">The auth mode string to test.</param>
     [Theory]
     [InlineData("OIDC")]
     [InlineData("Oidc")]

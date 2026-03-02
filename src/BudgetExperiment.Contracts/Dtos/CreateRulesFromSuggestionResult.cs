@@ -10,7 +10,7 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed record CreateRulesFromSuggestionResult
 {
     /// <summary>
-    /// Gets whether the operation was successful.
+    /// Gets a value indicating whether the operation was successful.
     /// </summary>
     public required bool Success { get; init; }
 

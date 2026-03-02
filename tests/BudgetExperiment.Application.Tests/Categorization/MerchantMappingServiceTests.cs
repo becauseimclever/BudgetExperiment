@@ -12,11 +12,12 @@ namespace BudgetExperiment.Application.Tests.Categorization;
 /// </summary>
 public class MerchantMappingServiceTests
 {
+    private const string TestOwnerId = "user-123";
+
     private readonly FakeLearnedMerchantMappingRepository _fakeRepository;
     private readonly FakeBudgetCategoryRepository _fakeCategoryRepository;
     private readonly FakeUnitOfWork _fakeUnitOfWork;
     private readonly MerchantMappingService _service;
-    private const string TestOwnerId = "user-123";
 
     public MerchantMappingServiceTests()
     {
@@ -25,8 +26,6 @@ public class MerchantMappingServiceTests
         _fakeUnitOfWork = new FakeUnitOfWork();
         _service = new MerchantMappingService(_fakeRepository, _fakeCategoryRepository, _fakeUnitOfWork);
     }
-
-    #region GetMappingAsync Tests
 
     [Fact]
     public async Task GetMappingAsync_With_Known_Merchant_Returns_Default_Mapping()
@@ -84,10 +83,6 @@ public class MerchantMappingServiceTests
         Assert.Equal(resultLower.Value.Category, resultMixed.Value.Category);
     }
 
-    #endregion
-
-    #region FindMatchingPatternsAsync Tests
-
     [Fact]
     public async Task FindMatchingPatternsAsync_Returns_Matched_Patterns()
     {
@@ -98,7 +93,7 @@ public class MerchantMappingServiceTests
             "SPOTIFY PREMIUM",
             "AMAZON.COM*456",
             "RANDOM STORE",
-            "WALMART #123"
+            "WALMART #123",
         };
 
         // Act
@@ -120,7 +115,7 @@ public class MerchantMappingServiceTests
         {
             "NETFLIX.COM",
             "SPOTIFY",
-            "HULU"
+            "HULU",
         };
 
         // Act
@@ -139,7 +134,7 @@ public class MerchantMappingServiceTests
         {
             "RANDOM STORE 1",
             "UNKNOWN MERCHANT",
-            "LOCAL BUSINESS"
+            "LOCAL BUSINESS",
         };
 
         // Act
@@ -148,10 +143,6 @@ public class MerchantMappingServiceTests
         // Assert
         Assert.Empty(result);
     }
-
-    #endregion
-
-    #region LearnFromCategorizationAsync Tests
 
     [Fact]
     public async Task LearnFromCategorizationAsync_Creates_New_Mapping()
@@ -194,17 +185,13 @@ public class MerchantMappingServiceTests
         var categoryId = Guid.NewGuid();
 
         // Act
-        await _service.LearnFromCategorizationAsync(TestOwnerId, "", categoryId, CancellationToken.None);
+        await _service.LearnFromCategorizationAsync(TestOwnerId, string.Empty, categoryId, CancellationToken.None);
         await _service.LearnFromCategorizationAsync(TestOwnerId, "  ", categoryId, CancellationToken.None);
 
         // Assert
         var mappings = await _fakeRepository.GetByOwnerAsync(TestOwnerId, CancellationToken.None);
         Assert.Empty(mappings);
     }
-
-    #endregion
-
-    #region GetLearnedMappingsAsync Tests
 
     [Fact]
     public async Task GetLearnedMappingsAsync_Returns_All_User_Mappings()
@@ -223,10 +210,6 @@ public class MerchantMappingServiceTests
         // Assert
         Assert.Equal(2, result.Count);
     }
-
-    #endregion
-
-    #region DeleteLearnedMappingAsync Tests
 
     [Fact]
     public async Task DeleteLearnedMappingAsync_Removes_Mapping()
@@ -254,8 +237,6 @@ public class MerchantMappingServiceTests
         // Assert
         Assert.False(result);
     }
-
-    #endregion
 
     private sealed class FakeLearnedMerchantMappingRepository : ILearnedMerchantMappingRepository
     {

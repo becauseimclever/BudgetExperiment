@@ -28,6 +28,7 @@ public sealed class GeocodingControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// POST /api/v1/geocoding/reverse with valid coordinates returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Post_ValidCoordinates_Returns200()
     {
@@ -50,6 +51,7 @@ public sealed class GeocodingControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// POST /api/v1/geocoding/reverse with out-of-range latitude returns 422.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Post_InvalidLatitude_Returns422()
     {
@@ -70,6 +72,7 @@ public sealed class GeocodingControllerTests : IClassFixture<CustomWebApplicatio
     /// <summary>
     /// POST /api/v1/geocoding/reverse with out-of-range longitude returns 422.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Post_InvalidLongitude_Returns422()
     {

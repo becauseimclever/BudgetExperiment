@@ -1,7 +1,7 @@
 # Feature 078: Re-enable StyleCop Analyzers
 > **Status:** Planning
 > **Priority:** High (code quality enforcement)
-> **Estimated Effort:** Medium (2-3 days)
+> **Estimated Effort:** Small–Medium (1-2 days)
 > **Dependencies:** None
 
 ## Overview
@@ -15,7 +15,7 @@ Individual project `.csproj` files reference `StyleCop.Analyzers` with `Update` 
 ### Current State
 
 ```xml
-<!-- Directory.Build.props (lines 14-22) -->
+<!-- Directory.Build.props (lines 18-27) -->
 <!-- StyleCop.Analyzers removed temporarily to fix build issues -->
 <!--
 <ItemGroup>
@@ -31,148 +31,299 @@ Individual project `.csproj` files reference `StyleCop.Analyzers` with `Update` 
 - `TreatWarningsAsErrors` is `true` but without StyleCop producing warnings, there's nothing to escalate
 - No date or tracking for when/why this was disabled
 
+### Violation Assessment (performed 2026-03-01)
+
+Temporarily uncommenting StyleCop reveals **1,514 violations** across **only 2 projects**:
+
+| Rule | Count | Projects | Description |
+|------|-------|----------|-------------|
+| **SA1101** | 1,194 | E2E.Tests (1,122) + Domain (72) | Prefix local calls with `this.` |
+| **SA1641** | 276 | Domain (194) + E2E.Tests (82) | File header company name mismatch |
+| SA1201 | 10 | Domain (8) + E2E.Tests (2) | Member ordering (field after property, etc.) |
+| SA1204 | 8 | Domain (6) + E2E.Tests (2) | Static members should appear before non-static |
+| SA1316 | 4 | E2E.Tests (4) | Tuple element name casing |
+| SA1202 | 4 | Domain (2) + E2E.Tests (2) | Public members before private members |
+| SA1210 | 4 | Domain (2) + E2E.Tests (2) | Using directives ordering |
+| SA1025 | 2 | Domain | Multiple whitespace characters in a row |
+| SA1108 | 2 | E2E.Tests | Block statements with embedded comments |
+| SA1118 | 2 | E2E.Tests | Parameter spans multiple lines |
+| SA1407 | 2 | Domain | Arithmetic precedence parentheses |
+| SA1516 | 2 | E2E.Tests | Elements separated by blank line |
+| SA1518 | 2 | Domain | File must end with single newline |
+| SA1615 | 2 | E2E.Tests | Return value documentation |
+
+**9 of 11 projects are already fully compliant.** The work is concentrated in Domain (290 violations) and E2E.Tests (1,224 violations).
+
+### Root Causes
+
+1. **SA1101 (1,194 — 79% of all violations):** The project uses `_camelCase` for private fields (§5), making `this.` redundant. SA1309 (underscore prefix) is already disabled in `.editorconfig` to accommodate this convention. SA1101 should be disabled for consistency — the `_` prefix already distinguishes fields from locals.
+
+2. **SA1641 (276 — 18% of all violations):** `stylecop.json` sets `companyName: "Fortinbra"` but 776 of 788 source files use `company="BecauseImClever"`. Only 12 files use "Fortinbra". Fix: update `stylecop.json` to `"BecauseImClever"` and align the 12 outlier files.
+
+3. **Remaining 44 violations (3%):** Member ordering, static ordering, minor formatting — all manual fixes in Domain and E2E.Tests.
+
 ### Target State
 
-- StyleCop uncommented and active in `Directory.Build.props`
-- Version updated to latest stable (or latest beta if needed for .NET 10)
-- All projects build cleanly with StyleCop enabled
-- Any existing violations are fixed (not suppressed)
+- StyleCop uncommented and active in `Directory.Build.props` (version `1.2.0-beta.556`)
+- SA1101 disabled in `.editorconfig` (deliberate convention decision, not a suppression)
+- `stylecop.json` company name corrected to `"BecauseImClever"`
+- All 1,514 violations resolved
+- All projects build cleanly with zero warnings
+- The commented-out block and "temporarily" note removed
 
 ---
 
-## User Stories
+## Vertical Slices
 
-### US-078-001: Re-enable StyleCop in Build
+Each slice is independently deliverable and leaves the build green. Slices are ordered so that early slices eliminate the most violations with the least risk.
+
+---
+
+### Slice 1: Disable SA1101 and fix `stylecop.json` company name
+
+**Risk:** Lowest — configuration-only changes, zero source code edits.
+**Impact:** Eliminates 1,470 of 1,514 violations (97%).
+
 **As a** developer
-**I want to** have StyleCop analyzers running during builds
-**So that** code style is enforced consistently and violations are caught before PR review.
+**I want** SA1101 disabled and the `stylecop.json` company name corrected
+**So that** re-enabling StyleCop is feasible without massive source churn.
 
-**Acceptance Criteria:**
-- [ ] `Directory.Build.props` has StyleCop uncommented and active
-- [ ] `stylecop.json` is linked as an `AdditionalFile` for all projects
-- [ ] All projects build without StyleCop errors (violations fixed, not suppressed)
-- [ ] `TreatWarningsAsErrors` catches StyleCop violations
-- [ ] The commented-out block and "temporarily" note are removed
+**Rationale:**
+- SA1101 (`this.` prefix) conflicts with the project's `_camelCase` field convention (§5). SA1309 is already disabled for the same reason. Disabling SA1101 is a **deliberate convention alignment**, not a workaround.
+- 776 of 788 files use `"BecauseImClever"`. The 12 "Fortinbra" files are outliers.
 
-### US-078-002: Fix Existing StyleCop Violations
-**As a** developer
-**I want to** fix all existing code style violations surfaced by StyleCop
-**So that** the codebase is clean when enforcement is re-enabled.
+**Changes:**
 
-**Acceptance Criteria:**
-- [ ] All SA-prefixed warnings resolved across all projects
-- [ ] No global suppressions added (scoped only, with justification)
-- [ ] `dotnet format` applied as a first pass
-- [ ] Remaining issues fixed manually
+1. **`.editorconfig`** — Add:
+   ```ini
+   dotnet_diagnostic.SA1101.severity = none   # Project uses _camelCase fields; this. prefix is redundant
+   ```
 
----
+2. **`stylecop.json`** — Change `companyName` from `"Fortinbra"` to `"BecauseImClever"` and update `copyrightText`:
+   ```json
+   "companyName": "BecauseImClever",
+   "copyrightText": "Copyright (c) BecauseImClever. All rights reserved."
+   ```
 
-## Technical Design
-
-### Approach
-
-1. **Uncomment** the StyleCop block in `Directory.Build.props`
-2. **Update version** from `1.2.0-beta.507` to match the `Update` version in individual projects (`1.2.0-beta.556`) or to latest available
-3. **Build** and collect all violations
-4. **Run `dotnet format`** to auto-fix formatting issues (ordering, spacing, usings)
-5. **Fix remaining** violations manually (XML docs, naming, etc.)
-6. **Verify** all tests still pass
-
-### Expected Violation Categories
-
-Based on common StyleCop rules:
-- **SA1200**: Using directives placement (likely handled by `GlobalUsings.cs`)
-- **SA1101**: Prefix local calls with `this.` (may conflict with project style)
-- **SA1600-SA1650**: Documentation rules (XML docs for public API)
-- **SA1300-SA1311**: Naming rules
-- **SA1500-SA1520**: Brace/bracket rules
-
-### Configuration Review
-
-- Review `stylecop.json` settings to ensure they match project conventions
-- Review `.editorconfig` for any conflicts
-- Ensure `documentationRules.documentInterfaces` and similar settings are appropriate
-
----
-
-## Implementation Plan
-
-### Phase 1: Assess Violation Count
-
-**Objective:** Uncomment StyleCop, build, and catalog violations without fixing.
+3. **12 source files** — Update copyright headers from `company="Fortinbra"` / `Copyright (c) 2025 Fortinbra (becauseimclever.com)` to `company="BecauseImClever"` / `Copyright (c) BecauseImClever`.
 
 **Tasks:**
-- [ ] Uncomment StyleCop in `Directory.Build.props`
-- [ ] Update to latest version
-- [ ] Build solution and redirect warnings to a log
-- [ ] Categorize violations by rule ID and count
-- [ ] Plan fix approach per category
-
-### Phase 2: Auto-Fix with dotnet format
-
-**Objective:** Apply automated fixes for formatting and ordering rules.
-
-**Tasks:**
-- [ ] Run `dotnet format` with analyzers enabled
-- [ ] Review auto-applied changes
-- [ ] Build and verify
-
-### Phase 3: Fix Documentation Violations
-
-**Objective:** Add XML documentation for public API surface.
-
-**Tasks:**
-- [ ] Add XML docs to public controller methods
-- [ ] Add XML docs to public service interfaces
-- [ ] Add XML docs to public DTO types
-- [ ] Verify build
-
-### Phase 4: Fix Remaining Violations
-
-**Objective:** Address any remaining naming, brace, or other style violations.
-
-**Tasks:**
-- [ ] Fix naming violations
-- [ ] Fix brace/formatting issues not caught by auto-fix
-- [ ] Add scoped suppressions only where justified (with TODO + issue link)
-- [ ] Final build verification
-- [ ] Full test suite green
+- [ ] Add `SA1101.severity = none` to `.editorconfig`
+- [ ] Update `stylecop.json` company name and copyright text
+- [ ] Find and fix the 12 files with "Fortinbra" headers
+- [ ] Verify these changes resolve 1,470 violations (SA1101 + SA1641)
 
 **Commit:**
-```bash
-git commit -m "chore: re-enable StyleCop analyzers
+```
+chore: align StyleCop config with project conventions
 
-- Uncomment StyleCop.Analyzers in Directory.Build.props
-- Fix all existing style violations
-- No global suppressions added
-- All projects build cleanly with TreatWarningsAsErrors
+- Disable SA1101 (this. prefix) — project uses _camelCase field convention
+- Fix stylecop.json companyName from "Fortinbra" to "BecauseImClever"
+- Standardize 12 outlier file headers to match majority convention
 
-Refs: #078"
+Refs: #078
+```
+
+---
+
+### Slice 2: Fix remaining Domain violations
+
+**Risk:** Low — 20 violations across ~10 files, all mechanical member reordering and minor formatting.
+**Depends on:** Slice 1 (SA1101 and SA1641 removed first).
+
+**As a** developer
+**I want** all remaining StyleCop violations in the Domain project fixed
+**So that** Domain is fully compliant before re-enabling enforcement.
+
+**Violations to fix (20):**
+| Rule | Count | Fix |
+|------|-------|-----|
+| SA1201 | 8 | Reorder members (fields before properties before methods) |
+| SA1204 | 6 | Move static members before instance members |
+| SA1202 | 2 | Move public members before private members |
+| SA1210 | 2 | Alphabetize using directives |
+| SA1518 | 2 | Add trailing newline to files |
+| SA1407 | 2 | Add parentheses to arithmetic expressions |
+| SA1025 | 2 | Remove extra whitespace |
+
+**Tasks:**
+- [ ] Run `dotnet format analyzers` on Domain project as first pass
+- [ ] Fix remaining violations manually (member ordering)
+- [ ] Verify Domain builds with zero SA warnings
+
+**Commit:**
+```
+style(domain): fix 20 StyleCop violations
+
+- Reorder members per SA1201/SA1202/SA1204 (fields → properties → methods)
+- Alphabetize using directives (SA1210)
+- Add trailing newlines, arithmetic parentheses, remove extra whitespace
+
+Refs: #078
+```
+
+---
+
+### Slice 3: Fix remaining E2E.Tests violations
+
+**Risk:** Low — 24 violations across test files, mechanical fixes.
+**Depends on:** Slice 1 (SA1101 and SA1641 removed first).
+
+**As a** developer
+**I want** all remaining StyleCop violations in E2E.Tests fixed
+**So that** every project in the solution is compliant.
+
+**Violations to fix (24):**
+| Rule | Count | Fix |
+|------|-------|-----|
+| SA1316 | 4 | Rename tuple elements to PascalCase |
+| SA1201 | 2 | Reorder members |
+| SA1202 | 2 | Public before private ordering |
+| SA1204 | 2 | Static before instance ordering |
+| SA1210 | 2 | Alphabetize usings |
+| SA1108 | 2 | Remove embedded comments from block statements |
+| SA1118 | 2 | Refactor multi-line parameters |
+| SA1516 | 2 | Add blank lines between elements |
+| SA1615 | 2 | Add `<returns>` XML doc |
+
+**Tasks:**
+- [ ] Fix violations manually (test files — no `dotnet format` auto-fix for most)
+- [ ] Verify E2E.Tests builds with zero SA warnings
+
+**Commit:**
+```
+style(e2e): fix 24 StyleCop violations in E2E tests
+
+- PascalCase tuple elements, member ordering, blank lines
+- Add return value XML docs, refactor multi-line parameters
+
+Refs: #078
+```
+
+---
+
+### Slice 4: Uncomment StyleCop in `Directory.Build.props`
+
+**Risk:** Low (all violations already fixed) — but this is the "point of no return" that enables enforcement.
+**Depends on:** Slices 1, 2, 3 all complete.
+
+**As a** developer
+**I want** StyleCop uncommented and actively enforcing in all builds
+**So that** future code style violations are caught at build time.
+
+**Changes:**
+
+1. **`Directory.Build.props`** — Replace the commented-out block:
+   ```xml
+   <ItemGroup>
+     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
+   </ItemGroup>
+   <ItemGroup>
+     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+   </ItemGroup>
+   ```
+   
+2. Remove the `<!-- StyleCop.Analyzers removed temporarily to fix build issues -->` comment.
+
+3. Update version from `1.2.0-beta.507` to `1.2.0-beta.556` (matching individual csproj `Update` refs).
+
+**Tasks:**
+- [ ] Uncomment and update StyleCop in `Directory.Build.props`
+- [ ] Remove the "temporarily" comment
+- [ ] `dotnet build` entire solution — zero warnings, zero errors
+- [ ] `dotnet test` — all tests pass
+- [ ] Verify CI would pass (no new violations introduced)
+
+**Commit:**
+```
+chore: re-enable StyleCop analyzers in Directory.Build.props
+
+- Uncomment StyleCop.Analyzers (v1.2.0-beta.556) in Directory.Build.props
+- Link stylecop.json as AdditionalFile for all projects
+- TreatWarningsAsErrors now catches StyleCop violations
+- All 11 projects build cleanly with zero warnings
+- Remove "removed temporarily" comment — enforcement is permanent
+
+Refs: #078
+```
+
+---
+
+## Configuration Summary
+
+### Rules disabled in `.editorconfig` (deliberate convention decisions)
+
+| Rule | Reason | Status |
+|------|--------|--------|
+| SA1633 | File header requirement | Already disabled |
+| SA1636 | File header company text | Already disabled |
+| SA1639 | File header summary tag | Already disabled |
+| SA1309 | Underscore prefix for fields | Already disabled (project uses `_camelCase`) |
+| SA1412 | BOM requirement | Already disabled |
+| SA1600 | Element documentation | Already disabled (temporarily — evaluate later) |
+| SA1609 | Property `<value>` doc | Already disabled |
+| **SA1101** | `this.` prefix | **To be disabled in Slice 1** (redundant with `_camelCase`) |
+
+### `stylecop.json` settings (after Slice 1)
+
+```json
+{
+  "settings": {
+    "documentationRules": {
+      "companyName": "BecauseImClever",
+      "copyrightText": "Copyright (c) BecauseImClever. All rights reserved.",
+      "documentInterfaces": true,
+      "documentInternalElements": false,
+      "documentPrivateElements": false,
+      "documentExposedElements": true,
+      "documentPrivateFields": false
+    },
+    "orderingRules": {
+      "usingDirectivesPlacement": "outsideNamespace",
+      "blankLinesBetweenUsingGroups": "allow"
+    },
+    "layoutRules": {
+      "newlineAtEndOfFile": "require"
+    },
+    "namingRules": {
+      "allowCommonHungarianPrefixes": false
+    }
+  }
+}
 ```
 
 ---
 
 ## Testing Strategy
 
-### Verification
-- [ ] `dotnet build` with zero warnings/errors
-- [ ] All unit tests pass
-- [ ] All integration tests pass
-- [ ] CI build passes
+### Per-Slice Verification
+- [ ] `dotnet build` with zero warnings/errors after each slice
+- [ ] All unit tests pass (no behavioral changes)
+
+### Post-Completion Verification (after Slice 4)
+- [ ] Full `dotnet test` suite passes
+- [ ] Introduce an intentional SA violation → confirm it fails the build
+- [ ] `dotnet format --verify-no-changes` passes
 
 ---
 
 ## Risk Assessment
 
-- **Medium risk**: May surface a large number of violations requiring manual intervention.
-- **Scope creep**: XML documentation requirement could be time-consuming for the public API surface.
-- **Mitigation**: Phase 1 assessment will quantify the work before committing to full fix.
+| Slice | Risk | Violations Resolved | Mitigation |
+|-------|------|-------------------|------------|
+| 1 – Config alignment | Lowest | 1,470 (97%) | Config-only + 12 trivial header fixes |
+| 2 – Domain fixes | Low | 20 | Mechanical reordering; no logic changes |
+| 3 – E2E fixes | Low | 24 | Test files only; no production code |
+| 4 – Enable enforcement | Low | 0 (already fixed) | Build validates instantly |
+
+Overall: **Low risk** — no behavioral changes. Each slice leaves the build green.
 
 ---
 
 ## References
 
 - Coding standard §18: "StyleCop enforced via `StyleCop.Analyzers` NuGet."
+- Coding standard §5: "Private fields: `_camelCase`."
 - `stylecop.json` and `.editorconfig` in repository root.
 
 ---
@@ -182,3 +333,4 @@ Refs: #078"
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-02-26 | Initial draft from codebase audit | @copilot |
+| 2026-03-01 | Restructured as vertical slices with violation assessment data | @copilot |

@@ -22,6 +22,7 @@ public sealed class NoAuthHandlerTests
     /// <summary>
     /// HandleAuthenticateAsync always returns a success result.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_ReturnsSuccess()
     {
@@ -36,6 +37,7 @@ public sealed class NoAuthHandlerTests
     /// <summary>
     /// The authentication ticket uses the <see cref="NoAuthHandler.SchemeName"/> scheme.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_UsesNoAuthScheme()
     {
@@ -49,6 +51,7 @@ public sealed class NoAuthHandlerTests
     /// <summary>
     /// The principal identity is authenticated (not anonymous).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_IdentityIsAuthenticated()
     {
@@ -65,6 +68,7 @@ public sealed class NoAuthHandlerTests
     /// <summary>
     /// The principal contains the <see cref="FamilyUserContext.FamilyUserId"/> as the NameIdentifier claim.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_ContainsNameIdentifierClaim()
     {
@@ -79,6 +83,7 @@ public sealed class NoAuthHandlerTests
     /// <summary>
     /// The principal contains the <see cref="FamilyUserContext.FamilyUserId"/> as the "sub" claim.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_ContainsSubClaim()
     {
@@ -93,6 +98,7 @@ public sealed class NoAuthHandlerTests
     /// <summary>
     /// The principal contains the <see cref="FamilyUserContext.FamilyUserName"/> as the Name claim.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_ContainsNameClaim()
     {
@@ -107,6 +113,7 @@ public sealed class NoAuthHandlerTests
     /// <summary>
     /// The principal contains the <see cref="FamilyUserContext.FamilyUserEmail"/> as the Email claim.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_ContainsEmailClaim()
     {
@@ -122,6 +129,7 @@ public sealed class NoAuthHandlerTests
     /// The principal contains the <see cref="FamilyUserContext.FamilyUserName"/> as the "name" claim
     /// (used by <see cref="UserContext.DisplayName"/>).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_ContainsShortNameClaim()
     {
@@ -137,6 +145,7 @@ public sealed class NoAuthHandlerTests
     /// The principal contains the <see cref="FamilyUserContext.FamilyUserName"/> as the "preferred_username" claim
     /// (used by <see cref="UserContext.Username"/>).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task HandleAuthenticateAsync_ContainsPreferredUsernameClaim()
     {

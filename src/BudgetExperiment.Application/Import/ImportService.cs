@@ -417,168 +417,6 @@ public sealed class ImportService : IImportService
         return count;
     }
 
-    private Guid GetRequiredUserId()
-    {
-        return this._userContext.UserIdAsGuid
-            ?? throw new DomainException("User ID is required for import operations.");
-    }
-
-    private async Task<List<ImportPreviewRow>> EnrichWithRecurringMatchesAsync(
-        List<ImportPreviewRow> rows,
-        CancellationToken cancellationToken)
-    {
-        // Get valid rows with dates for matching
-        var validRowsWithDates = rows
-            .Where(r => r.Date.HasValue && r.Amount.HasValue)
-            .ToList();
-
-        if (validRowsWithDates.Count == 0)
-        {
-            return rows;
-        }
-
-        // Get date range for recurring instance projection
-        var dates = validRowsWithDates.Select(r => r.Date!.Value).ToList();
-        var minDate = dates.Min().AddDays(-7);
-        var maxDate = dates.Max().AddDays(7);
-
-        // Load active recurring transactions and project instances
-        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
-        if (recurringTransactions.Count == 0)
-        {
-            return rows;
-        }
-
-        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
-            recurringTransactions,
-            minDate,
-            maxDate,
-            cancellationToken);
-
-        var allCandidates = instancesByDate.Values.SelectMany(list => list).ToList();
-        if (allCandidates.Count == 0)
-        {
-            return rows;
-        }
-
-        var tolerances = MatchingTolerancesValue.Default;
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-
-        // Enrich each valid row with potential matches
-        var enrichedRows = new List<ImportPreviewRow>();
-        foreach (var row in rows)
-        {
-            if (!row.Date.HasValue || !row.Amount.HasValue)
-            {
-                enrichedRows.Add(row);
-                continue;
-            }
-
-            // Create a temporary transaction-like object for matching
-            var bestMatch = this.FindBestMatchForPreviewRow(
-                row.Description,
-                row.Amount.Value,
-                row.Date.Value,
-                allCandidates,
-                tolerances,
-                currency);
-
-            if (bestMatch != null)
-            {
-                var matchPreview = new ImportRecurringMatchPreview
-                {
-                    RecurringTransactionId = bestMatch.RecurringTransactionId,
-                    RecurringDescription = allCandidates
-                        .First(c => c.RecurringTransactionId == bestMatch.RecurringTransactionId)
-                        .Description,
-                    InstanceDate = bestMatch.InstanceDate,
-                    ExpectedAmount = allCandidates
-                        .First(c => c.RecurringTransactionId == bestMatch.RecurringTransactionId)
-                        .Amount.Amount,
-                    ConfidenceScore = bestMatch.ConfidenceScore,
-                    ConfidenceLevel = bestMatch.ConfidenceLevel.ToString(),
-                    WouldAutoMatch = bestMatch.ConfidenceScore >= tolerances.AutoMatchThreshold,
-                };
-
-                enrichedRows.Add(row with { RecurringMatch = matchPreview });
-            }
-            else
-            {
-                enrichedRows.Add(row);
-            }
-        }
-
-        return enrichedRows;
-    }
-
-    private async Task<List<ImportPreviewRow>> EnrichWithLocationDataAsync(
-        List<ImportPreviewRow> rows,
-        CancellationToken cancellationToken)
-    {
-        var settings = await this._settingsRepository.GetAsync(cancellationToken);
-        if (!settings.EnableLocationData)
-        {
-            return rows;
-        }
-
-        var descriptions = rows.Select(r => r.Description).ToList();
-        var parseResults = this._locationParser.ParseBatch(descriptions);
-
-        var enrichedRows = new List<ImportPreviewRow>();
-        for (int i = 0; i < rows.Count; i++)
-        {
-            var row = rows[i];
-            var parseResult = parseResults[i];
-
-            if (parseResult.Location != null)
-            {
-                var locationPreview = new ImportLocationPreview
-                {
-                    City = parseResult.Location.City,
-                    StateOrRegion = parseResult.Location.StateOrRegion,
-                    Country = parseResult.Location.Country,
-                    PostalCode = parseResult.Location.PostalCode,
-                    Confidence = parseResult.Confidence,
-                    IsAccepted = true,
-                };
-
-                enrichedRows.Add(row with { ParsedLocation = locationPreview });
-            }
-            else
-            {
-                enrichedRows.Add(row);
-            }
-        }
-
-        return enrichedRows;
-    }
-
-    private TransactionMatchResultValue? FindBestMatchForPreviewRow(
-        string description,
-        decimal amount,
-        DateOnly date,
-        IReadOnlyList<RecurringInstanceInfoValue> candidates,
-        MatchingTolerancesValue tolerances,
-        string currency)
-    {
-        TransactionMatchResultValue? best = null;
-
-        foreach (var candidate in candidates)
-        {
-            var matchResult = this._transactionMatcher.CalculateMatch(
-                CreatePreviewTransaction(description, amount, date, currency),
-                candidate,
-                tolerances);
-
-            if (matchResult != null && (best == null || matchResult.ConfidenceScore > best.ConfidenceScore))
-            {
-                best = matchResult;
-            }
-        }
-
-        return best;
-    }
-
     private static Transaction CreatePreviewTransaction(string description, decimal amount, DateOnly date, string currency)
     {
         // Create a temporary transaction for matching purposes
@@ -1072,5 +910,167 @@ public sealed class ImportService : IImportService
         }
 
         return dates;
+    }
+
+    private Guid GetRequiredUserId()
+    {
+        return this._userContext.UserIdAsGuid
+            ?? throw new DomainException("User ID is required for import operations.");
+    }
+
+    private async Task<List<ImportPreviewRow>> EnrichWithRecurringMatchesAsync(
+        List<ImportPreviewRow> rows,
+        CancellationToken cancellationToken)
+    {
+        // Get valid rows with dates for matching
+        var validRowsWithDates = rows
+            .Where(r => r.Date.HasValue && r.Amount.HasValue)
+            .ToList();
+
+        if (validRowsWithDates.Count == 0)
+        {
+            return rows;
+        }
+
+        // Get date range for recurring instance projection
+        var dates = validRowsWithDates.Select(r => r.Date!.Value).ToList();
+        var minDate = dates.Min().AddDays(-7);
+        var maxDate = dates.Max().AddDays(7);
+
+        // Load active recurring transactions and project instances
+        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
+        if (recurringTransactions.Count == 0)
+        {
+            return rows;
+        }
+
+        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
+            recurringTransactions,
+            minDate,
+            maxDate,
+            cancellationToken);
+
+        var allCandidates = instancesByDate.Values.SelectMany(list => list).ToList();
+        if (allCandidates.Count == 0)
+        {
+            return rows;
+        }
+
+        var tolerances = MatchingTolerancesValue.Default;
+        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+
+        // Enrich each valid row with potential matches
+        var enrichedRows = new List<ImportPreviewRow>();
+        foreach (var row in rows)
+        {
+            if (!row.Date.HasValue || !row.Amount.HasValue)
+            {
+                enrichedRows.Add(row);
+                continue;
+            }
+
+            // Create a temporary transaction-like object for matching
+            var bestMatch = this.FindBestMatchForPreviewRow(
+                row.Description,
+                row.Amount.Value,
+                row.Date.Value,
+                allCandidates,
+                tolerances,
+                currency);
+
+            if (bestMatch != null)
+            {
+                var matchPreview = new ImportRecurringMatchPreview
+                {
+                    RecurringTransactionId = bestMatch.RecurringTransactionId,
+                    RecurringDescription = allCandidates
+                        .First(c => c.RecurringTransactionId == bestMatch.RecurringTransactionId)
+                        .Description,
+                    InstanceDate = bestMatch.InstanceDate,
+                    ExpectedAmount = allCandidates
+                        .First(c => c.RecurringTransactionId == bestMatch.RecurringTransactionId)
+                        .Amount.Amount,
+                    ConfidenceScore = bestMatch.ConfidenceScore,
+                    ConfidenceLevel = bestMatch.ConfidenceLevel.ToString(),
+                    WouldAutoMatch = bestMatch.ConfidenceScore >= tolerances.AutoMatchThreshold,
+                };
+
+                enrichedRows.Add(row with { RecurringMatch = matchPreview });
+            }
+            else
+            {
+                enrichedRows.Add(row);
+            }
+        }
+
+        return enrichedRows;
+    }
+
+    private async Task<List<ImportPreviewRow>> EnrichWithLocationDataAsync(
+        List<ImportPreviewRow> rows,
+        CancellationToken cancellationToken)
+    {
+        var settings = await this._settingsRepository.GetAsync(cancellationToken);
+        if (!settings.EnableLocationData)
+        {
+            return rows;
+        }
+
+        var descriptions = rows.Select(r => r.Description).ToList();
+        var parseResults = this._locationParser.ParseBatch(descriptions);
+
+        var enrichedRows = new List<ImportPreviewRow>();
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            var parseResult = parseResults[i];
+
+            if (parseResult.Location != null)
+            {
+                var locationPreview = new ImportLocationPreview
+                {
+                    City = parseResult.Location.City,
+                    StateOrRegion = parseResult.Location.StateOrRegion,
+                    Country = parseResult.Location.Country,
+                    PostalCode = parseResult.Location.PostalCode,
+                    Confidence = parseResult.Confidence,
+                    IsAccepted = true,
+                };
+
+                enrichedRows.Add(row with { ParsedLocation = locationPreview });
+            }
+            else
+            {
+                enrichedRows.Add(row);
+            }
+        }
+
+        return enrichedRows;
+    }
+
+    private TransactionMatchResultValue? FindBestMatchForPreviewRow(
+        string description,
+        decimal amount,
+        DateOnly date,
+        IReadOnlyList<RecurringInstanceInfoValue> candidates,
+        MatchingTolerancesValue tolerances,
+        string currency)
+    {
+        TransactionMatchResultValue? best = null;
+
+        foreach (var candidate in candidates)
+        {
+            var matchResult = this._transactionMatcher.CalculateMatch(
+                CreatePreviewTransaction(description, amount, date, currency),
+                candidate,
+                tolerances);
+
+            if (matchResult != null && (best == null || matchResult.ConfidenceScore > best.ConfidenceScore))
+            {
+                best = matchResult;
+            }
+        }
+
+        return best;
     }
 }

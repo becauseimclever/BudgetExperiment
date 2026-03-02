@@ -37,6 +37,11 @@ public sealed record DebitCreditIndicatorSettingsValue
         && this.CreditIndicators.Count > 0;
 
     /// <summary>
+    /// Gets disabled settings (no indicator column).
+    /// </summary>
+    public static DebitCreditIndicatorSettingsValue Disabled => new();
+
+    /// <summary>
     /// Creates debit/credit indicator settings.
     /// </summary>
     /// <param name="columnIndex">The indicator column index.</param>
@@ -87,11 +92,6 @@ public sealed record DebitCreditIndicatorSettingsValue
             CaseSensitive = caseSensitive,
         };
     }
-
-    /// <summary>
-    /// Gets disabled settings (no indicator column).
-    /// </summary>
-    public static DebitCreditIndicatorSettingsValue Disabled => new();
 
     /// <summary>
     /// Determines the sign multiplier for an indicator value.

@@ -31,6 +31,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/import/mappings returns 200 with empty list when no mappings exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMappings_Returns_200_WithEmptyList()
     {
@@ -46,6 +47,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/import/mappings/{id} returns 404 when mapping not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMappingById_Returns_404_WhenNotFound()
     {
@@ -59,6 +61,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// POST /api/v1/import/mappings creates a mapping and returns 201.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CreateMapping_Returns_201_WithCreatedMapping()
     {
@@ -89,6 +92,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// PUT /api/v1/import/mappings/{id} updates mapping and returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateMapping_Returns_200_WhenFound()
     {
@@ -123,6 +127,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// PUT /api/v1/import/mappings/{id} returns 404 when mapping not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task UpdateMapping_Returns_404_WhenNotFound()
     {
@@ -142,6 +147,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// DELETE /api/v1/import/mappings/{id} returns 204 when found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DeleteMapping_Returns_204_WhenFound()
     {
@@ -167,6 +173,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// DELETE /api/v1/import/mappings/{id} returns 404 when not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DeleteMapping_Returns_404_WhenNotFound()
     {
@@ -180,6 +187,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// POST /api/v1/import/mappings/suggest returns 204 when no matching mapping found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SuggestMapping_Returns_204_WhenNoMatch()
     {
@@ -199,6 +207,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// POST /api/v1/import/preview with valid request returns 200.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Preview_WithValidRequest_Returns_200()
     {
@@ -235,6 +244,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/import/history returns 200 with list.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetHistory_Returns_200_WithList()
     {
@@ -250,6 +260,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// GET /api/v1/import/batches/{id} returns 404 when batch not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetBatchById_Returns_404_WhenNotFound()
     {
@@ -263,6 +274,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// DELETE /api/v1/import/batches/{id} returns 404 when batch not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DeleteBatch_Returns_404_WhenNotFound()
     {
@@ -276,6 +288,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <summary>
     /// Full import flow: preview, execute, verify history (parsing is now client-side).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task FullImportFlow_Success()
     {
@@ -345,6 +358,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// POST /api/v1/import/parse endpoint has been removed (Slice 4 — server-side parsing eliminated).
     /// Endpoint returns 404 (Not Found) or 405 (Method Not Allowed) depending on routing.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Parse_EndpointRemoved_ReturnsErrorStatus()
     {

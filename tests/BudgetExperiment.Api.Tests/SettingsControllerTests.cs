@@ -28,6 +28,7 @@ public sealed class SettingsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// GET /api/v1/settings returns 200 OK with settings.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Get_Returns_200_WithSettings()
     {
@@ -46,6 +47,7 @@ public sealed class SettingsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// PUT /api/v1/settings updates AutoRealizePastDueItems and returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Put_Updates_AutoRealize_Returns_200()
     {
@@ -65,6 +67,7 @@ public sealed class SettingsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// PUT /api/v1/settings updates PastDueLookbackDays and returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Put_Updates_PastDueLookbackDays_Returns_200()
     {
@@ -84,6 +87,7 @@ public sealed class SettingsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// PUT /api/v1/settings with invalid PastDueLookbackDays returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Put_With_Invalid_PastDueLookbackDays_Returns_400()
     {
@@ -100,6 +104,7 @@ public sealed class SettingsControllerTests : IClassFixture<CustomWebApplication
     /// <summary>
     /// PUT /api/v1/settings updates both settings and returns 200 OK.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Put_Updates_Both_Settings_Returns_200()
     {

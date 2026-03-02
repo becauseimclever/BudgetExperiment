@@ -25,11 +25,10 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
         this._client = factory.CreateApiClient();
     }
 
-    #region GET /api/v1/allocations/paycheck
-
     /// <summary>
     /// GET /api/v1/allocations/paycheck returns 200 OK with summary.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_Returns_200_WithSummary()
     {
@@ -46,6 +45,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck without frequency returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithoutFrequency_Returns_400()
     {
@@ -59,6 +59,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck with invalid frequency returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithInvalidFrequency_Returns_400()
     {
@@ -72,6 +73,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck with paycheck amount calculates income.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithAmount_CalculatesIncome()
     {
@@ -91,6 +93,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck with negative amount returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithNegativeAmount_Returns_400()
     {
@@ -104,6 +107,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck with zero amount returns 400 Bad Request.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithZeroAmount_Returns_400()
     {
@@ -117,6 +121,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck with accountId filters by account.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithAccountId_FiltersByAccount()
     {
@@ -138,6 +143,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck supports Weekly frequency.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithWeeklyFrequency_Returns_200()
     {
@@ -154,6 +160,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck supports Monthly frequency.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithMonthlyFrequency_Returns_200()
     {
@@ -170,6 +177,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <summary>
     /// GET /api/v1/allocations/paycheck without amount generates NoIncomeConfigured warning.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPaycheckAllocation_WithoutAmount_HasNoIncomeWarning()
     {
@@ -185,6 +193,4 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
         // Should have either NoIncomeConfigured or NoBillsConfigured (depending on test data)
         Assert.True(summary.Warnings.Count > 0);
     }
-
-    #endregion
 }

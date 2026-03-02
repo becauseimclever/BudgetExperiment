@@ -2,11 +2,11 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Client.Services;
-
 using System.Text.Json;
 
 using Microsoft.JSInterop;
+
+namespace BudgetExperiment.Client.Services;
 
 /// <summary>
 /// Service for capturing GPS coordinates via browser Geolocation API.

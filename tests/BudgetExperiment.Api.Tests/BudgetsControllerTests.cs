@@ -28,6 +28,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets returns 200 OK with empty list when no goals exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetGoalsByMonth_Returns_200_WithGoalList()
     {
@@ -43,6 +44,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -59,6 +62,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// PUT /api/v1/budgets/{categoryId} creates a new budget goal.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SetGoal_Creates_NewGoal_Returns_200()
     {
@@ -90,6 +94,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// PUT /api/v1/budgets/{categoryId} updates an existing budget goal.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SetGoal_Updates_ExistingGoal_Returns_200()
     {
@@ -126,6 +131,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// PUT /api/v1/budgets/{categoryId} returns 404 for non-existent category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task SetGoal_Returns_404_WhenCategoryNotFound()
     {
@@ -147,6 +153,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// PUT /api/v1/budgets/{categoryId} returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -170,6 +178,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// DELETE /api/v1/budgets/{categoryId} deletes a budget goal.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DeleteGoal_Returns_204_WhenDeleted()
     {
@@ -196,6 +205,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// DELETE /api/v1/budgets/{categoryId} returns 404 when goal not found.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task DeleteGoal_Returns_404_WhenNotFound()
     {
@@ -209,6 +219,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// DELETE /api/v1/budgets/{categoryId} returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -224,6 +236,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/category/{categoryId} returns goals for a category.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetGoalsByCategory_Returns_200_WithGoalList()
     {
@@ -251,6 +264,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/progress returns 200 with summary.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProgress_Returns_200_WithSummary()
     {
@@ -268,6 +282,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/progress returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -283,6 +299,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/progress/{categoryId} returns 200 with category progress.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCategoryProgress_Returns_200_WithProgress()
     {
@@ -313,6 +330,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/progress/{categoryId} returns 404 when no goal exists.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCategoryProgress_Returns_404_WhenNoGoalExists()
     {
@@ -326,6 +344,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/progress/{categoryId} returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -341,6 +361,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/summary returns 200 with summary.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSummary_Returns_200_WithSummary()
     {
@@ -358,6 +379,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/budgets/summary returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -373,6 +396,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// Budget progress includes correct status based on spending.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetProgress_IncludesCorrectStatus()
     {
@@ -407,6 +431,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// POST /api/v1/budgets/copy copies goals from source to target month.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CopyGoals_Copies_Goals_Returns_200()
     {
@@ -451,6 +476,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// POST /api/v1/budgets/copy returns 400 for invalid source month.
     /// </summary>
+    /// <param name="sourceMonth">The invalid source month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -476,6 +503,8 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// POST /api/v1/budgets/copy returns 400 for invalid target month.
     /// </summary>
+    /// <param name="targetMonth">The invalid target month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -501,6 +530,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// POST /api/v1/budgets/copy returns 400 when source and target are the same.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CopyGoals_Returns_400_WhenSourceAndTargetAreSame()
     {
@@ -524,6 +554,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// POST /api/v1/budgets/copy with OverwriteExisting=false skips existing goals.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task CopyGoals_SkipsExistingGoals_WhenOverwriteExistingIsFalse()
     {

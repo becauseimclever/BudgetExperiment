@@ -169,6 +169,33 @@ public sealed class TransactionListService : ITransactionListService
         };
     }
 
+    private static List<DailyBalanceSummaryDto> CalculateDailyBalances(
+        List<TransactionListItemDto> sortedForBalance,
+        decimal startingBalanceAmount,
+        string currency)
+    {
+        var dailyBalances = new List<DailyBalanceSummaryDto>();
+        var dayBalance = startingBalanceAmount;
+
+        foreach (var dayGroup in sortedForBalance.GroupBy(i => i.Date).OrderBy(g => g.Key))
+        {
+            var dayStart = dayBalance;
+            var dayTotal = dayGroup.Sum(i => i.Amount.Amount);
+            dayBalance += dayTotal;
+
+            dailyBalances.Add(new DailyBalanceSummaryDto
+            {
+                Date = dayGroup.Key,
+                StartingBalance = new MoneyDto { Currency = currency, Amount = dayStart },
+                EndingBalance = new MoneyDto { Currency = currency, Amount = dayBalance },
+                DayTotal = new MoneyDto { Currency = currency, Amount = dayTotal },
+                TransactionCount = dayGroup.Count(),
+            });
+        }
+
+        return dailyBalances;
+    }
+
     private async Task AddRecurringTransactionInstancesAsync(
         Guid accountId,
         DateOnly startDate,
@@ -264,32 +291,5 @@ public sealed class TransactionListService : ITransactionListService
                 }
             }
         }
-    }
-
-    private static List<DailyBalanceSummaryDto> CalculateDailyBalances(
-        List<TransactionListItemDto> sortedForBalance,
-        decimal startingBalanceAmount,
-        string currency)
-    {
-        var dailyBalances = new List<DailyBalanceSummaryDto>();
-        var dayBalance = startingBalanceAmount;
-
-        foreach (var dayGroup in sortedForBalance.GroupBy(i => i.Date).OrderBy(g => g.Key))
-        {
-            var dayStart = dayBalance;
-            var dayTotal = dayGroup.Sum(i => i.Amount.Amount);
-            dayBalance += dayTotal;
-
-            dailyBalances.Add(new DailyBalanceSummaryDto
-            {
-                Date = dayGroup.Key,
-                StartingBalance = new MoneyDto { Currency = currency, Amount = dayStart },
-                EndingBalance = new MoneyDto { Currency = currency, Amount = dayBalance },
-                DayTotal = new MoneyDto { Currency = currency, Amount = dayTotal },
-                TransactionCount = dayGroup.Count(),
-            });
-        }
-
-        return dailyBalances;
     }
 }

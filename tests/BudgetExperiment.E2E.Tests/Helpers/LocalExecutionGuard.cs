@@ -13,6 +13,7 @@ public static class LocalExecutionGuard
     /// Skips the current test when the target base URL is not local.
     /// </summary>
     /// <param name="baseUrl">Current test base URL.</param>
+    /// <returns>True if the base URL is a local address; otherwise, false.</returns>
     public static bool IsLocalBaseUrl(string baseUrl)
     {
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))

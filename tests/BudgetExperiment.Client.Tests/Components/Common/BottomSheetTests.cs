@@ -2,11 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Components.Common;
 using BudgetExperiment.Client.Services;
-
+using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
@@ -247,13 +245,14 @@ public class BottomSheetTests : BunitContext, IAsyncLifetime
     public void BottomSheet_RendersFooter_WhenProvided()
     {
         // Arrange & Act
+        RenderFragment footerContent = builder =>
+        {
+            builder.AddContent(0, "<button>Save</button>");
+        };
         var cut = Render<BottomSheet>(parameters => parameters
             .Add(p => p.IsVisible, true)
             .AddChildContent("<p>Body content</p>")
-            .Add(p => p.FooterContent, (RenderFragment)(builder =>
-            {
-                builder.AddContent(0, "<button>Save</button>");
-            })));
+            .Add(p => p.FooterContent, footerContent));
 
         // Assert
         var footer = cut.Find(".bottom-sheet__footer");
@@ -263,6 +262,7 @@ public class BottomSheetTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that the bottom sheet calls OnClose when close button is clicked.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BottomSheet_CallsOnClose_WhenCloseButtonClicked()
     {
@@ -289,6 +289,7 @@ public class BottomSheetTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that the bottom sheet calls OnClose when backdrop is clicked.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BottomSheet_CallsOnClose_WhenBackdropClicked()
     {
@@ -315,6 +316,7 @@ public class BottomSheetTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that the bottom sheet does not close when backdrop click is disabled.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BottomSheet_DoesNotClose_WhenBackdropClickDisabled()
     {
@@ -341,6 +343,7 @@ public class BottomSheetTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that the bottom sheet calls OnClose when Escape key is pressed.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BottomSheet_CallsOnClose_WhenEscapePressed()
     {
@@ -408,6 +411,7 @@ public class BottomSheetTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that the bottom sheet shows closing animation class.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task BottomSheet_ShowsClosingClass_WhenClosing()
     {

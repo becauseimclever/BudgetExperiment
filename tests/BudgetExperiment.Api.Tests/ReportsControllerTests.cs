@@ -28,6 +28,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/reports/categories/monthly returns 200 OK with empty report when no transactions exist in that month.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMonthlyCategoryReport_Returns_200_WithEmptyReport()
     {
@@ -48,6 +49,8 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/reports/categories/monthly returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -64,6 +67,8 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/reports/categories/monthly returns 400 for invalid year.
     /// </summary>
+    /// <param name="year">The invalid year value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(1999)]
     [InlineData(2101)]
@@ -79,6 +84,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/reports/categories/monthly returns spending data for transactions in the month.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMonthlyCategoryReport_Returns_SpendingData_ForTransactions()
     {
@@ -140,6 +146,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET /api/v1/reports/categories/monthly separates income from expenses.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetMonthlyCategoryReport_Separates_Income_FromExpenses()
     {
@@ -205,6 +212,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET categories/range returns 200 with empty report when no transactions exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCategoryReportByRange_Returns_200_WithEmptyReport()
     {
@@ -225,6 +233,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET categories/range returns 400 when end date is before start date.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCategoryReportByRange_Returns_400_WhenEndBeforeStart()
     {
@@ -239,6 +248,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET categories/range returns 400 when range exceeds one year.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCategoryReportByRange_Returns_400_WhenRangeExceedsOneYear()
     {
@@ -253,6 +263,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET categories/range returns spending data for transactions in range.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetCategoryReportByRange_Returns_SpendingData()
     {
@@ -308,6 +319,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET trends returns 200 with empty monthly data when no transactions exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetSpendingTrends_Returns_200_WithEmptyData()
     {
@@ -327,6 +339,8 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET trends returns 400 for invalid months parameter.
     /// </summary>
+    /// <param name="months">The invalid months value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(25)]
@@ -343,6 +357,8 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET trends returns 400 for invalid endMonth.
     /// </summary>
+    /// <param name="endMonth">The invalid end month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -360,6 +376,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET day-summary returns 200 with zero totals when no transactions.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetDaySummary_Returns_200_WithEmptyDay()
     {
@@ -380,6 +397,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET day-summary returns spending/income data for a day with transactions.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetDaySummary_Returns_SpendingData()
     {
@@ -436,6 +454,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET budget-comparison returns 200 with summary when no budget goals exist.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetBudgetComparison_Returns_200()
     {
@@ -454,6 +473,8 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET budget-comparison returns 400 for invalid month.
     /// </summary>
+    /// <param name="month">The invalid month value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(13)]
@@ -470,6 +491,8 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <summary>
     /// GET budget-comparison returns 400 for invalid year.
     /// </summary>
+    /// <param name="year">The invalid year value to test.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Theory]
     [InlineData(1999)]
     [InlineData(2101)]

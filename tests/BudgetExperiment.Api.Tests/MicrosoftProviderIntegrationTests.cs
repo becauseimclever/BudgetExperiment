@@ -28,6 +28,7 @@ public sealed class MicrosoftProviderIntegrationTests
     /// <summary>
     /// The /api/v1/config endpoint returns mode=oidc when Provider=Microsoft.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_ReturnsModeOidc_WhenProviderIsMicrosoft()
     {
@@ -43,6 +44,7 @@ public sealed class MicrosoftProviderIntegrationTests
     /// <summary>
     /// The /api/v1/config endpoint returns Microsoft authority when Provider=Microsoft.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_ReturnsMicrosoftAuthority_WhenProviderIsMicrosoft()
     {
@@ -59,6 +61,7 @@ public sealed class MicrosoftProviderIntegrationTests
     /// <summary>
     /// The /api/v1/config endpoint returns the Microsoft ClientId when Provider=Microsoft.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_ReturnsMicrosoftClientId_WhenProviderIsMicrosoft()
     {
@@ -75,6 +78,7 @@ public sealed class MicrosoftProviderIntegrationTests
     /// <summary>
     /// The /api/v1/config endpoint returns standard OIDC scopes for Microsoft provider.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_ReturnsStandardScopes_WhenProviderIsMicrosoft()
     {
@@ -93,6 +97,7 @@ public sealed class MicrosoftProviderIntegrationTests
     /// <summary>
     /// The /api/v1/config endpoint returns 200 OK when Provider=Microsoft.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_Returns200_WhenProviderIsMicrosoft()
     {
@@ -107,6 +112,7 @@ public sealed class MicrosoftProviderIntegrationTests
     /// <summary>
     /// Microsoft authority uses multi-tenant ("common") when TenantId is not specified.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_UsesCommonTenant_WhenTenantIdNotSpecified()
     {
@@ -123,6 +129,7 @@ public sealed class MicrosoftProviderIntegrationTests
     /// <summary>
     /// Existing Authentik configuration still works when no Provider is set (backward compat).
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task ConfigEndpoint_StillWorksForAuthentik_WhenNoProviderSet()
     {
@@ -135,6 +142,52 @@ public sealed class MicrosoftProviderIntegrationTests
         Assert.Equal("oidc", config.Authentication.Mode);
         Assert.NotNull(config.Authentication.Oidc);
         Assert.Equal("https://auth.example.com/application/o/budget/", config.Authentication.Oidc.Authority);
+    }
+
+    /// <summary>
+    /// Replaces the real database with an in-memory database for testing.
+    /// </summary>
+    private static void ReplaceDbWithInMemory(IServiceCollection services, string dbName)
+    {
+        var descriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(DbContextOptions<BudgetDbContext>));
+        if (descriptor != null)
+        {
+            services.Remove(descriptor);
+        }
+
+        var uowDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(IUnitOfWork));
+        if (uowDescriptor != null)
+        {
+            services.Remove(uowDescriptor);
+        }
+
+        var inMemoryServiceProvider = new ServiceCollection()
+            .AddEntityFrameworkInMemoryDatabase()
+            .BuildServiceProvider();
+
+        services.AddDbContext<BudgetDbContext>(options =>
+        {
+            options.UseInMemoryDatabase(dbName)
+                   .UseInternalServiceProvider(inMemoryServiceProvider);
+        });
+
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
+    }
+
+    /// <summary>
+    /// Replaces the real auth handler with a test handler that auto-authenticates.
+    /// </summary>
+    private static void ReplaceAuthWithTestHandler(IServiceCollection services)
+    {
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = "TestAuto";
+            options.DefaultChallengeScheme = "TestAuto";
+        })
+        .AddScheme<AuthenticationSchemeOptions, AutoAuthenticatingTestHandler>(
+            "TestAuto", _ => { });
     }
 
     /// <summary>
@@ -249,51 +302,5 @@ public sealed class MicrosoftProviderIntegrationTests
                 ReplaceAuthWithTestHandler(services);
             });
         }
-    }
-
-    /// <summary>
-    /// Replaces the real database with an in-memory database for testing.
-    /// </summary>
-    private static void ReplaceDbWithInMemory(IServiceCollection services, string dbName)
-    {
-        var descriptor = services.SingleOrDefault(
-            d => d.ServiceType == typeof(DbContextOptions<BudgetDbContext>));
-        if (descriptor != null)
-        {
-            services.Remove(descriptor);
-        }
-
-        var uowDescriptor = services.SingleOrDefault(
-            d => d.ServiceType == typeof(IUnitOfWork));
-        if (uowDescriptor != null)
-        {
-            services.Remove(uowDescriptor);
-        }
-
-        var inMemoryServiceProvider = new ServiceCollection()
-            .AddEntityFrameworkInMemoryDatabase()
-            .BuildServiceProvider();
-
-        services.AddDbContext<BudgetDbContext>(options =>
-        {
-            options.UseInMemoryDatabase(dbName)
-                   .UseInternalServiceProvider(inMemoryServiceProvider);
-        });
-
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
-    }
-
-    /// <summary>
-    /// Replaces the real auth handler with a test handler that auto-authenticates.
-    /// </summary>
-    private static void ReplaceAuthWithTestHandler(IServiceCollection services)
-    {
-        services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = "TestAuto";
-            options.DefaultChallengeScheme = "TestAuto";
-        })
-        .AddScheme<AuthenticationSchemeOptions, AutoAuthenticatingTestHandler>(
-            "TestAuto", _ => { });
     }
 }

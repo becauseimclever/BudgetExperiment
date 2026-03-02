@@ -85,37 +85,6 @@ public class ImportServiceLocationTests
             this._currencyProviderMock.Object);
     }
 
-    private static ImportPreviewRequest CreatePreviewRequest(
-        params string[] descriptions)
-    {
-        var rows = descriptions.Select(d =>
-            (IReadOnlyList<string>)new List<string> { "01/15/2026", d, "-50.00" }).ToList();
-
-        return new ImportPreviewRequest
-        {
-            AccountId = Guid.NewGuid(),
-            Rows = rows,
-            Mappings =
-            [
-                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
-                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
-                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
-            ],
-            DateFormat = "MM/dd/yyyy",
-            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
-            CheckRecurringMatches = false,
-        };
-    }
-
-    private void SetupLocationEnabled(bool enabled)
-    {
-        var settings = AppSettings.CreateDefault();
-        settings.UpdateEnableLocationData(enabled);
-        this._settingsRepoMock
-            .Setup(r => r.GetAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(settings);
-    }
-
     [Fact]
     public async Task PreviewAsync_WhenLocationEnabled_ParsesDescriptions()
     {
@@ -392,5 +361,36 @@ public class ImportServiceLocationTests
         // Assert
         Assert.Equal(3, result.ImportedCount);
         Assert.Equal(2, result.LocationEnrichedCount);
+    }
+
+    private static ImportPreviewRequest CreatePreviewRequest(
+        params string[] descriptions)
+    {
+        var rows = descriptions.Select(d =>
+            (IReadOnlyList<string>)new List<string> { "01/15/2026", d, "-50.00" }).ToList();
+
+        return new ImportPreviewRequest
+        {
+            AccountId = Guid.NewGuid(),
+            Rows = rows,
+            Mappings =
+            [
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+                new ColumnMappingDto { ColumnIndex = 1, TargetField = ImportField.Description },
+                new ColumnMappingDto { ColumnIndex = 2, TargetField = ImportField.Amount },
+            ],
+            DateFormat = "MM/dd/yyyy",
+            DuplicateSettings = new DuplicateDetectionSettingsDto { Enabled = false },
+            CheckRecurringMatches = false,
+        };
+    }
+
+    private void SetupLocationEnabled(bool enabled)
+    {
+        var settings = AppSettings.CreateDefault();
+        settings.UpdateEnableLocationData(enabled);
+        this._settingsRepoMock
+            .Setup(r => r.GetAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(settings);
     }
 }

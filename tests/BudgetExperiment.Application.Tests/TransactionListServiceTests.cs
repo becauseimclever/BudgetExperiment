@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 using Moq;
@@ -379,8 +378,6 @@ public class TransactionListServiceTests
         Assert.Equal(result.Summary.CurrentBalance.Amount, lastItem.RunningBalance!.Amount);
     }
 
-    #region Unified Transaction Display Tests (Feature 014)
-
     [Fact]
     public async Task GetAccountTransactionListAsync_Shows_All_Four_Item_Types()
     {
@@ -632,10 +629,6 @@ public class TransactionListServiceTests
         Assert.Equal(1, result.Summary.TransactionCount);
         Assert.Equal(0, result.Summary.RecurringCount);
     }
-
-    #endregion
-
-    #region Running Balance Tests
 
     [Fact]
     public async Task GetAccountTransactionListAsync_IncludesStartingBalance()
@@ -1231,21 +1224,6 @@ public class TransactionListServiceTests
         Assert.Equal(0m, result.StartingBalance.Amount);
     }
 
-    #endregion
-
-    private TransactionListService CreateService()
-    {
-        return new TransactionListService(
-            _transactionRepo.Object,
-            _recurringRepo.Object,
-            _recurringTransferRepo.Object,
-            _accountRepo.Object,
-            _balanceService.Object,
-            _recurringInstanceProjector.Object,
-            _recurringTransferInstanceProjector.Object,
-            _currencyProvider.Object);
-    }
-
     private static Account CreateTestAccount(Guid id, string name)
     {
         // Use reflection to create account for testing since factory may not allow setting ID
@@ -1370,5 +1348,18 @@ public class TransactionListServiceTests
     {
         var idProperty = typeof(T).GetProperty("Id");
         idProperty?.SetValue(entity, id);
+    }
+
+    private TransactionListService CreateService()
+    {
+        return new TransactionListService(
+            _transactionRepo.Object,
+            _recurringRepo.Object,
+            _recurringTransferRepo.Object,
+            _accountRepo.Object,
+            _balanceService.Object,
+            _recurringInstanceProjector.Object,
+            _recurringTransferInstanceProjector.Object,
+            _currencyProvider.Object);
     }
 }

@@ -2,11 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using Bunit;
-
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
-
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -30,6 +28,7 @@ public class LicensesPageTests : BunitContext, IAsyncLifetime
 
     /// <inheritdoc/>
     public new Task DisposeAsync() => base.DisposeAsync().AsTask();
+
     /// <summary>
     /// Verifies that the licenses page renders without errors.
     /// </summary>

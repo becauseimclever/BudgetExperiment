@@ -3,10 +3,9 @@
 // </copyright>
 
 using System.Threading;
-
-using Bunit;
 using BudgetExperiment.Client.Components.Export;
 using BudgetExperiment.Client.Services;
+using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components;

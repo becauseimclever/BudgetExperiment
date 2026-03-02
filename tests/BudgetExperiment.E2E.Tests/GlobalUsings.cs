@@ -2,6 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-global using Xunit;
 global using Microsoft.Playwright;
+global using Xunit;
 global using static Microsoft.Playwright.Assertions;

@@ -27,6 +27,7 @@ public sealed class SettingsControllerLocationTests : IClassFixture<CustomWebApp
     /// <summary>
     /// DELETE /api/v1/settings/location-data returns 200 with cleared count.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_LocationData_Returns200WithCount()
     {
@@ -72,6 +73,7 @@ public sealed class SettingsControllerLocationTests : IClassFixture<CustomWebApp
     /// <summary>
     /// DELETE /api/v1/settings/location-data clears persisted location data.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Delete_LocationData_ClearsPersistedLocations()
     {

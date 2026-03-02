@@ -265,45 +265,6 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
-    private static RecurrencePatternValue CreateRecurrencePattern(
-        string frequency,
-        int interval,
-        int? dayOfMonth,
-        string? dayOfWeek,
-        int? monthOfYear)
-    {
-        if (!Enum.TryParse<RecurrenceFrequency>(frequency, ignoreCase: true, out var freq))
-        {
-            throw new DomainException($"Invalid frequency: {frequency}");
-        }
-
-        return freq switch
-        {
-            RecurrenceFrequency.Daily => RecurrencePatternValue.CreateDaily(interval),
-            RecurrenceFrequency.Weekly => RecurrencePatternValue.CreateWeekly(interval, ParseDayOfWeek(dayOfWeek)),
-            RecurrenceFrequency.BiWeekly => RecurrencePatternValue.CreateBiWeekly(ParseDayOfWeek(dayOfWeek)),
-            RecurrenceFrequency.Monthly => RecurrencePatternValue.CreateMonthly(interval, dayOfMonth ?? 1),
-            RecurrenceFrequency.Quarterly => RecurrencePatternValue.CreateQuarterly(dayOfMonth ?? 1),
-            RecurrenceFrequency.Yearly => RecurrencePatternValue.CreateYearly(dayOfMonth ?? 1, monthOfYear ?? 1),
-            _ => throw new DomainException($"Unsupported frequency: {frequency}"),
-        };
-    }
-
-    private static DayOfWeek ParseDayOfWeek(string? dayOfWeek)
-    {
-        if (string.IsNullOrWhiteSpace(dayOfWeek))
-        {
-            throw new DomainException("Day of week is required for weekly/biweekly patterns.");
-        }
-
-        if (!Enum.TryParse<DayOfWeek>(dayOfWeek, ignoreCase: true, out var dow))
-        {
-            throw new DomainException($"Invalid day of week: {dayOfWeek}");
-        }
-
-        return dow;
-    }
-
     /// <inheritdoc />
     public async Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -351,5 +312,44 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         {
             Patterns = recurring.ImportPatterns.Select(p => p.Pattern).ToList(),
         };
+    }
+
+    private static RecurrencePatternValue CreateRecurrencePattern(
+        string frequency,
+        int interval,
+        int? dayOfMonth,
+        string? dayOfWeek,
+        int? monthOfYear)
+    {
+        if (!Enum.TryParse<RecurrenceFrequency>(frequency, ignoreCase: true, out var freq))
+        {
+            throw new DomainException($"Invalid frequency: {frequency}");
+        }
+
+        return freq switch
+        {
+            RecurrenceFrequency.Daily => RecurrencePatternValue.CreateDaily(interval),
+            RecurrenceFrequency.Weekly => RecurrencePatternValue.CreateWeekly(interval, ParseDayOfWeek(dayOfWeek)),
+            RecurrenceFrequency.BiWeekly => RecurrencePatternValue.CreateBiWeekly(ParseDayOfWeek(dayOfWeek)),
+            RecurrenceFrequency.Monthly => RecurrencePatternValue.CreateMonthly(interval, dayOfMonth ?? 1),
+            RecurrenceFrequency.Quarterly => RecurrencePatternValue.CreateQuarterly(dayOfMonth ?? 1),
+            RecurrenceFrequency.Yearly => RecurrencePatternValue.CreateYearly(dayOfMonth ?? 1, monthOfYear ?? 1),
+            _ => throw new DomainException($"Unsupported frequency: {frequency}"),
+        };
+    }
+
+    private static DayOfWeek ParseDayOfWeek(string? dayOfWeek)
+    {
+        if (string.IsNullOrWhiteSpace(dayOfWeek))
+        {
+            throw new DomainException("Day of week is required for weekly/biweekly patterns.");
+        }
+
+        if (!Enum.TryParse<DayOfWeek>(dayOfWeek, ignoreCase: true, out var dow))
+        {
+            throw new DomainException($"Invalid day of week: {dayOfWeek}");
+        }
+
+        return dow;
     }
 }

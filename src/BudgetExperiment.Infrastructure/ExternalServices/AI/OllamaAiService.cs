@@ -16,16 +16,16 @@ namespace BudgetExperiment.Infrastructure.ExternalServices.AI;
 /// </summary>
 public sealed class OllamaAiService : IAiService
 {
-    private readonly HttpClient _httpClient;
-    private readonly IAppSettingsService _settingsService;
-    private readonly ILogger<OllamaAiService> _logger;
-
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
+
+    private readonly HttpClient _httpClient;
+    private readonly IAppSettingsService _settingsService;
+    private readonly ILogger<OllamaAiService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OllamaAiService"/> class.
@@ -227,8 +227,6 @@ public sealed class OllamaAiService : IAiService
         }
     }
 
-    #region Ollama API DTOs
-
     private sealed class OllamaTagsResponse
     {
         public List<OllamaModelInfo>? Models { get; set; }
@@ -290,6 +288,4 @@ public sealed class OllamaAiService : IAiService
 
         public long? EvalDuration { get; set; }
     }
-
-    #endregion
 }

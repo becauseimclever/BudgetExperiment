@@ -27,7 +27,8 @@ public sealed class GenericOidcClaimMapperTests
         [
             new Claim("sub", "user-123"),
             new Claim("nickname", "testuser"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
         var mappings = new Dictionary<string, string>
         {
@@ -54,7 +55,8 @@ public sealed class GenericOidcClaimMapperTests
         [
             new Claim("sub", "user-123"),
             new Claim("email", "user@example.com"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
         var mappings = new Dictionary<string, string>();
 
@@ -79,7 +81,8 @@ public sealed class GenericOidcClaimMapperTests
             new Claim("sub", "user-123"),
             new Claim("email", "user@example.com"),
             new Claim("preferred_username", "existing-user"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
         var mappings = new Dictionary<string, string>();
 
@@ -104,7 +107,8 @@ public sealed class GenericOidcClaimMapperTests
             new Claim("sub", "user-123"),
             new Claim("login", "testuser"),
             new Claim("full_name", "Test User"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
         var mappings = new Dictionary<string, string>
         {
@@ -130,7 +134,8 @@ public sealed class GenericOidcClaimMapperTests
         var identity = new ClaimsIdentity(
         [
             new Claim("sub", "user-123"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
         var mappings = new Dictionary<string, string>
         {
@@ -156,7 +161,8 @@ public sealed class GenericOidcClaimMapperTests
             new Claim("sub", "user-123"),
             new Claim("nickname", "from-nickname"),
             new Claim("preferred_username", "already-exists"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
         var mappings = new Dictionary<string, string>
         {
@@ -206,7 +212,8 @@ public sealed class GenericOidcClaimMapperTests
         [
             new Claim("sub", "user-123"),
             new Claim("email", "user@example.com"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act — should not throw
@@ -228,7 +235,8 @@ public sealed class GenericOidcClaimMapperTests
             new Claim("sub", "user-123"),
             new Claim("email", "user@example.com"),
             new Claim("custom_claim", "custom_value"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
         var mappings = new Dictionary<string, string>
         {
@@ -256,7 +264,8 @@ public sealed class GenericOidcClaimMapperTests
         [
             new Claim("sub", "user-123"),
             new Claim("email", "user@auth0.com"),
-        ], "Bearer");
+        ],
+        "Bearer");
         var principal = new ClaimsPrincipal(identity);
 
         // Act

@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
@@ -357,8 +356,6 @@ public class ChatServiceTests
         result.ShouldBeFalse();
     }
 
-    #region Mock Implementations
-
     private sealed class MockChatSessionRepository : IChatSessionRepository
     {
         private readonly Dictionary<Guid, ChatSession> _sessions = new();
@@ -707,6 +704,4 @@ public class ChatServiceTests
             return Task.FromResult(this.Currency);
         }
     }
-
-    #endregion
 }

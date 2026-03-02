@@ -9,6 +9,11 @@ namespace BudgetExperiment.Domain.Accounts;
 /// </summary>
 public sealed class Transaction
 {
+    /// <summary>
+    /// Maximum length for external reference.
+    /// </summary>
+    public const int MaxExternalReferenceLength = 100;
+
     private readonly List<object> _domainEvents = new();
 
     /// <summary>
@@ -145,11 +150,6 @@ public sealed class Transaction
     /// Gets the geographic location of the transaction (null if not set).
     /// </summary>
     public TransactionLocationValue? Location { get; private set; }
-
-    /// <summary>
-    /// Maximum length for external reference.
-    /// </summary>
-    public const int MaxExternalReferenceLength = 100;
 
     /// <summary>
     /// Creates a new transaction.
@@ -352,19 +352,6 @@ public sealed class Transaction
     }
 
     /// <summary>
-    /// Sets the scope from the parent account.
-    /// </summary>
-    /// <param name="scope">The budget scope.</param>
-    /// <param name="ownerUserId">The owner user ID (null for shared).</param>
-    /// <param name="createdByUserId">The user ID who created this transaction.</param>
-    internal void SetScope(BudgetScope scope, Guid? ownerUserId, Guid createdByUserId)
-    {
-        this.Scope = scope;
-        this.OwnerUserId = ownerUserId;
-        this.CreatedByUserId = createdByUserId;
-    }
-
-    /// <summary>
     /// Associates this transaction with an import batch.
     /// </summary>
     /// <param name="batchId">The import batch identifier.</param>
@@ -448,5 +435,18 @@ public sealed class Transaction
         this.RecurringTransactionId = null;
         this.RecurringInstanceDate = null;
         this.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the scope from the parent account.
+    /// </summary>
+    /// <param name="scope">The budget scope.</param>
+    /// <param name="ownerUserId">The owner user ID (null for shared).</param>
+    /// <param name="createdByUserId">The user ID who created this transaction.</param>
+    internal void SetScope(BudgetScope scope, Guid? ownerUserId, Guid createdByUserId)
+    {
+        this.Scope = scope;
+        this.OwnerUserId = ownerUserId;
+        this.CreatedByUserId = createdByUserId;
     }
 }
