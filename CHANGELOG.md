@@ -35,6 +35,7 @@ All notable changes to Budget Experiment.
 
 ### Refactoring
 
+- **all:** Decouple Client from Domain — create `BudgetExperiment.Shared` project, move 10 domain enums (`BudgetScope`, `CategorySource`, `DescriptionMatchMode`, `ChatActionStatus`, `ChatActionType`, `ChatRole`, `AmountParseMode`, `ImportBatchStatus`, `ImportField`, `ImportRowStatus`) to Shared; remove Client → Domain project reference; remove 13 domain namespace imports from Client; Client now depends only on Contracts → Shared (Feature 079)
 - **all:** Re-enable StyleCop analyzers — fix ~1,500+ violations across all 11 projects: company headers (`BecauseImClever`), member ordering (SA1201/SA1202/SA1203/SA1204), parameter formatting (SA1117/SA1118), XML doc completeness (SA1611/SA1615/SA1623/SA1629), using placement (SA1200/SA1210), file hygiene (SA1402/SA1507/SA1515/SA1518), arithmetic parentheses (SA1407); extract types to satisfy one-type-per-file rule; `TreatWarningsAsErrors=true` enforced (Feature 078)
 - **domain:** Organize domain interfaces — move `IAutoRealizeService`, `ITransactionMatcher`, `IRecurringInstanceProjector`, `IRecurringTransferInstanceProjector` from `Repositories/` to `Services/`; move `IUserContext` from `Repositories/` to `Identity/`; `Repositories/` now contains only data access abstractions (Feature 077)
 - **domain:** Rename 17 value objects with `Value` suffix per §5 naming convention — `GeoCoordinateValue`, `TransactionLocationValue`, `MatchingTolerancesValue`, `DailyTotalValue`, `ColumnMappingValue`, `SkipRowsSettingsValue`, `DebitCreditIndicatorSettingsValue`, `DuplicateDetectionSettingsValue`, `BillInfoValue`, `RecurrencePatternValue`, `RecurringInstanceInfoValue`, `RecurringTransferInstanceInfoValue`, `ImportPatternValue`, `PaycheckAllocationValue`, `PaycheckAllocationSummaryValue`, `PaycheckAllocationWarningValue`, `TransactionMatchResultValue` (Feature 076)
@@ -48,6 +49,7 @@ All notable changes to Budget Experiment.
 - **infrastructure:** 4 integration tests for scope filtering isolation in `TransactionRepository` (Feature 065)
 - **application:** Regression test for CSV import double-skip bug (Feature 069)
 - **application:** 6 unit tests + 2 integration tests for AI JSON extraction (Feature 070)
+- **application:** 36 unit tests for `RecurringTransactionService` — covers all 12 public methods (CRUD, pause/resume, skip, import patterns), all frequency types, error paths; prerequisite for Feature 080 god service decomposition (Feature 080)
 - **client:** Unit tests for donut chart segment filtering, sorting, and fallback color (Feature 067)
 
 ### Documentation
