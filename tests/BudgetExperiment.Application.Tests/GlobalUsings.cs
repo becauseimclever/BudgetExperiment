@@ -8,11 +8,13 @@ global using BudgetExperiment.Domain.Budgeting;
 global using BudgetExperiment.Domain.Categorization;
 global using BudgetExperiment.Domain.Chat;
 global using BudgetExperiment.Domain.Common;
+global using BudgetExperiment.Domain.Identity;
 global using BudgetExperiment.Domain.Import;
 global using BudgetExperiment.Domain.Paycheck;
 global using BudgetExperiment.Domain.Reconciliation;
 global using BudgetExperiment.Domain.Recurring;
 global using BudgetExperiment.Domain.Repositories;
+global using BudgetExperiment.Domain.Services;
 global using BudgetExperiment.Domain.Settings;
 
 // Application namespaces

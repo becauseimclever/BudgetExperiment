@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Fortinbra (becauseimclever.com). All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Repositories;
+namespace BudgetExperiment.Domain.Identity;
 
 /// <summary>
 /// Provides access to the current authenticated user's identity and claims.

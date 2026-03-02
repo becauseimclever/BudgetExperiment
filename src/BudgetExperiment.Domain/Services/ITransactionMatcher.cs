@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Repositories;
+namespace BudgetExperiment.Domain.Services;
 
 /// <summary>
 /// Matches imported transactions with recurring transaction instances.

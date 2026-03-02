@@ -2,7 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Domain.Repositories;
+namespace BudgetExperiment.Domain.Services;
 
 /// <summary>
 /// Projects recurring transfer instances for date ranges.
