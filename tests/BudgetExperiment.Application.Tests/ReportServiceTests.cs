@@ -38,7 +38,7 @@ public class ReportServiceTests
         categoryRepo.Setup(r => r.GetByIdAsync(groceriesCategory.Id, default))
             .ReturnsAsync(groceriesCategory);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, currencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, currencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -60,7 +60,7 @@ public class ReportServiceTests
             new DateOnly(2026, 1, 31),
             null,
             default)).ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -100,7 +100,7 @@ public class ReportServiceTests
         categoryRepo.Setup(r => r.GetByIdAsync(groceriesCategory.Id, default)).ReturnsAsync(groceriesCategory);
         categoryRepo.Setup(r => r.GetByIdAsync(entertainmentCategory.Id, default)).ReturnsAsync(entertainmentCategory);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -151,7 +151,7 @@ public class ReportServiceTests
         categoryRepo.Setup(r => r.GetByIdAsync(category1.Id, default)).ReturnsAsync(category1);
         categoryRepo.Setup(r => r.GetByIdAsync(category2.Id, default)).ReturnsAsync(category2);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -185,7 +185,7 @@ public class ReportServiceTests
             null,
             default)).ReturnsAsync(transactions);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -227,7 +227,7 @@ public class ReportServiceTests
         categoryRepo.Setup(r => r.GetByIdAsync(incomeCategory.Id, default)).ReturnsAsync(incomeCategory);
         categoryRepo.Setup(r => r.GetByIdAsync(expenseCategory.Id, default)).ReturnsAsync(expenseCategory);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -265,7 +265,7 @@ public class ReportServiceTests
 
         categoryRepo.Setup(r => r.GetByIdAsync(category.Id, default)).ReturnsAsync(category);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -303,7 +303,7 @@ public class ReportServiceTests
         categoryRepo.Setup(r => r.GetByIdAsync(largeCategory.Id, default)).ReturnsAsync(largeCategory);
         categoryRepo.Setup(r => r.GetByIdAsync(mediumCategory.Id, default)).ReturnsAsync(mediumCategory);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
@@ -328,7 +328,7 @@ public class ReportServiceTests
             null,
             default)).ReturnsAsync(new List<Transaction>());
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetMonthlyCategoryReportAsync(2026, 2);
@@ -358,7 +358,7 @@ public class ReportServiceTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetCategoryReportByRangeAsync(startDate, endDate);
@@ -395,7 +395,7 @@ public class ReportServiceTests
         categoryRepo.Setup(r => r.GetByIdAsync(groceries.Id, default)).ReturnsAsync(groceries);
         categoryRepo.Setup(r => r.GetByIdAsync(dining.Id, default)).ReturnsAsync(dining);
 
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetCategoryReportByRangeAsync(startDate, endDate);
@@ -422,7 +422,7 @@ public class ReportServiceTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, accountId, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetCategoryReportByRangeAsync(startDate, endDate, accountId);
@@ -451,7 +451,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(transactions);
         categoryRepo.Setup(r => r.GetByIdAsync(category.Id, default)).ReturnsAsync(category);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetCategoryReportByRangeAsync(startDate, endDate);
@@ -471,7 +471,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(6, 2026, 6);
@@ -502,7 +502,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(2, 2026, 2);
@@ -541,7 +541,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(1, 2026, 1, groceries.Id);
@@ -561,7 +561,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(100, 2026, 6);
@@ -587,7 +587,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(4, 2026, 4);
@@ -614,7 +614,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(4, 2026, 4);
@@ -639,7 +639,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(1, 2026, 1);
@@ -665,7 +665,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(3, 2026, 3);
@@ -694,7 +694,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(
             It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingTrendsAsync(4, 2026, 2);
@@ -717,7 +717,7 @@ public class ReportServiceTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(date, date, null, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetDaySummaryAsync(date);
@@ -752,7 +752,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(date, date, null, default))
             .ReturnsAsync(transactions);
         categoryRepo.Setup(r => r.GetByIdAsync(expenseCategory.Id, default)).ReturnsAsync(expenseCategory);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetDaySummaryAsync(date);
@@ -790,7 +790,7 @@ public class ReportServiceTests
         categoryRepo.Setup(r => r.GetByIdAsync(cat2.Id, default)).ReturnsAsync(cat2);
         categoryRepo.Setup(r => r.GetByIdAsync(cat3.Id, default)).ReturnsAsync(cat3);
         categoryRepo.Setup(r => r.GetByIdAsync(cat4.Id, default)).ReturnsAsync(cat4);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetDaySummaryAsync(date);
@@ -820,7 +820,7 @@ public class ReportServiceTests
         transactionRepo.Setup(r => r.GetByDateRangeAsync(date, date, null, default))
             .ReturnsAsync(transactions);
         categoryRepo.Setup(r => r.GetByIdAsync(category.Id, default)).ReturnsAsync(category);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetDaySummaryAsync(date);
@@ -840,7 +840,7 @@ public class ReportServiceTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(date, date, accountId, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetDaySummaryAsync(date, accountId);
@@ -865,7 +865,7 @@ public class ReportServiceTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(date, date, null, default))
             .ReturnsAsync(transactions);
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetDaySummaryAsync(date);
@@ -904,5 +904,18 @@ public class ReportServiceTests
         var mock = new Mock<ICurrencyProvider>();
         mock.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
         return mock;
+    }
+
+    private static ReportService CreateReportService(
+        Mock<ITransactionRepository> transactionRepo,
+        Mock<IBudgetCategoryRepository> categoryRepo,
+        Mock<ICurrencyProvider> currencyProvider)
+    {
+        return new ReportService(
+            transactionRepo.Object,
+            categoryRepo.Object,
+            currencyProvider.Object,
+            new TrendReportBuilder(transactionRepo.Object, currencyProvider.Object),
+            new LocationReportBuilder(transactionRepo.Object));
     }
 }

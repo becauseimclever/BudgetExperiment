@@ -61,7 +61,11 @@ public static class DependencyInjection
         services.AddScoped<INaturalLanguageParser, NaturalLanguageParser>();
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<ITransactionMatcher, TransactionMatcher>();
+        services.AddScoped<IReconciliationStatusBuilder, ReconciliationStatusBuilder>();
+        services.AddScoped<IReconciliationMatchActionHandler, ReconciliationMatchActionHandler>();
         services.AddScoped<IReconciliationService, ReconciliationService>();
+        services.AddScoped<ITrendReportBuilder, TrendReportBuilder>();
+        services.AddScoped<ILocationReportBuilder, LocationReportBuilder>();
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<ICustomReportLayoutService, CustomReportLayoutService>();
         services.AddScoped<IExportFormatter, CsvExportService>();

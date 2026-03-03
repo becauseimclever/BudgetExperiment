@@ -30,7 +30,7 @@ public class ReportServiceLocationTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingByLocationAsync(startDate, endDate);
@@ -64,7 +64,7 @@ public class ReportServiceLocationTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(new List<Transaction> { t1, t2, t3 });
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingByLocationAsync(startDate, endDate);
@@ -105,7 +105,7 @@ public class ReportServiceLocationTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(new List<Transaction> { t1, t2 });
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingByLocationAsync(startDate, endDate);
@@ -136,7 +136,7 @@ public class ReportServiceLocationTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(new List<Transaction> { spending, transfer });
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingByLocationAsync(startDate, endDate);
@@ -163,7 +163,7 @@ public class ReportServiceLocationTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, accountId, default))
             .ReturnsAsync(new List<Transaction>());
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingByLocationAsync(startDate, endDate, accountId);
@@ -192,7 +192,7 @@ public class ReportServiceLocationTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(new List<Transaction> { t1, t2, t3 });
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingByLocationAsync(startDate, endDate);
@@ -231,7 +231,7 @@ public class ReportServiceLocationTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         transactionRepo.Setup(r => r.GetByDateRangeAsync(startDate, endDate, null, default))
             .ReturnsAsync(new List<Transaction> { withLocation, withoutLocation });
-        var service = new ReportService(transactionRepo.Object, categoryRepo.Object, DefaultCurrencyProvider.Object);
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
 
         // Act
         var result = await service.GetSpendingByLocationAsync(startDate, endDate);
@@ -293,5 +293,18 @@ public class ReportServiceLocationTests
         var mock = new Mock<ICurrencyProvider>();
         mock.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(currency);
         return mock;
+    }
+
+    private static ReportService CreateReportService(
+        Mock<ITransactionRepository> transactionRepo,
+        Mock<IBudgetCategoryRepository> categoryRepo,
+        Mock<ICurrencyProvider> currencyProvider)
+    {
+        return new ReportService(
+            transactionRepo.Object,
+            categoryRepo.Object,
+            currencyProvider.Object,
+            new TrendReportBuilder(transactionRepo.Object, currencyProvider.Object),
+            new LocationReportBuilder(transactionRepo.Object));
     }
 }

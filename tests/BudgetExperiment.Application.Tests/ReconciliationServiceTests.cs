@@ -927,12 +927,26 @@ public class ReconciliationServiceTests
 
     private ReconciliationService CreateService()
     {
+        var statusBuilder = new ReconciliationStatusBuilder(
+            _matchRepository.Object,
+            _recurringRepository.Object,
+            _transactionRepository.Object,
+            _instanceProjector.Object);
+
+        var matchActionHandler = new ReconciliationMatchActionHandler(
+            _matchRepository.Object,
+            _recurringRepository.Object,
+            _transactionRepository.Object,
+            _unitOfWork.Object);
+
         return new ReconciliationService(
             _matchRepository.Object,
             _recurringRepository.Object,
             _transactionRepository.Object,
             _instanceProjector.Object,
             _transactionMatcher.Object,
-            _unitOfWork.Object);
+            _unitOfWork.Object,
+            statusBuilder,
+            matchActionHandler);
     }
 }

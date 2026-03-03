@@ -41,6 +41,8 @@ All notable changes to Budget Experiment.
 - **domain:** Rename 17 value objects with `Value` suffix per §5 naming convention — `GeoCoordinateValue`, `TransactionLocationValue`, `MatchingTolerancesValue`, `DailyTotalValue`, `ColumnMappingValue`, `SkipRowsSettingsValue`, `DebitCreditIndicatorSettingsValue`, `DuplicateDetectionSettingsValue`, `BillInfoValue`, `RecurrencePatternValue`, `RecurringInstanceInfoValue`, `RecurringTransferInstanceInfoValue`, `ImportPatternValue`, `PaycheckAllocationValue`, `PaycheckAllocationSummaryValue`, `PaycheckAllocationWarningValue`, `TransactionMatchResultValue` (Feature 076)
 - **application:** Decompose `RuleSuggestionService` (857 → 260 lines) — extract `RuleSuggestionResponseParser` (~350 lines, AI JSON → domain objects), `RuleSuggestionPromptBuilder` (~115 lines, static prompt building), `SuggestionAcceptanceHandler` (~150 lines, accept/dismiss/feedback lifecycle) with `IRuleSuggestionResponseParser` and `ISuggestionAcceptanceHandler` interfaces (Feature 080 Phase 2)
 - **application:** Decompose `NaturalLanguageParser` (556 → 130 lines) — extract `ChatActionParser` (~450 lines, static response → ChatAction parsing); orchestrator now delegates all response parsing (Feature 080 Phase 2)
+- **application:** Decompose `ReconciliationService` (545 → 335 lines) — extract `ReconciliationStatusBuilder` (171 lines, period status reports), `ReconciliationMatchActionHandler` (208 lines, accept/reject/unlink/bulk/manual-link lifecycle) with `IReconciliationStatusBuilder` and `IReconciliationMatchActionHandler` interfaces (Feature 080 Phase 3)
+- **application:** Decompose `ReportService` (423 → 252 lines) — extract `TrendReportBuilder` (165 lines, monthly spending trends), `LocationReportBuilder` (118 lines, geographic spending grouping) with `ITrendReportBuilder` and `ILocationReportBuilder` interfaces (Feature 080 Phase 3)
 - **application:** Replace 51 hardcoded `"USD"` strings across 11 Application services with `ICurrencyProvider` — all monetary values now derive currency from user's `PreferredCurrency` setting (Feature 064)
 - **contracts:** Change `MoneyDto.Currency` default from `"USD"` to `string.Empty` — all callers now set currency explicitly via `ICurrencyProvider` (Feature 064)
 
@@ -53,6 +55,7 @@ All notable changes to Budget Experiment.
 - **application:** 6 unit tests + 2 integration tests for AI JSON extraction (Feature 070)
 - **application:** 36 unit tests for `RecurringTransactionService` — covers all 12 public methods (CRUD, pause/resume, skip, import patterns), all frequency types, error paths; prerequisite for Feature 080 god service decomposition (Feature 080)
 - **application:** 42 unit tests for Phase 2 extracted components — 13 `RuleSuggestionResponseParserTests`, 9 `SuggestionAcceptanceHandlerTests`, 20 `ChatActionParserTests`; all 2,748 tests passing (Feature 080 Phase 2)
+- **application:** 35 unit tests for Phase 3 extracted components — 8 `ReconciliationStatusBuilderTests`, 11 `ReconciliationMatchActionHandlerTests`, 8 `TrendReportBuilderTests`, 8 `LocationReportBuilderTests`; all 2,783 tests passing (Feature 080 Phase 3)
 - **client:** Unit tests for donut chart segment filtering, sorting, and fallback color (Feature 067)
 
 ### Documentation

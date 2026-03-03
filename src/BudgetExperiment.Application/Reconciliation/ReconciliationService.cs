@@ -9,6 +9,8 @@ namespace BudgetExperiment.Application.Reconciliation;
 
 /// <summary>
 /// Application service for recurring transaction reconciliation workflow.
+/// Orchestrates match discovery, queries, and delegates match actions
+/// and status reporting to focused sub-services.
 /// </summary>
 public sealed class ReconciliationService : IReconciliationService
 {
@@ -18,6 +20,8 @@ public sealed class ReconciliationService : IReconciliationService
     private readonly IRecurringInstanceProjector _instanceProjector;
     private readonly ITransactionMatcher _transactionMatcher;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IReconciliationStatusBuilder _statusBuilder;
+    private readonly IReconciliationMatchActionHandler _matchActionHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReconciliationService"/> class.
@@ -28,13 +32,17 @@ public sealed class ReconciliationService : IReconciliationService
     /// <param name="instanceProjector">The recurring instance projector.</param>
     /// <param name="transactionMatcher">The transaction matcher domain service.</param>
     /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="statusBuilder">The reconciliation status builder.</param>
+    /// <param name="matchActionHandler">The reconciliation match action handler.</param>
     public ReconciliationService(
         IReconciliationMatchRepository matchRepository,
         IRecurringTransactionRepository recurringRepository,
         ITransactionRepository transactionRepository,
         IRecurringInstanceProjector instanceProjector,
         ITransactionMatcher transactionMatcher,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IReconciliationStatusBuilder statusBuilder,
+        IReconciliationMatchActionHandler matchActionHandler)
     {
         this._matchRepository = matchRepository;
         this._recurringRepository = recurringRepository;
@@ -42,6 +50,8 @@ public sealed class ReconciliationService : IReconciliationService
         this._instanceProjector = instanceProjector;
         this._transactionMatcher = transactionMatcher;
         this._unitOfWork = unitOfWork;
+        this._statusBuilder = statusBuilder;
+        this._matchActionHandler = matchActionHandler;
     }
 
     /// <inheritdoc />
@@ -175,273 +185,52 @@ public sealed class ReconciliationService : IReconciliationService
     }
 
     /// <inheritdoc />
-    public async Task<ReconciliationMatchDto?> AcceptMatchAsync(
+    public Task<ReconciliationMatchDto?> AcceptMatchAsync(
         Guid matchId,
         CancellationToken cancellationToken = default)
     {
-        var match = await this._matchRepository.GetByIdAsync(matchId, cancellationToken);
-        if (match is null)
-        {
-            return null;
-        }
-
-        match.Accept();
-
-        // Link the transaction to the recurring instance
-        var transaction = await this._transactionRepository.GetByIdAsync(
-            match.ImportedTransactionId,
-            cancellationToken);
-        transaction?.LinkToRecurringInstance(match.RecurringTransactionId, match.RecurringInstanceDate);
-
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var recurring = await this._recurringRepository.GetByIdAsync(
-            match.RecurringTransactionId,
-            cancellationToken);
-
-        return ReconciliationMapper.ToDto(
-            match,
-            transaction,
-            recurring?.Description,
-            recurring?.Amount);
+        return this._matchActionHandler.AcceptMatchAsync(matchId, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<ReconciliationMatchDto?> RejectMatchAsync(
+    public Task<ReconciliationMatchDto?> RejectMatchAsync(
         Guid matchId,
         CancellationToken cancellationToken = default)
     {
-        var match = await this._matchRepository.GetByIdAsync(matchId, cancellationToken);
-        if (match is null)
-        {
-            return null;
-        }
-
-        match.Reject();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return ReconciliationMapper.ToDto(match);
+        return this._matchActionHandler.RejectMatchAsync(matchId, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ReconciliationMatchDto>> BulkAcceptMatchesAsync(
+    public Task<IReadOnlyList<ReconciliationMatchDto>> BulkAcceptMatchesAsync(
         BulkMatchActionRequest request,
         CancellationToken cancellationToken = default)
     {
-        var accepted = new List<ReconciliationMatchDto>();
-
-        foreach (var matchId in request.MatchIds)
-        {
-            var result = await this.AcceptMatchAsync(matchId, cancellationToken);
-            if (result != null)
-            {
-                accepted.Add(result);
-            }
-        }
-
-        return accepted;
+        return this._matchActionHandler.BulkAcceptMatchesAsync(request, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<ReconciliationStatusDto> GetReconciliationStatusAsync(
+    public Task<ReconciliationStatusDto> GetReconciliationStatusAsync(
         int year,
         int month,
         CancellationToken cancellationToken = default)
     {
-        var startDate = new DateOnly(year, month, 1);
-        var endDate = startDate.AddMonths(1).AddDays(-1);
-
-        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
-        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
-            recurringTransactions,
-            startDate,
-            endDate,
-            cancellationToken);
-
-        var instances = new List<RecurringInstanceStatusDto>();
-        var matchedCount = 0;
-        var pendingCount = 0;
-        var missingCount = 0;
-
-        // Get all matches for this period
-        var periodMatches = await this._matchRepository.GetByPeriodAsync(year, month, cancellationToken);
-
-        var matchLookup = periodMatches
-            .GroupBy(m => (m.RecurringTransactionId, m.RecurringInstanceDate))
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        foreach (var (_, instancesForDate) in instancesByDate)
-        {
-            foreach (var instance in instancesForDate)
-            {
-                if (instance.IsSkipped)
-                {
-                    continue;
-                }
-
-                var key = (instance.RecurringTransactionId, instance.InstanceDate);
-                var matchesForInstance = matchLookup.GetValueOrDefault(key, []);
-
-                var acceptedMatch = matchesForInstance.FirstOrDefault(
-                    m => m.Status is ReconciliationMatchStatus.Accepted or ReconciliationMatchStatus.AutoMatched);
-                var pendingMatch = matchesForInstance.FirstOrDefault(
-                    m => m.Status == ReconciliationMatchStatus.Suggested);
-
-                string status;
-                Guid? matchedTransactionId = null;
-                MoneyDto? actualAmount = null;
-                decimal? amountVariance = null;
-                Guid? matchId = null;
-                string? matchSource = null;
-
-                if (acceptedMatch != null)
-                {
-                    status = "Matched";
-                    matchedTransactionId = acceptedMatch.ImportedTransactionId;
-                    amountVariance = acceptedMatch.AmountVariance;
-                    matchId = acceptedMatch.Id;
-                    matchSource = acceptedMatch.Source.ToString();
-                    matchedCount++;
-
-                    // Get actual amount from matched transaction
-                    var transaction = await this._transactionRepository.GetByIdAsync(
-                        acceptedMatch.ImportedTransactionId,
-                        cancellationToken);
-                    if (transaction != null)
-                    {
-                        actualAmount = CommonMapper.ToDto(transaction.Amount);
-                    }
-                }
-                else if (pendingMatch != null)
-                {
-                    status = "Pending";
-                    matchId = pendingMatch.Id;
-                    matchSource = pendingMatch.Source.ToString();
-                    pendingCount++;
-                }
-                else
-                {
-                    status = "Missing";
-                    missingCount++;
-                }
-
-                instances.Add(new RecurringInstanceStatusDto
-                {
-                    RecurringTransactionId = instance.RecurringTransactionId,
-                    Description = instance.Description,
-                    InstanceDate = instance.InstanceDate,
-                    ExpectedAmount = CommonMapper.ToDto(instance.Amount),
-                    Status = status,
-                    MatchedTransactionId = matchedTransactionId,
-                    ActualAmount = actualAmount,
-                    AmountVariance = amountVariance,
-                    MatchId = matchId,
-                    MatchSource = matchSource,
-                });
-            }
-        }
-
-        return new ReconciliationStatusDto
-        {
-            Year = year,
-            Month = month,
-            TotalExpectedInstances = instances.Count,
-            MatchedCount = matchedCount,
-            PendingCount = pendingCount,
-            MissingCount = missingCount,
-            Instances = instances,
-        };
+        return this._statusBuilder.GetReconciliationStatusAsync(year, month, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<ReconciliationMatchDto?> CreateManualMatchAsync(
+    public Task<ReconciliationMatchDto?> CreateManualMatchAsync(
         ManualMatchRequest request,
         CancellationToken cancellationToken = default)
     {
-        var transaction = await this._transactionRepository.GetByIdAsync(
-            request.TransactionId,
-            cancellationToken);
-        if (transaction is null)
-        {
-            return null;
-        }
-
-        var recurring = await this._recurringRepository.GetByIdAsync(
-            request.RecurringTransactionId,
-            cancellationToken);
-        if (recurring is null)
-        {
-            return null;
-        }
-
-        // Check if match already exists
-        var existingMatch = await this._matchRepository.ExistsAsync(
-            request.TransactionId,
-            request.RecurringTransactionId,
-            request.InstanceDate,
-            cancellationToken);
-
-        if (existingMatch)
-        {
-            // Return existing match if found
-            var existing = (await this._matchRepository.GetByTransactionIdAsync(
-                request.TransactionId,
-                cancellationToken)).FirstOrDefault(m =>
-                    m.RecurringTransactionId == request.RecurringTransactionId &&
-                    m.RecurringInstanceDate == request.InstanceDate);
-
-            if (existing != null)
-            {
-                return ReconciliationMapper.ToDto(existing, transaction, recurring.Description, recurring.Amount);
-            }
-        }
-
-        // Calculate variance
-        var amountVariance = recurring.Amount.Amount - transaction.Amount.Amount;
-        var dateOffsetDays = transaction.Date.DayNumber - request.InstanceDate.DayNumber;
-
-        // Create manual link (already accepted with MatchSource.Manual)
-        var match = ReconciliationMatch.CreateManualLink(
-            request.TransactionId,
-            request.RecurringTransactionId,
-            request.InstanceDate,
-            amountVariance,
-            dateOffsetDays,
-            recurring.Scope,
-            recurring.OwnerUserId);
-
-        // Link the transaction
-        transaction.LinkToRecurringInstance(request.RecurringTransactionId, request.InstanceDate);
-
-        await this._matchRepository.AddAsync(match, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return ReconciliationMapper.ToDto(match, transaction, recurring.Description, recurring.Amount);
+        return this._matchActionHandler.CreateManualMatchAsync(request, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<ReconciliationMatchDto?> UnlinkMatchAsync(
+    public Task<ReconciliationMatchDto?> UnlinkMatchAsync(
         Guid matchId,
         CancellationToken cancellationToken = default)
     {
-        var match = await this._matchRepository.GetByIdAsync(matchId, cancellationToken);
-        if (match is null)
-        {
-            return null;
-        }
-
-        // Unlink the domain match (sets status to Rejected)
-        match.Unlink();
-
-        // Also unlink the transaction
-        var transaction = await this._transactionRepository.GetByIdAsync(
-            match.ImportedTransactionId,
-            cancellationToken);
-        transaction?.UnlinkFromRecurring();
-
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return ReconciliationMapper.ToDto(match);
+        return this._matchActionHandler.UnlinkMatchAsync(matchId, cancellationToken);
     }
 
     /// <inheritdoc />
