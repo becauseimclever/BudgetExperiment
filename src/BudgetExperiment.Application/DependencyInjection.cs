@@ -47,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<IUserSettingsService, UserSettingsService>();
         services.AddScoped<ICategorizationEngine, CategorizationEngine>();
         services.AddScoped<ICategorizationRuleService, CategorizationRuleService>();
+        services.AddScoped<IRuleSuggestionResponseParser, RuleSuggestionResponseParser>();
+        services.AddScoped<ISuggestionAcceptanceHandler, SuggestionAcceptanceHandler>();
         services.AddScoped<IRuleSuggestionService, RuleSuggestionService>();
         services.AddScoped<IMerchantMappingService, MerchantMappingService>();
         services.AddScoped<ICategorySuggestionService, CategorySuggestionService>();

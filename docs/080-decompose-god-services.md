@@ -1,5 +1,5 @@
 # Feature 080: Decompose God Services
-> **Status:** In Progress (Phase 1 complete)
+> **Status:** In Progress (Phase 2 complete)
 > **Priority:** High (maintainability / SRP)
 > **Estimated Effort:** Large (10-12 days)
 > **Dependencies:** ~~Write missing unit tests for RecurringTransactionService~~ ✅ Done (36 tests added)
@@ -15,8 +15,8 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 | Service | Lines | Responsibilities | Severity |
 |---------|-------|-----------------|----------|
 | ~~`ImportService.cs`~~ | ~~1,076~~ → 424 | Orchestration only (row processing, duplicate detection, enrichment extracted) | **Done** |
-| `RuleSuggestionService.cs` | 857 | Rule suggestion generation, AI response parsing, pattern analysis, confidence scoring, transaction grouping | **Critical** |
-| `NaturalLanguageParser.cs` | 556 | AI prompt building, response parsing, JSON extraction, action type mapping, parameter extraction | **High** |
+| ~~`RuleSuggestionService.cs`~~ | ~~857~~ → 260 | Orchestration only (parsing, prompt building, acceptance handling extracted) | **Done** |
+| ~~`NaturalLanguageParser.cs`~~ | ~~556~~ → 130 | Orchestration only (response parsing extracted to ChatActionParser) | **Done** |
 | `ReconciliationService.cs` | 545 | Match finding, status calculation, bulk operations, tolerance management, instance linking | **High** |
 | `ReportService.cs` | 423 | Category reports, trend reports, location reports, date range processing | **High** |
 | `ChatService.cs` | 397 | Message handling, AI integration, action confirmation, session management | **Moderate** |
@@ -34,25 +34,25 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 | ~~`ExecuteAsync`~~ | `ImportService.cs` | ~160 → ~44 |
 | `GetReconciliationStatusAsync` | `ReconciliationService.cs` | ~109 |
 | `FindMatchesAsync` | `ReconciliationService.cs` | ~104 |
-| `CreateConflictSuggestion` | `RuleSuggestionService.cs` | ~119 |
+| ~~`CreateConflictSuggestion`~~ | ~~`RuleSuggestionService.cs`~~ → `RuleSuggestionResponseParser.cs` | ~119 → extracted |
 | ~~`EnrichWithRecurringMatchesAsync`~~ | ~~`ImportService.cs`~~ → `ImportPreviewEnricher.cs` | ~86 → extracted |
 | `GetSpendingTrendsAsync` | `ReportService.cs` | ~86 |
 | ~~`PreviewAsync`~~ | `ImportService.cs` | ~86 → ~30 |
 | `BuildCategoryReportAsync` | `ReportService.cs` | ~85 |
 | `CalculateMatch` | `TransactionMatcher.cs` (Domain) | ~83 |
-| `ParseAiResponse` | `NaturalLanguageParser.cs` | ~80 |
+| ~~`ParseAiResponse`~~ | ~~`NaturalLanguageParser.cs`~~ → `ChatActionParser.cs` | ~80 → extracted |
 | `GetSpendingByLocationAsync` | `ReportService.cs` | ~77 |
 | `Create` | `RecurringTransfer.cs` (Domain) | ~75 |
 | `AnalyzeTransactionsAsync` | `CategorySuggestionService.cs` | ~73 |
 | `GetLinkableInstancesAsync` | `ReconciliationService.cs` | ~71 |
-| `ParseRecurringTransferAction` | `NaturalLanguageParser.cs` | ~69 |
+| ~~`ParseRecurringTransferAction`~~ | ~~`NaturalLanguageParser.cs`~~ → `ChatActionParser.cs` | ~69 → extracted |
 | `ConfirmActionAsync` | `ChatService.cs` | ~67 |
 | `CreateManualMatchAsync` | `ReconciliationService.cs` | ~64 |
-| `ParseRecurringTransactionAction` | `NaturalLanguageParser.cs` | ~58 |
-| `ParseTransferAction` | `NaturalLanguageParser.cs` | ~61 |
+| ~~`ParseRecurringTransactionAction`~~ | ~~`NaturalLanguageParser.cs`~~ → `ChatActionParser.cs` | ~58 → extracted |
+| ~~`ParseTransferAction`~~ | ~~`NaturalLanguageParser.cs`~~ → `ChatActionParser.cs` | ~61 → extracted |
 | `GetDaySummaryAsync` | `ReportService.cs` | ~56 |
 | `SendMessageAsync` | `ChatService.cs` | ~56 |
-| `ParseTransactionAction` | `NaturalLanguageParser.cs` | ~54 |
+| ~~`ParseTransactionAction`~~ | ~~`NaturalLanguageParser.cs`~~ → `ChatActionParser.cs` | ~54 → extracted |
 
 ### Target State
 
@@ -87,8 +87,8 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 **So that** the codebase follows SRP consistently.
 
 **Acceptance Criteria:**
-- [ ] `RuleSuggestionService` ≤ 300 lines (extract AI parsing, pattern analysis)
-- [ ] `NaturalLanguageParser` ≤ 300 lines (extract JSON extraction, action mapping)
+- [x] `RuleSuggestionService` ≤ 300 lines → 260 lines (extracted AI parsing, prompt building, acceptance handling)
+- [x] `NaturalLanguageParser` ≤ 300 lines → 130 lines (extracted response parsing to ChatActionParser)
 - [ ] `ReconciliationService` ≤ 300 lines (extract status calculation, bulk operations)
 - [ ] `ReportService` ≤ 300 lines (extract report building per report type)
 
@@ -168,15 +168,30 @@ This is 362 lines of static data (merchant → category mappings), not logic. Co
 | `IImportPreviewEnricher.cs` | 33 | Interface |
 | `IImportDuplicateDetector.cs` | 38 | Interface |
 
-### Phase 2: Decompose RuleSuggestionService and NaturalLanguageParser
+### Phase 2: Decompose RuleSuggestionService and NaturalLanguageParser ✅
 
 **Objective:** Extract AI parsing and pattern analysis concerns.
 
 **Tasks:**
-- [ ] Extract AI response parsing from `RuleSuggestionService`
-- [ ] Extract JSON extraction from `NaturalLanguageParser`
-- [ ] Write unit tests
-- [ ] Verify behavior unchanged
+- [x] Extract AI response parsing from `RuleSuggestionService` to `RuleSuggestionResponseParser`
+- [x] Extract prompt building from `RuleSuggestionService` to `RuleSuggestionPromptBuilder` (static)
+- [x] Extract acceptance/dismiss/feedback from `RuleSuggestionService` to `SuggestionAcceptanceHandler`
+- [x] Extract JSON/action parsing from `NaturalLanguageParser` to `ChatActionParser` (static)
+- [x] Write unit tests (42 new tests: 13 parser + 9 acceptance + 20 chat action)
+- [x] Register new services in DependencyInjection.cs
+- [x] Verify behavior unchanged (2,748 total tests passing, up from 2,706)
+
+**Results:**
+| File | Lines | Role |
+|------|-------|------|
+| `RuleSuggestionService.cs` | 260 | Orchestrator (suggest, analyze, filter duplicates) |
+| `RuleSuggestionResponseParser.cs` | ~350 | AI JSON response → RuleSuggestion domain objects |
+| `RuleSuggestionPromptBuilder.cs` | ~115 | Static prompt building for AI requests |
+| `SuggestionAcceptanceHandler.cs` | ~150 | Accept/dismiss/feedback lifecycle |
+| `IRuleSuggestionResponseParser.cs` | ~30 | Interface |
+| `ISuggestionAcceptanceHandler.cs` | ~30 | Interface |
+| `NaturalLanguageParser.cs` | 130 | Thin orchestrator (prompt + delegate parsing) |
+| `ChatActionParser.cs` | ~450 | Static response → ChatAction parsing |
 
 ### Phase 3: Decompose ReconciliationService and ReportService
 
@@ -271,3 +286,4 @@ Refs: #080"
 | 2026-03-01 | Prerequisite satisfied: 36 unit tests for RecurringTransactionService committed | @copilot |
 | 2026-03-01 | Updated line counts to actuals (all grew 30-139 lines since audit), added TransactionMatcher (372 lines), corrected effort estimate to 10-12 days, added prerequisite for RecurringTransactionService tests | @copilot |
 | 2026-03-03 | Phase 1 complete: ImportService decomposed (1,076 → 424 lines). Extracted ImportRowProcessor (512), ImportDuplicateDetector (112), ImportPreviewEnricher (213). Added 41 new unit tests. All 2,706 tests passing. | @copilot |
+| 2026-03-03 | Phase 2 complete: RuleSuggestionService decomposed (857 → 260 lines). Extracted RuleSuggestionResponseParser (~350), RuleSuggestionPromptBuilder (~115), SuggestionAcceptanceHandler (~150). NaturalLanguageParser decomposed (556 → 130 lines). Extracted ChatActionParser (~450). Added 42 new unit tests. All 2,748 tests passing. | @copilot |

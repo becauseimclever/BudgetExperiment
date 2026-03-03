@@ -1007,7 +1007,7 @@ public class RuleSuggestionServiceTests
         var json = """{"suggestions": []}""";
 
         // Act
-        var result = RuleSuggestionService.ExtractJson(json);
+        var result = RuleSuggestionResponseParser.ExtractJson(json);
 
         // Assert
         Assert.Equal(json, result);
@@ -1024,7 +1024,7 @@ public class RuleSuggestionServiceTests
             """;
 
         // Act
-        var result = RuleSuggestionService.ExtractJson(content);
+        var result = RuleSuggestionResponseParser.ExtractJson(content);
 
         // Assert
         Assert.StartsWith("{", result);
@@ -1042,7 +1042,7 @@ public class RuleSuggestionServiceTests
             """;
 
         // Act
-        var result = RuleSuggestionService.ExtractJson(content);
+        var result = RuleSuggestionResponseParser.ExtractJson(content);
 
         // Assert
         Assert.StartsWith("{", result);
@@ -1059,7 +1059,7 @@ public class RuleSuggestionServiceTests
             """;
 
         // Act
-        var result = RuleSuggestionService.ExtractJson(content);
+        var result = RuleSuggestionResponseParser.ExtractJson(content);
 
         // Assert
         Assert.Equal("""{"suggestions": []}""", result);
@@ -1072,14 +1072,14 @@ public class RuleSuggestionServiceTests
         var content = "Sorry, I cannot help with that.";
 
         // Act & Assert
-        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(content));
+        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionResponseParser.ExtractJson(content));
     }
 
     [Fact]
     public void ExtractJson_Throws_JsonException_For_Empty_Content()
     {
         // Act & Assert
-        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionService.ExtractJson(string.Empty));
+        Assert.Throws<System.Text.Json.JsonException>(() => RuleSuggestionResponseParser.ExtractJson(string.Empty));
     }
 
     [Fact]
@@ -1190,13 +1190,21 @@ public class RuleSuggestionServiceTests
             .Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<CategorizationRule>());
 
+        var responseParser = new RuleSuggestionResponseParser(suggestionRepo.Object);
+        var acceptanceHandler = new SuggestionAcceptanceHandler(
+            suggestionRepo.Object,
+            ruleRepo.Object,
+            unitOfWork.Object);
+
         var service = new RuleSuggestionService(
             aiService.Object,
             transactionRepo.Object,
             ruleRepo.Object,
             categoryRepo.Object,
             suggestionRepo.Object,
-            unitOfWork.Object);
+            unitOfWork.Object,
+            responseParser,
+            acceptanceHandler);
 
         return (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo);
     }
