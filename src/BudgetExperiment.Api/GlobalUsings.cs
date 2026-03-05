@@ -2,6 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+// API versioning
+global using Asp.Versioning;
+
 // Application namespaces
 global using BudgetExperiment.Application.Accounts;
 global using BudgetExperiment.Application.Ai;

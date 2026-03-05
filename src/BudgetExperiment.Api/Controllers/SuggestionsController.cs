@@ -12,9 +12,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for AI-generated rule suggestion operations.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/ai/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public sealed class SuggestionsController : ControllerBase
 {

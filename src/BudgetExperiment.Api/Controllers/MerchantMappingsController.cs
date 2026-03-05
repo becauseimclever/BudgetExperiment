@@ -12,9 +12,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// API endpoints for managing learned merchant mappings.
 /// </summary>
+[ApiVersion("1.0")]
 [Authorize]
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public class MerchantMappingsController : ControllerBase
 {

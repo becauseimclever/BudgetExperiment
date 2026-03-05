@@ -13,9 +13,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for paycheck allocation operations.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/allocations")]
+[Route("api/v{version:apiVersion}/allocations")]
 [Produces("application/json")]
 public sealed class AllocationsController : ControllerBase
 {

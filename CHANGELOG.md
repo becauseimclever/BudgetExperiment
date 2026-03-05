@@ -6,6 +6,8 @@ All notable changes to Budget Experiment.
 
 ### Features
 
+- **api:** Runtime API versioning with `Asp.Versioning.Mvc` — `[ApiVersion("1.0")]` on all 26 controllers, routes use `v{version:apiVersion}` template, `api-supported-versions` header in responses, `AssumeDefaultVersionWhenUnspecified` for backward compatibility (Feature 081)
+- **api:** Normalize `SuggestionsController` route from `api/v1/ai/[controller]` to standard `api/v{version:apiVersion}/[controller]` pattern; add version segment to `VersionController` (Feature 081)
 - **domain:** `ICurrencyProvider` abstraction for global currency resolution — single interface in Domain layer with `UserSettingsCurrencyProvider` implementation in Application layer, falls back to USD when preference is unset or user is unauthenticated (Feature 064)
 - **domain:** Add `FirstDayOfWeek` and `IsOnboarded` to `UserSettings` — restricted to Sunday/Monday, domain validation via `DomainException` (Feature 066)
 - **client:** Client-side CSV parsing — CSV files parsed entirely in Blazor WebAssembly with zero server round-trip, auto-delimiter detection, quote-aware parsing, and BOM removal (Feature 063)

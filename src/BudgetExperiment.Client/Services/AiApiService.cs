@@ -154,7 +154,7 @@ public sealed class AiApiService : IAiApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/ai/suggestions/generate", request, JsonOptions);
+            var response = await this._httpClient.PostAsJsonAsync("api/v1/suggestions/generate", request, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<List<RuleSuggestionDto>>(JsonOptions);
@@ -180,8 +180,8 @@ public sealed class AiApiService : IAiApiService
         try
         {
             var url = string.IsNullOrEmpty(type)
-                ? "api/v1/ai/suggestions"
-                : $"api/v1/ai/suggestions?type={type}";
+                ? "api/v1/suggestions"
+                : $"api/v1/suggestions?type={type}";
 
             var result = await this._httpClient.GetFromJsonAsync<List<RuleSuggestionDto>>(url, JsonOptions);
             return result ?? new List<RuleSuggestionDto>();
@@ -202,7 +202,7 @@ public sealed class AiApiService : IAiApiService
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<RuleSuggestionDto>($"api/v1/ai/suggestions/{id}", JsonOptions);
+            return await this._httpClient.GetFromJsonAsync<RuleSuggestionDto>($"api/v1/suggestions/{id}", JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {
@@ -220,7 +220,7 @@ public sealed class AiApiService : IAiApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync($"api/v1/ai/suggestions/{id}/accept", null);
+            var response = await this._httpClient.PostAsync($"api/v1/suggestions/{id}/accept", null);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<CategorizationRuleDto>(JsonOptions);
@@ -245,7 +245,7 @@ public sealed class AiApiService : IAiApiService
         try
         {
             var request = new DismissSuggestionRequest { Reason = reason };
-            var response = await this._httpClient.PostAsJsonAsync($"api/v1/ai/suggestions/{id}/dismiss", request, JsonOptions);
+            var response = await this._httpClient.PostAsJsonAsync($"api/v1/suggestions/{id}/dismiss", request, JsonOptions);
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)
@@ -265,7 +265,7 @@ public sealed class AiApiService : IAiApiService
         try
         {
             var request = new FeedbackRequest { IsPositive = isPositive };
-            var response = await this._httpClient.PostAsJsonAsync($"api/v1/ai/suggestions/{id}/feedback", request, JsonOptions);
+            var response = await this._httpClient.PostAsJsonAsync($"api/v1/suggestions/{id}/feedback", request, JsonOptions);
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)

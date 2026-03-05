@@ -12,9 +12,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for recurring transaction operations.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/recurring-transactions")]
+[Route("api/v{version:apiVersion}/recurring-transactions")]
 [Produces("application/json")]
 public sealed class RecurringTransactionsController : ControllerBase
 {

@@ -25,14 +25,14 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     }
 
     /// <summary>
-    /// GET /api/v1/ai/suggestions returns 200 OK with suggestion list.
+    /// GET /api/v1/suggestions returns 200 OK with suggestion list.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPending_Returns_200_WithSuggestionList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/ai/suggestions");
+        var response = await this._client.GetAsync("/api/v1/suggestions");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -41,14 +41,14 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     }
 
     /// <summary>
-    /// GET /api/v1/ai/suggestions?type=NewRule returns 200 OK with filtered suggestions.
+    /// GET /api/v1/suggestions?type=NewRule returns 200 OK with filtered suggestions.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetPending_WithTypeFilter_Returns_200()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/ai/suggestions?type=NewRule");
+        var response = await this._client.GetAsync("/api/v1/suggestions?type=NewRule");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -57,21 +57,21 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     }
 
     /// <summary>
-    /// GET /api/v1/ai/suggestions/{id} returns 404 when suggestion not found.
+    /// GET /api/v1/suggestions/{id} returns 404 when suggestion not found.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/ai/suggestions/{Guid.NewGuid()}");
+        var response = await this._client.GetAsync($"/api/v1/suggestions/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     /// <summary>
-    /// POST /api/v1/ai/suggestions/generate returns appropriate response.
+    /// POST /api/v1/suggestions/generate returns appropriate response.
     /// </summary>
     /// <remarks>
     /// When AI is unavailable, may return 503 or 200 with empty results.
@@ -88,7 +88,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/ai/suggestions/generate", request);
+        var response = await this._client.PostAsJsonAsync("/api/v1/suggestions/generate", request);
 
         // Assert - either 200 (with possibly empty results) or 503 (AI unavailable)
         Assert.True(
@@ -104,7 +104,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     }
 
     /// <summary>
-    /// POST /api/v1/ai/suggestions/generate with invalid type returns 400.
+    /// POST /api/v1/suggestions/generate with invalid type returns 400.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -118,7 +118,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/ai/suggestions/generate", request);
+        var response = await this._client.PostAsJsonAsync("/api/v1/suggestions/generate", request);
 
         // Assert
         // May be 503 (AI unavailable check happens first) or 400 (invalid type)
@@ -128,21 +128,21 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
     }
 
     /// <summary>
-    /// POST /api/v1/ai/suggestions/{id}/accept returns 404 when suggestion not found.
+    /// POST /api/v1/suggestions/{id}/accept returns 404 when suggestion not found.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Accept_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/ai/suggestions/{Guid.NewGuid()}/accept", null);
+        var response = await this._client.PostAsync($"/api/v1/suggestions/{Guid.NewGuid()}/accept", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     /// <summary>
-    /// POST /api/v1/ai/suggestions/{id}/dismiss returns 404 when suggestion not found.
+    /// POST /api/v1/suggestions/{id}/dismiss returns 404 when suggestion not found.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -152,14 +152,14 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
         var request = new DismissSuggestionRequest { Reason = "Not useful" };
 
         // Act
-        var response = await this._client.PostAsJsonAsync($"/api/v1/ai/suggestions/{Guid.NewGuid()}/dismiss", request);
+        var response = await this._client.PostAsJsonAsync($"/api/v1/suggestions/{Guid.NewGuid()}/dismiss", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     /// <summary>
-    /// POST /api/v1/ai/suggestions/{id}/feedback returns 404 when suggestion not found.
+    /// POST /api/v1/suggestions/{id}/feedback returns 404 when suggestion not found.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -169,7 +169,7 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
         var request = new FeedbackRequest { IsPositive = true };
 
         // Act
-        var response = await this._client.PostAsJsonAsync($"/api/v1/ai/suggestions/{Guid.NewGuid()}/feedback", request);
+        var response = await this._client.PostAsJsonAsync($"/api/v1/suggestions/{Guid.NewGuid()}/feedback", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);

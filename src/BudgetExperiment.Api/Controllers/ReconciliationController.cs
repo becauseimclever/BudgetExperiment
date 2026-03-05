@@ -13,9 +13,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for recurring transaction reconciliation operations.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/reconciliation")]
+[Route("api/v{version:apiVersion}/reconciliation")]
 [Produces("application/json")]
 public sealed class ReconciliationController : ControllerBase
 {

@@ -12,9 +12,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for budget goal and progress operations.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public sealed class BudgetsController : ControllerBase
 {

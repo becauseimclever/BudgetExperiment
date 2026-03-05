@@ -14,8 +14,9 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// Provides version and build information for the API.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class VersionController : ControllerBase
 {
     private static readonly DateTime BuildDateUtc = ExtractBuildDate();

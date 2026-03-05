@@ -13,9 +13,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for custom report layouts.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/custom-reports")]
+[Route("api/v{version:apiVersion}/custom-reports")]
 [Produces("application/json")]
 public sealed class CustomReportsController : ControllerBase
 {

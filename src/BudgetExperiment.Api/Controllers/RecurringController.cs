@@ -12,9 +12,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for cross-cutting recurring operations (past-due, batch operations).
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/recurring")]
+[Route("api/v{version:apiVersion}/recurring")]
 [Produces("application/json")]
 public sealed class RecurringController : ControllerBase
 {

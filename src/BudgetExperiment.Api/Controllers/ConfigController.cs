@@ -14,9 +14,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// REST API controller for client configuration.
 /// Provides configuration settings for the Blazor WebAssembly client.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [AllowAnonymous]
-[Route("api/v1/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public sealed class ConfigController : ControllerBase
 {

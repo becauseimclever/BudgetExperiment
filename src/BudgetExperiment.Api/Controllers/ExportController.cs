@@ -15,9 +15,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for report exports.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/exports")]
+[Route("api/v{version:apiVersion}/exports")]
 public sealed class ExportController : ControllerBase
 {
     private readonly IReportService _reportService;

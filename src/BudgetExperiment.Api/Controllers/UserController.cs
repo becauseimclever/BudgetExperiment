@@ -12,9 +12,10 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// REST API controller for user-related operations.
 /// </summary>
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v1/user")]
+[Route("api/v{version:apiVersion}/user")]
 [Produces("application/json")]
 public sealed class UserController : ControllerBase
 {
