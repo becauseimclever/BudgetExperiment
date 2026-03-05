@@ -16,11 +16,13 @@ All notable changes to Budget Experiment.
 - **client:** Settings page user preferences — currency dropdown and first-day-of-week toggle editable post-onboarding (Feature 066)
 - **api:** Preview endpoint row count validation — rejects requests exceeding 10,000 rows (400 with ProblemDetails) (Feature 063)
 - **api:** `POST api/v1/user/settings/complete-onboarding` convenience endpoint (Feature 066)
-- **api:** Optimistic concurrency with ETags — `ExceptionHandlingMiddleware` maps `DbUpdateConcurrencyException` → 409 Conflict; `IUnitOfWork` gains `GetConcurrencyToken`/`SetExpectedConcurrencyToken`; `xmin` configured on `Account`, `Transaction`, `BudgetCategory`, and `BudgetGoal`; GET endpoints return `ETag` header; PUT/PATCH endpoints validate `If-Match` header (backward compatible — missing header accepted); `AccountDto`, `TransactionDto`, `BudgetCategoryDto`, and `BudgetGoalDto` gain `Version` property (Feature 082 Slices 1–3)
+- **api:** Optimistic concurrency with ETags — `ExceptionHandlingMiddleware` maps `DbUpdateConcurrencyException` → 409 Conflict; `IUnitOfWork` gains `GetConcurrencyToken`/`SetExpectedConcurrencyToken`; `xmin` configured on `Account`, `Transaction`, `BudgetCategory`, `BudgetGoal`, `RecurringTransaction`, `RecurringTransfer`, `CategorizationRule`, `CustomReportLayout`, and `ImportMapping`; GET endpoints return `ETag` header; PUT/PATCH endpoints validate `If-Match` header (backward compatible — missing header accepted); `AccountDto`, `TransactionDto`, `BudgetCategoryDto`, `BudgetGoalDto`, `RecurringTransactionDto`, `RecurringTransferDto`, `CategorizationRuleDto`, `CustomReportLayoutDto`, and `ImportMappingDto` gain `Version` property (Feature 082 Slices 1–6)
+- **client:** Optimistic concurrency client integration — `ApiResult<T>` result type for update operations distinguishing success/conflict/failure; `BudgetApiService` and `ImportApiService` send `If-Match` header with entity version on PUT/PATCH; all 10 mutable-entity pages handle 409 Conflict with toast notification and automatic data reload; `SendUpdateAsync<T>` private helper centralizes ETag wire protocol (Feature 082 Slice 7)
 - **api:** Restore dismissed category suggestions — `GET /dismissed`, `POST /{id}/restore`, `DELETE /dismissed-patterns` endpoints (Feature 061)
 
 ### Bug Fixes
 
+- **api:** Fix `CustomReportsController.CreateAsync` `CreatedAtAction` route resolution — use `\"GetById\"` string instead of `nameof(GetByIdAsync)` to match API versioning route conventions (Feature 082 Slice 6)
 - **infrastructure:** Fix scope filtering in `GetByDateRangeAsync` and `GetByIdWithExceptionsAsync` — reports now respect Personal/Shared/All budget scope (Feature 065)
 - **application:** Fix CSV import double-skip bug — `RowsToSkip` was applied twice (parser and preview service), causing silent data loss (Feature 069)
 - **application:** Fix AI suggestions JSON extraction — `ExtractJson()` method handles markdown code blocks and preamble text in AI responses, restoring non-functional Smart Insights feature (Feature 070)
@@ -71,6 +73,7 @@ All notable changes to Budget Experiment.
 - **domain:** 16 unit tests for `DescriptionSimilarityCalculator` — similarity scoring, normalization, containment matching, punctuation handling, edge cases; all 2,826 tests passing (Feature 080 Phase 6)
 - **client:** Unit tests for donut chart segment filtering, sorting, and fallback color (Feature 067)
 - **api:** 10 API tests for optimistic concurrency — ETag returned on GET, valid/stale/missing `If-Match` on PUT/PATCH for Account (4 tests) and Transaction (6 tests) (Feature 082)
+- **api:** 12 API tests for secondary aggregate concurrency — ETag/If-Match for CategorizationRule (4 tests), CustomReportLayout (4 tests), and ImportMapping (4 tests) (Feature 082 Slice 6)
 
 ### Documentation
 

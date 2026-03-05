@@ -123,5 +123,9 @@ internal sealed class RecurringTransferConfiguration : IEntityTypeConfiguration<
         // Indexes for scope filtering
         builder.HasIndex(r => r.Scope);
         builder.HasIndex(r => r.OwnerUserId);
+
+        // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
     }
 }

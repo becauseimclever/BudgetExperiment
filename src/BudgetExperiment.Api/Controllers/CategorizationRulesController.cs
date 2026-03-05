@@ -61,6 +61,11 @@ public sealed class CategorizationRulesController : ControllerBase
             return this.NotFound();
         }
 
+        if (rule.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{rule.Version}\"";
+        }
+
         return this.Ok(rule);
     }
 
@@ -90,12 +95,24 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType<CategorizationRuleDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] CategorizationRuleUpdateDto dto, CancellationToken cancellationToken)
     {
-        var rule = await this._service.UpdateAsync(id, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var rule = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (rule is null)
         {
             return this.NotFound();
+        }
+
+        if (rule.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{rule.Version}\"";
         }
 
         return this.Ok(rule);

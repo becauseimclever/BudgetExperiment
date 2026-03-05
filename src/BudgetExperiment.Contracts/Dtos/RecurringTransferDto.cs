@@ -62,4 +62,7 @@ public sealed class RecurringTransferDto
 
     /// <summary>Gets or sets the last update timestamp (UTC).</summary>
     public DateTime UpdatedAtUtc { get; set; }
+
+    /// <summary>Gets or sets the concurrency version token.</summary>
+    public string? Version { get; set; }
 }

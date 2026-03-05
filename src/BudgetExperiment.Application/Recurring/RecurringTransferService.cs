@@ -51,7 +51,8 @@ public sealed class RecurringTransferService : IRecurringTransferService
         }
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
+        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName, version);
     }
 
     /// <summary>
@@ -156,14 +157,20 @@ public sealed class RecurringTransferService : IRecurringTransferService
     /// </summary>
     /// <param name="id">The recurring transfer identifier.</param>
     /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated recurring transfer DTO, or null if not found.</returns>
-    public async Task<RecurringTransferDto?> UpdateAsync(Guid id, RecurringTransferUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<RecurringTransferDto?> UpdateAsync(Guid id, RecurringTransferUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
@@ -173,7 +180,8 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
+        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName, version);
     }
 
     /// <summary>
@@ -269,18 +277,25 @@ public sealed class RecurringTransferService : IRecurringTransferService
     /// <param name="id">The recurring transfer identifier.</param>
     /// <param name="instanceDate">The date from which to apply changes.</param>
     /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated recurring transfer DTO, or null if not found.</returns>
     public async Task<RecurringTransferDto?> UpdateFromDateAsync(
         Guid id,
         DateOnly instanceDate,
         RecurringTransferUpdateDto dto,
+        string? expectedVersion = null,
         CancellationToken cancellationToken = default)
     {
         var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
         }
 
         // Remove all exceptions from this date forward
@@ -294,7 +309,8 @@ public sealed class RecurringTransferService : IRecurringTransferService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var accounts = await this.GetAccountNamesAsync(recurring.SourceAccountId, recurring.DestinationAccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName);
+        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        return RecurringMapper.ToDto(recurring, accounts.SourceName, accounts.DestName, version);
     }
 
     private async Task<(string SourceName, string DestName)> GetAccountNamesAsync(

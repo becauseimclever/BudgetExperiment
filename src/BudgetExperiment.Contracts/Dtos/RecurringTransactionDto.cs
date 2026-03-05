@@ -59,4 +59,7 @@ public sealed class RecurringTransactionDto
 
     /// <summary>Gets or sets the last update timestamp (UTC).</summary>
     public DateTime UpdatedAtUtc { get; set; }
+
+    /// <summary>Gets or sets the concurrency version token for optimistic concurrency.</summary>
+    public string? Version { get; set; }
 }

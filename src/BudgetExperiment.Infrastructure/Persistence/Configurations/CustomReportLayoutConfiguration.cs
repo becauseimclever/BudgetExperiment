@@ -50,5 +50,9 @@ internal sealed class CustomReportLayoutConfiguration : IEntityTypeConfiguration
         builder.HasIndex(l => l.Scope);
         builder.HasIndex(l => l.OwnerUserId);
         builder.HasIndex(l => l.CreatedByUserId);
+
+        // Optimistic concurrency token (PostgreSQL xmin)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
     }
 }

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
@@ -319,5 +320,233 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    /// <summary>
+    /// GET /api/v1/recurring-transfers/{id} returns an ETag header for concurrency control.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetById_Returns_ETag_Header()
+    {
+        // Arrange
+        var created = await this.CreateRecurringTransferAsync();
+
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        Assert.False(string.IsNullOrEmpty(response.Headers.ETag.Tag));
+    }
+
+    /// <summary>
+    /// PUT /api/v1/recurring-transfers/{id} succeeds when a valid If-Match header is provided.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange
+        var created = await this.CreateRecurringTransferAsync();
+        var getResponse = await this._client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var updateDto = new RecurringTransferUpdateDto
+        {
+            Description = "Updated With ETag",
+            Amount = new MoneyDto { Currency = "USD", Amount = 150m },
+            Frequency = "Monthly",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/recurring-transfers/{created.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<RecurringTransferDto>();
+        Assert.Equal("Updated With ETag", updated!.Description);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/recurring-transfers/{id} returns 409 Conflict when If-Match does not match current version.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var created = await this.CreateRecurringTransferAsync();
+
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var updateDto = new RecurringTransferUpdateDto
+        {
+            Description = "Should Fail",
+            Amount = new MoneyDto { Currency = "USD", Amount = 200m },
+            Frequency = "Monthly",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/recurring-transfers/{created.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/recurring-transfers/{id} succeeds without If-Match header for backward compatibility.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_Without_IfMatch_Succeeds_BackwardCompatible()
+    {
+        // Arrange
+        var created = await this.CreateRecurringTransferAsync();
+        var updateDto = new RecurringTransferUpdateDto
+        {
+            Description = "Updated Without ETag",
+            Amount = new MoneyDto { Currency = "USD", Amount = 200m },
+            Frequency = "Monthly",
+        };
+
+        // Act
+        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transfers/{created.Id}", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<RecurringTransferDto>();
+        Assert.Equal("Updated Without ETag", updated!.Description);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/recurring-transfers/{id}/instances/{date} returns 409 Conflict with stale If-Match.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ModifyInstance_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var created = await this.CreateRecurringTransferAsync(dayOfMonth: 15, startDate: new DateOnly(2026, 1, 15));
+
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var modifyDto = new RecurringTransferInstanceModifyDto
+        {
+            Amount = new MoneyDto { Currency = "USD", Amount = 100m },
+            Description = "Should Fail",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/recurring-transfers/{created.Id}/instances/2026-01-15")
+        {
+            Content = JsonContent.Create(modifyDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/recurring-transfers/{id}/instances/{date}/future returns 409 Conflict with stale If-Match.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task UpdateFuture_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var created = await this.CreateRecurringTransferAsync(dayOfMonth: 1, startDate: new DateOnly(2026, 1, 1));
+
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var updateDto = new RecurringTransferUpdateDto
+        {
+            Description = "Should Fail",
+            Amount = new MoneyDto { Currency = "USD", Amount = 200m },
+            Frequency = "Monthly",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/recurring-transfers/{created.Id}/instances/2026-02-01/future")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/recurring-transfers/{id}/instances/{date}/future succeeds with valid If-Match and returns ETag.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task UpdateFuture_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange
+        var created = await this.CreateRecurringTransferAsync(dayOfMonth: 1, startDate: new DateOnly(2026, 1, 1));
+        var getResponse = await this._client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var updateDto = new RecurringTransferUpdateDto
+        {
+            Description = "Updated Future",
+            Amount = new MoneyDto { Currency = "USD", Amount = 75m },
+            Frequency = "Monthly",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/recurring-transfers/{created.Id}/instances/2026-02-01/future")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<RecurringTransferDto>();
+        Assert.Equal("Updated Future", updated!.Description);
+    }
+
+    private async Task<RecurringTransferDto> CreateRecurringTransferAsync(
+        int? dayOfMonth = null,
+        DateOnly? startDate = null)
+    {
+        var sourceAccountDto = new AccountCreateDto { Name = $"RT Source {Guid.NewGuid():N}", Type = "Checking" };
+        var sourceResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", sourceAccountDto);
+        var sourceAccount = await sourceResponse.Content.ReadFromJsonAsync<AccountDto>();
+
+        var destAccountDto = new AccountCreateDto { Name = $"RT Dest {Guid.NewGuid():N}", Type = "Savings" };
+        var destResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", destAccountDto);
+        var destAccount = await destResponse.Content.ReadFromJsonAsync<AccountDto>();
+
+        var createDto = new RecurringTransferCreateDto
+        {
+            SourceAccountId = sourceAccount!.Id,
+            DestinationAccountId = destAccount!.Id,
+            Description = "ETag Test Transfer",
+            Amount = new MoneyDto { Currency = "USD", Amount = 100m },
+            Frequency = "Monthly",
+            DayOfMonth = dayOfMonth,
+            StartDate = startDate ?? new DateOnly(2026, 1, 1),
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transfers", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        return (await createResponse.Content.ReadFromJsonAsync<RecurringTransferDto>())!;
     }
 }

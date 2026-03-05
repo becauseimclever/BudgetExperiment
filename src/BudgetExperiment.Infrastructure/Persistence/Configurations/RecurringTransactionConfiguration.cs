@@ -141,5 +141,9 @@ internal sealed class RecurringTransactionConfiguration : IEntityTypeConfigurati
         // Navigate the private _importPatterns field
         var navigation = builder.Metadata.FindNavigation(nameof(RecurringTransaction.ImportPatterns));
         navigation?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+        // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
     }
 }

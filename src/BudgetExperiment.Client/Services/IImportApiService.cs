@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Contracts.Dtos;
 
 namespace BudgetExperiment.Client.Services;
@@ -36,8 +37,9 @@ public interface IImportApiService
     /// </summary>
     /// <param name="id">The mapping ID.</param>
     /// <param name="request">The update request.</param>
-    /// <returns>The updated mapping.</returns>
-    Task<ImportMappingDto?> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<ImportMappingDto>> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, string? version = null);
 
     /// <summary>
     /// Deletes an import mapping.

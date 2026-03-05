@@ -39,9 +39,10 @@ public interface IImportMappingService
     /// </summary>
     /// <param name="id">The mapping ID.</param>
     /// <param name="request">The update request.</param>
+    /// <param name="expectedVersion">The expected concurrency version (from If-Match header).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated mapping if found.</returns>
-    Task<ImportMappingDto?> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, CancellationToken cancellationToken = default);
+    Task<ImportMappingDto?> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a mapping.

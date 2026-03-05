@@ -68,6 +68,11 @@ public sealed class ImportController : ControllerBase
             return this.NotFound();
         }
 
+        if (mapping.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{mapping.Version}\"";
+        }
+
         return this.Ok(mapping);
     }
 
@@ -97,12 +102,24 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType<ImportMappingDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateMappingAsync(Guid id, [FromBody] UpdateImportMappingRequest request, CancellationToken cancellationToken)
     {
-        var mapping = await this._mappingService.UpdateMappingAsync(id, request, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var mapping = await this._mappingService.UpdateMappingAsync(id, request, expectedVersion, cancellationToken);
         if (mapping is null)
         {
             return this.NotFound();
+        }
+
+        if (mapping.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{mapping.Version}\"";
         }
 
         return this.Ok(mapping);

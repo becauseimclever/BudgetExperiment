@@ -45,14 +45,20 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
             rules = await this._repository.ListAsync(0, int.MaxValue, cancellationToken);
         }
 
-        return rules.Select(CategorizationMapper.ToDto).ToList();
+        return rules.Select(r => CategorizationMapper.ToDto(r)).ToList();
     }
 
     /// <inheritdoc/>
     public async Task<CategorizationRuleDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var rule = await this._repository.GetByIdAsync(id, cancellationToken);
-        return rule is null ? null : CategorizationMapper.ToDto(rule);
+        if (rule is null)
+        {
+            return null;
+        }
+
+        var version = this._unitOfWork.GetConcurrencyToken(rule);
+        return CategorizationMapper.ToDto(rule, version);
     }
 
     /// <inheritdoc/>
@@ -82,12 +88,17 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     }
 
     /// <inheritdoc/>
-    public async Task<CategorizationRuleDto?> UpdateAsync(Guid id, CategorizationRuleUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<CategorizationRuleDto?> UpdateAsync(Guid id, CategorizationRuleUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var rule = await this._repository.GetByIdAsync(id, cancellationToken);
         if (rule is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(rule, expectedVersion);
         }
 
         if (!Enum.TryParse<RuleMatchType>(dto.MatchType, ignoreCase: true, out var matchType))
@@ -100,7 +111,8 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         // Re-fetch to include category navigation property
         var updated = await this._repository.GetByIdAsync(rule.Id, cancellationToken);
-        return CategorizationMapper.ToDto(updated!);
+        var version = this._unitOfWork.GetConcurrencyToken(updated!);
+        return CategorizationMapper.ToDto(updated!, version);
     }
 
     /// <inheritdoc/>
@@ -133,7 +145,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         var patternSet = new HashSet<string>(patterns, StringComparer.OrdinalIgnoreCase);
         var matchingRules = allRules.Where(r => patternSet.Contains(r.Pattern)).ToList();
 
-        return matchingRules.Select(CategorizationMapper.ToDto).ToList();
+        return matchingRules.Select(r => CategorizationMapper.ToDto(r)).ToList();
     }
 
     /// <inheritdoc/>

@@ -56,7 +56,17 @@ public sealed class CustomReportsController : ControllerBase
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var layout = await this._layoutService.GetByIdAsync(id, cancellationToken);
-        return layout is null ? this.NotFound() : this.Ok(layout);
+        if (layout is null)
+        {
+            return this.NotFound();
+        }
+
+        if (layout.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{layout.Version}\"";
+        }
+
+        return this.Ok(layout);
     }
 
     /// <summary>
@@ -73,7 +83,7 @@ public sealed class CustomReportsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var layout = await this._layoutService.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction(nameof(GetByIdAsync), new { id = layout.Id }, layout);
+        return this.CreatedAtAction("GetById", new { id = layout.Id }, layout);
     }
 
     /// <summary>
@@ -86,13 +96,30 @@ public sealed class CustomReportsController : ControllerBase
     [HttpPut("{id:guid}")]
     [ProducesResponseType<CustomReportLayoutDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateAsync(
         Guid id,
         [FromBody] CustomReportLayoutUpdateDto dto,
         CancellationToken cancellationToken)
     {
-        var layout = await this._layoutService.UpdateAsync(id, dto, cancellationToken);
-        return layout is null ? this.NotFound() : this.Ok(layout);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var layout = await this._layoutService.UpdateAsync(id, dto, expectedVersion, cancellationToken);
+        if (layout is null)
+        {
+            return this.NotFound();
+        }
+
+        if (layout.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{layout.Version}\"";
+        }
+
+        return this.Ok(layout);
     }
 
     /// <summary>

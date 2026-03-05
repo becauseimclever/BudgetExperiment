@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Globalization;
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages.Reports;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
@@ -181,7 +182,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<AccountDto?> CreateAccountAsync(AccountCreateDto model) => Task.FromResult<AccountDto?>(null);
 
         /// <inheritdoc/>
-        public Task<AccountDto?> UpdateAccountAsync(Guid id, AccountUpdateDto model) => Task.FromResult<AccountDto?>(null);
+        public Task<ApiResult<AccountDto>> UpdateAccountAsync(Guid id, AccountUpdateDto model, string? version = null) => Task.FromResult(ApiResult<AccountDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteAccountAsync(Guid id) => Task.FromResult(false);
@@ -196,13 +197,13 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<TransactionDto?> CreateTransactionAsync(TransactionCreateDto model) => Task.FromResult<TransactionDto?>(null);
 
         /// <inheritdoc/>
-        public Task<TransactionDto?> UpdateTransactionAsync(Guid id, TransactionUpdateDto model) => Task.FromResult<TransactionDto?>(null);
+        public Task<ApiResult<TransactionDto>> UpdateTransactionAsync(Guid id, TransactionUpdateDto model, string? version = null) => Task.FromResult(ApiResult<TransactionDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteTransactionAsync(Guid id) => Task.FromResult(false);
 
         /// <inheritdoc/>
-        public Task<TransactionDto?> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto) => Task.FromResult<TransactionDto?>(null);
+        public Task<ApiResult<TransactionDto>> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? version = null) => Task.FromResult(ApiResult<TransactionDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> ClearTransactionLocationAsync(Guid id) => Task.FromResult(false);
@@ -232,7 +233,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<RecurringTransactionDto?> CreateRecurringTransactionAsync(RecurringTransactionCreateDto model) => Task.FromResult<RecurringTransactionDto?>(null);
 
         /// <inheritdoc/>
-        public Task<RecurringTransactionDto?> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model) => Task.FromResult<RecurringTransactionDto?>(null);
+        public Task<ApiResult<RecurringTransactionDto>> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model, string? version = null) => Task.FromResult(ApiResult<RecurringTransactionDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteRecurringTransactionAsync(Guid id) => Task.FromResult(false);
@@ -253,7 +254,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<bool> SkipRecurringInstanceAsync(Guid id, DateOnly date) => Task.FromResult(false);
 
         /// <inheritdoc/>
-        public Task<RecurringInstanceDto?> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model) => Task.FromResult<RecurringInstanceDto?>(null);
+        public Task<ApiResult<RecurringInstanceDto>> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model, string? version = null) => Task.FromResult(ApiResult<RecurringInstanceDto>.Failure());
 
         /// <inheritdoc/>
         public Task<TransferResponse?> CreateTransferAsync(CreateTransferRequest model) => Task.FromResult<TransferResponse?>(null);
@@ -280,7 +281,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<RecurringTransferDto?> CreateRecurringTransferAsync(RecurringTransferCreateDto model) => Task.FromResult<RecurringTransferDto?>(null);
 
         /// <inheritdoc/>
-        public Task<RecurringTransferDto?> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model) => Task.FromResult<RecurringTransferDto?>(null);
+        public Task<ApiResult<RecurringTransferDto>> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model, string? version = null) => Task.FromResult(ApiResult<RecurringTransferDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteRecurringTransferAsync(Guid id) => Task.FromResult(false);
@@ -301,7 +302,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<bool> SkipRecurringTransferInstanceAsync(Guid id, DateOnly date) => Task.FromResult(false);
 
         /// <inheritdoc/>
-        public Task<RecurringTransferInstanceDto?> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model) => Task.FromResult<RecurringTransferInstanceDto?>(null);
+        public Task<ApiResult<RecurringTransferInstanceDto>> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model, string? version = null) => Task.FromResult(ApiResult<RecurringTransferInstanceDto>.Failure());
 
         /// <inheritdoc/>
         public Task<TransactionDto?> RealizeRecurringTransactionAsync(Guid recurringTransactionId, RealizeRecurringTransactionRequest request) => Task.FromResult<TransactionDto?>(null);
@@ -337,7 +338,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<BudgetCategoryDto?> CreateCategoryAsync(BudgetCategoryCreateDto model) => Task.FromResult<BudgetCategoryDto?>(null);
 
         /// <inheritdoc/>
-        public Task<BudgetCategoryDto?> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model) => Task.FromResult<BudgetCategoryDto?>(null);
+        public Task<ApiResult<BudgetCategoryDto>> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model, string? version = null) => Task.FromResult(ApiResult<BudgetCategoryDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteCategoryAsync(Guid id) => Task.FromResult(false);
@@ -355,7 +356,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsByCategoryAsync(Guid categoryId) => Task.FromResult<IReadOnlyList<BudgetGoalDto>>([]);
 
         /// <inheritdoc/>
-        public Task<BudgetGoalDto?> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model) => Task.FromResult<BudgetGoalDto?>(null);
+        public Task<ApiResult<BudgetGoalDto>> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model, string? version = null) => Task.FromResult(ApiResult<BudgetGoalDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month) => Task.FromResult(false);
@@ -379,7 +380,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<CategorizationRuleDto?> CreateCategorizationRuleAsync(CategorizationRuleCreateDto model) => Task.FromResult<CategorizationRuleDto?>(null);
 
         /// <inheritdoc/>
-        public Task<CategorizationRuleDto?> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model) => Task.FromResult<CategorizationRuleDto?>(null);
+        public Task<ApiResult<CategorizationRuleDto>> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model, string? version = null) => Task.FromResult(ApiResult<CategorizationRuleDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteCategorizationRuleAsync(Guid id) => Task.FromResult(false);
@@ -433,7 +434,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         public Task<CustomReportLayoutDto?> CreateCustomReportLayoutAsync(CustomReportLayoutCreateDto dto) => Task.FromResult<CustomReportLayoutDto?>(null);
 
         /// <inheritdoc/>
-        public Task<CustomReportLayoutDto?> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto) => Task.FromResult<CustomReportLayoutDto?>(null);
+        public Task<ApiResult<CustomReportLayoutDto>> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto, string? version = null) => Task.FromResult(ApiResult<CustomReportLayoutDto>.Failure());
 
         /// <inheritdoc/>
         public Task<bool> DeleteCustomReportLayoutAsync(Guid id) => Task.FromResult(false);

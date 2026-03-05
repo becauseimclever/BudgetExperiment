@@ -37,8 +37,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">The account ID.</param>
     /// <param name="model">The account update data.</param>
-    /// <returns>The updated account.</returns>
-    Task<AccountDto?> UpdateAccountAsync(Guid id, AccountUpdateDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<AccountDto>> UpdateAccountAsync(Guid id, AccountUpdateDto model, string? version = null);
 
     /// <summary>
     /// Deletes an account.
@@ -75,8 +76,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">The transaction ID.</param>
     /// <param name="model">The transaction update data.</param>
-    /// <returns>The updated transaction.</returns>
-    Task<TransactionDto?> UpdateTransactionAsync(Guid id, TransactionUpdateDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<TransactionDto>> UpdateTransactionAsync(Guid id, TransactionUpdateDto model, string? version = null);
 
     /// <summary>
     /// Deletes a transaction by ID.
@@ -90,8 +92,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">The transaction ID.</param>
     /// <param name="dto">The location update data.</param>
-    /// <returns>The updated transaction or null if not found.</returns>
-    Task<TransactionDto?> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<TransactionDto>> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? version = null);
 
     /// <summary>
     /// Clears the location data for a transaction.
@@ -174,8 +177,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">The recurring transaction ID.</param>
     /// <param name="model">The update data.</param>
-    /// <returns>The updated recurring transaction.</returns>
-    Task<RecurringTransactionDto?> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<RecurringTransactionDto>> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model, string? version = null);
 
     /// <summary>
     /// Deletes a recurring transaction.
@@ -228,8 +232,9 @@ public interface IBudgetApiService
     /// <param name="id">The recurring transaction ID.</param>
     /// <param name="date">The scheduled date to modify.</param>
     /// <param name="model">The modification data.</param>
-    /// <returns>The modified instance.</returns>
-    Task<RecurringInstanceDto?> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<RecurringInstanceDto>> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model, string? version = null);
 
     /// <summary>
     /// Creates a new transfer between accounts.
@@ -304,8 +309,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">The recurring transfer ID.</param>
     /// <param name="model">The update data.</param>
-    /// <returns>The updated recurring transfer.</returns>
-    Task<RecurringTransferDto?> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<RecurringTransferDto>> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model, string? version = null);
 
     /// <summary>
     /// Deletes a recurring transfer.
@@ -358,8 +364,9 @@ public interface IBudgetApiService
     /// <param name="id">The recurring transfer ID.</param>
     /// <param name="date">The scheduled date to modify.</param>
     /// <param name="model">The modification data.</param>
-    /// <returns>The modified instance.</returns>
-    Task<RecurringTransferInstanceDto?> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<RecurringTransferInstanceDto>> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model, string? version = null);
 
     // Realize Recurring Items
 
@@ -476,8 +483,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">The category ID.</param>
     /// <param name="model">The category update data.</param>
-    /// <returns>The updated category.</returns>
-    Task<BudgetCategoryDto?> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<BudgetCategoryDto>> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model, string? version = null);
 
     /// <summary>
     /// Deletes a budget category.
@@ -522,8 +530,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="categoryId">The category ID.</param>
     /// <param name="model">The goal data.</param>
-    /// <returns>The created or updated goal.</returns>
-    Task<BudgetGoalDto?> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<BudgetGoalDto>> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model, string? version = null);
 
     /// <summary>
     /// Deletes a budget goal.
@@ -588,8 +597,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">The rule ID.</param>
     /// <param name="model">The rule update data.</param>
-    /// <returns>The updated rule.</returns>
-    Task<CategorizationRuleDto?> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<CategorizationRuleDto>> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model, string? version = null);
 
     /// <summary>
     /// Deletes a categorization rule.
@@ -718,8 +728,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="id">Layout id.</param>
     /// <param name="dto">Update DTO.</param>
-    /// <returns>The updated layout or null.</returns>
-    Task<CustomReportLayoutDto?> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto);
+    /// <param name="version">Optional ETag version for optimistic concurrency.</param>
+    /// <returns>The update result (success, conflict, or failure).</returns>
+    Task<ApiResult<CustomReportLayoutDto>> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto, string? version = null);
 
     /// <summary>
     /// Deletes a custom report layout.

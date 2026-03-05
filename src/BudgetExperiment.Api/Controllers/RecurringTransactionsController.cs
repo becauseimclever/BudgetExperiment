@@ -69,6 +69,11 @@ public sealed class RecurringTransactionsController : ControllerBase
             return this.NotFound();
         }
 
+        if (recurring.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{recurring.Version}\"";
+        }
+
         return this.Ok(recurring);
     }
 
@@ -99,12 +104,24 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType<RecurringTransactionDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] RecurringTransactionUpdateDto dto, CancellationToken cancellationToken)
     {
-        var recurring = await this._service.UpdateAsync(id, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var recurring = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
+        }
+
+        if (recurring.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{recurring.Version}\"";
         }
 
         return this.Ok(recurring);
@@ -260,13 +277,20 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType<RecurringInstanceDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ModifyInstanceAsync(
         Guid id,
         DateOnly date,
         [FromBody] RecurringInstanceModifyDto dto,
         CancellationToken cancellationToken)
     {
-        var instance = await this._instanceService.ModifyInstanceAsync(id, date, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var instance = await this._instanceService.ModifyInstanceAsync(id, date, dto, expectedVersion, cancellationToken);
         if (instance is null)
         {
             return this.NotFound();
@@ -308,16 +332,28 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType<RecurringTransactionDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateFutureAsync(
         Guid id,
         DateOnly date,
         [FromBody] RecurringTransactionUpdateDto dto,
         CancellationToken cancellationToken)
     {
-        var recurring = await this._service.UpdateFromDateAsync(id, date, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var recurring = await this._service.UpdateFromDateAsync(id, date, dto, expectedVersion, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
+        }
+
+        if (recurring.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{recurring.Version}\"";
         }
 
         return this.Ok(recurring);

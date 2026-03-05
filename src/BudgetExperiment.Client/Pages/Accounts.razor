@@ -3,6 +3,7 @@
 @implements IDisposable
 
 @inject IBudgetApiService ApiService
+@inject IToastService ToastService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
 
@@ -108,6 +109,7 @@
     private bool showEditAccount = false;
     private AccountCreateDto editAccount = new();
     private Guid? editingAccountId = null;
+    private string? editingVersion;
 
     // Transfer state
     private bool showTransfer = false;
@@ -192,6 +194,7 @@
     private void ShowEditAccount(AccountDto account)
     {
         editingAccountId = account.Id;
+        editingVersion = account.Version;
         editAccount = new AccountCreateDto
         {
             Name = account.Name,
@@ -228,8 +231,16 @@
                 InitialBalanceDate = model.InitialBalanceDate,
             };
 
-            var result = await ApiService.UpdateAccountAsync(editingAccountId.Value, updateDto);
-            if (result != null)
+            var result = await ApiService.UpdateAccountAsync(editingAccountId.Value, updateDto, editingVersion);
+            if (result.IsConflict)
+            {
+                ToastService.ShowWarning("This account was modified by another user. Data has been refreshed.", "Conflict");
+                HideEditAccount();
+                await LoadAccounts();
+                return;
+            }
+
+            if (result.IsSuccess)
             {
                 showEditAccount = false;
                 editingAccountId = null;

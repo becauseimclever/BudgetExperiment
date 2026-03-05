@@ -58,4 +58,9 @@ public sealed record ImportMappingDto
     /// Gets when the mapping was last updated.
     /// </summary>
     public DateTime? UpdatedAtUtc { get; init; }
+
+    /// <summary>
+    /// Gets the concurrency version token for optimistic concurrency.
+    /// </summary>
+    public string? Version { get; init; }
 }

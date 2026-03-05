@@ -66,9 +66,10 @@ public interface ICategorizationRuleService
     /// </summary>
     /// <param name="id">The rule identifier.</param>
     /// <param name="dto">The rule update data.</param>
+    /// <param name="expectedVersion">The expected concurrency version (from If-Match header).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated rule if found, null otherwise.</returns>
-    Task<CategorizationRuleDto?> UpdateAsync(Guid id, CategorizationRuleUpdateDto dto, CancellationToken cancellationToken = default);
+    Task<CategorizationRuleDto?> UpdateAsync(Guid id, CategorizationRuleUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a categorization rule.

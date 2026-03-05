@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -88,23 +89,9 @@ public sealed class ImportApiService : IImportApiService
     }
 
     /// <inheritdoc />
-    public async Task<ImportMappingDto?> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request)
+    public async Task<ApiResult<ImportMappingDto>> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, string? version = null)
     {
-        try
-        {
-            var response = await this._httpClient.PutAsJsonAsync($"api/v1/import/mappings/{id}", request, JsonOptions);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<ImportMappingDto>(JsonOptions);
-            }
-
-            return null;
-        }
-        catch (AccessTokenNotAvailableException ex)
-        {
-            ex.Redirect();
-            return null;
-        }
+        return await this.SendUpdateAsync<ImportMappingDto>(HttpMethod.Put, $"api/v1/import/mappings/{id}", request, version);
     }
 
     /// <inheritdoc />
@@ -239,6 +226,42 @@ public sealed class ImportApiService : IImportApiService
         {
             ex.Redirect();
             return null;
+        }
+    }
+
+    private async Task<ApiResult<T>> SendUpdateAsync<T>(HttpMethod method, string url, object body, string? version)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(method, url)
+            {
+                Content = JsonContent.Create(body, body.GetType(), options: JsonOptions),
+            };
+
+            if (!string.IsNullOrEmpty(version))
+            {
+                request.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{version}\""));
+            }
+
+            var response = await this._httpClient.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                return ApiResult<T>.Conflict();
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions);
+                return data is not null ? ApiResult<T>.Success(data) : ApiResult<T>.Failure();
+            }
+
+            return ApiResult<T>.Failure();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return ApiResult<T>.Failure();
         }
     }
 }

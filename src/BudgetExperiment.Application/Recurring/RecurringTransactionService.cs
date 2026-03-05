@@ -51,7 +51,8 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         }
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty, version);
     }
 
     /// <summary>
@@ -124,14 +125,20 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// </summary>
     /// <param name="id">The recurring transaction identifier.</param>
     /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
-    public async Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
@@ -141,7 +148,8 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty, version);
     }
 
     /// <summary>
@@ -237,18 +245,25 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <param name="id">The recurring transaction identifier.</param>
     /// <param name="instanceDate">The date from which to apply changes.</param>
     /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
     public async Task<RecurringTransactionDto?> UpdateFromDateAsync(
         Guid id,
         DateOnly instanceDate,
         RecurringTransactionUpdateDto dto,
+        string? expectedVersion = null,
         CancellationToken cancellationToken = default)
     {
         var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
         }
 
         // Remove all exceptions from this date forward
@@ -262,7 +277,8 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
+        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty, version);
     }
 
     /// <inheritdoc />

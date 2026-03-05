@@ -63,4 +63,9 @@ public sealed class CategorizationRuleDto
     /// Gets or sets the last modification timestamp (UTC).
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets the concurrency version token for optimistic concurrency.
+    /// </summary>
+    public string? Version { get; set; }
 }

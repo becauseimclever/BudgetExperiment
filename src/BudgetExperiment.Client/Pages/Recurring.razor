@@ -3,6 +3,7 @@
 @implements IDisposable
 
 @inject IBudgetApiService ApiService
+@inject IToastService ToastService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
 @inject IChatContextService ChatContext
@@ -162,6 +163,7 @@
     private RecurringTransactionCreateDto newRecurring = new();
     private RecurringTransactionUpdateDto editModel = new();
     private Guid editingId;
+    private string? editingVersion;
     private RecurringTransactionDto? deletingRecurring;
     private Guid importPatternsRecurringId;
     private string importPatternsDescription = string.Empty;
@@ -254,6 +256,7 @@
     private void ShowEditForm(RecurringTransactionDto recurring)
     {
         editingId = recurring.Id;
+        editingVersion = recurring.Version;
         editModel = new RecurringTransactionUpdateDto
         {
             Description = recurring.Description,
@@ -293,8 +296,16 @@
         isSubmitting = true;
         try
         {
-            var result = await ApiService.UpdateRecurringTransactionAsync(editingId, model);
-            if (result != null)
+            var result = await ApiService.UpdateRecurringTransactionAsync(editingId, model, editingVersion);
+            if (result.IsConflict)
+            {
+                ToastService.ShowWarning("This recurring transaction was modified by another user. Data has been refreshed.", "Conflict");
+                HideForm();
+                await LoadRecurringTransactions();
+                return;
+            }
+
+            if (result.IsSuccess)
             {
                 showEditForm = false;
                 await LoadRecurringTransactions();

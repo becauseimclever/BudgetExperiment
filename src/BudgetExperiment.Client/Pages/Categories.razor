@@ -3,6 +3,7 @@
 @implements IDisposable
 
 @inject IBudgetApiService ApiService
+@inject IToastService ToastService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
 @inject IChatContextService ChatContext
@@ -144,6 +145,7 @@
     private bool showEditCategory = false;
     private BudgetCategoryCreateDto editCategory = new();
     private Guid? editingCategoryId = null;
+    private string? editingVersion;
     private int editSortOrder = 0;
 
     // Delete confirmation state
@@ -253,6 +255,7 @@
     private void ShowEditCategory(BudgetCategoryDto category)
     {
         editingCategoryId = category.Id;
+        editingVersion = category.Version;
         editCategory = new BudgetCategoryCreateDto
         {
             Name = category.Name,
@@ -289,13 +292,21 @@
                 SortOrder = editSortOrder
             };
 
-            var updated = await ApiService.UpdateCategoryAsync(editingCategoryId.Value, updateDto);
-            if (updated != null)
+            var updated = await ApiService.UpdateCategoryAsync(editingCategoryId.Value, updateDto, editingVersion);
+            if (updated.IsConflict)
+            {
+                ToastService.ShowWarning("This category was modified by another user. Data has been refreshed.", "Conflict");
+                HideEditCategory();
+                await LoadCategories();
+                return;
+            }
+
+            if (updated.IsSuccess)
             {
                 var index = categories.FindIndex(c => c.Id == editingCategoryId.Value);
                 if (index >= 0)
                 {
-                    categories[index] = updated;
+                    categories[index] = updated.Data!;
                 }
 
                 showEditCategory = false;

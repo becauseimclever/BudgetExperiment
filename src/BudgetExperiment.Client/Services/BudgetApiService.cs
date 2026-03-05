@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -32,6 +33,12 @@ public sealed class BudgetApiService : IBudgetApiService
     public BudgetApiService(HttpClient httpClient)
     {
         this._httpClient = httpClient;
+    }
+
+    /// <inheritdoc />
+    public async Task<ApiResult<AccountDto>> UpdateAccountAsync(Guid id, AccountUpdateDto model, string? version = null)
+    {
+        return await this.SendUpdateAsync<AccountDto>(HttpMethod.Put, $"api/v1/accounts/{id}", model, version);
     }
 
     /// <inheritdoc />
@@ -73,26 +80,6 @@ public sealed class BudgetApiService : IBudgetApiService
         try
         {
             var response = await this._httpClient.PostAsJsonAsync("api/v1/accounts", model, JsonOptions);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
-            }
-
-            return null;
-        }
-        catch (AccessTokenNotAvailableException ex)
-        {
-            ex.Redirect();
-            return null;
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task<AccountDto?> UpdateAccountAsync(Guid id, AccountUpdateDto model)
-    {
-        try
-        {
-            var response = await this._httpClient.PutAsJsonAsync($"api/v1/accounts/{id}", model, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<AccountDto>(JsonOptions);
@@ -182,23 +169,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<TransactionDto?> UpdateTransactionAsync(Guid id, TransactionUpdateDto model)
+    public async Task<ApiResult<TransactionDto>> UpdateTransactionAsync(Guid id, TransactionUpdateDto model, string? version = null)
     {
-        try
-        {
-            var response = await this._httpClient.PutAsJsonAsync($"api/v1/transactions/{id}", model, JsonOptions);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
-            }
-
-            return null;
-        }
-        catch (AccessTokenNotAvailableException ex)
-        {
-            ex.Redirect();
-            return null;
-        }
+        return await this.SendUpdateAsync<TransactionDto>(HttpMethod.Put, $"api/v1/transactions/{id}", model, version);
     }
 
     /// <inheritdoc />
@@ -217,23 +190,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<TransactionDto?> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto)
+    public async Task<ApiResult<TransactionDto>> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? version = null)
     {
-        try
-        {
-            var response = await this._httpClient.PatchAsJsonAsync($"api/v1/transactions/{id}/location", dto, JsonOptions);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
-            }
-
-            return null;
-        }
-        catch (AccessTokenNotAvailableException ex)
-        {
-            ex.Redirect();
-            return null;
-        }
+        return await this.SendUpdateAsync<TransactionDto>(HttpMethod.Patch, $"api/v1/transactions/{id}/location", dto, version);
     }
 
     /// <inheritdoc />
@@ -402,15 +361,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransactionDto?> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model)
+    public async Task<ApiResult<RecurringTransactionDto>> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model, string? version = null)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<RecurringTransactionDto>(JsonOptions);
-        }
-
-        return null;
+        return await this.SendUpdateAsync<RecurringTransactionDto>(HttpMethod.Put, $"api/v1/recurring-transactions/{id}", model, version);
     }
 
     /// <inheritdoc />
@@ -477,15 +430,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<RecurringInstanceDto?> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model)
+    public async Task<ApiResult<RecurringInstanceDto>> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model, string? version = null)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transactions/{id}/instances/{date:yyyy-MM-dd}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<RecurringInstanceDto>(JsonOptions);
-        }
-
-        return null;
+        return await this.SendUpdateAsync<RecurringInstanceDto>(HttpMethod.Put, $"api/v1/recurring-transactions/{id}/instances/{date:yyyy-MM-dd}", model, version);
     }
 
     /// <inheritdoc />
@@ -601,15 +548,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransferDto?> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model)
+    public async Task<ApiResult<RecurringTransferDto>> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model, string? version = null)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transfers/{id}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<RecurringTransferDto>(JsonOptions);
-        }
-
-        return null;
+        return await this.SendUpdateAsync<RecurringTransferDto>(HttpMethod.Put, $"api/v1/recurring-transfers/{id}", model, version);
     }
 
     /// <inheritdoc />
@@ -676,15 +617,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<RecurringTransferInstanceDto?> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model)
+    public async Task<ApiResult<RecurringTransferInstanceDto>> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model, string? version = null)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/recurring-transfers/{id}/instances/{date:yyyy-MM-dd}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<RecurringTransferInstanceDto>(JsonOptions);
-        }
-
-        return null;
+        return await this.SendUpdateAsync<RecurringTransferInstanceDto>(HttpMethod.Put, $"api/v1/recurring-transfers/{id}/instances/{date:yyyy-MM-dd}", model, version);
     }
 
     /// <inheritdoc />
@@ -875,15 +810,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<BudgetCategoryDto?> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model)
+    public async Task<ApiResult<BudgetCategoryDto>> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model, string? version = null)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/categories/{id}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<BudgetCategoryDto>(JsonOptions);
-        }
-
-        return null;
+        return await this.SendUpdateAsync<BudgetCategoryDto>(HttpMethod.Put, $"api/v1/categories/{id}", model, version);
     }
 
     /// <inheritdoc />
@@ -928,15 +857,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<BudgetGoalDto?> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model)
+    public async Task<ApiResult<BudgetGoalDto>> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model, string? version = null)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/budgets/{categoryId}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<BudgetGoalDto>(JsonOptions);
-        }
-
-        return null;
+        return await this.SendUpdateAsync<BudgetGoalDto>(HttpMethod.Put, $"api/v1/budgets/{categoryId}", model, version);
     }
 
     /// <inheritdoc />
@@ -1028,15 +951,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<CategorizationRuleDto?> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model)
+    public async Task<ApiResult<CategorizationRuleDto>> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model, string? version = null)
     {
-        var response = await this._httpClient.PutAsJsonAsync($"api/v1/categorizationrules/{id}", model, JsonOptions);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<CategorizationRuleDto>(JsonOptions);
-        }
-
-        return null;
+        return await this.SendUpdateAsync<CategorizationRuleDto>(HttpMethod.Put, $"api/v1/categorizationrules/{id}", model, version);
     }
 
     /// <inheritdoc />
@@ -1387,30 +1304,9 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<CustomReportLayoutDto?> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto)
+    public async Task<ApiResult<CustomReportLayoutDto>> UpdateCustomReportLayoutAsync(Guid id, CustomReportLayoutUpdateDto dto, string? version = null)
     {
-        try
-        {
-            var response = await this._httpClient.PutAsJsonAsync(
-                $"api/v1/custom-reports/{id}",
-                dto,
-                JsonOptions);
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-
-            return await response.Content.ReadFromJsonAsync<CustomReportLayoutDto>(JsonOptions);
-        }
-        catch (AccessTokenNotAvailableException ex)
-        {
-            ex.Redirect();
-            return null;
-        }
-        catch (HttpRequestException)
-        {
-            return null;
-        }
+        return await this.SendUpdateAsync<CustomReportLayoutDto>(HttpMethod.Put, $"api/v1/custom-reports/{id}", dto, version);
     }
 
     /// <inheritdoc />
@@ -1473,6 +1369,42 @@ public sealed class BudgetApiService : IBudgetApiService
         {
             ex.Redirect();
             return null;
+        }
+    }
+
+    private async Task<ApiResult<T>> SendUpdateAsync<T>(HttpMethod method, string url, object body, string? version)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(method, url)
+            {
+                Content = JsonContent.Create(body, body.GetType(), options: JsonOptions),
+            };
+
+            if (!string.IsNullOrEmpty(version))
+            {
+                request.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{version}\""));
+            }
+
+            var response = await this._httpClient.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                return ApiResult<T>.Conflict();
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions);
+                return data is not null ? ApiResult<T>.Success(data) : ApiResult<T>.Failure();
+            }
+
+            return ApiResult<T>.Failure();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return ApiResult<T>.Failure();
         }
     }
 }

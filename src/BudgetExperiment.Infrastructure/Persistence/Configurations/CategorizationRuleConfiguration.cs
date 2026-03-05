@@ -68,5 +68,9 @@ internal sealed class CategorizationRuleConfiguration : IEntityTypeConfiguration
             .HasDatabaseName("IX_CategorizationRules_CategoryId");
 
         builder.HasIndex(r => r.Name);
+
+        // Optimistic concurrency token (PostgreSQL xmin)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
     }
 }

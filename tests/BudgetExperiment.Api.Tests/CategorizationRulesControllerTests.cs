@@ -419,4 +419,165 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         Assert.Contains(rules, r => r.Id == activeRule!.Id);
         Assert.DoesNotContain(rules, r => r.Id == inactiveRule!.Id);
     }
+
+    /// <summary>
+    /// GET /api/v1/categorizationrules/{id} returns ETag header.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetById_Returns_ETag_Header()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "ETag Rule Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var createDto = new CategorizationRuleCreateDto
+        {
+            Name = "ETag Rule",
+            Pattern = "ETAG",
+            MatchType = "Contains",
+            CategoryId = category!.Id,
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        Assert.False(string.IsNullOrEmpty(response.Headers.ETag.Tag));
+    }
+
+    /// <summary>
+    /// PUT /api/v1/categorizationrules/{id} with valid If-Match succeeds and returns new ETag.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "IfMatch Valid Rule Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var createDto = new CategorizationRuleCreateDto
+        {
+            Name = "IfMatch Valid Rule",
+            Pattern = "VALID",
+            MatchType = "Contains",
+            CategoryId = category!.Id,
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+
+        var getResponse = await this._client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var updateDto = new CategorizationRuleUpdateDto
+        {
+            Name = "Updated With ETag",
+            Pattern = "VALID",
+            MatchType = "Contains",
+            CategoryId = category.Id,
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/categorizationrules/{created.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+        Assert.Equal("Updated With ETag", updated!.Name);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/categorizationrules/{id} with stale If-Match returns 409 Conflict.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "Stale IfMatch Rule Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var createDto = new CategorizationRuleCreateDto
+        {
+            Name = "Stale IfMatch Rule",
+            Pattern = "STALE",
+            MatchType = "Contains",
+            CategoryId = category!.Id,
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+
+        var staleETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"99999999\"");
+        var updateDto = new CategorizationRuleUpdateDto
+        {
+            Name = "Should Fail",
+            Pattern = "STALE",
+            MatchType = "Contains",
+            CategoryId = category!.Id,
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/categorizationrules/{created!.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/categorizationrules/{id} without If-Match still succeeds (backward compatible).
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_Without_IfMatch_Succeeds_BackwardCompatible()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "No IfMatch Rule Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var createDto = new CategorizationRuleCreateDto
+        {
+            Name = "No IfMatch Rule",
+            Pattern = "NOIFMATCH",
+            MatchType = "Contains",
+            CategoryId = category!.Id,
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+
+        var updateDto = new CategorizationRuleUpdateDto
+        {
+            Name = "Updated Without ETag",
+            Pattern = "NOIFMATCH",
+            MatchType = "Contains",
+            CategoryId = category!.Id,
+        };
+
+        // Act
+        var response = await this._client.PutAsJsonAsync($"/api/v1/categorizationrules/{created!.Id}", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+        Assert.Equal("Updated Without ETag", updated!.Name);
+    }
 }

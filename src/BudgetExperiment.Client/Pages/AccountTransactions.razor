@@ -6,6 +6,7 @@
 @implements IDisposable
 
 @inject IBudgetApiService ApiService
+@inject IToastService ToastService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
 @inject IChatContextService ChatContext
@@ -377,8 +378,6 @@
 
         try
         {
-            TransactionDto? result;
-
             if (editingTransaction != null)
             {
                 // Update existing transaction
@@ -389,19 +388,33 @@
                     Description = transaction.Description,
                     CategoryId = transaction.CategoryId,
                 };
-                result = await ApiService.UpdateTransactionAsync(editingTransaction.Id, updateDto);
+                var updateResult = await ApiService.UpdateTransactionAsync(editingTransaction.Id, updateDto, editingTransaction.Version);
+                if (updateResult.IsConflict)
+                {
+                    ToastService.ShowWarning("This transaction was modified by another user. Data has been refreshed.", "Conflict");
+                    showAddTransaction = false;
+                    editingTransaction = null;
+                    await LoadData();
+                    return;
+                }
+
+                if (updateResult.IsSuccess)
+                {
+                    showAddTransaction = false;
+                    editingTransaction = null;
+                    await LoadData();
+                }
             }
             else
             {
                 // Create new transaction
-                result = await ApiService.CreateTransactionAsync(transaction);
-            }
-
-            if (result != null)
-            {
-                showAddTransaction = false;
-                editingTransaction = null;
-                await LoadData();
+                var result = await ApiService.CreateTransactionAsync(transaction);
+                if (result != null)
+                {
+                    showAddTransaction = false;
+                    editingTransaction = null;
+                    await LoadData();
+                }
             }
         }
         catch (Exception ex)
@@ -491,7 +504,7 @@
                 editingRecurringItem.Date,
                 model);
 
-            if (result != null)
+            if (result.IsSuccess)
             {
                 showEditRecurring = false;
                 editingRecurringItem = null;
@@ -618,10 +631,17 @@
 
         try
         {
-            var result = await ApiService.UpdateTransactionLocationAsync(editingTransaction.Id, dto);
-            if (result != null)
+            var result = await ApiService.UpdateTransactionLocationAsync(editingTransaction.Id, dto, editingTransaction.Version);
+            if (result.IsConflict)
             {
-                editingTransaction = result;
+                ToastService.ShowWarning("This transaction was modified by another user. Data has been refreshed.", "Conflict");
+                await LoadData();
+                return;
+            }
+
+            if (result.IsSuccess)
+            {
+                editingTransaction = result.Data;
             }
         }
         catch (Exception ex)

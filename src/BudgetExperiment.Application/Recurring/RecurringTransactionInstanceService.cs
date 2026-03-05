@@ -79,12 +79,18 @@ public sealed class RecurringTransactionInstanceService : IRecurringTransactionI
         Guid id,
         DateOnly instanceDate,
         RecurringInstanceModifyDto dto,
+        string? expectedVersion = null,
         CancellationToken cancellationToken = default)
     {
         var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            _unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
         }
 
         var exception = await _repository.GetExceptionAsync(id, instanceDate, cancellationToken);

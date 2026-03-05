@@ -19,6 +19,18 @@ public static class RecurringMapper
     /// <returns>The mapped DTO.</returns>
     public static RecurringTransactionDto ToDto(RecurringTransaction recurring, string accountName = "")
     {
+        return ToDto(recurring, accountName, null);
+    }
+
+    /// <summary>
+    /// Maps a <see cref="RecurringTransaction"/> to a <see cref="RecurringTransactionDto"/> with a concurrency version.
+    /// </summary>
+    /// <param name="recurring">The recurring transaction entity.</param>
+    /// <param name="accountName">The account name.</param>
+    /// <param name="version">The concurrency version token.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static RecurringTransactionDto ToDto(RecurringTransaction recurring, string accountName, string? version)
+    {
         return new RecurringTransactionDto
         {
             Id = recurring.Id,
@@ -37,6 +49,7 @@ public static class RecurringMapper
             IsActive = recurring.IsActive,
             CreatedAtUtc = recurring.CreatedAtUtc,
             UpdatedAtUtc = recurring.UpdatedAtUtc,
+            Version = version,
         };
     }
 
@@ -86,6 +99,19 @@ public static class RecurringMapper
     /// <returns>The mapped DTO.</returns>
     public static RecurringTransferDto ToDto(RecurringTransfer recurring, string sourceAccountName = "", string destAccountName = "")
     {
+        return ToDto(recurring, sourceAccountName, destAccountName, null);
+    }
+
+    /// <summary>
+    /// Maps a <see cref="RecurringTransfer"/> to a <see cref="RecurringTransferDto"/> with a concurrency version.
+    /// </summary>
+    /// <param name="recurring">The recurring transfer entity.</param>
+    /// <param name="sourceAccountName">The source account name.</param>
+    /// <param name="destAccountName">The destination account name.</param>
+    /// <param name="version">The concurrency version token.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static RecurringTransferDto ToDto(RecurringTransfer recurring, string sourceAccountName, string destAccountName, string? version)
+    {
         return new RecurringTransferDto
         {
             Id = recurring.Id,
@@ -106,6 +132,7 @@ public static class RecurringMapper
             IsActive = recurring.IsActive,
             CreatedAtUtc = recurring.CreatedAtUtc,
             UpdatedAtUtc = recurring.UpdatedAtUtc,
+            Version = version,
         };
     }
 

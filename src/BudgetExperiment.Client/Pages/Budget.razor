@@ -309,7 +309,7 @@
             };
 
             var result = await ApiService.SetBudgetGoalAsync(editingProgress.CategoryId, goalDto);
-            if (result != null)
+            if (result.IsSuccess)
             {
                 showEditGoal = false;
                 editingProgress = null;

@@ -34,7 +34,7 @@ public sealed class ImportMappingService : IImportMappingService
     {
         var userId = this.GetRequiredUserId();
         var mappings = await this._repository.GetByUserAsync(userId, cancellationToken);
-        return mappings.Select(ToDto).ToList();
+        return mappings.Select(m => ToDto(m)).ToList();
     }
 
     /// <inheritdoc />
@@ -53,7 +53,8 @@ public sealed class ImportMappingService : IImportMappingService
             return null;
         }
 
-        return ToDto(mapping);
+        var version = this._unitOfWork.GetConcurrencyToken(mapping);
+        return ToDto(mapping, version);
     }
 
     /// <inheritdoc />
@@ -107,7 +108,7 @@ public sealed class ImportMappingService : IImportMappingService
     }
 
     /// <inheritdoc />
-    public async Task<ImportMappingDto?> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, CancellationToken cancellationToken = default)
+    public async Task<ImportMappingDto?> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var userId = this.GetRequiredUserId();
         var mapping = await this._repository.GetByIdAsync(id, cancellationToken);
@@ -115,6 +116,11 @@ public sealed class ImportMappingService : IImportMappingService
         if (mapping is null || mapping.UserId != userId)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(mapping, expectedVersion);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Name) && request.Name != mapping.Name)
@@ -162,7 +168,8 @@ public sealed class ImportMappingService : IImportMappingService
         }
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return ToDto(mapping);
+        var version = this._unitOfWork.GetConcurrencyToken(mapping);
+        return ToDto(mapping, version);
     }
 
     /// <inheritdoc />
@@ -222,7 +229,7 @@ public sealed class ImportMappingService : IImportMappingService
         return mappings.Any(m => !string.IsNullOrWhiteSpace(m.ColumnHeader) && headerSet.Contains(m.ColumnHeader!));
     }
 
-    private static ImportMappingDto ToDto(ImportMapping mapping)
+    private static ImportMappingDto ToDto(ImportMapping mapping, string? version = null)
     {
         return new ImportMappingDto
         {
@@ -240,6 +247,7 @@ public sealed class ImportMappingService : IImportMappingService
                 : null,
             CreatedAtUtc = mapping.CreatedAtUtc,
             UpdatedAtUtc = mapping.UpdatedAtUtc,
+            Version = version,
         };
     }
 

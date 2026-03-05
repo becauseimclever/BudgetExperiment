@@ -26,4 +26,7 @@ public sealed class CustomReportLayoutDto
 
     /// <summary>Gets or sets when the layout was last updated (UTC).</summary>
     public DateTime UpdatedAtUtc { get; set; }
+
+    /// <summary>Gets or sets the concurrency version token for optimistic concurrency.</summary>
+    public string? Version { get; set; }
 }

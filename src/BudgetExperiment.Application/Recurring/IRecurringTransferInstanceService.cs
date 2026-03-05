@@ -31,12 +31,14 @@ public interface IRecurringTransferInstanceService
     /// <param name="id">The recurring transfer identifier.</param>
     /// <param name="instanceDate">The original scheduled date of the instance.</param>
     /// <param name="dto">The modification data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The modified instance DTO, or null if not found.</returns>
     Task<RecurringTransferInstanceDto?> ModifyInstanceAsync(
         Guid id,
         DateOnly instanceDate,
         RecurringTransferInstanceModifyDto dto,
+        string? expectedVersion = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

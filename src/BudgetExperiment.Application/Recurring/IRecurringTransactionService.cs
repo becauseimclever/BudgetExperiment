@@ -47,9 +47,10 @@ public interface IRecurringTransactionService
     /// </summary>
     /// <param name="id">The recurring transaction identifier.</param>
     /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
-    Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, CancellationToken cancellationToken = default);
+    Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a recurring transaction.

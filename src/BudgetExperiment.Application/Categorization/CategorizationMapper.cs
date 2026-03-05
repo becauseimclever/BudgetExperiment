@@ -15,8 +15,9 @@ public static class CategorizationMapper
     /// Maps a <see cref="CategorizationRule"/> to a <see cref="CategorizationRuleDto"/>.
     /// </summary>
     /// <param name="rule">The categorization rule entity.</param>
+    /// <param name="version">The concurrency version token.</param>
     /// <returns>The mapped DTO.</returns>
-    public static CategorizationRuleDto ToDto(CategorizationRule rule)
+    public static CategorizationRuleDto ToDto(CategorizationRule rule, string? version = null)
     {
         return new CategorizationRuleDto
         {
@@ -31,6 +32,7 @@ public static class CategorizationMapper
             IsActive = rule.IsActive,
             CreatedAt = rule.CreatedAtUtc,
             UpdatedAt = rule.UpdatedAtUtc,
+            Version = version,
         };
     }
 

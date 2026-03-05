@@ -108,5 +108,9 @@ internal sealed class ImportMappingConfiguration : IEntityTypeConfiguration<Impo
 
         builder.HasIndex(m => new { m.UserId, m.Name })
             .HasDatabaseName("IX_ImportMappings_UserId_Name");
+
+        // Optimistic concurrency token (PostgreSQL xmin)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
     }
 }

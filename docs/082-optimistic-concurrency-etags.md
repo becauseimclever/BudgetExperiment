@@ -1,6 +1,6 @@
 # Feature 082: Optimistic Concurrency with ETags
 
-> **Status:** In Progress (Slices 1–3 complete)
+> **Status:** Complete (Slices 1–7 complete)
 > **Priority:** High (data integrity)
 > **Dependencies:** None
 
@@ -63,44 +63,44 @@ Both budgeting aggregates in one slice (1 PUT each).
 4 PUT endpoints — instance and future-instance edits need concurrency protection too.
 
 **Tasks:**
-- [ ] Add `UseXminAsConcurrencyToken()` to `RecurringTransactionConfiguration`
-- [ ] `GET /recurring/{id}` returns ETag
-- [ ] `PUT /recurring/{id}` validates If-Match
-- [ ] `PUT /recurring/{id}/instances/{date}` validates If-Match
-- [ ] `PUT /recurring/{id}/instances/{date}/future` validates If-Match
-- [ ] API tests for each endpoint
+- [x] Add `UseXminAsConcurrencyToken()` to `RecurringTransactionConfiguration`
+- [x] `GET /recurring/{id}` returns ETag
+- [x] `PUT /recurring/{id}` validates If-Match
+- [x] `PUT /recurring/{id}/instances/{date}` validates If-Match
+- [x] `PUT /recurring/{id}/instances/{date}/future` validates If-Match
+- [x] API tests for each endpoint
 
 ### Slice 5: RecurringTransfer
 
 3 PUT endpoints, same pattern as Slice 4.
 
 **Tasks:**
-- [ ] Add `UseXminAsConcurrencyToken()` to `RecurringTransferConfiguration`
-- [ ] `GET /recurring-transfers/{id}` returns ETag
-- [ ] `PUT /recurring-transfers/{id}` validates If-Match
-- [ ] `PUT /recurring-transfers/{id}/instances/{date}` validates If-Match
-- [ ] `PUT /recurring-transfers/{id}/instances/{date}/future` validates If-Match
-- [ ] API tests for each endpoint
+- [x] Add `UseXminAsConcurrencyToken()` to `RecurringTransferConfiguration`
+- [x] `GET /recurring-transfers/{id}` returns ETag
+- [x] `PUT /recurring-transfers/{id}` validates If-Match
+- [x] `PUT /recurring-transfers/{id}/instances/{date}` validates If-Match
+- [x] `PUT /recurring-transfers/{id}/instances/{date}/future` validates If-Match
+- [x] API tests for each endpoint
 
 ### Slice 6: Secondary Aggregates
 
 Lower-risk aggregates with single update endpoints each.
 
 **Tasks:**
-- [ ] `CategorizationRule`: xmin config + ETag + If-Match on `PUT /rules/{id}`
-- [ ] `CustomReport`: xmin config + ETag + If-Match on `PUT /reports/{id}`
-- [ ] `ImportMapping`: xmin config + ETag + If-Match on `PUT /import/mappings/{id}`
-- [ ] API tests for each
+- [x] `CategorizationRule`: xmin config + ETag + If-Match on `PUT /rules/{id}`
+- [x] `CustomReport`: xmin config + ETag + If-Match on `PUT /reports/{id}`
+- [x] `ImportMapping`: xmin config + ETag + If-Match on `PUT /import/mappings/{id}`
+- [x] API tests for each
 
 ### Slice 7: Client Integration
 
 Update Blazor WASM client to participate in the concurrency protocol.
 
 **Tasks:**
-- [ ] Store ETag from GET responses in state/service
-- [ ] Send `If-Match` header on PUT/PATCH requests
-- [ ] Handle 409 response: show user-friendly conflict notification
-- [ ] Offer reload-and-retry flow for conflicts
+- [x] Store ETag from GET responses in state/service
+- [x] Send `If-Match` header on PUT/PATCH requests
+- [x] Handle 409 response: show user-friendly conflict notification
+- [x] Offer reload-and-retry flow for conflicts
 
 ---
 
@@ -154,6 +154,7 @@ DbUpdateConcurrencyException => (409, "Conflict", "The resource was modified by 
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-03-04 | Slice 7 implemented: Client integration (ApiResult<T>, If-Match headers, 409 conflict handling with toast, reload-and-retry in all components) | @copilot |
 | 2026-03-04 | Slice 3 implemented: BudgetCategory + BudgetGoal (xmin, ETag, If-Match on PUT) | @copilot |
 | 2026-03-04 | Slice 2 implemented: Transaction (xmin, ETag, If-Match on PUT + PATCH/location) | @copilot |
 | 2026-03-04 | Slice 1 implemented: Foundation + Account (xmin, ETag, If-Match, 409 middleware) | @copilot |

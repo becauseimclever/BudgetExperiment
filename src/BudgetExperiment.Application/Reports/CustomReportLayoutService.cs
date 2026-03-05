@@ -37,14 +37,20 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
     public async Task<IReadOnlyList<CustomReportLayoutDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var layouts = await this._repository.GetAllAsync(cancellationToken);
-        return layouts.Select(ToDto).ToList();
+        return layouts.Select(l => ToDto(l)).ToList();
     }
 
     /// <inheritdoc />
     public async Task<CustomReportLayoutDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var layout = await this._repository.GetByIdAsync(id, cancellationToken);
-        return layout is null ? null : ToDto(layout);
+        if (layout is null)
+        {
+            return null;
+        }
+
+        var version = this._unitOfWork.GetConcurrencyToken(layout);
+        return ToDto(layout, version);
     }
 
     /// <inheritdoc />
@@ -68,12 +74,17 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
     }
 
     /// <inheritdoc />
-    public async Task<CustomReportLayoutDto?> UpdateAsync(Guid id, CustomReportLayoutUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<CustomReportLayoutDto?> UpdateAsync(Guid id, CustomReportLayoutUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var layout = await this._repository.GetByIdAsync(id, cancellationToken);
         if (layout is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(layout, expectedVersion);
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Name))
@@ -87,7 +98,8 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
         }
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return ToDto(layout);
+        var version = this._unitOfWork.GetConcurrencyToken(layout);
+        return ToDto(layout, version);
     }
 
     /// <inheritdoc />
@@ -104,7 +116,7 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
         return true;
     }
 
-    private static CustomReportLayoutDto ToDto(CustomReportLayout layout)
+    private static CustomReportLayoutDto ToDto(CustomReportLayout layout, string? version = null)
     {
         return new CustomReportLayoutDto
         {
@@ -114,6 +126,7 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
             Scope = layout.Scope.ToString(),
             CreatedAtUtc = layout.CreatedAtUtc,
             UpdatedAtUtc = layout.UpdatedAtUtc,
+            Version = version,
         };
     }
 

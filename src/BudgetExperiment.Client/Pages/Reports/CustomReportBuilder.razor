@@ -192,8 +192,16 @@
             LayoutJson = SerializeLayout(),
         };
 
-        var updated = await ApiService.UpdateCustomReportLayoutAsync(currentLayout.Id, dto);
-        if (updated == null)
+        var updated = await ApiService.UpdateCustomReportLayoutAsync(currentLayout.Id, dto, currentLayout.Version);
+        if (updated.IsConflict)
+        {
+            ToastService.ShowWarning("This layout was modified by another user. Data has been refreshed.", "Conflict");
+            layouts = await ApiService.GetCustomReportLayoutsAsync();
+            isSaving = false;
+            return;
+        }
+
+        if (!updated.IsSuccess)
         {
             ToastService.ShowError("Unable to save layout.");
             isSaving = false;
@@ -201,7 +209,7 @@
         }
 
         layouts = await ApiService.GetCustomReportLayoutsAsync();
-        await SelectLayoutAsync(updated);
+        await SelectLayoutAsync(updated.Data!);
         isSaving = false;
     }
 

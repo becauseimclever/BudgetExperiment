@@ -39,9 +39,10 @@ public interface ICustomReportLayoutService
     /// </summary>
     /// <param name="id">Layout identifier.</param>
     /// <param name="dto">Update data.</param>
+    /// <param name="expectedVersion">The expected concurrency version (from If-Match header).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated layout or null if not found.</returns>
-    Task<CustomReportLayoutDto?> UpdateAsync(Guid id, CustomReportLayoutUpdateDto dto, CancellationToken cancellationToken = default);
+    Task<CustomReportLayoutDto?> UpdateAsync(Guid id, CustomReportLayoutUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a layout by id.

@@ -373,4 +373,135 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
             response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed,
             $"Expected 404 or 405 but got {response.StatusCode}");
     }
+
+    /// <summary>
+    /// GET /api/v1/import/mappings/{id} returns ETag header.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetMappingById_Returns_ETag_Header()
+    {
+        // Arrange
+        var createRequest = new CreateImportMappingRequest
+        {
+            Name = "ETag Mapping",
+            ColumnMappings = new List<ColumnMappingDto>
+            {
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+            },
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
+
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/import/mappings/{created!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        Assert.False(string.IsNullOrEmpty(response.Headers.ETag.Tag));
+    }
+
+    /// <summary>
+    /// PUT /api/v1/import/mappings/{id} with valid If-Match succeeds and returns new ETag.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task UpdateMapping_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange
+        var createRequest = new CreateImportMappingRequest
+        {
+            Name = "IfMatch Valid Mapping",
+            ColumnMappings = new List<ColumnMappingDto>
+            {
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+            },
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
+
+        var getResponse = await this._client.GetAsync($"/api/v1/import/mappings/{created!.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var updateRequest = new UpdateImportMappingRequest { Name = "Updated With ETag" };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/import/mappings/{created.Id}")
+        {
+            Content = JsonContent.Create(updateRequest),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<ImportMappingDto>();
+        Assert.Equal("Updated With ETag", updated!.Name);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/import/mappings/{id} with stale If-Match returns 409 Conflict.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task UpdateMapping_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var createRequest = new CreateImportMappingRequest
+        {
+            Name = "Stale IfMatch Mapping",
+            ColumnMappings = new List<ColumnMappingDto>
+            {
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+            },
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
+
+        var staleETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"99999999\"");
+        var updateRequest = new UpdateImportMappingRequest { Name = "Should Fail" };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/import/mappings/{created!.Id}")
+        {
+            Content = JsonContent.Create(updateRequest),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/import/mappings/{id} without If-Match still succeeds (backward compatible).
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task UpdateMapping_Without_IfMatch_Succeeds_BackwardCompatible()
+    {
+        // Arrange
+        var createRequest = new CreateImportMappingRequest
+        {
+            Name = "No IfMatch Mapping",
+            ColumnMappings = new List<ColumnMappingDto>
+            {
+                new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
+            },
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
+
+        var updateRequest = new UpdateImportMappingRequest { Name = "Updated Without ETag" };
+
+        // Act
+        var response = await this._client.PutAsJsonAsync($"/api/v1/import/mappings/{created!.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<ImportMappingDto>();
+        Assert.Equal("Updated Without ETag", updated!.Name);
+    }
 }

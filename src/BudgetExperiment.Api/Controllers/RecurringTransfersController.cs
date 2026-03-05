@@ -113,6 +113,11 @@ public sealed class RecurringTransfersController : ControllerBase
             return this.NotFound();
         }
 
+        if (transfer.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{transfer.Version}\"";
+        }
+
         return this.Ok(transfer);
     }
 
@@ -143,12 +148,24 @@ public sealed class RecurringTransfersController : ControllerBase
     [ProducesResponseType<RecurringTransferDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] RecurringTransferUpdateDto dto, CancellationToken cancellationToken)
     {
-        var transfer = await this._service.UpdateAsync(id, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var transfer = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (transfer is null)
         {
             return this.NotFound();
+        }
+
+        if (transfer.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{transfer.Version}\"";
         }
 
         return this.Ok(transfer);
@@ -304,13 +321,20 @@ public sealed class RecurringTransfersController : ControllerBase
     [ProducesResponseType<RecurringTransferInstanceDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ModifyInstanceAsync(
         Guid id,
         DateOnly date,
         [FromBody] RecurringTransferInstanceModifyDto dto,
         CancellationToken cancellationToken)
     {
-        var instance = await this._instanceService.ModifyInstanceAsync(id, date, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var instance = await this._instanceService.ModifyInstanceAsync(id, date, dto, expectedVersion, cancellationToken);
         if (instance is null)
         {
             return this.NotFound();
@@ -352,16 +376,28 @@ public sealed class RecurringTransfersController : ControllerBase
     [ProducesResponseType<RecurringTransferDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateFutureAsync(
         Guid id,
         DateOnly date,
         [FromBody] RecurringTransferUpdateDto dto,
         CancellationToken cancellationToken)
     {
-        var transfer = await this._service.UpdateFromDateAsync(id, date, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var transfer = await this._service.UpdateFromDateAsync(id, date, dto, expectedVersion, cancellationToken);
         if (transfer is null)
         {
             return this.NotFound();
+        }
+
+        if (transfer.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{transfer.Version}\"";
         }
 
         return this.Ok(transfer);

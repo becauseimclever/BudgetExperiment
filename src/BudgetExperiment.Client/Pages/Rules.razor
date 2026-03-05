@@ -3,6 +3,7 @@
 @implements IDisposable
 
 @inject IBudgetApiService ApiService
+@inject IToastService ToastService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
 
@@ -113,6 +114,7 @@
     private bool showEditRule;
     private CategorizationRuleCreateDto editRule = new();
     private Guid? editingRuleId;
+    private string? editingVersion;
 
     // Delete confirmation state
     private bool showDeleteConfirm;
@@ -228,6 +230,7 @@
     private void ShowEditRule(CategorizationRuleDto rule)
     {
         editingRuleId = rule.Id;
+        editingVersion = rule.Version;
         editRule = new CategorizationRuleCreateDto
         {
             Name = rule.Name,
@@ -266,13 +269,21 @@
                 CategoryId = editRule.CategoryId,
             };
 
-            var updated = await ApiService.UpdateCategorizationRuleAsync(editingRuleId.Value, updateDto);
-            if (updated != null)
+            var updated = await ApiService.UpdateCategorizationRuleAsync(editingRuleId.Value, updateDto, editingVersion);
+            if (updated.IsConflict)
+            {
+                ToastService.ShowWarning("This rule was modified by another user. Data has been refreshed.", "Conflict");
+                HideEditRule();
+                await LoadDataAsync();
+                return;
+            }
+
+            if (updated.IsSuccess)
             {
                 var index = rules.FindIndex(r => r.Id == editingRuleId.Value);
                 if (index >= 0)
                 {
-                    rules[index] = updated;
+                    rules[index] = updated.Data!;
                 }
 
                 HideEditRule();

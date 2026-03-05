@@ -947,14 +947,18 @@
                 Name = mapping.Name,
             };
 
-            var updatedMapping = await ImportApi.UpdateMappingAsync(mapping.Id, request);
-            if (updatedMapping != null)
+            var updatedMapping = await ImportApi.UpdateMappingAsync(mapping.Id, request, mapping.Version);
+            if (updatedMapping.IsConflict)
+            {
+                errorMessage = "This mapping was modified elsewhere. Please reload and try again.";
+            }
+            else if (updatedMapping.IsSuccess)
             {
                 // Replace in the list
                 var index = savedMappings.FindIndex(m => m.Id == mapping.Id);
                 if (index >= 0)
                 {
-                    savedMappings[index] = updatedMapping;
+                    savedMappings[index] = updatedMapping.Data!;
                 }
             }
             else

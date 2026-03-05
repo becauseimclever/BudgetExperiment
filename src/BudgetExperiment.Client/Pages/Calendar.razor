@@ -398,7 +398,7 @@
             };
 
             var result = await ApiService.SetBudgetGoalAsync(editingBudgetProgress.CategoryId, goalDto);
-            if (result != null)
+            if (result.IsSuccess)
             {
                 HideBudgetGoalModal();
                 await LoadBudgetSummary();
@@ -661,7 +661,7 @@
                 dayDetail.Date,
                 model);
 
-            if (result != null)
+            if (result.IsSuccess)
             {
                 showEditInstance = false;
                 editingItem = null;

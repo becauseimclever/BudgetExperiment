@@ -337,7 +337,7 @@ public class ChatActionExecutorTests
         public Task<IReadOnlyList<RecurringTransactionDto>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<RecurringTransactionDto>>(new List<RecurringTransactionDto>());
 
-        public Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, CancellationToken cancellationToken = default) =>
+        public Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
             Task.FromResult<RecurringTransactionDto?>(null);
 
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
