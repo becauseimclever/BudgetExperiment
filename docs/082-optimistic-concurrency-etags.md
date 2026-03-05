@@ -1,6 +1,6 @@
 # Feature 082: Optimistic Concurrency with ETags
 
-> **Status:** In Progress (Slices 1–2 complete)
+> **Status:** In Progress (Slices 1–3 complete)
 > **Priority:** High (data integrity)
 > **Dependencies:** None
 
@@ -51,12 +51,12 @@ First slice establishes shared infrastructure and proves the pattern on `Account
 Both budgeting aggregates in one slice (1 PUT each).
 
 **Tasks:**
-- [ ] Add `UseXminAsConcurrencyToken()` to `BudgetCategoryConfiguration`
-- [ ] Add `UseXminAsConcurrencyToken()` to `BudgetGoalConfiguration`
-- [ ] `GET /budgets/{categoryId}` returns ETag
-- [ ] `PUT /budgets/{categoryId}` validates If-Match
-- [ ] Budget goal endpoints: ETag + If-Match where applicable
-- [ ] API tests for both aggregates
+- [x] Add `UseXminAsConcurrencyToken()` to `BudgetCategoryConfiguration`
+- [x] Add `UseXminAsConcurrencyToken()` to `BudgetGoalConfiguration`
+- [x] `GET /categories/{id}` returns ETag
+- [x] `PUT /categories/{id}` validates If-Match
+- [x] `PUT /budgets/{categoryId}` (SetGoal) validates If-Match
+- [x] API tests for both aggregates
 
 ### Slice 4: RecurringTransaction
 
@@ -154,6 +154,7 @@ DbUpdateConcurrencyException => (409, "Conflict", "The resource was modified by 
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-03-04 | Slice 3 implemented: BudgetCategory + BudgetGoal (xmin, ETag, If-Match on PUT) | @copilot |
 | 2026-03-04 | Slice 2 implemented: Transaction (xmin, ETag, If-Match on PUT + PATCH/location) | @copilot |
 | 2026-03-04 | Slice 1 implemented: Foundation + Account (xmin, ETag, If-Match, 409 middleware) | @copilot |
 | 2026-03-04 | Rewrite as vertical slices; confirmed zero existing implementation | @copilot |

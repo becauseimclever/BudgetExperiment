@@ -33,7 +33,13 @@ public sealed class BudgetGoalService : IBudgetGoalService
     public async Task<BudgetGoalDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var goal = await this._repository.GetByIdAsync(id, cancellationToken);
-        return goal is null ? null : BudgetMapper.ToDto(goal);
+        if (goal is null)
+        {
+            return null;
+        }
+
+        var version = this._unitOfWork.GetConcurrencyToken(goal);
+        return BudgetMapper.ToDto(goal, version);
     }
 
     /// <inheritdoc/>
@@ -51,7 +57,7 @@ public sealed class BudgetGoalService : IBudgetGoalService
     }
 
     /// <inheritdoc/>
-    public async Task<BudgetGoalDto?> SetGoalAsync(Guid categoryId, BudgetGoalSetDto dto, CancellationToken cancellationToken = default)
+    public async Task<BudgetGoalDto?> SetGoalAsync(Guid categoryId, BudgetGoalSetDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var category = await this._categoryRepository.GetByIdAsync(categoryId, cancellationToken);
         if (category is null)
@@ -64,15 +70,22 @@ public sealed class BudgetGoalService : IBudgetGoalService
 
         if (existingGoal is not null)
         {
+            if (expectedVersion is not null)
+            {
+                this._unitOfWork.SetExpectedConcurrencyToken(existingGoal, expectedVersion);
+            }
+
             existingGoal.UpdateTarget(targetAmount);
             await this._unitOfWork.SaveChangesAsync(cancellationToken);
-            return BudgetMapper.ToDto(existingGoal);
+            var version = this._unitOfWork.GetConcurrencyToken(existingGoal);
+            return BudgetMapper.ToDto(existingGoal, version);
         }
 
         var goal = BudgetGoal.Create(categoryId, dto.Year, dto.Month, targetAmount);
         await this._repository.AddAsync(goal, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return BudgetMapper.ToDto(goal);
+        var newVersion = this._unitOfWork.GetConcurrencyToken(goal);
+        return BudgetMapper.ToDto(goal, newVersion);
     }
 
     /// <inheritdoc/>

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
@@ -603,5 +604,153 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         var progressResponse = await this._client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=6");
         var progress = await progressResponse.Content.ReadFromJsonAsync<BudgetProgressDto>();
         Assert.Equal(300.00m, progress!.TargetAmount.Amount);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/budgets/{categoryId} returns ETag header when setting a goal.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetGoal_Returns_ETag_Header()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "ETag Goal Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var goalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 8,
+            TargetAmount = new MoneyDto { Amount = 100.00m, Currency = "USD" },
+        };
+
+        // Act
+        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        Assert.False(string.IsNullOrEmpty(response.Headers.ETag.Tag));
+    }
+
+    /// <summary>
+    /// PUT /api/v1/budgets/{categoryId} with valid If-Match succeeds and returns new ETag.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetGoal_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange - create category and initial goal
+        var categoryDto = new BudgetCategoryCreateDto { Name = "IfMatch Goal Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var initialGoalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 9,
+            TargetAmount = new MoneyDto { Amount = 200.00m, Currency = "USD" },
+        };
+        var createGoalResponse = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
+        var etag = createGoalResponse.Headers.ETag;
+
+        // Act - update with valid ETag
+        var updateGoalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 9,
+            TargetAmount = new MoneyDto { Amount = 350.00m, Currency = "USD" },
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/budgets/{category.Id}")
+        {
+            Content = JsonContent.Create(updateGoalDto),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<BudgetGoalDto>();
+        Assert.Equal(350.00m, updated!.TargetAmount.Amount);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/budgets/{categoryId} with stale If-Match returns 409 Conflict.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetGoal_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange - create category and initial goal
+        var categoryDto = new BudgetCategoryCreateDto { Name = "Stale IfMatch Goal Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var initialGoalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 10,
+            TargetAmount = new MoneyDto { Amount = 400.00m, Currency = "USD" },
+        };
+        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
+
+        // Act - try to update with stale ETag
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var updateGoalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 10,
+            TargetAmount = new MoneyDto { Amount = 500.00m, Currency = "USD" },
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/budgets/{category.Id}")
+        {
+            Content = JsonContent.Create(updateGoalDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/budgets/{categoryId} without If-Match still succeeds (backward compatible).
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetGoal_Without_IfMatch_Succeeds_BackwardCompatible()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "No IfMatch Goal Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var goalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 11,
+            TargetAmount = new MoneyDto { Amount = 150.00m, Currency = "USD" },
+        };
+
+        // Create the goal first
+        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+
+        // Act - update without If-Match
+        var updateGoalDto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 11,
+            TargetAmount = new MoneyDto { Amount = 250.00m, Currency = "USD" },
+        };
+        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", updateGoalDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<BudgetGoalDto>();
+        Assert.Equal(250.00m, updated!.TargetAmount.Amount);
     }
 }

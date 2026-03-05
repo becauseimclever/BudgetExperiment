@@ -41,9 +41,10 @@ public interface IBudgetGoalService
     /// </summary>
     /// <param name="categoryId">The category identifier.</param>
     /// <param name="dto">The goal data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created or updated goal DTO, or null if category not found.</returns>
-    Task<BudgetGoalDto?> SetGoalAsync(Guid categoryId, BudgetGoalSetDto dto, CancellationToken cancellationToken = default);
+    Task<BudgetGoalDto?> SetGoalAsync(Guid categoryId, BudgetGoalSetDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a budget goal for a category and month.

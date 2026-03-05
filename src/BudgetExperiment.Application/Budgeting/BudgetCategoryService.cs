@@ -41,7 +41,13 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
     public async Task<BudgetCategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var category = await this._repository.GetByIdAsync(id, cancellationToken);
-        return category is null ? null : BudgetMapper.ToDto(category);
+        if (category is null)
+        {
+            return null;
+        }
+
+        var version = this._unitOfWork.GetConcurrencyToken(category);
+        return BudgetMapper.ToDto(category, version);
     }
 
     /// <inheritdoc/>
@@ -84,12 +90,17 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
     }
 
     /// <inheritdoc/>
-    public async Task<BudgetCategoryDto?> UpdateAsync(Guid id, BudgetCategoryUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<BudgetCategoryDto?> UpdateAsync(Guid id, BudgetCategoryUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var category = await this._repository.GetByIdAsync(id, cancellationToken);
         if (category is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(category, expectedVersion);
         }
 
         category.Update(
@@ -99,7 +110,8 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
             dto.SortOrder ?? category.SortOrder);
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return BudgetMapper.ToDto(category);
+        var version = this._unitOfWork.GetConcurrencyToken(category);
+        return BudgetMapper.ToDto(category, version);
     }
 
     /// <inheritdoc/>

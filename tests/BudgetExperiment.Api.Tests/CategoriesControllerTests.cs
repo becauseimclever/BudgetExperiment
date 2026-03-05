@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
@@ -335,5 +336,108 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
         var created = await response.Content.ReadFromJsonAsync<BudgetCategoryDto>();
         Assert.NotNull(created);
         Assert.Equal(categoryType, created.Type);
+    }
+
+    /// <summary>
+    /// GET /api/v1/categories/{id} returns ETag header.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetById_Returns_ETag_Header()
+    {
+        // Arrange
+        var createDto = new BudgetCategoryCreateDto { Name = "ETag Category", Type = "Expense" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/categories/{created!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        Assert.False(string.IsNullOrEmpty(response.Headers.ETag.Tag));
+    }
+
+    /// <summary>
+    /// PUT /api/v1/categories/{id} with valid If-Match succeeds and returns new ETag.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange
+        var createDto = new BudgetCategoryCreateDto { Name = "IfMatch Valid Category", Type = "Expense" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var getResponse = await this._client.GetAsync($"/api/v1/categories/{created!.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var updateDto = new BudgetCategoryUpdateDto { Name = "Updated With ETag" };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/categories/{created.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+        Assert.Equal("Updated With ETag", updated!.Name);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/categories/{id} with stale If-Match returns 409 Conflict.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var createDto = new BudgetCategoryCreateDto { Name = "Stale IfMatch Category", Type = "Expense" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var updateDto = new BudgetCategoryUpdateDto { Name = "Should Fail" };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/categories/{created!.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/categories/{id} without If-Match still succeeds (backward compatible).
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_Without_IfMatch_Succeeds_BackwardCompatible()
+    {
+        // Arrange
+        var createDto = new BudgetCategoryCreateDto { Name = "No IfMatch Category", Type = "Expense" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var updateDto = new BudgetCategoryUpdateDto { Name = "Updated Without ETag" };
+
+        // Act
+        var response = await this._client.PutAsJsonAsync($"/api/v1/categories/{created!.Id}", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+        Assert.Equal("Updated Without ETag", updated!.Name);
     }
 }

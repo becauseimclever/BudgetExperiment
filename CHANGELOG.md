@@ -16,7 +16,7 @@ All notable changes to Budget Experiment.
 - **client:** Settings page user preferences — currency dropdown and first-day-of-week toggle editable post-onboarding (Feature 066)
 - **api:** Preview endpoint row count validation — rejects requests exceeding 10,000 rows (400 with ProblemDetails) (Feature 063)
 - **api:** `POST api/v1/user/settings/complete-onboarding` convenience endpoint (Feature 066)
-- **api:** Optimistic concurrency with ETags — `ExceptionHandlingMiddleware` maps `DbUpdateConcurrencyException` → 409 Conflict; `IUnitOfWork` gains `GetConcurrencyToken`/`SetExpectedConcurrencyToken`; `xmin` configured on `Account` and `Transaction`; GET endpoints return `ETag` header; PUT/PATCH endpoints validate `If-Match` header (backward compatible — missing header accepted); `AccountDto` and `TransactionDto` gain `Version` property (Feature 082 Slices 1–2)
+- **api:** Optimistic concurrency with ETags — `ExceptionHandlingMiddleware` maps `DbUpdateConcurrencyException` → 409 Conflict; `IUnitOfWork` gains `GetConcurrencyToken`/`SetExpectedConcurrencyToken`; `xmin` configured on `Account`, `Transaction`, `BudgetCategory`, and `BudgetGoal`; GET endpoints return `ETag` header; PUT/PATCH endpoints validate `If-Match` header (backward compatible — missing header accepted); `AccountDto`, `TransactionDto`, `BudgetCategoryDto`, and `BudgetGoalDto` gain `Version` property (Feature 082 Slices 1–3)
 - **api:** Restore dismissed category suggestions — `GET /dismissed`, `POST /{id}/restore`, `DELETE /dismissed-patterns` endpoints (Feature 061)
 
 ### Bug Fixes

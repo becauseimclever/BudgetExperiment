@@ -18,6 +18,17 @@ public static class BudgetMapper
     /// <returns>The mapped DTO.</returns>
     public static BudgetCategoryDto ToDto(BudgetCategory category)
     {
+        return ToDto(category, null);
+    }
+
+    /// <summary>
+    /// Maps a <see cref="BudgetCategory"/> to a <see cref="BudgetCategoryDto"/> with a concurrency version.
+    /// </summary>
+    /// <param name="category">The budget category entity.</param>
+    /// <param name="version">The concurrency token value.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static BudgetCategoryDto ToDto(BudgetCategory category, string? version)
+    {
         return new BudgetCategoryDto
         {
             Id = category.Id,
@@ -27,6 +38,7 @@ public static class BudgetMapper
             Color = category.Color,
             SortOrder = category.SortOrder,
             IsActive = category.IsActive,
+            Version = version,
         };
     }
 
@@ -37,6 +49,17 @@ public static class BudgetMapper
     /// <returns>The mapped DTO.</returns>
     public static BudgetGoalDto ToDto(BudgetGoal goal)
     {
+        return ToDto(goal, null);
+    }
+
+    /// <summary>
+    /// Maps a <see cref="BudgetGoal"/> to a <see cref="BudgetGoalDto"/> with a concurrency version.
+    /// </summary>
+    /// <param name="goal">The budget goal entity.</param>
+    /// <param name="version">The concurrency token value.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static BudgetGoalDto ToDto(BudgetGoal goal, string? version)
+    {
         return new BudgetGoalDto
         {
             Id = goal.Id,
@@ -44,6 +67,7 @@ public static class BudgetMapper
             Year = goal.Year,
             Month = goal.Month,
             TargetAmount = CommonMapper.ToDto(goal.TargetAmount),
+            Version = version,
         };
     }
 

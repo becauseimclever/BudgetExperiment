@@ -82,6 +82,7 @@ public sealed class BudgetsController : ControllerBase
     [ProducesResponseType<BudgetGoalDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> SetGoalAsync(
         Guid categoryId,
         [FromBody] BudgetGoalSetDto dto,
@@ -92,10 +93,21 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var goal = await this._goalService.SetGoalAsync(categoryId, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var goal = await this._goalService.SetGoalAsync(categoryId, dto, expectedVersion, cancellationToken);
         if (goal is null)
         {
             return this.NotFound("Category not found.");
+        }
+
+        if (goal.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{goal.Version}\"";
         }
 
         return this.Ok(goal);

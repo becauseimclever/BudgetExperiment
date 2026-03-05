@@ -46,9 +46,10 @@ public interface IBudgetCategoryService
     /// </summary>
     /// <param name="id">The category identifier.</param>
     /// <param name="dto">The category update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated category DTO, or null if not found.</returns>
-    Task<BudgetCategoryDto?> UpdateAsync(Guid id, BudgetCategoryUpdateDto dto, CancellationToken cancellationToken = default);
+    Task<BudgetCategoryDto?> UpdateAsync(Guid id, BudgetCategoryUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deactivates a budget category.

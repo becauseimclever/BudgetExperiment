@@ -56,6 +56,10 @@ internal sealed class BudgetCategoryConfiguration : IEntityTypeConfiguration<Bud
             .HasForeignKey(g => g.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
+
         // Indexes
         builder.HasIndex(c => c.Name);
         builder.HasIndex(c => c.Type);

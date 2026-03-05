@@ -43,4 +43,9 @@ public sealed class BudgetCategoryDto
     /// Gets or sets a value indicating whether the category is active.
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Gets or sets the concurrency token for optimistic concurrency.
+    /// </summary>
+    public string? Version { get; set; }
 }

@@ -38,4 +38,9 @@ public sealed class BudgetGoalDto
     /// Gets or sets the target amount.
     /// </summary>
     public MoneyDto TargetAmount { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the concurrency token for optimistic concurrency.
+    /// </summary>
+    public string? Version { get; set; }
 }

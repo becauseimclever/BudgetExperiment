@@ -46,6 +46,10 @@ internal sealed class BudgetGoalConfiguration : IEntityTypeConfiguration<BudgetG
                 .IsRequired();
         });
 
+        // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
+
         builder.Property(g => g.CreatedAtUtc)
             .IsRequired();
 

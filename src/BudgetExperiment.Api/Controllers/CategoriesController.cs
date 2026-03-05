@@ -63,6 +63,11 @@ public sealed class CategoriesController : ControllerBase
             return this.NotFound();
         }
 
+        if (category.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{category.Version}\"";
+        }
+
         return this.Ok(category);
     }
 
@@ -92,12 +97,24 @@ public sealed class CategoriesController : ControllerBase
     [ProducesResponseType<BudgetCategoryDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] BudgetCategoryUpdateDto dto, CancellationToken cancellationToken)
     {
-        var category = await this._service.UpdateAsync(id, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var category = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (category is null)
         {
             return this.NotFound();
+        }
+
+        if (category.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{category.Version}\"";
         }
 
         return this.Ok(category);
