@@ -4,6 +4,7 @@ using System.Text.Json;
 using BudgetExperiment.Domain;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace BudgetExperiment.Api.Middleware;
@@ -55,6 +56,11 @@ public sealed class ExceptionHandlingMiddleware
             this._logger.LogDebug("Request was cancelled");
             status = 499; // Client Closed Request (nginx convention)
             title = "Client Closed Request";
+        }
+        else if (ex is DbUpdateConcurrencyException)
+        {
+            status = StatusCodes.Status409Conflict;
+            title = "Conflict";
         }
         else if (ex is DomainException de && de.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
         {

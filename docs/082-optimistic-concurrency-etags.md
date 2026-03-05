@@ -1,231 +1,149 @@
 # Feature 082: Optimistic Concurrency with ETags
+
 > **Status:** Planning
 > **Priority:** High (data integrity)
-> **Estimated Effort:** Large (5-7 days)
 > **Dependencies:** None
 
-## Overview
+## Problem
 
-The coding standard (§9) requires "Support optimistic concurrency for mutable aggregates (header `If-Match`)." An audit found **zero implementation** of concurrency control — no concurrency tokens on entities, no ETag headers, no `If-Match` validation on PUT/PATCH endpoints. Mutable aggregates like `Account`, `Transaction`, `RecurringTransaction`, `BudgetCategory`, and `BudgetGoal` have no protection against lost updates.
+The coding standard (§9) requires optimistic concurrency for mutable aggregates via `If-Match` headers. A codebase audit found **zero implementation**: no concurrency tokens, no ETag headers, no `If-Match` validation, and no `409 Conflict` responses across 10 mutable aggregates and 21 PUT/PATCH endpoints. Concurrent edits silently overwrite each other.
 
-In a multi-user budgeting application (especially with family scope sharing), concurrent edits can silently overwrite each other.
+## Approach
 
-## Problem Statement
-
-### Current State
-
-- **No concurrency tokens** on any entity (`RowVersion`, `xmin`, or similar)
-- **No ETag headers** in API responses
-- **No `If-Match` validation** on PUT/PATCH endpoints
-- **No `409 Conflict` responses** for concurrency violations
-- Zero references to `ConcurrencyToken`, `RowVersion`, `IsConcurrencyToken`, `UseXminAsConcurrencyToken`, `ETag`, or `If-Match` in the codebase
-
-### Target State
-
-- Mutable aggregate roots have concurrency tokens
-- GET responses include `ETag` header
-- PUT/PATCH endpoints require `If-Match` header
-- Concurrent modification returns `409 Conflict` with `ProblemDetails`
-- PostgreSQL `xmin` system column used as concurrency token (lightweight, no schema change)
+- **PostgreSQL `xmin`** system column as concurrency token — no migration, no domain changes.
+- **`ExceptionHandlingMiddleware`** catches `DbUpdateConcurrencyException` → `409 Conflict`.
+- **Per-controller** ETag read/write — explicit, testable, no magic filters.
+- **If-Match optional during rollout** — missing header is accepted (backward compatible), stale header returns 409.
+- Each vertical slice delivers one aggregate end-to-end: EF config → service plumbing → controller ETag/If-Match → API tests.
 
 ---
 
-## User Stories
+## Vertical Slices
 
-### US-082-001: Add Concurrency Tokens to Aggregates
-**As a** developer
-**I want to** aggregate root entities to have concurrency tokens
-**So that** EF Core detects concurrent modifications.
+### Slice 1: Foundation + Account
 
-**Acceptance Criteria:**
-- [ ] `Account` has concurrency token configured via EF Fluent API
-- [ ] `Transaction` has concurrency token
-- [ ] `RecurringTransaction` has concurrency token
-- [ ] `RecurringTransfer` has concurrency token
-- [ ] `BudgetCategory` has concurrency token
-- [ ] `BudgetGoal` has concurrency token
-- [ ] All other mutable aggregates evaluated and protected
-- [ ] PostgreSQL `xmin` used (no new columns, no migration needed)
+First slice establishes shared infrastructure and proves the pattern on `Account` (1 PUT endpoint — simplest aggregate).
 
-### US-082-002: Add ETag Headers to GET Responses
-**As a** developer
-**I want to** GET endpoints to return `ETag` headers
-**So that** clients can use them for conditional updates.
+**Tasks:**
+- [ ] Add `DbUpdateConcurrencyException` → 409 mapping in `ExceptionHandlingMiddleware`
+- [ ] Add `UseXminAsConcurrencyToken()` to `AccountConfiguration`
+- [ ] Surface `xmin` value through repository/service so controller can read it
+- [ ] `GET /accounts/{id}` returns `ETag` header from xmin
+- [ ] `PUT /accounts/{id}` reads `If-Match`, sets xmin original value before save
+- [ ] API test: GET returns ETag header
+- [ ] API test: PUT with valid If-Match succeeds, returns new ETag
+- [ ] API test: PUT with stale If-Match returns 409 Conflict
+- [ ] API test: PUT without If-Match still succeeds (backward compatible)
 
-**Acceptance Criteria:**
-- [ ] Single-resource GET endpoints include `ETag` header derived from concurrency token
-- [ ] ETag follows HTTP standard format (`"value"` with quotes)
-- [ ] Collection endpoints may use composite or skip ETag (evaluate)
+### Slice 2: Transaction
 
-### US-082-003: Validate If-Match on PUT/PATCH
-**As a** developer
-**I want to** PUT/PATCH endpoints to validate `If-Match` header
-**So that** stale updates are rejected with `409 Conflict`.
+`Transaction` has 1 PUT + 1 PATCH endpoint.
 
-**Acceptance Criteria:**
-- [ ] PUT/PATCH endpoints check `If-Match` header
-- [ ] Missing `If-Match` returns `428 Precondition Required` or is accepted (choose policy)
-- [ ] Mismatched ETag returns `409 Conflict` with ProblemDetails
-- [ ] `DbUpdateConcurrencyException` caught and converted to `409`
-- [ ] Response body explains the conflict
+**Tasks:**
+- [ ] Add `UseXminAsConcurrencyToken()` to `TransactionConfiguration`
+- [ ] `GET /transactions/{id}` returns ETag
+- [ ] `PUT /transactions/{id}` validates If-Match
+- [ ] `PATCH /transactions/{id}/location` validates If-Match
+- [ ] API tests: ETag returned, valid/stale/missing If-Match scenarios
+
+### Slice 3: BudgetCategory + BudgetGoal
+
+Both budgeting aggregates in one slice (1 PUT each).
+
+**Tasks:**
+- [ ] Add `UseXminAsConcurrencyToken()` to `BudgetCategoryConfiguration`
+- [ ] Add `UseXminAsConcurrencyToken()` to `BudgetGoalConfiguration`
+- [ ] `GET /budgets/{categoryId}` returns ETag
+- [ ] `PUT /budgets/{categoryId}` validates If-Match
+- [ ] Budget goal endpoints: ETag + If-Match where applicable
+- [ ] API tests for both aggregates
+
+### Slice 4: RecurringTransaction
+
+4 PUT endpoints — instance and future-instance edits need concurrency protection too.
+
+**Tasks:**
+- [ ] Add `UseXminAsConcurrencyToken()` to `RecurringTransactionConfiguration`
+- [ ] `GET /recurring/{id}` returns ETag
+- [ ] `PUT /recurring/{id}` validates If-Match
+- [ ] `PUT /recurring/{id}/instances/{date}` validates If-Match
+- [ ] `PUT /recurring/{id}/instances/{date}/future` validates If-Match
+- [ ] API tests for each endpoint
+
+### Slice 5: RecurringTransfer
+
+3 PUT endpoints, same pattern as Slice 4.
+
+**Tasks:**
+- [ ] Add `UseXminAsConcurrencyToken()` to `RecurringTransferConfiguration`
+- [ ] `GET /recurring-transfers/{id}` returns ETag
+- [ ] `PUT /recurring-transfers/{id}` validates If-Match
+- [ ] `PUT /recurring-transfers/{id}/instances/{date}` validates If-Match
+- [ ] `PUT /recurring-transfers/{id}/instances/{date}/future` validates If-Match
+- [ ] API tests for each endpoint
+
+### Slice 6: Secondary Aggregates
+
+Lower-risk aggregates with single update endpoints each.
+
+**Tasks:**
+- [ ] `CategorizationRule`: xmin config + ETag + If-Match on `PUT /rules/{id}`
+- [ ] `CustomReport`: xmin config + ETag + If-Match on `PUT /reports/{id}`
+- [ ] `ImportMapping`: xmin config + ETag + If-Match on `PUT /import/mappings/{id}`
+- [ ] API tests for each
+
+### Slice 7: Client Integration
+
+Update Blazor WASM client to participate in the concurrency protocol.
+
+**Tasks:**
+- [ ] Store ETag from GET responses in state/service
+- [ ] Send `If-Match` header on PUT/PATCH requests
+- [ ] Handle 409 response: show user-friendly conflict notification
+- [ ] Offer reload-and-retry flow for conflicts
 
 ---
 
-## Technical Design
+## Technical Notes
 
-### PostgreSQL xmin Approach
-
-PostgreSQL has a built-in `xmin` system column (transaction ID that last modified the row). EF Core Npgsql supports this as a concurrency token without schema changes:
+### xmin Configuration (Infrastructure only, no domain impact)
 
 ```csharp
-// In EF Configuration
+// In each entity's IEntityTypeConfiguration
 builder.UseXminAsConcurrencyToken();
-```
-
-```csharp
-// In entity (shadow property, no domain change needed)
-// xmin is configured in Infrastructure only — domain stays clean
 ```
 
 ### ETag Flow
 
 ```
-Client GET /api/v1/accounts/123
-→ Response: 200 OK
+GET /api/v1/accounts/123
+→ 200 OK
   ETag: "12345"
   Body: { ... }
 
-Client PUT /api/v1/accounts/123
+PUT /api/v1/accounts/123
   If-Match: "12345"
   Body: { ... }
 
-If xmin matches:
-→ Response: 200 OK
-  ETag: "12346" (new xmin)
-
-If xmin doesn't match:
-→ Response: 409 Conflict
-  Body: ProblemDetails { ... }
+→ 200 OK (xmin matched)     or     → 409 Conflict (xmin changed)
+  ETag: "12346"                       ProblemDetails { ... }
 ```
 
-### Middleware vs Controller Approach
+### If-Match Policy
 
-**Option A: Per-controller** — Each controller manually reads `If-Match`, passes to service, catches `DbUpdateConcurrencyException`.
+During rollout, missing `If-Match` is accepted (no `428`). This keeps backward compatibility while the client integration (Slice 7) is developed. Once the client sends ETags, the policy can be tightened.
 
-**Option B: Action filter** (Recommended) — Create `ConcurrencyFilter` that:
-1. Reads `If-Match` header
-2. Passes the expected version to the service layer
-3. Catches `DbUpdateConcurrencyException` and returns `409`
+### ExceptionHandlingMiddleware Addition
 
-### Domain Impact
-
-**None.** The concurrency token is a shadow property configured in Infrastructure's EF Fluent API. Domain entities remain pure.
-
-### ExceptionHandlingMiddleware Update
-
-Add handling for `DbUpdateConcurrencyException`:
 ```csharp
-DbUpdateConcurrencyException => (409, "Conflict", "The resource was modified by another user.")
+DbUpdateConcurrencyException => (409, "Conflict", "The resource was modified by another user. Reload and try again.")
 ```
-
----
-
-## Implementation Plan
-
-### Phase 1: Configure xmin Concurrency Tokens
-
-**Objective:** Add `UseXminAsConcurrencyToken()` to EF configurations for all mutable aggregates.
-
-**Tasks:**
-- [ ] Update `AccountConfiguration` with `UseXminAsConcurrencyToken()`
-- [ ] Update `TransactionConfiguration`
-- [ ] Update `RecurringTransactionConfiguration`
-- [ ] Update `RecurringTransferConfiguration`
-- [ ] Update `BudgetCategoryConfiguration`
-- [ ] Update `BudgetGoalConfiguration`
-- [ ] Evaluate and update other aggregate configurations
-- [ ] Verify no migration needed (xmin is a system column)
-- [ ] Write integration test: concurrent update throws `DbUpdateConcurrencyException`
-
-### Phase 2: Add ETag Support to GET Endpoints
-
-**Objective:** Return ETag headers from single-resource GET endpoints.
-
-**Tasks:**
-- [ ] Create helper method or filter to set ETag from xmin value
-- [ ] Read xmin shadow property from entity after query
-- [ ] Set `ETag` header on response
-- [ ] Update key GET endpoints (accounts, transactions, recurring, budget)
-- [ ] Write API tests verifying ETag presence
-
-### Phase 3: Add If-Match Validation to PUT/PATCH
-
-**Objective:** Validate concurrent modifications on update endpoints.
-
-**Tasks:**
-- [ ] Create `ConcurrencyFilter` or integrate into controllers
-- [ ] Read `If-Match` header
-- [ ] Set expected OriginalValue on xmin before SaveChanges
-- [ ] Handle `DbUpdateConcurrencyException` → 409 response
-- [ ] Update `ExceptionHandlingMiddleware` for 409
-- [ ] Write API tests for conflict scenarios
-
-### Phase 4: Client Integration
-
-**Objective:** Update Blazor Client to handle ETags.
-
-**Tasks:**
-- [ ] Store ETag from GET responses
-- [ ] Send `If-Match` header on PUT/PATCH requests
-- [ ] Handle 409 responses with user-friendly notification
-- [ ] Implement retry/reload strategy for conflicts
-
-**Commit:**
-```bash
-git commit -m "feat(api): implement optimistic concurrency with ETags
-
-- Configure xmin as concurrency token on all mutable aggregates
-- GET endpoints return ETag header
-- PUT/PATCH endpoints validate If-Match header
-- 409 Conflict with ProblemDetails on concurrent modification
-- Client sends/receives ETags for conflict detection
-
-Refs: #082"
-```
-
----
-
-## Testing Strategy
-
-### Unit Tests
-- [ ] Concurrency token configuration verified in EF model tests
-- [ ] ETag generation/parsing logic tested
-
-### Integration Tests
-- [ ] Two concurrent updates: first succeeds, second gets 409
-- [ ] Missing If-Match header behavior tested
-- [ ] ETag changes after successful update
-
-### API Tests
-- [ ] GET returns ETag header
-- [ ] PUT with valid If-Match succeeds
-- [ ] PUT with stale If-Match returns 409
-- [ ] PUT without If-Match handled per policy
-
----
-
-## Risk Assessment
-
-- **Medium risk**: Requires careful testing of concurrency flows.
-- **Client impact**: Existing client code doesn't send If-Match — decide on backward compatibility policy.
-- **Performance**: xmin is a system column; no additional queries needed.
-- **Migration**: None required — xmin exists automatically on all PostgreSQL tables.
 
 ---
 
 ## References
 
-- Coding standard §9: "ETags / Concurrency: Support optimistic concurrency for mutable aggregates."
+- Coding standard §9: optimistic concurrency for mutable aggregates
 - [PostgreSQL xmin](https://www.postgresql.org/docs/current/ddl-system-columns.html)
 - [Npgsql xmin concurrency](https://www.npgsql.org/efcore/modeling/concurrency.html)
 - [RFC 7232: Conditional Requests](https://tools.ietf.org/html/rfc7232)
@@ -236,4 +154,6 @@ Refs: #082"
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-03-04 | Slice 1 implemented: Foundation + Account (xmin, ETag, If-Match, 409 middleware) | @copilot |
+| 2026-03-04 | Rewrite as vertical slices; confirmed zero existing implementation | @copilot |
 | 2026-02-26 | Initial draft from codebase audit | @copilot |

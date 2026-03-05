@@ -36,6 +36,9 @@ public sealed class AccountDto
     /// <summary>Gets or sets the budget scope ("Shared" or "Personal").</summary>
     public string Scope { get; set; } = "Shared";
 
+    /// <summary>Gets or sets the concurrency version token for optimistic concurrency.</summary>
+    public string? Version { get; set; }
+
     /// <summary>Gets or sets the transactions for this account.</summary>
     public IReadOnlyList<TransactionDto> Transactions { get; set; } = new List<TransactionDto>();
 }

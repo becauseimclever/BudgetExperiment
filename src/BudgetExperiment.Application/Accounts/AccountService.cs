@@ -38,7 +38,13 @@ public sealed class AccountService
     public async Task<AccountDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var account = await this._repository.GetByIdWithTransactionsAsync(id, cancellationToken);
-        return account is null ? null : AccountMapper.ToDto(account);
+        if (account is null)
+        {
+            return null;
+        }
+
+        var version = this._unitOfWork.GetConcurrencyToken(account);
+        return AccountMapper.ToDto(account, version);
     }
 
     /// <summary>
@@ -94,15 +100,21 @@ public sealed class AccountService
     /// </summary>
     /// <param name="id">The account identifier.</param>
     /// <param name="dto">The account update data.</param>
+    /// <param name="expectedVersion">The expected concurrency token for optimistic concurrency, or null to skip.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated account DTO, or null if not found.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public async Task<AccountDto?> UpdateAsync(Guid id, AccountUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<AccountDto?> UpdateAsync(Guid id, AccountUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var account = await this._repository.GetByIdAsync(id, cancellationToken);
         if (account is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(account, expectedVersion);
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Name))
@@ -132,7 +144,8 @@ public sealed class AccountService
         }
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return AccountMapper.ToDto(account);
+        var version = this._unitOfWork.GetConcurrencyToken(account);
+        return AccountMapper.ToDto(account, version);
     }
 
     /// <summary>

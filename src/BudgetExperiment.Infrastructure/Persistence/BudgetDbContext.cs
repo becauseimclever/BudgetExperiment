@@ -123,8 +123,46 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     public DbSet<DismissedSuggestionPattern> DismissedSuggestionPatterns => this.Set<DismissedSuggestionPattern>();
 
     /// <inheritdoc />
+    public string? GetConcurrencyToken<T>(T entity)
+        where T : class
+    {
+        var entry = this.Entry(entity);
+        var property = entry.Properties.FirstOrDefault(p => p.Metadata.IsConcurrencyToken && p.Metadata.Name == "xmin");
+        return property?.CurrentValue?.ToString();
+    }
+
+    /// <inheritdoc />
+    public void SetExpectedConcurrencyToken<T>(T entity, string token)
+        where T : class
+    {
+        var entry = this.Entry(entity);
+        var property = entry.Properties.FirstOrDefault(p => p.Metadata.IsConcurrencyToken && p.Metadata.Name == "xmin");
+        if (property is not null && uint.TryParse(token, out var xmin))
+        {
+            property.OriginalValue = xmin;
+        }
+    }
+
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BudgetDbContext).Assembly);
+
+        // Apply PostgreSQL-specific xmin configuration for optimistic concurrency.
+        // Entity configurations mark shadow property "xmin" as IsConcurrencyToken();
+        // here we map it to the PostgreSQL system column so the DB auto-manages the value.
+        if (this.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var xminProp = entityType.FindProperty("xmin");
+                if (xminProp is not null)
+                {
+                    xminProp.SetColumnName("xmin");
+                    xminProp.SetColumnType("xid");
+                    xminProp.ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.OnAddOrUpdate;
+                }
+            }
+        }
     }
 }

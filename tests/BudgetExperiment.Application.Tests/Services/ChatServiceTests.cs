@@ -564,5 +564,13 @@ public class ChatServiceTests
             this.SaveChangesCalled = true;
             return Task.FromResult(1);
         }
+
+        public string? GetConcurrencyToken<T>(T entity)
+            where T : class => null;
+
+        public void SetExpectedConcurrencyToken<T>(T entity, string token)
+            where T : class
+        {
+        }
     }
 }

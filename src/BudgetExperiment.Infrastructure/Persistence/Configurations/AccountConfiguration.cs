@@ -72,6 +72,10 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasForeignKey(t => t.AccountId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
+
         // Index for efficient listing
         builder.HasIndex(a => a.Name);
         builder.HasIndex(a => a.Type);

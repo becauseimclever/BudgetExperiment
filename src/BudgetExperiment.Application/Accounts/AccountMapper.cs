@@ -18,6 +18,17 @@ public static class AccountMapper
     /// <returns>The mapped DTO.</returns>
     public static AccountDto ToDto(Account account)
     {
+        return ToDto(account, null);
+    }
+
+    /// <summary>
+    /// Maps an <see cref="Account"/> to an <see cref="AccountDto"/> with a concurrency version.
+    /// </summary>
+    /// <param name="account">The account entity.</param>
+    /// <param name="version">The concurrency token value.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static AccountDto ToDto(Account account, string? version)
+    {
         return new AccountDto
         {
             Id = account.Id,
@@ -29,6 +40,7 @@ public static class AccountMapper
             CreatedAt = account.CreatedAt,
             UpdatedAt = account.UpdatedAt,
             Scope = account.Scope.ToString(),
+            Version = version,
             Transactions = account.Transactions.Select(ToDto).ToList(),
         };
     }

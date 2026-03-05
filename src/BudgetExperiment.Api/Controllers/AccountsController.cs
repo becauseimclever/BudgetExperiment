@@ -60,6 +60,11 @@ public sealed class AccountsController : ControllerBase
             return this.NotFound();
         }
 
+        if (account.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{account.Version}\"";
+        }
+
         return this.Ok(account);
     }
 
@@ -89,12 +94,24 @@ public sealed class AccountsController : ControllerBase
     [ProducesResponseType<AccountDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] AccountUpdateDto dto, CancellationToken cancellationToken)
     {
-        var account = await this._service.UpdateAsync(id, dto, cancellationToken);
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var account = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (account is null)
         {
             return this.NotFound();
+        }
+
+        if (account.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{account.Version}\"";
         }
 
         return this.Ok(account);

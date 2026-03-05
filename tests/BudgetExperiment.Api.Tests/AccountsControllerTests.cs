@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
@@ -200,5 +201,109 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         Assert.Equal(3000.00m, account.InitialBalance);
         Assert.Equal("USD", account.InitialBalanceCurrency);
         Assert.Equal(new DateOnly(2026, 1, 5), account.InitialBalanceDate);
+    }
+
+    /// <summary>
+    /// GET /api/v1/accounts/{id} returns an ETag header for concurrency control.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetById_Returns_ETag_Header()
+    {
+        // Arrange
+        var createDto = new AccountCreateDto { Name = "ETag Test", Type = "Checking" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
+
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/accounts/{created!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        Assert.False(string.IsNullOrEmpty(response.Headers.ETag.Tag));
+    }
+
+    /// <summary>
+    /// PUT /api/v1/accounts/{id} succeeds when a valid If-Match header is provided.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange - create account and get ETag
+        var createDto = new AccountCreateDto { Name = "IfMatch Valid Test", Type = "Checking" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
+
+        var getResponse = await this._client.GetAsync($"/api/v1/accounts/{created!.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var updateDto = new AccountUpdateDto { Name = "Updated With ETag" };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/accounts/{created.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.Equal("Updated With ETag", updated!.Name);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/accounts/{id} returns 409 Conflict when If-Match does not match current version.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange - create account
+        var createDto = new AccountCreateDto { Name = "Stale IfMatch Test", Type = "Checking" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
+
+        // Use a deliberately wrong ETag to simulate stale version
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var updateDto = new AccountUpdateDto { Name = "Should Fail" };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/accounts/{created!.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/accounts/{id} succeeds without If-Match header for backward compatibility.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_Without_IfMatch_Succeeds_BackwardCompatible()
+    {
+        // Arrange
+        var createDto = new AccountCreateDto { Name = "No IfMatch Test", Type = "Checking" };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
+
+        var updateDto = new AccountUpdateDto { Name = "Updated Without ETag" };
+
+        // Act - PUT without If-Match header
+        var response = await this._client.PutAsJsonAsync($"/api/v1/accounts/{created!.Id}", updateDto);
+
+        // Assert - should still succeed
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.Equal("Updated Without ETag", updated!.Name);
     }
 }
