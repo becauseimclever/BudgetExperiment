@@ -70,6 +70,8 @@ public class ImportServiceLocationTests
         this._service = new ImportService(
             new ImportRowProcessor(new ImportDuplicateDetector()),
             previewEnricher,
+            new Mock<IImportBatchManager>().Object,
+            new Mock<IImportTransactionCreator>().Object,
             this._transactionRepoMock.Object,
             this._ruleRepoMock.Object,
             this._categoryRepoMock.Object,
@@ -78,8 +80,7 @@ public class ImportServiceLocationTests
             this._accountRepoMock.Object,
             this._reconciliationServiceMock.Object,
             this._userContextMock.Object,
-            this._unitOfWorkMock.Object,
-            this._currencyProviderMock.Object);
+            this._unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -202,162 +203,6 @@ public class ImportServiceLocationTests
         Assert.NotNull(result.Rows[0].ParsedLocation);
         Assert.Null(result.Rows[1].ParsedLocation);
         Assert.Equal(1, result.LocationEnrichedCount);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithLocationData_SetsLocationOnTransaction()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-
-        var accountId = Guid.NewGuid();
-        var account = Account.CreatePersonal("Test", AccountType.Checking, userId);
-        this._accountRepoMock
-            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(account);
-
-        Transaction? capturedTransaction = null;
-        this._transactionRepoMock
-            .Setup(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()))
-            .Callback<Transaction, CancellationToken>((t, _) => capturedTransaction = t)
-            .Returns(Task.CompletedTask);
-
-        var request = new ImportExecuteRequest
-        {
-            AccountId = accountId,
-            FileName = "test.csv",
-            Transactions =
-            [
-                new ImportTransactionData
-                {
-                    Date = new DateOnly(2026, 1, 15),
-                    Description = "COFFEE SHOP PORTLAND OR",
-                    Amount = -5.00m,
-                    LocationCity = "Portland",
-                    LocationStateOrRegion = "OR",
-                    LocationCountry = "US",
-                    LocationSource = "Parsed",
-                },
-            ],
-        };
-
-        // Act
-        var result = await this._service.ExecuteAsync(request);
-
-        // Assert
-        Assert.Equal(1, result.ImportedCount);
-        Assert.Equal(1, result.LocationEnrichedCount);
-        Assert.NotNull(capturedTransaction);
-        Assert.NotNull(capturedTransaction!.Location);
-        Assert.Equal("Portland", capturedTransaction.Location!.City);
-        Assert.Equal("OR", capturedTransaction.Location.StateOrRegion);
-        Assert.Equal("US", capturedTransaction.Location.Country);
-        Assert.Equal(LocationSource.Parsed, capturedTransaction.Location.Source);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithoutLocationData_DoesNotSetLocation()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-
-        var accountId = Guid.NewGuid();
-        var account = Account.CreatePersonal("Test", AccountType.Checking, userId);
-        this._accountRepoMock
-            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(account);
-
-        Transaction? capturedTransaction = null;
-        this._transactionRepoMock
-            .Setup(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()))
-            .Callback<Transaction, CancellationToken>((t, _) => capturedTransaction = t)
-            .Returns(Task.CompletedTask);
-
-        var request = new ImportExecuteRequest
-        {
-            AccountId = accountId,
-            FileName = "test.csv",
-            Transactions =
-            [
-                new ImportTransactionData
-                {
-                    Date = new DateOnly(2026, 1, 15),
-                    Description = "ONLINE PURCHASE",
-                    Amount = -25.00m,
-                },
-            ],
-        };
-
-        // Act
-        var result = await this._service.ExecuteAsync(request);
-
-        // Assert
-        Assert.Equal(1, result.ImportedCount);
-        Assert.Equal(0, result.LocationEnrichedCount);
-        Assert.NotNull(capturedTransaction);
-        Assert.Null(capturedTransaction!.Location);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ImportSummary_IncludesLocationStats()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-
-        var accountId = Guid.NewGuid();
-        var account = Account.CreatePersonal("Test", AccountType.Checking, userId);
-        this._accountRepoMock
-            .Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(account);
-
-        this._transactionRepoMock
-            .Setup(r => r.AddAsync(It.IsAny<Transaction>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        var request = new ImportExecuteRequest
-        {
-            AccountId = accountId,
-            FileName = "test.csv",
-            Transactions =
-            [
-                new ImportTransactionData
-                {
-                    Date = new DateOnly(2026, 1, 15),
-                    Description = "GROCERY STORE SEATTLE WA",
-                    Amount = -100.00m,
-                    LocationCity = "Seattle",
-                    LocationStateOrRegion = "WA",
-                    LocationCountry = "US",
-                    LocationSource = "Parsed",
-                },
-                new ImportTransactionData
-                {
-                    Date = new DateOnly(2026, 1, 16),
-                    Description = "ONLINE PURCHASE",
-                    Amount = -50.00m,
-                },
-                new ImportTransactionData
-                {
-                    Date = new DateOnly(2026, 1, 17),
-                    Description = "RESTAURANT PORTLAND OR",
-                    Amount = -30.00m,
-                    LocationCity = "Portland",
-                    LocationStateOrRegion = "OR",
-                    LocationCountry = "US",
-                    LocationSource = "Parsed",
-                },
-            ],
-        };
-
-        // Act
-        var result = await this._service.ExecuteAsync(request);
-
-        // Assert
-        Assert.Equal(3, result.ImportedCount);
-        Assert.Equal(2, result.LocationEnrichedCount);
     }
 
     private static ImportPreviewRequest CreatePreviewRequest(

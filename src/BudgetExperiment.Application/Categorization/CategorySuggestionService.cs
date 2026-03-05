@@ -18,6 +18,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     private readonly IMerchantMappingService _merchantMappingService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserContext _userContext;
+    private readonly ICategorySuggestionDismissalHandler _dismissalHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorySuggestionService"/> class.
@@ -29,6 +30,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     /// <param name="merchantMappingService">Merchant mapping service.</param>
     /// <param name="unitOfWork">Unit of work.</param>
     /// <param name="userContext">User context.</param>
+    /// <param name="dismissalHandler">The suggestion dismissal handler.</param>
     public CategorySuggestionService(
         ITransactionRepository transactionRepository,
         IBudgetCategoryRepository categoryRepository,
@@ -36,7 +38,8 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         IDismissedSuggestionPatternRepository dismissedRepository,
         IMerchantMappingService merchantMappingService,
         IUnitOfWork unitOfWork,
-        IUserContext userContext)
+        IUserContext userContext,
+        ICategorySuggestionDismissalHandler dismissalHandler)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
@@ -45,6 +48,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         _merchantMappingService = merchantMappingService;
         _unitOfWork = unitOfWork;
         _userContext = userContext;
+        _dismissalHandler = dismissalHandler;
     }
 
     /// <inheritdoc />
@@ -52,66 +56,24 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     {
         var ownerId = _userContext.UserId;
 
-        // Get uncategorized transactions
         var uncategorized = await _transactionRepository.GetUncategorizedAsync(cancellationToken);
         if (uncategorized.Count == 0)
         {
             return Array.Empty<CategorySuggestion>();
         }
 
-        // Get existing categories to avoid suggesting duplicates
-        var existingCategories = await _categoryRepository.GetActiveAsync(cancellationToken);
-        var existingCategoryNames = new HashSet<string>(
-            existingCategories.Select(c => c.Name),
-            StringComparer.OrdinalIgnoreCase);
-
-        // Clear any pending suggestions before re-analyzing
+        var existingCategoryNames = await GetExistingCategoryNamesAsync(cancellationToken);
         await _suggestionRepository.DeletePendingByOwnerAsync(ownerId, cancellationToken);
 
-        // Find matching patterns in transaction descriptions
         var descriptions = uncategorized.Select(t => t.Description).ToList();
         var patternMatches = await _merchantMappingService.FindMatchingPatternsAsync(ownerId, descriptions, cancellationToken);
 
-        // Group patterns by suggested category
         var categoryGroups = patternMatches
             .GroupBy(p => p.Category, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
-        var suggestions = new List<CategorySuggestion>();
-
-        foreach (var (categoryName, patterns) in categoryGroups)
-        {
-            // Skip if category already exists
-            if (existingCategoryNames.Contains(categoryName))
-            {
-                continue;
-            }
-
-            // Skip if category was dismissed
-            if (await _dismissedRepository.IsDismissedAsync(ownerId, categoryName, cancellationToken))
-            {
-                continue;
-            }
-
-            // Get total transaction count and patterns for this category
-            var totalCount = patterns.Sum(p => p.TransactionCount);
-            var allPatterns = patterns.Select(p => p.Pattern).Distinct().ToList();
-            var icon = patterns.FirstOrDefault()?.Icon ?? "category";
-
-            // Calculate confidence based on transaction count and pattern diversity
-            var confidence = CalculateConfidence(totalCount, allPatterns.Count);
-
-            var suggestion = CategorySuggestion.Create(
-                categoryName,
-                MerchantKnowledgeBase.GetCategoryType(categoryName),
-                allPatterns,
-                totalCount,
-                confidence,
-                ownerId,
-                icon);
-
-            suggestions.Add(suggestion);
-        }
+        var suggestions = await BuildSuggestionsFromPatternsAsync(
+            categoryGroups, existingCategoryNames, ownerId, cancellationToken);
 
         if (suggestions.Count > 0)
         {
@@ -216,88 +178,21 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     }
 
     /// <inheritdoc />
-    public async Task<bool> DismissSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<bool> DismissSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken);
-        if (suggestion == null)
-        {
-            return false;
-        }
-
-        if (suggestion.OwnerId != _userContext.UserId)
-        {
-            return false;
-        }
-
-        if (suggestion.Status != SuggestionStatus.Pending)
-        {
-            return false;
-        }
-
-        // Mark suggestion as dismissed
-        suggestion.Dismiss();
-
-        // Add dismissed pattern to prevent re-suggesting
-        var isDismissed = await _dismissedRepository.IsDismissedAsync(
-            _userContext.UserId,
-            suggestion.SuggestedName,
-            cancellationToken);
-
-        if (!isDismissed)
-        {
-            var dismissedPattern = DismissedSuggestionPattern.Create(suggestion.SuggestedName, _userContext.UserId);
-            await _dismissedRepository.AddAsync(dismissedPattern, cancellationToken);
-        }
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return true;
+        return _dismissalHandler.DismissSuggestionAsync(id, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> RestoreSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<bool> RestoreSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken);
-        if (suggestion == null)
-        {
-            return false;
-        }
-
-        if (suggestion.OwnerId != _userContext.UserId)
-        {
-            return false;
-        }
-
-        if (suggestion.Status != SuggestionStatus.Dismissed)
-        {
-            return false;
-        }
-
-        // Restore suggestion to pending
-        suggestion.Restore();
-
-        // Remove dismissed pattern so re-analysis won't skip it
-        var dismissedPattern = await _dismissedRepository.GetByPatternAsync(
-            _userContext.UserId,
-            suggestion.SuggestedName.ToUpperInvariant(),
-            cancellationToken);
-
-        if (dismissedPattern != null)
-        {
-            await _dismissedRepository.RemoveAsync(dismissedPattern, cancellationToken);
-        }
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return true;
+        return _dismissalHandler.RestoreSuggestionAsync(id, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<int> ClearDismissedPatternsAsync(CancellationToken cancellationToken = default)
+    public Task<int> ClearDismissedPatternsAsync(CancellationToken cancellationToken = default)
     {
-        var clearedCount = await _dismissedRepository.ClearByOwnerAsync(_userContext.UserId, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return clearedCount;
+        return _dismissalHandler.ClearDismissedPatternsAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -362,5 +257,53 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         };
 
         return Math.Min(0.99m, countConfidence + patternBoost);
+    }
+
+    private async Task<HashSet<string>> GetExistingCategoryNamesAsync(CancellationToken cancellationToken)
+    {
+        var existingCategories = await _categoryRepository.GetActiveAsync(cancellationToken);
+        return new HashSet<string>(
+            existingCategories.Select(c => c.Name),
+            StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<List<CategorySuggestion>> BuildSuggestionsFromPatternsAsync(
+        Dictionary<string, List<PatternMatch>> categoryGroups,
+        HashSet<string> existingCategoryNames,
+        string ownerId,
+        CancellationToken cancellationToken)
+    {
+        var suggestions = new List<CategorySuggestion>();
+
+        foreach (var (categoryName, patterns) in categoryGroups)
+        {
+            if (existingCategoryNames.Contains(categoryName))
+            {
+                continue;
+            }
+
+            if (await _dismissedRepository.IsDismissedAsync(ownerId, categoryName, cancellationToken))
+            {
+                continue;
+            }
+
+            var totalCount = patterns.Sum(p => p.TransactionCount);
+            var allPatterns = patterns.Select(p => p.Pattern).Distinct().ToList();
+            var icon = patterns.FirstOrDefault()?.Icon ?? "category";
+            var confidence = CalculateConfidence(totalCount, allPatterns.Count);
+
+            var suggestion = CategorySuggestion.Create(
+                categoryName,
+                MerchantKnowledgeBase.GetCategoryType(categoryName),
+                allPatterns,
+                totalCount,
+                confidence,
+                ownerId,
+                icon);
+
+            suggestions.Add(suggestion);
+        }
+
+        return suggestions;
     }
 }

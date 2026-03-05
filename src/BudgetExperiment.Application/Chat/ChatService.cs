@@ -2,9 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
-using BudgetExperiment.Domain.Settings;
 
 namespace BudgetExperiment.Application.Chat;
 
@@ -18,12 +16,8 @@ public sealed class ChatService : IChatService
     private readonly IAccountRepository _accountRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly INaturalLanguageParser _parser;
-    private readonly ITransactionService _transactionService;
-    private readonly ITransferService _transferService;
-    private readonly IRecurringTransactionService _recurringTransactionService;
-    private readonly IRecurringTransferService _recurringTransferService;
+    private readonly IChatActionExecutor _actionExecutor;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChatService"/> class.
@@ -33,36 +27,24 @@ public sealed class ChatService : IChatService
     /// <param name="accountRepository">The account repository.</param>
     /// <param name="categoryRepository">The category repository.</param>
     /// <param name="parser">The natural language parser.</param>
-    /// <param name="transactionService">The transaction service.</param>
-    /// <param name="transferService">The transfer service.</param>
-    /// <param name="recurringTransactionService">The recurring transaction service.</param>
-    /// <param name="recurringTransferService">The recurring transfer service.</param>
+    /// <param name="actionExecutor">The chat action executor.</param>
     /// <param name="unitOfWork">The unit of work.</param>
-    /// <param name="currencyProvider">The currency provider.</param>
     public ChatService(
         IChatSessionRepository sessionRepository,
         IChatMessageRepository messageRepository,
         IAccountRepository accountRepository,
         IBudgetCategoryRepository categoryRepository,
         INaturalLanguageParser parser,
-        ITransactionService transactionService,
-        ITransferService transferService,
-        IRecurringTransactionService recurringTransactionService,
-        IRecurringTransferService recurringTransferService,
-        IUnitOfWork unitOfWork,
-        ICurrencyProvider currencyProvider)
+        IChatActionExecutor actionExecutor,
+        IUnitOfWork unitOfWork)
     {
         this._sessionRepository = sessionRepository;
         this._messageRepository = messageRepository;
         this._accountRepository = accountRepository;
         this._categoryRepository = categoryRepository;
         this._parser = parser;
-        this._transactionService = transactionService;
-        this._transferService = transferService;
-        this._recurringTransactionService = recurringTransactionService;
-        this._recurringTransferService = recurringTransferService;
+        this._actionExecutor = actionExecutor;
         this._unitOfWork = unitOfWork;
-        this._currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc />
@@ -116,46 +98,20 @@ public sealed class ChatService : IChatService
         ChatContext? context = null,
         CancellationToken cancellationToken = default)
     {
-        // Validate session
         var session = await this._sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session == null)
+
+        var validationError = ValidateSessionForMessage(session);
+        if (validationError is not null)
         {
-            return new ChatResult(
-                Success: false,
-                UserMessage: null,
-                AssistantMessage: null,
-                ErrorMessage: "Session not found.");
+            return validationError;
         }
 
-        if (!session.IsActive)
-        {
-            return new ChatResult(
-                Success: false,
-                UserMessage: null,
-                AssistantMessage: null,
-                ErrorMessage: "Session is closed.");
-        }
-
-        // Add user message
-        var userMessage = session.AddUserMessage(content);
+        var userMessage = session!.AddUserMessage(content);
         await this._messageRepository.AddAsync(userMessage, cancellationToken);
 
-        // Get accounts and categories for the parser
-        var accounts = await this.GetAccountInfoAsync(cancellationToken);
-        var categories = await this.GetCategoryInfoAsync(cancellationToken);
+        var parseResult = await this.ParseUserCommandAsync(content, context, cancellationToken);
 
-        // Parse the user's command
-        var parseResult = await this._parser.ParseCommandAsync(
-            content,
-            accounts,
-            categories,
-            context,
-            cancellationToken);
-
-        // Create assistant response
-        var assistantMessage = session.AddAssistantMessage(
-            parseResult.ResponseText,
-            parseResult.Action);
+        var assistantMessage = session.AddAssistantMessage(parseResult.ResponseText, parseResult.Action);
         await this._messageRepository.AddAsync(assistantMessage, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -170,68 +126,14 @@ public sealed class ChatService : IChatService
     public async Task<ActionExecutionResult> ConfirmActionAsync(Guid messageId, CancellationToken cancellationToken = default)
     {
         var message = await this._messageRepository.GetByIdAsync(messageId, cancellationToken);
-        if (message == null)
+
+        var validationError = ValidateMessageForConfirmation(message);
+        if (validationError is not null)
         {
-            return new ActionExecutionResult(
-                Success: false,
-                ActionType: ChatActionType.CreateTransaction,
-                CreatedEntityId: null,
-                Message: "Message not found.",
-                ErrorMessage: "Message not found.");
+            return validationError;
         }
 
-        if (message.Action == null)
-        {
-            return new ActionExecutionResult(
-                Success: false,
-                ActionType: ChatActionType.CreateTransaction,
-                CreatedEntityId: null,
-                Message: "Message has no action to confirm.",
-                ErrorMessage: "No action present.");
-        }
-
-        if (message.ActionStatus != ChatActionStatus.Pending)
-        {
-            return new ActionExecutionResult(
-                Success: false,
-                ActionType: message.Action.Type,
-                CreatedEntityId: null,
-                Message: $"Action is already {message.ActionStatus}.",
-                ErrorMessage: "Action not pending.");
-        }
-
-        try
-        {
-            var result = await this.ExecuteActionAsync(message.Action, cancellationToken);
-            if (result.Success && result.CreatedEntityId.HasValue)
-            {
-                message.MarkActionConfirmed(result.CreatedEntityId.Value);
-            }
-            else if (result.Success)
-            {
-                // Edge case: success but no entity (shouldn't happen in normal flow)
-                message.MarkActionFailed("No entity ID returned.");
-            }
-            else
-            {
-                message.MarkActionFailed(result.ErrorMessage ?? "Execution failed.");
-            }
-
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
-            return result;
-        }
-        catch (DomainException ex)
-        {
-            message.MarkActionFailed(ex.Message);
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
-
-            return new ActionExecutionResult(
-                Success: false,
-                ActionType: message.Action.Type,
-                CreatedEntityId: null,
-                Message: "Action failed.",
-                ErrorMessage: ex.Message);
-        }
+        return await this.ExecuteAndUpdateActionStatusAsync(message!, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -262,6 +164,114 @@ public sealed class ChatService : IChatService
         return true;
     }
 
+    private static ChatResult? ValidateSessionForMessage(ChatSession? session)
+    {
+        if (session == null)
+        {
+            return new ChatResult(
+                Success: false,
+                UserMessage: null,
+                AssistantMessage: null,
+                ErrorMessage: "Session not found.");
+        }
+
+        if (!session.IsActive)
+        {
+            return new ChatResult(
+                Success: false,
+                UserMessage: null,
+                AssistantMessage: null,
+                ErrorMessage: "Session is closed.");
+        }
+
+        return null;
+    }
+
+    private static ActionExecutionResult? ValidateMessageForConfirmation(ChatMessage? message)
+    {
+        if (message == null)
+        {
+            return new ActionExecutionResult(
+                Success: false,
+                ActionType: ChatActionType.CreateTransaction,
+                CreatedEntityId: null,
+                Message: "Message not found.",
+                ErrorMessage: "Message not found.");
+        }
+
+        if (message.Action == null)
+        {
+            return new ActionExecutionResult(
+                Success: false,
+                ActionType: ChatActionType.CreateTransaction,
+                CreatedEntityId: null,
+                Message: "Message has no action to confirm.",
+                ErrorMessage: "No action present.");
+        }
+
+        if (message.ActionStatus != ChatActionStatus.Pending)
+        {
+            return new ActionExecutionResult(
+                Success: false,
+                ActionType: message.Action.Type,
+                CreatedEntityId: null,
+                Message: $"Action is already {message.ActionStatus}.",
+                ErrorMessage: "Action not pending.");
+        }
+
+        return null;
+    }
+
+    private async Task<ParseResult> ParseUserCommandAsync(
+        string content,
+        ChatContext? context,
+        CancellationToken cancellationToken)
+    {
+        var accounts = await this.GetAccountInfoAsync(cancellationToken);
+        var categories = await this.GetCategoryInfoAsync(cancellationToken);
+
+        return await this._parser.ParseCommandAsync(
+            content, accounts, categories, context, cancellationToken);
+    }
+
+    private async Task<ActionExecutionResult> ExecuteAndUpdateActionStatusAsync(
+        ChatMessage message,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await this._actionExecutor.ExecuteActionAsync(message.Action!, cancellationToken);
+
+            if (result.Success && result.CreatedEntityId.HasValue)
+            {
+                message.MarkActionConfirmed(result.CreatedEntityId.Value);
+            }
+            else if (result.Success)
+            {
+                message.MarkActionFailed("No entity ID returned.");
+            }
+            else
+            {
+                message.MarkActionFailed(result.ErrorMessage ?? "Execution failed.");
+            }
+
+            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            return result;
+        }
+        catch (DomainException ex)
+        {
+            message.MarkActionFailed(ex.Message);
+            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return new ActionExecutionResult(
+                Success: false,
+                ActionType: message.Action!.Type,
+                CreatedEntityId: null,
+                Message: "Action failed.",
+                ErrorMessage: ex.Message);
+        }
+    }
+
     private async Task<IReadOnlyList<AccountInfo>> GetAccountInfoAsync(CancellationToken cancellationToken)
     {
         var accounts = await this._accountRepository.GetAllAsync(cancellationToken);
@@ -272,126 +282,5 @@ public sealed class ChatService : IChatService
     {
         var categories = await this._categoryRepository.GetActiveAsync(cancellationToken);
         return categories.Select(c => new CategoryInfo(c.Id, c.Name)).ToList();
-    }
-
-    private async Task<ActionExecutionResult> ExecuteActionAsync(ChatAction action, CancellationToken cancellationToken)
-    {
-        return action switch
-        {
-            CreateTransactionAction txnAction => await this.ExecuteTransactionActionAsync(txnAction, cancellationToken),
-            CreateTransferAction xferAction => await this.ExecuteTransferActionAsync(xferAction, cancellationToken),
-            CreateRecurringTransactionAction recTxnAction => await this.ExecuteRecurringTransactionActionAsync(recTxnAction, cancellationToken),
-            CreateRecurringTransferAction recXferAction => await this.ExecuteRecurringTransferActionAsync(recXferAction, cancellationToken),
-            ClarificationNeededAction => new ActionExecutionResult(
-                Success: false,
-                ActionType: ChatActionType.ClarificationNeeded,
-                CreatedEntityId: null,
-                Message: "Clarification actions cannot be executed.",
-                ErrorMessage: "Cannot execute clarification action."),
-            _ => new ActionExecutionResult(
-                Success: false,
-                ActionType: action.Type,
-                CreatedEntityId: null,
-                Message: "Unknown action type.",
-                ErrorMessage: "Unknown action type."),
-        };
-    }
-
-    private async Task<ActionExecutionResult> ExecuteTransactionActionAsync(
-        CreateTransactionAction action,
-        CancellationToken cancellationToken)
-    {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-        var dto = new TransactionCreateDto
-        {
-            AccountId = action.AccountId,
-            Amount = new MoneyDto { Currency = currency, Amount = action.Amount },
-            Date = action.Date,
-            Description = action.Description,
-            CategoryId = action.CategoryId,
-        };
-
-        var created = await this._transactionService.CreateAsync(dto, cancellationToken);
-        return new ActionExecutionResult(
-            Success: true,
-            ActionType: ChatActionType.CreateTransaction,
-            CreatedEntityId: created.Id,
-            Message: $"Created transaction: {action.Description} for {action.Amount:C}");
-    }
-
-    private async Task<ActionExecutionResult> ExecuteTransferActionAsync(
-        CreateTransferAction action,
-        CancellationToken cancellationToken)
-    {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-        var request = new CreateTransferRequest
-        {
-            SourceAccountId = action.FromAccountId,
-            DestinationAccountId = action.ToAccountId,
-            Amount = action.Amount,
-            Currency = currency,
-            Date = action.Date,
-            Description = action.Description,
-        };
-
-        var created = await this._transferService.CreateAsync(request, cancellationToken);
-        return new ActionExecutionResult(
-            Success: true,
-            ActionType: ChatActionType.CreateTransfer,
-            CreatedEntityId: created.TransferId,
-            Message: $"Created transfer of {action.Amount:C} from {action.FromAccountName} to {action.ToAccountName}");
-    }
-
-    private async Task<ActionExecutionResult> ExecuteRecurringTransactionActionAsync(
-        CreateRecurringTransactionAction action,
-        CancellationToken cancellationToken)
-    {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-        var dto = new RecurringTransactionCreateDto
-        {
-            AccountId = action.AccountId,
-            Description = action.Description,
-            Amount = new MoneyDto { Currency = currency, Amount = action.Amount },
-            Frequency = action.Recurrence.Frequency.ToString(),
-            Interval = action.Recurrence.Interval,
-            DayOfMonth = action.Recurrence.DayOfMonth,
-            DayOfWeek = action.Recurrence.DayOfWeek?.ToString(),
-            StartDate = action.StartDate,
-            EndDate = action.EndDate,
-        };
-
-        var created = await this._recurringTransactionService.CreateAsync(dto, cancellationToken);
-        return new ActionExecutionResult(
-            Success: true,
-            ActionType: ChatActionType.CreateRecurringTransaction,
-            CreatedEntityId: created.Id,
-            Message: $"Created recurring transaction: {action.Description} ({action.Recurrence.Frequency})");
-    }
-
-    private async Task<ActionExecutionResult> ExecuteRecurringTransferActionAsync(
-        CreateRecurringTransferAction action,
-        CancellationToken cancellationToken)
-    {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-        var dto = new RecurringTransferCreateDto
-        {
-            SourceAccountId = action.FromAccountId,
-            DestinationAccountId = action.ToAccountId,
-            Description = action.Description ?? "Recurring transfer",
-            Amount = new MoneyDto { Currency = currency, Amount = action.Amount },
-            Frequency = action.Recurrence.Frequency.ToString(),
-            Interval = action.Recurrence.Interval,
-            DayOfMonth = action.Recurrence.DayOfMonth,
-            DayOfWeek = action.Recurrence.DayOfWeek?.ToString(),
-            StartDate = action.StartDate,
-            EndDate = action.EndDate,
-        };
-
-        var created = await this._recurringTransferService.CreateAsync(dto, cancellationToken);
-        return new ActionExecutionResult(
-            Success: true,
-            ActionType: ChatActionType.CreateRecurringTransfer,
-            CreatedEntityId: created.Id,
-            Message: $"Created recurring transfer: {action.Description ?? "Transfer"} ({action.Recurrence.Frequency})");
     }
 }

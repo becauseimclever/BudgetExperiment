@@ -120,45 +120,9 @@ public sealed class RecurringTransfer
         DateOnly startDate,
         DateOnly? endDate = null)
     {
-        if (sourceAccountId == Guid.Empty)
-        {
-            throw new DomainException("Source account ID is required.");
-        }
-
-        if (destinationAccountId == Guid.Empty)
-        {
-            throw new DomainException("Destination account ID is required.");
-        }
-
-        if (sourceAccountId == destinationAccountId)
-        {
-            throw new DomainException("Source and destination accounts must be different.");
-        }
-
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new DomainException("Description is required.");
-        }
-
-        if (amount is null)
-        {
-            throw new DomainException("Amount is required.");
-        }
-
-        if (amount.Amount <= 0)
-        {
-            throw new DomainException("Transfer amount must be positive.");
-        }
-
-        if (recurrencePattern is null)
-        {
-            throw new DomainException("Recurrence pattern is required.");
-        }
-
-        if (endDate.HasValue && endDate.Value < startDate)
-        {
-            throw new DomainException("End date must be on or after start date.");
-        }
+        ValidateAccountIds(sourceAccountId, destinationAccountId);
+        ValidateCommonFields(description, amount, recurrencePattern);
+        ValidateEndDate(endDate, startDate);
 
         var now = DateTime.UtcNow;
         return new RecurringTransfer
@@ -193,30 +157,8 @@ public sealed class RecurringTransfer
         RecurrencePatternValue recurrencePattern,
         DateOnly? endDate)
     {
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new DomainException("Description is required.");
-        }
-
-        if (amount is null)
-        {
-            throw new DomainException("Amount is required.");
-        }
-
-        if (amount.Amount <= 0)
-        {
-            throw new DomainException("Transfer amount must be positive.");
-        }
-
-        if (recurrencePattern is null)
-        {
-            throw new DomainException("Recurrence pattern is required.");
-        }
-
-        if (endDate.HasValue && endDate.Value < this.StartDate)
-        {
-            throw new DomainException("End date must be on or after start date.");
-        }
+        ValidateCommonFields(description, amount, recurrencePattern);
+        ValidateEndDate(endDate, this.StartDate);
 
         this.Description = description.Trim();
         this.Amount = amount;
@@ -363,6 +305,58 @@ public sealed class RecurringTransfer
             }
 
             current = this.RecurrencePatternValue.CalculateNextOccurrence(current);
+        }
+    }
+
+    private static void ValidateAccountIds(Guid sourceAccountId, Guid destinationAccountId)
+    {
+        if (sourceAccountId == Guid.Empty)
+        {
+            throw new DomainException("Source account ID is required.");
+        }
+
+        if (destinationAccountId == Guid.Empty)
+        {
+            throw new DomainException("Destination account ID is required.");
+        }
+
+        if (sourceAccountId == destinationAccountId)
+        {
+            throw new DomainException("Source and destination accounts must be different.");
+        }
+    }
+
+    private static void ValidateCommonFields(
+        string description,
+        MoneyValue amount,
+        RecurrencePatternValue recurrencePattern)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new DomainException("Description is required.");
+        }
+
+        if (amount is null)
+        {
+            throw new DomainException("Amount is required.");
+        }
+
+        if (amount.Amount <= 0)
+        {
+            throw new DomainException("Transfer amount must be positive.");
+        }
+
+        if (recurrencePattern is null)
+        {
+            throw new DomainException("Recurrence pattern is required.");
+        }
+    }
+
+    private static void ValidateEndDate(DateOnly? endDate, DateOnly startDate)
+    {
+        if (endDate.HasValue && endDate.Value < startDate)
+        {
+            throw new DomainException("End date must be on or after start date.");
         }
     }
 }

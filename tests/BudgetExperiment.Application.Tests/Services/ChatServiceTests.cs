@@ -2,9 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
-using BudgetExperiment.Domain.Settings;
 using Shouldly;
 using Xunit;
 
@@ -21,12 +19,8 @@ public class ChatServiceTests
     private readonly MockAccountRepository _accountRepo;
     private readonly MockBudgetCategoryRepository _categoryRepo;
     private readonly MockNaturalLanguageParser _parser;
-    private readonly MockTransactionService _transactionService;
-    private readonly MockTransferService _transferService;
-    private readonly MockRecurringTransactionService _recurringTransactionService;
-    private readonly MockRecurringTransferService _recurringTransferService;
+    private readonly MockChatActionExecutor _actionExecutor;
     private readonly MockUnitOfWork _unitOfWork;
-    private readonly MockCurrencyProvider _currencyProvider;
     private readonly ChatService _service;
 
     public ChatServiceTests()
@@ -36,12 +30,8 @@ public class ChatServiceTests
         this._accountRepo = new MockAccountRepository();
         this._categoryRepo = new MockBudgetCategoryRepository();
         this._parser = new MockNaturalLanguageParser();
-        this._transactionService = new MockTransactionService();
-        this._transferService = new MockTransferService();
-        this._recurringTransactionService = new MockRecurringTransactionService();
-        this._recurringTransferService = new MockRecurringTransferService();
+        this._actionExecutor = new MockChatActionExecutor();
         this._unitOfWork = new MockUnitOfWork();
-        this._currencyProvider = new MockCurrencyProvider();
 
         this._service = new ChatService(
             this._sessionRepo,
@@ -49,12 +39,8 @@ public class ChatServiceTests
             this._accountRepo,
             this._categoryRepo,
             this._parser,
-            this._transactionService,
-            this._transferService,
-            this._recurringTransactionService,
-            this._recurringTransferService,
-            this._unitOfWork,
-            this._currencyProvider);
+            this._actionExecutor,
+            this._unitOfWork);
     }
 
     [Fact]
@@ -545,143 +531,28 @@ public class ChatServiceTests
         }
     }
 
-    private sealed class MockTransferService : ITransferService
+    private sealed class MockChatActionExecutor : IChatActionExecutor
     {
-        public Task<TransferResponse> CreateAsync(CreateTransferRequest request, CancellationToken cancellationToken = default)
+        private ActionExecutionResult? _result;
+
+        public void SetupResult(ActionExecutionResult result)
         {
-            return Task.FromResult(new TransferResponse
-            {
-                TransferId = Guid.NewGuid(),
-                SourceAccountId = request.SourceAccountId,
-                DestinationAccountId = request.DestinationAccountId,
-                Amount = request.Amount,
-                Currency = request.Currency,
-                Date = request.Date,
-            });
+            this._result = result;
         }
 
-        public Task<TransferResponse?> GetByIdAsync(Guid transferId, CancellationToken cancellationToken = default) =>
-            Task.FromResult<TransferResponse?>(null);
-
-        public Task<IReadOnlyList<TransferListItemResponse>> ListAsync(Guid? accountId = null, DateOnly? fromDate = null, DateOnly? toDate = null, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<TransferListItemResponse>>(new List<TransferListItemResponse>());
-
-        public Task<TransferResponse?> UpdateAsync(Guid transferId, UpdateTransferRequest request, CancellationToken cancellationToken = default) =>
-            Task.FromResult<TransferResponse?>(null);
-
-        public Task<bool> DeleteAsync(Guid transferId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(false);
-    }
-
-    private sealed class MockRecurringTransactionService : IRecurringTransactionService
-    {
-        public Task<RecurringTransactionDto> CreateAsync(RecurringTransactionCreateDto dto, CancellationToken cancellationToken = default)
+        public Task<ActionExecutionResult> ExecuteActionAsync(ChatAction action, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(new RecurringTransactionDto
+            if (this._result is not null)
             {
-                Id = Guid.NewGuid(),
-                AccountId = dto.AccountId,
-                AccountName = "Test Account",
-                Description = dto.Description,
-                Amount = dto.Amount,
-                Frequency = dto.Frequency,
-                StartDate = dto.StartDate,
-            });
+                return Task.FromResult(this._result);
+            }
+
+            return Task.FromResult(new ActionExecutionResult(
+                Success: true,
+                ActionType: action.Type,
+                CreatedEntityId: Guid.NewGuid(),
+                Message: "Action executed."));
         }
-
-        public Task<RecurringTransactionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<RecurringTransactionDto?>(null);
-
-        public Task<IReadOnlyList<RecurringTransactionDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<RecurringTransactionDto>>(new List<RecurringTransactionDto>());
-
-        public Task<IReadOnlyList<RecurringTransactionDto>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<RecurringTransactionDto>>(new List<RecurringTransactionDto>());
-
-        public Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, CancellationToken cancellationToken = default) =>
-            Task.FromResult<RecurringTransactionDto?>(null);
-
-        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(false);
-
-        public Task<RecurringTransactionDto?> PauseAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<RecurringTransactionDto?>(null);
-
-        public Task<RecurringTransactionDto?> ResumeAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<RecurringTransactionDto?>(null);
-
-        public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<ImportPatternsDto?>(null);
-
-        public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid id, ImportPatternsDto dto, CancellationToken cancellationToken = default) =>
-            Task.FromResult<ImportPatternsDto?>(null);
-    }
-
-    private sealed class MockRecurringTransferService : IRecurringTransferService
-    {
-        public Task<RecurringTransferDto> CreateAsync(RecurringTransferCreateDto dto, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(new RecurringTransferDto
-            {
-                Id = Guid.NewGuid(),
-                SourceAccountId = dto.SourceAccountId,
-                SourceAccountName = "Source Account",
-                DestinationAccountId = dto.DestinationAccountId,
-                DestinationAccountName = "Dest Account",
-                Description = dto.Description,
-                Amount = dto.Amount,
-                Frequency = dto.Frequency,
-                StartDate = dto.StartDate,
-            });
-        }
-
-        public Task<RecurringTransferDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<RecurringTransferDto?>(null);
-
-        public Task<IReadOnlyList<RecurringTransferDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<RecurringTransferDto>>(new List<RecurringTransferDto>());
-
-        public Task<IReadOnlyList<RecurringTransferDto>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<RecurringTransferDto>>(new List<RecurringTransferDto>());
-
-        public Task<IReadOnlyList<RecurringTransferDto>> GetActiveAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<RecurringTransferDto>>(new List<RecurringTransferDto>());
-    }
-
-    private sealed class MockTransactionService : ITransactionService
-    {
-        public Task<TransactionDto> CreateAsync(TransactionCreateDto dto, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(new TransactionDto
-            {
-                Id = Guid.NewGuid(),
-                AccountId = dto.AccountId,
-                Amount = dto.Amount,
-                Date = dto.Date,
-                Description = dto.Description,
-            });
-        }
-
-        public Task<TransactionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<TransactionDto?>(null);
-
-        public Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<TransactionDto>>(new List<TransactionDto>());
-
-        public Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, CancellationToken cancellationToken = default) =>
-            Task.FromResult<TransactionDto?>(null);
-
-        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(false);
-
-        public Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, CancellationToken cancellationToken = default) =>
-            Task.FromResult<TransactionDto?>(null);
-
-        public Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(false);
-
-        public Task<int> ClearAllLocationDataAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(0);
     }
 
     private sealed class MockUnitOfWork : IUnitOfWork
@@ -692,16 +563,6 @@ public class ChatServiceTests
         {
             this.SaveChangesCalled = true;
             return Task.FromResult(1);
-        }
-    }
-
-    private sealed class MockCurrencyProvider : ICurrencyProvider
-    {
-        public string Currency { get; set; } = "USD";
-
-        public Task<string> GetCurrencyAsync(CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(this.Currency);
         }
     }
 }

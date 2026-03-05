@@ -46,35 +46,15 @@ public sealed class TransactionMatcher : ITransactionMatcher
         IEnumerable<RecurringInstanceInfoValue> candidates,
         MatchingTolerancesValue tolerances)
     {
-        if (transaction is null)
-        {
-            throw new ArgumentNullException(nameof(transaction));
-        }
+        ArgumentNullException.ThrowIfNull(transaction);
+        ArgumentNullException.ThrowIfNull(candidates);
+        ArgumentNullException.ThrowIfNull(tolerances);
 
-        if (candidates is null)
-        {
-            throw new ArgumentNullException(nameof(candidates));
-        }
-
-        if (tolerances is null)
-        {
-            throw new ArgumentNullException(nameof(tolerances));
-        }
-
-        var matches = new List<TransactionMatchResultValue>();
-
-        foreach (var candidate in candidates)
-        {
-            var result = this.CalculateMatch(transaction, candidate, tolerances);
-            if (result is not null)
-            {
-                matches.Add(result);
-            }
-        }
-
-        return matches
-            .OrderByDescending(m => m.ConfidenceScore)
-            .ToList();
+        return candidates
+            .Select(c => this.CalculateMatch(transaction, c, tolerances))
+            .Where(r => r is not null)
+            .OrderByDescending(r => r!.ConfidenceScore)
+            .ToList()!;
     }
 
     /// <inheritdoc/>
@@ -83,81 +63,37 @@ public sealed class TransactionMatcher : ITransactionMatcher
         RecurringInstanceInfoValue candidate,
         MatchingTolerancesValue tolerances)
     {
-        if (transaction is null)
-        {
-            throw new ArgumentNullException(nameof(transaction));
-        }
+        ArgumentNullException.ThrowIfNull(transaction);
+        ArgumentNullException.ThrowIfNull(candidate);
+        ArgumentNullException.ThrowIfNull(tolerances);
 
-        if (candidate is null)
-        {
-            throw new ArgumentNullException(nameof(candidate));
-        }
-
-        if (tolerances is null)
-        {
-            throw new ArgumentNullException(nameof(tolerances));
-        }
-
-        // Calculate date offset
         var dateOffsetDays = transaction.Date.DayNumber - candidate.InstanceDate.DayNumber;
-
-        // Check date tolerance first (hard filter)
-        if (Math.Abs(dateOffsetDays) > tolerances.DateToleranceDays)
-        {
-            return null;
-        }
-
-        // Calculate amount variance
         var actualAmount = transaction.Amount.Amount;
         var expectedAmount = candidate.Amount.Amount;
-        var amountVariance = expectedAmount - actualAmount;
 
-        // Check amount tolerance (hard filter - either percent or absolute must pass)
-        if (!this.IsAmountWithinTolerance(actualAmount, expectedAmount, tolerances))
+        // Hard filters: date tolerance, amount tolerance, description similarity
+        if (!this.PassesHardFilters(
+                dateOffsetDays,
+                actualAmount,
+                expectedAmount,
+                transaction.Description,
+                candidate,
+                tolerances,
+                out var hasPatternMatch,
+                out var descriptionSimilarity))
         {
             return null;
         }
 
-        // Check for import pattern match first (takes precedence over fuzzy matching)
-        var hasPatternMatch = this.MatchesImportPatterns(transaction.Description, candidate.ImportPatterns);
-
-        // Calculate description similarity (for non-pattern matches or as secondary signal)
-        var descriptionSimilarity = hasPatternMatch
-            ? 1.0m // Pattern match implies full description match
-            : this.CalculateDescriptionSimilarity(transaction.Description, candidate.Description);
-
-        // Check description threshold only if no pattern match
-        if (!hasPatternMatch && descriptionSimilarity < tolerances.DescriptionSimilarityThreshold)
-        {
-            return null;
-        }
-
-        // Calculate overall confidence score
-        var dateScore = this.CalculateDateScore(dateOffsetDays, tolerances.DateToleranceDays);
-        var amountScore = this.CalculateAmountScore(actualAmount, expectedAmount, tolerances);
-
-        decimal confidenceScore;
-        if (hasPatternMatch)
-        {
-            // Pattern matches get high confidence, with slight adjustment for date/amount
-            confidenceScore = PatternMatchConfidence * ((((dateScore + amountScore) / 2) * 0.02m) + 0.98m);
-        }
-        else
-        {
-            confidenceScore =
-                (descriptionSimilarity * DescriptionWeight) +
-                (amountScore * AmountWeight) +
-                (dateScore * DateWeight);
-        }
-
-        var confidenceLevel = DetermineConfidenceLevel(confidenceScore);
+        var confidenceScore = this.CalculateOverallConfidence(
+            hasPatternMatch, descriptionSimilarity, dateOffsetDays, actualAmount, expectedAmount, tolerances);
 
         return new TransactionMatchResultValue(
             RecurringTransactionId: candidate.RecurringTransactionId,
             InstanceDate: candidate.InstanceDate,
             ConfidenceScore: confidenceScore,
-            ConfidenceLevel: confidenceLevel,
-            AmountVariance: amountVariance,
+            ConfidenceLevel: DetermineConfidenceLevel(confidenceScore),
+            AmountVariance: expectedAmount - actualAmount,
             DateOffsetDays: dateOffsetDays,
             DescriptionSimilarity: descriptionSimilarity);
     }
@@ -196,6 +132,58 @@ public sealed class TransactionMatcher : ITransactionMatcher
         }
 
         return normalized.Trim();
+    }
+
+    private bool PassesHardFilters(
+        int dateOffsetDays,
+        decimal actualAmount,
+        decimal expectedAmount,
+        string transactionDescription,
+        RecurringInstanceInfoValue candidate,
+        MatchingTolerancesValue tolerances,
+        out bool hasPatternMatch,
+        out decimal descriptionSimilarity)
+    {
+        hasPatternMatch = false;
+        descriptionSimilarity = 0m;
+
+        if (Math.Abs(dateOffsetDays) > tolerances.DateToleranceDays)
+        {
+            return false;
+        }
+
+        if (!this.IsAmountWithinTolerance(actualAmount, expectedAmount, tolerances))
+        {
+            return false;
+        }
+
+        hasPatternMatch = this.MatchesImportPatterns(transactionDescription, candidate.ImportPatterns);
+        descriptionSimilarity = hasPatternMatch
+            ? 1.0m
+            : this.CalculateDescriptionSimilarity(transactionDescription, candidate.Description);
+
+        return hasPatternMatch || descriptionSimilarity >= tolerances.DescriptionSimilarityThreshold;
+    }
+
+    private decimal CalculateOverallConfidence(
+        bool hasPatternMatch,
+        decimal descriptionSimilarity,
+        int dateOffsetDays,
+        decimal actualAmount,
+        decimal expectedAmount,
+        MatchingTolerancesValue tolerances)
+    {
+        var dateScore = this.CalculateDateScore(dateOffsetDays, tolerances.DateToleranceDays);
+        var amountScore = this.CalculateAmountScore(actualAmount, expectedAmount, tolerances);
+
+        if (hasPatternMatch)
+        {
+            return PatternMatchConfidence * ((((dateScore + amountScore) / 2) * 0.02m) + 0.98m);
+        }
+
+        return (descriptionSimilarity * DescriptionWeight) +
+               (amountScore * AmountWeight) +
+               (dateScore * DateWeight);
     }
 
     private bool MatchesImportPatterns(string transactionDescription, IReadOnlyCollection<ImportPatternValue>? patterns)

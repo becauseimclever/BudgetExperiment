@@ -792,101 +792,6 @@ public class ReconciliationServiceTests
         result.All(m => m.Status == "Accepted").ShouldBeTrue();
     }
 
-    [Fact]
-    public async Task GetLinkableInstancesAsync_TransactionNotFound_ReturnsEmptyList()
-    {
-        // Arrange
-        _transactionRepository
-            .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Transaction?)null);
-
-        var service = CreateService();
-
-        // Act
-        var result = await service.GetLinkableInstancesAsync(Guid.NewGuid());
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task GetLinkableInstancesAsync_ReturnsInstancesWithin30Days()
-    {
-        // Arrange
-        var transactionId = Guid.NewGuid();
-        var accountId = Guid.NewGuid();
-        var recurringId = Guid.NewGuid();
-        var transactionDate = new DateOnly(2026, 1, 15);
-
-        var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, transactionDate);
-        var recurring = CreateTestRecurringTransaction(recurringId, accountId, "Netflix", -15.99m, transactionDate);
-
-        _transactionRepository
-            .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(transaction);
-
-        _recurringRepository
-            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RecurringTransaction> { recurring });
-
-        var instance = new RecurringInstanceInfoValue(
-            RecurringTransactionId: recurringId,
-            InstanceDate: transactionDate,
-            AccountId: accountId,
-            AccountName: "Test Account",
-            Description: "Netflix",
-            Amount: MoneyValue.Create("USD", -15.99m),
-            CategoryId: null,
-            CategoryName: null,
-            IsModified: false,
-            IsSkipped: false);
-
-        _instanceProjector
-            .Setup(p => p.GetInstancesByDateRangeAsync(
-                It.IsAny<IReadOnlyList<RecurringTransaction>>(),
-                It.IsAny<DateOnly>(),
-                It.IsAny<DateOnly>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
-            {
-                { transactionDate, new List<RecurringInstanceInfoValue> { instance } },
-            });
-
-        _matchRepository
-            .Setup(r => r.IsInstanceMatchedAsync(recurringId, transactionDate, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        _transactionMatcher
-            .Setup(m => m.FindMatches(
-                transaction,
-                It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
-                It.IsAny<MatchingTolerancesValue>()))
-            .Returns(new List<TransactionMatchResultValue>
-            {
-                new TransactionMatchResultValue(
-                    RecurringTransactionId: recurringId,
-                    InstanceDate: transactionDate,
-                    ConfidenceScore: 0.95m,
-                    ConfidenceLevel: MatchConfidenceLevel.High,
-                    AmountVariance: 0m,
-                    DateOffsetDays: 0,
-                    DescriptionSimilarity: 1.0m),
-            });
-
-        var service = CreateService();
-
-        // Act
-        var result = await service.GetLinkableInstancesAsync(transactionId);
-
-        // Assert
-        result.ShouldNotBeEmpty();
-        result.Count.ShouldBe(1);
-        result[0].RecurringTransactionId.ShouldBe(recurringId);
-        result[0].InstanceDate.ShouldBe(transactionDate);
-        result[0].IsAlreadyMatched.ShouldBeFalse();
-        result[0].SuggestedConfidence.ShouldBe(0.95m);
-    }
-
     private static Transaction CreateTestTransaction(Guid id, Guid accountId, string description, decimal amount, DateOnly date)
     {
         var transaction = Transaction.Create(
@@ -947,6 +852,7 @@ public class ReconciliationServiceTests
             _transactionMatcher.Object,
             _unitOfWork.Object,
             statusBuilder,
-            matchActionHandler);
+            matchActionHandler,
+            new Mock<ILinkableInstanceFinder>().Object);
     }
 }

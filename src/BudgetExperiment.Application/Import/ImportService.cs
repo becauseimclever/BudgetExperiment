@@ -15,6 +15,8 @@ public sealed class ImportService : IImportService
 {
     private readonly IImportRowProcessor _rowProcessor;
     private readonly IImportPreviewEnricher _previewEnricher;
+    private readonly IImportBatchManager _batchManager;
+    private readonly IImportTransactionCreator _transactionCreator;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategorizationRuleRepository _ruleRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
@@ -24,14 +26,15 @@ public sealed class ImportService : IImportService
     private readonly IReconciliationService _reconciliationService;
     private readonly IUserContext _userContext;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportService"/> class.
     /// </summary>
     /// <param name="rowProcessor">Row processor for CSV parsing.</param>
     /// <param name="previewEnricher">Preview enrichment service.</param>
-    /// <param name="transactionRepository">Transaction repository.</param>
+    /// <param name="batchManager">Batch history manager.</param>
+    /// <param name="transactionCreator">Transaction creator for import execution.</param>
+    /// <param name="transactionRepository">Transaction repository for duplicate detection.</param>
     /// <param name="ruleRepository">Categorization rule repository.</param>
     /// <param name="categoryRepository">Budget category repository.</param>
     /// <param name="batchRepository">Import batch repository.</param>
@@ -40,10 +43,11 @@ public sealed class ImportService : IImportService
     /// <param name="reconciliationService">Reconciliation service.</param>
     /// <param name="userContext">User context.</param>
     /// <param name="unitOfWork">Unit of work.</param>
-    /// <param name="currencyProvider">The currency provider.</param>
     public ImportService(
         IImportRowProcessor rowProcessor,
         IImportPreviewEnricher previewEnricher,
+        IImportBatchManager batchManager,
+        IImportTransactionCreator transactionCreator,
         ITransactionRepository transactionRepository,
         ICategorizationRuleRepository ruleRepository,
         IBudgetCategoryRepository categoryRepository,
@@ -52,11 +56,12 @@ public sealed class ImportService : IImportService
         IAccountRepository accountRepository,
         IReconciliationService reconciliationService,
         IUserContext userContext,
-        IUnitOfWork unitOfWork,
-        ICurrencyProvider currencyProvider)
+        IUnitOfWork unitOfWork)
     {
         this._rowProcessor = rowProcessor;
         this._previewEnricher = previewEnricher;
+        this._batchManager = batchManager;
+        this._transactionCreator = transactionCreator;
         this._transactionRepository = transactionRepository;
         this._ruleRepository = ruleRepository;
         this._categoryRepository = categoryRepository;
@@ -66,7 +71,6 @@ public sealed class ImportService : IImportService
         this._reconciliationService = reconciliationService;
         this._userContext = userContext;
         this._unitOfWork = unitOfWork;
-        this._currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc />
@@ -118,7 +122,7 @@ public sealed class ImportService : IImportService
 
         await this.MarkMappingAsUsedAsync(request.MappingId, cancellationToken);
 
-        var importStats = await this.CreateTransactionsAsync(account, batch.Id, request.Transactions, cancellationToken);
+        var importStats = await this._transactionCreator.CreateTransactionsAsync(account, batch.Id, request.Transactions, cancellationToken);
 
         batch.Complete(importStats.CreatedIds.Count, importStats.Skipped, errors: 0);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
@@ -148,66 +152,13 @@ public sealed class ImportService : IImportService
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportBatchDto>> GetImportHistoryAsync(CancellationToken cancellationToken = default)
     {
-        var userId = this.GetRequiredUserId();
-        var batches = await this._batchRepository.GetByUserAsync(userId, cancellationToken: cancellationToken);
-
-        var result = new List<ImportBatchDto>();
-        foreach (var batch in batches.OrderByDescending(b => b.ImportedAtUtc))
-        {
-            string? mappingName = null;
-            if (batch.MappingId.HasValue)
-            {
-                var mapping = await this._mappingRepository.GetByIdAsync(batch.MappingId.Value, cancellationToken);
-                mappingName = mapping?.Name;
-            }
-
-            var account = await this._accountRepository.GetByIdAsync(batch.AccountId, cancellationToken);
-
-            result.Add(new ImportBatchDto
-            {
-                Id = batch.Id,
-                AccountId = batch.AccountId,
-                AccountName = account?.Name ?? "Unknown",
-                FileName = batch.FileName,
-                TransactionCount = batch.ImportedCount,
-                Status = batch.Status,
-                ImportedAtUtc = batch.ImportedAtUtc,
-                MappingId = batch.MappingId,
-                MappingName = mappingName,
-            });
-        }
-
-        return result;
+        return await this._batchManager.GetImportHistoryAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<int> DeleteImportBatchAsync(Guid batchId, CancellationToken cancellationToken = default)
     {
-        var userId = this.GetRequiredUserId();
-
-        var batch = await this._batchRepository.GetByIdAsync(batchId, cancellationToken);
-        if (batch is null)
-        {
-            return 0;
-        }
-
-        if (batch.UserId != userId)
-        {
-            throw new DomainException("Cannot delete import batch owned by another user.");
-        }
-
-        var transactions = await this._transactionRepository.GetByImportBatchAsync(batchId, cancellationToken);
-        var count = transactions.Count;
-
-        foreach (var transaction in transactions)
-        {
-            await this._transactionRepository.RemoveAsync(transaction, cancellationToken);
-        }
-
-        batch.MarkDeleted();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return count;
+        return await this._batchManager.DeleteImportBatchAsync(batchId, cancellationToken);
     }
 
     private static ImportPreviewResult BuildPreviewResult(List<ImportPreviewRow> previewRows)
@@ -225,36 +176,6 @@ public sealed class ImportService : IImportService
             AutoCategorizedCount = previewRows.Count(r => r.CategorySource == CategorySource.AutoRule),
             LocationEnrichedCount = previewRows.Count(r => r.ParsedLocation != null),
         };
-    }
-
-    private static Transaction CreateAndConfigureTransaction(
-        Account account,
-        Guid batchId,
-        ImportTransactionData txData,
-        string currency)
-    {
-        var amount = MoneyValue.Create(currency, txData.Amount);
-        var transaction = account.AddTransaction(amount, txData.Date, txData.Description, txData.CategoryId);
-        transaction.SetImportBatch(batchId, txData.Reference);
-
-        if (!string.IsNullOrEmpty(txData.LocationCity) || !string.IsNullOrEmpty(txData.LocationStateOrRegion))
-        {
-            var locationSource = Enum.TryParse<LocationSource>(txData.LocationSource, true, out var src)
-                ? src
-                : LocationSource.Parsed;
-
-            var location = TransactionLocationValue.Create(
-                city: txData.LocationCity,
-                stateOrRegion: txData.LocationStateOrRegion,
-                country: txData.LocationCountry,
-                postalCode: txData.LocationPostalCode,
-                coordinates: null,
-                source: locationSource);
-
-            transaction.SetLocation(location);
-        }
-
-        return transaction;
     }
 
     private Guid GetRequiredUserId()
@@ -324,56 +245,6 @@ public sealed class ImportService : IImportService
         mapping?.MarkUsed();
     }
 
-    private async Task<ImportStats> CreateTransactionsAsync(
-        Account account,
-        Guid batchId,
-        IReadOnlyList<ImportTransactionData> transactions,
-        CancellationToken cancellationToken)
-    {
-        var createdIds = new List<Guid>();
-        int autoCategorized = 0;
-        int csvCategorized = 0;
-        int uncategorized = 0;
-        int skipped = 0;
-        int locationEnriched = 0;
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-
-        foreach (var txData in transactions)
-        {
-            try
-            {
-                var transaction = CreateAndConfigureTransaction(account, batchId, txData, currency);
-
-                if (transaction.Location != null)
-                {
-                    locationEnriched++;
-                }
-
-                await this._transactionRepository.AddAsync(transaction, cancellationToken);
-                createdIds.Add(transaction.Id);
-
-                switch (txData.CategorySource)
-                {
-                    case CategorySource.AutoRule:
-                        autoCategorized++;
-                        break;
-                    case CategorySource.CsvColumn:
-                        csvCategorized++;
-                        break;
-                    case CategorySource.None:
-                        uncategorized++;
-                        break;
-                }
-            }
-            catch (DomainException)
-            {
-                skipped++;
-            }
-        }
-
-        return new ImportStats(createdIds, autoCategorized, csvCategorized, uncategorized, skipped, locationEnriched);
-    }
-
     private async Task<ReconciliationStats> RunReconciliationAsync(
         List<Guid> createdIds,
         IReadOnlyList<ImportTransactionData> transactions,
@@ -404,14 +275,6 @@ public sealed class ImportService : IImportService
             result.TotalMatchesFound - result.HighConfidenceCount,
             suggestions);
     }
-
-    private readonly record struct ImportStats(
-        List<Guid> CreatedIds,
-        int AutoCategorized,
-        int CsvCategorized,
-        int Uncategorized,
-        int Skipped,
-        int LocationEnriched);
 
     private sealed record ReconciliationStats(
         int TotalMatches,

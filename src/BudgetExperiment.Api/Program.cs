@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using Asp.Versioning;
+
 using BudgetExperiment.Api;
 using BudgetExperiment.Api.Authentication;
 using BudgetExperiment.Api.HealthChecks;
@@ -36,6 +38,20 @@ public partial class Program
         // Add controllers + OpenAPI (ASP.NET Core built-in OpenAPI services).
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
+
+        // API versioning with URL segment reader (§9, §20)
+        builder.Services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+            options.ApiVersionReader = new UrlSegmentApiVersionReader();
+        })
+        .AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+        });
 
         // Authentication & Authorization
 #pragma warning disable CS0618 // AuthentikOptions is obsolete but still registered for backward compat

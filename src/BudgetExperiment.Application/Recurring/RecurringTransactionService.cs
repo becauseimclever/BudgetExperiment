@@ -103,7 +103,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
-        var pattern = CreateRecurrencePattern(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
+        var pattern = RecurrencePatternFactory.Create(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
 
         var recurring = RecurringTransaction.Create(
             dto.AccountId,
@@ -135,7 +135,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
-        var pattern = CreateRecurrencePattern(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
+        var pattern = RecurrencePatternFactory.Create(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
 
         recurring.Update(dto.Description, amount, pattern, dto.EndDate, dto.CategoryId);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
@@ -256,7 +256,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
 
         // Update the series
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
-        var pattern = CreateRecurrencePattern(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
+        var pattern = RecurrencePatternFactory.Create(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
         recurring.Update(dto.Description, amount, pattern, dto.EndDate, dto.CategoryId);
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
@@ -312,44 +312,5 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         {
             Patterns = recurring.ImportPatterns.Select(p => p.Pattern).ToList(),
         };
-    }
-
-    private static RecurrencePatternValue CreateRecurrencePattern(
-        string frequency,
-        int interval,
-        int? dayOfMonth,
-        string? dayOfWeek,
-        int? monthOfYear)
-    {
-        if (!Enum.TryParse<RecurrenceFrequency>(frequency, ignoreCase: true, out var freq))
-        {
-            throw new DomainException($"Invalid frequency: {frequency}");
-        }
-
-        return freq switch
-        {
-            RecurrenceFrequency.Daily => RecurrencePatternValue.CreateDaily(interval),
-            RecurrenceFrequency.Weekly => RecurrencePatternValue.CreateWeekly(interval, ParseDayOfWeek(dayOfWeek)),
-            RecurrenceFrequency.BiWeekly => RecurrencePatternValue.CreateBiWeekly(ParseDayOfWeek(dayOfWeek)),
-            RecurrenceFrequency.Monthly => RecurrencePatternValue.CreateMonthly(interval, dayOfMonth ?? 1),
-            RecurrenceFrequency.Quarterly => RecurrencePatternValue.CreateQuarterly(dayOfMonth ?? 1),
-            RecurrenceFrequency.Yearly => RecurrencePatternValue.CreateYearly(dayOfMonth ?? 1, monthOfYear ?? 1),
-            _ => throw new DomainException($"Unsupported frequency: {frequency}"),
-        };
-    }
-
-    private static DayOfWeek ParseDayOfWeek(string? dayOfWeek)
-    {
-        if (string.IsNullOrWhiteSpace(dayOfWeek))
-        {
-            throw new DomainException("Day of week is required for weekly/biweekly patterns.");
-        }
-
-        if (!Enum.TryParse<DayOfWeek>(dayOfWeek, ignoreCase: true, out var dow))
-        {
-            throw new DomainException($"Invalid day of week: {dayOfWeek}");
-        }
-
-        return dow;
     }
 }

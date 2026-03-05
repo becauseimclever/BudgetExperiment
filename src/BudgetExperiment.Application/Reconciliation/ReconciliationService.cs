@@ -22,6 +22,7 @@ public sealed class ReconciliationService : IReconciliationService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IReconciliationStatusBuilder _statusBuilder;
     private readonly IReconciliationMatchActionHandler _matchActionHandler;
+    private readonly ILinkableInstanceFinder _linkableInstanceFinder;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReconciliationService"/> class.
@@ -34,6 +35,7 @@ public sealed class ReconciliationService : IReconciliationService
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="statusBuilder">The reconciliation status builder.</param>
     /// <param name="matchActionHandler">The reconciliation match action handler.</param>
+    /// <param name="linkableInstanceFinder">The linkable instance finder.</param>
     public ReconciliationService(
         IReconciliationMatchRepository matchRepository,
         IRecurringTransactionRepository recurringRepository,
@@ -42,7 +44,8 @@ public sealed class ReconciliationService : IReconciliationService
         ITransactionMatcher transactionMatcher,
         IUnitOfWork unitOfWork,
         IReconciliationStatusBuilder statusBuilder,
-        IReconciliationMatchActionHandler matchActionHandler)
+        IReconciliationMatchActionHandler matchActionHandler,
+        ILinkableInstanceFinder linkableInstanceFinder)
     {
         this._matchRepository = matchRepository;
         this._recurringRepository = recurringRepository;
@@ -52,6 +55,7 @@ public sealed class ReconciliationService : IReconciliationService
         this._unitOfWork = unitOfWork;
         this._statusBuilder = statusBuilder;
         this._matchActionHandler = matchActionHandler;
+        this._linkableInstanceFinder = linkableInstanceFinder;
     }
 
     /// <inheritdoc />
@@ -63,89 +67,23 @@ public sealed class ReconciliationService : IReconciliationService
             ? ReconciliationMapper.ToDomain(request.Tolerances)
             : MatchingTolerancesValue.Default;
 
+        var allCandidates = await this.GetMatchCandidatesAsync(
+            request.StartDate, request.EndDate, cancellationToken);
+
         var matchesByTransaction = new Dictionary<Guid, IReadOnlyList<ReconciliationMatchDto>>();
         var totalMatches = 0;
         var highConfidenceCount = 0;
 
-        // Get active recurring transactions and project instances for the date range
-        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
-        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
-            recurringTransactions,
-            request.StartDate,
-            request.EndDate,
-            cancellationToken);
-
-        // Flatten to list of candidates
-        var allCandidates = instancesByDate.Values.SelectMany(list => list).ToList();
-
-        // Process each transaction
         foreach (var transactionId in request.TransactionIds)
         {
-            var transaction = await this._transactionRepository.GetByIdAsync(transactionId, cancellationToken);
-            if (transaction is null)
-            {
-                continue;
-            }
-
-            // Find matches using the transaction matcher
-            var matchResults = this._transactionMatcher.FindMatches(transaction, allCandidates, tolerances);
-
-            var matches = new List<ReconciliationMatchDto>();
-
-            foreach (var matchResult in matchResults)
-            {
-                // Check if match already exists
-                var existingMatch = await this._matchRepository.ExistsAsync(
-                    transactionId,
-                    matchResult.RecurringTransactionId,
-                    matchResult.InstanceDate,
-                    cancellationToken);
-
-                if (existingMatch)
-                {
-                    continue;
-                }
-
-                // Get recurring transaction for scope info
-                var recurring = await this._recurringRepository.GetByIdAsync(
-                    matchResult.RecurringTransactionId,
-                    cancellationToken);
-                if (recurring is null)
-                {
-                    continue;
-                }
-
-                // Create new match
-                var match = ReconciliationMatch.Create(
-                    transactionId,
-                    matchResult.RecurringTransactionId,
-                    matchResult.InstanceDate,
-                    matchResult.ConfidenceScore,
-                    matchResult.AmountVariance,
-                    matchResult.DateOffsetDays,
-                    recurring.Scope,
-                    recurring.OwnerUserId);
-
-                // Auto-match if confidence is high enough
-                if (matchResult.ConfidenceScore >= tolerances.AutoMatchThreshold)
-                {
-                    match.AutoMatch();
-                    highConfidenceCount++;
-                }
-
-                await this._matchRepository.AddAsync(match, cancellationToken);
-
-                matches.Add(ReconciliationMapper.ToDto(
-                    match,
-                    transaction,
-                    recurring.Description,
-                    recurring.Amount));
-                totalMatches++;
-            }
+            var (matches, autoMatchedInBatch) = await this.FindMatchesForTransactionAsync(
+                transactionId, allCandidates, tolerances, cancellationToken);
 
             if (matches.Count > 0)
             {
                 matchesByTransaction[transactionId] = matches;
+                totalMatches += matches.Count;
+                highConfidenceCount += autoMatchedInBatch;
             }
         }
 
@@ -234,77 +172,99 @@ public sealed class ReconciliationService : IReconciliationService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(
+    public Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(
         Guid transactionId,
         CancellationToken cancellationToken = default)
+    {
+        return this._linkableInstanceFinder.GetLinkableInstancesAsync(transactionId, cancellationToken);
+    }
+
+    private async Task<List<RecurringInstanceInfoValue>> GetMatchCandidatesAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken)
+    {
+        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
+        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
+            recurringTransactions, startDate, endDate, cancellationToken);
+
+        return instancesByDate.Values.SelectMany(list => list).ToList();
+    }
+
+    private async Task<(List<ReconciliationMatchDto> Matches, int AutoMatched)> FindMatchesForTransactionAsync(
+        Guid transactionId,
+        List<RecurringInstanceInfoValue> candidates,
+        MatchingTolerancesValue tolerances,
+        CancellationToken cancellationToken)
     {
         var transaction = await this._transactionRepository.GetByIdAsync(transactionId, cancellationToken);
         if (transaction is null)
         {
-            return [];
+            return ([], 0);
         }
 
-        // Get instances within ±30 days of the transaction date
-        var startDate = transaction.Date.AddDays(-30);
-        var endDate = transaction.Date.AddDays(30);
+        var matchResults = this._transactionMatcher.FindMatches(transaction, candidates, tolerances);
+        var matches = new List<ReconciliationMatchDto>();
+        var autoMatched = 0;
 
-        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
-        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
-            recurringTransactions,
-            startDate,
-            endDate,
-            cancellationToken);
-
-        // Flatten to list of instances
-        var allInstances = instancesByDate.Values.SelectMany(list => list).ToList();
-
-        // Get existing matches to determine which instances are already matched
-        var result = new List<LinkableInstanceDto>();
-
-        foreach (var instance in allInstances)
+        foreach (var matchResult in matchResults)
         {
-            if (instance.IsSkipped)
+            var (dto, wasAutoMatched) = await this.CreateMatchIfNewAsync(
+                transaction, transactionId, matchResult, tolerances, cancellationToken);
+            if (dto is not null)
             {
-                continue;
-            }
-
-            // Check if this instance is already matched
-            var isAlreadyMatched = await this._matchRepository.IsInstanceMatchedAsync(
-                instance.RecurringTransactionId,
-                instance.InstanceDate,
-                cancellationToken);
-
-            // Calculate a suggested confidence score for display
-            decimal? suggestedConfidence = null;
-            if (!isAlreadyMatched)
-            {
-                var matchResults = this._transactionMatcher.FindMatches(
-                    transaction,
-                    [instance],
-                    MatchingTolerancesValue.Default);
-                var matchResult = matchResults.FirstOrDefault();
-                if (matchResult != null)
+                matches.Add(dto);
+                if (wasAutoMatched)
                 {
-                    suggestedConfidence = matchResult.ConfidenceScore;
+                    autoMatched++;
                 }
             }
-
-            result.Add(new LinkableInstanceDto
-            {
-                RecurringTransactionId = instance.RecurringTransactionId,
-                Description = instance.Description,
-                ExpectedAmount = CommonMapper.ToDto(instance.Amount),
-                InstanceDate = instance.InstanceDate,
-                IsAlreadyMatched = isAlreadyMatched,
-                SuggestedConfidence = suggestedConfidence,
-            });
         }
 
-        // Sort by date, then by suggested confidence (highest first)
-        return result
-            .OrderBy(i => i.InstanceDate)
-            .ThenByDescending(i => i.SuggestedConfidence ?? 0)
-            .ToList();
+        return (matches, autoMatched);
+    }
+
+    private async Task<(ReconciliationMatchDto? Dto, bool WasAutoMatched)> CreateMatchIfNewAsync(
+        Transaction transaction,
+        Guid transactionId,
+        TransactionMatchResultValue matchResult,
+        MatchingTolerancesValue tolerances,
+        CancellationToken cancellationToken)
+    {
+        var existingMatch = await this._matchRepository.ExistsAsync(
+            transactionId, matchResult.RecurringTransactionId, matchResult.InstanceDate, cancellationToken);
+        if (existingMatch)
+        {
+            return (null, false);
+        }
+
+        var recurring = await this._recurringRepository.GetByIdAsync(
+            matchResult.RecurringTransactionId, cancellationToken);
+        if (recurring is null)
+        {
+            return (null, false);
+        }
+
+        var match = ReconciliationMatch.Create(
+            transactionId,
+            matchResult.RecurringTransactionId,
+            matchResult.InstanceDate,
+            matchResult.ConfidenceScore,
+            matchResult.AmountVariance,
+            matchResult.DateOffsetDays,
+            recurring.Scope,
+            recurring.OwnerUserId);
+
+        var wasAutoMatched = matchResult.ConfidenceScore >= tolerances.AutoMatchThreshold;
+        if (wasAutoMatched)
+        {
+            match.AutoMatch();
+        }
+
+        await this._matchRepository.AddAsync(match, cancellationToken);
+
+        var dto = ReconciliationMapper.ToDto(match, transaction, recurring.Description, recurring.Amount);
+        return (dto, wasAutoMatched);
     }
 
     private async Task<IReadOnlyList<ReconciliationMatchDto>> EnrichMatchesWithDetailsAsync(
