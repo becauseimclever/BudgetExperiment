@@ -44,6 +44,14 @@ All notable changes to Budget Experiment.
 - **application:** Decompose `ReconciliationService` (545 → 335 lines) — extract `ReconciliationStatusBuilder` (171 lines, period status reports), `ReconciliationMatchActionHandler` (208 lines, accept/reject/unlink/bulk/manual-link lifecycle) with `IReconciliationStatusBuilder` and `IReconciliationMatchActionHandler` interfaces (Feature 080 Phase 3)
 - **application:** Decompose `ReportService` (423 → 252 lines) — extract `TrendReportBuilder` (165 lines, monthly spending trends), `LocationReportBuilder` (118 lines, geographic spending grouping) with `ITrendReportBuilder` and `ILocationReportBuilder` interfaces (Feature 080 Phase 3)
 - **application:** Replace 51 hardcoded `"USD"` strings across 11 Application services with `ICurrencyProvider` — all monetary values now derive currency from user's `PreferredCurrency` setting (Feature 064)
+- **application:** Decompose `ImportService` (1,076 → 247 lines) — extract `ImportRowProcessor` (512 lines, CSV row parsing), `ImportDuplicateDetector` (112 lines), `ImportPreviewEnricher` (213 lines), `ImportBatchManager` (~140 lines, batch history/deletion), `ImportTransactionCreator` (~130 lines) with corresponding interfaces (Feature 080 Phases 1 & 5)
+- **application:** Decompose `ChatService` (397 → 286 lines) — extract `ChatActionExecutor` (~110 lines, action dispatch to domain services) with `IChatActionExecutor` interface; break down `SendMessageAsync` (56 → 25) and `ConfirmActionAsync` (66 → 14) (Feature 080 Phases 4 & 5)
+- **application:** Decompose `CategorySuggestionService` (366 → 309 lines) — extract `CategorySuggestionDismissalHandler` (~120 lines, dismiss/restore/clear lifecycle); break down `AnalyzeTransactionsAsync` (73 → 28) (Feature 080 Phases 4 & 5)
+- **application:** Extract `RecurrencePatternFactory` (~50 lines) — shared static factory for `RecurringTransactionService` (355 → 316) and `RecurringTransferService` (348 → 309) (Feature 080 Phase 5)
+- **application:** Extract `LinkableInstanceFinder` (~120 lines) from `ReconciliationService` (335 → 294 lines) — linkable instance projection and confidence (Feature 080 Phase 5)
+- **domain:** Decompose `TransactionMatcher` (372 → 256 lines) — extract `DescriptionSimilarityCalculator` (121 lines, description normalization, containment matching, Levenshtein distance); break down `CalculateMatch` (83 → 27), extract `PassesHardFilters` + `CalculateOverallConfidence` (Feature 080 Phases 4 & 6)
+- **domain:** Break down `RecurringTransfer.Create` (67 → 30 lines) — extract `ValidateAccountIds`, `ValidateCommonFields`, `ValidateEndDate` (Feature 080 Phase 4)
+- **application:** Document `MerchantKnowledgeBase` (369 lines) as exempt from ~300-line guideline — static data declarations, not logic (Feature 080 Phase 6)
 - **contracts:** Change `MoneyDto.Currency` default from `"USD"` to `string.Empty` — all callers now set currency explicitly via `ICurrencyProvider` (Feature 064)
 
 ### Testing
@@ -56,6 +64,8 @@ All notable changes to Budget Experiment.
 - **application:** 36 unit tests for `RecurringTransactionService` — covers all 12 public methods (CRUD, pause/resume, skip, import patterns), all frequency types, error paths; prerequisite for Feature 080 god service decomposition (Feature 080)
 - **application:** 42 unit tests for Phase 2 extracted components — 13 `RuleSuggestionResponseParserTests`, 9 `SuggestionAcceptanceHandlerTests`, 20 `ChatActionParserTests`; all 2,748 tests passing (Feature 080 Phase 2)
 - **application:** 35 unit tests for Phase 3 extracted components — 8 `ReconciliationStatusBuilderTests`, 11 `ReconciliationMatchActionHandlerTests`, 8 `TrendReportBuilderTests`, 8 `LocationReportBuilderTests`; all 2,783 tests passing (Feature 080 Phase 3)
+- **application:** 23 unit tests for Phase 5 extracted components — `ChatActionExecutorTests`, `ImportBatchManagerTests`, `ImportTransactionCreatorTests`, `LinkableInstanceFinderTests`, `CategorySuggestionDismissalHandlerTests`; all 2,809 tests passing (Feature 080 Phase 5)
+- **domain:** 16 unit tests for `DescriptionSimilarityCalculator` — similarity scoring, normalization, containment matching, punctuation handling, edge cases; all 2,826 tests passing (Feature 080 Phase 6)
 - **client:** Unit tests for donut chart segment filtering, sorting, and fallback color (Feature 067)
 
 ### Documentation

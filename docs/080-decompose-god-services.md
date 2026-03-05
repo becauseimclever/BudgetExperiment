@@ -1,5 +1,5 @@
 # Feature 080: Decompose God Services
-> **Status:** In Progress (Phase 5 complete)
+> **Status:** Complete (Phase 6 complete)
 > **Priority:** High (maintainability / SRP)
 > **Estimated Effort:** Large (10-12 days)
 > **Dependencies:** ~~Write missing unit tests for RecurringTransactionService~~ ✅ Done (36 tests added)
@@ -20,9 +20,9 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 | ~~`ReconciliationService.cs`~~ | ~~545~~ → 294 | Orchestration only (status building, match actions, linkable instances extracted) | **Done** |
 | ~~`ReportService.cs`~~ | ~~423~~ → 252 | Orchestration only (trend and location report builders extracted) | **Done** |
 | ~~`ChatService.cs`~~ | ~~397~~ → 286 | Orchestration only (action execution extracted to ChatActionExecutor) | **Done** |
-| `TransactionMatcher.cs` (Domain) | 372 | Match scoring, description similarity, Levenshtein distance, amount/date tolerance | **Moderate** |
+| ~~`TransactionMatcher.cs`~~ (Domain) | ~~372~~ → 256 | Orchestrator only (description similarity extracted to DescriptionSimilarityCalculator) | **Done** |
 | ~~`CategorySuggestionService.cs`~~ | ~~366~~ → 309 | Orchestration only (dismiss/restore/clear extracted to DismissalHandler) | **Done** |
-| `MerchantKnowledgeBase.cs` | 362 | Static merchant-to-category mappings (data, not logic) | **Moderate** |
+| `MerchantKnowledgeBase.cs` | 369 | Static merchant-to-category mappings (data, not logic — exempt, documented) | **Exempt** |
 | ~~`RecurringTransactionService.cs`~~ | ~~355~~ → 316 | CRUD, pause/resume, skip (recurrence pattern factory extracted) | **Done** |
 | ~~`RecurringTransferService.cs`~~ | ~~348~~ → 309 | CRUD, pause/resume, skip (recurrence pattern factory extracted) | **Done** |
 
@@ -35,7 +35,7 @@ The coding standard (§24) forbids "god services" exceeding ~300 lines or having
 | ~~`GetReconciliationStatusAsync`~~ | ~~`ReconciliationService.cs`~~ → `ReconciliationStatusBuilder.cs` | ~109 → extracted |
 | ~~`FindMatchesAsync`~~ | `ReconciliationService.cs` | ~104 → 27 (orchestrator, sub-methods extracted) |
 | ~~`BuildCategoryReportAsync`~~ | `ReportService.cs` | ~85 → 16 (delegates to `BuildCategorySpendingListAsync`) |
-| ~~`CalculateMatch`~~ | `TransactionMatcher.cs` (Domain) | ~83 → 27 (extracted `PassesHardFilters` + `CalculateOverallConfidence`) |
+| ~~`CalculateMatch`~~ | `TransactionMatcher.cs` (Domain) | ~83 → 27 (extracted `PassesHardFilters` + `CalculateOverallConfidence` + description similarity to `DescriptionSimilarityCalculator`) |
 | ~~`AnalyzeTransactionsAsync`~~ | `CategorySuggestionService.cs` | ~73 → 28 (extracted `BuildSuggestionsFromPatternsAsync`) |
 | ~~`GetLinkableInstancesAsync`~~ | `ReconciliationService.cs` | ~71 → 26 (extracted `GetNearbyInstancesAsync` + `BuildLinkableInstanceDtoAsync`) |
 | ~~`Create`~~ | `RecurringTransfer.cs` (Domain) | ~75 → 30 (extracted `ValidateAccountIds` + `ValidateCommonFields` + `ValidateEndDate`) |
@@ -278,6 +278,23 @@ This is 362 lines of static data (merchant → category mappings), not logic. Co
 | `CategorySuggestionDismissalHandler.cs` | ~120 | Dismiss/restore/clear lifecycle |
 | `ICategorySuggestionDismissalHandler.cs` | ~20 | Interface |
 
+### Phase 6: Final Extractions & Exemptions ✅
+
+**Objective:** Address the two remaining files above the ~300-line threshold.
+
+**Tasks:**
+- [x] Extract `DescriptionSimilarityCalculator` from `TransactionMatcher` (description normalization, containment matching, Levenshtein distance)
+- [x] Write 16 unit tests for `DescriptionSimilarityCalculator` (similarity scoring, normalization, edge cases)
+- [x] Document `MerchantKnowledgeBase` exemption (static data, not logic — per §24 intent)
+- [x] Verify behavior unchanged (2,826 total tests passing, up from 2,809)
+
+**Results:**
+| File | Lines | Role |
+|------|-------|------|
+| `TransactionMatcher.cs` | 256 | Orchestrator (match scoring, hard filters, amount/date scoring) |
+| `DescriptionSimilarityCalculator.cs` | 121 | Static: normalization, containment matching, Levenshtein distance |
+| `MerchantKnowledgeBase.cs` | 369 | Static data (exempt — merchant-to-category mappings, trivial lookup logic) |
+
 **Commit:**
 ```bash
 git commit -m "refactor(app): decompose god services into focused components
@@ -303,7 +320,7 @@ Refs: #080"
 | ImportService | 65 + 41 new (sub-services) | 4/4 | — | ✅ Safe |
 | RuleSuggestionService | 42 | 8/8 | — | ✅ Safe |
 | ReportService | 35 | 5/5 | — | ✅ Safe |
-| TransactionMatcher | 27 | 2/2 | — | ✅ Safe |
+| TransactionMatcher | 27 + 16 new (DescriptionSimilarityCalculator) | 2/2 | — | ✅ Safe |
 | NaturalLanguageParser | 23 | 1/1 | — | ✅ Safe |
 | ReconciliationService | 21 | 9/10 | `GetMatchesForRecurringTransactionAsync` | ✅ Safe |
 | ChatService | 17 | 5/6 | `GetUserSessionsAsync` | ✅ Safe |
@@ -355,4 +372,5 @@ Refs: #080"
 | 2026-03-03 | Phase 2 complete: RuleSuggestionService decomposed (857 → 260 lines). Extracted RuleSuggestionResponseParser (~350), RuleSuggestionPromptBuilder (~115), SuggestionAcceptanceHandler (~150). NaturalLanguageParser decomposed (556 → 130 lines). Extracted ChatActionParser (~450). Added 42 new unit tests. All 2,748 tests passing. | @copilot |
 | 2026-03-04 | Phase 3 complete: ReconciliationService decomposed (545 → 335 lines). Extracted ReconciliationStatusBuilder (171), ReconciliationMatchActionHandler (208). ReportService decomposed (423 → 252 lines). Extracted TrendReportBuilder (165), LocationReportBuilder (118). Added 35 new unit tests. All 2,783 tests passing. | @copilot |
 | 2026-03-04 | Phase 4 complete: Decomposed 12 long methods across 7 files. TransactionMatcher.CalculateMatch (83 → 27), ReconciliationService.FindMatchesAsync (103 → 27), ReportService.BuildCategoryReportAsync (84 → 16), ChatService.ConfirmActionAsync (66 → 14), CategorySuggestionService.AnalyzeTransactionsAsync (73 → 28), RecurringTransfer.Create (67 → 30). All 2,783 tests passing. | @copilot |
-| 2026-03-05 | Phase 5 complete: Decomposed 6 remaining services. ChatService (397→286), ImportService (424→247), ReconciliationService (335→294), CategorySuggestionService (366→309), RecurringTransactionService (355→316), RecurringTransferService (348→309). Extracted ChatActionExecutor, ImportBatchManager, ImportTransactionCreator, RecurrencePatternFactory, LinkableInstanceFinder, CategorySuggestionDismissalHandler. Added 23 new tests. All 2,809 tests passing. | @copilot |
+| 2026-03-04 | Phase 5 complete: Decomposed 6 remaining services. ChatService (397→286), ImportService (424→247), ReconciliationService (335→294), CategorySuggestionService (366→309), RecurringTransactionService (355→316), RecurringTransferService (348→309). Extracted ChatActionExecutor, ImportBatchManager, ImportTransactionCreator, RecurrencePatternFactory, LinkableInstanceFinder, CategorySuggestionDismissalHandler. Added 23 new tests. All 2,809 tests passing. | @copilot |
+| 2026-03-04 | Phase 6 complete: TransactionMatcher (372→256 lines). Extracted DescriptionSimilarityCalculator (121 lines). MerchantKnowledgeBase (369 lines) documented as exempt (static data). Added 16 new tests. All 2,826 tests passing. Feature complete. | @copilot |

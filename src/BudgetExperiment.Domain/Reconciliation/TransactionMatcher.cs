@@ -113,27 +113,6 @@ public sealed class TransactionMatcher : ITransactionMatcher
         return MatchConfidenceLevel.Low;
     }
 
-    private static string NormalizeDescription(string description)
-    {
-        // Remove common noise, normalize whitespace, lowercase
-        var normalized = description
-            .ToUpperInvariant()
-            .Replace(".", string.Empty)
-            .Replace(",", string.Empty)
-            .Replace("-", " ")
-            .Replace("_", " ")
-            .Replace("*", string.Empty)
-            .Replace("#", string.Empty);
-
-        // Normalize multiple spaces to single space
-        while (normalized.Contains("  ", StringComparison.Ordinal))
-        {
-            normalized = normalized.Replace("  ", " ");
-        }
-
-        return normalized.Trim();
-    }
-
     private bool PassesHardFilters(
         int dateOffsetDays,
         decimal actualAmount,
@@ -160,7 +139,7 @@ public sealed class TransactionMatcher : ITransactionMatcher
         hasPatternMatch = this.MatchesImportPatterns(transactionDescription, candidate.ImportPatterns);
         descriptionSimilarity = hasPatternMatch
             ? 1.0m
-            : this.CalculateDescriptionSimilarity(transactionDescription, candidate.Description);
+            : DescriptionSimilarityCalculator.CalculateSimilarity(transactionDescription, candidate.Description);
 
         return hasPatternMatch || descriptionSimilarity >= tolerances.DescriptionSimilarityThreshold;
     }
@@ -273,88 +252,5 @@ public sealed class TransactionMatcher : ITransactionMatcher
         return tolerances.AmountToleranceAbsolute > 0
             ? 1.0m - Math.Min(1.0m, difference / tolerances.AmountToleranceAbsolute)
             : 0m;
-    }
-
-    private decimal CalculateDescriptionSimilarity(string transactionDesc, string candidateDesc)
-    {
-        if (string.IsNullOrWhiteSpace(transactionDesc) || string.IsNullOrWhiteSpace(candidateDesc))
-        {
-            return 0m;
-        }
-
-        // Normalize both strings
-        var normalizedTransaction = NormalizeDescription(transactionDesc);
-        var normalizedCandidate = NormalizeDescription(candidateDesc);
-
-        if (normalizedTransaction == normalizedCandidate)
-        {
-            return 1.0m;
-        }
-
-        // Check if one contains the other (common with bank descriptions that add extra info)
-        if (normalizedTransaction.Contains(normalizedCandidate, StringComparison.OrdinalIgnoreCase) ||
-            normalizedCandidate.Contains(normalizedTransaction, StringComparison.OrdinalIgnoreCase))
-        {
-            // Higher score for longer matches
-            var shorter = Math.Min(normalizedTransaction.Length, normalizedCandidate.Length);
-            var longer = Math.Max(normalizedTransaction.Length, normalizedCandidate.Length);
-            return (decimal)shorter / longer;
-        }
-
-        // Use Levenshtein distance for fuzzy matching
-        var distance = this.CalculateLevenshteinDistance(normalizedTransaction, normalizedCandidate);
-        var maxLength = Math.Max(normalizedTransaction.Length, normalizedCandidate.Length);
-
-        if (maxLength == 0)
-        {
-            return 1.0m;
-        }
-
-        var similarity = 1.0m - ((decimal)distance / maxLength);
-        return Math.Max(0, similarity);
-    }
-
-    private int CalculateLevenshteinDistance(string source, string target)
-    {
-        if (string.IsNullOrEmpty(source))
-        {
-            return string.IsNullOrEmpty(target) ? 0 : target.Length;
-        }
-
-        if (string.IsNullOrEmpty(target))
-        {
-            return source.Length;
-        }
-
-        var sourceLength = source.Length;
-        var targetLength = target.Length;
-
-        var distance = new int[sourceLength + 1, targetLength + 1];
-
-        for (var i = 0; i <= sourceLength; i++)
-        {
-            distance[i, 0] = i;
-        }
-
-        for (var j = 0; j <= targetLength; j++)
-        {
-            distance[0, j] = j;
-        }
-
-        for (var i = 1; i <= sourceLength; i++)
-        {
-            for (var j = 1; j <= targetLength; j++)
-            {
-                var cost = target[j - 1] == source[i - 1] ? 0 : 1;
-
-                distance[i, j] = Math.Min(
-                    Math.Min(
-                        distance[i - 1, j] + 1,      // deletion
-                        distance[i, j - 1] + 1),     // insertion
-                    distance[i - 1, j - 1] + cost);  // substitution
-            }
-        }
-
-        return distance[sourceLength, targetLength];
     }
 }

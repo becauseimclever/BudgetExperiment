@@ -10,6 +10,13 @@ namespace BudgetExperiment.Application.Categorization;
 /// Default merchant-to-category mappings for common vendors.
 /// Used as fallback when no learned mapping exists.
 /// </summary>
+/// <remarks>
+/// This class exceeds the ~300-line guideline (§24) but is exempt because it is
+/// static data declarations (merchant patterns → category/icon tuples), not logic.
+/// The four public methods are trivial lookups. If the mapping set grows further,
+/// consider migrating to a database-backed or JSON-file provider behind an
+/// <c>IMerchantMappingProvider</c> interface.
+/// </remarks>
 public static class MerchantKnowledgeBase
 {
     /// <summary>
