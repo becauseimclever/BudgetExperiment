@@ -1,6 +1,6 @@
 # Feature 082: Optimistic Concurrency with ETags
 
-> **Status:** Planning
+> **Status:** In Progress (Slices 1–2 complete)
 > **Priority:** High (data integrity)
 > **Dependencies:** None
 
@@ -25,26 +25,26 @@ The coding standard (§9) requires optimistic concurrency for mutable aggregates
 First slice establishes shared infrastructure and proves the pattern on `Account` (1 PUT endpoint — simplest aggregate).
 
 **Tasks:**
-- [ ] Add `DbUpdateConcurrencyException` → 409 mapping in `ExceptionHandlingMiddleware`
-- [ ] Add `UseXminAsConcurrencyToken()` to `AccountConfiguration`
-- [ ] Surface `xmin` value through repository/service so controller can read it
-- [ ] `GET /accounts/{id}` returns `ETag` header from xmin
-- [ ] `PUT /accounts/{id}` reads `If-Match`, sets xmin original value before save
-- [ ] API test: GET returns ETag header
-- [ ] API test: PUT with valid If-Match succeeds, returns new ETag
-- [ ] API test: PUT with stale If-Match returns 409 Conflict
-- [ ] API test: PUT without If-Match still succeeds (backward compatible)
+- [x] Add `DbUpdateConcurrencyException` → 409 mapping in `ExceptionHandlingMiddleware`
+- [x] Add `UseXminAsConcurrencyToken()` to `AccountConfiguration`
+- [x] Surface `xmin` value through repository/service so controller can read it
+- [x] `GET /accounts/{id}` returns `ETag` header from xmin
+- [x] `PUT /accounts/{id}` reads `If-Match`, sets xmin original value before save
+- [x] API test: GET returns ETag header
+- [x] API test: PUT with valid If-Match succeeds, returns new ETag
+- [x] API test: PUT with stale If-Match returns 409 Conflict
+- [x] API test: PUT without If-Match still succeeds (backward compatible)
 
 ### Slice 2: Transaction
 
 `Transaction` has 1 PUT + 1 PATCH endpoint.
 
 **Tasks:**
-- [ ] Add `UseXminAsConcurrencyToken()` to `TransactionConfiguration`
-- [ ] `GET /transactions/{id}` returns ETag
-- [ ] `PUT /transactions/{id}` validates If-Match
-- [ ] `PATCH /transactions/{id}/location` validates If-Match
-- [ ] API tests: ETag returned, valid/stale/missing If-Match scenarios
+- [x] Add `UseXminAsConcurrencyToken()` to `TransactionConfiguration`
+- [x] `GET /transactions/{id}` returns ETag
+- [x] `PUT /transactions/{id}` validates If-Match
+- [x] `PATCH /transactions/{id}/location` validates If-Match
+- [x] API tests: ETag returned, valid/stale/missing If-Match scenarios
 
 ### Slice 3: BudgetCategory + BudgetGoal
 
@@ -154,6 +154,7 @@ DbUpdateConcurrencyException => (409, "Conflict", "The resource was modified by 
 
 | Date | Change | Author |
 |------|--------|--------|
-| 2026-03-04 | Slice 2 implemented: Transaction (xmin, ETag, If-Match on PUT + PATCH/location) | @copilot |\n| 2026-03-04 | Slice 1 implemented: Foundation + Account (xmin, ETag, If-Match, 409 middleware) | @copilot |
+| 2026-03-04 | Slice 2 implemented: Transaction (xmin, ETag, If-Match on PUT + PATCH/location) | @copilot |
+| 2026-03-04 | Slice 1 implemented: Foundation + Account (xmin, ETag, If-Match, 409 middleware) | @copilot |
 | 2026-03-04 | Rewrite as vertical slices; confirmed zero existing implementation | @copilot |
 | 2026-02-26 | Initial draft from codebase audit | @copilot |
