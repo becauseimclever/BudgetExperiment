@@ -154,6 +154,6 @@ DbUpdateConcurrencyException => (409, "Conflict", "The resource was modified by 
 
 | Date | Change | Author |
 |------|--------|--------|
-| 2026-03-04 | Slice 1 implemented: Foundation + Account (xmin, ETag, If-Match, 409 middleware) | @copilot |
+| 2026-03-04 | Slice 2 implemented: Transaction (xmin, ETag, If-Match on PUT + PATCH/location) | @copilot |\n| 2026-03-04 | Slice 1 implemented: Foundation + Account (xmin, ETag, If-Match, 409 middleware) | @copilot |
 | 2026-03-04 | Rewrite as vertical slices; confirmed zero existing implementation | @copilot |
 | 2026-02-26 | Initial draft from codebase audit | @copilot |

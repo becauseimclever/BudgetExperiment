@@ -87,6 +87,10 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
             .HasForeignKey(t => t.RecurringTransferId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
+        builder.Property<uint>("xmin")
+            .IsConcurrencyToken();
+
         // Indexes for calendar queries
         builder.HasIndex(t => t.Date);
         builder.HasIndex(t => t.AccountId);

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
@@ -450,5 +451,264 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         var transaction = await getResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(transaction);
         Assert.Null(transaction.Location);
+    }
+
+    /// <summary>
+    /// GET /api/v1/transactions/{id} returns an ETag header for concurrency control.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetById_Returns_ETag_Header()
+    {
+        // Arrange
+        var accountDto = new AccountCreateDto { Name = "TxnETagTest", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -10m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "ETag Test Txn",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        // Act
+        var response = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        Assert.False(string.IsNullOrEmpty(response.Headers.ETag.Tag));
+    }
+
+    /// <summary>
+    /// PUT /api/v1/transactions/{id} succeeds when a valid If-Match header is provided.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange
+        var accountDto = new AccountCreateDto { Name = "TxnIfMatchValid", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -20m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "IfMatch Valid Txn",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var updateDto = new TransactionUpdateDto
+        {
+            Amount = new MoneyDto { Currency = "USD", Amount = -25m },
+            Date = new DateOnly(2026, 3, 2),
+            Description = "Updated With ETag",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/transactions/{created.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var updated = await response.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.Equal("Updated With ETag", updated!.Description);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/transactions/{id} returns 409 Conflict when If-Match does not match current version.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var accountDto = new AccountCreateDto { Name = "TxnIfMatchStale", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -30m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "Stale IfMatch Txn",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var updateDto = new TransactionUpdateDto
+        {
+            Amount = new MoneyDto { Currency = "USD", Amount = -35m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "Should Fail",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/v1/transactions/{created.Id}")
+        {
+            Content = JsonContent.Create(updateDto),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>
+    /// PUT /api/v1/transactions/{id} succeeds without If-Match header for backward compatibility.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Update_Without_IfMatch_Succeeds_BackwardCompatible()
+    {
+        // Arrange
+        var accountDto = new AccountCreateDto { Name = "TxnNoIfMatch", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -40m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "No IfMatch Txn",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var updateDto = new TransactionUpdateDto
+        {
+            Amount = new MoneyDto { Currency = "USD", Amount = -45m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "Updated Without ETag",
+        };
+
+        // Act
+        var response = await this._client.PutAsJsonAsync($"/api/v1/transactions/{created.Id}", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.Equal("Updated Without ETag", updated!.Description);
+    }
+
+    /// <summary>
+    /// PATCH /api/v1/transactions/{id}/location returns ETag and respects If-Match.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task PatchLocation_With_Valid_IfMatch_Succeeds()
+    {
+        // Arrange
+        var accountDto = new AccountCreateDto { Name = "TxnLocIfMatch", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -15m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "Location IfMatch Txn",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var etag = getResponse.Headers.ETag;
+
+        var locationUpdate = new TransactionLocationUpdateDto
+        {
+            City = "Denver",
+            StateOrRegion = "CO",
+            Country = "US",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/v1/transactions/{created.Id}/location")
+        {
+            Content = JsonContent.Create(locationUpdate),
+        };
+        request.Headers.IfMatch.Add(etag!);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Headers.ETag);
+        var result = await response.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.Equal("Denver", result!.Location!.City);
+    }
+
+    /// <summary>
+    /// PATCH /api/v1/transactions/{id}/location returns 409 with stale If-Match.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task PatchLocation_With_Stale_IfMatch_Returns_409()
+    {
+        // Arrange
+        var accountDto = new AccountCreateDto { Name = "TxnLocStale", Type = "Checking" };
+        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(account);
+
+        var transactionDto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = -12m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "Location Stale Txn",
+        };
+        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.NotNull(created);
+
+        var staleETag = new EntityTagHeaderValue("\"99999999\"");
+        var locationUpdate = new TransactionLocationUpdateDto
+        {
+            City = "Boston",
+            StateOrRegion = "MA",
+            Country = "US",
+        };
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/v1/transactions/{created.Id}/location")
+        {
+            Content = JsonContent.Create(locationUpdate),
+        };
+        request.Headers.IfMatch.Add(staleETag);
+
+        // Act
+        var response = await this._client.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 }

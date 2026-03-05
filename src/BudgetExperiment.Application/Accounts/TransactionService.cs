@@ -45,7 +45,13 @@ public sealed class TransactionService : ITransactionService
     public async Task<TransactionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
-        return transaction is null ? null : AccountMapper.ToDto(transaction);
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        return AccountMapper.ToTransactionDto(transaction, version);
     }
 
     /// <summary>
@@ -95,14 +101,20 @@ public sealed class TransactionService : ITransactionService
     /// </summary>
     /// <param name="id">The transaction identifier.</param>
     /// <param name="dto">The transaction update data.</param>
+    /// <param name="expectedVersion">The expected concurrency token for optimistic concurrency, or null to skip.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated transaction DTO, or null if not found.</returns>
-    public async Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
@@ -112,7 +124,8 @@ public sealed class TransactionService : ITransactionService
         transaction.UpdateCategory(dto.CategoryId);
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return AccountMapper.ToDto(transaction);
+        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        return AccountMapper.ToTransactionDto(transaction, version);
     }
 
     /// <summary>
@@ -139,14 +152,20 @@ public sealed class TransactionService : ITransactionService
     /// </summary>
     /// <param name="id">The transaction identifier.</param>
     /// <param name="dto">The location update data.</param>
+    /// <param name="expectedVersion">The expected concurrency token for optimistic concurrency, or null to skip.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated transaction DTO, or null if not found.</returns>
-    public async Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
         }
 
         GeoCoordinateValue? coordinates = null;
@@ -165,7 +184,8 @@ public sealed class TransactionService : ITransactionService
 
         transaction.SetLocation(location);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        return AccountMapper.ToDto(transaction);
+        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        return AccountMapper.ToTransactionDto(transaction, version);
     }
 
     /// <summary>

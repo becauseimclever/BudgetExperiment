@@ -42,9 +42,10 @@ public interface ITransactionService
     /// </summary>
     /// <param name="id">The transaction identifier.</param>
     /// <param name="dto">The transaction update data.</param>
+    /// <param name="expectedVersion">The expected concurrency token for optimistic concurrency, or null to skip.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated transaction DTO, or null if not found.</returns>
-    Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, CancellationToken cancellationToken = default);
+    Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a transaction by its identifier.
@@ -59,9 +60,10 @@ public interface ITransactionService
     /// </summary>
     /// <param name="id">The transaction identifier.</param>
     /// <param name="dto">The location update data.</param>
+    /// <param name="expectedVersion">The expected concurrency token for optimistic concurrency, or null to skip.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated transaction DTO, or null if not found.</returns>
-    Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, CancellationToken cancellationToken = default);
+    Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears the location from a transaction.

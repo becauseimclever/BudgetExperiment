@@ -52,6 +52,17 @@ public static class AccountMapper
     /// <returns>The mapped DTO.</returns>
     public static TransactionDto ToDto(Transaction transaction)
     {
+        return ToTransactionDto(transaction, null);
+    }
+
+    /// <summary>
+    /// Maps a <see cref="Transaction"/> to a <see cref="TransactionDto"/> with a concurrency version.
+    /// </summary>
+    /// <param name="transaction">The transaction entity.</param>
+    /// <param name="version">The concurrency token value.</param>
+    /// <returns>The mapped DTO.</returns>
+    public static TransactionDto ToTransactionDto(Transaction transaction, string? version)
+    {
         return new TransactionDto
         {
             Id = transaction.Id,
@@ -71,6 +82,7 @@ public static class AccountMapper
             RecurringTransferId = transaction.RecurringTransferId,
             RecurringTransferInstanceDate = transaction.RecurringTransferInstanceDate,
             Location = ToLocationDto(transaction.Location),
+            Version = version,
         };
     }
 

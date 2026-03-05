@@ -262,13 +262,13 @@ public class ChatActionExecutorTests
         public Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<TransactionDto>>(new List<TransactionDto>());
 
-        public Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, CancellationToken cancellationToken = default) =>
+        public Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
             Task.FromResult<TransactionDto?>(null);
 
         public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);
 
-        public Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, CancellationToken cancellationToken = default) =>
+        public Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
             Task.FromResult<TransactionDto?>(null);
 
         public Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default) =>

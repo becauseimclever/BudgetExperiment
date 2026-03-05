@@ -59,4 +59,7 @@ public sealed class TransactionDto
 
     /// <summary>Gets or sets the geographic location of the transaction.</summary>
     public TransactionLocationDto? Location { get; set; }
+
+    /// <summary>Gets or sets the concurrency version token for optimistic concurrency.</summary>
+    public string? Version { get; set; }
 }
