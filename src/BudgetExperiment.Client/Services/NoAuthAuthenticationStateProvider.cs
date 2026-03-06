@@ -4,6 +4,8 @@
 
 using System.Security.Claims;
 
+using BudgetExperiment.Contracts.Constants;
+
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BudgetExperiment.Client.Services;
@@ -46,7 +48,7 @@ public sealed class NoAuthAuthenticationStateProvider : AuthenticationStateProvi
             new Claim(ClaimTypes.NameIdentifier, FamilyUserId),
             new Claim(ClaimTypes.Name, FamilyUserName),
             new Claim(ClaimTypes.Email, FamilyUserEmail),
-            new Claim("sub", FamilyUserId),
+            new Claim(ClaimConstants.Subject, FamilyUserId),
         };
 
         var identity = new ClaimsIdentity(claims, "NoAuth");

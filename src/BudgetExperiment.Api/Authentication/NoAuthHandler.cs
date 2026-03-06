@@ -5,6 +5,8 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
+using BudgetExperiment.Contracts.Constants;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 
@@ -48,9 +50,9 @@ public sealed class NoAuthHandler : AuthenticationHandler<AuthenticationSchemeOp
             new Claim(ClaimTypes.NameIdentifier, FamilyUserContext.FamilyUserId.ToString()),
             new Claim(ClaimTypes.Name, FamilyUserContext.FamilyUserName),
             new Claim(ClaimTypes.Email, FamilyUserContext.FamilyUserEmail),
-            new Claim("sub", FamilyUserContext.FamilyUserId.ToString()),
-            new Claim("name", FamilyUserContext.FamilyUserName),
-            new Claim("preferred_username", FamilyUserContext.FamilyUserName),
+            new Claim(ClaimConstants.Subject, FamilyUserContext.FamilyUserId.ToString()),
+            new Claim(ClaimConstants.Name, FamilyUserContext.FamilyUserName),
+            new Claim(ClaimConstants.PreferredUsername, FamilyUserContext.FamilyUserName),
         };
 
         var identity = new ClaimsIdentity(claims, SchemeName);

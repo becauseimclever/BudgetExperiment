@@ -4,6 +4,8 @@
 
 using System.Security.Claims;
 
+using BudgetExperiment.Contracts.Constants;
+
 namespace BudgetExperiment.Api.Authentication;
 
 /// <summary>
@@ -52,12 +54,12 @@ public static class GenericOidcClaimMapper
         }
 
         // Fallback: derive preferred_username from email if still missing
-        if (!identity.HasClaim(c => c.Type == "preferred_username"))
+        if (!identity.HasClaim(c => c.Type == ClaimConstants.PreferredUsername))
         {
-            var email = identity.FindFirst("email")?.Value;
+            var email = identity.FindFirst(ClaimConstants.Email)?.Value;
             if (!string.IsNullOrEmpty(email))
             {
-                identity.AddClaim(new Claim("preferred_username", email));
+                identity.AddClaim(new Claim(ClaimConstants.PreferredUsername, email));
             }
         }
     }

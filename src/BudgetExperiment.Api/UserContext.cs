@@ -4,6 +4,7 @@
 
 using System.Security.Claims;
 
+using BudgetExperiment.Contracts.Constants;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Api;
@@ -26,22 +27,22 @@ public sealed class UserContext : IUserContext
     }
 
     /// <inheritdoc/>
-    public string UserId => this.GetClaimValue(ClaimTypes.NameIdentifier) ?? this.GetClaimValue("sub") ?? string.Empty;
+    public string UserId => this.GetClaimValue(ClaimTypes.NameIdentifier) ?? this.GetClaimValue(ClaimConstants.Subject) ?? string.Empty;
 
     /// <inheritdoc/>
     public Guid? UserIdAsGuid => ParseUserIdAsGuid(this.UserId);
 
     /// <inheritdoc/>
-    public string Username => this.GetClaimValue("preferred_username") ?? this.GetClaimValue(ClaimTypes.Name) ?? string.Empty;
+    public string Username => this.GetClaimValue(ClaimConstants.PreferredUsername) ?? this.GetClaimValue(ClaimTypes.Name) ?? string.Empty;
 
     /// <inheritdoc/>
-    public string? Email => this.GetClaimValue(ClaimTypes.Email) ?? this.GetClaimValue("email");
+    public string? Email => this.GetClaimValue(ClaimTypes.Email) ?? this.GetClaimValue(ClaimConstants.Email);
 
     /// <inheritdoc/>
-    public string? DisplayName => this.GetClaimValue("name") ?? this.GetClaimValue(ClaimTypes.GivenName);
+    public string? DisplayName => this.GetClaimValue(ClaimConstants.Name) ?? this.GetClaimValue(ClaimTypes.GivenName);
 
     /// <inheritdoc/>
-    public string? AvatarUrl => this.GetClaimValue("picture");
+    public string? AvatarUrl => this.GetClaimValue(ClaimConstants.Picture);
 
     /// <inheritdoc/>
     public bool IsAuthenticated => this.httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
