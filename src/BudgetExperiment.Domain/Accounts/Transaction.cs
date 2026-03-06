@@ -64,12 +64,12 @@ public sealed class Transaction
     /// <summary>
     /// Gets the UTC timestamp when the transaction was created.
     /// </summary>
-    public DateTime CreatedAt { get; private set; }
+    public DateTime CreatedAtUtc { get; private set; }
 
     /// <summary>
     /// Gets the UTC timestamp when the transaction was last updated.
     /// </summary>
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime UpdatedAtUtc { get; private set; }
 
     /// <summary>
     /// Gets the identifier of the recurring transaction this was generated from (null for manual transactions).
@@ -192,8 +192,8 @@ public sealed class Transaction
             Date = date,
             Description = description.Trim(),
             CategoryId = categoryId,
-            CreatedAt = now,
-            UpdatedAt = now,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
             RecurringTransactionId = null,
             RecurringInstanceDate = null,
         };
@@ -312,7 +312,7 @@ public sealed class Transaction
         }
 
         this.Description = description.Trim();
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -328,7 +328,7 @@ public sealed class Transaction
         }
 
         this.Amount = amount;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -338,7 +338,7 @@ public sealed class Transaction
     public void UpdateDate(DateOnly date)
     {
         this.Date = date;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -348,7 +348,7 @@ public sealed class Transaction
     public void UpdateCategory(Guid? categoryId)
     {
         this.CategoryId = categoryId;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -376,7 +376,7 @@ public sealed class Transaction
         }
 
         this.ImportBatchId = batchId;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -399,7 +399,7 @@ public sealed class Transaction
 
         this.RecurringTransactionId = recurringTransactionId;
         this.RecurringInstanceDate = instanceDate;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -409,7 +409,7 @@ public sealed class Transaction
     public void SetLocation(TransactionLocationValue? location)
     {
         this.Location = location;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -418,7 +418,7 @@ public sealed class Transaction
     public void ClearLocation()
     {
         this.Location = null;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -434,7 +434,7 @@ public sealed class Transaction
 
         this.RecurringTransactionId = null;
         this.RecurringInstanceDate = null;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>

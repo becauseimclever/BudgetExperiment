@@ -275,7 +275,7 @@ public sealed class TransactionTableSortTests : BunitContext
                 Description = "Groceries",
                 Amount = new MoneyDto { Currency = "USD", Amount = -200m },
                 RunningBalance = new MoneyDto { Currency = "USD", Amount = 450m },
-                CreatedAt = new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc),
+                CreatedAtUtc = new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc),
             },
             new TransactionListItem
             {
@@ -284,7 +284,7 @@ public sealed class TransactionTableSortTests : BunitContext
                 Description = "Paycheck",
                 Amount = new MoneyDto { Currency = "USD", Amount = 1000m },
                 RunningBalance = new MoneyDto { Currency = "USD", Amount = 1450m },
-                CreatedAt = new DateTime(2026, 1, 20, 10, 0, 0, DateTimeKind.Utc),
+                CreatedAtUtc = new DateTime(2026, 1, 20, 10, 0, 0, DateTimeKind.Utc),
             },
             new TransactionListItem
             {
@@ -293,7 +293,7 @@ public sealed class TransactionTableSortTests : BunitContext
                 Description = "Coffee",
                 Amount = new MoneyDto { Currency = "USD", Amount = -50m },
                 RunningBalance = new MoneyDto { Currency = "USD", Amount = 950m },
-                CreatedAt = new DateTime(2026, 1, 5, 10, 0, 0, DateTimeKind.Utc),
+                CreatedAtUtc = new DateTime(2026, 1, 5, 10, 0, 0, DateTimeKind.Utc),
             },
         };
     }

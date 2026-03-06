@@ -92,7 +92,7 @@ public sealed class DayDetailService : IDayDetailService
                 CategoryId = txn.CategoryId,
                 AccountName = accountMap.GetValueOrDefault(txn.AccountId, string.Empty),
                 AccountId = txn.AccountId,
-                CreatedAt = txn.CreatedAt,
+                CreatedAtUtc = txn.CreatedAtUtc,
                 IsModified = false,
                 IsSkipped = false,
                 RecurringTransactionId = txn.RecurringTransactionId,
@@ -122,7 +122,7 @@ public sealed class DayDetailService : IDayDetailService
                     CategoryId = instance.CategoryId,
                     AccountName = instance.AccountName,
                     AccountId = instance.AccountId,
-                    CreatedAt = null,
+                    CreatedAtUtc = null,
                     IsModified = instance.IsModified,
                     IsSkipped = instance.IsSkipped,
                     RecurringTransactionId = instance.RecurringTransactionId,
@@ -152,7 +152,7 @@ public sealed class DayDetailService : IDayDetailService
                     CategoryId = null,
                     AccountName = instance.AccountName,
                     AccountId = instance.AccountId,
-                    CreatedAt = null,
+                    CreatedAtUtc = null,
                     IsModified = instance.IsModified,
                     IsSkipped = instance.IsSkipped,
                     RecurringTransactionId = null,
@@ -171,7 +171,7 @@ public sealed class DayDetailService : IDayDetailService
         return new DayDetailDto
         {
             Date = date,
-            Items = items.OrderBy(i => i.Type).ThenBy(i => i.CreatedAt ?? DateTime.MaxValue).ToList(),
+            Items = items.OrderBy(i => i.Type).ThenBy(i => i.CreatedAtUtc ?? DateTime.MaxValue).ToList(),
             Summary = new DayDetailSummaryDto
             {
                 TotalActual = new MoneyDto { Currency = currency, Amount = actualTotal },

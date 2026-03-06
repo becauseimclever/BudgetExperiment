@@ -370,8 +370,8 @@ else
         return _sortColumn switch
         {
             SortDate => _sortDescending
-                ? items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue)
-                : items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt ?? DateTime.MinValue),
+                ? items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAtUtc ?? DateTime.MinValue)
+                : items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAtUtc ?? DateTime.MinValue),
             SortDescription => _sortDescending
                 ? items.OrderByDescending(i => i.Description, StringComparer.OrdinalIgnoreCase)
                 : items.OrderBy(i => i.Description, StringComparer.OrdinalIgnoreCase),
@@ -381,7 +381,7 @@ else
             SortBalance => _sortDescending
                 ? items.OrderByDescending(i => i.RunningBalance.Amount)
                 : items.OrderBy(i => i.RunningBalance.Amount),
-            _ => items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue),
+            _ => items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAtUtc ?? DateTime.MinValue),
         };
     }
 
@@ -390,8 +390,8 @@ else
         return _sortColumn switch
         {
             SortDate => _sortDescending
-                ? transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
-                : transactions.OrderBy(t => t.Date).ThenBy(t => t.CreatedAt),
+                ? transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAtUtc)
+                : transactions.OrderBy(t => t.Date).ThenBy(t => t.CreatedAtUtc),
             SortDescription => _sortDescending
                 ? transactions.OrderByDescending(t => t.Description, StringComparer.OrdinalIgnoreCase)
                 : transactions.OrderBy(t => t.Description, StringComparer.OrdinalIgnoreCase),
@@ -399,8 +399,8 @@ else
                 ? transactions.OrderByDescending(t => t.Amount.Amount)
                 : transactions.OrderBy(t => t.Amount.Amount),
             _ => _sortDescending
-                ? transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
-                : transactions.OrderBy(t => t.Date).ThenBy(t => t.CreatedAt),
+                ? transactions.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAtUtc)
+                : transactions.OrderBy(t => t.Date).ThenBy(t => t.CreatedAtUtc),
         };
     }
 

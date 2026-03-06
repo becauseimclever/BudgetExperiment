@@ -30,8 +30,8 @@ public class TransactionTests
         Assert.Equal(date, transaction.Date);
         Assert.Equal(description, transaction.Description);
         Assert.Null(transaction.CategoryId);
-        Assert.NotEqual(default, transaction.CreatedAt);
-        Assert.NotEqual(default, transaction.UpdatedAt);
+        Assert.NotEqual(default, transaction.CreatedAtUtc);
+        Assert.NotEqual(default, transaction.UpdatedAtUtc);
     }
 
     [Fact]
@@ -159,14 +159,14 @@ public class TransactionTests
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
             "Original");
-        var originalUpdatedAt = transaction.UpdatedAt;
+        var originalUpdatedAt = transaction.UpdatedAtUtc;
 
         // Act
         transaction.UpdateDescription("New Description");
 
         // Assert
         Assert.Equal("New Description", transaction.Description);
-        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+        Assert.True(transaction.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Theory]
@@ -196,7 +196,7 @@ public class TransactionTests
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
             "Test");
-        var originalUpdatedAt = transaction.UpdatedAt;
+        var originalUpdatedAt = transaction.UpdatedAtUtc;
         var newAmount = MoneyValue.Create("USD", 200m);
 
         // Act
@@ -204,7 +204,7 @@ public class TransactionTests
 
         // Assert
         Assert.Equal(newAmount, transaction.Amount);
-        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+        Assert.True(transaction.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]
@@ -231,7 +231,7 @@ public class TransactionTests
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
             "Test");
-        var originalUpdatedAt = transaction.UpdatedAt;
+        var originalUpdatedAt = transaction.UpdatedAtUtc;
         var newDate = new DateOnly(2026, 2, 15);
 
         // Act
@@ -239,7 +239,7 @@ public class TransactionTests
 
         // Assert
         Assert.Equal(newDate, transaction.Date);
-        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+        Assert.True(transaction.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]
@@ -251,7 +251,7 @@ public class TransactionTests
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
             "Test");
-        var originalUpdatedAt = transaction.UpdatedAt;
+        var originalUpdatedAt = transaction.UpdatedAtUtc;
         var newCategoryId = Guid.NewGuid();
 
         // Act
@@ -259,7 +259,7 @@ public class TransactionTests
 
         // Assert
         Assert.Equal(newCategoryId, transaction.CategoryId);
-        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+        Assert.True(transaction.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]
@@ -709,7 +709,7 @@ public class TransactionTests
             "Netflix");
         var recurringTransactionId = Guid.NewGuid();
         var instanceDate = new DateOnly(2026, 1, 15);
-        var originalUpdatedAt = transaction.UpdatedAt;
+        var originalUpdatedAt = transaction.UpdatedAtUtc;
 
         // Act
         transaction.LinkToRecurringInstance(recurringTransactionId, instanceDate);
@@ -718,7 +718,7 @@ public class TransactionTests
         Assert.Equal(recurringTransactionId, transaction.RecurringTransactionId);
         Assert.Equal(instanceDate, transaction.RecurringInstanceDate);
         Assert.True(transaction.IsFromRecurringTransaction);
-        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+        Assert.True(transaction.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]
@@ -827,7 +827,7 @@ public class TransactionTests
             MoneyValue.Create("USD", -25.00m),
             new DateOnly(2026, 2, 20),
             "COFFEE SHOP");
-        var originalUpdatedAt = transaction.UpdatedAt;
+        var originalUpdatedAt = transaction.UpdatedAtUtc;
         var location = TransactionLocationValue.Create(
             "Seattle", "WA", "US", "98101", null, LocationSource.Manual);
 
@@ -836,7 +836,7 @@ public class TransactionTests
 
         // Assert
         Assert.Equal(location, transaction.Location);
-        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+        Assert.True(transaction.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]
@@ -851,14 +851,14 @@ public class TransactionTests
         var location = TransactionLocationValue.Create(
             "Seattle", "WA", "US", null, null, LocationSource.Manual);
         transaction.SetLocation(location);
-        var originalUpdatedAt = transaction.UpdatedAt;
+        var originalUpdatedAt = transaction.UpdatedAtUtc;
 
         // Act
         transaction.ClearLocation();
 
         // Assert
         Assert.Null(transaction.Location);
-        Assert.True(transaction.UpdatedAt >= originalUpdatedAt);
+        Assert.True(transaction.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]

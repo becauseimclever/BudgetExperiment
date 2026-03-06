@@ -141,7 +141,7 @@ public sealed class TransferService : ITransferService
         var allSourceTransfers = transactions
             .Where(t => t.TransferId.HasValue && t.TransferDirection == TransferDirection.Source)
             .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.CreatedAt)
+            .ThenByDescending(t => t.CreatedAtUtc)
             .ToList();
 
         var totalCount = allSourceTransfers.Count;
@@ -295,7 +295,7 @@ public sealed class TransferService : ITransferService
             Description = ExtractDescription(sourceTransaction.Description),
             SourceTransactionId = sourceTransaction.Id,
             DestinationTransactionId = destinationTransaction.Id,
-            CreatedAtUtc = sourceTransaction.CreatedAt,
+            CreatedAtUtc = sourceTransaction.CreatedAtUtc,
         };
     }
 

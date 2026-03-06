@@ -89,7 +89,7 @@ public sealed class TransactionListService : ITransactionListService
                 Amount = CommonMapper.ToDto(txn.Amount),
                 CategoryId = txn.CategoryId,
                 CategoryName = txn.Category?.Name,
-                CreatedAt = txn.CreatedAt,
+                CreatedAtUtc = txn.CreatedAtUtc,
                 IsModified = false,
                 RecurringTransactionId = txn.RecurringTransactionId,
                 RecurringTransferId = txn.RecurringTransferId,
@@ -107,7 +107,7 @@ public sealed class TransactionListService : ITransactionListService
         }
 
         // Sort items by date descending, then by created timestamp
-        var sortedItems = items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAt ?? DateTime.MinValue).ToList();
+        var sortedItems = items.OrderByDescending(i => i.Date).ThenByDescending(i => i.CreatedAtUtc ?? DateTime.MinValue).ToList();
 
         // Calculate starting balance for the date range
         var startingBalance = await _balanceCalculationService.GetBalanceBeforeDateAsync(
@@ -125,7 +125,7 @@ public sealed class TransactionListService : ITransactionListService
         }
 
         // Sort items by date ascending for running balance calculation
-        var sortedForBalance = items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt ?? DateTime.MinValue).ToList();
+        var sortedForBalance = items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAtUtc ?? DateTime.MinValue).ToList();
 
         // Calculate running balance for each item
         var runningBalance = balanceSeed;
@@ -232,7 +232,7 @@ public sealed class TransactionListService : ITransactionListService
                         Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
                         CategoryId = instance.CategoryId,
                         CategoryName = instance.CategoryName,
-                        CreatedAt = null,
+                        CreatedAtUtc = null,
                         IsModified = instance.IsModified,
                         RecurringTransactionId = instance.RecurringTransactionId,
                         RecurringTransferId = null,
@@ -280,7 +280,7 @@ public sealed class TransactionListService : ITransactionListService
                         Description = instance.Description,
                         Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
                         CategoryId = null,
-                        CreatedAt = null,
+                        CreatedAtUtc = null,
                         IsModified = instance.IsModified,
                         RecurringTransactionId = null,
                         RecurringTransferId = instance.RecurringTransferId,

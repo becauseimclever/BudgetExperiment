@@ -25,8 +25,8 @@ public class AccountTests
         Assert.NotEqual(Guid.Empty, account.Id);
         Assert.Equal(name, account.Name);
         Assert.Equal(type, account.Type);
-        Assert.NotEqual(default, account.CreatedAt);
-        Assert.NotEqual(default, account.UpdatedAt);
+        Assert.NotEqual(default, account.CreatedAtUtc);
+        Assert.NotEqual(default, account.UpdatedAtUtc);
         Assert.Empty(account.Transactions);
     }
 
@@ -59,14 +59,14 @@ public class AccountTests
     {
         // Arrange
         var account = Account.Create("Original", AccountType.Checking);
-        var originalUpdatedAt = account.UpdatedAt;
+        var originalUpdatedAt = account.UpdatedAtUtc;
 
         // Act
         account.UpdateName("New Name");
 
         // Assert
         Assert.Equal("New Name", account.Name);
-        Assert.True(account.UpdatedAt >= originalUpdatedAt);
+        Assert.True(account.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Theory]
@@ -88,14 +88,14 @@ public class AccountTests
     {
         // Arrange
         var account = Account.Create("Account", AccountType.Checking);
-        var originalUpdatedAt = account.UpdatedAt;
+        var originalUpdatedAt = account.UpdatedAtUtc;
 
         // Act
         account.UpdateType(AccountType.Savings);
 
         // Assert
         Assert.Equal(AccountType.Savings, account.Type);
-        Assert.True(account.UpdatedAt >= originalUpdatedAt);
+        Assert.True(account.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]
@@ -263,7 +263,7 @@ public class AccountTests
     {
         // Arrange
         var account = Account.Create("Checking", AccountType.Checking);
-        var originalUpdatedAt = account.UpdatedAt;
+        var originalUpdatedAt = account.UpdatedAtUtc;
         var newBalance = MoneyValue.Create("USD", 2000.00m);
         var newDate = new DateOnly(2026, 1, 15);
 
@@ -273,7 +273,7 @@ public class AccountTests
         // Assert
         Assert.Equal(newBalance, account.InitialBalance);
         Assert.Equal(newDate, account.InitialBalanceDate);
-        Assert.True(account.UpdatedAt >= originalUpdatedAt);
+        Assert.True(account.UpdatedAtUtc >= originalUpdatedAt);
     }
 
     [Fact]

@@ -2,6 +2,23 @@
 
 All notable changes to Budget Experiment.
 
+## [3.18.0] - 2026-03-06
+
+### Refactoring
+
+- **domain:** Rename `Account.CreatedAt`/`UpdatedAt` and `Transaction.CreatedAt`/`UpdatedAt` to `CreatedAtUtc`/`UpdatedAtUtc` per §30 naming convention — all entities now consistently use `Utc` suffix for UTC timestamps (Feature 085)
+- **contracts:** Rename `AccountDto`, `TransactionDto`, `TransactionListItemDto`, `DayDetailItemDto` timestamp properties to `CreatedAtUtc`/`UpdatedAtUtc` (Feature 085)
+- **application:** Update `AccountMapper`, `TransferService`, `TransactionListService`, `DayDetailService` for `Utc` suffix (Feature 085)
+- **client:** Update `TransactionListItem` model and `AccountTransactions.razor` for `Utc` suffix (Feature 085)
+
+### Database
+
+- **infrastructure:** EF migration `Feature085_RenameCreatedAtUpdatedAtToUtcSuffix` — renames `CreatedAt`→`CreatedAtUtc` and `UpdatedAt`→`UpdatedAtUtc` columns on `Accounts` and `Transactions` tables (Feature 085)
+
+### Documentation
+
+- **docs:** Feature 085 — DateTime naming consistency (complete)
+
 ## [3.17.0] - 2026-03-06
 
 ### Features

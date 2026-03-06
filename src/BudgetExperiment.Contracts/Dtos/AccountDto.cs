@@ -28,10 +28,10 @@ public sealed class AccountDto
     public DateOnly InitialBalanceDate { get; set; }
 
     /// <summary>Gets or sets the creation timestamp (UTC).</summary>
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
 
     /// <summary>Gets or sets the last update timestamp (UTC).</summary>
-    public DateTime UpdatedAt { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
 
     /// <summary>Gets or sets the budget scope ("Shared" or "Personal").</summary>
     public string Scope { get; set; } = "Shared";

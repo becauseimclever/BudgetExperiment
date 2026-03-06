@@ -49,12 +49,12 @@ public sealed class Account
     /// <summary>
     /// Gets the UTC timestamp when the account was created.
     /// </summary>
-    public DateTime CreatedAt { get; private set; }
+    public DateTime CreatedAtUtc { get; private set; }
 
     /// <summary>
     /// Gets the UTC timestamp when the account was last updated.
     /// </summary>
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime UpdatedAtUtc { get; private set; }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
@@ -104,8 +104,8 @@ public sealed class Account
             Type = type,
             InitialBalance = initialBalance ?? MoneyValue.Zero("USD"),
             InitialBalanceDate = initialBalanceDate ?? DateOnly.FromDateTime(now),
-            CreatedAt = now,
-            UpdatedAt = now,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
         };
     }
 
@@ -147,8 +147,8 @@ public sealed class Account
             Scope = BudgetScope.Shared,
             OwnerUserId = null,
             CreatedByUserId = createdByUserId,
-            CreatedAt = now,
-            UpdatedAt = now,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
         };
     }
 
@@ -190,8 +190,8 @@ public sealed class Account
             Scope = BudgetScope.Personal,
             OwnerUserId = ownerUserId,
             CreatedByUserId = ownerUserId,
-            CreatedAt = now,
-            UpdatedAt = now,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
         };
     }
 
@@ -208,7 +208,7 @@ public sealed class Account
         }
 
         this.Name = name.Trim();
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ public sealed class Account
     public void UpdateType(AccountType type)
     {
         this.Type = type;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -236,7 +236,7 @@ public sealed class Account
 
         this.InitialBalance = balance;
         this.InitialBalanceDate = asOfDate;
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ public sealed class Account
         var transaction = Transaction.Create(this.Id, amount, date, description, categoryId);
         transaction.SetScope(this.Scope, this.OwnerUserId, this.CreatedByUserId);
         this._transactions.Add(transaction);
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
         return transaction;
     }
 
@@ -285,7 +285,7 @@ public sealed class Account
         }
 
         this._transactions.Remove(transaction);
-        this.UpdatedAt = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
         return true;
     }
 }

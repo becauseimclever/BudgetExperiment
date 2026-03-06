@@ -37,7 +37,7 @@ public sealed class TransactionListItem
     public bool IsModified { get; set; }
 
     /// <summary>Gets or sets the creation timestamp for actual transactions.</summary>
-    public DateTime? CreatedAt { get; set; }
+    public DateTime? CreatedAtUtc { get; set; }
 
     /// <summary>Gets or sets a value indicating whether this transaction is part of a transfer.</summary>
     public bool IsTransfer { get; set; }
@@ -74,7 +74,7 @@ public sealed class TransactionListItem
             Amount = transaction.Amount,
             IsRecurring = false,
             IsModified = false,
-            CreatedAt = transaction.CreatedAt,
+            CreatedAtUtc = transaction.CreatedAtUtc,
             IsTransfer = transaction.IsTransfer,
             TransferId = transaction.TransferId,
             TransferDirection = transaction.TransferDirection,
@@ -98,7 +98,7 @@ public sealed class TransactionListItem
             Amount = instance.Amount,
             IsRecurring = true,
             IsModified = instance.IsModified,
-            CreatedAt = null,
+            CreatedAtUtc = null,
         };
     }
 
@@ -127,7 +127,7 @@ public sealed class TransactionListItem
             IsRecurring = true,
             IsRecurringTransfer = true,
             IsModified = instance.IsModified,
-            CreatedAt = null,
+            CreatedAtUtc = null,
             IsTransfer = true,
             RecurringTransferId = instance.RecurringTransferId,
             TransferDirection = isSource ? "Source" : "Destination",

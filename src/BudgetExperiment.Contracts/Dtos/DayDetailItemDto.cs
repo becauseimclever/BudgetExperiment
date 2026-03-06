@@ -31,7 +31,7 @@ public sealed class DayDetailItemDto
     public Guid AccountId { get; set; }
 
     /// <summary>Gets or sets the creation timestamp (for actual transactions).</summary>
-    public DateTime? CreatedAt { get; set; }
+    public DateTime? CreatedAtUtc { get; set; }
 
     /// <summary>Gets or sets a value indicating whether this recurring instance has been modified.</summary>
     public bool IsModified { get; set; }

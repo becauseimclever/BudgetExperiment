@@ -733,7 +733,7 @@ public class TransactionListServiceTests
         // After -100 on Jan 12: 1200
 
         // Note: Items are returned descending for display, but running balance should reflect chronological order
-        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt).ToList();
+        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAtUtc).ToList();
         Assert.Equal(1500m, itemsByDateAsc[0].RunningBalance.Amount); // After first txn
         Assert.Equal(1300m, itemsByDateAsc[1].RunningBalance.Amount); // After second txn
         Assert.Equal(1200m, itemsByDateAsc[2].RunningBalance.Amount); // After third txn
@@ -1050,7 +1050,7 @@ public class TransactionListServiceTests
         // Starting seed: 0 (before Jan 1) + 1000 (initial balance) = 1000
         // After -50 on Jan 1: 950
         // After +200 on Jan 5: 1150
-        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAt).ToList();
+        var itemsByDateAsc = result.Items.OrderBy(i => i.Date).ThenBy(i => i.CreatedAtUtc).ToList();
         Assert.Equal(950m, itemsByDateAsc[0].RunningBalance.Amount);
         Assert.Equal(1150m, itemsByDateAsc[1].RunningBalance.Amount);
 

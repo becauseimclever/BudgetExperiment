@@ -111,7 +111,7 @@ public sealed class RecurringTransferRealizationService : IRecurringTransferReal
             Description = recurring.Description,
             SourceTransactionId = sourceTransaction.Id,
             DestinationTransactionId = destTransaction.Id,
-            CreatedAtUtc = sourceTransaction.CreatedAt,
+            CreatedAtUtc = sourceTransaction.CreatedAtUtc,
         };
     }
 

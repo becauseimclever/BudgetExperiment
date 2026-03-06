@@ -49,10 +49,10 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.InitialBalanceDate)
             .IsRequired();
 
-        builder.Property(a => a.CreatedAt)
+        builder.Property(a => a.CreatedAtUtc)
             .IsRequired();
 
-        builder.Property(a => a.UpdatedAt)
+        builder.Property(a => a.UpdatedAtUtc)
             .IsRequired();
 
         // Scope properties for multi-user support

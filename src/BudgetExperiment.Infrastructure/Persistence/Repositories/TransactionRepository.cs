@@ -41,7 +41,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         return await this.ApplyScopeFilter(this._context.Transactions)
             .Include(t => t.Category)
             .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.CreatedAt)
+            .ThenByDescending(t => t.CreatedAtUtc)
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken);
@@ -71,7 +71,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 
         return await query
             .OrderBy(t => t.Date)
-            .ThenBy(t => t.CreatedAt)
+            .ThenBy(t => t.CreatedAtUtc)
             .ToListAsync(cancellationToken);
     }
 
@@ -209,7 +209,7 @@ internal sealed class TransactionRepository : ITransactionRepository
             .Include(t => t.Category)
             .Where(t => t.CategoryId == null)
             .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.CreatedAt)
+            .ThenByDescending(t => t.CreatedAtUtc)
             .ToListAsync(cancellationToken);
     }
 
@@ -277,8 +277,8 @@ internal sealed class TransactionRepository : ITransactionRepository
                 ? query.OrderByDescending(t => t.Description).ThenByDescending(t => t.Date)
                 : query.OrderBy(t => t.Description).ThenBy(t => t.Date),
             _ => sortDescending
-                ? query.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
-                : query.OrderBy(t => t.Date).ThenBy(t => t.CreatedAt),
+                ? query.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAtUtc)
+                : query.OrderBy(t => t.Date).ThenBy(t => t.CreatedAtUtc),
         };
 
         // Apply paging

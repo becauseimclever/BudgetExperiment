@@ -268,7 +268,7 @@ public sealed class TransactionTablePaginationTests : BunitContext
             Date = new DateOnly(2026, 1, 1).AddDays(i % 30),
             Description = $"Txn {i}",
             Amount = new MoneyDto { Currency = "USD", Amount = -10m * i },
-            CreatedAt = DateTime.UtcNow,
+            CreatedAtUtc = DateTime.UtcNow,
         }).ToList();
 
         var cut = Render<TransactionTable>(parameters => parameters
@@ -325,7 +325,7 @@ public sealed class TransactionTablePaginationTests : BunitContext
             Description = $"Transaction {i:D4}",
             Amount = new MoneyDto { Currency = "USD", Amount = -10m * i },
             RunningBalance = new MoneyDto { Currency = "USD", Amount = 1000m - (10m * i) },
-            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(i % 30).AddMinutes(i),
+            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(i % 30).AddMinutes(i),
         }).ToList();
     }
 

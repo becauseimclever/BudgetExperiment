@@ -55,10 +55,10 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
             .HasForeignKey(t => t.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        builder.Property(t => t.CreatedAt)
+        builder.Property(t => t.CreatedAtUtc)
             .IsRequired();
 
-        builder.Property(t => t.UpdatedAt)
+        builder.Property(t => t.UpdatedAtUtc)
             .IsRequired();
 
         // Recurring transaction link (nullable FK)
