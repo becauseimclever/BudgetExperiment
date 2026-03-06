@@ -1,6 +1,6 @@
 # Feature 083: Centralize Magic Strings and Constants
 
-> **Status:** In Progress (Slice 1 complete)
+> **Status:** Complete (All 7 slices done)
 > **Priority:** Medium (code quality / maintainability)
 > **Dependencies:** None
 
@@ -15,6 +15,13 @@ The coding standard (§8) requires "Centralize constants; avoid magic strings/nu
 | `AuthModeConstants` | Api | `"None"`, `"OIDC"` |
 | `AuthProviderConstants` | Api | `"Authentik"`, `"Google"`, `"Microsoft"`, `"OIDC"` |
 | `ImportValidationConstants` | Application | Max import limits |
+| `ClaimConstants` | Contracts | `"sub"`, `"preferred_username"`, `"email"`, `"name"`, `"picture"` |
+| `ReconciliationStatus` | Contracts | `"Matched"`, `"Pending"`, `"Missing"` |
+| `CurrencyDefaults` | Domain | `"USD"` |
+| `OidcScopeDefaults` | Contracts | `"openid"`, `"profile"`, `"email"` |
+| `ExportColumns` | Application | 14 export column header strings |
+| `AiDefaults` | Domain | `"http://localhost:11434"` |
+| `FamilyUserDefaults` | Contracts | `"00000000-...0001"`, `"Family"`, `"family@localhost"` |
 
 ### What Is NOT in Scope
 
@@ -84,9 +91,11 @@ Refs: #083
 
 ---
 
-### Slice 2: Reconciliation Status Constants
+### Slice 2: Reconciliation Status Constants ✅
 
 **Goal:** Eliminate 4 hardcoded reconciliation status strings and prevent status typo bugs.
+
+**Completed:** `ReconciliationStatus` created in `BudgetExperiment.Contracts/Constants/ReconciliationStatus.cs`. 5 magic string replacements across 2 files. 3 regression guard tests added in `ReconciliationStatusConstantsTests.cs`.
 
 #### Current State
 
@@ -99,12 +108,12 @@ Refs: #083
 
 #### Tasks
 
-1. **RED** — Write unit tests verifying `ReconciliationStatus` constants have expected string values.
-2. **GREEN** — Create `ReconciliationStatus` constants class. Place in `BudgetExperiment.Contracts` (both Application and Contracts already use these values).
-3. **REFACTOR** — Replace all hardcoded status strings in:
-   - `ReconciliationStatusBuilder.cs` (~4 usages: assignments and switch cases)
-   - `RecurringInstanceStatusDto.cs` (1 usage: default property value)
-4. **VERIFY** — Build succeeds, reconciliation tests pass, status display unchanged.
+1. **RED** — Write unit tests verifying `ReconciliationStatus` constants have expected string values. ✅
+2. **GREEN** — Create `ReconciliationStatus` constants class. Place in `BudgetExperiment.Contracts` (both Application and Contracts already use these values). ✅
+3. **REFACTOR** — Replace all hardcoded status strings in: ✅
+   - `ReconciliationStatusBuilder.cs` (~4 usages: assignments and switch cases) ✅
+   - `RecurringInstanceStatusDto.cs` (1 usage: default property value) ✅
+4. **VERIFY** — Build succeeds, reconciliation tests pass (43/43), client tests pass (645/645), status display unchanged. ✅
 
 #### Design
 
@@ -130,35 +139,37 @@ Refs: #083
 
 ---
 
-### Slice 3: Default Currency Constant
+### Slice 3: Default Currency Constant ✅
 
 **Goal:** Eliminate 5+ hardcoded `"USD"` default currency strings.
+
+**Completed:** `CurrencyDefaults` created in `BudgetExperiment.Domain/Common/CurrencyDefaults.cs`. 24 magic string replacements across 3 files (`UserSettingsCurrencyProvider.cs`, `TransactionRepository.cs`, `DatabaseSeeder.cs`). `AccountDto.cs` and `AccountCreateDto.cs` intentionally kept as literal defaults — Contracts must not depend on Domain. 1 regression guard test added in `CurrencyDefaultsTests.cs`.
 
 #### Current State
 
 | File | Context |
 |------|---------|
 | `UserSettingsCurrencyProvider.cs` | `private const string DefaultCurrency = "USD"` — already a local constant, but not shared |
-| `AccountDto.cs` | Default property value |
-| `AccountCreateDto.cs` | Default property value |
+| `AccountDto.cs` | Default property value (kept as literal — Contracts → Domain dependency not allowed) |
+| `AccountCreateDto.cs` | Default property value (kept as literal — Contracts → Domain dependency not allowed) |
 | `TransactionRepository.cs` | Fallback currency |
-| `DatabaseSeeder.cs` | Seed data |
+| `DatabaseSeeder.cs` | Seed data (21 instances) |
 
 #### Tasks
 
-1. **RED** — Write unit test verifying `CurrencyDefaults.DefaultCurrency` equals `"USD"`.
-2. **GREEN** — Create `CurrencyDefaults` in `BudgetExperiment.Domain` (domain concept, referenced by all layers).
-3. **REFACTOR** — Replace all hardcoded `"USD"` defaults:
-   - `UserSettingsCurrencyProvider.cs` — replace local constant with `CurrencyDefaults.DefaultCurrency`
-   - `AccountDto.cs`, `AccountCreateDto.cs` — reference shared constant
-   - `TransactionRepository.cs` — reference shared constant
-   - `DatabaseSeeder.cs` — reference shared constant
-4. **VERIFY** — Build succeeds, account/transaction tests pass.
+1. **RED** — Write unit test verifying `CurrencyDefaults.DefaultCurrency` equals `"USD"`. ✅
+2. **GREEN** — Create `CurrencyDefaults` in `BudgetExperiment.Domain.Common` (domain concept, referenced by all layers). ✅
+3. **REFACTOR** — Replace hardcoded `"USD"` defaults: ✅
+   - `UserSettingsCurrencyProvider.cs` — local constant now references `CurrencyDefaults.DefaultCurrency` ✅
+   - `TransactionRepository.cs` — 2 usages replaced ✅
+   - `DatabaseSeeder.cs` — 21 usages replaced ✅
+   - `AccountDto.cs`, `AccountCreateDto.cs` — kept as literal (Contracts cannot depend on Domain) ✅
+4. **VERIFY** — Build succeeds (0 errors), 830 domain tests + 742 application tests pass. ✅
 
 #### Design
 
 ```csharp
-// src/BudgetExperiment.Domain/Constants/CurrencyDefaults.cs
+// src/BudgetExperiment.Domain/Common/CurrencyDefaults.cs
 public static class CurrencyDefaults
 {
     public const string DefaultCurrency = "USD";
@@ -177,9 +188,11 @@ Refs: #083
 
 ---
 
-### Slice 4: OIDC Scope Constants
+### Slice 4: OIDC Scope Constants ✅
 
 **Goal:** Eliminate 4 duplicated OIDC scope arrays across Api, Contracts, and Client.
+
+**Completed:** `OidcScopeDefaults` created in `BudgetExperiment.Contracts/Constants/OidcScopeDefaults.cs`. 4 duplicated scope arrays replaced across 4 files. 4 regression guard tests added in `OidcScopeDefaultsTests.cs`.
 
 #### Current State
 
@@ -192,14 +205,14 @@ Refs: #083
 
 #### Tasks
 
-1. **RED** — Write unit test verifying `OidcScopeDefaults` contains expected scope values.
-2. **GREEN** — Create `OidcScopeDefaults` in `BudgetExperiment.Contracts` (shared between Api and Client).
-3. **REFACTOR** — Replace all hardcoded scope arrays:
-   - `GenericOidcProviderOptions.cs` — use constants
-   - `ClientConfigOptions.cs` — use constants
-   - `OidcConfigDto.cs` — use constants
-   - `Client/Program.cs` — use constants
-4. **VERIFY** — Build succeeds, OIDC auth flow unchanged.
+1. **RED** — Write unit test verifying `OidcScopeDefaults` contains expected scope values. ✅
+2. **GREEN** — Create `OidcScopeDefaults` in `BudgetExperiment.Contracts` (shared between Api and Client). ✅
+3. **REFACTOR** — Replace all hardcoded scope arrays: ✅
+   - `GenericOidcProviderOptions.cs` — use constants ✅
+   - `ClientConfigOptions.cs` — use constants ✅
+   - `OidcConfigDto.cs` — use constants ✅
+   - `Client/Program.cs` — use constants ✅
+4. **VERIFY** — Build succeeds (0 errors), 530 API tests + 645 client tests pass, OIDC auth flow unchanged. ✅
 
 #### Design
 
@@ -227,9 +240,11 @@ Refs: #083
 
 ---
 
-### Slice 5: Export Column Name Constants
+### Slice 5: Export Column Name Constants ✅
 
 **Goal:** Centralize ~17 hardcoded export column header strings in `ExportController.cs`.
+
+**Completed:** `ExportColumns` created in `BudgetExperiment.Application/Export/ExportColumns.cs`. 17 magic string replacements across 3 builder methods in `ExportController.cs`. 14 regression guard tests added in `ExportColumnsTests.cs` (Theory + InlineData pattern).
 
 #### Current State
 
@@ -243,13 +258,13 @@ These are only used in one file, so risk of typo-induced bugs is lower. However,
 
 #### Tasks
 
-1. **RED** — Write unit test verifying `ExportColumns` constants have expected values.
-2. **GREEN** — Create `ExportColumns` static class in `BudgetExperiment.Application/Export/` (or alongside ExportController if preferred).
-3. **REFACTOR** — Replace all hardcoded column name strings in `ExportController.cs`:
-   - `BuildCategoryTable` (5 columns)
-   - `BuildTrendsTable` (5 columns)
-   - `BuildBudgetComparisonTable` (7 columns)
-4. **VERIFY** — Build succeeds, export tests pass, export output unchanged.
+1. **RED** — Write unit test verifying `ExportColumns` constants have expected values. ✅
+2. **GREEN** — Create `ExportColumns` static class in `BudgetExperiment.Application/Export/`. ✅
+3. **REFACTOR** — Replace all hardcoded column name strings in `ExportController.cs`: ✅
+   - `BuildCategoryTable` (5 columns) ✅
+   - `BuildTrendsTable` (5 columns) ✅
+   - `BuildBudgetComparisonTable` (7 columns) ✅
+4. **VERIFY** — Build succeeds (0 errors), 6 API export tests + 19 application export tests pass, export output unchanged. ✅
 
 #### Design
 
@@ -293,27 +308,34 @@ Refs: #083
 
 ---
 
-### Slice 6: Ollama URL Default Consolidation
+### Slice 6: Ollama URL Default Consolidation ✅
 
 **Goal:** Remove duplicated default Ollama URL from EF configuration; reference the domain default.
+
+**Completed:** `AiDefaults` created in `BudgetExperiment.Domain/Settings/AiDefaults.cs`. 8 magic string replacements across 4 files (`AppSettings.cs`, `AppSettingsConfiguration.cs`, `OllamaAiServiceTests.cs`, `AiControllerTests.cs`). `AiSettingsDto.cs` (Contracts), `AiAvailabilityServiceTests.cs` (Client.Tests), and `AiSettingsForm.razor` (Client) kept as literals — cannot depend on Domain. Migration files are auto-generated and not edited. 1 regression guard test added in `AiDefaultsTests.cs`.
 
 #### Current State
 
 | File | Context |
 |------|---------|
 | `AppSettings.cs` (Domain) | Default value `"http://localhost:11434"` — **this is the source of truth** |
-| `AppSettingsConfiguration.cs` (Infrastructure) | Duplicated in EF Fluent API `.HasDefaultValue(...)` |
-| `OllamaAiServiceTests.cs` (Tests) | Duplicated in test setup |
+| `AppSettingsConfiguration.cs` (Infrastructure) | Duplicated in EF Fluent API `.HasDefaultValue(...)` and seed data |
+| `OllamaAiServiceTests.cs` (Tests) | Duplicated in 4 test setups |
+| `AiControllerTests.cs` (Tests) | Duplicated in test data |
+| `AiSettingsDto.cs` (Contracts) | Default property value (kept as literal — Contracts → Domain not allowed) |
+| `AiAvailabilityServiceTests.cs` (Client.Tests) | Test data (kept as literal — no Domain reference) |
+| `AiSettingsForm.razor` (Client) | HTML placeholder (kept as literal — no Domain reference) |
 
 #### Tasks
 
-1. **RED** — Write unit test verifying `AiDefaults.DefaultOllamaUrl` equals `"http://localhost:11434"`.
-2. **GREEN** — Create `AiDefaults` in `BudgetExperiment.Domain/Settings/AiDefaults.cs`.
-3. **REFACTOR** — Replace duplicated URLs:
-   - `AppSettings.cs` — reference `AiDefaults.DefaultOllamaUrl`
-   - `AppSettingsConfiguration.cs` — reference `AiDefaults.DefaultOllamaUrl`
-   - `OllamaAiServiceTests.cs` — reference `AiDefaults.DefaultOllamaUrl`
-4. **VERIFY** — Build succeeds, AI settings tests pass.
+1. **RED** — Write unit test verifying `AiDefaults.DefaultOllamaUrl` equals `"http://localhost:11434"`. ✅
+2. **GREEN** — Create `AiDefaults` in `BudgetExperiment.Domain/Settings/AiDefaults.cs`. ✅
+3. **REFACTOR** — Replace duplicated URLs: ✅
+   - `AppSettings.cs` — reference `AiDefaults.DefaultOllamaUrl` ✅
+   - `AppSettingsConfiguration.cs` — 2 usages replaced (HasDefaultValue + seed data) ✅
+   - `OllamaAiServiceTests.cs` — 4 usages replaced ✅
+   - `AiControllerTests.cs` — 1 usage replaced ✅
+4. **VERIFY** — Build succeeds (0 errors), domain/application/API tests pass. ✅
 
 #### Design
 
@@ -337,9 +359,11 @@ Refs: #083
 
 ---
 
-### Slice 7: Family User Context Deduplication (Client ↔ Api)
+### Slice 7: Family User Context Deduplication (Client ↔ Api) ✅
 
 **Goal:** Eliminate duplicated family user identity values between Api and Client.
+
+**Completed:** `FamilyUserDefaults` created in `BudgetExperiment.Contracts/Constants/FamilyUserDefaults.cs`. 6 magic string replacements across 2 files (`FamilyUserContext.cs`, `NoAuthAuthenticationStateProvider.cs`). Both classes now delegate to shared constants. 4 regression guard tests added in `FamilyUserDefaultsTests.cs`.
 
 #### Current State
 
@@ -353,12 +377,12 @@ These must stay in sync. If someone changes the Api value, the Client silently b
 
 #### Tasks
 
-1. **RED** — Write unit test verifying shared family user constants match expected values.
-2. **GREEN** — Create `FamilyUserDefaults` in `BudgetExperiment.Contracts` (shared between Api and Client).
-3. **REFACTOR** — Update both:
-   - `FamilyUserContext.cs` (Api) — reference shared constants
-   - `NoAuthAuthenticationStateProvider.cs` (Client) — reference shared constants
-4. **VERIFY** — Build succeeds, NoAuth login flow unchanged.
+1. **RED** — Write unit test verifying shared family user constants match expected values. ✅
+2. **GREEN** — Create `FamilyUserDefaults` in `BudgetExperiment.Contracts` (shared between Api and Client). ✅
+3. **REFACTOR** — Update both: ✅
+   - `FamilyUserContext.cs` (Api) — reference shared constants ✅
+   - `NoAuthAuthenticationStateProvider.cs` (Client) — reference shared constants ✅
+4. **VERIFY** — Build succeeds (0 errors, 0 warnings), 2,909 unit tests pass. ✅
 
 #### Design
 
@@ -388,13 +412,13 @@ Refs: #083
 
 | # | Slice | Instances | Risk | Priority |
 |---|-------|-----------|------|----------|
-| 1 | Claim Name Constants | ~15 | Low | P1 — most duplicated |
-| 2 | Reconciliation Status Constants | 4 | Low | P1 — bug-prone strings |
-| 3 | Default Currency Constant | 5+ | Low | P2 |
-| 4 | OIDC Scope Constants | 4 files | Low | P2 |
-| 5 | Export Column Name Constants | ~17 | Very Low | P3 — single file |
-| 6 | Ollama URL Consolidation | 3 | Very Low | P3 — partially done |
-| 7 | Family User Context Dedup | 3 values | Low | P3 — cross-project sync |
+| 1 | Claim Name Constants | ~15 | Low | ✅ Done |
+| 2 | Reconciliation Status Constants | 4 | Low | ✅ Done |
+| 3 | Default Currency Constant | 5+ | Low | ✅ Done |
+| 4 | OIDC Scope Constants | 4 files | Low | ✅ Done |
+| 5 | Export Column Name Constants | ~17 | Very Low | ✅ Done |
+| 6 | Ollama URL Consolidation | 3 | Very Low | ✅ Done |
+| 7 | Family User Context Dedup | 3 values | Low | ✅ Done |
 
 All slices are pure refactoring with no behavior change. Each can be delivered and merged independently.
 
@@ -430,3 +454,4 @@ No new integration or E2E tests needed — these are compile-time refactorings.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-02-26 | Initial draft from codebase audit | @copilot |
+| 2026-03-06 | Slice 7 complete — all slices done | @copilot |

@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Constants;
+
 namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
@@ -27,7 +29,7 @@ public sealed class OidcConfigDto
     /// <summary>
     /// Gets the scopes to request during authentication.
     /// </summary>
-    public IReadOnlyList<string> Scopes { get; init; } = ["openid", "profile", "email"];
+    public IReadOnlyList<string> Scopes { get; init; } = [OidcScopeDefaults.OpenId, OidcScopeDefaults.Profile, OidcScopeDefaults.Email];
 
     /// <summary>
     /// Gets the redirect URI after logout.

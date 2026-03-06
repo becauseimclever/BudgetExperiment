@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Domain.Common;
 using BudgetExperiment.Domain.Repositories;
 using BudgetExperiment.Domain.Settings;
 
@@ -13,7 +14,7 @@ namespace BudgetExperiment.Application.Settings;
 /// </summary>
 public sealed class UserSettingsCurrencyProvider : ICurrencyProvider
 {
-    private const string DefaultCurrency = "USD";
+    private const string DefaultCurrency = CurrencyDefaults.DefaultCurrency;
     private readonly IUserContext _userContext;
     private readonly IUserSettingsRepository _settingsRepository;
 

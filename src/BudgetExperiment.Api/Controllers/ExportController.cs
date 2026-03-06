@@ -189,7 +189,7 @@ public sealed class ExportController : ControllerBase
 
     private static ExportTable BuildCategoryTable(string title, IReadOnlyList<CategorySpendingDto> categories)
     {
-        var columns = new List<string> { "Category", "Amount", "Currency", "Percentage", "Transactions" };
+        var columns = new List<string> { ExportColumns.Category, ExportColumns.Amount, ExportColumns.Currency, ExportColumns.Percentage, ExportColumns.Transactions };
         var rows = categories
             .Select(category => new List<string>
             {
@@ -207,7 +207,7 @@ public sealed class ExportController : ControllerBase
 
     private static ExportTable BuildTrendsTable(SpendingTrendsReportDto report)
     {
-        var columns = new List<string> { "Month", "Income", "Spending", "Net", "Transactions" };
+        var columns = new List<string> { ExportColumns.Month, ExportColumns.Income, ExportColumns.Spending, ExportColumns.Net, ExportColumns.Transactions };
         var rows = report.MonthlyData
             .OrderBy(point => point.Year)
             .ThenBy(point => point.Month)
@@ -229,13 +229,13 @@ public sealed class ExportController : ControllerBase
     {
         var columns = new List<string>
         {
-            "Category",
-            "Budgeted",
-            "Spent",
-            "Remaining",
-            "PercentUsed",
-            "Status",
-            "Transactions",
+            ExportColumns.Category,
+            ExportColumns.Budgeted,
+            ExportColumns.Spent,
+            ExportColumns.Remaining,
+            ExportColumns.PercentUsed,
+            ExportColumns.Status,
+            ExportColumns.Transactions,
         };
 
         var rows = summary.CategoryProgress

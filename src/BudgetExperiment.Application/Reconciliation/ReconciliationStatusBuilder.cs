@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Constants;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -79,10 +80,10 @@ public sealed class ReconciliationStatusBuilder : IReconciliationStatusBuilder
 
                 switch (statusDto.Status)
                 {
-                    case "Matched":
+                    case ReconciliationStatus.Matched:
                         matchedCount++;
                         break;
-                    case "Pending":
+                    case ReconciliationStatus.Pending:
                         pendingCount++;
                         break;
                     default:
@@ -128,7 +129,7 @@ public sealed class ReconciliationStatusBuilder : IReconciliationStatusBuilder
 
         if (acceptedMatch != null)
         {
-            status = "Matched";
+            status = ReconciliationStatus.Matched;
             matchedTransactionId = acceptedMatch.ImportedTransactionId;
             amountVariance = acceptedMatch.AmountVariance;
             matchId = acceptedMatch.Id;
@@ -145,13 +146,13 @@ public sealed class ReconciliationStatusBuilder : IReconciliationStatusBuilder
         }
         else if (pendingMatch != null)
         {
-            status = "Pending";
+            status = ReconciliationStatus.Pending;
             matchId = pendingMatch.Id;
             matchSource = pendingMatch.Source.ToString();
         }
         else
         {
-            status = "Missing";
+            status = ReconciliationStatus.Missing;
         }
 
         return new RecurringInstanceStatusDto

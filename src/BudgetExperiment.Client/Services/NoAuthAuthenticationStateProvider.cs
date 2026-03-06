@@ -13,25 +13,25 @@ namespace BudgetExperiment.Client.Services;
 /// <summary>
 /// Authentication state provider for auth-off (demo) mode.
 /// Always returns an authenticated state with the well-known family user claims.
-/// This mirrors the API's NoAuthHandler and FamilyUserContext constants.
+/// Values are sourced from <see cref="FamilyUserDefaults"/> in Contracts.
 /// </summary>
 public sealed class NoAuthAuthenticationStateProvider : AuthenticationStateProvider
 {
     /// <summary>
     /// Well-known GUID for the family user in auth-off mode.
-    /// Must match the API's FamilyUserContext.FamilyUserId.
+    /// Sourced from <see cref="FamilyUserDefaults.UserId"/>.
     /// </summary>
-    public const string FamilyUserId = "00000000-0000-0000-0000-000000000001";
+    public const string FamilyUserId = FamilyUserDefaults.UserId;
 
     /// <summary>
     /// Display name for the family user.
     /// </summary>
-    public const string FamilyUserName = "Family";
+    public const string FamilyUserName = FamilyUserDefaults.UserName;
 
     /// <summary>
     /// Email for the family user.
     /// </summary>
-    public const string FamilyUserEmail = "family@localhost";
+    public const string FamilyUserEmail = FamilyUserDefaults.UserEmail;
 
     private static readonly AuthenticationState AuthenticatedState = CreateFamilyUserState();
 

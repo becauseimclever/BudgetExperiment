@@ -87,7 +87,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
         // Arrange
         var request = new AiSettingsDto
         {
-            OllamaEndpoint = "http://localhost:11434",
+            OllamaEndpoint = AiDefaults.DefaultOllamaUrl,
             ModelName = "llama3.2",
             Temperature = 0.5m,
             MaxTokens = 3000,

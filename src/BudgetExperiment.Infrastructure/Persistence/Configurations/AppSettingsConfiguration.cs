@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -38,7 +39,7 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
         // AI Settings
         builder.Property(s => s.AiOllamaEndpoint)
             .HasMaxLength(500)
-            .HasDefaultValue("http://localhost:11434")
+            .HasDefaultValue(AiDefaults.DefaultOllamaUrl)
             .IsRequired();
 
         builder.Property(s => s.AiModelName)
@@ -96,7 +97,7 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
 
         // AI Settings defaults
         typeof(AppSettings).GetProperty(nameof(AppSettings.AiOllamaEndpoint))!
-            .SetValue(settings, "http://localhost:11434");
+            .SetValue(settings, AiDefaults.DefaultOllamaUrl);
         typeof(AppSettings).GetProperty(nameof(AppSettings.AiModelName))!
             .SetValue(settings, "llama3.2");
         typeof(AppSettings).GetProperty(nameof(AppSettings.AiTemperature))!

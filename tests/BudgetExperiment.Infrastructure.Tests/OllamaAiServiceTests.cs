@@ -26,7 +26,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     public OllamaAiServiceTests()
     {
         _settings = new AiSettingsData(
-            OllamaEndpoint: "http://localhost:11434",
+            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,
@@ -71,7 +71,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     {
         // Arrange
         var disabledSettings = new AiSettingsData(
-            OllamaEndpoint: "http://localhost:11434",
+            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,
@@ -131,7 +131,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     {
         // Arrange
         var disabledSettings = new AiSettingsData(
-            OllamaEndpoint: "http://localhost:11434",
+            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,
@@ -155,7 +155,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     {
         // Arrange
         var disabledSettings = new AiSettingsData(
-            OllamaEndpoint: "http://localhost:11434",
+            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,

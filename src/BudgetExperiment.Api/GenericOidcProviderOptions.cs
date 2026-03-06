@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Constants;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
@@ -28,7 +30,7 @@ public sealed class GenericOidcProviderOptions
     /// <summary>
     /// Gets or sets the requested scopes.
     /// </summary>
-    public string[] Scopes { get; set; } = ["openid", "profile", "email"];
+    public string[] Scopes { get; set; } = [OidcScopeDefaults.OpenId, OidcScopeDefaults.Profile, OidcScopeDefaults.Email];
 
     /// <summary>
     /// Gets or sets the audience (API identifier).

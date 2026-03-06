@@ -58,6 +58,7 @@ All notable changes to Budget Experiment.
 - **domain:** Break down `RecurringTransfer.Create` (67 → 30 lines) — extract `ValidateAccountIds`, `ValidateCommonFields`, `ValidateEndDate` (Feature 080 Phase 4)
 - **application:** Document `MerchantKnowledgeBase` (369 lines) as exempt from ~300-line guideline — static data declarations, not logic (Feature 080 Phase 6)
 - **contracts:** Change `MoneyDto.Currency` default from `"USD"` to `string.Empty` — all callers now set currency explicitly via `ICurrencyProvider` (Feature 064)
+- **contracts:** Centralize family user identity values into `FamilyUserDefaults` — `FamilyUserContext` (Api) and `NoAuthAuthenticationStateProvider` (Client) now reference shared constants, eliminating cross-project duplication (Feature 083 Slice 7)
 
 ### Testing
 

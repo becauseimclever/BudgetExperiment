@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Common;
 using BudgetExperiment.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -49,110 +50,110 @@ public static class DatabaseSeeder
 
         // Checking account transactions (income and expenses)
         checking.AddTransaction(
-            MoneyValue.Create("USD", 3500.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 3500.00m),
             startOfMonth,
             "Paycheck - Direct Deposit");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", -1200.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -1200.00m),
             startOfMonth.AddDays(1),
             "Rent Payment");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", -85.50m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -85.50m),
             startOfMonth.AddDays(3),
             "Electric Bill");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", -120.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -120.00m),
             startOfMonth.AddDays(5),
             "Grocery Store");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", -45.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -45.00m),
             startOfMonth.AddDays(7),
             "Gas Station");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", 3500.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 3500.00m),
             startOfMonth.AddDays(15),
             "Paycheck - Direct Deposit");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", -65.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -65.00m),
             startOfMonth.AddDays(16),
             "Internet Bill");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", -150.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -150.00m),
             startOfMonth.AddDays(18),
             "Grocery Store");
 
         checking.AddTransaction(
-            MoneyValue.Create("USD", -500.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -500.00m),
             startOfMonth.AddDays(20),
             "Transfer to Savings");
 
         // Savings account transactions
         savings.AddTransaction(
-            MoneyValue.Create("USD", 500.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 500.00m),
             startOfMonth.AddDays(20),
             "Transfer from Checking");
 
         savings.AddTransaction(
-            MoneyValue.Create("USD", 25.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 25.00m),
             startOfMonth.AddDays(25),
             "Interest Payment");
 
         // Credit card transactions
         creditCard.AddTransaction(
-            MoneyValue.Create("USD", -89.99m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -89.99m),
             startOfMonth.AddDays(2),
             "Amazon Purchase");
 
         creditCard.AddTransaction(
-            MoneyValue.Create("USD", -35.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -35.00m),
             startOfMonth.AddDays(4),
             "Restaurant Dinner");
 
         creditCard.AddTransaction(
-            MoneyValue.Create("USD", -12.99m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -12.99m),
             startOfMonth.AddDays(6),
             "Netflix Subscription");
 
         creditCard.AddTransaction(
-            MoneyValue.Create("USD", -15.99m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -15.99m),
             startOfMonth.AddDays(6),
             "Spotify Subscription");
 
         creditCard.AddTransaction(
-            MoneyValue.Create("USD", -250.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -250.00m),
             startOfMonth.AddDays(10),
             "Credit Card Payment");
 
         creditCard.AddTransaction(
-            MoneyValue.Create("USD", -42.50m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -42.50m),
             startOfMonth.AddDays(12),
             "Coffee Shop");
 
         creditCard.AddTransaction(
-            MoneyValue.Create("USD", -199.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -199.00m),
             startOfMonth.AddDays(14),
             "New Shoes");
 
         // Cash transactions
         cash.AddTransaction(
-            MoneyValue.Create("USD", 100.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 100.00m),
             startOfMonth.AddDays(1),
             "ATM Withdrawal");
 
         cash.AddTransaction(
-            MoneyValue.Create("USD", -25.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -25.00m),
             startOfMonth.AddDays(8),
             "Farmers Market");
 
         cash.AddTransaction(
-            MoneyValue.Create("USD", -15.00m),
+            MoneyValue.Create(CurrencyDefaults.DefaultCurrency, -15.00m),
             startOfMonth.AddDays(15),
             "Parking");
 

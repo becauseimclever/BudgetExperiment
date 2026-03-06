@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -187,7 +188,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 
         if (!categoryExists)
         {
-            return MoneyValue.Create("USD", 0m);
+            return MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 0m);
         }
 
         // Sum all spending (negative amounts represent expenses) with scope filtering
@@ -198,7 +199,7 @@ internal sealed class TransactionRepository : ITransactionRepository
                 && t.Amount.Amount < 0)
             .SumAsync(t => Math.Abs(t.Amount.Amount), cancellationToken);
 
-        return MoneyValue.Create("USD", totalSpending);
+        return MoneyValue.Create(CurrencyDefaults.DefaultCurrency, totalSpending);
     }
 
     /// <inheritdoc />

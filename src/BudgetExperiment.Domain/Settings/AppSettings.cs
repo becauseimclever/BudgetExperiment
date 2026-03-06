@@ -55,7 +55,7 @@ public sealed class AppSettings
     /// <summary>
     /// Gets the Ollama API endpoint URL.
     /// </summary>
-    public string AiOllamaEndpoint { get; private set; } = "http://localhost:11434";
+    public string AiOllamaEndpoint { get; private set; } = AiDefaults.DefaultOllamaUrl;
 
     /// <summary>
     /// Gets the AI model name to use.

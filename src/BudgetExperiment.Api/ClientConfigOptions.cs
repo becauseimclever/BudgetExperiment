@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Constants;
 using BudgetExperiment.Contracts.Dtos;
 
 namespace BudgetExperiment.Api;
@@ -40,7 +41,7 @@ public sealed class ClientConfigOptions
     /// <summary>
     /// Gets or sets the OIDC scopes.
     /// </summary>
-    public List<string> OidcScopes { get; set; } = ["openid", "profile", "email"];
+    public List<string> OidcScopes { get; set; } = [OidcScopeDefaults.OpenId, OidcScopeDefaults.Profile, OidcScopeDefaults.Email];
 
     /// <summary>
     /// Gets or sets the post-logout redirect URI.

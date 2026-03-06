@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Constants;
+
 namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
@@ -42,7 +44,7 @@ public sealed record RecurringInstanceStatusDto
     /// <summary>
     /// Gets the reconciliation status.
     /// </summary>
-    public string Status { get; init; } = "Missing";
+    public string Status { get; init; } = ReconciliationStatus.Missing;
 
     /// <summary>
     /// Gets the matched transaction ID (if matched).

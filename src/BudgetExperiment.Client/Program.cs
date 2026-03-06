@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 
 using BudgetExperiment.Client;
 using BudgetExperiment.Client.Services;
+using BudgetExperiment.Contracts.Constants;
 using BudgetExperiment.Contracts.Dtos;
 
 using Microsoft.AspNetCore.Components.Authorization;
@@ -76,9 +77,9 @@ else
     {
         builder.Configuration.Bind("Authentication:Authentik", options.ProviderOptions);
         options.ProviderOptions.ResponseType = "code";
-        options.ProviderOptions.DefaultScopes.Add("openid");
-        options.ProviderOptions.DefaultScopes.Add("profile");
-        options.ProviderOptions.DefaultScopes.Add("email");
+        options.ProviderOptions.DefaultScopes.Add(OidcScopeDefaults.OpenId);
+        options.ProviderOptions.DefaultScopes.Add(OidcScopeDefaults.Profile);
+        options.ProviderOptions.DefaultScopes.Add(OidcScopeDefaults.Email);
     });
 }
 
