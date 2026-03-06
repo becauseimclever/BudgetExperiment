@@ -1,142 +1,178 @@
 # Feature 084: Code Hygiene Fixes
-> **Status:** Planning
+
+> **Status:** Complete
 > **Priority:** Medium (code quality / consistency)
-> **Estimated Effort:** Small (< 1 day)
 > **Dependencies:** None
 
 ## Overview
 
-A codebase audit identified several smaller coding standard violations that individually don't warrant their own feature spec but collectively impact consistency. This document groups them for a single cleanup pass.
-
-## Issues
-
-### 1. Async Method Naming — MerchantMappingsController
-
-**Standard violated:** §5 — "Async methods end with `Async`."
-
-Three public async methods in `MerchantMappingsController.cs` are missing the `Async` suffix:
-
-| Current Name | Line | Proposed Name |
-|-------------|------|---------------|
-| `GetLearned` | ~43 | `GetLearnedAsync` |
-| `Learn` | ~57 | `LearnAsync` |
-| `Delete` | ~82 | `DeleteAsync` |
-
-All other ~500+ async methods across the codebase correctly use the `Async` suffix. This is an isolated violation in one controller.
-
-### 2. Exception Handling Middleware Ordering
-
-**Standard violated:** §28 — "Central middleware converting exceptions → ProblemDetails."
-
-In `Program.cs`, `UseMiddleware<ExceptionHandlingMiddleware>()` is registered **after** `MapControllers()` (line ~143). Exception-handling middleware should be registered early in the pipeline (before routing/controllers) to catch all exceptions. The current ordering may cause exceptions in the controller pipeline to bypass the handler.
-
-**Fix:** Move `app.UseMiddleware<ExceptionHandlingMiddleware>()` before `app.UseRouting()` / `app.MapControllers()`.
-
-### 3. Non-Standard HTTP 499 Status Code
-
-**Standard violated:** §9 — Use standard status codes.
-
-`ExceptionHandlingMiddleware.cs` (line ~57) returns HTTP 499 for cancelled requests. This is an nginx convention, not an RFC standard code. Standard alternatives:
-- **No response**: Simply don't write a response (connection is closed anyway)
-- **408 Request Timeout**: If the request truly timed out
-- **Drop**: Log and swallow — client has already disconnected
-
-### 4. Inconsistent Pagination Headers
-
-**Standard violated:** §9 — "Return `X-Pagination-TotalCount` header."
-
-Only `TransactionsController.GetUncategorizedAsync` sets `X-Pagination-TotalCount`. `TransfersController` has pagination parameters (line ~92-93) but does **not** return the header. All paginated endpoints should consistently return this header.
-
-### 5. ExceptionHandlingMiddleware Uses Anonymous Type
-
-**Standard violated:** §28 — Use `ProblemDetails`.
-
-The middleware serializes error responses from an anonymous object instead of `Microsoft.AspNetCore.Mvc.ProblemDetails`. While functional, this misses the `instance` field recommended by RFC 7807 and doesn't integrate with ASP.NET Core's built-in Problem Details machinery.
-
-### 6. Contracts Project Undocumented
-
-**Standard violated:** §3, §21 — Project listing doesn't include Contracts.
-
-The `BudgetExperiment.Contracts` project (56 files, shared DTOs) is not mentioned in the copilot-instructions.md architecture documentation (§2, §3, §21). It should be added to the documented project list and architecture description.
-
-### 7. Missing AddDomain() DI Extension
-
-**Standard violated:** §14 — "Configure per layer registration extension methods (e.g., `AddDomain()`)."
-
-No `AddDomain()` extension method exists. The Domain project is pure models/interfaces with no services to register, but the standard calls for the extension method pattern for all layers. A no-op `AddDomain()` method ensures consistency and provides a hook for future domain service registrations.
+A codebase audit identified several coding standard violations. This document organizes them as independently deliverable **vertical slices** — each slice crosses layers, includes its own tests, and can be merged on its own.
 
 ---
 
-## Implementation Plan
+## Slice 1 — Exception Handling Middleware Hardening
 
-### Phase 1: Fix Async Naming
+> **Priority:** Critical — middleware ordering bug means exceptions may bypass the handler entirely.
+> **Standards:** §9 (status codes), §28 (ProblemDetails)
 
-**Tasks:**
-- [ ] Rename `GetLearned` → `GetLearnedAsync` in `MerchantMappingsController`
-- [ ] Rename `Learn` → `LearnAsync`
-- [ ] Rename `Delete` → `DeleteAsync`
-- [ ] Note: ASP.NET MVC strips `Async` suffix from action names by convention, so route behavior is unaffected
+### Problem
 
-### Phase 2: Fix Middleware Ordering
+Three related issues in `ExceptionHandlingMiddleware` and its registration:
 
-**Tasks:**
-- [ ] Move `UseMiddleware<ExceptionHandlingMiddleware>()` before `MapControllers()` in `Program.cs`
-- [ ] Evaluate replacing 499 with standard status code or dropping the response
-- [ ] Update middleware to use `ProblemDetails` class instead of anonymous type
-- [ ] Add `instance` field per RFC 7807
+| # | Issue | Detail |
+|---|-------|--------|
+| A | **Wrong pipeline position** | `UseMiddleware<ExceptionHandlingMiddleware>()` is registered *after* `MapControllers()` in `Program.cs`. Exceptions thrown inside the controller pipeline can bypass the handler. |
+| B | **Non-standard 499 status** | `OperationCanceledException` returns HTTP 499 (nginx convention). Not an RFC standard code. |
+| C | **Anonymous type response** | Error responses are built from an anonymous object instead of `Microsoft.AspNetCore.Mvc.ProblemDetails`, missing `instance` field and built-in framework integration. |
 
-### Phase 3: Fix Pagination Consistency
+### Implementation
 
-**Tasks:**
-- [ ] Add `X-Pagination-TotalCount` header to `TransfersController` paginated endpoint
-- [ ] Audit other controllers for missing pagination headers
-- [ ] Consider creating a helper method for consistent pagination header setting
+**Files touched:**
 
-### Phase 4: Documentation and DI Updates
+- `src/BudgetExperiment.Api/Program.cs` — move middleware registration before `MapControllers()`
+- `src/BudgetExperiment.Api/Middleware/ExceptionHandlingMiddleware.cs`:
+  - Replace anonymous object with `ProblemDetails` (include `Instance = context.Request.Path`)
+  - Replace 499 → log + abort without writing response (client already disconnected), or use `StatusCodes.Status408RequestTimeout` if response not yet started
 
 **Tasks:**
-- [ ] Add `BudgetExperiment.Contracts` to copilot-instructions.md §3 and §21
-- [ ] Create `AddDomain()` extension method (can be no-op returning `IServiceCollection`)
-- [ ] Call `AddDomain()` in `Program.cs` for consistency
 
-**Commit:**
-```bash
-git commit -m "fix: code hygiene cleanup from codebase audit
+- [x] RED: Write unit test — middleware returns RFC 7807 `ProblemDetails` for unhandled exception
+- [x] RED: Write unit test — middleware handles `OperationCanceledException` without 499
+- [x] GREEN: Refactor middleware to use `ProblemDetails` class
+- [x] GREEN: Replace 499 with standard handling
+- [x] REFACTOR: Move `UseMiddleware<ExceptionHandlingMiddleware>()` before `MapControllers()` in `Program.cs`
+- [x] Verify all existing tests pass
 
-- Fix async naming in MerchantMappingsController (3 methods)
-- Fix exception middleware ordering (register before MapControllers)
-- Replace 499 with standard status handling
-- Use ProblemDetails class instead of anonymous type
-- Add X-Pagination-TotalCount to TransfersController
-- Document Contracts project in copilot-instructions.md
-- Add AddDomain() DI extension for consistency
+**Commit:** `fix(api): harden exception middleware — ordering, ProblemDetails, drop 499`
 
-Refs: #084"
+---
+
+## Slice 2 — Async Method Naming (MerchantMappingsController)
+
+> **Priority:** Low — naming-only change, no behavior impact.
+> **Standard:** §5 — "Async methods end with `Async`."
+
+### Problem
+
+Three public async methods in `MerchantMappingsController` are missing the `Async` suffix. All other ~500+ async methods across the codebase follow the convention.
+
+| Current Name | Proposed Name |
+|-------------|---------------|
+| `GetLearned` | `GetLearnedAsync` |
+| `Learn` | `LearnAsync` |
+| `Delete` | `DeleteAsync` |
+
+ASP.NET MVC strips the `Async` suffix from action names by convention, so **routes and OpenAPI docs are unaffected**.
+
+### Implementation
+
+**Files touched:**
+
+- `src/BudgetExperiment.Api/Controllers/MerchantMappingsController.cs` — rename 3 methods
+
+**Tasks:**
+
+- [x] Rename methods
+- [x] Verify `dotnet build` succeeds
+- [x] Verify existing tests pass (no test changes needed — routes unchanged)
+
+**Commit:** `refactor(api): add Async suffix to MerchantMappingsController methods`
+
+---
+
+## Slice 3 — Transfer Pagination Consistency
+
+> **Priority:** Medium — clients cannot paginate transfers properly without `TotalCount`.
+> **Standard:** §9 — "Return `X-Pagination-TotalCount` header."
+
+### Problem
+
+`TransfersController.ListAsync` accepts `page` and `pageSize` but does **not** return:
+- `X-Pagination-TotalCount` response header
+- Total count in the response body
+
+The service layer (`ITransferService.ListAsync`) returns `IReadOnlyList<TransferListItemResponse>` — a bare list with no pagination metadata. By comparison, `UncategorizedTransactionService.GetPagedAsync` returns `UncategorizedTransactionPageDto` with `TotalCount`, `Page`, `PageSize`, and `TotalPages`.
+
+### Implementation
+
+This slice crosses **Application → API** layers:
+
+**Files touched:**
+
+- `src/BudgetExperiment.Contracts/Transfers/TransferListPageResponse.cs` — new paged DTO (matches `UncategorizedTransactionPageDto` pattern: `Items`, `TotalCount`, `Page`, `PageSize`, `TotalPages`)
+- `src/BudgetExperiment.Application/Transfers/ITransferService.cs` — change `ListAsync` return type to `TransferListPageResponse`
+- `src/BudgetExperiment.Application/Transfers/TransferService.cs` — query total count before pagination, return paged DTO
+- `src/BudgetExperiment.Api/Controllers/TransfersController.cs` — set `X-Pagination-TotalCount` header
+
+**Tasks:**
+
+- [x] RED: Write unit test — `TransferService.ListAsync` returns `TransferListPageResponse` with correct `TotalCount`
+- [x] RED: Write integration test — `TransfersController.ListAsync` response includes `X-Pagination-TotalCount` header
+- [x] GREEN: Create `TransferListPageResponse` DTO
+- [x] GREEN: Update `ITransferService` and `TransferService`
+- [x] GREEN: Update `TransfersController` to set header
+- [x] REFACTOR: Audit other paginated endpoints for same issue
+- [x] Verify all existing tests pass
+
+**Commit:** `feat(api): add pagination metadata to transfer list endpoint`
+
+---
+
+## Slice 4 — Architecture Documentation & DI Consistency
+
+> **Priority:** Low — documentation and structural consistency only.
+> **Standards:** §3 (project listing), §14 (DI extensions), §21 (folder layout)
+
+### Problem
+
+| # | Issue |
+|---|-------|
+| A | `BudgetExperiment.Contracts` (56+ shared DTOs) is not documented in `copilot-instructions.md` §2, §3, or §21. |
+| B | `BudgetExperiment.Shared` (shared enums: `BudgetScope`, `CategorySource`, `DescriptionMatchMode`) is also undocumented. |
+| C | No `AddDomain()` DI extension exists. `AddApplication()` and `AddInfrastructure()` follow the pattern, but Domain is skipped. |
+
+### Implementation
+
+**Files touched:**
+
+- `.github/copilot-instructions.md` — add Contracts and Shared to §2, §3, §21
+- `src/BudgetExperiment.Domain/DependencyInjection.cs` — new file, no-op `AddDomain()` extension
+- `src/BudgetExperiment.Api/Program.cs` — call `builder.Services.AddDomain()` before `AddApplication()`
+
+**Tasks:**
+
+- [x] Update `copilot-instructions.md` §2 (architecture description)
+- [x] Update `copilot-instructions.md` §3 (project list)
+- [x] Update `copilot-instructions.md` §21 (folder layout)
+- [x] Create `AddDomain()` extension method (no-op, returns `IServiceCollection`)
+- [x] Call `AddDomain()` in `Program.cs`
+- [x] Verify `dotnet build` succeeds
+
+**Commit:** `docs: document Contracts/Shared projects, add AddDomain() DI extension`
+
+---
+
+## Slice Dependency & Ordering
+
+```
+Slice 1 (Exception Middleware)  ──┐
+Slice 2 (Async Naming)          ──┤── all independent, any order
+Slice 3 (Transfer Pagination)   ──┤
+Slice 4 (Docs & DI)             ──┘
 ```
 
----
-
-## Testing Strategy
-
-### Unit Tests
-- [ ] Middleware ordering verified with integration test
-- [ ] Pagination header present in transfer list endpoint
-
-### Integration Tests
-- [ ] Exception handling returns proper ProblemDetails format
-- [ ] Renamed controller methods still route correctly
-
-### Verification
-- [ ] `dotnet build` succeeds
-- [ ] All tests pass
-- [ ] Manual verification of error responses
+All four slices are **independent** — no slice depends on another. Recommended order is by priority: 1 → 3 → 2 → 4.
 
 ---
 
 ## Risk Assessment
 
-- **Low risk**: Small, targeted fixes. Each is independent.
-- **Middleware ordering**: Most impactful — verify exception handling works in all scenarios after moving.
+| Slice | Risk | Mitigation |
+|-------|------|------------|
+| 1 — Exception Middleware | Medium — pipeline reordering affects all requests | Unit test middleware in isolation; run full test suite |
+| 2 — Async Naming | Minimal — ASP.NET strips suffix; routes unchanged | Build verification only |
+| 3 — Transfer Pagination | Low — additive change (new DTO, new header) | Unit + integration tests |
+| 4 — Docs & DI | Minimal — docs + no-op method | Build verification only |
 
 ---
 
@@ -155,3 +191,4 @@ Refs: #084"
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-02-26 | Initial draft from codebase audit | @copilot |
+| 2026-03-06 | Restructured into vertical slices; added Shared project to Slice 4; detailed pagination layer changes in Slice 3 | @copilot |

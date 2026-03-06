@@ -40,7 +40,7 @@ public class MerchantMappingsController : ControllerBase
     /// <returns>The list of learned mappings.</returns>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<LearnedMerchantMappingDto>>(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<LearnedMerchantMappingDto>>> GetLearned(CancellationToken cancellationToken = default)
+    public async Task<ActionResult<IReadOnlyList<LearnedMerchantMappingDto>>> GetLearnedAsync(CancellationToken cancellationToken = default)
     {
         var mappings = await _mappingService.GetLearnedMappingsAsync(_userContext.UserId, cancellationToken);
         return Ok(mappings.Select(MapToDto).ToList());
@@ -55,7 +55,7 @@ public class MerchantMappingsController : ControllerBase
     [HttpPost("learn")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Learn([FromBody] LearnMerchantMappingRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> LearnAsync([FromBody] LearnMerchantMappingRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Description))
         {
@@ -80,7 +80,7 @@ public class MerchantMappingsController : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var deleted = await _mappingService.DeleteLearnedMappingAsync(_userContext.UserId, id, cancellationToken);
         return deleted ? NoContent() : NotFound();

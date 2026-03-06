@@ -4,6 +4,7 @@ using System.Text.Json;
 using BudgetExperiment.Domain;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -48,16 +49,17 @@ public sealed class ExceptionHandlingMiddleware
             return;
         }
 
-        int status;
-        string title;
         if (ex is OperationCanceledException or TaskCanceledException)
         {
-            // Client disconnected or request was cancelled - this is not an error
+            // Client disconnected — abort without writing a response body
             this._logger.LogDebug("Request was cancelled");
-            status = 499; // Client Closed Request (nginx convention)
-            title = "Client Closed Request";
+            context.Abort();
+            return;
         }
-        else if (ex is DbUpdateConcurrencyException)
+
+        int status;
+        string title;
+        if (ex is DbUpdateConcurrencyException)
         {
             status = StatusCodes.Status409Conflict;
             title = "Conflict";
@@ -79,14 +81,16 @@ public sealed class ExceptionHandlingMiddleware
             this._logger.LogError(ex, "Unhandled exception");
         }
 
-        var problem = new
+        var problem = new ProblemDetails
         {
-            type = "about:blank",
-            title,
-            status,
-            detail = ex.Message,
-            traceId = context.TraceIdentifier,
+            Type = "about:blank",
+            Title = title,
+            Status = status,
+            Detail = ex.Message,
+            Instance = context.Request.Path,
         };
+
+        problem.Extensions["traceId"] = context.TraceIdentifier;
 
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/problem+json";

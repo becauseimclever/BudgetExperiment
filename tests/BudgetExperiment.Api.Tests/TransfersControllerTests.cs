@@ -157,19 +157,21 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     }
 
     /// <summary>
-    /// GET /api/v1/transfers returns list of transfers.
+    /// GET /api/v1/transfers returns paged list with X-Pagination-TotalCount header.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task List_Returns_200_WithTransfers()
+    public async Task List_Returns_200_WithPaginationHeader()
     {
         // Act
         var response = await this._client.GetAsync("/api/v1/transfers");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var transfers = await response.Content.ReadFromJsonAsync<List<TransferListItemResponse>>();
-        Assert.NotNull(transfers);
+        Assert.True(response.Headers.Contains("X-Pagination-TotalCount"));
+        var page = await response.Content.ReadFromJsonAsync<TransferListPageResponse>();
+        Assert.NotNull(page);
+        Assert.NotNull(page.Items);
     }
 
     /// <summary>

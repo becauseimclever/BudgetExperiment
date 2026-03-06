@@ -65,7 +65,8 @@ public partial class Program
         // Client configuration (exposed via /api/v1/config endpoint)
         ConfigureClientConfig(builder.Services, builder.Configuration);
 
-        // Application & Infrastructure
+        // Domain, Application & Infrastructure
+        builder.Services.AddDomain();
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -146,14 +147,14 @@ public partial class Program
         // Budget scope extraction from X-Budget-Scope header
         app.UseMiddleware<BudgetExperiment.Api.Middleware.BudgetScopeMiddleware>();
 
+        // Custom exception handling — must be before MapControllers so it catches controller exceptions
+        app.UseMiddleware<BudgetExperiment.Api.Middleware.ExceptionHandlingMiddleware>();
+
         app.MapControllers();
         app.MapHealthChecks("/health");
 
         // Fallback to index.html for client-side routes.
         app.MapFallbackToFile("index.html");
-
-        // Custom exception handling
-        app.UseMiddleware<BudgetExperiment.Api.Middleware.ExceptionHandlingMiddleware>();
 
         await app.RunAsync().ConfigureAwait(false);
     }

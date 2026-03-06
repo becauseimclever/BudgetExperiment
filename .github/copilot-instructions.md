@@ -11,6 +11,8 @@ Layers (outer → inner depends inward only):
 - API (ASP.NET Core Minimal or Controllers) – REST interface, validation, auth, OpenAPI + Scalar UI.
 - Application / Services – use cases (business workflows), orchestration, domain-centric service interfaces.
 - Domain / Models – entities, value objects, enums, domain events, interfaces (abstractions only, NO EF types).
+- Contracts – shared DTOs and request/response types consumed by API, Application, and Client layers.
+- Shared – shared enums (e.g., `BudgetScope`, `CategorySource`, `DescriptionMatchMode`) referenced by Contracts, Application, and Client layers.
 - Infrastructure (Repository / Data Access / External Integrations) – EF Core (Npgsql), repositories, migrations, external service adapters.
 
 ## 3. Projects (All under `src/`)
@@ -19,6 +21,8 @@ Layers (outer → inner depends inward only):
 - `BudgetExperiment.Infrastructure` (EF Core DbContext, repository implementations, migrations, third-party adapters)
 - `BudgetExperiment.Api` (REST API, DI wiring, OpenAPI, Scalar page, versioning, error handling)
 - `BudgetExperiment.Client` (Blazor WebAssembly app)
+- `BudgetExperiment.Contracts` (shared DTOs, request/response types used across API, Application, and Client)
+- `BudgetExperiment.Shared` (shared enums: `BudgetScope`, `CategorySource`, `DescriptionMatchMode`, etc.)
 
 Tests under `tests/` mirroring structure:
 - `BudgetExperiment.Domain.Tests`
@@ -151,7 +155,9 @@ root
  │   ├─ BudgetExperiment.Application
  │   ├─ BudgetExperiment.Infrastructure
  │   ├─ BudgetExperiment.Api
- │   └─ BudgetExperiment.Client
+ │   ├─ BudgetExperiment.Client
+ │   ├─ BudgetExperiment.Contracts
+ │   └─ BudgetExperiment.Shared
  └─ tests
      ├─ BudgetExperiment.Domain.Tests
      ├─ BudgetExperiment.Application.Tests

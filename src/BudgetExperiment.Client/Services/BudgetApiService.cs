@@ -484,8 +484,8 @@ public sealed class BudgetApiService : IBudgetApiService
             url += $"&to={to.Value:yyyy-MM-dd}";
         }
 
-        var result = await this._httpClient.GetFromJsonAsync<List<TransferListItemResponse>>(url, JsonOptions);
-        return result ?? new List<TransferListItemResponse>();
+        var result = await this._httpClient.GetFromJsonAsync<TransferListPageResponse>(url, JsonOptions);
+        return result?.Items ?? new List<TransferListItemResponse>();
     }
 
     /// <inheritdoc />

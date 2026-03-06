@@ -81,10 +81,10 @@ public sealed class TransfersController : ControllerBase
     /// <param name="page">Page number (1-based, default 1).</param>
     /// <param name="pageSize">Page size (default 20, max 100).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of transfer summaries.</returns>
-    /// <response code="200">Returns the list of transfers.</response>
+    /// <returns>A paged list of transfer summaries.</returns>
+    /// <response code="200">Returns the paged list of transfers.</response>
     [HttpGet]
-    [ProducesResponseType<IReadOnlyList<TransferListItemResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<TransferListPageResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ListAsync(
         [FromQuery] Guid? accountId,
         [FromQuery] DateOnly? from,
@@ -108,6 +108,7 @@ public sealed class TransfersController : ControllerBase
         }
 
         var result = await this._service.ListAsync(accountId, from, to, page, pageSize, cancellationToken);
+        this.Response.Headers["X-Pagination-TotalCount"] = result.TotalCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
         return this.Ok(result);
     }
 

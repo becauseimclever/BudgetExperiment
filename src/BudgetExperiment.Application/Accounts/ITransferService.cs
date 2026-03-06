@@ -36,8 +36,8 @@ public interface ITransferService
     /// <param name="page">Page number (1-based).</param>
     /// <param name="pageSize">Page size.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of transfer list items.</returns>
-    Task<IReadOnlyList<TransferListItemResponse>> ListAsync(
+    /// <returns>A paged response of transfer list items.</returns>
+    Task<TransferListPageResponse> ListAsync(
         Guid? accountId = null,
         DateOnly? fromDate = null,
         DateOnly? toDate = null,

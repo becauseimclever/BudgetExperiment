@@ -2,10 +2,11 @@
 
 All notable changes to Budget Experiment.
 
-## [Unreleased]
+## [3.17.0] - 2026-03-06
 
 ### Features
 
+- **api:** Add pagination metadata to transfer list endpoint — `TransferListPageResponse` paged DTO with `Items`, `TotalCount`, `Page`, `PageSize`, `TotalPages`; `X-Pagination-TotalCount` response header on `GET /api/v1/transfers` (Feature 084 Slice 3)
 - **api:** Runtime API versioning with `Asp.Versioning.Mvc` — `[ApiVersion("1.0")]` on all 26 controllers, routes use `v{version:apiVersion}` template, `api-supported-versions` header in responses, `AssumeDefaultVersionWhenUnspecified` for backward compatibility (Feature 081)
 - **api:** Normalize `SuggestionsController` route from `api/v1/ai/[controller]` to standard `api/v{version:apiVersion}/[controller]` pattern; add version segment to `VersionController` (Feature 081)
 - **domain:** `ICurrencyProvider` abstraction for global currency resolution — single interface in Domain layer with `UserSettingsCurrencyProvider` implementation in Application layer, falls back to USD when preference is unset or user is unauthenticated (Feature 064)
@@ -22,6 +23,7 @@ All notable changes to Budget Experiment.
 
 ### Bug Fixes
 
+- **api:** Fix exception middleware pipeline ordering — move `ExceptionHandlingMiddleware` registration before `MapControllers()` so controller exceptions are properly caught; replace non-standard HTTP 499 with connection abort for cancelled requests; use `ProblemDetails` class with `Instance` field instead of anonymous object (Feature 084 Slice 1)
 - **api:** Fix `CustomReportsController.CreateAsync` `CreatedAtAction` route resolution — use `\"GetById\"` string instead of `nameof(GetByIdAsync)` to match API versioning route conventions (Feature 082 Slice 6)
 - **infrastructure:** Fix scope filtering in `GetByDateRangeAsync` and `GetByIdWithExceptionsAsync` — reports now respect Personal/Shared/All budget scope (Feature 065)
 - **application:** Fix CSV import double-skip bug — `RowsToSkip` was applied twice (parser and preview service), causing silent data loss (Feature 069)
@@ -40,6 +42,8 @@ All notable changes to Budget Experiment.
 
 ### Refactoring
 
+- **api:** Add `Async` suffix to `MerchantMappingsController` methods — `GetLearned` → `GetLearnedAsync`, `Learn` → `LearnAsync`, `Delete` → `DeleteAsync`; routes unchanged (ASP.NET strips suffix) (Feature 084 Slice 2)
+- **docs:** Document `Contracts` and `Shared` projects in `copilot-instructions.md` §2, §3, §21; add `AddDomain()` DI extension for consistency with `AddApplication()`/`AddInfrastructure()` (Feature 084 Slice 4)
 - **all:** Decouple Client from Domain — create `BudgetExperiment.Shared` project, move 10 domain enums (`BudgetScope`, `CategorySource`, `DescriptionMatchMode`, `ChatActionStatus`, `ChatActionType`, `ChatRole`, `AmountParseMode`, `ImportBatchStatus`, `ImportField`, `ImportRowStatus`) to Shared; remove Client → Domain project reference; remove 13 domain namespace imports from Client; Client now depends only on Contracts → Shared (Feature 079)
 - **all:** Re-enable StyleCop analyzers — fix ~1,500+ violations across all 11 projects: company headers (`BecauseImClever`), member ordering (SA1201/SA1202/SA1203/SA1204), parameter formatting (SA1117/SA1118), XML doc completeness (SA1611/SA1615/SA1623/SA1629), using placement (SA1200/SA1210), file hygiene (SA1402/SA1507/SA1515/SA1518), arithmetic parentheses (SA1407); extract types to satisfy one-type-per-file rule; `TreatWarningsAsErrors=true` enforced (Feature 078)
 - **domain:** Organize domain interfaces — move `IAutoRealizeService`, `ITransactionMatcher`, `IRecurringInstanceProjector`, `IRecurringTransferInstanceProjector` from `Repositories/` to `Services/`; move `IUserContext` from `Repositories/` to `Identity/`; `Repositories/` now contains only data access abstractions (Feature 077)
@@ -62,6 +66,9 @@ All notable changes to Budget Experiment.
 
 ### Testing
 
+- **api:** 7 unit tests for `ExceptionHandlingMiddleware` — ProblemDetails shape, traceId, Instance field, cancellation abort, DomainException 400/404 mapping (Feature 084 Slice 1)
+- **application:** Unit test for `TransferService.ListAsync` paged response with correct `TotalCount`, `Page`, `PageSize`, `TotalPages` (Feature 084 Slice 3)
+- **api:** Integration test for `TransfersController.ListAsync` — verifies `X-Pagination-TotalCount` header and `TransferListPageResponse` body shape (Feature 084 Slice 3)
 - **e2e:** Functional Playwright test suite — calendar navigation, transaction CRUD, account management, CSV import flow (Feature 062)
 - **e2e:** Local critical Playwright tests — 6 tests for transaction, account, and category creation flows with `LocalCritical` trait (Feature 068)
 - **infrastructure:** 4 integration tests for scope filtering isolation in `TransactionRepository` (Feature 065)

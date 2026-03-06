@@ -299,8 +299,8 @@ public class ChatActionExecutorTests
         public Task<TransferResponse?> GetByIdAsync(Guid transferId, CancellationToken cancellationToken = default) =>
             Task.FromResult<TransferResponse?>(null);
 
-        public Task<IReadOnlyList<TransferListItemResponse>> ListAsync(Guid? accountId = null, DateOnly? fromDate = null, DateOnly? toDate = null, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<TransferListItemResponse>>(new List<TransferListItemResponse>());
+        public Task<TransferListPageResponse> ListAsync(Guid? accountId = null, DateOnly? fromDate = null, DateOnly? toDate = null, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new TransferListPageResponse());
 
         public Task<TransferResponse?> UpdateAsync(Guid transferId, UpdateTransferRequest request, CancellationToken cancellationToken = default) =>
             Task.FromResult<TransferResponse?>(null);

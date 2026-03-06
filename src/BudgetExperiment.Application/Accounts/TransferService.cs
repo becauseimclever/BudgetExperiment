@@ -122,7 +122,7 @@ public sealed class TransferService : ITransferService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<TransferListItemResponse>> ListAsync(
+    public async Task<TransferListPageResponse> ListAsync(
         Guid? accountId = null,
         DateOnly? fromDate = null,
         DateOnly? toDate = null,
@@ -138,16 +138,21 @@ public sealed class TransferService : ITransferService
         var transactions = await this._transactionRepository.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
 
         // Filter to only source transactions (to avoid duplicates) with TransferId
-        var transferTransactions = transactions
+        var allSourceTransfers = transactions
             .Where(t => t.TransferId.HasValue && t.TransferDirection == TransferDirection.Source)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAt)
+            .ToList();
+
+        var totalCount = allSourceTransfers.Count;
+
+        var transferTransactions = allSourceTransfers
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();
 
         // Load all related transactions and account names
-        var result = new List<TransferListItemResponse>();
+        var items = new List<TransferListItemResponse>();
         var accountCache = new Dictionary<Guid, string>();
 
         foreach (var source in transferTransactions)
@@ -175,7 +180,7 @@ public sealed class TransferService : ITransferService
                 accountCache[destination.AccountId] = destAccountName;
             }
 
-            result.Add(new TransferListItemResponse
+            items.Add(new TransferListItemResponse
             {
                 TransferId = source.TransferId!.Value,
                 SourceAccountId = source.AccountId,
@@ -189,7 +194,13 @@ public sealed class TransferService : ITransferService
             });
         }
 
-        return result;
+        return new TransferListPageResponse
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
     }
 
     /// <inheritdoc />

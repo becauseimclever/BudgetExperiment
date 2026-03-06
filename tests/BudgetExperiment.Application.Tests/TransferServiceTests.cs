@@ -405,4 +405,38 @@ public class TransferServiceTests
             default),
             Times.Exactly(2));
     }
+
+    [Fact]
+    public async Task ListAsync_Returns_PagedResponse_With_Correct_TotalCount()
+    {
+        // Arrange — create 3 transfer pairs across a date range
+        var transferId1 = Guid.NewGuid();
+        var transferId2 = Guid.NewGuid();
+        var transferId3 = Guid.NewGuid();
+
+        var source1 = Transaction.CreateTransfer(this._sourceAccount.Id, MoneyValue.Create("USD", -100m), new DateOnly(2026, 1, 1), "Transfer to Savings: A", transferId1, TransferDirection.Source);
+        var dest1 = Transaction.CreateTransfer(this._destinationAccount.Id, MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 1), "Transfer from Checking: A", transferId1, TransferDirection.Destination);
+        var source2 = Transaction.CreateTransfer(this._sourceAccount.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 2), "Transfer to Savings: B", transferId2, TransferDirection.Source);
+        var dest2 = Transaction.CreateTransfer(this._destinationAccount.Id, MoneyValue.Create("USD", 200m), new DateOnly(2026, 1, 2), "Transfer from Checking: B", transferId2, TransferDirection.Destination);
+        var source3 = Transaction.CreateTransfer(this._sourceAccount.Id, MoneyValue.Create("USD", -300m), new DateOnly(2026, 1, 3), "Transfer to Savings: C", transferId3, TransferDirection.Source);
+        var dest3 = Transaction.CreateTransfer(this._destinationAccount.Id, MoneyValue.Create("USD", 300m), new DateOnly(2026, 1, 3), "Transfer from Checking: C", transferId3, TransferDirection.Destination);
+
+        this._transactionRepo.Setup(r => r.GetByDateRangeAsync(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
+            .ReturnsAsync(new List<Transaction> { source1, dest1, source2, dest2, source3, dest3 });
+        this._transactionRepo.Setup(r => r.GetByTransferIdAsync(transferId1, default)).ReturnsAsync(new List<Transaction> { source1, dest1 });
+        this._transactionRepo.Setup(r => r.GetByTransferIdAsync(transferId2, default)).ReturnsAsync(new List<Transaction> { source2, dest2 });
+        this._transactionRepo.Setup(r => r.GetByTransferIdAsync(transferId3, default)).ReturnsAsync(new List<Transaction> { source3, dest3 });
+        this._accountRepo.Setup(r => r.GetByIdAsync(this._sourceAccount.Id, default)).ReturnsAsync(this._sourceAccount);
+        this._accountRepo.Setup(r => r.GetByIdAsync(this._destinationAccount.Id, default)).ReturnsAsync(this._destinationAccount);
+
+        // Act — request page 1 of size 2 (out of 3 total)
+        var result = await this._service.ListAsync(page: 1, pageSize: 2);
+
+        // Assert
+        Assert.Equal(3, result.TotalCount);
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(1, result.Page);
+        Assert.Equal(2, result.PageSize);
+        Assert.Equal(2, result.TotalPages);
+    }
 }
