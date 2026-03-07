@@ -1,6 +1,6 @@
 # Feature 091: Test Coverage Gaps — Client Components & Services
 
-> **Status:** Planning
+> **Status:** In Progress
 > **Priority:** Medium (60+ untested Blazor components, 7+ untested services)
 > **Dependencies:** None
 
@@ -85,26 +85,26 @@ All components with meaningful logic (form validation, state management, conditi
 **Objective:** Test untested API service classes that wrap HTTP calls.
 
 **Tasks:**
-- [ ] Create `AiApiServiceTests.cs`
-- [ ] Create `ChatApiServiceTests.cs`
-- [ ] Create `ExportDownloadServiceTests.cs`
-- [ ] Create `ImportApiServiceTests.cs`
-- [ ] Create `ScopeServiceTests.cs`
-- [ ] Create `ThemeServiceTests.cs`
-- [ ] Create `VersionServiceTests.cs`
-- [ ] All tests pass
+- [x] Create `AiApiServiceTests.cs`
+- [x] Create `ChatApiServiceTests.cs`
+- [x] Create `ExportDownloadServiceTests.cs`
+- [x] Create `ImportApiServiceTests.cs`
+- [x] Create `ScopeServiceTests.cs`
+- [x] Create `ThemeServiceTests.cs`
+- [x] Create `VersionServiceTests.cs`
+- [x] All tests pass
 
 ### Phase 2: Form Components (High Interaction)
 
 **Objective:** Test form components with validation logic.
 
 **Tasks:**
-- [ ] Create tests for AccountForm, TransactionForm, CategoryForm
-- [ ] Create tests for RecurringTransactionForm, RecurringTransferForm
-- [ ] Create tests for TransferDialog, RuleForm
-- [ ] Create tests for EditRecurringForm, EditRecurringTransferForm
-- [ ] Create tests for remaining form dialogs
-- [ ] All tests pass
+- [x] Create tests for AccountForm, TransactionForm, CategoryForm
+- [x] Create tests for RecurringTransactionForm, RecurringTransferForm
+- [x] Create tests for TransferDialog, RuleForm
+- [x] Create tests for EditRecurringForm, EditRecurringTransferForm
+- [x] Create tests for remaining form dialogs (RuleTestPanel, ApplyRulesDialog, PastDueReviewModal, EditInstanceDialog)
+- [x] All tests pass
 
 ### Phase 3: Common UI Components
 
