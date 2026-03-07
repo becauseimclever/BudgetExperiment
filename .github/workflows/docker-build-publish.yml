@@ -66,14 +66,26 @@ jobs:
       - name: Build solution
         run: dotnet build BudgetExperiment.sln --configuration Release --no-restore
 
-      - name: Run tests (excluding E2E and external dependencies)
+      - name: Run tests with coverage
         run: |
           dotnet test BudgetExperiment.sln \
             --configuration Release \
             --no-build \
             --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency" \
+            --collect:"XPlat Code Coverage" \
             --logger "trx" \
             --results-directory ./TestResults
+
+      - name: Merge coverage reports
+        uses: danielpalme/ReportGenerator-GitHub-Action@5
+        with:
+          reports: ./TestResults/**/coverage.cobertura.xml
+          targetdir: ./CoverageReport
+          reporttypes: Cobertura;MarkdownSummaryGithub
+
+      - name: Publish coverage summary
+        if: always()
+        run: cat ./CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

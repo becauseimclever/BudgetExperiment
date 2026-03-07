@@ -178,6 +178,7 @@ root
 - [ ] OpenAPI docs updated (if API changes)
 - [ ] No unnecessary comments / dead code
 - [ ] Unit + integration tests green
+- [ ] Code coverage gate passes (CI enforces minimum threshold)
 
 ## 24. Forbidden / Discouraged
 - FluentUI-Blazor (use plain Blazor components only)

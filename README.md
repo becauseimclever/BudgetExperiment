@@ -1,5 +1,6 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G11OJJBY)
 [![CI](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/ci.yml)
+[![Code Coverage](https://img.shields.io/badge/coverage-check%20CI-blue)](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/ci.yml)
 [![Create Release](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/release.yml/badge.svg)](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/release.yml)
 [![Build and Publish Docker Images](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/docker-build-publish.yml/badge.svg)](https://github.com/becauseimclever/BudgetExperiment/actions/workflows/docker-build-publish.yml)
 [![GitHub release](https://img.shields.io/github/v/release/becauseimclever/BudgetExperiment?include_prereleases&label=version)](https://github.com/becauseimclever/BudgetExperiment/releases)

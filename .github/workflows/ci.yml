@@ -20,9 +20,12 @@ jobs:
     permissions:
       contents: read
       checks: write
+      pull-requests: write
     env:
       # Dummy connection string for DI validation (tests use in-memory database)
       ConnectionStrings__AppDb: "Host=localhost;Database=test;Username=test;Password=test"
+      # Coverage threshold (line / branch warning)
+      COVERAGE_THRESHOLD: '80 90'
 
     steps:
       - name: Checkout repository
@@ -49,14 +52,42 @@ jobs:
       - name: Build solution
         run: dotnet build BudgetExperiment.sln --configuration Release --no-restore
 
-      - name: Run tests (excluding E2E and external dependencies)
+      - name: Run tests with coverage
         run: |
           dotnet test BudgetExperiment.sln \
             --configuration Release \
             --no-build \
             --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency" \
+            --collect:"XPlat Code Coverage" \
             --logger "trx" \
             --results-directory ./TestResults
+
+      - name: Merge coverage reports
+        uses: danielpalme/ReportGenerator-GitHub-Action@5
+        with:
+          reports: ./TestResults/**/coverage.cobertura.xml
+          targetdir: ./CoverageReport
+          reporttypes: Cobertura;MarkdownSummaryGithub
+
+      - name: Publish coverage summary
+        if: always()
+        run: cat ./CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Enforce coverage threshold
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: ./CoverageReport/Cobertura.xml
+          fail_below_min: true
+          thresholds: ${{ env.COVERAGE_THRESHOLD }}
+          format: markdown
+          output: both
+
+      - name: Add coverage PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -65,6 +96,14 @@ jobs:
           name: test-results
           path: ./TestResults/*.trx
           retention-days: 7
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: ./CoverageReport/Cobertura.xml
+          retention-days: 30
 
       - name: Test Summary
         uses: dorny/test-reporter@v1

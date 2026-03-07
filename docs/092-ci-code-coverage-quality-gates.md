@@ -1,5 +1,5 @@
 # Feature 092: CI Code Coverage & Quality Gates
-> **Status:** Planning  
+> **Status:** Done  
 > **Priority:** High  
 > **Dependencies:** Coverlet already present in all test projects
 
@@ -38,9 +38,9 @@ This follows a **vertical slice** approach: each phase delivers a fully working,
 **So that** I have objective metrics on how well the codebase is tested
 
 **Acceptance Criteria:**
-- [ ] `dotnet test` in CI passes `--collect:"XPlat Code Coverage"` to Coverlet
-- [ ] Individual Cobertura XML files are produced per test project
-- [ ] Coverage files are uploaded as build artifacts
+- [x] `dotnet test` in CI passes `--collect:"XPlat Code Coverage"` to Coverlet
+- [x] Individual Cobertura XML files are produced per test project
+- [x] Coverage files are uploaded as build artifacts
 
 ### Coverage Reporting
 
@@ -50,9 +50,9 @@ This follows a **vertical slice** approach: each phase delivers a fully working,
 **So that** I can quickly assess whether the change maintains adequate test coverage
 
 **Acceptance Criteria:**
-- [ ] A coverage report action (e.g., `danielpalme/ReportGenerator` or `irongut/CodeCoverageSummary`) merges per-project results
-- [ ] Coverage summary appears in the GitHub Actions job summary
-- [ ] On pull requests, a comment shows overall and per-project line/branch coverage
+- [x] A coverage report action (e.g., `danielpalme/ReportGenerator` or `irongut/CodeCoverageSummary`) merges per-project results
+- [x] Coverage summary appears in the GitHub Actions job summary
+- [x] On pull requests, a comment shows overall and per-project line/branch coverage
 
 ### Quality Gates
 
@@ -62,9 +62,9 @@ This follows a **vertical slice** approach: each phase delivers a fully working,
 **So that** code quality does not degrade over time
 
 **Acceptance Criteria:**
-- [ ] A configurable threshold (default 80% line coverage) is defined in the workflow
-- [ ] The CI job fails with a clear message when coverage is below the threshold
-- [ ] The threshold value is easy to adjust (single YAML variable or workflow input)
+- [x] A configurable threshold (default 80% line coverage) is defined in the workflow
+- [x] The CI job fails with a clear message when coverage is below the threshold
+- [x] The threshold value is easy to adjust (single YAML variable or workflow input)
 
 #### US-092-004: Branch Protection Integration
 **As a** repository admin  
@@ -72,8 +72,8 @@ This follows a **vertical slice** approach: each phase delivers a fully working,
 **So that** PRs cannot be merged without passing coverage gates
 
 **Acceptance Criteria:**
-- [ ] The coverage gate is a distinct job or step with a clear pass/fail status
-- [ ] GitHub branch protection rules can reference this check by name
+- [x] The coverage gate is a distinct job or step with a clear pass/fail status
+- [x] GitHub branch protection rules can reference this check by name
 
 ### Developer Experience
 
@@ -85,11 +85,11 @@ This follows a **vertical slice** approach: each phase delivers a fully working,
 **So that** coverage percentages reflect the actual quality of business logic tests
 
 **Acceptance Criteria:**
-- [ ] `[ExcludeFromCodeCoverage]` added to all identified Api boilerplate classes (~17 files)
-- [ ] `[ExcludeFromCodeCoverage]` added to all identified Infrastructure boilerplate classes (~25 files)
-- [ ] `[ExcludeFromCodeCoverage]` added to Application `DependencyInjection`
-- [ ] EF Migrations excluded via assembly-level attribute
-- [ ] Coverage re-run confirms improved percentages reflect actual tested code
+- [x] `[ExcludeFromCodeCoverage]` added to all identified Api boilerplate classes (~17 files)
+- [x] `[ExcludeFromCodeCoverage]` added to all identified Infrastructure boilerplate classes (~25 files)
+- [x] `[ExcludeFromCodeCoverage]` added to Application `DependencyInjection`
+- [x] EF Migrations excluded via assembly-level attribute
+- [x] Coverage re-run confirms improved percentages reflect actual tested code
 
 ### Developer Experience
 
@@ -99,8 +99,8 @@ This follows a **vertical slice** approach: each phase delivers a fully working,
 **So that** I can see the project's current test coverage at a glance
 
 **Acceptance Criteria:**
-- [ ] A coverage badge (shields.io or similar) is added to README.md
-- [ ] Badge value updates automatically from CI results
+- [x] A coverage badge (shields.io or similar) is added to README.md
+- [x] Badge value updates automatically from CI results
 
 ---
 
@@ -228,11 +228,11 @@ None.
 **Objective:** Add `[ExcludeFromCodeCoverage]` to framework setup and configuration classes so coverage metrics reflect actual business logic quality.
 
 **Tasks:**
-- [ ] Add `[ExcludeFromCodeCoverage]` to Api boilerplate: auth options, middleware, auth handlers, health checks, `ApiMarker`, `VersionController`
-- [ ] Add `[ExcludeFromCodeCoverage]` to Infrastructure boilerplate: `DependencyInjection`, `BudgetDbContext`, `DesignTimeBudgetDbContextFactory`, `DatabaseOptions`, all EF Configurations
-- [ ] Add `[ExcludeFromCodeCoverage]` to Application `DependencyInjection`
-- [ ] Add assembly-level `[ExcludeFromCodeCoverage]` for Migrations namespace in `GlobalSuppressions.cs`
-- [ ] Run coverage locally and verify improved baseline
+- [x] Add `[ExcludeFromCodeCoverage]` to Api boilerplate: auth options, middleware, auth handlers, health checks, `ApiMarker`, `VersionController`
+- [x] Add `[ExcludeFromCodeCoverage]` to Infrastructure boilerplate: `DependencyInjection`, `BudgetDbContext`, `DesignTimeBudgetDbContextFactory`, `DatabaseOptions`, all EF Configurations
+- [x] Add `[ExcludeFromCodeCoverage]` to Application `DependencyInjection`
+- [x] Add assembly-level `[ExcludeFromCodeCoverage]` for Migrations namespace in `GlobalSuppressions.cs`
+- [x] Run coverage locally and verify improved baseline
 
 **Commit:**
 ```bash
@@ -254,10 +254,10 @@ Refs: #092"
 **Objective:** Add `--collect:"XPlat Code Coverage"` to the existing test step and upload raw coverage artifacts.
 
 **Tasks:**
-- [ ] Modify `dotnet test` command in `.github/workflows/ci.yml` to include `--collect:"XPlat Code Coverage"`
-- [ ] Upload `TestResults/**/coverage.cobertura.xml` as a build artifact
-- [ ] Verify coverage XML is produced for each test project
-- [ ] Apply same change to `docker-build-publish.yml` test step
+- [x] Modify `dotnet test` command in `.github/workflows/ci.yml` to include `--collect:"XPlat Code Coverage"`
+- [x] Upload `TestResults/**/coverage.cobertura.xml` as a build artifact
+- [x] Verify coverage XML is produced for each test project
+- [x] Apply same change to `docker-build-publish.yml` test step
 
 **Commit:**
 ```bash
@@ -278,11 +278,11 @@ Refs: #092"
 **Objective:** Merge per-project Cobertura files and display a coverage summary in the GitHub Actions job summary.
 
 **Tasks:**
-- [ ] Add `danielpalme/ReportGenerator-GitHub-Action@5` step to merge coverage XMLs
-- [ ] Generate `MarkdownSummaryGithub` report type
-- [ ] Append summary markdown to `$GITHUB_STEP_SUMMARY`
-- [ ] Upload merged Cobertura report as artifact
-- [ ] Create `coverlet.runsettings` to exclude E2E, Client assembly, and migrations
+- [x] Add `danielpalme/ReportGenerator-GitHub-Action@5` step to merge coverage XMLs
+- [x] Generate `MarkdownSummaryGithub` report type
+- [x] Append summary markdown to `$GITHUB_STEP_SUMMARY`
+- [x] Upload merged Cobertura report as artifact
+- [x] Create `coverlet.runsettings` to exclude E2E, Client assembly, and migrations
 
 **Commit:**
 ```bash
@@ -304,11 +304,11 @@ Refs: #092"
 **Objective:** Fail the CI job when line coverage drops below a configurable minimum.
 
 **Tasks:**
-- [ ] Add `irongut/CodeCoverageSummary@v1.3.0` step with `fail_below_min: true`
-- [ ] Set initial threshold at 80% line / 90% as warning
-- [ ] Define threshold as a workflow-level env variable for easy adjustment
-- [ ] Test that the job fails correctly when coverage is below threshold
-- [ ] Document threshold rationale and how to adjust
+- [x] Add `irongut/CodeCoverageSummary@v1.3.0` step with `fail_below_min: true`
+- [x] Set initial threshold at 80% line / 90% as warning
+- [x] Define threshold as a workflow-level env variable for easy adjustment
+- [x] Test that the job fails correctly when coverage is below threshold
+- [x] Document threshold rationale and how to adjust
 
 **Commit:**
 ```bash
@@ -329,10 +329,10 @@ Refs: #092"
 **Objective:** Post a sticky PR comment showing coverage per project and overall totals.
 
 **Tasks:**
-- [ ] Add `marocchino/sticky-pull-request-comment@v2` step (conditional on `pull_request` event)
-- [ ] Format coverage markdown for PR comment
-- [ ] Ensure comment updates on force-push (sticky/recreate)
-- [ ] Verify bot has `pull-requests: write` permission
+- [x] Add `marocchino/sticky-pull-request-comment@v2` step (conditional on `pull_request` event)
+- [x] Format coverage markdown for PR comment
+- [x] Ensure comment updates on force-push (sticky/recreate)
+- [x] Verify bot has `pull-requests: write` permission
 
 **Commit:**
 ```bash
@@ -353,10 +353,10 @@ Refs: #092"
 **Objective:** Add a coverage badge to the README and document how to configure branch protection.
 
 **Tasks:**
-- [ ] Generate coverage badge (via ReportGenerator `Badges` report type or shields.io endpoint)
-- [ ] Add badge to README.md
-- [ ] Document branch protection setup: add the coverage job as a required status check
-- [ ] Update `copilot-instructions.md` §23 PR Checklist with coverage gate reference
+- [x] Generate coverage badge (via ReportGenerator `Badges` report type or shields.io endpoint)
+- [x] Add badge to README.md
+- [x] Document branch protection setup: add the coverage job as a required status check
+- [x] Update `copilot-instructions.md` §23 PR Checklist with coverage gate reference
 - [ ] Archive feature doc to `docs/archive/` when complete
 
 **Commit:**
