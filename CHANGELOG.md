@@ -2,6 +2,19 @@
 
 All notable changes to Budget Experiment.
 
+## [3.21.0] - 2026-03-07
+
+### Dependencies
+
+- **deps:** Update Microsoft ASP.NET Core & Extensions packages 10.0.0 → 10.0.3 — JwtBearer, OpenApi, WebAssembly, WebAssembly.Server, WebAssembly.Authentication, WebAssembly.DevServer, Extensions.Http, DependencyInjection.Abstractions, Mvc.Testing (Feature 093 Phase 1)
+- **deps:** Update Scalar.AspNetCore 2.10.3 → 2.13.1, bunit 2.5.3 → 2.6.2, Microsoft.Playwright 1.49.0 → 1.58.0, Deque.AxeCore.Playwright 4.11.0 → 4.11.1, Microsoft.Build.Tasks.Core 18.0.2 → 18.3.3 (Feature 093 Phase 2)
+- **deps:** Update Microsoft.NET.Test.Sdk 18.0.1 → 18.3.0, coverlet.collector 6.0.4 → 8.0.0 across all 6 test projects (Feature 093 Phase 3)
+- **deps:** Update MinVer 6.0.0 → 7.0.0 centrally in Directory.Build.props (Feature 093 Phase 4)
+
+### Documentation
+
+- **docs:** Feature 093 — NuGet package updates (non-EF Core) (complete)
+
 ## [3.20.0] - 2026-03-07
 
 ### Testing
