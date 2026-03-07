@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Moq;
 
@@ -1168,6 +1169,178 @@ public class RuleSuggestionServiceTests
         // Assert
         Assert.Single(result);
         Assert.Equal("TARGET", result[0].SuggestedPattern);
+    }
+
+    [Fact]
+    public async Task MapSuggestionsToDtosAsync_Returns_Dtos_With_CategoryAndRuleNames()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, categoryRepo, _) = CreateService();
+        var categoryId = GroceryCategoryId;
+        var ruleId = Guid.NewGuid();
+
+        SetupCategories(categoryRepo, ("Groceries", categoryId));
+
+        var rule = CategorizationRule.Create("Amazon Rule", RuleMatchType.Contains, "AMAZON", categoryId);
+        typeof(CategorizationRule).GetProperty("Id")!.SetValue(rule, ruleId);
+        ruleRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CategorizationRule> { rule });
+
+        var suggestion = RuleSuggestion.CreateNewRuleSuggestion(
+            title: "New rule",
+            description: "Desc",
+            reasoning: "Reason",
+            confidence: 0.9m,
+            suggestedPattern: "WALMART",
+            suggestedMatchType: RuleMatchType.Contains,
+            suggestedCategoryId: categoryId,
+            affectedTransactionCount: 5,
+            sampleDescriptions: new List<string> { "WALMART #123" });
+        typeof(RuleSuggestion).GetProperty("TargetRuleId")!.SetValue(suggestion, ruleId);
+
+        // Act
+        var result = await service.MapSuggestionsToDtosAsync(new List<RuleSuggestion> { suggestion });
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("Groceries", result[0].SuggestedCategoryName);
+        Assert.Equal("Amazon Rule", result[0].TargetRuleName);
+    }
+
+    [Fact]
+    public async Task MapSuggestionsToDtosAsync_Returns_Null_Names_When_IdsNotFound()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, categoryRepo, _) = CreateService();
+
+        categoryRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<BudgetCategory>());
+        ruleRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CategorizationRule>());
+
+        var suggestion = RuleSuggestion.CreateNewRuleSuggestion(
+            title: "New rule",
+            description: "Desc",
+            reasoning: "Reason",
+            confidence: 0.9m,
+            suggestedPattern: "WALMART",
+            suggestedMatchType: RuleMatchType.Contains,
+            suggestedCategoryId: Guid.NewGuid(),
+            affectedTransactionCount: 5,
+            sampleDescriptions: new List<string> { "WALMART #123" });
+        typeof(RuleSuggestion).GetProperty("TargetRuleId")!.SetValue(suggestion, Guid.NewGuid());
+
+        // Act
+        var result = await service.MapSuggestionsToDtosAsync(new List<RuleSuggestion> { suggestion });
+
+        // Assert
+        Assert.Single(result);
+        Assert.Null(result[0].SuggestedCategoryName);
+        Assert.Null(result[0].TargetRuleName);
+    }
+
+    [Fact]
+    public async Task MapSuggestionsToDtosAsync_Returns_Empty_For_EmptyInput()
+    {
+        // Arrange
+        var (service, _, _, _, categoryRepo, _) = CreateService();
+        categoryRepo.Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<BudgetCategory>());
+
+        // Act
+        var result = await service.MapSuggestionsToDtosAsync(new List<RuleSuggestion>());
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task MapSuggestionToDtoAsync_Returns_Dto_With_CategoryName()
+    {
+        // Arrange
+        var (service, _, _, _, categoryRepo, _) = CreateService();
+        var categoryId = GroceryCategoryId;
+
+        var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        typeof(BudgetCategory).GetProperty("Id")!.SetValue(category, categoryId);
+        categoryRepo.Setup(r => r.GetByIdAsync(categoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(category);
+
+        var suggestion = RuleSuggestion.CreateNewRuleSuggestion(
+            title: "New rule",
+            description: "Desc",
+            reasoning: "Reason",
+            confidence: 0.9m,
+            suggestedPattern: "WALMART",
+            suggestedMatchType: RuleMatchType.Contains,
+            suggestedCategoryId: categoryId,
+            affectedTransactionCount: 5,
+            sampleDescriptions: new List<string> { "WALMART #123" });
+
+        // Act
+        var result = await service.MapSuggestionToDtoAsync(suggestion);
+
+        // Assert
+        Assert.Equal("Groceries", result.SuggestedCategoryName);
+    }
+
+    [Fact]
+    public async Task MapSuggestionToDtoAsync_Returns_Dto_With_RuleName()
+    {
+        // Arrange
+        var (service, _, _, ruleRepo, _, _) = CreateService();
+        var ruleId = Guid.NewGuid();
+
+        var rule = CategorizationRule.Create("Amazon Rule", RuleMatchType.Contains, "AMAZON", GroceryCategoryId);
+        typeof(CategorizationRule).GetProperty("Id")!.SetValue(rule, ruleId);
+        ruleRepo.Setup(r => r.GetByIdAsync(ruleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rule);
+
+        var suggestion = RuleSuggestion.CreateNewRuleSuggestion(
+            title: "Optimization",
+            description: "Desc",
+            reasoning: "Reason",
+            confidence: 0.85m,
+            suggestedPattern: "AMAZON",
+            suggestedMatchType: RuleMatchType.Contains,
+            suggestedCategoryId: GroceryCategoryId,
+            affectedTransactionCount: 3,
+            sampleDescriptions: new List<string> { "AMAZON #456" });
+        typeof(RuleSuggestion).GetProperty("TargetRuleId")!.SetValue(suggestion, ruleId);
+
+        // Act
+        var result = await service.MapSuggestionToDtoAsync(suggestion);
+
+        // Assert
+        Assert.Equal("Amazon Rule", result.TargetRuleName);
+    }
+
+    [Fact]
+    public async Task MapSuggestionToDtoAsync_Returns_Null_Names_When_NoIds()
+    {
+        // Arrange
+        var (service, _, _, _, _, _) = CreateService();
+
+        var suggestion = RuleSuggestion.CreateNewRuleSuggestion(
+            title: "New rule",
+            description: "Desc",
+            reasoning: "Reason",
+            confidence: 0.9m,
+            suggestedPattern: "TEST",
+            suggestedMatchType: RuleMatchType.Contains,
+            suggestedCategoryId: GroceryCategoryId,
+            affectedTransactionCount: 1,
+            sampleDescriptions: new List<string> { "TEST" });
+
+        // Clear the category ID via reflection to simulate no IDs
+        typeof(RuleSuggestion).GetProperty("SuggestedCategoryId")!.SetValue(suggestion, (Guid?)null);
+
+        // Act
+        var result = await service.MapSuggestionToDtoAsync(suggestion);
+
+        // Assert
+        Assert.Null(result.SuggestedCategoryName);
+        Assert.Null(result.TargetRuleName);
     }
 
     private static (

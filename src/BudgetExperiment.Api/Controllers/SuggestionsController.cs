@@ -21,26 +21,18 @@ public sealed class SuggestionsController : ControllerBase
 {
     private readonly IRuleSuggestionService _suggestionService;
     private readonly IAiService _aiService;
-    private readonly IBudgetCategoryRepository _categoryRepository;
-    private readonly ICategorizationRuleRepository _ruleRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SuggestionsController"/> class.
     /// </summary>
     /// <param name="suggestionService">The rule suggestion service.</param>
     /// <param name="aiService">The AI service.</param>
-    /// <param name="categoryRepository">The category repository.</param>
-    /// <param name="ruleRepository">The categorization rule repository.</param>
     public SuggestionsController(
         IRuleSuggestionService suggestionService,
-        IAiService aiService,
-        IBudgetCategoryRepository categoryRepository,
-        ICategorizationRuleRepository ruleRepository)
+        IAiService aiService)
     {
         this._suggestionService = suggestionService;
         this._aiService = aiService;
-        this._categoryRepository = categoryRepository;
-        this._ruleRepository = ruleRepository;
     }
 
     /// <summary>
@@ -91,7 +83,7 @@ public sealed class SuggestionsController : ControllerBase
             return this.BadRequest(new { message = $"Invalid suggestion type: {request.SuggestionType}. Valid values are: NewRule, Optimization, Conflict" });
         }
 
-        var dtos = await this.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
+        var dtos = await this._suggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
         return this.Ok(dtos);
     }
 
@@ -115,7 +107,7 @@ public sealed class SuggestionsController : ControllerBase
         }
 
         var suggestions = await this._suggestionService.GetPendingSuggestionsAsync(typeFilter, cancellationToken);
-        var dtos = await this.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
+        var dtos = await this._suggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
 
         return this.Ok(dtos);
     }
@@ -139,7 +131,7 @@ public sealed class SuggestionsController : ControllerBase
             return this.NotFound();
         }
 
-        var dto = await this.MapSuggestionToDtoAsync(suggestion, cancellationToken);
+        var dto = await this._suggestionService.MapSuggestionToDtoAsync(suggestion, cancellationToken);
         return this.Ok(dto);
     }
 
@@ -220,55 +212,5 @@ public sealed class SuggestionsController : ControllerBase
         {
             return this.NotFound(new { message = ex.Message });
         }
-    }
-
-    private async Task<IReadOnlyList<RuleSuggestionDto>> MapSuggestionsToDtosAsync(
-        IReadOnlyList<RuleSuggestion> suggestions,
-        CancellationToken cancellationToken)
-    {
-        // Pre-fetch categories and rules for efficient mapping
-        var categoryIds = suggestions
-            .Where(s => s.SuggestedCategoryId.HasValue)
-            .Select(s => s.SuggestedCategoryId!.Value)
-            .Distinct();
-
-        var ruleIds = suggestions
-            .Where(s => s.TargetRuleId.HasValue)
-            .Select(s => s.TargetRuleId!.Value)
-            .Distinct();
-
-        var categories = await this._categoryRepository.ListAsync(0, int.MaxValue, cancellationToken);
-        var categoryLookup = categories.ToDictionary(c => c.Id, c => c.Name);
-
-        var rules = await this._ruleRepository.ListAsync(0, int.MaxValue, cancellationToken);
-        var ruleLookup = rules.ToDictionary(r => r.Id, r => r.Name);
-
-        return suggestions.Select(s => CategorizationMapper.ToDto(
-            s,
-            s.SuggestedCategoryId.HasValue ? categoryLookup.GetValueOrDefault(s.SuggestedCategoryId.Value) : null,
-            s.TargetRuleId.HasValue ? ruleLookup.GetValueOrDefault(s.TargetRuleId.Value) : null))
-            .ToList();
-    }
-
-    private async Task<RuleSuggestionDto> MapSuggestionToDtoAsync(
-        RuleSuggestion suggestion,
-        CancellationToken cancellationToken)
-    {
-        string? categoryName = null;
-        string? ruleName = null;
-
-        if (suggestion.SuggestedCategoryId.HasValue)
-        {
-            var category = await this._categoryRepository.GetByIdAsync(suggestion.SuggestedCategoryId.Value, cancellationToken);
-            categoryName = category?.Name;
-        }
-
-        if (suggestion.TargetRuleId.HasValue)
-        {
-            var rule = await this._ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, cancellationToken);
-            ruleName = rule?.Name;
-        }
-
-        return CategorizationMapper.ToDto(suggestion, categoryName, ruleName);
     }
 }

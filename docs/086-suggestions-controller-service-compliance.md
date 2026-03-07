@@ -1,6 +1,6 @@
 # Feature 086: SuggestionsController Service Layer Compliance
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium (§13 compliance — application service mediation)
 > **Dependencies:** None
 
@@ -36,12 +36,12 @@ These are called directly in controller actions (e.g., `ListAsync()`, `GetByIdAs
 **So that** the controller follows the same mediation pattern as all other controllers.
 
 **Acceptance Criteria:**
-- [ ] `SuggestionsController` no longer injects `IBudgetCategoryRepository` or `ICategorizationRuleRepository`
-- [ ] Category/rule lookup logic moved to `RuleSuggestionService` (or a new service if scope warrants)
-- [ ] Existing behavior unchanged (same API responses)
-- [ ] Controller tests updated
-- [ ] Application service tests cover the moved logic
-- [ ] All tests pass
+- [x] `SuggestionsController` no longer injects `IBudgetCategoryRepository` or `ICategorizationRuleRepository`
+- [x] Category/rule lookup logic moved to `RuleSuggestionService` (or a new service if scope warrants)
+- [x] Existing behavior unchanged (same API responses)
+- [x] Controller tests updated
+- [x] Application service tests cover the moved logic
+- [x] All tests pass
 
 ---
 
@@ -76,25 +76,25 @@ No changes to API endpoints or response shapes. This is an internal refactoring.
 **Objective:** Add category/rule lookup methods to `IRuleSuggestionService` / `RuleSuggestionService`.
 
 **Tasks:**
-- [ ] Write unit tests for the new service methods
-- [ ] Add methods to `IRuleSuggestionService` interface
-- [ ] Implement in `RuleSuggestionService`
-- [ ] Verify tests pass
+- [x] Write unit tests for the new service methods
+- [x] Add methods to `IRuleSuggestionService` interface
+- [x] Implement in `RuleSuggestionService`
+- [x] Verify tests pass
 
 ### Phase 2: Refactor Controller
 
 **Objective:** Remove direct repository access from `SuggestionsController`.
 
 **Tasks:**
-- [ ] Remove `IBudgetCategoryRepository` and `ICategorizationRuleRepository` from constructor
-- [ ] Replace direct calls with application service calls
-- [ ] Update controller tests
-- [ ] Verify all tests pass
+- [x] Remove `IBudgetCategoryRepository` and `ICategorizationRuleRepository` from constructor
+- [x] Replace direct calls with application service calls
+- [x] Update controller tests
+- [x] Verify all tests pass
 
 ### Phase 3: Verification
 
 **Objective:** Confirm no controller directly injects repository interfaces.
 
 **Tasks:**
-- [ ] Grep codebase: no `IRepository` injections in Controllers/
-- [ ] Full test suite passes
+- [x] Grep codebase: no `IRepository` injections in Controllers/
+- [x] Full test suite passes

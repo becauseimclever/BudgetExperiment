@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Categorization;
@@ -89,5 +90,25 @@ public interface IRuleSuggestionService
     Task ProvideFeedbackAsync(
         Guid suggestionId,
         bool isPositive,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Maps a list of suggestions to DTOs with enriched category and rule names.
+    /// </summary>
+    /// <param name="suggestions">The suggestions to map.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The mapped DTOs.</returns>
+    Task<IReadOnlyList<RuleSuggestionDto>> MapSuggestionsToDtosAsync(
+        IReadOnlyList<RuleSuggestion> suggestions,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Maps a single suggestion to a DTO with enriched category and rule names.
+    /// </summary>
+    /// <param name="suggestion">The suggestion to map.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The mapped DTO.</returns>
+    Task<RuleSuggestionDto> MapSuggestionToDtoAsync(
+        RuleSuggestion suggestion,
         CancellationToken ct = default);
 }

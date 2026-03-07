@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Diagnostics;
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Categorization;
@@ -255,6 +256,47 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         CancellationToken ct = default)
     {
         return _acceptanceHandler.ProvideFeedbackAsync(suggestionId, isPositive, ct);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<RuleSuggestionDto>> MapSuggestionsToDtosAsync(
+        IReadOnlyList<RuleSuggestion> suggestions,
+        CancellationToken ct = default)
+    {
+        var categories = await _categoryRepository.ListAsync(0, int.MaxValue, ct);
+        var categoryLookup = categories.ToDictionary(c => c.Id, c => c.Name);
+
+        var rules = await _ruleRepository.ListAsync(0, int.MaxValue, ct);
+        var ruleLookup = rules.ToDictionary(r => r.Id, r => r.Name);
+
+        return suggestions.Select(s => CategorizationMapper.ToDto(
+            s,
+            s.SuggestedCategoryId.HasValue ? categoryLookup.GetValueOrDefault(s.SuggestedCategoryId.Value) : null,
+            s.TargetRuleId.HasValue ? ruleLookup.GetValueOrDefault(s.TargetRuleId.Value) : null))
+            .ToList();
+    }
+
+    /// <inheritdoc/>
+    public async Task<RuleSuggestionDto> MapSuggestionToDtoAsync(
+        RuleSuggestion suggestion,
+        CancellationToken ct = default)
+    {
+        string? categoryName = null;
+        string? ruleName = null;
+
+        if (suggestion.SuggestedCategoryId.HasValue)
+        {
+            var category = await _categoryRepository.GetByIdAsync(suggestion.SuggestedCategoryId.Value, ct);
+            categoryName = category?.Name;
+        }
+
+        if (suggestion.TargetRuleId.HasValue)
+        {
+            var rule = await _ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, ct);
+            ruleName = rule?.Name;
+        }
+
+        return CategorizationMapper.ToDto(suggestion, categoryName, ruleName);
     }
 
     private async Task<List<RuleSuggestion>> FilterDuplicateSuggestionsAsync(

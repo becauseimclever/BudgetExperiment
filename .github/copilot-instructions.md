@@ -258,3 +258,9 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 - **Legacy Scripts**: All legacy local build/deploy scripts (e.g., `build-docker-windows.ps1`, `deploy-to-pi.ps1`, `deploy.sh`) have been removed from the repository. Do not add or reference local Docker scripts. Use CI/CD-built images and deploy by pulling with `docker compose` on the target device.
 - **Documentation**: See `README.Docker.md` for deployment guide, `DEPLOY-QUICKSTART.md` for quick Pi setup.
 - **Important**: Do NOT create or suggest local Docker build workflows. Direct users to CI/CD pipeline or standard .NET local development.
+
+## 36. Feature Documentation Lifecycle
+- When implementing a feature from a `docs/` feature document (e.g., `docs/086-suggestions-controller-service-compliance.md`), **update the document** as work progresses:
+  - Set `Status` to `In Progress` when starting, `Done` when complete.
+  - Check off completed acceptance criteria (`- [x]`) and implementation tasks.
+  - After all work is finished, move the document to `docs/archive/` following the existing naming convention (group by number range, e.g., `081-090-*.md`).
