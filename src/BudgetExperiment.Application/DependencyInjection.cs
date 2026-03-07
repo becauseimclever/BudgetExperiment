@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using BudgetExperiment.Application.Export;
 using BudgetExperiment.Application.Settings;
 using BudgetExperiment.Domain;
@@ -10,6 +12,7 @@ namespace BudgetExperiment.Application;
 /// <summary>
 /// Application layer DI registration.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class DependencyInjection
 {
     /// <summary>Adds application services.</summary>

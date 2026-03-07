@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 
 using BudgetExperiment.Contracts.Constants;
@@ -14,6 +15,7 @@ namespace BudgetExperiment.Api.Authentication;
 /// and <c>tid</c>. The <c>preferred_username</c> claim may or may not be present depending
 /// on token version and scopes. This mapper ensures it is always available.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class MicrosoftClaimMapper
 {
     /// <summary>

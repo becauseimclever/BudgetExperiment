@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
@@ -21,6 +22,7 @@ namespace BudgetExperiment.Api.Authentication;
 /// by user ID continues to work even when authentication is disabled.
 /// All requests are treated as authenticated using the <see cref="FamilyUserContext"/> constants.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public sealed class NoAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     /// <summary>

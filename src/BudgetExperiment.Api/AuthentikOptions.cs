@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
@@ -12,6 +14,7 @@ namespace BudgetExperiment.Api;
 /// <c>IOptions&lt;AuthentikOptions&gt;</c>. New code should use
 /// <see cref="AuthenticationOptions.Authentik"/> instead.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 [Obsolete("Use AuthenticationOptions.Authentik (AuthentikProviderOptions) instead. This class will be removed in a future release.")]
 public sealed class AuthentikOptions
 {

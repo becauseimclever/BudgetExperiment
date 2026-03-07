@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.Json;
 
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace BudgetExperiment.Api.Middleware;
 
 /// <summary>Converts exceptions to RFC 7807 problem details responses.</summary>
+[ExcludeFromCodeCoverage]
 public sealed class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;

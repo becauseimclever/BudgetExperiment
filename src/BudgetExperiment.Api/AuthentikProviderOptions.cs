@@ -2,12 +2,15 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
 /// Authentik-specific OIDC provider configuration options.
 /// Nested under <see cref="AuthenticationOptions.Authentik"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class AuthentikProviderOptions
 {
     /// <summary>

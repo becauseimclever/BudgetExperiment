@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
@@ -13,6 +15,7 @@ namespace BudgetExperiment.Api;
 /// Binds from the "Authentication" configuration section.
 /// Backward compatible with existing <c>Authentication:Authentik:*</c> configuration keys.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public sealed class AuthenticationOptions
 {
     /// <summary>

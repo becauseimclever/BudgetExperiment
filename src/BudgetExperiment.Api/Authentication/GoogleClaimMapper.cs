@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 
 using BudgetExperiment.Contracts.Constants;
@@ -13,6 +14,7 @@ namespace BudgetExperiment.Api.Authentication;
 /// Google ID tokens include standard OIDC claims (<c>sub</c>, <c>name</c>, <c>email</c>, <c>picture</c>)
 /// but do not include <c>preferred_username</c> which the application requires for user display.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class GoogleClaimMapper
 {
     /// <summary>

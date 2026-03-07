@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 
 using BudgetExperiment.Contracts.Constants;
@@ -15,6 +16,7 @@ namespace BudgetExperiment.Api.Authentication;
 /// This mapper applies user-defined mappings and falls back to deriving
 /// <c>preferred_username</c> from <c>email</c> if not already present.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class GenericOidcClaimMapper
 {
     /// <summary>

@@ -2,11 +2,14 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
 /// String constants for authentication mode values.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class AuthModeConstants
 {
     /// <summary>

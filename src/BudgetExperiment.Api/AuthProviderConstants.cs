@@ -2,11 +2,14 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
 /// String constants for authentication provider values.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class AuthProviderConstants
 {
     /// <summary>

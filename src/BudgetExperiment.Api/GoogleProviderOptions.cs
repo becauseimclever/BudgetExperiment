@@ -2,12 +2,15 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
 /// Google OAuth provider configuration options.
 /// Nested under <see cref="AuthenticationOptions.Google"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class GoogleProviderOptions
 {
     /// <summary>

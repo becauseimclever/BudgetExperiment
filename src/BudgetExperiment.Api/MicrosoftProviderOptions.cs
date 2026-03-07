@@ -2,12 +2,15 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace BudgetExperiment.Api;
 
 /// <summary>
 /// Microsoft Entra ID (Azure AD) provider configuration options.
 /// Nested under <see cref="AuthenticationOptions.Microsoft"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class MicrosoftProviderOptions
 {
     /// <summary>

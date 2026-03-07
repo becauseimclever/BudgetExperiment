@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 using BudgetExperiment.Contracts.Constants;
 using BudgetExperiment.Contracts.Dtos;
 
@@ -11,6 +13,7 @@ namespace BudgetExperiment.Api;
 /// Strongly-typed options for client configuration.
 /// Maps from IConfiguration and exposes settings safe for client consumption.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class ClientConfigOptions
 {
     /// <summary>

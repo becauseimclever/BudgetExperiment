@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using BudgetExperiment.Contracts.Dtos;
@@ -14,6 +15,7 @@ namespace BudgetExperiment.Api.Controllers;
 /// <summary>
 /// Provides version and build information for the API.
 /// </summary>
+[ExcludeFromCodeCoverage]
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]

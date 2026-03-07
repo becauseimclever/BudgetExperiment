@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 using BudgetExperiment.Contracts.Constants;
 
 namespace BudgetExperiment.Api;
@@ -10,6 +12,7 @@ namespace BudgetExperiment.Api;
 /// Generic OIDC provider configuration options for Keycloak, Auth0, Okta, etc.
 /// Nested under <see cref="AuthenticationOptions.Oidc"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class GenericOidcProviderOptions
 {
     /// <summary>

@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 using BudgetExperiment.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,7 @@ namespace BudgetExperiment.Api.HealthChecks;
 /// Health check that reports the status of database migrations.
 /// Returns Healthy when no pending migrations exist, Degraded when migrations are pending.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class MigrationHealthCheck : IHealthCheck
 {
     private readonly BudgetDbContext _context;

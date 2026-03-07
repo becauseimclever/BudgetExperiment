@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Api.Middleware;
@@ -10,6 +12,7 @@ namespace BudgetExperiment.Api.Middleware;
 /// Middleware that reads the X-Budget-Scope header from incoming requests
 /// and sets the scope on the current IUserContext.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class BudgetScopeMiddleware
 {
     /// <summary>

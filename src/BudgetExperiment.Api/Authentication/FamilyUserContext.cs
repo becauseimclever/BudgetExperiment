@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 using BudgetExperiment.Contracts.Constants;
 
 namespace BudgetExperiment.Api.Authentication;
@@ -12,6 +14,7 @@ namespace BudgetExperiment.Api.Authentication;
 /// ensuring a consistent and deterministic user identity.
 /// Values are sourced from <see cref="FamilyUserDefaults"/> in Contracts.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class FamilyUserContext
 {
     /// <summary>
