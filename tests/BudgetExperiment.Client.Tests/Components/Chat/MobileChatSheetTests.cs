@@ -184,9 +184,8 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies the close callback fires when OnClose is triggered.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Sheet_OnClose_FiresCallback()
+    public void Sheet_OnClose_FiresCallback()
     {
         // Arrange
         bool closed = false;
@@ -210,11 +209,8 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
         var closeBtn = cut.Find(".bottom-sheet__close");
         closeBtn.Click();
 
-        // Wait for the BottomSheet close animation delay
-        await Task.Delay(300);
-
-        // Assert
-        Assert.True(closed);
+        // Assert - use WaitForAssertion to handle the async close animation
+        cut.WaitForAssertion(() => Assert.True(closed), TimeSpan.FromSeconds(5));
     }
 
     /// <summary>
