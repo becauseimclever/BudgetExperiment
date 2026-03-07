@@ -1,6 +1,6 @@
 # Feature 091: Test Coverage Gaps — Client Components & Services
 
-> **Status:** In Progress
+> **Status:** Done
 > **Priority:** Medium (60+ untested Blazor components, 7+ untested services)
 > **Dependencies:** None
 
@@ -111,29 +111,37 @@ All components with meaningful logic (form validation, state management, conditi
 **Objective:** Test reusable components with behavioral logic.
 
 **Tasks:**
-- [ ] Create tests for Modal, ConfirmDialog, BottomSheet (interaction logic)
-- [ ] Create tests for ToastContainer (state management)
-- [ ] Create tests for FormField (validation display)
-- [ ] Evaluate remaining components — skip pure display-only components
-- [ ] All tests pass
+- [x] Create tests for Modal, ConfirmDialog, BottomSheet (interaction logic)
+- [x] Create tests for ToastContainer (state management)
+- [x] Create tests for FormField (validation display)
+- [x] Create tests for ErrorAlert (conditional rendering, retry/dismiss callbacks)
+- [x] Create tests for PageHeader (back button, subtitle, actions)
+- [x] Create tests for ThemeToggle (dropdown state, theme selection)
+- [x] Create tests for LoadingSpinner (size classes, message, full-page mode)
+- [x] Evaluate remaining components — skip pure display-only components
+- [x] All tests pass
+
+**Evaluation Notes (Skipped):**
+- **Icon**: Skipped — pure display component with large SVG path switch. ThemeService integration tested indirectly by components that use Icon.
+- **Badge, Button, Card, EmptyState, SwipeContainer**: Already had tests from prior work.
 
 ### Phase 4: Import & AI Components
 
 **Objective:** Test import workflow and AI suggestion components.
 
 **Tasks:**
-- [ ] Create tests for import components (ColumnMappingEditor, CsvPreviewTable, etc.)
-- [ ] Create tests for AI suggestion components (SuggestionCard, SuggestionList, etc.)
-- [ ] All tests pass
+- [x] Create tests for import components (AmountModeSelector, ColumnMappingEditor, CsvPreviewTable, DateFormatSelector, DuplicateWarningCard, FileUploadZone, ImportHistoryList, ImportPreviewTable, ImportSummaryCard, IndicatorSettingsEditor, SavedMappingSelector, SavedMappingsManager, SkipRowsInput) — 120 tests
+- [x] Create tests for AI suggestion components (AiOnboardingPanel, AiSettingsForm, AiStatusBadge, AnalysisProgressDialog, AnalysisSummaryCard, CategorySuggestionCard, SuggestionCard, SuggestionDetailDialog, SuggestionList) — 74 tests
+- [x] All tests pass
 
 ### Phase 5: Reconciliation & Navigation
 
 **Objective:** Test remaining component categories.
 
 **Tasks:**
-- [ ] Create tests for reconciliation components
-- [ ] Create tests for NavMenu, ScopeSwitcher
-- [ ] All tests pass
+- [x] Create tests for reconciliation components (ConfidenceBadge, MatchReviewModal, ToleranceSettingsPanel, ImportPatternsDialog, LinkableInstancesDialog, ManualMatchDialog) — 58 tests
+- [x] Create tests for NavMenu, ScopeSwitcher — 26 tests
+- [x] All tests pass
 
 ---
 

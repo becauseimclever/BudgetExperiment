@@ -2,6 +2,21 @@
 
 All notable changes to Budget Experiment.
 
+## [3.20.0] - 2026-03-07
+
+### Testing
+
+- **client:** bUnit tests for 5 common UI components — ConfirmDialog (7), ErrorAlert (8), LoadingSpinner (7), PageHeader (8), ThemeToggle (8) (Feature 091 Phase 3)
+- **client:** bUnit tests for 13 import workflow components — AmountModeSelector, ColumnMappingEditor, CsvPreviewTable, DateFormatSelector, DuplicateWarningCard, FileUploadZone, ImportHistoryList, ImportPreviewTable, ImportSummaryCard, IndicatorSettingsEditor, SavedMappingSelector, SavedMappingsManager, SkipRowsInput — 120 tests (Feature 091 Phase 4)
+- **client:** bUnit tests for 9 AI components — AiOnboardingPanel, AiSettingsForm, AiStatusBadge, AnalysisProgressDialog, AnalysisSummaryCard, CategorySuggestionCard, SuggestionCard, SuggestionDetailDialog, SuggestionList — 74 tests (Feature 091 Phase 4)
+- **client:** bUnit tests for 6 reconciliation components — ConfidenceBadge (11), MatchReviewModal (12), ToleranceSettingsPanel (9), ImportPatternsDialog (9), LinkableInstancesDialog (8), ManualMatchDialog (9) — 58 tests (Feature 091 Phase 5)
+- **client:** bUnit tests for 2 navigation components — NavMenu (15), ScopeSwitcher (11) — 26 tests (Feature 091 Phase 5)
+- **client:** Total test count: 2,686 passed (1 skipped), up from 1,059
+
+### Documentation
+
+- **docs:** Feature 091 — Client component & service test coverage (complete)
+
 ## [3.19.0] - 2026-03-06
 
 ### Testing
