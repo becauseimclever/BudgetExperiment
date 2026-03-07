@@ -1,14 +1,14 @@
-# API Versioning, Concurrency, Constants & Hygiene (081-086) - Consolidated Summary
+# API Versioning, Concurrency, Hygiene & Test Coverage (081-090) - Consolidated Summary
 
 **Consolidated:** 2026-03-06
-**Original Features:** 081 through 086
+**Original Features:** 081 through 090
 **Status:** All Completed
 
 ---
 
 ## Overview
 
-This document consolidates features 081–086, which covered adding runtime API versioning infrastructure, implementing optimistic concurrency with ETags across all mutable aggregates, centralizing ~36+ magic strings into shared constants classes, fixing code hygiene violations (exception middleware hardening, async naming, transfer pagination, DI/docs consistency), renaming Account/Transaction DateTime properties to the `*Utc` suffix convention, and refactoring the SuggestionsController to comply with the application service mediation pattern.
+This document consolidates features 081–090, covering: runtime API versioning infrastructure, optimistic concurrency with ETags, centralized constants, code hygiene fixes, DateTime naming consistency, SuggestionsController service compliance, and systematic closure of test coverage gaps across Infrastructure, Application, Domain, and API layers.
 
 ---
 
@@ -124,3 +124,65 @@ Refactored `SuggestionsController` to comply with §13 (application service medi
 - No API endpoint or response shape changes — purely internal refactoring
 - Application service tests added for the moved logic; controller tests updated
 - Codebase grep confirmed: no remaining `IRepository` injections in any controller
+
+---
+
+## 087: Infrastructure Repository Test Coverage
+
+**Completed:** 2026-03-06
+
+Added integration tests for 5 previously untested repositories that contained custom data access logic (scope filtering, normalization, composite lookups, bulk operations). Three pure EF Core pass-through repositories (AppSettings, UserSettings, CustomReportLayout) were intentionally excluded — no custom logic to test.
+
+**Key Outcomes:**
+- `BudgetCategoryRepositoryTests.cs` — 9 tests: scope filtering, GetByName, GetActive, GetByType, GetByIds
+- `BudgetGoalRepositoryTests.cs` — 6 tests: scope filtering, GetByCategoryAndMonth, GetByMonth with Include, GetByCategory
+- `CategorySuggestionRepositoryTests.cs` — 6 tests: ExistsPendingWithName case normalization, DeletePendingByOwner fetch-then-remove, AddRange
+- `LearnedMerchantMappingRepositoryTests.cs` — 5 tests: GetByPattern/Exists normalization (`Trim().ToUpperInvariant()`), GetByOwner ordering
+- `RecurringTransactionRepositoryTests.cs` — 10 tests: exception CRUD, date-range queries, RemoveExceptionsFromDate, scope filtering, GetActive
+- **36 total integration tests** using SQLite in-memory pattern with `InMemoryDbFixture`
+
+---
+
+## 088: Application Layer Test Coverage
+
+**Completed:** 2026-03-06
+
+Added unit tests for untested application services, handlers, projectors, and mappers with non-trivial logic. Simple 1:1 property-mapping mappers (AccountMapper, BudgetMapper, CategorizationMapper, CommonMapper, PaycheckMapper, ReconciliationMapper) were intentionally excluded — no business logic.
+
+**Key Outcomes:**
+
+### Services & Handlers
+- `CustomReportLayoutServiceTests.cs` — CRUD service for custom report layouts
+- `ImportPreviewEnricherTests.cs` — import preview data enrichment
+- `RecurringInstanceProjectorTests.cs` — recurring transaction instance projection
+- `RecurringTransferInstanceProjectorTests.cs` — recurring transfer instance projection
+
+### Mappers
+- `ChatMapperTests.cs` — polymorphic action mapping with multiple ChatAction subtypes
+- `RecurringMapperTests.cs` — exception resolution logic (skipped/modified exception handling)
+
+---
+
+## 089: Domain Value Object & Entity Test Coverage
+
+**Completed:** 2026-03-06
+
+Added unit tests for domain entities with validation logic. Pure positional records with no custom logic (DailyTotalValue, TransactionMatchResultValue, RecurringInstanceInfoValue, RecurringTransferInstanceInfoValue) were excluded with justification.
+
+**Key Outcomes:**
+- `CustomReportLayoutTests.cs` — 24 tests covering CreateShared, CreatePersonal, validation (empty name, max length, empty userId), NormalizeLayoutJson, UpdateName, UpdateLayout, trimming, unique IDs
+- `BillInfoValueTests.cs` — pre-existing (10 tests) verified: Create, validation, FromRecurringTransaction, record equality
+- `ChatActionTests.cs` — pre-existing, verified coverage for all action subtypes (CreateTransaction, CreateTransfer, CreateRecurringTransaction, CreateRecurringTransfer, ClarificationNeeded, ClarificationOption)
+
+---
+
+## 090: API Controller Test Coverage
+
+**Completed:** 2026-03-06
+
+Added integration tests for the final 2 untested controllers (out of 27 total), bringing API controller test coverage to 100%.
+
+**Key Outcomes:**
+- `MerchantMappingsControllerTests.cs` — tests for GET (list), POST (learn), DELETE (remove), and 404 for non-existent mappings
+- `VersionControllerTests.cs` — tests for GET returning 200 with version info shape
+- Both use `WebApplicationFactory` following existing test patterns

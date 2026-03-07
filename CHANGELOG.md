@@ -2,6 +2,21 @@
 
 All notable changes to Budget Experiment.
 
+## [3.19.0] - 2026-03-06
+
+### Testing
+
+- **infrastructure:** 36 integration tests for 5 previously untested repositories — BudgetCategoryRepository (9 tests: scope filtering, GetByName, GetActive, GetByType, GetByIds), BudgetGoalRepository (6 tests: scope filtering, GetByCategoryAndMonth, GetByMonth), CategorySuggestionRepository (6 tests: case-normalization, fetch-then-remove, AddRange), LearnedMerchantMappingRepository (5 tests: pattern normalization, GetByOwner ordering), RecurringTransactionRepository (10 tests: exception CRUD, date-range queries, bulk delete, scope filtering) (Feature 087)
+- **application:** Unit tests for untested services, handlers, and projectors — CustomReportLayoutService, ImportPreviewEnricher, RecurringInstanceProjector, RecurringTransferInstanceProjector (Feature 088)
+- **application:** Unit tests for mappers with non-trivial logic — ChatMapper (polymorphic action mapping), RecurringMapper (exception resolution logic); simple 1:1 property mappers excluded (Feature 088)
+- **domain:** 24 unit tests for CustomReportLayout entity — CreateShared, CreatePersonal, validation (empty name, max length, empty userId), NormalizeLayoutJson, UpdateName, UpdateLayout, trimming, unique IDs (Feature 089)
+- **api:** MerchantMappingsController integration tests — GET (list), POST (learn), DELETE (remove), 404 for non-existent mappings (Feature 090)
+- **api:** VersionController integration tests — GET returns 200 with version info shape (Feature 090)
+
+### Documentation
+
+- **docs:** Consolidate features 081–090 into single archive document (API versioning, concurrency, hygiene & test coverage)
+
 ## [3.18.0] - 2026-03-06
 
 ### Refactoring
@@ -103,6 +118,7 @@ All notable changes to Budget Experiment.
 ### Documentation
 
 - **docs:** Consolidate features 061–070 into archive
+- **docs:** Consolidate features 071–080 into archive
 
 ## [3.16.1] - 2026-02-22
 
