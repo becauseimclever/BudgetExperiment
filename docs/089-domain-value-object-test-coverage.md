@@ -1,6 +1,6 @@
 # Feature 089: Test Coverage Gaps — Domain Value Objects & Enums
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium (§6 TDD — domain logic must be tested)
 > **Dependencies:** None
 
@@ -45,13 +45,13 @@ All domain value objects with validation or construction logic have unit tests. 
 **So that** construction, validation, and equality semantics are verified.
 
 **Acceptance Criteria:**
-- [ ] `BillInfoValue` has unit tests
-- [ ] `DailyTotalValue` has unit tests
-- [ ] `TransactionMatchResultValue` has unit tests
-- [ ] `RecurringInstanceInfoValue` has unit tests
-- [ ] `RecurringTransferInstanceInfoValue` has unit tests
-- [ ] `CustomReportLayout` has unit tests
-- [ ] All tests pass
+- [x] `BillInfoValue` has unit tests (already existed)
+- [x] `DailyTotalValue` — excluded: pure positional record, no custom logic
+- [x] `TransactionMatchResultValue` — excluded: pure positional record, no custom logic
+- [x] `RecurringInstanceInfoValue` — excluded: pure positional record, no custom logic
+- [x] `RecurringTransferInstanceInfoValue` — excluded: pure positional record, no custom logic
+- [x] `CustomReportLayout` has unit tests (24 tests added)
+- [x] All tests pass
 
 ---
 
@@ -62,18 +62,18 @@ All domain value objects with validation or construction logic have unit tests. 
 **Objective:** Add tests for value objects used in reconciliation and recurring projections.
 
 **Tasks:**
-- [ ] Create `BillInfoValueTests.cs`
-- [ ] Create `DailyTotalValueTests.cs`
-- [ ] Create `TransactionMatchResultValueTests.cs`
-- [ ] Create `RecurringInstanceInfoValueTests.cs`
-- [ ] Create `RecurringTransferInstanceInfoValueTests.cs`
-- [ ] All tests pass
+- [x] `BillInfoValueTests.cs` — already existed with 10 tests covering Create, validation, FromRecurringTransaction, record equality
+- [x] `DailyTotalValue` — skipped: pure positional record `(DateOnly, MoneyValue, int)`, no custom logic to test
+- [x] `TransactionMatchResultValue` — skipped: pure positional record, no custom logic to test
+- [x] `RecurringInstanceInfoValue` — skipped: pure positional record, no custom logic to test
+- [x] `RecurringTransferInstanceInfoValue` — skipped: pure positional record, no custom logic to test
+- [x] All tests pass
 
 ### Phase 2: Entity & Chat Action Tests
 
 **Objective:** Add tests for remaining untested domain types.
 
 **Tasks:**
-- [ ] Create `CustomReportLayoutTests.cs`
-- [ ] Expand `ChatActionTests.cs` to cover all action subtypes
-- [ ] All tests pass
+- [x] Create `CustomReportLayoutTests.cs` — 24 tests covering CreateShared, CreatePersonal, validation (empty name, max length, empty userId), NormalizeLayoutJson, UpdateName, UpdateLayout, trimming, unique IDs
+- [x] `ChatActionTests.cs` — already covers all action subtypes (CreateTransaction, CreateTransfer, CreateRecurringTransaction, CreateRecurringTransfer, ClarificationNeeded, ClarificationOption) with Type and GetPreviewSummary tests
+- [x] All tests pass
