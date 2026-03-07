@@ -59,6 +59,7 @@ jobs:
             --no-build \
             --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency" \
             --collect:"XPlat Code Coverage" \
+            --settings coverlet.runsettings \
             --logger "trx" \
             --results-directory ./TestResults
 
