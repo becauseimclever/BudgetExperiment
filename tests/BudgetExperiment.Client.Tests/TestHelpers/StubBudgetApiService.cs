@@ -91,6 +91,36 @@ internal class StubBudgetApiService : IBudgetApiService
     public BudgetCategoryDto? GetCategoryResult { get; set; }
 
     /// <summary>
+    /// Gets or sets an exception to throw from <see cref="GetCategoriesAsync"/>.
+    /// </summary>
+    public Exception? GetCategoriesException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="CreateCategoryAsync"/>.
+    /// </summary>
+    public Exception? CreateCategoryException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="UpdateCategoryAsync"/>.
+    /// </summary>
+    public Exception? UpdateCategoryException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="DeleteCategoryAsync"/>.
+    /// </summary>
+    public Exception? DeleteCategoryException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="ActivateCategoryAsync"/>.
+    /// </summary>
+    public Exception? ActivateCategoryException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="DeactivateCategoryAsync"/>.
+    /// </summary>
+    public Exception? DeactivateCategoryException { get; set; }
+
+    /// <summary>
     /// Gets or sets the app settings returned by <see cref="GetSettingsAsync"/>.
     /// </summary>
     public AppSettingsDto? AppSettings { get; set; }
@@ -480,25 +510,43 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null) => Task.FromResult(this.AllocationSummary);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<BudgetCategoryDto>> GetCategoriesAsync(bool activeOnly = false) => Task.FromResult<IReadOnlyList<BudgetCategoryDto>>(this.Categories);
+    public Task<IReadOnlyList<BudgetCategoryDto>> GetCategoriesAsync(bool activeOnly = false) =>
+        this.GetCategoriesException is not null
+            ? Task.FromException<IReadOnlyList<BudgetCategoryDto>>(this.GetCategoriesException)
+            : Task.FromResult<IReadOnlyList<BudgetCategoryDto>>(this.Categories);
 
     /// <inheritdoc/>
     public Task<BudgetCategoryDto?> GetCategoryAsync(Guid id) => Task.FromResult(this.GetCategoryResult ?? this.Categories.Find(c => c.Id == id));
 
     /// <inheritdoc/>
-    public Task<BudgetCategoryDto?> CreateCategoryAsync(BudgetCategoryCreateDto model) => Task.FromResult(this.CreateCategoryResult);
+    public Task<BudgetCategoryDto?> CreateCategoryAsync(BudgetCategoryCreateDto model) =>
+        this.CreateCategoryException is not null
+            ? Task.FromException<BudgetCategoryDto?>(this.CreateCategoryException)
+            : Task.FromResult(this.CreateCategoryResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<BudgetCategoryDto>> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model, string? version = null) => Task.FromResult(this.UpdateCategoryResult ?? ApiResult<BudgetCategoryDto>.Failure());
+    public Task<ApiResult<BudgetCategoryDto>> UpdateCategoryAsync(Guid id, BudgetCategoryUpdateDto model, string? version = null) =>
+        this.UpdateCategoryException is not null
+            ? Task.FromException<ApiResult<BudgetCategoryDto>>(this.UpdateCategoryException)
+            : Task.FromResult(this.UpdateCategoryResult ?? ApiResult<BudgetCategoryDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteCategoryAsync(Guid id) => Task.FromResult(this.DeleteCategoryResult);
+    public Task<bool> DeleteCategoryAsync(Guid id) =>
+        this.DeleteCategoryException is not null
+            ? Task.FromException<bool>(this.DeleteCategoryException)
+            : Task.FromResult(this.DeleteCategoryResult);
 
     /// <inheritdoc/>
-    public Task<bool> ActivateCategoryAsync(Guid id) => Task.FromResult(this.ActivateCategoryResult);
+    public Task<bool> ActivateCategoryAsync(Guid id) =>
+        this.ActivateCategoryException is not null
+            ? Task.FromException<bool>(this.ActivateCategoryException)
+            : Task.FromResult(this.ActivateCategoryResult);
 
     /// <inheritdoc/>
-    public Task<bool> DeactivateCategoryAsync(Guid id) => Task.FromResult(this.DeactivateCategoryResult);
+    public Task<bool> DeactivateCategoryAsync(Guid id) =>
+        this.DeactivateCategoryException is not null
+            ? Task.FromException<bool>(this.DeactivateCategoryException)
+            : Task.FromResult(this.DeactivateCategoryResult);
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsAsync(int year, int month) => Task.FromResult<IReadOnlyList<BudgetGoalDto>>([]);
