@@ -265,3 +265,9 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
   - Set `Status` to `In Progress` when starting, `Done` when complete.
   - Check off completed acceptance criteria (`- [x]`) and implementation tasks.
   - After all work is finished, move the document to `docs/archive/` following the existing naming convention (group by number range, e.g., `081-090-*.md`).
+
+## 37. Culture-Sensitive Formatting in Tests
+- `ToString("C")`, `ToString("N")`, and other culture-dependent format strings produce different output depending on the host OS locale. CI runs on Linux with invariant culture, where `"C"` renders as `¤` instead of `$`.
+- **Always** set `CultureInfo.CurrentCulture` to a known culture (e.g., `CultureInfo.GetCultureInfo("en-US")`) in test constructors or setup when tests assert on formatted currency, number, or date strings.
+- Prefer explicit `IFormatProvider` overloads (e.g., `ToString("C", CultureInfo.GetCultureInfo("en-US"))`) in production code when the output is user-visible and must be deterministic.
+- This applies to all test projects, not just Client tests.
