@@ -90,6 +90,31 @@ internal class StubBudgetApiService : IBudgetApiService
     /// </summary>
     public BudgetCategoryDto? GetCategoryResult { get; set; }
 
+    /// <summary>
+    /// Gets or sets the app settings returned by <see cref="GetSettingsAsync"/>.
+    /// </summary>
+    public AppSettingsDto? AppSettings { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user settings returned by <see cref="GetUserSettingsAsync"/>.
+    /// </summary>
+    public UserSettingsDto? UserSettings { get; set; }
+
+    /// <summary>
+    /// Gets the list of categorization rules returned by <see cref="GetCategorizationRulesAsync"/>.
+    /// </summary>
+    public List<CategorizationRuleDto> Rules { get; } = new();
+
+    /// <summary>
+    /// Gets or sets the uncategorized transaction page returned by <see cref="GetUncategorizedTransactionsAsync"/>.
+    /// </summary>
+    public UncategorizedTransactionPageDto UncategorizedPage { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the paycheck allocation summary returned by <see cref="GetPaycheckAllocationAsync"/>.
+    /// </summary>
+    public PaycheckAllocationSummaryDto? AllocationSummary { get; set; }
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<AccountDto>> GetAccountsAsync() => Task.FromResult<IReadOnlyList<AccountDto>>(this.Accounts);
 
@@ -235,7 +260,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<BatchRealizeResultDto?> RealizeBatchAsync(BatchRealizeRequest request) => Task.FromResult<BatchRealizeResultDto?>(null);
 
     /// <inheritdoc/>
-    public Task<AppSettingsDto?> GetSettingsAsync() => Task.FromResult<AppSettingsDto?>(null);
+    public Task<AppSettingsDto?> GetSettingsAsync() => Task.FromResult(this.AppSettings);
 
     /// <inheritdoc/>
     public Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto) => Task.FromResult<AppSettingsDto?>(null);
@@ -244,7 +269,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<LocationDataClearedDto?> DeleteAllLocationDataAsync() => Task.FromResult<LocationDataClearedDto?>(null);
 
     /// <inheritdoc/>
-    public Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null) => Task.FromResult<PaycheckAllocationSummaryDto?>(null);
+    public Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null) => Task.FromResult(this.AllocationSummary);
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<BudgetCategoryDto>> GetCategoriesAsync(bool activeOnly = false) => Task.FromResult<IReadOnlyList<BudgetCategoryDto>>(this.Categories);
@@ -289,7 +314,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<BudgetProgressDto?> GetCategoryProgressAsync(Guid categoryId, int year, int month) => Task.FromResult<BudgetProgressDto?>(null);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<CategorizationRuleDto>> GetCategorizationRulesAsync(bool activeOnly = false) => Task.FromResult<IReadOnlyList<CategorizationRuleDto>>([]);
+    public Task<IReadOnlyList<CategorizationRuleDto>> GetCategorizationRulesAsync(bool activeOnly = false) => Task.FromResult<IReadOnlyList<CategorizationRuleDto>>(this.Rules);
 
     /// <inheritdoc/>
     public Task<CategorizationRuleDto?> GetCategorizationRuleAsync(Guid id) => Task.FromResult<CategorizationRuleDto?>(null);
@@ -319,7 +344,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds) => Task.FromResult(false);
 
     /// <inheritdoc/>
-    public Task<UncategorizedTransactionPageDto> GetUncategorizedTransactionsAsync(UncategorizedTransactionFilterDto filter) => Task.FromResult(new UncategorizedTransactionPageDto());
+    public Task<UncategorizedTransactionPageDto> GetUncategorizedTransactionsAsync(UncategorizedTransactionFilterDto filter) => Task.FromResult(this.UncategorizedPage);
 
     /// <inheritdoc/>
     public Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request) => Task.FromResult(new BulkCategorizeResponse());
@@ -361,7 +386,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns) => Task.FromResult<ImportPatternsDto?>(null);
 
     /// <inheritdoc/>
-    public Task<UserSettingsDto?> GetUserSettingsAsync() => Task.FromResult<UserSettingsDto?>(null);
+    public Task<UserSettingsDto?> GetUserSettingsAsync() => Task.FromResult(this.UserSettings);
 
     /// <inheritdoc/>
     public Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto) => Task.FromResult<UserSettingsDto?>(null);
