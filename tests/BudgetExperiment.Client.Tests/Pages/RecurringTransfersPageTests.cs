@@ -245,4 +245,188 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
 
         cut.Markup.ShouldContain("Ends:");
     }
+
+    /// <summary>
+    /// Verifies add recurring transfer button exists.
+    /// </summary>
+    [Fact]
+    public void HasAddButton()
+    {
+        var cut = Render<RecurringTransfers>();
+
+        cut.Markup.ShouldContain("Add Recurring Transfer");
+    }
+
+    /// <summary>
+    /// Verifies card shows frequency.
+    /// </summary>
+    [Fact]
+    public void Card_ShowsFrequency()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Weekly Transfer"));
+
+        var cut = Render<RecurringTransfers>();
+
+        cut.Markup.ShouldContain("Monthly");
+    }
+
+    /// <summary>
+    /// Verifies card shows next occurrence.
+    /// </summary>
+    [Fact]
+    public void Card_ShowsNextOccurrence()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+
+        var cut = Render<RecurringTransfers>();
+
+        cut.Markup.ShouldContain("Next:");
+    }
+
+    /// <summary>
+    /// Verifies multiple recurring transfers are rendered.
+    /// </summary>
+    [Fact]
+    public void ShowsMultipleRecurringTransfers()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Transfer A"));
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Transfer B"));
+
+        var cut = Render<RecurringTransfers>();
+
+        cut.Markup.ShouldContain("Transfer A");
+        cut.Markup.ShouldContain("Transfer B");
+    }
+
+    /// <summary>
+    /// Verifies active status badge is shown.
+    /// </summary>
+    [Fact]
+    public void ShowsActiveStatusBadge()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Active Transfer"));
+
+        var cut = Render<RecurringTransfers>();
+
+        cut.Markup.ShouldContain("badge-status-active");
+    }
+
+    /// <summary>
+    /// Verifies Skip button triggers skip action.
+    /// </summary>
+    [Fact]
+    public void SkipButton_IsClickable()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+
+        var cut = Render<RecurringTransfers>();
+        var skipButton = cut.FindAll("button").First(b => b.TextContent.Contains("Skip"));
+        skipButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Pause button triggers pause action.
+    /// </summary>
+    [Fact]
+    public void PauseButton_IsClickable()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+
+        var cut = Render<RecurringTransfers>();
+        var pauseButton = cut.FindAll("button").First(b => b.TextContent.Contains("Pause"));
+        pauseButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Resume button triggers resume action on paused transfers.
+    /// </summary>
+    [Fact]
+    public void ResumeButton_IsClickable()
+    {
+        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "Paused Transfer",
+            Amount = new MoneyDto { Amount = 200.00m, Currency = "USD" },
+            Frequency = "Monthly",
+            NextOccurrence = new DateOnly(2026, 5, 1),
+            StartDate = new DateOnly(2025, 1, 1),
+            IsActive = false,
+            SourceAccountId = Guid.NewGuid(),
+            SourceAccountName = "Checking",
+            DestinationAccountId = Guid.NewGuid(),
+            DestinationAccountName = "Savings",
+        });
+
+        var cut = Render<RecurringTransfers>();
+        var resumeButton = cut.FindAll("button").First(b => b.TextContent.Contains("Resume"));
+        resumeButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Delete button opens confirm dialog.
+    /// </summary>
+    [Fact]
+    public void DeleteButton_ShowsConfirmDialog()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+
+        var cut = Render<RecurringTransfers>();
+        var deleteButton = cut.FindAll("button").First(b => b.TextContent.Contains("Delete"));
+        deleteButton.Click();
+
+        cut.Markup.ShouldContain("Are you sure");
+    }
+
+    /// <summary>
+    /// Verifies Edit button opens edit form.
+    /// </summary>
+    [Fact]
+    public void EditButton_OpensEditForm()
+    {
+        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+
+        var cut = Render<RecurringTransfers>();
+        var editButton = cut.FindAll("button").First(b => b.TextContent.Contains("Edit"));
+        editButton.Click();
+
+        cut.Markup.ShouldContain("Edit Recurring Transfer");
+    }
+
+    /// <summary>
+    /// Verifies Add button opens add form.
+    /// </summary>
+    [Fact]
+    public void AddButton_OpensAddForm()
+    {
+        var cut = Render<RecurringTransfers>();
+        var addButton = cut.FindAll("button").First(b => b.TextContent.Contains("Add Recurring Transfer"));
+        addButton.Click();
+
+        cut.Markup.ShouldContain("Add Recurring Transfer");
+    }
+
+    private static RecurringTransferDto CreateRecurringTransfer(string description)
+    {
+        return new RecurringTransferDto
+        {
+            Id = Guid.NewGuid(),
+            Description = description,
+            Amount = new MoneyDto { Amount = 500.00m, Currency = "USD" },
+            Frequency = "Monthly",
+            NextOccurrence = new DateOnly(2026, 6, 1),
+            StartDate = new DateOnly(2025, 1, 1),
+            IsActive = true,
+            SourceAccountId = Guid.NewGuid(),
+            SourceAccountName = "Checking",
+            DestinationAccountId = Guid.NewGuid(),
+            DestinationAccountName = "Savings",
+        };
+    }
 }

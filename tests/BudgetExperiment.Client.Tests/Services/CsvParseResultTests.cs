@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
+
 namespace BudgetExperiment.Client.Tests.Services;
 
 /// <summary>
@@ -20,7 +22,7 @@ public class CsvParseResultTests
         };
 
         // Act
-        var result = Models.CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true);
+        var result = CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true);
 
         // Assert
         Assert.True(result.Success);
@@ -44,7 +46,7 @@ public class CsvParseResultTests
         };
 
         // Act
-        var result = Models.CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true, rowsSkipped: 5);
+        var result = CsvParseResult.CreateSuccess(headers, rows, ',', hasHeaderRow: true, rowsSkipped: 5);
 
         // Assert
         Assert.True(result.Success);
@@ -55,7 +57,7 @@ public class CsvParseResultTests
     public void CreateFailure_Returns_Failed_Result()
     {
         // Act
-        var result = Models.CsvParseResult.CreateFailure("File is empty");
+        var result = CsvParseResult.CreateFailure("File is empty");
 
         // Assert
         Assert.False(result.Success);

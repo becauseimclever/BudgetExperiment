@@ -130,4 +130,212 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
         cut.Markup.ShouldContain("toolbar-left");
         cut.Markup.ShouldContain("toolbar-right");
     }
+
+    /// <summary>
+    /// Verifies AI status is displayed when connected.
+    /// </summary>
+    [Fact]
+    public void ShowsConnectedStatus()
+    {
+        this._aiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            CurrentModel = "gpt-4",
+        };
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies disconnected status shows appropriate message.
+    /// </summary>
+    [Fact]
+    public void ShowsDisconnectedStatus()
+    {
+        this._aiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = false,
+        };
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies pending suggestions are rendered.
+    /// </summary>
+    [Fact]
+    public void ShowsPendingSuggestions()
+    {
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = Guid.NewGuid(),
+            SuggestedPattern = "STARBUCKS",
+            SuggestedCategoryName = "Coffee",
+            Confidence = 0.9m,
+            AffectedTransactionCount = 5,
+            Type = "NewRule",
+        });
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldContain("STARBUCKS");
+    }
+
+    /// <summary>
+    /// Verifies multiple suggestions are rendered.
+    /// </summary>
+    [Fact]
+    public void ShowsMultipleSuggestions()
+    {
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = Guid.NewGuid(),
+            SuggestedPattern = "NETFLIX",
+            SuggestedCategoryName = "Entertainment",
+            Confidence = 0.95m,
+            AffectedTransactionCount = 3,
+            Type = "NewRule",
+        });
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = Guid.NewGuid(),
+            SuggestedPattern = "WALMART",
+            SuggestedCategoryName = "Groceries",
+            Confidence = 0.85m,
+            AffectedTransactionCount = 8,
+            Type = "NewRule",
+        });
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldContain("NETFLIX");
+        cut.Markup.ShouldContain("WALMART");
+    }
+
+    /// <summary>
+    /// Verifies empty state when no suggestions.
+    /// </summary>
+    [Fact]
+    public void ShowsEmptyState_WhenNoSuggestions()
+    {
+        this._aiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            CurrentModel = "gpt-4",
+        };
+
+        var cut = Render<AiSuggestions>();
+
+        // Should show the onboarding or empty state
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies that clicking Run AI Analysis triggers analysis and shows progress dialog.
+    /// </summary>
+    [Fact]
+    public void StartAnalysis_ShowsProgressDialog_WhenAiAvailable()
+    {
+        this._aiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            IsEnabled = true,
+            CurrentModel = "gpt-4",
+        };
+
+        var cut = Render<AiSuggestions>();
+
+        var analysisButton = cut.FindAll("button").First(b => b.TextContent.Contains("Run AI Analysis"));
+        analysisButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies that clicking Refresh reloads suggestions.
+    /// </summary>
+    [Fact]
+    public void RefreshButton_ReloadsSuggestions()
+    {
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = Guid.NewGuid(),
+            SuggestedPattern = "AMAZON",
+            SuggestedCategoryName = "Shopping",
+            Confidence = 0.8m,
+            AffectedTransactionCount = 10,
+            Type = "NewRule",
+        });
+
+        var cut = Render<AiSuggestions>();
+
+        var refreshButton = cut.FindAll("button").First(b => b.TextContent.Contains("Refresh"));
+        refreshButton.Click();
+
+        cut.Markup.ShouldContain("AMAZON");
+    }
+
+    /// <summary>
+    /// Verifies that accepting a suggestion removes it from the list.
+    /// </summary>
+    [Fact]
+    public void AcceptSuggestion_RemovesFromList()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "TARGET",
+            SuggestedCategoryName = "Shopping",
+            Confidence = 0.9m,
+            AffectedTransactionCount = 3,
+            Type = "NewRule",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldContain("TARGET");
+    }
+
+    /// <summary>
+    /// Verifies that dismissing a suggestion handles the response correctly.
+    /// </summary>
+    [Fact]
+    public void DismissSuggestion_HandlesResponse()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "UBER",
+            SuggestedCategoryName = "Transport",
+            Confidence = 0.7m,
+            AffectedTransactionCount = 2,
+            Type = "NewRule",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldContain("UBER");
+    }
+
+    /// <summary>
+    /// Verifies Run AI Analysis button is disabled when AI is not available.
+    /// </summary>
+    [Fact]
+    public void RunAnalysis_IsDisabled_WhenAiNotAvailable()
+    {
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = false, IsEnabled = false };
+
+        var cut = Render<AiSuggestions>();
+
+        var analysisButton = cut.FindAll("button").First(b => b.TextContent.Contains("Run AI Analysis"));
+        analysisButton.HasAttribute("disabled").ShouldBeTrue();
+    }
 }

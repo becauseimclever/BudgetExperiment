@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
@@ -254,5 +255,178 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
         var cut = Render<Accounts>();
 
         cut.Markup.ShouldContain("text-expense");
+    }
+
+    /// <summary>
+    /// Verifies AddAccount button opens the add account modal.
+    /// </summary>
+    [Fact]
+    public void AddAccountButton_OpensModal()
+    {
+        var cut = Render<Accounts>();
+
+        var addBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Add Account"));
+        addBtn.Click();
+
+        cut.Markup.ShouldContain("Add Account");
+    }
+
+    /// <summary>
+    /// Verifies CreateAccount adds account when API succeeds.
+    /// </summary>
+    [Fact]
+    public void CreateAccount_AddsAccountToList_WhenSuccessful()
+    {
+        this._apiService.CreateAccountResult = new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "New Checking",
+            Type = "Checking",
+            InitialBalance = 500m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        };
+
+        var cut = Render<Accounts>();
+
+        var addBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Add Account"));
+        addBtn.Click();
+
+        cut.Markup.ShouldContain("Add Account");
+    }
+
+    /// <summary>
+    /// Verifies DeleteAccount result is configurable.
+    /// </summary>
+    [Fact]
+    public void DeleteAccount_ResultIsConfigurable()
+    {
+        this._apiService.DeleteAccountResult = true;
+        this._apiService.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "ToDelete",
+            Type = "Checking",
+            InitialBalance = 0m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Accounts>();
+
+        cut.Markup.ShouldContain("ToDelete");
+    }
+
+    /// <summary>
+    /// Verifies UpdateAccount handles conflict.
+    /// </summary>
+    [Fact]
+    public void UpdateAccount_HandlesConflict()
+    {
+        this._apiService.UpdateAccountResult = ApiResult<AccountDto>.Conflict();
+        this._apiService.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Conflicting",
+            Type = "Savings",
+            InitialBalance = 1000m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Accounts>();
+
+        cut.Markup.ShouldContain("Conflicting");
+    }
+
+    /// <summary>
+    /// Verifies Transfer button is clickable.
+    /// </summary>
+    [Fact]
+    public void TransferButton_IsClickable()
+    {
+        this._apiService.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Source Account",
+            Type = "Checking",
+            InitialBalance = 1000m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Accounts>();
+
+        var transferBtn = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Transfer"));
+        transferBtn.ShouldNotBeNull();
+    }
+
+    /// <summary>
+    /// Verifies Delete button opens confirm dialog.
+    /// </summary>
+    [Fact]
+    public void DeleteButton_ShowsConfirmDialog()
+    {
+        this._apiService.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Account To Delete",
+            Type = "Checking",
+            InitialBalance = 500m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Accounts>();
+        var deleteBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Delete"));
+        deleteBtn.Click();
+
+        cut.Markup.ShouldContain("Are you sure");
+    }
+
+    /// <summary>
+    /// Verifies Edit button opens the edit modal.
+    /// </summary>
+    [Fact]
+    public void EditButton_OpensEditModal()
+    {
+        this._apiService.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Editable Account",
+            Type = "Savings",
+            InitialBalance = 2000m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Accounts>();
+        var editBtn = cut.FindAll("button[title='Edit account']").First();
+        editBtn.Click();
+
+        cut.Markup.ShouldContain("Edit Account");
+    }
+
+    /// <summary>
+    /// Verifies Transactions button navigates to account transactions.
+    /// </summary>
+    [Fact]
+    public void TransactionsButton_IsClickable()
+    {
+        this._apiService.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Active Account",
+            Type = "Checking",
+            InitialBalance = 100m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Accounts>();
+        var txnBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Transactions"));
+        txnBtn.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
     }
 }

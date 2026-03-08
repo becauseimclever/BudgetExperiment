@@ -234,4 +234,173 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
         cut.Markup.ShouldContain("badge-status-active");
         cut.Markup.ShouldContain("Active");
     }
+
+    /// <summary>
+    /// Verifies card shows account name.
+    /// </summary>
+    [Fact]
+    public void Card_ShowsAccountName()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Gym Membership", "Checking"));
+
+        var cut = Render<Recurring>();
+
+        cut.Markup.ShouldContain("Checking");
+    }
+
+    /// <summary>
+    /// Verifies card shows frequency info.
+    /// </summary>
+    [Fact]
+    public void Card_ShowsFrequency()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Insurance", "Main"));
+
+        var cut = Render<Recurring>();
+
+        cut.Markup.ShouldContain("Monthly");
+    }
+
+    /// <summary>
+    /// Verifies card shows next occurrence date.
+    /// </summary>
+    [Fact]
+    public void Card_ShowsNextOccurrence()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+
+        var cut = Render<Recurring>();
+
+        cut.Markup.ShouldContain("Next:");
+    }
+
+    /// <summary>
+    /// Verifies multiple recurring items are rendered.
+    /// </summary>
+    [Fact]
+    public void ShowsMultipleRecurringItems()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Electric", "Savings"));
+
+        var cut = Render<Recurring>();
+
+        cut.Markup.ShouldContain("Rent");
+        cut.Markup.ShouldContain("Electric");
+    }
+
+    /// <summary>
+    /// Verifies Skip button triggers the skip action.
+    /// </summary>
+    [Fact]
+    public void SkipButton_IsClickable()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+
+        var cut = Render<Recurring>();
+        var skipButton = cut.FindAll("button").First(b => b.TextContent.Contains("Skip"));
+        skipButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Pause button triggers the pause action.
+    /// </summary>
+    [Fact]
+    public void PauseButton_IsClickable()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+
+        var cut = Render<Recurring>();
+        var pauseButton = cut.FindAll("button").First(b => b.TextContent.Contains("Pause"));
+        pauseButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Resume button triggers the resume action on paused items.
+    /// </summary>
+    [Fact]
+    public void ResumeButton_IsClickable()
+    {
+        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "Paused Item",
+            Amount = new MoneyDto { Amount = -75.00m, Currency = "USD" },
+            Frequency = "Monthly",
+            NextOccurrence = new DateOnly(2026, 5, 1),
+            StartDate = new DateOnly(2025, 1, 1),
+            IsActive = false,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Checking",
+        });
+
+        var cut = Render<Recurring>();
+        var resumeButton = cut.FindAll("button").First(b => b.TextContent.Contains("Resume"));
+        resumeButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Delete button opens confirm dialog.
+    /// </summary>
+    [Fact]
+    public void DeleteButton_ShowsConfirmDialog()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+
+        var cut = Render<Recurring>();
+        var deleteButton = cut.FindAll("button").First(b => b.TextContent.Contains("Delete"));
+        deleteButton.Click();
+
+        cut.Markup.ShouldContain("Are you sure");
+    }
+
+    /// <summary>
+    /// Verifies Edit button opens edit form.
+    /// </summary>
+    [Fact]
+    public void EditButton_OpensEditForm()
+    {
+        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+
+        var cut = Render<Recurring>();
+        var editButton = cut.FindAll("button").First(b => b.TextContent.Contains("Edit"));
+        editButton.Click();
+
+        cut.Markup.ShouldContain("Edit Recurring Transaction");
+    }
+
+    /// <summary>
+    /// Verifies Add button opens add form.
+    /// </summary>
+    [Fact]
+    public void AddButton_OpensAddForm()
+    {
+        var cut = Render<Recurring>();
+        var addButton = cut.FindAll("button").First(b => b.TextContent.Contains("Add Recurring"));
+        addButton.Click();
+
+        cut.Markup.ShouldContain("Add Recurring Transaction");
+    }
+
+    private static RecurringTransactionDto CreateRecurring(string description, string account)
+    {
+        return new RecurringTransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = description,
+            Amount = new MoneyDto { Amount = -100.00m, Currency = "USD" },
+            Frequency = "Monthly",
+            NextOccurrence = new DateOnly(2026, 5, 1),
+            StartDate = new DateOnly(2025, 1, 1),
+            IsActive = true,
+            AccountId = Guid.NewGuid(),
+            AccountName = account,
+        };
+    }
 }

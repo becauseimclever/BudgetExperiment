@@ -27,6 +27,11 @@ internal class StubAiApiService : IAiApiService
     /// </summary>
     public AiSettingsDto? Settings { get; set; }
 
+    /// <summary>
+    /// Gets the list of pending suggestions returned by <see cref="GetPendingSuggestionsAsync"/>.
+    /// </summary>
+    public List<RuleSuggestionDto> PendingSuggestions { get; } = new();
+
     /// <inheritdoc/>
     public Task<AiStatusDto?> GetStatusAsync() =>
         Task.FromResult(this.AiStatus);
@@ -53,7 +58,7 @@ internal class StubAiApiService : IAiApiService
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<RuleSuggestionDto>> GetPendingSuggestionsAsync(string? type = null) =>
-        Task.FromResult<IReadOnlyList<RuleSuggestionDto>>([]);
+        Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(this.PendingSuggestions);
 
     /// <inheritdoc/>
     public Task<RuleSuggestionDto?> GetSuggestionAsync(Guid id) =>

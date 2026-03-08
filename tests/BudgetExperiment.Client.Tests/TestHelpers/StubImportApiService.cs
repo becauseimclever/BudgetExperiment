@@ -49,6 +49,21 @@ internal sealed class StubImportApiService : IImportApiService
     public bool ShouldThrowOnGetMappings { get; set; }
 
     /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateMappingAsync"/>.
+    /// </summary>
+    public ApiResult<ImportMappingDto>? UpdateMappingResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeleteMappingAsync"/> returns true.
+    /// </summary>
+    public bool DeleteMappingResult { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the count returned by <see cref="DeleteBatchAsync"/>.
+    /// </summary>
+    public int? DeleteBatchResult { get; set; } = 5;
+
+    /// <summary>
     /// Gets or sets a value indicating whether <see cref="GetHistoryAsync"/> should throw.
     /// </summary>
     public bool ShouldThrowOnGetHistory { get; set; }
@@ -74,10 +89,10 @@ internal sealed class StubImportApiService : IImportApiService
 
     /// <inheritdoc/>
     public Task<ApiResult<ImportMappingDto>> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, string? version = null) =>
-        Task.FromResult(ApiResult<ImportMappingDto>.Failure());
+        Task.FromResult(this.UpdateMappingResult ?? ApiResult<ImportMappingDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteMappingAsync(Guid id) => Task.FromResult(true);
+    public Task<bool> DeleteMappingAsync(Guid id) => Task.FromResult(this.DeleteMappingResult);
 
     /// <inheritdoc/>
     public Task<ImportMappingDto?> SuggestMappingAsync(IReadOnlyList<string> headers) =>
@@ -107,5 +122,5 @@ internal sealed class StubImportApiService : IImportApiService
         Task.FromResult(this.Batches.Find(b => b.Id == id));
 
     /// <inheritdoc/>
-    public Task<int?> DeleteBatchAsync(Guid id) => Task.FromResult<int?>(5);
+    public Task<int?> DeleteBatchAsync(Guid id) => Task.FromResult(this.DeleteBatchResult);
 }

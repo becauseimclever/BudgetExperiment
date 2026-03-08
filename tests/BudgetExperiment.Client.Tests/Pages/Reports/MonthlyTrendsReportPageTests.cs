@@ -150,4 +150,144 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
 
         cut.Markup.ShouldContain("Groceries");
     }
+
+    /// <summary>
+    /// Verifies clicking a month count button reloads data.
+    /// </summary>
+    [Fact]
+    public void MonthCountButton_ReloadsData()
+    {
+        this._apiService.SpendingTrends = CreateTestTrendsReport();
+
+        var cut = Render<MonthlyTrendsReport>();
+
+        var monthButtons = cut.FindAll("button.month-option");
+        var button12 = monthButtons.First(b => b.TextContent.Contains("12"));
+        button12.Click();
+
+        cut.Markup.ShouldContain("Averages");
+    }
+
+    /// <summary>
+    /// Verifies the category filter select triggers reload.
+    /// </summary>
+    [Fact]
+    public void CategoryFilter_SelectTriggersReload()
+    {
+        var catId = Guid.NewGuid();
+        this._apiService.Categories.Add(new BudgetCategoryDto
+        {
+            Id = catId,
+            Name = "Dining",
+            Type = "Expense",
+            IsActive = true,
+        });
+        this._apiService.SpendingTrends = CreateTestTrendsReport();
+
+        var cut = Render<MonthlyTrendsReport>();
+
+        var select = cut.Find("select#category-select");
+        select.Change(catId.ToString());
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the monthly breakdown table shows data when report exists.
+    /// </summary>
+    [Fact]
+    public void ShowsMonthlyBreakdownTable_WhenDataExists()
+    {
+        this._apiService.SpendingTrends = CreateTestTrendsReport();
+
+        var cut = Render<MonthlyTrendsReport>();
+
+        cut.Markup.ShouldContain("Monthly Breakdown");
+        cut.Markup.ShouldContain("Month");
+        cut.Markup.ShouldContain("Income");
+        cut.Markup.ShouldContain("Spending");
+    }
+
+    /// <summary>
+    /// Verifies the trend direction is displayed with correct arrow.
+    /// </summary>
+    [Fact]
+    public void ShowsTrendDirection_Decreasing()
+    {
+        this._apiService.SpendingTrends = new SpendingTrendsReportDto
+        {
+            AverageMonthlySpending = new MoneyDto { Amount = 2500m, Currency = "USD" },
+            AverageMonthlyIncome = new MoneyDto { Amount = 4000m, Currency = "USD" },
+            TrendDirection = "decreasing",
+            TrendPercentage = -8.3m,
+            MonthlyData = [],
+        };
+
+        var cut = Render<MonthlyTrendsReport>();
+
+        cut.Markup.ShouldContain("↓");
+        cut.Markup.ShouldContain("8.3");
+    }
+
+    /// <summary>
+    /// Verifies the trend direction is displayed with upward arrow for increasing.
+    /// </summary>
+    [Fact]
+    public void ShowsTrendDirection_Increasing()
+    {
+        this._apiService.SpendingTrends = new SpendingTrendsReportDto
+        {
+            AverageMonthlySpending = new MoneyDto { Amount = 3500m, Currency = "USD" },
+            AverageMonthlyIncome = new MoneyDto { Amount = 4000m, Currency = "USD" },
+            TrendDirection = "increasing",
+            TrendPercentage = 12.1m,
+            MonthlyData = [],
+        };
+
+        var cut = Render<MonthlyTrendsReport>();
+
+        cut.Markup.ShouldContain("↑");
+        cut.Markup.ShouldContain("12.1");
+    }
+
+    /// <summary>
+    /// Verifies the default month count selector has 6 months selected.
+    /// </summary>
+    [Fact]
+    public void DefaultMonthCount_IsSix()
+    {
+        var cut = Render<MonthlyTrendsReport>();
+
+        var activeButton = cut.Find("button.month-option.active");
+        activeButton.TextContent.ShouldContain("6");
+    }
+
+    private static SpendingTrendsReportDto CreateTestTrendsReport() => new()
+    {
+        AverageMonthlySpending = new MoneyDto { Amount = 3000m, Currency = "USD" },
+        AverageMonthlyIncome = new MoneyDto { Amount = 5000m, Currency = "USD" },
+        TrendDirection = "decreasing",
+        TrendPercentage = -5.2m,
+        MonthlyData =
+        [
+            new MonthlyTrendPointDto
+            {
+                Year = 2025,
+                Month = 1,
+                TotalSpending = new MoneyDto { Amount = 3200m, Currency = "USD" },
+                TotalIncome = new MoneyDto { Amount = 5000m, Currency = "USD" },
+                NetAmount = new MoneyDto { Amount = 1800m, Currency = "USD" },
+                TransactionCount = 45,
+            },
+            new MonthlyTrendPointDto
+            {
+                Year = 2025,
+                Month = 2,
+                TotalSpending = new MoneyDto { Amount = 2800m, Currency = "USD" },
+                TotalIncome = new MoneyDto { Amount = 5000m, Currency = "USD" },
+                NetAmount = new MoneyDto { Amount = 2200m, Currency = "USD" },
+                TransactionCount = 38,
+            },
+        ],
+    };
 }

@@ -10,14 +10,14 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 
 ## Problem Statement
 
-### Current State (Post-Feature 091)
+### Current State (Post-Phase 5)
 
 | Metric               | Value                    |
 |-----------------------|--------------------------|
-| Line coverage         | **41.3%** (7,093 / 17,144) |
-| Branch coverage       | **46.1%** (2,962 / 6,424)  |
-| Method coverage       | **59.1%** (1,496 / 2,531)  |
-| Total tests (Client)  | 1,337 passing, 1 skipped   |
+| Line coverage         | **59.9%** (10,273 / 17,144) |
+| Branch coverage       | **62.0%** (3,990 / 6,430)  |
+| Method coverage       | TBD                        |
+| Total tests (Client)  | 1,780 passing, 1 skipped   |
 
 **Key Gaps:**
 - **18 of 21 page components** have 0% coverage (these are the largest files in the project, 241–1,099 lines each)
@@ -141,9 +141,10 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 **So that** page-level orchestration logic (data loading, CRUD operations, filtering, sorting) is verified.
 
 **Acceptance Criteria:**
-- [ ] All P1 pages have bUnit tests (Import, Calendar, AccountTransactions, CategorySuggestions)
-- [ ] All P2 pages have bUnit tests (Reconciliation, Settings, Uncategorized, PaycheckPlanner, Rules, Categories, CustomReportBuilder)
+- [x] All P1 pages have bUnit tests (Import, Calendar, AccountTransactions, CategorySuggestions)
+- [x] All P2 pages have bUnit tests (Reconciliation, Settings, Uncategorized, PaycheckPlanner, Rules, Categories, CustomReportBuilder)
 - [x] All P3 pages have bUnit tests (Recurring, AiSuggestions, RecurringTransfers, Budget, Accounts, Transfers, Onboarding, MonthlyTrendsReport, MonthlyCategoriesReport)
+- [ ] P1/P2 page handler methods (CRUD operations, confirmations) have deeper coverage — currently pages average ~30% due to untested async handlers
 
 ### US-095-002: Improve API Service Coverage
 **As a** developer
@@ -272,25 +273,80 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 - [x] Add tests for TransactionListItem, ImportWizardState, ColumnMappingState
 - [x] All tests pass (1,544 → 1,694, +150 tests)
 
-**Results:** +150 tests, overall Client coverage estimated ~57%
+**Results:** +150 tests (1,544 → 1,694), overall Client coverage 53% → 59.9% (measured: 10,273 / 17,144 lines)
 
 **Commit:** `test(client): add P3 page, service, and model tests`
+
+> **Post-Phase 5 checkpoint (1,780 tests):** Additional tests added after Phase 5 commit brought total to 1,780 tests, 59.9% line coverage. Gap to 65%: **871 lines**.
 
 ### Phase 6: Coverage Improvement for Moderate Components
 **Objective:** Improve coverage for components in the 30-57% range.
 
-**Tasks:**
-- [ ] Expand ImportPatternsDialog tests (45% → 75%)
-- [ ] Expand ManualMatchDialog tests (48.4% → 70%)
-- [ ] Expand LocationFields tests (47.3% → 75%)
-- [ ] Expand ToleranceSettingsPanel tests (39.1% → 70%)
-- [ ] Expand ChartTooltip tests (31.2% → 70%)
-- [ ] Expand ChartLegend tests (43.2% → 70%)
-- [ ] Expand ChatApiService, ThemeService coverage
+**Status:** Several targets already exceeded from previous phases; Pages handler methods are the primary remaining gap.
+
+**Phase 6 Component Status (measured post-Phase 5):**
+
+| Component | Doc Baseline | Current | Target | Status |
+|--|--|--|--|--|
+| ImportPatternsDialog | 45% | ~80% | 75% | ✅ Done |
+| ToleranceSettingsPanel | 39.1% | ~87% | 70% | ✅ Done |
+| ChartLegend | 43.2% | ~91% | 70% | ✅ Done |
+| LocationFields | 47.3% | ~80% (HandleUseCurrentLocation 18%) | 75% | ✅ Done |
+| ChatApiService | 49.1% | ~72% | 60%+ | ✅ Done |
+| ThemeService | 58.1% | ~74% | 60%+ | ✅ Done |
+| ManualMatchDialog | 48.4% | ~65% (HandleSubmit 0%) | 70% | ⚠️ Close |
+| ChartTooltip | 31.2% | 31.2% | 70% | ❌ Needs work |
+
+**Remaining Tasks:**
+- [x] Expand ImportPatternsDialog tests (45% → 75%) — already at ~80%
+- [ ] Expand ManualMatchDialog tests — HandleSubmit path (0/33 lines) uncovered
+- [x] Expand LocationFields tests (47.3% → 75%) — already at ~80%
+- [x] Expand ToleranceSettingsPanel tests (39.1% → 70%) — already at ~87%
+- [ ] Expand ChartTooltip tests (31.2% → 70%) — still at baseline
+- [x] Expand ChartLegend tests (43.2% → 70%) — already at ~91%
+- [x] Expand ChatApiService, ThemeService coverage — both above 70%
+- [ ] Deepen page handler coverage (CRUD, confirmation dialogs) — see Phase 6b below
 - [ ] Run final coverage report, validate ≥ 65% overall
 - [ ] All tests pass
 
-**Commit:** `test(client): improve coverage for moderate-coverage components`
+### Phase 6b: Page Handler Coverage (NEW — Required for 65%)
+**Objective:** The 871-line gap to 65% is dominated by 3,721 uncovered lines in page async handler methods (CRUD operations, confirmation dialogs, delete flows). Covering ~871 of these lines reaches the target.
+
+**Biggest page handler gaps (lines at 0% coverage):**
+
+| Page | Handler Method | Uncovered Lines |
+|--|--|--|
+| Import | HandleFileSelected, GoToStep3, ExecuteImport, SaveMapping, HandleSkipRowsChanged, UpdateMapping, DeleteImportBatch, DeleteMapping | ~280 |
+| Calendar | ConfirmRecurringInstance, SkipPastDueItems, SaveBudgetGoal, ModifyInstance, ConfirmSkipInstance, DeleteBudgetGoal, CopyBudgetGoalsFromPrevious, CreateTransaction, ConfirmPastDueItems, RetryLoad, OnScopeChanged | ~280 |
+| PaycheckPlanner | CreateRecurringTransfer, CalculateAllocation | ~77 |
+| AccountTransactions | SaveTransaction, ConfirmRecurringInstance, SaveRecurringInstance, ConfirmDelete, ConfirmSkipRecurring, SaveLocation, ClearLocation, EditTransaction, ConfirmPastDueItems, SkipPastDueItems | ~270 |
+| CategorySuggestions | ConfirmAccept, AnalyzeTransactions, AcceptSelected, RestoreSuggestion, ShowRulesPreview, DismissSuggestion, ConfirmClearDismissedPatterns | ~152 |
+| Categories | UpdateCategory, DeleteCategory, DeactivateCategory, ActivateCategory, CreateCategory | ~132 |
+| Rules | UpdateRule, DeleteRule, CreateRule, ActivateRule, DeactivateRule, TestPattern | ~133 |
+| Settings | ConfirmDeleteLocationData, SaveSettingAsync, SaveUserPrefAsync | ~56 |
+| AiSuggestions | StartAnalysis, HandleFeedback, HandleAccept, HandleDismiss, HandleViewDetails, DisplayClass | ~157 |
+| CustomReportBuilder | SaveLayoutAsync, ApplyPresetAsync, HandleRemoveWidget, CreateNewLayout | ~76 |
+| Budget | SaveGoal, DeleteGoal | ~63 |
+| Reconciliation | HandleUnlinkConfirmed, AcceptAllHighConfidence, AcceptMatch, RejectMatch | ~57 |
+| Recurring | UpdateRecurring, ConfirmDelete, CreateRecurring | ~53 |
+| RecurringTransfers | UpdateRecurring, ConfirmDelete, CreateRecurring | ~53 |
+| Accounts | UpdateAccount, ConfirmDelete, CreateAccount | ~65 |
+| Transfers | UpdateTransfer | ~14 |
+| Onboarding | CompleteOnboarding, SkipOnboarding | ~38 |
+| Uncategorized | BulkCategorize, ToggleSort | ~50 |
+
+**Strategy:** Prioritize Import, Calendar, AccountTransactions, and CategorySuggestions handler methods — these four pages alone have ~980 uncovered handler lines. Covering ~60% of those (~590 lines) plus ManualMatchDialog (~33 lines) and ChartTooltip (~11 lines) would exceed the 871-line target.
+
+**Tasks:**
+- [ ] Add Import page handler tests (file selection, step navigation, save/delete mapping, execute import)
+- [ ] Add Calendar page handler tests (recurring instances, budget goals, transactions, past-due)
+- [ ] Add AccountTransactions page handler tests (save/edit/delete transactions, recurring, locations)
+- [ ] Add CategorySuggestions page handler tests (accept, dismiss, restore, analyze, bulk, rules preview)
+- [ ] Add handler tests for Categories, Rules, AiSuggestions pages
+- [ ] Add handler tests for remaining pages as needed (Budget, Reconciliation, Accounts, etc.)
+- [ ] Run final coverage report, validate ≥ 65% overall
+
+**Commit:** `test(client): deepen page handler coverage to reach 65% target`
 
 ---
 
@@ -299,7 +355,8 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 - **Phase 1 (Services)** delivers the highest testability-per-effort: API services are pure C# with mocked `HttpClient`, no bUnit complexity.
 - **Phase 2 (Core Pages)** covers the most complex user workflows but requires more bUnit setup (mocked services, navigation, authorization).
 - **Phases 3-5** can be parallelized across developers if needed.
-- **Phase 6** is polish — only pursue if the 65% target isn't met after phases 1-5.
+- **Phase 6** addresses remaining moderate-coverage components (most already met targets from earlier phases).
+- **Phase 6b** (NEW) is required to reach 65% — the gap is dominated by page async handler methods at 0%. Focus on the 4 largest pages (Import, Calendar, AccountTransactions, CategorySuggestions) for maximum impact.
 - **Layouts** (MainLayout, CalendarLayout, EmptyLayout) are excluded — they are thin shells best validated by integration/E2E tests.
 - **ComponentShowcase** is excluded — it's a developer tool, not production functionality.
 

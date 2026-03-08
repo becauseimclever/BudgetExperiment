@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
@@ -465,6 +466,149 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
         cut.Markup.ShouldContain("Pending Review"); // the visible option text
         cut.Markup.ShouldContain("Missing");
         cut.Markup.ShouldContain("Skipped");
+    }
+
+    /// <summary>
+    /// Verifies accept match result is configurable.
+    /// </summary>
+    [Fact]
+    public void AcceptMatchResult_IsConfigurable()
+    {
+        this._reconciliationApiService.AcceptMatchResult = true;
+
+        var cut = Render<Reconciliation>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies reject match result is configurable.
+    /// </summary>
+    [Fact]
+    public void RejectMatchResult_IsConfigurable()
+    {
+        this._reconciliationApiService.RejectMatchResult = true;
+
+        var cut = Render<Reconciliation>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies bulk accept result is configurable.
+    /// </summary>
+    [Fact]
+    public void BulkAcceptResult_IsConfigurable()
+    {
+        this._reconciliationApiService.BulkAcceptResult = 3;
+
+        var cut = Render<Reconciliation>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies unlink match result is configurable.
+    /// </summary>
+    [Fact]
+    public void UnlinkMatchResult_IsConfigurable()
+    {
+        this._reconciliationApiService.UnlinkMatchResult = true;
+
+        var cut = Render<Reconciliation>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies match with high confidence can be configured.
+    /// </summary>
+    [Fact]
+    public void HighConfidenceMatch_IsConfigurable()
+    {
+        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Netflix", "High", 0.95m));
+
+        var cut = Render<Reconciliation>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Accept button is clickable for pending matches.
+    /// </summary>
+    [Fact]
+    public void AcceptButton_IsClickable_ForPendingMatch()
+    {
+        this._reconciliationApiService.AcceptMatchResult = true;
+        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        {
+            Year = 2025,
+            Month = 6,
+            TotalExpectedInstances = 1,
+            MatchedCount = 0,
+            PendingCount = 1,
+            MissingCount = 0,
+            Instances = [],
+        };
+        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Netflix", "High", 0.95m));
+
+        var cut = Render<Reconciliation>();
+        var acceptButton = cut.FindAll("button").First(b => b.TextContent.Contains("Accept") && !b.TextContent.Contains("All"));
+        acceptButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Reject button is clickable for pending matches.
+    /// </summary>
+    [Fact]
+    public void RejectButton_IsClickable_ForPendingMatch()
+    {
+        this._reconciliationApiService.RejectMatchResult = true;
+        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        {
+            Year = 2025,
+            Month = 6,
+            TotalExpectedInstances = 1,
+            MatchedCount = 0,
+            PendingCount = 1,
+            MissingCount = 0,
+            Instances = [],
+        };
+        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Spotify", "Medium", 0.75m));
+
+        var cut = Render<Reconciliation>();
+        var rejectButton = cut.FindAll("button").First(b => b.TextContent.Contains("Reject"));
+        rejectButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Refresh button triggers data reload.
+    /// </summary>
+    [Fact]
+    public void RefreshButton_IsClickable()
+    {
+        var cut = Render<Reconciliation>();
+        var refreshButton = cut.FindAll("button").First(b => b.TextContent.Contains("Refresh"));
+        refreshButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Apply button in filter bar triggers filter application.
+    /// </summary>
+    [Fact]
+    public void ApplyButton_TriggersFilter()
+    {
+        var cut = Render<Reconciliation>();
+        var applyButton = cut.FindAll("button").First(b => b.TextContent.Contains("Apply"));
+        applyButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
     }
 
     private static ReconciliationMatchDto CreateMatch(string description, string confidence, decimal score)

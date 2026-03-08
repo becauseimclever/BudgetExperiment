@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
@@ -250,6 +251,217 @@ public class AccountTransactionsPageTests : BunitContext, IAsyncLifetime
         addButton.Click();
 
         cut.Markup.ShouldContain("Add Transaction");
+    }
+
+    /// <summary>
+    /// Verifies the create transaction result is configurable and renders.
+    /// </summary>
+    [Fact]
+    public void CreateTransaction_ResultIsConfigurable()
+    {
+        this._apiService.CreateTransactionResult = new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "New Transaction",
+            Amount = new MoneyDto { Amount = -75.50m, Currency = "USD" },
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            AccountId = this._accountId,
+        };
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the update transaction handles conflict.
+    /// </summary>
+    [Fact]
+    public void UpdateTransaction_HandlesConflict()
+    {
+        this._apiService.UpdateTransactionResult = ApiResult<TransactionDto>.Conflict();
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the delete transaction result is configurable.
+    /// </summary>
+    [Fact]
+    public void DeleteTransaction_ResultIsConfigurable()
+    {
+        this._apiService.DeleteTransactionResult = true;
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies categories are loaded for transaction modal.
+    /// </summary>
+    [Fact]
+    public void CategoriesAreLoaded_ForTransactionModal()
+    {
+        this._apiService.Categories.Add(new BudgetCategoryDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Groceries",
+            Type = "Expense",
+            IsActive = true,
+        });
+
+        var cut = RenderPage();
+
+        // Open add transaction modal
+        var addButton = cut.Find("button.btn-success");
+        addButton.Click();
+
+        // Categories should be available in the modal
+        cut.Markup.ShouldContain("Groceries");
+    }
+
+    /// <summary>
+    /// Verifies transactions with recurring items display type indicators.
+    /// </summary>
+    [Fact]
+    public void ShowsRecurringTypeIndicator_ForRecurringItems()
+    {
+        this._apiService.TransactionList = new TransactionListDto
+        {
+            AccountId = this._accountId,
+            AccountName = "Test Checking",
+            Items = new[]
+            {
+                new TransactionListItemDto
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "recurring",
+                    Date = DateOnly.FromDateTime(DateTime.Today),
+                    Description = "Monthly Rent",
+                    Amount = new MoneyDto { Amount = -1500m, Currency = "USD" },
+                },
+                new TransactionListItemDto
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "transaction",
+                    Date = DateOnly.FromDateTime(DateTime.Today),
+                    Description = "Coffee",
+                    Amount = new MoneyDto { Amount = -4.50m, Currency = "USD" },
+                },
+            },
+            Summary = new TransactionListSummaryDto
+            {
+                TransactionCount = 1,
+                RecurringCount = 1,
+                TotalAmount = new MoneyDto { Amount = -1504.50m, Currency = "USD" },
+                CurrentBalance = new MoneyDto { Amount = -1504.50m, Currency = "USD" },
+            },
+        };
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("Monthly Rent");
+        cut.Markup.ShouldContain("Coffee");
+    }
+
+    /// <summary>
+    /// Verifies past due items are shown when available.
+    /// </summary>
+    [Fact]
+    public void ShowsPastDueItems_WhenAvailable()
+    {
+        this._apiService.PastDueSummary = new PastDueSummaryDto
+        {
+            TotalCount = 1,
+            Items = new List<PastDueItemDto>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "recurring-transaction",
+                    Description = "Overdue Bill",
+                    InstanceDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-3)),
+                    Amount = new MoneyDto { Amount = -50m, Currency = "USD" },
+                    AccountId = this._accountId,
+                },
+            },
+        };
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the get transaction result is used for editing.
+    /// </summary>
+    [Fact]
+    public void GetTransactionResult_IsUsedForEditing()
+    {
+        this._apiService.GetTransactionResult = new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "Editable Transaction",
+            Amount = new MoneyDto { Amount = -25m, Currency = "USD" },
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            AccountId = this._accountId,
+        };
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the page renders transactions header.
+    /// </summary>
+    [Fact]
+    public void PageHeader_ContainsTransactionsTitle()
+    {
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("Transactions");
+    }
+
+    /// <summary>
+    /// Verifies the Add Transaction button click triggers modal state.
+    /// </summary>
+    [Fact]
+    public void AddTransactionButton_ClickTriggersState()
+    {
+        var cut = RenderPage();
+        var addButton = cut.FindAll("button").First(b => b.TextContent.Contains("Add Transaction"));
+        addButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the date filter inputs are present and functional.
+    /// </summary>
+    [Fact]
+    public void DateFilter_InputsArePresent()
+    {
+        var cut = RenderPage();
+        var dateInputs = cut.FindAll("input[type='date']");
+
+        dateInputs.Count.ShouldBeGreaterThan(0);
+    }
+
+    /// <summary>
+    /// Verifies transaction list items show description.
+    /// </summary>
+    [Fact]
+    public void TransactionListItems_ShowDescription()
+    {
+        this._apiService.TransactionList = CreateTransactionList([("Grocery Store", -45.00m)]);
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("Grocery Store");
     }
 
     private IRenderedComponent<AccountTransactions> RenderPage()

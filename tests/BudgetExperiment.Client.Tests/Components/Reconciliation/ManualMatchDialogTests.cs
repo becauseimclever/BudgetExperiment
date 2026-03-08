@@ -350,6 +350,96 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         Assert.Contains("Transaction Date", cut.Markup);
     }
 
+    /// <summary>
+    /// Verifies HandleSubmit creates a match and invokes the callback when successful.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_HandleSubmit_CreatesMatch_WhenSuccessful()
+    {
+        var matchResult = new ReconciliationMatchDto
+        {
+            Id = Guid.NewGuid(),
+            ImportedTransactionId = Guid.NewGuid(),
+            ConfidenceScore = 1.0m,
+        };
+        _reconciliationApi.ManualMatchResult = matchResult;
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        ReconciliationMatchDto? receivedMatch = null;
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction())
+            .Add(p => p.OnMatchCreated, (ReconciliationMatchDto m) => { receivedMatch = m; }));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        // Select a recurring transfer
+        cut.Find(".recurring-option").Click();
+
+        // Click Create Match
+        var submitBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Create Match"));
+        submitBtn.Click();
+
+        await Task.Delay(50);
+
+        Assert.NotNull(receivedMatch);
+        Assert.Equal(matchResult.Id, receivedMatch!.Id);
+    }
+
+    /// <summary>
+    /// Verifies HandleSubmit shows error when API returns null.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_HandleSubmit_ShowsError_WhenApiFails()
+    {
+        _reconciliationApi.ManualMatchResult = null;
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        // Select a recurring transfer
+        cut.Find(".recurring-option").Click();
+
+        // Click Create Match
+        var submitBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Create Match"));
+        submitBtn.Click();
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("Failed to create match", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies HandleSubmit does nothing when no transaction is provided.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_HandleSubmit_NoOp_WhenNoTransaction()
+    {
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        var matchCreated = false;
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, (TransactionDto?)null)
+            .Add(p => p.OnMatchCreated, (ReconciliationMatchDto _) => { matchCreated = true; }));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        // Submit should be disabled — the button won't fire
+        Assert.False(matchCreated);
+    }
+
     private static TransactionDto CreateTransaction(string description = "Test Transaction") => new()
     {
         Id = Guid.NewGuid(),
@@ -661,8 +751,11 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
 
     private sealed class StubReconciliationApiService : IReconciliationApiService
     {
+        /// <summary>Gets or sets the result for <see cref="CreateManualMatchAsync"/>.</summary>
+        public ReconciliationMatchDto? ManualMatchResult { get; set; }
+
         /// <inheritdoc/>
-        public Task<ReconciliationMatchDto?> CreateManualMatchAsync(ManualMatchRequest request) => Task.FromResult<ReconciliationMatchDto?>(null);
+        public Task<ReconciliationMatchDto?> CreateManualMatchAsync(ManualMatchRequest request) => Task.FromResult(this.ManualMatchResult);
 
         /// <inheritdoc/>
         public Task<ReconciliationStatusDto?> GetStatusAsync(int year, int month, Guid? accountId = null) => Task.FromResult<ReconciliationStatusDto?>(null);

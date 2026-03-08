@@ -116,6 +116,96 @@ internal class StubBudgetApiService : IBudgetApiService
     public List<CategorizationRuleDto> Rules { get; } = new();
 
     /// <summary>
+    /// Gets or sets the rule returned by <see cref="CreateCategorizationRuleAsync"/>.
+    /// </summary>
+    public CategorizationRuleDto? CreateRuleResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateCategorizationRuleAsync"/>.
+    /// </summary>
+    public ApiResult<CategorizationRuleDto>? UpdateRuleResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeleteCategorizationRuleAsync"/> returns true.
+    /// </summary>
+    public bool DeleteRuleResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="ActivateCategorizationRuleAsync"/> returns true.
+    /// </summary>
+    public bool ActivateRuleResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeactivateCategorizationRuleAsync"/> returns true.
+    /// </summary>
+    public bool DeactivateRuleResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="SetBudgetGoalAsync"/>.
+    /// </summary>
+    public ApiResult<BudgetGoalDto>? SetBudgetGoalResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeleteBudgetGoalAsync"/> returns true.
+    /// </summary>
+    public bool DeleteBudgetGoalResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the transaction returned by <see cref="CreateTransactionAsync"/>.
+    /// </summary>
+    public TransactionDto? CreateTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateTransactionAsync"/>.
+    /// </summary>
+    public ApiResult<TransactionDto>? UpdateTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeleteTransactionAsync"/> returns true.
+    /// </summary>
+    public bool DeleteTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the transfer returned by <see cref="CreateTransferAsync"/>.
+    /// </summary>
+    public TransferResponse? CreateTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="DeleteAllLocationDataAsync"/>.
+    /// </summary>
+    public LocationDataClearedDto? DeleteLocationDataResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="CompleteOnboardingAsync"/>.
+    /// </summary>
+    public UserSettingsDto? CompleteOnboardingResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="TestPatternAsync"/>.
+    /// </summary>
+    public TestPatternResponse? TestPatternResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="ApplyCategorizationRulesAsync"/>.
+    /// </summary>
+    public ApplyRulesResponse? ApplyRulesResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="GetTransactionAsync"/>.
+    /// </summary>
+    public TransactionDto? GetTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="CopyBudgetGoalsAsync"/>.
+    /// </summary>
+    public CopyBudgetGoalsResult? CopyBudgetGoalsResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="RealizeBatchAsync"/>.
+    /// </summary>
+    public BatchRealizeResultDto? RealizeBatchResult { get; set; }
+
+    /// <summary>
     /// Gets or sets the uncategorized transaction page returned by <see cref="GetUncategorizedTransactionsAsync"/>.
     /// </summary>
     public UncategorizedTransactionPageDto UncategorizedPage { get; set; } = new();
@@ -124,6 +214,11 @@ internal class StubBudgetApiService : IBudgetApiService
     /// Gets or sets the paycheck allocation summary returned by <see cref="GetPaycheckAllocationAsync"/>.
     /// </summary>
     public PaycheckAllocationSummaryDto? AllocationSummary { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="CreateRecurringTransferAsync"/>.
+    /// </summary>
+    public RecurringTransferDto? CreateRecurringTransferResult { get; set; }
 
     /// <summary>
     /// Gets the list of recurring transactions returned by <see cref="GetRecurringTransactionsAsync"/>.
@@ -169,16 +264,16 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<IReadOnlyList<TransactionDto>>([]);
 
     /// <inheritdoc/>
-    public Task<TransactionDto?> GetTransactionAsync(Guid id) => Task.FromResult<TransactionDto?>(null);
+    public Task<TransactionDto?> GetTransactionAsync(Guid id) => Task.FromResult(this.GetTransactionResult);
 
     /// <inheritdoc/>
-    public Task<TransactionDto?> CreateTransactionAsync(TransactionCreateDto model) => Task.FromResult<TransactionDto?>(null);
+    public Task<TransactionDto?> CreateTransactionAsync(TransactionCreateDto model) => Task.FromResult(this.CreateTransactionResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<TransactionDto>> UpdateTransactionAsync(Guid id, TransactionUpdateDto model, string? version = null) => Task.FromResult(ApiResult<TransactionDto>.Failure());
+    public Task<ApiResult<TransactionDto>> UpdateTransactionAsync(Guid id, TransactionUpdateDto model, string? version = null) => Task.FromResult(this.UpdateTransactionResult ?? ApiResult<TransactionDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteTransactionAsync(Guid id) => Task.FromResult(false);
+    public Task<bool> DeleteTransactionAsync(Guid id) => Task.FromResult(this.DeleteTransactionResult);
 
     /// <inheritdoc/>
     public Task<ApiResult<TransactionDto>> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? version = null) => Task.FromResult(ApiResult<TransactionDto>.Failure());
@@ -243,7 +338,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<ApiResult<RecurringInstanceDto>> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model, string? version = null) => Task.FromResult(ApiResult<RecurringInstanceDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<TransferResponse?> CreateTransferAsync(CreateTransferRequest model) => Task.FromResult<TransferResponse?>(null);
+    public Task<TransferResponse?> CreateTransferAsync(CreateTransferRequest model) => Task.FromResult(this.CreateTransferResult);
 
     /// <inheritdoc/>
     public Task<TransferResponse?> GetTransferAsync(Guid transferId) => Task.FromResult<TransferResponse?>(null);
@@ -264,7 +359,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<RecurringTransferDto?> GetRecurringTransferAsync(Guid id) => Task.FromResult<RecurringTransferDto?>(null);
 
     /// <inheritdoc/>
-    public Task<RecurringTransferDto?> CreateRecurringTransferAsync(RecurringTransferCreateDto model) => Task.FromResult<RecurringTransferDto?>(null);
+    public Task<RecurringTransferDto?> CreateRecurringTransferAsync(RecurringTransferCreateDto model) => Task.FromResult(this.CreateRecurringTransferResult);
 
     /// <inheritdoc/>
     public Task<ApiResult<RecurringTransferDto>> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model, string? version = null) => Task.FromResult(ApiResult<RecurringTransferDto>.Failure());
@@ -300,7 +395,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<PastDueSummaryDto?> GetPastDueItemsAsync(Guid? accountId = null) => Task.FromResult(this.PastDueSummary);
 
     /// <inheritdoc/>
-    public Task<BatchRealizeResultDto?> RealizeBatchAsync(BatchRealizeRequest request) => Task.FromResult<BatchRealizeResultDto?>(null);
+    public Task<BatchRealizeResultDto?> RealizeBatchAsync(BatchRealizeRequest request) => Task.FromResult(this.RealizeBatchResult);
 
     /// <inheritdoc/>
     public Task<AppSettingsDto?> GetSettingsAsync() => Task.FromResult(this.AppSettings);
@@ -309,7 +404,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto) => Task.FromResult<AppSettingsDto?>(null);
 
     /// <inheritdoc/>
-    public Task<LocationDataClearedDto?> DeleteAllLocationDataAsync() => Task.FromResult<LocationDataClearedDto?>(null);
+    public Task<LocationDataClearedDto?> DeleteAllLocationDataAsync() => Task.FromResult(this.DeleteLocationDataResult);
 
     /// <inheritdoc/>
     public Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null) => Task.FromResult(this.AllocationSummary);
@@ -342,13 +437,13 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsByCategoryAsync(Guid categoryId) => Task.FromResult<IReadOnlyList<BudgetGoalDto>>([]);
 
     /// <inheritdoc/>
-    public Task<ApiResult<BudgetGoalDto>> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model, string? version = null) => Task.FromResult(ApiResult<BudgetGoalDto>.Failure());
+    public Task<ApiResult<BudgetGoalDto>> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model, string? version = null) => Task.FromResult(this.SetBudgetGoalResult ?? ApiResult<BudgetGoalDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month) => Task.FromResult(false);
+    public Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month) => Task.FromResult(this.DeleteBudgetGoalResult);
 
     /// <inheritdoc/>
-    public Task<CopyBudgetGoalsResult?> CopyBudgetGoalsAsync(CopyBudgetGoalsRequest request) => Task.FromResult<CopyBudgetGoalsResult?>(null);
+    public Task<CopyBudgetGoalsResult?> CopyBudgetGoalsAsync(CopyBudgetGoalsRequest request) => Task.FromResult(this.CopyBudgetGoalsResult);
 
     /// <inheritdoc/>
     public Task<BudgetSummaryDto?> GetBudgetSummaryAsync(int year, int month) => Task.FromResult(this.BudgetSummary);
@@ -363,25 +458,25 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<CategorizationRuleDto?> GetCategorizationRuleAsync(Guid id) => Task.FromResult<CategorizationRuleDto?>(null);
 
     /// <inheritdoc/>
-    public Task<CategorizationRuleDto?> CreateCategorizationRuleAsync(CategorizationRuleCreateDto model) => Task.FromResult<CategorizationRuleDto?>(null);
+    public Task<CategorizationRuleDto?> CreateCategorizationRuleAsync(CategorizationRuleCreateDto model) => Task.FromResult(this.CreateRuleResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<CategorizationRuleDto>> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model, string? version = null) => Task.FromResult(ApiResult<CategorizationRuleDto>.Failure());
+    public Task<ApiResult<CategorizationRuleDto>> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model, string? version = null) => Task.FromResult(this.UpdateRuleResult ?? ApiResult<CategorizationRuleDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteCategorizationRuleAsync(Guid id) => Task.FromResult(false);
+    public Task<bool> DeleteCategorizationRuleAsync(Guid id) => Task.FromResult(this.DeleteRuleResult);
 
     /// <inheritdoc/>
-    public Task<bool> ActivateCategorizationRuleAsync(Guid id) => Task.FromResult(false);
+    public Task<bool> ActivateCategorizationRuleAsync(Guid id) => Task.FromResult(this.ActivateRuleResult);
 
     /// <inheritdoc/>
-    public Task<bool> DeactivateCategorizationRuleAsync(Guid id) => Task.FromResult(false);
+    public Task<bool> DeactivateCategorizationRuleAsync(Guid id) => Task.FromResult(this.DeactivateRuleResult);
 
     /// <inheritdoc/>
-    public Task<TestPatternResponse?> TestPatternAsync(TestPatternRequest request) => Task.FromResult<TestPatternResponse?>(null);
+    public Task<TestPatternResponse?> TestPatternAsync(TestPatternRequest request) => Task.FromResult(this.TestPatternResult);
 
     /// <inheritdoc/>
-    public Task<ApplyRulesResponse?> ApplyCategorizationRulesAsync(ApplyRulesRequest request) => Task.FromResult<ApplyRulesResponse?>(null);
+    public Task<ApplyRulesResponse?> ApplyCategorizationRulesAsync(ApplyRulesRequest request) => Task.FromResult(this.ApplyRulesResult);
 
     /// <inheritdoc/>
     public Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds) => Task.FromResult(false);
@@ -435,5 +530,5 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto) => Task.FromResult<UserSettingsDto?>(null);
 
     /// <inheritdoc/>
-    public Task<UserSettingsDto?> CompleteOnboardingAsync() => Task.FromResult<UserSettingsDto?>(null);
+    public Task<UserSettingsDto?> CompleteOnboardingAsync() => Task.FromResult(this.CompleteOnboardingResult);
 }

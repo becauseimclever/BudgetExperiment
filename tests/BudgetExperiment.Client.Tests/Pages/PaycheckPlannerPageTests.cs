@@ -213,6 +213,177 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
         cut.Markup.ShouldContain("$");
     }
 
+    /// <summary>
+    /// Verifies clicking Calculate shows the summary section.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsSummary()
+    {
+        this._apiService.AllocationSummary = CreateAllocationSummary();
+
+        var cut = Render<PaycheckPlanner>();
+        var calculateButton = cut.Find("button.btn-primary");
+        calculateButton.Click();
+
+        cut.Markup.ShouldContain("Summary");
+        cut.Markup.ShouldContain("Total per Paycheck");
+    }
+
+    /// <summary>
+    /// Verifies clicking Calculate shows the bill breakdown table.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsBillBreakdown()
+    {
+        this._apiService.AllocationSummary = CreateAllocationSummary();
+
+        var cut = Render<PaycheckPlanner>();
+        var calculateButton = cut.Find("button.btn-primary");
+        calculateButton.Click();
+
+        cut.Markup.ShouldContain("Bill Breakdown");
+        cut.Markup.ShouldContain("Rent");
+    }
+
+    /// <summary>
+    /// Verifies the annual total is displayed after calculation.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsAnnualTotal()
+    {
+        this._apiService.AllocationSummary = CreateAllocationSummary();
+
+        var cut = Render<PaycheckPlanner>();
+        cut.Find("button.btn-primary").Click();
+
+        cut.Markup.ShouldContain("Annual Total");
+    }
+
+    /// <summary>
+    /// Verifies warnings are displayed when allocation has warnings.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsWarnings_WhenPresent()
+    {
+        var summary = CreateAllocationSummary();
+        summary.HasWarnings = true;
+        summary.Warnings =
+        [
+            new PaycheckAllocationWarningDto
+            {
+                Type = "InsufficientIncome",
+                Message = "Your income may not cover all bills",
+            },
+        ];
+        this._apiService.AllocationSummary = summary;
+
+        var cut = Render<PaycheckPlanner>();
+        cut.Find("button.btn-primary").Click();
+
+        cut.Markup.ShouldContain("Your income may not cover all bills");
+    }
+
+    /// <summary>
+    /// Verifies the cannot-reconcile warning uses the red warning class.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsRedWarning_ForCannotReconcile()
+    {
+        var summary = CreateAllocationSummary();
+        summary.HasWarnings = true;
+        summary.CannotReconcile = true;
+        summary.Warnings =
+        [
+            new PaycheckAllocationWarningDto
+            {
+                Type = "CannotReconcile",
+                Message = "Cannot reconcile bills with income",
+            },
+        ];
+        this._apiService.AllocationSummary = summary;
+
+        var cut = Render<PaycheckPlanner>();
+        cut.Find("button.btn-primary").Click();
+
+        cut.Markup.ShouldContain("warning-red");
+    }
+
+    /// <summary>
+    /// Verifies the set aside section appears after calculation.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsSetAsideSection()
+    {
+        this._apiService.AllocationSummary = CreateAllocationSummary();
+
+        var cut = Render<PaycheckPlanner>();
+        cut.Find("button.btn-primary").Click();
+
+        cut.Markup.ShouldContain("Set Aside Money");
+    }
+
+    /// <summary>
+    /// Verifies the NoBillsConfigured warning uses the info warning class.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsInfoWarning_ForNoBillsConfigured()
+    {
+        var summary = CreateAllocationSummary();
+        summary.HasWarnings = true;
+        summary.Allocations = [];
+        summary.Warnings =
+        [
+            new PaycheckAllocationWarningDto
+            {
+                Type = "NoBillsConfigured",
+                Message = "No recurring bills configured",
+            },
+        ];
+        this._apiService.AllocationSummary = summary;
+
+        var cut = Render<PaycheckPlanner>();
+        cut.Find("button.btn-primary").Click();
+
+        cut.Markup.ShouldContain("warning-info");
+    }
+
+    /// <summary>
+    /// Verifies error message shows when allocation returns null.
+    /// </summary>
+    [Fact]
+    public void CalculateButton_ShowsError_WhenAllocationNull()
+    {
+        this._apiService.AllocationSummary = null;
+
+        var cut = Render<PaycheckPlanner>();
+        cut.Find("button.btn-primary").Click();
+
+        cut.Markup.ShouldContain("Failed to calculate allocation");
+    }
+
+    /// <summary>
+    /// Verifies the breakdown table shows multiple allocations.
+    /// </summary>
+    [Fact]
+    public void ShowsMultipleAllocations_InBreakdownTable()
+    {
+        var summary = CreateAllocationSummary();
+        summary.Allocations.Add(new PaycheckAllocationDto
+        {
+            Description = "Electric",
+            BillAmount = new MoneyDto { Amount = 200m, Currency = "USD" },
+            BillFrequency = "Monthly",
+            AmountPerPaycheck = new MoneyDto { Amount = 100m, Currency = "USD" },
+        });
+        this._apiService.AllocationSummary = summary;
+
+        var cut = Render<PaycheckPlanner>();
+        cut.Find("button.btn-primary").Click();
+
+        cut.Markup.ShouldContain("Rent");
+        cut.Markup.ShouldContain("Electric");
+    }
+
     private static PaycheckAllocationSummaryDto CreateAllocationSummary()
     {
         return new PaycheckAllocationSummaryDto

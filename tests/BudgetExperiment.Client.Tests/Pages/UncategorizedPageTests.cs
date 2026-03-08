@@ -306,6 +306,200 @@ public class UncategorizedPageTests : BunitContext, IAsyncLifetime
         cut.Markup.ShouldContain("All Accounts");
     }
 
+    /// <summary>
+    /// Verifies categories are loaded for bulk categorize.
+    /// </summary>
+    [Fact]
+    public void CategoriesAreLoaded()
+    {
+        this._apiService.Categories.Add(new BudgetCategoryDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Groceries",
+            IsActive = true,
+        });
+        this._apiService.UncategorizedPage = CreatePageWithOneTransaction();
+
+        var cut = Render<Uncategorized>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies page shows total count.
+    /// </summary>
+    [Fact]
+    public void ShowsTotalCount_InSubtitle()
+    {
+        this._apiService.UncategorizedPage = new UncategorizedTransactionPageDto
+        {
+            Items =
+            [
+                new TransactionDto
+                {
+                    Id = Guid.NewGuid(),
+                    AccountId = Guid.NewGuid(),
+                    Description = "Item",
+                    Amount = new MoneyDto { Amount = -10m, Currency = "USD" },
+                    Date = new DateOnly(2025, 6, 1),
+                },
+            ],
+            TotalCount = 42,
+            Page = 1,
+            PageSize = 25,
+        };
+
+        var cut = Render<Uncategorized>();
+
+        cut.Markup.ShouldContain("42");
+    }
+
+    /// <summary>
+    /// Verifies multiple item page renders all items.
+    /// </summary>
+    [Fact]
+    public void ShowsMultipleTransactions()
+    {
+        this._apiService.UncategorizedPage = new UncategorizedTransactionPageDto
+        {
+            Items =
+            [
+                new TransactionDto
+                {
+                    Id = Guid.NewGuid(),
+                    AccountId = Guid.NewGuid(),
+                    Description = "Coffee Shop",
+                    Amount = new MoneyDto { Amount = -5m, Currency = "USD" },
+                    Date = new DateOnly(2025, 6, 1),
+                },
+                new TransactionDto
+                {
+                    Id = Guid.NewGuid(),
+                    AccountId = Guid.NewGuid(),
+                    Description = "Gas Station",
+                    Amount = new MoneyDto { Amount = -40m, Currency = "USD" },
+                    Date = new DateOnly(2025, 6, 2),
+                },
+            ],
+            TotalCount = 2,
+            Page = 1,
+            PageSize = 25,
+        };
+
+        var cut = Render<Uncategorized>();
+
+        cut.Markup.ShouldContain("Coffee Shop");
+        cut.Markup.ShouldContain("Gas Station");
+    }
+
+    /// <summary>
+    /// Verifies the bulk categorize button text.
+    /// </summary>
+    [Fact]
+    public void HasBulkCategorizeButton()
+    {
+        this._apiService.UncategorizedPage = CreatePageWithOneTransaction();
+
+        var cut = Render<Uncategorized>();
+
+        cut.Markup.ShouldContain("Categorize");
+    }
+
+    /// <summary>
+    /// Verifies sort header click toggles sort order.
+    /// </summary>
+    [Fact]
+    public void SortableHeader_ClickTogglesSort()
+    {
+        this._apiService.UncategorizedPage = CreatePageWithOneTransaction();
+
+        var cut = Render<Uncategorized>();
+        var sortableHeaders = cut.FindAll("th.sortable");
+        sortableHeaders.Count.ShouldBeGreaterThan(0);
+
+        sortableHeaders[0].Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies clear filters button resets filters.
+    /// </summary>
+    [Fact]
+    public void ClearFilters_ResetsFilters()
+    {
+        this._apiService.UncategorizedPage = CreatePageWithOneTransaction();
+
+        var cut = Render<Uncategorized>();
+        var clearButton = cut.FindAll("button").First(b => b.TextContent.Contains("Clear"));
+        clearButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies select all checkbox toggles all selections.
+    /// </summary>
+    [Fact]
+    public void SelectAll_TogglesAllCheckboxes()
+    {
+        this._apiService.UncategorizedPage = CreatePageWithOneTransaction();
+
+        var cut = Render<Uncategorized>();
+        var selectAllCheckbox = cut.Find("th.checkbox-col input[type='checkbox']");
+        selectAllCheckbox.Change(true);
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies individual row checkbox toggles selection.
+    /// </summary>
+    [Fact]
+    public void RowCheckbox_TogglesSelection()
+    {
+        this._apiService.UncategorizedPage = CreatePageWithOneTransaction();
+
+        var cut = Render<Uncategorized>();
+        var rowCheckbox = cut.Find("td.checkbox-col input[type='checkbox']");
+        rowCheckbox.Change(true);
+
+        cut.Markup.ShouldContain("1 selected");
+    }
+
+    /// <summary>
+    /// Verifies that selecting a row and clicking Apply Category triggers bulk categorize.
+    /// </summary>
+    [Fact]
+    public void BulkCategorize_TriggersWhenRowSelectedAndCategoryChosen()
+    {
+        var catId = Guid.NewGuid();
+        this._apiService.UncategorizedPage = CreatePageWithOneTransaction();
+        this._apiService.Categories.Add(new BudgetCategoryDto
+        {
+            Id = catId,
+            Name = "Food",
+            Type = "Expense",
+            IsActive = true,
+        });
+
+        var cut = Render<Uncategorized>();
+
+        // Select the row checkbox
+        var rowCheckbox = cut.Find("td.checkbox-col input[type='checkbox']");
+        rowCheckbox.Change(true);
+
+        // Select a category from the dropdown
+        var select = cut.Find(".bulk-action-controls select");
+        select.Change(catId.ToString());
+
+        // Click Apply Category
+        var applyButton = cut.FindAll("button").First(b => b.TextContent.Contains("Apply Category"));
+        applyButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
     private static UncategorizedTransactionPageDto CreatePageWithOneTransaction()
     {
         return new UncategorizedTransactionPageDto

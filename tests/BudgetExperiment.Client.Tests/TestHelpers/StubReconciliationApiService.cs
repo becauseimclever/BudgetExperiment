@@ -42,6 +42,11 @@ internal class StubReconciliationApiService : IReconciliationApiService
     /// </summary>
     public bool UnlinkMatchResult { get; set; }
 
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="CreateManualMatchAsync"/>.
+    /// </summary>
+    public ReconciliationMatchDto? ManualMatchResult { get; set; }
+
     /// <inheritdoc/>
     public Task<ReconciliationStatusDto?> GetStatusAsync(int year, int month, Guid? accountId = null) =>
         Task.FromResult(this.Status);
@@ -68,7 +73,7 @@ internal class StubReconciliationApiService : IReconciliationApiService
 
     /// <inheritdoc/>
     public Task<ReconciliationMatchDto?> CreateManualMatchAsync(ManualMatchRequest request) =>
-        Task.FromResult<ReconciliationMatchDto?>(null);
+        Task.FromResult(this.ManualMatchResult);
 
     /// <inheritdoc/>
     public Task<MatchingTolerancesDto?> GetTolerancesAsync() =>

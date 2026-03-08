@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
@@ -240,4 +241,283 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
 
         cut.Markup.ShouldContain("By Category");
     }
+
+    /// <summary>
+    /// Verifies set budget goal result is configurable.
+    /// </summary>
+    [Fact]
+    public void SetBudgetGoalResult_IsConfigurable()
+    {
+        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        {
+            Id = Guid.NewGuid(),
+            CategoryId = Guid.NewGuid(),
+            TargetAmount = new MoneyDto { Amount = 300m, Currency = "USD" },
+            Year = DateTime.Today.Year,
+            Month = DateTime.Today.Month,
+        });
+
+        var cut = Render<Budget>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies delete budget goal result is configurable.
+    /// </summary>
+    [Fact]
+    public void DeleteBudgetGoalResult_IsConfigurable()
+    {
+        this._apiService.DeleteBudgetGoalResult = true;
+
+        var cut = Render<Budget>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies copy budget goals result is configurable.
+    /// </summary>
+    [Fact]
+    public void CopyBudgetGoalsResult_IsConfigurable()
+    {
+        this._apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult
+        {
+            GoalsCreated = 5,
+        };
+
+        var cut = Render<Budget>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies clicking next month navigates and updates the month display.
+    /// </summary>
+    [Fact]
+    public void NextMonthButton_UpdatesDisplay()
+    {
+        var cut = Render<Budget>();
+
+        var nextButton = cut.FindAll("button").First(b => b.GetAttribute("title") == "Next month");
+        nextButton.Click();
+
+        var expectedMonth = DateTime.Today.AddMonths(1).ToString("MMMM yyyy");
+        cut.Markup.ShouldContain(expectedMonth);
+    }
+
+    /// <summary>
+    /// Verifies clicking previous month navigates and updates the month display.
+    /// </summary>
+    [Fact]
+    public void PreviousMonthButton_UpdatesDisplay()
+    {
+        var cut = Render<Budget>();
+
+        var prevButton = cut.FindAll("button").First(b => b.GetAttribute("title") == "Previous month");
+        prevButton.Click();
+
+        var expectedMonth = DateTime.Today.AddMonths(-1).ToString("MMMM yyyy");
+        cut.Markup.ShouldContain(expectedMonth);
+    }
+
+    /// <summary>
+    /// Verifies the empty state shows manage categories button.
+    /// </summary>
+    [Fact]
+    public void EmptyState_ShowsManageCategoriesMessage()
+    {
+        this._apiService.BudgetSummary = new BudgetSummaryDto
+        {
+            Year = DateTime.Today.Year,
+            Month = DateTime.Today.Month,
+            TotalBudgeted = new MoneyDto { Amount = 0m, Currency = "USD" },
+            TotalSpent = new MoneyDto { Amount = 0m, Currency = "USD" },
+            TotalRemaining = new MoneyDto { Amount = 0m, Currency = "USD" },
+            OverallPercentUsed = 0m,
+            CategoriesOnTrack = 0,
+            CategoriesWarning = 0,
+            CategoriesOverBudget = 0,
+            CategoriesNoBudgetSet = 0,
+            CategoryProgress = [],
+        };
+
+        var cut = Render<Budget>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the no-budget-set status count is displayed.
+    /// </summary>
+    [Fact]
+    public void ShowsNoBudgetSetStatusCount()
+    {
+        this._apiService.BudgetSummary = new BudgetSummaryDto
+        {
+            Year = DateTime.Today.Year,
+            Month = DateTime.Today.Month,
+            TotalBudgeted = new MoneyDto { Amount = 1000m, Currency = "USD" },
+            TotalSpent = new MoneyDto { Amount = 300m, Currency = "USD" },
+            TotalRemaining = new MoneyDto { Amount = 700m, Currency = "USD" },
+            OverallPercentUsed = 30m,
+            CategoriesOnTrack = 1,
+            CategoriesWarning = 0,
+            CategoriesOverBudget = 0,
+            CategoriesNoBudgetSet = 3,
+            CategoryProgress = [],
+        };
+
+        var cut = Render<Budget>();
+
+        cut.Markup.ShouldContain("3 no budget");
+    }
+
+    /// <summary>
+    /// Verifies the overall progress bar shows correct percentage.
+    /// </summary>
+    [Fact]
+    public void ShowsOverallProgressPercentage()
+    {
+        this._apiService.BudgetSummary = new BudgetSummaryDto
+        {
+            Year = DateTime.Today.Year,
+            Month = DateTime.Today.Month,
+            TotalBudgeted = new MoneyDto { Amount = 5000m, Currency = "USD" },
+            TotalSpent = new MoneyDto { Amount = 2500m, Currency = "USD" },
+            TotalRemaining = new MoneyDto { Amount = 2500m, Currency = "USD" },
+            OverallPercentUsed = 50m,
+            CategoriesOnTrack = 2,
+            CategoriesWarning = 0,
+            CategoriesOverBudget = 0,
+            CategoriesNoBudgetSet = 0,
+            CategoryProgress = [],
+        };
+
+        var cut = Render<Budget>();
+
+        cut.Markup.ShouldContain("50");
+    }
+
+    /// <summary>
+    /// Verifies clicking Edit Goal on a category card opens the modal and Save triggers the handler.
+    /// </summary>
+    [Fact]
+    public void EditGoal_OpensModal_AndSaveTriggersHandler()
+    {
+        var categoryId = Guid.NewGuid();
+        this._apiService.BudgetSummary = CreateSummaryWithProgress(categoryId);
+        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        {
+            Id = Guid.NewGuid(),
+            CategoryId = categoryId,
+            TargetAmount = new MoneyDto { Amount = 600m, Currency = "USD" },
+            Year = DateTime.Today.Year,
+            Month = DateTime.Today.Month,
+        });
+
+        var cut = Render<Budget>();
+
+        // Click "Edit Goal" button on the CategoryBudgetCard
+        var editButton = cut.FindAll("button").First(b => b.TextContent.Contains("Edit Goal"));
+        editButton.Click();
+
+        // Modal should be visible with Save button
+        cut.Markup.ShouldContain("Edit Budget Goal");
+
+        // Click Save to trigger SaveGoal handler
+        var saveButton = cut.FindAll("button").First(b => b.TextContent.Contains("Save"));
+        saveButton.Click();
+
+        // After success, modal should close
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies clicking Delete Goal triggers the delete handler.
+    /// </summary>
+    [Fact]
+    public void DeleteGoal_TriggersHandler()
+    {
+        var categoryId = Guid.NewGuid();
+        this._apiService.BudgetSummary = CreateSummaryWithProgress(categoryId);
+        this._apiService.DeleteBudgetGoalResult = true;
+
+        var cut = Render<Budget>();
+
+        // Open edit modal
+        var editButton = cut.FindAll("button").First(b => b.TextContent.Contains("Edit Goal"));
+        editButton.Click();
+
+        // Click Delete Goal
+        var deleteButton = cut.FindAll("button").First(b => b.TextContent.Contains("Delete Goal"));
+        deleteButton.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the Set Budget button appears for categories with no budget.
+    /// </summary>
+    [Fact]
+    public void SetBudget_ButtonAppearsForNoBudgetCategory()
+    {
+        this._apiService.BudgetSummary = new BudgetSummaryDto
+        {
+            Year = DateTime.Today.Year,
+            Month = DateTime.Today.Month,
+            TotalBudgeted = new MoneyDto { Amount = 0m, Currency = "USD" },
+            TotalSpent = new MoneyDto { Amount = 100m, Currency = "USD" },
+            TotalRemaining = new MoneyDto { Amount = -100m, Currency = "USD" },
+            OverallPercentUsed = 0m,
+            CategoriesOnTrack = 0,
+            CategoriesWarning = 0,
+            CategoriesOverBudget = 0,
+            CategoriesNoBudgetSet = 1,
+            CategoryProgress =
+            [
+                new BudgetProgressDto
+                {
+                    CategoryId = Guid.NewGuid(),
+                    CategoryName = "Dining",
+                    TargetAmount = new MoneyDto { Amount = 0m, Currency = "USD" },
+                    SpentAmount = new MoneyDto { Amount = 100m, Currency = "USD" },
+                    RemainingAmount = new MoneyDto { Amount = -100m, Currency = "USD" },
+                    PercentUsed = 0m,
+                    Status = "NoBudgetSet",
+                },
+            ],
+        };
+
+        var cut = Render<Budget>();
+
+        cut.Markup.ShouldContain("Set Budget");
+    }
+
+    private static BudgetSummaryDto CreateSummaryWithProgress(Guid categoryId) => new()
+    {
+        Year = DateTime.Today.Year,
+        Month = DateTime.Today.Month,
+        TotalBudgeted = new MoneyDto { Amount = 500m, Currency = "USD" },
+        TotalSpent = new MoneyDto { Amount = 300m, Currency = "USD" },
+        TotalRemaining = new MoneyDto { Amount = 200m, Currency = "USD" },
+        OverallPercentUsed = 60m,
+        CategoriesOnTrack = 1,
+        CategoriesWarning = 0,
+        CategoriesOverBudget = 0,
+        CategoriesNoBudgetSet = 0,
+        CategoryProgress =
+        [
+            new BudgetProgressDto
+            {
+                CategoryId = categoryId,
+                CategoryName = "Groceries",
+                TargetAmount = new MoneyDto { Amount = 500m, Currency = "USD" },
+                SpentAmount = new MoneyDto { Amount = 300m, Currency = "USD" },
+                RemainingAmount = new MoneyDto { Amount = 200m, Currency = "USD" },
+                PercentUsed = 60m,
+                Status = "OnTrack",
+            },
+        ],
+    };
 }

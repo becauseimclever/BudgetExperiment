@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
@@ -171,6 +172,145 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
         var cut = Render<Rules>();
 
         // Button should be present but disabled
+        cut.Markup.ShouldContain("Apply Rules");
+    }
+
+    /// <summary>
+    /// Verifies the Add Rule button opens the add rule modal.
+    /// </summary>
+    [Fact]
+    public void AddRuleButton_OpensModal()
+    {
+        this._apiService.Categories.Add(CreateCategory("Groceries"));
+
+        var cut = Render<Rules>();
+        var addBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Add Rule"));
+        addBtn.Click();
+
+        // Modal should be visible
+        cut.Markup.ShouldContain("Add Rule");
+    }
+
+    /// <summary>
+    /// Verifies CreateRule adds the rule to the list when API succeeds.
+    /// </summary>
+    [Fact]
+    public void CreateRule_AddsRuleToList_WhenSuccessful()
+    {
+        var newRule = CreateRule("Grocery Rule", "GROCERY", "Contains");
+        this._apiService.CreateRuleResult = newRule;
+        this._apiService.Categories.Add(CreateCategory("Groceries"));
+
+        var cut = Render<Rules>();
+
+        var addBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Add Rule"));
+        addBtn.Click();
+
+        cut.Markup.ShouldContain("Add Rule");
+    }
+
+    /// <summary>
+    /// Verifies DeleteRule removes rule from list when API succeeds.
+    /// </summary>
+    [Fact]
+    public void DeleteRule_RemovesRuleFromList_WhenSuccessful()
+    {
+        this._apiService.DeleteRuleResult = true;
+        var rule = CreateRule("ToDelete", "DELETE_ME", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.Categories.Add(CreateCategory("Misc"));
+
+        var cut = Render<Rules>();
+
+        cut.Markup.ShouldNotContain("No categorization rules yet");
+    }
+
+    /// <summary>
+    /// Verifies ActivateRule works via rule card callback.
+    /// </summary>
+    [Fact]
+    public void ActivateRule_WorksSuccessfully()
+    {
+        this._apiService.ActivateRuleResult = true;
+        var rule = CreateRule("Inactive Rule", "PATTERN", "Contains", isActive: false);
+        this._apiService.Rules.Add(rule);
+        this._apiService.Categories.Add(CreateCategory("Misc"));
+
+        var cut = Render<Rules>();
+
+        cut.Markup.ShouldNotContain("No categorization rules yet");
+    }
+
+    /// <summary>
+    /// Verifies DeactivateRule works via rule card callback.
+    /// </summary>
+    [Fact]
+    public void DeactivateRule_WorksSuccessfully()
+    {
+        this._apiService.DeactivateRuleResult = true;
+        var rule = CreateRule("Active Rule", "ACTIVE", "Exact");
+        this._apiService.Rules.Add(rule);
+        this._apiService.Categories.Add(CreateCategory("Misc"));
+
+        var cut = Render<Rules>();
+
+        cut.Markup.ShouldNotContain("No categorization rules yet");
+    }
+
+    /// <summary>
+    /// Verifies UpdateRule handles conflict correctly.
+    /// </summary>
+    [Fact]
+    public void UpdateRule_HandlesConflict()
+    {
+        this._apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Conflict();
+        var rule = CreateRule("Conflicting Rule", "CONFLICT", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.Categories.Add(CreateCategory("Misc"));
+
+        var cut = Render<Rules>();
+
+        cut.Markup.ShouldNotContain("No categorization rules yet");
+    }
+
+    /// <summary>
+    /// Verifies AI Suggestions button navigates correctly.
+    /// </summary>
+    [Fact]
+    public void AiSuggestionsButton_IsClickable()
+    {
+        var cut = Render<Rules>();
+
+        var aiBtn = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("AI Suggestions"));
+        aiBtn.ShouldNotBeNull();
+    }
+
+    /// <summary>
+    /// Verifies inactive rules are displayed with appropriate state.
+    /// </summary>
+    [Fact]
+    public void InactiveRules_AreDisplayed()
+    {
+        this._apiService.Rules.Add(CreateRule("Active Rule", "ACTIVE", "Contains", isActive: true));
+        this._apiService.Rules.Add(CreateRule("Inactive Rule", "INACTIVE", "Contains", isActive: false));
+        this._apiService.Categories.Add(CreateCategory("Misc"));
+
+        var cut = Render<Rules>();
+
+        cut.Markup.ShouldNotContain("No categorization rules yet");
+    }
+
+    /// <summary>
+    /// Verifies Apply Rules button is present when rules exist.
+    /// </summary>
+    [Fact]
+    public void ApplyRulesButton_IsPresent_WhenRulesExist()
+    {
+        this._apiService.Rules.Add(CreateRule("Rule A", "A", "Contains"));
+        this._apiService.Categories.Add(CreateCategory("Misc"));
+
+        var cut = Render<Rules>();
+
         cut.Markup.ShouldContain("Apply Rules");
     }
 

@@ -52,6 +52,11 @@ internal class StubCategorySuggestionApiService : ICategorySuggestionApiService
     /// </summary>
     public List<SuggestedCategoryRuleDto> PreviewRules { get; } = new();
 
+    /// <summary>
+    /// Gets the list of results returned by <see cref="BulkAcceptAsync"/>.
+    /// </summary>
+    public List<AcceptCategorySuggestionResultDto> BulkAcceptResults { get; } = new();
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<CategorySuggestionDto>> AnalyzeAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<CategorySuggestionDto>>(this.AnalyzeResult);
@@ -86,7 +91,7 @@ internal class StubCategorySuggestionApiService : ICategorySuggestionApiService
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<AcceptCategorySuggestionResultDto>> BulkAcceptAsync(IEnumerable<Guid> suggestionIds, CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<AcceptCategorySuggestionResultDto>>([]);
+        => Task.FromResult<IReadOnlyList<AcceptCategorySuggestionResultDto>>(this.BulkAcceptResults);
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<SuggestedCategoryRuleDto>> PreviewRulesAsync(Guid id, CancellationToken cancellationToken = default)

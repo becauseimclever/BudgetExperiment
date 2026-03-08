@@ -116,6 +116,76 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         Assert.Contains("Export", cut.Markup);
     }
 
+    /// <summary>
+    /// Verifies that the region table is rendered with correct column headers.
+    /// </summary>
+    [Fact]
+    public void Render_ShowsRegionTableHeaders()
+    {
+        // Arrange
+        this.stubApiService.LocationReportResult = CreateTestReport();
+
+        // Act
+        var cut = Render<LocationReportPage>();
+
+        // Assert
+        var table = cut.Find("table.location-data-table");
+        Assert.Contains("Region", table.TextContent);
+        Assert.Contains("Spending", table.TextContent);
+        Assert.Contains("Transactions", table.TextContent);
+    }
+
+    /// <summary>
+    /// Verifies that clicking a region row selects it and shows city breakdown.
+    /// </summary>
+    [Fact]
+    public void RegionClick_ShowsCityBreakdown()
+    {
+        // Arrange
+        this.stubApiService.LocationReportResult = CreateTestReport();
+
+        // Act
+        var cut = Render<LocationReportPage>();
+        var regionRows = cut.FindAll("table.location-data-table tbody tr");
+        regionRows[0].Click();
+
+        // Assert - should show city breakdown for Washington
+        Assert.Contains("Seattle", cut.Markup);
+        Assert.Contains("Tacoma", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that the summary stats section shows transaction counts.
+    /// </summary>
+    [Fact]
+    public void Render_ShowsSummaryStats()
+    {
+        // Arrange
+        this.stubApiService.LocationReportResult = CreateTestReport();
+
+        // Act
+        var cut = Render<LocationReportPage>();
+
+        // Assert
+        Assert.Contains("10", cut.Markup);
+        Assert.Contains("8", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that empty state is shown when no report data.
+    /// </summary>
+    [Fact]
+    public void Render_ShowsEmptyState_WhenNoData()
+    {
+        // Arrange - no report data set
+
+        // Act
+        var cut = Render<LocationReportPage>();
+
+        // Assert
+        Assert.Contains("No location data", cut.Markup);
+    }
+
     private static LocationSpendingReportDto CreateTestReport() => new()
     {
         StartDate = new DateOnly(2025, 1, 1),

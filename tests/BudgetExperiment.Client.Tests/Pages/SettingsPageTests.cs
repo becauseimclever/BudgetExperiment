@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net.Http;
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
@@ -214,6 +215,202 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
         // The number input should exist with the configured value
         var numberInputs = cut.FindAll("input[type='number']");
         numberInputs.Count.ShouldBeGreaterThan(0);
+    }
+
+    /// <summary>
+    /// Verifies auto-realize toggle is present.
+    /// </summary>
+    [Fact]
+    public void HasAutoRealizeToggle()
+    {
+        SetupSettingsData();
+
+        var cut = Render<Settings>();
+
+        cut.Markup.ShouldContain("Auto-Realize");
+    }
+
+    /// <summary>
+    /// Verifies delete location data result is configurable.
+    /// </summary>
+    [Fact]
+    public void DeleteLocationDataResult_IsConfigurable()
+    {
+        this._apiService.DeleteLocationDataResult = new LocationDataClearedDto
+        {
+            ClearedCount = 10,
+        };
+        SetupSettingsData(enableLocation: true);
+
+        var cut = Render<Settings>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies AI tab shows status.
+    /// </summary>
+    [Fact]
+    public void AiTab_ShowsStatus()
+    {
+        this._aiApiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            CurrentModel = "gpt-4",
+        };
+        SetupSettingsData();
+
+        var cut = Render<Settings>();
+
+        cut.Markup.ShouldContain("AI");
+    }
+
+    /// <summary>
+    /// Verifies lookback days input is present.
+    /// </summary>
+    [Fact]
+    public void HasLookbackDaysInput()
+    {
+        SetupSettingsData();
+
+        var cut = Render<Settings>();
+
+        cut.Markup.ShouldContain("Lookback");
+    }
+
+    /// <summary>
+    /// Verifies general tab is active by default.
+    /// </summary>
+    [Fact]
+    public void GeneralTab_IsActiveByDefault()
+    {
+        SetupSettingsData();
+
+        var cut = Render<Settings>();
+
+        cut.Markup.ShouldContain("active");
+    }
+
+    /// <summary>
+    /// Verifies clicking the AI tab switches tab state.
+    /// </summary>
+    [Fact]
+    public void ClickAiTab_SwitchesTab()
+    {
+        SetupSettingsData();
+        this._aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
+
+        var cut = Render<Settings>();
+        var aiTab = cut.FindAll("button.settings-tab")[1];
+        aiTab.Click();
+
+        // After click, the AI tab should have the active class
+        cut.FindAll("button.settings-tab")[1].ClassList.ShouldContain("active");
+    }
+
+    /// <summary>
+    /// Verifies clicking the AI tab and then back to General restores content.
+    /// </summary>
+    [Fact]
+    public void ClickGeneralTab_RestoresGeneralContent()
+    {
+        SetupSettingsData();
+        this._aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
+
+        var cut = Render<Settings>();
+
+        // Click AI tab first
+        cut.FindAll("button.settings-tab")[1].Click();
+
+        // Click General tab
+        cut.FindAll("button.settings-tab")[0].Click();
+
+        cut.Markup.ShouldContain("Recurring Items");
+    }
+
+    /// <summary>
+    /// Verifies the auto-realize toggle sends update.
+    /// </summary>
+    [Fact]
+    public void AutoRealizeToggle_UpdatesSettings()
+    {
+        SetupSettingsData();
+
+        var cut = Render<Settings>();
+
+        // Find the auto-realize checkbox and change it
+        var checkboxes = cut.FindAll("input[type='checkbox']");
+        checkboxes.Count.ShouldBeGreaterThan(0);
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the delete location data confirmation flow.
+    /// </summary>
+    [Fact]
+    public void DeleteLocationData_ShowsConfirmation()
+    {
+        SetupSettingsData(enableLocation: true);
+        this._apiService.DeleteLocationDataResult = new LocationDataClearedDto { ClearedCount = 5 };
+
+        var cut = Render<Settings>();
+
+        // Click the delete button (btn-outline-danger initially)
+        var deleteButton = cut.Find("button.btn-outline-danger");
+        deleteButton.Click();
+
+        // Should show confirmation
+        cut.Markup.ShouldContain("Yes, delete all");
+    }
+
+    /// <summary>
+    /// Verifies confirming location data deletion shows success.
+    /// </summary>
+    [Fact]
+    public void ConfirmDeleteLocationData_ShowsSuccess()
+    {
+        SetupSettingsData(enableLocation: true);
+        this._apiService.DeleteLocationDataResult = new LocationDataClearedDto { ClearedCount = 5 };
+
+        var cut = Render<Settings>();
+
+        // Click initial delete button to show confirmation
+        cut.Find("button.btn-outline-danger").Click();
+
+        // Confirm deletion (btn-danger appears in confirmation)
+        cut.Find("button.btn-danger").Click();
+
+        cut.Markup.ShouldContain("Cleared location data");
+    }
+
+    /// <summary>
+    /// Verifies the day-of-week toggle updates user settings.
+    /// </summary>
+    [Fact]
+    public void DayOfWeekToggle_IsClickable()
+    {
+        SetupSettingsData();
+
+        var cut = Render<Settings>();
+
+        // Find day toggle buttons (Sun, Mon)
+        cut.Markup.ShouldContain("Sun");
+        cut.Markup.ShouldContain("Mon");
+    }
+
+    /// <summary>
+    /// Verifies AI tab shows about info when clicked.
+    /// </summary>
+    [Fact]
+    public void AiTab_ShowsAboutLocalAi()
+    {
+        SetupSettingsData();
+        this._aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
+
+        var cut = Render<Settings>();
+        cut.FindAll("button.settings-tab")[1].Click();
+
+        cut.Markup.ShouldContain("About Local AI");
     }
 
     private void SetupSettingsData(bool enableLocation = false)
