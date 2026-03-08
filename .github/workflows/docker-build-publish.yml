@@ -147,7 +147,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download publish artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-publish
           path: ./publish
@@ -206,7 +206,7 @@ jobs:
 
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
           pattern: digests-*
