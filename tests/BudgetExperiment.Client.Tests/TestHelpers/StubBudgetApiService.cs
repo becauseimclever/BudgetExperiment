@@ -115,6 +115,31 @@ internal class StubBudgetApiService : IBudgetApiService
     /// </summary>
     public PaycheckAllocationSummaryDto? AllocationSummary { get; set; }
 
+    /// <summary>
+    /// Gets the list of recurring transactions returned by <see cref="GetRecurringTransactionsAsync"/>.
+    /// </summary>
+    public List<RecurringTransactionDto> RecurringTransactions { get; } = new();
+
+    /// <summary>
+    /// Gets the list of recurring transfers returned by <see cref="GetRecurringTransfersAsync"/>.
+    /// </summary>
+    public List<RecurringTransferDto> RecurringTransfers { get; } = new();
+
+    /// <summary>
+    /// Gets the list of transfers returned by <see cref="GetTransfersAsync"/>.
+    /// </summary>
+    public List<TransferListItemResponse> Transfers { get; } = new();
+
+    /// <summary>
+    /// Gets or sets the spending trends report returned by <see cref="GetSpendingTrendsAsync"/>.
+    /// </summary>
+    public SpendingTrendsReportDto? SpendingTrends { get; set; }
+
+    /// <summary>
+    /// Gets or sets the category report returned by <see cref="GetCategoryReportByRangeAsync"/>.
+    /// </summary>
+    public DateRangeCategoryReportDto? DateRangeCategoryReport { get; set; }
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<AccountDto>> GetAccountsAsync() => Task.FromResult<IReadOnlyList<AccountDto>>(this.Accounts);
 
@@ -167,7 +192,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<IReadOnlyList<DailyTotalDto>> GetCalendarSummaryAsync(int year, int month, Guid? accountId = null) => Task.FromResult<IReadOnlyList<DailyTotalDto>>([]);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<RecurringTransactionDto>> GetRecurringTransactionsAsync() => Task.FromResult<IReadOnlyList<RecurringTransactionDto>>([]);
+    public Task<IReadOnlyList<RecurringTransactionDto>> GetRecurringTransactionsAsync() => Task.FromResult<IReadOnlyList<RecurringTransactionDto>>(this.RecurringTransactions);
 
     /// <inheritdoc/>
     public Task<RecurringTransactionDto?> GetRecurringTransactionAsync(Guid id) => Task.FromResult<RecurringTransactionDto?>(null);
@@ -206,7 +231,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<TransferResponse?> GetTransferAsync(Guid transferId) => Task.FromResult<TransferResponse?>(null);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<TransferListItemResponse>> GetTransfersAsync(Guid? accountId = null, DateOnly? from = null, DateOnly? to = null, int page = 1, int pageSize = 20) => Task.FromResult<IReadOnlyList<TransferListItemResponse>>([]);
+    public Task<IReadOnlyList<TransferListItemResponse>> GetTransfersAsync(Guid? accountId = null, DateOnly? from = null, DateOnly? to = null, int page = 1, int pageSize = 20) => Task.FromResult<IReadOnlyList<TransferListItemResponse>>(this.Transfers);
 
     /// <inheritdoc/>
     public Task<TransferResponse?> UpdateTransferAsync(Guid transferId, UpdateTransferRequest model) => Task.FromResult<TransferResponse?>(null);
@@ -215,7 +240,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> DeleteTransferAsync(Guid transferId) => Task.FromResult(false);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringTransferDto>>([]);
+    public Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringTransferDto>>(this.RecurringTransfers);
 
     /// <inheritdoc/>
     public Task<RecurringTransferDto?> GetRecurringTransferAsync(Guid id) => Task.FromResult<RecurringTransferDto?>(null);
@@ -353,10 +378,10 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month) => Task.FromResult<MonthlyCategoryReportDto?>(null);
 
     /// <inheritdoc/>
-    public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<DateRangeCategoryReportDto?>(null);
+    public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult(this.DateRangeCategoryReport);
 
     /// <inheritdoc/>
-    public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null) => Task.FromResult<SpendingTrendsReportDto?>(null);
+    public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null) => Task.FromResult(this.SpendingTrends);
 
     /// <inheritdoc/>
     public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null) => Task.FromResult<DaySummaryDto?>(null);

@@ -143,7 +143,7 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 **Acceptance Criteria:**
 - [ ] All P1 pages have bUnit tests (Import, Calendar, AccountTransactions, CategorySuggestions)
 - [ ] All P2 pages have bUnit tests (Reconciliation, Settings, Uncategorized, PaycheckPlanner, Rules, Categories, CustomReportBuilder)
-- [ ] All P3 pages have bUnit tests (Recurring, AiSuggestions, RecurringTransfers, Budget, Accounts, Transfers, Onboarding, MonthlyTrendsReport, MonthlyCategoriesReport)
+- [x] All P3 pages have bUnit tests (Recurring, AiSuggestions, RecurringTransfers, Budget, Accounts, Transfers, Onboarding, MonthlyTrendsReport, MonthlyCategoriesReport)
 
 ### US-095-002: Improve API Service Coverage
 **As a** developer
@@ -153,10 +153,10 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 **Acceptance Criteria:**
 - [x] BudgetApiService coverage ≥ 70% (76.2%)
 - [x] CategorySuggestionApiService coverage ≥ 70% (76.4%)
-- [ ] ReconciliationApiService coverage ≥ 60%
-- [ ] AiApiService coverage ≥ 60%
-- [ ] ImportApiService coverage ≥ 60%
-- [ ] ExportDownloadService coverage ≥ 60%
+- [x] ReconciliationApiService coverage ≥ 60%
+- [x] AiApiService coverage ≥ 60%
+- [x] ImportApiService coverage ≥ 60%
+- [x] ExportDownloadService coverage ≥ 60%
 
 ### US-095-003: Test Chat Feature Cluster
 **As a** developer
@@ -185,9 +185,9 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 **So that** client-side data transformation logic is verified.
 
 **Acceptance Criteria:**
-- [ ] TransactionListItem computed properties tested
-- [ ] ImportWizardState state transitions tested
-- [ ] ColumnMappingState mapping logic tested
+- [x] TransactionListItem computed properties tested
+- [x] ImportWizardState state transitions tested
+- [x] ColumnMappingState mapping logic tested
 
 ---
 
@@ -266,11 +266,13 @@ A follow-up coverage audit after Feature 091 reveals that while individual compo
 **Objective:** Cover P3 pages, remaining services, and models.
 
 **Tasks:**
-- [ ] Create page tests for: Recurring, AiSuggestions, RecurringTransfers, Budget, Accounts, Transfers, Onboarding
-- [ ] Create page tests for: MonthlyTrendsReport, MonthlyCategoriesReport
-- [ ] Add tests for ReconciliationApiService, AiApiService, ImportApiService, ExportDownloadService
-- [ ] Add tests for TransactionListItem, ImportWizardState, ColumnMappingState
-- [ ] All tests pass
+- [x] Create page tests for: Recurring, AiSuggestions, RecurringTransfers, Budget, Accounts, Transfers, Onboarding
+- [x] Create page tests for: MonthlyTrendsReport, MonthlyCategoriesReport
+- [x] Add tests for ReconciliationApiService, AiApiService, ImportApiService, ExportDownloadService
+- [x] Add tests for TransactionListItem, ImportWizardState, ColumnMappingState
+- [x] All tests pass (1,544 → 1,694, +150 tests)
+
+**Results:** +150 tests, overall Client coverage estimated ~57%
 
 **Commit:** `test(client): add P3 page, service, and model tests`
 
