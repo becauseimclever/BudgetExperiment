@@ -6,6 +6,7 @@ using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
+using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddTransient<CategoriesViewModel>();
     }
 
     /// <inheritdoc/>

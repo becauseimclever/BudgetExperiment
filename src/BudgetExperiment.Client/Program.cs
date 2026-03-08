@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 
 using BudgetExperiment.Client;
 using BudgetExperiment.Client.Services;
+using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Constants;
 using BudgetExperiment.Contracts.Dtos;
 
@@ -130,5 +131,6 @@ builder.Services.AddScoped<IFormStateService, FormStateService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<GeolocationService>();
 builder.Services.AddScoped<VersionService>();
+builder.Services.AddTransient<CategoriesViewModel>();
 
 await builder.Build().RunAsync();
