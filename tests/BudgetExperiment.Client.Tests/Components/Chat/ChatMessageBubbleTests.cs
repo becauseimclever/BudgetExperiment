@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Globalization;
 using BudgetExperiment.Client.Components.Chat;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
@@ -20,6 +21,7 @@ public class ChatMessageBubbleTests : BunitContext, IAsyncLifetime
     /// </summary>
     public ChatMessageBubbleTests()
     {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
     }
