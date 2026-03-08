@@ -245,6 +245,76 @@ internal class StubBudgetApiService : IBudgetApiService
     /// </summary>
     public DateRangeCategoryReportDto? DateRangeCategoryReport { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="SkipRecurringInstanceAsync"/> returns true.
+    /// </summary>
+    public bool SkipRecurringInstanceResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="ModifyRecurringInstanceAsync"/>.
+    /// </summary>
+    public ApiResult<RecurringInstanceDto>? ModifyRecurringInstanceResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateTransactionLocationAsync"/>.
+    /// </summary>
+    public ApiResult<TransactionDto>? UpdateTransactionLocationResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="ClearTransactionLocationAsync"/> returns true.
+    /// </summary>
+    public bool ClearTransactionLocationResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="RealizeRecurringTransactionAsync"/>.
+    /// </summary>
+    public TransactionDto? RealizeRecurringTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="CreateRecurringTransactionAsync"/>.
+    /// </summary>
+    public RecurringTransactionDto? CreateRecurringTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateRecurringTransactionAsync"/>.
+    /// </summary>
+    public ApiResult<RecurringTransactionDto>? UpdateRecurringTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeleteRecurringTransactionAsync"/> returns true.
+    /// </summary>
+    public bool DeleteRecurringTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateRecurringTransferAsync"/>.
+    /// </summary>
+    public ApiResult<RecurringTransferDto>? UpdateRecurringTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeleteRecurringTransferAsync"/> returns true.
+    /// </summary>
+    public bool DeleteRecurringTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateTransferAsync"/>.
+    /// </summary>
+    public TransferResponse? UpdateTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="DeleteTransferAsync"/> returns true.
+    /// </summary>
+    public bool DeleteTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateSettingsAsync"/>.
+    /// </summary>
+    public AppSettingsDto? UpdateSettingsResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateUserSettingsAsync"/>.
+    /// </summary>
+    public UserSettingsDto? UpdateUserSettingsResult { get; set; }
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<AccountDto>> GetAccountsAsync() => Task.FromResult<IReadOnlyList<AccountDto>>(this.Accounts);
 
@@ -276,10 +346,10 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> DeleteTransactionAsync(Guid id) => Task.FromResult(this.DeleteTransactionResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<TransactionDto>> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? version = null) => Task.FromResult(ApiResult<TransactionDto>.Failure());
+    public Task<ApiResult<TransactionDto>> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? version = null) => Task.FromResult(this.UpdateTransactionLocationResult ?? ApiResult<TransactionDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> ClearTransactionLocationAsync(Guid id) => Task.FromResult(false);
+    public Task<bool> ClearTransactionLocationAsync(Guid id) => Task.FromResult(this.ClearTransactionLocationResult);
 
     /// <inheritdoc/>
     public Task<ReverseGeocodeResponseDto?> ReverseGeocodeAsync(decimal latitude, decimal longitude) => Task.FromResult<ReverseGeocodeResponseDto?>(null);
@@ -311,13 +381,13 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<RecurringTransactionDto?> GetRecurringTransactionAsync(Guid id) => Task.FromResult<RecurringTransactionDto?>(null);
 
     /// <inheritdoc/>
-    public Task<RecurringTransactionDto?> CreateRecurringTransactionAsync(RecurringTransactionCreateDto model) => Task.FromResult<RecurringTransactionDto?>(null);
+    public Task<RecurringTransactionDto?> CreateRecurringTransactionAsync(RecurringTransactionCreateDto model) => Task.FromResult(this.CreateRecurringTransactionResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<RecurringTransactionDto>> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model, string? version = null) => Task.FromResult(ApiResult<RecurringTransactionDto>.Failure());
+    public Task<ApiResult<RecurringTransactionDto>> UpdateRecurringTransactionAsync(Guid id, RecurringTransactionUpdateDto model, string? version = null) => Task.FromResult(this.UpdateRecurringTransactionResult ?? ApiResult<RecurringTransactionDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteRecurringTransactionAsync(Guid id) => Task.FromResult(false);
+    public Task<bool> DeleteRecurringTransactionAsync(Guid id) => Task.FromResult(this.DeleteRecurringTransactionResult);
 
     /// <inheritdoc/>
     public Task<RecurringTransactionDto?> PauseRecurringTransactionAsync(Guid id) => Task.FromResult<RecurringTransactionDto?>(null);
@@ -332,10 +402,10 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<IReadOnlyList<RecurringInstanceDto>> GetProjectedRecurringAsync(DateOnly from, DateOnly to, Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringInstanceDto>>([]);
 
     /// <inheritdoc/>
-    public Task<bool> SkipRecurringInstanceAsync(Guid id, DateOnly date) => Task.FromResult(false);
+    public Task<bool> SkipRecurringInstanceAsync(Guid id, DateOnly date) => Task.FromResult(this.SkipRecurringInstanceResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<RecurringInstanceDto>> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model, string? version = null) => Task.FromResult(ApiResult<RecurringInstanceDto>.Failure());
+    public Task<ApiResult<RecurringInstanceDto>> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model, string? version = null) => Task.FromResult(this.ModifyRecurringInstanceResult ?? ApiResult<RecurringInstanceDto>.Failure());
 
     /// <inheritdoc/>
     public Task<TransferResponse?> CreateTransferAsync(CreateTransferRequest model) => Task.FromResult(this.CreateTransferResult);
@@ -347,10 +417,10 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<IReadOnlyList<TransferListItemResponse>> GetTransfersAsync(Guid? accountId = null, DateOnly? from = null, DateOnly? to = null, int page = 1, int pageSize = 20) => Task.FromResult<IReadOnlyList<TransferListItemResponse>>(this.Transfers);
 
     /// <inheritdoc/>
-    public Task<TransferResponse?> UpdateTransferAsync(Guid transferId, UpdateTransferRequest model) => Task.FromResult<TransferResponse?>(null);
+    public Task<TransferResponse?> UpdateTransferAsync(Guid transferId, UpdateTransferRequest model) => Task.FromResult(this.UpdateTransferResult);
 
     /// <inheritdoc/>
-    public Task<bool> DeleteTransferAsync(Guid transferId) => Task.FromResult(false);
+    public Task<bool> DeleteTransferAsync(Guid transferId) => Task.FromResult(this.DeleteTransferResult);
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringTransferDto>>(this.RecurringTransfers);
@@ -362,10 +432,10 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<RecurringTransferDto?> CreateRecurringTransferAsync(RecurringTransferCreateDto model) => Task.FromResult(this.CreateRecurringTransferResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<RecurringTransferDto>> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model, string? version = null) => Task.FromResult(ApiResult<RecurringTransferDto>.Failure());
+    public Task<ApiResult<RecurringTransferDto>> UpdateRecurringTransferAsync(Guid id, RecurringTransferUpdateDto model, string? version = null) => Task.FromResult(this.UpdateRecurringTransferResult ?? ApiResult<RecurringTransferDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteRecurringTransferAsync(Guid id) => Task.FromResult(false);
+    public Task<bool> DeleteRecurringTransferAsync(Guid id) => Task.FromResult(this.DeleteRecurringTransferResult);
 
     /// <inheritdoc/>
     public Task<RecurringTransferDto?> PauseRecurringTransferAsync(Guid id) => Task.FromResult<RecurringTransferDto?>(null);
@@ -386,7 +456,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<ApiResult<RecurringTransferInstanceDto>> ModifyRecurringTransferInstanceAsync(Guid id, DateOnly date, RecurringTransferInstanceModifyDto model, string? version = null) => Task.FromResult(ApiResult<RecurringTransferInstanceDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<TransactionDto?> RealizeRecurringTransactionAsync(Guid recurringTransactionId, RealizeRecurringTransactionRequest request) => Task.FromResult<TransactionDto?>(null);
+    public Task<TransactionDto?> RealizeRecurringTransactionAsync(Guid recurringTransactionId, RealizeRecurringTransactionRequest request) => Task.FromResult(this.RealizeRecurringTransactionResult);
 
     /// <inheritdoc/>
     public Task<TransferResponse?> RealizeRecurringTransferAsync(Guid recurringTransferId, RealizeRecurringTransferRequest request) => Task.FromResult<TransferResponse?>(null);
@@ -401,7 +471,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<AppSettingsDto?> GetSettingsAsync() => Task.FromResult(this.AppSettings);
 
     /// <inheritdoc/>
-    public Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto) => Task.FromResult<AppSettingsDto?>(null);
+    public Task<AppSettingsDto?> UpdateSettingsAsync(AppSettingsUpdateDto dto) => Task.FromResult(this.UpdateSettingsResult);
 
     /// <inheritdoc/>
     public Task<LocationDataClearedDto?> DeleteAllLocationDataAsync() => Task.FromResult(this.DeleteLocationDataResult);
@@ -527,7 +597,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<UserSettingsDto?> GetUserSettingsAsync() => Task.FromResult(this.UserSettings);
 
     /// <inheritdoc/>
-    public Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto) => Task.FromResult<UserSettingsDto?>(null);
+    public Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto) => Task.FromResult(this.UpdateUserSettingsResult);
 
     /// <inheritdoc/>
     public Task<UserSettingsDto?> CompleteOnboardingAsync() => Task.FromResult(this.CompleteOnboardingResult);

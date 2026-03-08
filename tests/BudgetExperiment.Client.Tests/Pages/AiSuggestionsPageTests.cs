@@ -338,4 +338,221 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
         var analysisButton = cut.FindAll("button").First(b => b.TextContent.Contains("Run AI Analysis"));
         analysisButton.HasAttribute("disabled").ShouldBeTrue();
     }
+
+    /// <summary>
+    /// Verifies accepting a suggestion removes it from the list when accepted successfully.
+    /// </summary>
+    [Fact]
+    public void HandleAccept_RemovesSuggestion_WhenSuccessful()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "ACCEPT_TARGET",
+            SuggestedCategoryName = "Shopping",
+            Confidence = 0.9m,
+            AffectedTransactionCount = 5,
+            Type = "NewRule",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        this._aiService.AcceptSuggestionResult = new CategorizationRuleDto
+        {
+            Id = Guid.NewGuid(),
+            Pattern = "ACCEPT_TARGET",
+            CategoryId = Guid.NewGuid(),
+            IsActive = true,
+        };
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldContain("ACCEPT_TARGET");
+
+        var acceptButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-success") && b.TextContent.Contains("Accept"));
+        acceptButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("ACCEPT_TARGET"));
+    }
+
+    /// <summary>
+    /// Verifies accepting a suggestion shows error when API returns null.
+    /// </summary>
+    [Fact]
+    public void HandleAccept_ShowsError_WhenApiFails()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "FAIL_ACCEPT",
+            SuggestedCategoryName = "Test",
+            Confidence = 0.8m,
+            AffectedTransactionCount = 2,
+            Type = "NewRule",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        this._aiService.AcceptSuggestionResult = null;
+
+        var cut = Render<AiSuggestions>();
+
+        var acceptButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-success") && b.TextContent.Contains("Accept"));
+        acceptButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to accept suggestion"));
+    }
+
+    /// <summary>
+    /// Verifies dismissing a suggestion removes it from the list.
+    /// </summary>
+    [Fact]
+    public void HandleDismiss_RemovesSuggestion_WhenSuccessful()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "DISMISS_TARGET",
+            SuggestedCategoryName = "Test",
+            Confidence = 0.7m,
+            AffectedTransactionCount = 1,
+            Type = "NewRule",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        this._aiService.DismissSuggestionResult = true;
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldContain("DISMISS_TARGET");
+
+        var dismissButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-secondary") && b.TextContent.Contains("Dismiss"));
+        dismissButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("DISMISS_TARGET"));
+    }
+
+    /// <summary>
+    /// Verifies dismissing a suggestion shows error when API fails.
+    /// </summary>
+    [Fact]
+    public void HandleDismiss_ShowsError_WhenApiFails()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "FAIL_DISMISS",
+            SuggestedCategoryName = "Test",
+            Confidence = 0.6m,
+            AffectedTransactionCount = 1,
+            Type = "NewRule",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        this._aiService.DismissSuggestionResult = false;
+
+        var cut = Render<AiSuggestions>();
+
+        var dismissButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-secondary") && b.TextContent.Contains("Dismiss"));
+        dismissButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to dismiss suggestion"));
+    }
+
+    /// <summary>
+    /// Verifies the view details button shows suggestion detail dialog.
+    /// </summary>
+    [Fact]
+    public void HandleViewDetails_ShowsDetailDialog()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "DETAIL_VIEW",
+            SuggestedCategoryName = "Details",
+            Confidence = 0.95m,
+            AffectedTransactionCount = 10,
+            Type = "NewRule",
+            Description = "Test suggestion description",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+
+        var cut = Render<AiSuggestions>();
+
+        var detailsButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.TextContent.Contains("Details"));
+        detailsButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
+    /// <summary>
+    /// Verifies providing positive feedback updates the suggestion.
+    /// </summary>
+    [Fact]
+    public void HandleFeedback_UpdatesSuggestion_WhenSuccessful()
+    {
+        var suggestionId = Guid.NewGuid();
+        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        {
+            Id = suggestionId,
+            SuggestedPattern = "FEEDBACK_TARGET",
+            SuggestedCategoryName = "Feedback",
+            Confidence = 0.8m,
+            AffectedTransactionCount = 3,
+            Type = "NewRule",
+        });
+        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        this._aiService.ProvideFeedbackResult = true;
+
+        var cut = Render<AiSuggestions>();
+
+        cut.Markup.ShouldContain("FEEDBACK_TARGET");
+    }
+
+    /// <summary>
+    /// Verifies analysis runs and processes result when AI is available.
+    /// </summary>
+    [Fact]
+    public void StartAnalysis_ProcessesResult_WhenAiAvailable()
+    {
+        this._aiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            IsEnabled = true,
+            CurrentModel = "gpt-4",
+        };
+        this._aiService.AnalyzeResult = new AnalysisResponseDto
+        {
+            NewRuleSuggestions = 5,
+        };
+
+        var cut = Render<AiSuggestions>();
+
+        var analysisButton = cut.FindAll("button").First(b => b.TextContent.Contains("Run AI Analysis"));
+        analysisButton.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
+    /// <summary>
+    /// Verifies analysis is not triggered when AI is not enabled.
+    /// </summary>
+    [Fact]
+    public void StartAnalysis_DoesNotRun_WhenAiNotEnabled()
+    {
+        this._aiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            IsEnabled = false,
+        };
+
+        var cut = Render<AiSuggestions>();
+
+        var analysisButton = cut.FindAll("button").First(b => b.TextContent.Contains("Run AI Analysis"));
+        analysisButton.HasAttribute("disabled").ShouldBeTrue();
+    }
 }

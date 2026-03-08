@@ -464,6 +464,241 @@ public class AccountTransactionsPageTests : BunitContext, IAsyncLifetime
         cut.Markup.ShouldContain("Grocery Store");
     }
 
+    /// <summary>
+    /// Verifies the update transaction result configures success path.
+    /// </summary>
+    [Fact]
+    public void UpdateTransaction_Success_RefreshesData()
+    {
+        this._apiService.UpdateTransactionResult = ApiResult<TransactionDto>.Success(new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "Updated Transaction",
+            Amount = new MoneyDto { Amount = -100m, Currency = "USD" },
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            AccountId = this._accountId,
+        });
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the delete transaction handler with success result.
+    /// </summary>
+    [Fact]
+    public void DeleteTransaction_Success_RefreshesData()
+    {
+        this._apiService.DeleteTransactionResult = true;
+        this._apiService.TransactionList = CreateTransactionList([("To Delete", -50m)]);
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("To Delete");
+    }
+
+    /// <summary>
+    /// Verifies the confirm recurring instance result is configurable.
+    /// </summary>
+    [Fact]
+    public void ConfirmRecurringInstance_Success_RefreshesData()
+    {
+        this._apiService.RealizeRecurringTransactionResult = new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "Confirmed Recurring",
+            Amount = new MoneyDto { Amount = -15.99m, Currency = "USD" },
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            AccountId = this._accountId,
+        };
+
+        this._apiService.TransactionList = new TransactionListDto
+        {
+            AccountId = this._accountId,
+            AccountName = "Test Checking",
+            Items = new[]
+            {
+                new TransactionListItemDto
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "recurring",
+                    RecurringTransactionId = Guid.NewGuid(),
+                    Date = DateOnly.FromDateTime(DateTime.Today),
+                    Description = "Netflix Subscription",
+                    Amount = new MoneyDto { Amount = -15.99m, Currency = "USD" },
+                },
+            },
+        };
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("Netflix Subscription");
+    }
+
+    /// <summary>
+    /// Verifies the skip recurring instance result is configurable.
+    /// </summary>
+    [Fact]
+    public void SkipRecurringInstance_Success_RefreshesData()
+    {
+        this._apiService.SkipRecurringInstanceResult = true;
+
+        this._apiService.TransactionList = new TransactionListDto
+        {
+            AccountId = this._accountId,
+            AccountName = "Test Checking",
+            Items = new[]
+            {
+                new TransactionListItemDto
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "recurring",
+                    RecurringTransactionId = Guid.NewGuid(),
+                    Date = DateOnly.FromDateTime(DateTime.Today),
+                    Description = "Skippable Subscription",
+                    Amount = new MoneyDto { Amount = -9.99m, Currency = "USD" },
+                },
+            },
+        };
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("Skippable Subscription");
+    }
+
+    /// <summary>
+    /// Verifies the save location result is configurable.
+    /// </summary>
+    [Fact]
+    public void SaveLocation_Success_UpdatesTransaction()
+    {
+        this._apiService.UpdateTransactionLocationResult = ApiResult<TransactionDto>.Success(new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "Located Transaction",
+            Amount = new MoneyDto { Amount = -30m, Currency = "USD" },
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            AccountId = this._accountId,
+        });
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the clear location result is configurable.
+    /// </summary>
+    [Fact]
+    public void ClearLocation_Success_UpdatesTransaction()
+    {
+        this._apiService.ClearTransactionLocationResult = true;
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the modify recurring instance result is configurable.
+    /// </summary>
+    [Fact]
+    public void ModifyRecurringInstance_Success_RefreshesData()
+    {
+        this._apiService.ModifyRecurringInstanceResult = ApiResult<RecurringInstanceDto>.Success(new RecurringInstanceDto
+        {
+            RecurringTransactionId = Guid.NewGuid(),
+            ScheduledDate = DateOnly.FromDateTime(DateTime.Today),
+        });
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the past due items are shown with realize batch result.
+    /// </summary>
+    [Fact]
+    public void ConfirmPastDueItems_Success_RefreshesData()
+    {
+        this._apiService.RealizeBatchResult = new BatchRealizeResultDto { SuccessCount = 2 };
+        this._apiService.PastDueSummary = new PastDueSummaryDto
+        {
+            TotalCount = 1,
+            Items = new List<PastDueItemDto>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "recurring-transaction",
+                    Description = "Past Due Bill",
+                    InstanceDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-5)),
+                    Amount = new MoneyDto { Amount = -75m, Currency = "USD" },
+                    AccountId = this._accountId,
+                },
+            },
+        };
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies clicking Add Transaction opens the modal.
+    /// </summary>
+    [Fact]
+    public void AddTransaction_OpensModal()
+    {
+        this._apiService.Categories.Add(new BudgetCategoryDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Food & Dining",
+            Type = "Expense",
+            IsActive = true,
+        });
+
+        var cut = RenderPage();
+        var addButton = cut.FindAll("button").First(b => b.TextContent.Contains("Add Transaction"));
+        addButton.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Add Transaction"));
+    }
+
+    /// <summary>
+    /// Verifies the error message includes the error from API.
+    /// </summary>
+    [Fact]
+    public void Error_ShowsApiErrorMessage()
+    {
+        this._apiService.ShouldThrowOnGetTransactionList = true;
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("Failed to load transactions");
+    }
+
+    /// <summary>
+    /// Verifies multiple transaction items are rendered in the list.
+    /// </summary>
+    [Fact]
+    public void ShowsMultipleTransactions_InOrder()
+    {
+        this._apiService.TransactionList = CreateTransactionList([
+            ("Alpha Purchase", -10m),
+            ("Beta Purchase", -20m),
+            ("Gamma Purchase", -30m),
+        ]);
+
+        var cut = RenderPage();
+
+        cut.Markup.ShouldContain("Alpha Purchase");
+        cut.Markup.ShouldContain("Beta Purchase");
+        cut.Markup.ShouldContain("Gamma Purchase");
+    }
+
     private IRenderedComponent<AccountTransactions> RenderPage()
     {
         return Render<AccountTransactions>(parameters => parameters

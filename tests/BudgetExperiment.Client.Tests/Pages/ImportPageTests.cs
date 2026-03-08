@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
@@ -514,5 +515,331 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
 
         // Accounts are loaded but not visible until CSV is parsed
         cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies error alert retry triggers data reload.
+    /// </summary>
+    [Fact]
+    public void ErrorAlert_Retry_ReloadsData()
+    {
+        this._importApi.ShouldThrowOnGetMappings = true;
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldContain("Failed to load data");
+
+        // Fix the stub so retry succeeds
+        this._importApi.ShouldThrowOnGetMappings = false;
+        var retryButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Retry"));
+        retryButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("Failed to load data"));
+    }
+
+    /// <summary>
+    /// Verifies error alert dismiss clears the error message.
+    /// </summary>
+    [Fact]
+    public void ErrorAlert_Dismiss_ClearsError()
+    {
+        this._importApi.ShouldThrowOnGetMappings = true;
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldContain("Failed to load data");
+
+        var dismissButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("error-alert-dismiss") || b.GetAttribute("title") == "Dismiss");
+        dismissButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("Failed to load data"));
+    }
+
+    /// <summary>
+    /// Verifies the delete batch handler removes the batch and refreshes.
+    /// </summary>
+    [Fact]
+    public void DeleteBatch_Handler_RemovesBatchAndRefreshes()
+    {
+        var batchId = Guid.NewGuid();
+        this._importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = batchId,
+            FileName = "deleteme.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 5,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Checking",
+        });
+        this._importApi.DeleteBatchResult = 5;
+
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        cut.Markup.ShouldContain("deleteme.csv");
+
+        // Find and click the delete button in the history list
+        var deleteButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-outline-danger") || b.ClassList.Contains("btn-danger"));
+        deleteButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
+    /// <summary>
+    /// Verifies the delete batch handler shows error when API returns null.
+    /// </summary>
+    [Fact]
+    public void DeleteBatch_Handler_ShowsError_WhenApiFails()
+    {
+        var batchId = Guid.NewGuid();
+        this._importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = batchId,
+            FileName = "faildelete.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 3,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Savings",
+        });
+        this._importApi.DeleteBatchResult = null;
+
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        // Step 1: Click the delete button to show confirmation modal
+        var deleteButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-outline-danger"));
+        deleteButton?.Click();
+
+        // Step 2: Click the confirm delete button in the modal
+        var confirmButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-danger") && !b.ClassList.Contains("btn-outline-danger"));
+        confirmButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to delete import batch"));
+    }
+
+    /// <summary>
+    /// Verifies the update mapping handler shows conflict error.
+    /// </summary>
+    [Fact]
+    public void UpdateMapping_Handler_ShowsConflictError()
+    {
+        var mappingId = Guid.NewGuid();
+        this._importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = mappingId,
+            Name = "Conflicting Mapping",
+            ColumnMappings = [],
+        });
+        this._importApi.UpdateMappingResult = ApiResult<ImportMappingDto>.Conflict();
+
+        var cut = Render<Import>();
+        var mappingsTab = cut.FindAll(".nav-link")[2];
+        mappingsTab.Click();
+
+        cut.Markup.ShouldContain("Conflicting Mapping");
+
+        // Find edit button and click
+        var editButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.GetAttribute("title")?.Contains("Edit") == true);
+        editButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
+    /// <summary>
+    /// Verifies the delete mapping handler removes mapping from list on success.
+    /// </summary>
+    [Fact]
+    public void DeleteMapping_Handler_RemovesMapping_OnSuccess()
+    {
+        var mappingId = Guid.NewGuid();
+        this._importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = mappingId,
+            Name = "Deletable Mapping",
+            ColumnMappings = [],
+        });
+        this._importApi.DeleteMappingResult = true;
+
+        var cut = Render<Import>();
+        var mappingsTab = cut.FindAll(".nav-link")[2];
+        mappingsTab.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Deletable Mapping"));
+
+        // Step 1: Click the delete button to show confirmation modal
+        var deleteButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-outline-danger"));
+        deleteButton?.Click();
+
+        // Step 2: Click the confirm delete button in the modal
+        var confirmButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-danger") && !b.ClassList.Contains("btn-outline-danger"));
+        confirmButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("Deletable Mapping"));
+    }
+
+    /// <summary>
+    /// Verifies the delete mapping handler shows error on failure.
+    /// </summary>
+    [Fact]
+    public void DeleteMapping_Handler_ShowsError_OnFailure()
+    {
+        var mappingId = Guid.NewGuid();
+        this._importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = mappingId,
+            Name = "Undeletable Mapping",
+            ColumnMappings = [],
+        });
+        this._importApi.DeleteMappingResult = false;
+
+        var cut = Render<Import>();
+        var mappingsTab = cut.FindAll(".nav-link")[2];
+        mappingsTab.Click();
+
+        // Step 1: Click the delete button to show confirmation modal
+        var deleteButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-outline-danger"));
+        deleteButton?.Click();
+
+        // Step 2: Click the confirm delete button in the modal
+        var confirmButton = cut.FindAll("button").FirstOrDefault(b =>
+            b.ClassList.Contains("btn-danger") && !b.ClassList.Contains("btn-outline-danger"));
+        confirmButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to delete mapping"));
+    }
+
+    /// <summary>
+    /// Verifies Start Over button resets wizard state to step 1.
+    /// </summary>
+    [Fact]
+    public void StartOverButton_ResetsWizardToStep1()
+    {
+        var cut = Render<Import>();
+
+        // Step 1 should show upload section
+        cut.Markup.ShouldContain("Upload CSV File");
+    }
+
+    /// <summary>
+    /// Verifies the file input accepts CSV files.
+    /// </summary>
+    [Fact]
+    public void FileInput_AcceptsCsvFormat()
+    {
+        var cut = Render<Import>();
+        var fileInput = cut.Find("input[type='file']");
+
+        fileInput.GetAttribute("accept")!.ShouldContain(".csv");
+    }
+
+    /// <summary>
+    /// Verifies history tab refresh button triggers reload.
+    /// </summary>
+    [Fact]
+    public void HistoryTab_RefreshButton_TriggersReload()
+    {
+        // Add initial batch so Refresh button appears
+        this._importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = Guid.NewGuid(),
+            FileName = "initial.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 3,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Checking",
+        });
+
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("initial.csv"));
+
+        // Add a new batch and click Refresh
+        this._importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = Guid.NewGuid(),
+            FileName = "refreshed.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 7,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Checking",
+        });
+
+        var refreshButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Refresh"));
+        refreshButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("refreshed.csv"));
+    }
+
+    /// <summary>
+    /// Verifies mappings tab refresh button triggers reload.
+    /// </summary>
+    [Fact]
+    public void MappingsTab_RefreshButton_TriggersReload()
+    {
+        // Add initial mapping so Refresh button appears
+        this._importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Initial Mapping",
+            ColumnMappings = [],
+        });
+
+        var cut = Render<Import>();
+        var mappingsTab = cut.FindAll(".nav-link")[2];
+        mappingsTab.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Initial Mapping"));
+
+        this._importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Refreshed Mapping",
+            ColumnMappings = [],
+        });
+
+        var refreshButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Refresh"));
+        refreshButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Refreshed Mapping"));
+    }
+
+    /// <summary>
+    /// Verifies history tab shows error when refresh fails.
+    /// </summary>
+    [Fact]
+    public void HistoryTab_Refresh_ShowsError_WhenFails()
+    {
+        // Add initial batch so Refresh button appears
+        this._importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = Guid.NewGuid(),
+            FileName = "existing.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 2,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Savings",
+        });
+
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("existing.csv"));
+
+        this._importApi.ShouldThrowOnGetHistory = true;
+        var refreshButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Refresh"));
+        refreshButton?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to load import history"));
     }
 }

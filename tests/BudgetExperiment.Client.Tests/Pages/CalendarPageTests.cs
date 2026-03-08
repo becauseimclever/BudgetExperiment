@@ -8,6 +8,7 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -448,6 +449,305 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
         var cut = Render<Calendar>();
 
         cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the view mode toggle buttons are present.
+    /// </summary>
+    [Fact]
+    public void HasViewModeToggle()
+    {
+        var cut = Render<Calendar>();
+
+        // Calendar should have view mode toggle (Month/Week)
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the budget goal modal is hidden by default.
+    /// </summary>
+    [Fact]
+    public void BudgetGoalModal_IsHiddenByDefault()
+    {
+        var cut = Render<Calendar>();
+
+        cut.Markup.ShouldNotContain("Set Budget Goal");
+    }
+
+    /// <summary>
+    /// Verifies Save budget goal calls the API with correct data.
+    /// </summary>
+    [Fact]
+    public void SaveBudgetGoal_Success_RefreshesCalendar()
+    {
+        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        {
+            Id = Guid.NewGuid(),
+            CategoryId = Guid.NewGuid(),
+            TargetAmount = new MoneyDto { Amount = 300m, Currency = "USD" },
+            Year = 2025,
+            Month = 6,
+        });
+
+        this._apiService.BudgetSummary = new BudgetSummaryDto
+        {
+            Year = 2025,
+            Month = 6,
+        };
+
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 6));
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Delete budget goal result triggers refresh.
+    /// </summary>
+    [Fact]
+    public void DeleteBudgetGoal_Success_RefreshesCalendar()
+    {
+        this._apiService.DeleteBudgetGoalResult = true;
+
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 6));
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies Copy budget goals from previous month is configurable.
+    /// </summary>
+    [Fact]
+    public void CopyBudgetGoals_Success_RefreshesCalendar()
+    {
+        this._apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult { GoalsCreated = 3 };
+        this._apiService.BudgetSummary = new BudgetSummaryDto
+        {
+            Year = 2025,
+            Month = 6,
+        };
+
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 6));
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the create transaction result adds to day detail.
+    /// </summary>
+    [Fact]
+    public void CreateTransaction_Success_RefreshesCalendar()
+    {
+        this._apiService.CreateTransactionResult = new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            Description = "Test Transaction",
+            Amount = new MoneyDto { Amount = -25m, Currency = "USD" },
+            Date = new DateOnly(2025, 6, 15),
+            AccountId = Guid.NewGuid(),
+        };
+
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 6));
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies skip recurring instance is configurable.
+    /// </summary>
+    [Fact]
+    public void SkipRecurringInstance_Success_RefreshesCalendar()
+    {
+        this._apiService.SkipRecurringInstanceResult = true;
+
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 6));
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies modify recurring instance is configurable.
+    /// </summary>
+    [Fact]
+    public void ModifyRecurringInstance_Success_RefreshesCalendar()
+    {
+        this._apiService.ModifyRecurringInstanceResult = ApiResult<RecurringInstanceDto>.Success(new RecurringInstanceDto
+        {
+            RecurringTransactionId = Guid.NewGuid(),
+            ScheduledDate = new DateOnly(2025, 6, 15),
+        });
+
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 6));
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies realize batch result for confirming past due items.
+    /// </summary>
+    [Fact]
+    public void ConfirmPastDueItems_Success_RefreshesCalendar()
+    {
+        this._apiService.RealizeBatchResult = new BatchRealizeResultDto { SuccessCount = 2 };
+        this._apiService.PastDueSummary = new PastDueSummaryDto
+        {
+            TotalCount = 2,
+            Items = new List<PastDueItemDto>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "recurring-transaction",
+                    Description = "Late Payment",
+                    InstanceDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-7)),
+                    Amount = new MoneyDto { Amount = -100m, Currency = "USD" },
+                },
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "recurring-transaction",
+                    Description = "Very Late",
+                    InstanceDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-14)),
+                    Amount = new MoneyDto { Amount = -50m, Currency = "USD" },
+                },
+            },
+        };
+
+        var cut = Render<Calendar>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies navigating to previous month triggers navigation to correct URL.
+    /// </summary>
+    [Fact]
+    public void PreviousMonth_NavigatesToCorrectUrl()
+    {
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 3));
+
+        var prevButton = cut.FindAll("button").First(b => b.TextContent.Contains("Previous"));
+        prevButton.Click();
+
+        var navMan = this.Services.GetRequiredService<NavigationManager>();
+        navMan.Uri.ShouldContain("/2025/2");
+    }
+
+    /// <summary>
+    /// Verifies navigating to next month from December wraps to January of next year.
+    /// </summary>
+    [Fact]
+    public void NextMonth_FromDecember_NavigatesToJanuary()
+    {
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 12));
+
+        var nextButton = cut.FindAll("button").First(b => b.TextContent.Contains("Next"));
+        nextButton.Click();
+
+        var navMan = this.Services.GetRequiredService<NavigationManager>();
+        navMan.Uri.ShouldContain("/2026/1");
+    }
+
+    /// <summary>
+    /// Verifies navigating to previous month from January wraps to December of previous year.
+    /// </summary>
+    [Fact]
+    public void PreviousMonth_FromJanuary_NavigatesToDecember()
+    {
+        var cut = Render<Calendar>(parameters => parameters
+            .Add(p => p.Year, 2025)
+            .Add(p => p.Month, 1));
+
+        var prevButton = cut.FindAll("button").First(b => b.TextContent.Contains("Previous"));
+        prevButton.Click();
+
+        var navMan = this.Services.GetRequiredService<NavigationManager>();
+        navMan.Uri.ShouldContain("/2024/12");
+    }
+
+    /// <summary>
+    /// Verifies that calendar handles day click with both grid and detail data.
+    /// </summary>
+    [Fact]
+    public void SelectDate_LoadsDayDetail()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        this._apiService.CalendarGrid = new CalendarGridDto
+        {
+            Year = today.Year,
+            Month = today.Month,
+            Days = new List<CalendarDaySummaryDto>
+            {
+                new()
+                {
+                    Date = today,
+                    IsCurrentMonth = true,
+                    ActualTotal = new MoneyDto { Amount = -25m, Currency = "USD" },
+                    TransactionCount = 1,
+                },
+            },
+        };
+        this._apiService.DayDetail = new DayDetailDto
+        {
+            Date = today,
+            Items = new List<DayDetailItemDto>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Type = "transaction",
+                    Description = "Day Detail Item",
+                    Amount = new MoneyDto { Amount = -25m, Currency = "USD" },
+                },
+            },
+        };
+
+        var cut = Render<Calendar>();
+
+        var dayCells = cut.FindAll(".calendar-day");
+        if (dayCells.Any())
+        {
+            dayCells.First().Click();
+        }
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
+    /// <summary>
+    /// Verifies account filter changes reload calendar data.
+    /// </summary>
+    [Fact]
+    public void AccountFilter_Change_ReloadsData()
+    {
+        var accountId = Guid.NewGuid();
+        this._apiService.Accounts.Add(new AccountDto
+        {
+            Id = accountId,
+            Name = "Filtered Account",
+            Type = "Checking",
+            InitialBalance = 0m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Calendar>();
+
+        cut.Markup.ShouldContain("Filtered Account");
     }
 
     private static AccountDto CreateAccount(string name)

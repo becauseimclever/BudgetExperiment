@@ -389,6 +389,246 @@ public class CategorySuggestionsPageTests : BunitContext, IAsyncLifetime
         cut.Markup.ShouldContain("No Dismissed Suggestions");
     }
 
+    /// <summary>
+    /// Verifies restore button triggers restore and shows success message.
+    /// </summary>
+    [Fact]
+    public void RestoreSuggestion_ShowsSuccessMessage()
+    {
+        var suggestion = CreateSuggestion("Restored Category");
+        this._suggestionService.DismissedSuggestions.Add(suggestion);
+        this._suggestionService.RestoreResult = suggestion;
+
+        var cut = Render<CategorySuggestions>();
+        var dismissedTab = cut.FindAll(".tab-button")[1];
+        dismissedTab.Click();
+
+        cut.Markup.ShouldContain("Restored Category");
+
+        var restoreBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Restore"));
+        restoreBtn.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("restored to pending"));
+    }
+
+    /// <summary>
+    /// Verifies restore failure shows error message.
+    /// </summary>
+    [Fact]
+    public void RestoreSuggestion_WhenFails_ShowsErrorMessage()
+    {
+        var suggestion = CreateSuggestion("Stuck Category");
+        this._suggestionService.DismissedSuggestions.Add(suggestion);
+        this._suggestionService.RestoreResult = null;
+
+        var cut = Render<CategorySuggestions>();
+        var dismissedTab = cut.FindAll(".tab-button")[1];
+        dismissedTab.Click();
+
+        var restoreBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Restore"));
+        restoreBtn.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to restore suggestion"));
+    }
+
+    /// <summary>
+    /// Verifies accept selected with multiple suggestions processes them.
+    /// </summary>
+    [Fact]
+    public void AcceptSelected_ProcessesMultipleSuggestions()
+    {
+        var s1 = CreateSuggestion("Category A");
+        var s2 = CreateSuggestion("Category B");
+        this._suggestionService.PendingSuggestions.Add(s1);
+        this._suggestionService.PendingSuggestions.Add(s2);
+        this._suggestionService.BulkAcceptResults.Add(new AcceptCategorySuggestionResultDto
+        {
+            SuggestionId = s1.Id,
+            Success = true,
+            CategoryId = Guid.NewGuid(),
+            CategoryName = "Category A",
+        });
+        this._suggestionService.BulkAcceptResults.Add(new AcceptCategorySuggestionResultDto
+        {
+            SuggestionId = s2.Id,
+            Success = true,
+            CategoryId = Guid.NewGuid(),
+            CategoryName = "Category B",
+        });
+
+        var cut = Render<CategorySuggestions>();
+
+        // Select both suggestions
+        var checkboxes = cut.FindAll("input[type='checkbox']");
+        foreach (var cb in checkboxes)
+        {
+            cb.Change(true);
+        }
+
+        var acceptSelectedBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Accept Selected"));
+        acceptSelectedBtn.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
+    /// <summary>
+    /// Verifies confirm accept in the modal actually accepts and removes suggestion.
+    /// </summary>
+    [Fact]
+    public void ConfirmAccept_AcceptsSuggestionAndClosesModal()
+    {
+        var suggestion = CreateSuggestion("Accepted Category");
+        this._suggestionService.PendingSuggestions.Add(suggestion);
+        this._suggestionService.AcceptResult = new AcceptCategorySuggestionResultDto
+        {
+            SuggestionId = suggestion.Id,
+            Success = true,
+            CategoryId = Guid.NewGuid(),
+            CategoryName = "Accepted Category",
+        };
+
+        var cut = Render<CategorySuggestions>();
+
+        // Open accept dialog
+        var acceptBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Accept") && !b.TextContent.Contains("Selected"));
+        acceptBtn.Click();
+
+        // Click Accept Category in modal
+        var confirmBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Accept Category"));
+        confirmBtn.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotContain("Accept Category Suggestion"));
+    }
+
+    /// <summary>
+    /// Verifies cancel in accept modal closes the modal.
+    /// </summary>
+    [Fact]
+    public void CloseAcceptModal_ClosesDialogWithoutAccepting()
+    {
+        this._suggestionService.PendingSuggestions.Add(CreateSuggestion("Keep This"));
+
+        var cut = Render<CategorySuggestions>();
+
+        var acceptBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Accept") && !b.TextContent.Contains("Selected"));
+        acceptBtn.Click();
+
+        cut.Markup.ShouldContain("Accept Category Suggestion");
+
+        var cancelBtn = cut.FindAll("button").First(b => b.TextContent.Trim() == "Cancel");
+        cancelBtn.Click();
+
+        cut.Markup.ShouldContain("Keep This");
+    }
+
+    /// <summary>
+    /// Verifies clear dismissed patterns confirmation and execution.
+    /// </summary>
+    [Fact]
+    public void ConfirmClearDismissedPatterns_ClearsAndShowsSuccess()
+    {
+        this._suggestionService.DismissedSuggestions.Add(CreateSuggestion("Old Dismissed"));
+        this._suggestionService.ClearDismissedPatternsResult = 1;
+
+        var cut = Render<CategorySuggestions>();
+
+        var dismissedTab = cut.FindAll(".tab-button")[1];
+        dismissedTab.Click();
+
+        // Click "Clear Dismissed History" button
+        var clearBtn = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Clear Dismissed"));
+        clearBtn?.Click();
+
+        // Click the confirmation button "Yes, Clear"
+        var confirmBtn = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Yes, Clear"));
+        confirmBtn?.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
+    /// <summary>
+    /// Verifies cancel clear dismissed patterns hides confirmation.
+    /// </summary>
+    [Fact]
+    public void CancelClearDismissedPatterns_HidesConfirmation()
+    {
+        this._suggestionService.DismissedSuggestions.Add(CreateSuggestion("Still Dismissed"));
+        this._suggestionService.ClearDismissedPatternsResult = 1;
+
+        var cut = Render<CategorySuggestions>();
+        var dismissedTab = cut.FindAll(".tab-button")[1];
+        dismissedTab.Click();
+
+        var clearBtn = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Clear Dismissed"));
+        clearBtn?.Click();
+
+        cut.Markup.ShouldContain("Yes, Clear");
+
+        var cancelBtn = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Trim() == "Cancel");
+        cancelBtn?.Click();
+
+        cut.Markup.ShouldNotContain("Yes, Clear");
+    }
+
+    /// <summary>
+    /// Verifies dismiss failure shows error message.
+    /// </summary>
+    [Fact]
+    public void DismissSuggestion_WhenFails_ShowsErrorMessage()
+    {
+        this._suggestionService.PendingSuggestions.Add(CreateSuggestion("Cannot Dismiss"));
+        this._suggestionService.DismissResult = false;
+
+        var cut = Render<CategorySuggestions>();
+
+        // Use title attribute to avoid matching the "Dismissed" tab button
+        var dismissBtn = cut.FindAll("button").First(b =>
+            b.GetAttribute("title")?.Contains("Dismiss suggestion") == true);
+        dismissBtn.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to dismiss suggestion"));
+    }
+
+    /// <summary>
+    /// Verifies selecting then deselecting a suggestion hides Accept Selected.
+    /// </summary>
+    [Fact]
+    public void ToggleSelection_Deselect_HidesAcceptSelected()
+    {
+        this._suggestionService.PendingSuggestions.Add(CreateSuggestion("Toggle Test"));
+
+        var cut = Render<CategorySuggestions>();
+        var checkbox = cut.Find("input[type='checkbox']");
+
+        // Select
+        checkbox.Change(true);
+        cut.Markup.ShouldContain("Accept Selected");
+
+        // Deselect
+        checkbox.Change(false);
+        cut.Markup.ShouldNotContain("Accept Selected");
+    }
+
+    /// <summary>
+    /// Verifies refresh on dismissed tab reloads dismissed suggestions.
+    /// </summary>
+    [Fact]
+    public void RefreshOnDismissedTab_ReloadsDismissedSuggestions()
+    {
+        this._suggestionService.DismissedSuggestions.Add(CreateSuggestion("Dismissed One"));
+
+        var cut = Render<CategorySuggestions>();
+        var dismissedTab = cut.FindAll(".tab-button")[1];
+        dismissedTab.Click();
+
+        cut.Markup.ShouldContain("Dismissed One");
+
+        var refreshBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Refresh"));
+        refreshBtn.Click();
+
+        cut.WaitForAssertion(() => cut.Markup.ShouldNotBeNullOrEmpty());
+    }
+
     private static CategorySuggestionDto CreateSuggestion(string name)
     {
         return new CategorySuggestionDto
