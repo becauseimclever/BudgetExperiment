@@ -25,7 +25,7 @@ public class BudgetApiServiceUncategorizedTests
     public async Task GetUncategorizedTransactionsAsync_BuildsCorrectUrl_WithDefaultFilter()
     {
         // Arrange
-        string? capturedUrl = null;
+        var capturedUrl = string.Empty;
         var handler = new MockHttpMessageHandler((request, _) =>
         {
             capturedUrl = request.RequestUri?.PathAndQuery;
@@ -70,7 +70,7 @@ public class BudgetApiServiceUncategorizedTests
     {
         // Arrange
         var accountId = Guid.Parse("12345678-1234-1234-1234-123456789012");
-        string? capturedUrl = null;
+        var capturedUrl = string.Empty;
         var handler = new MockHttpMessageHandler((request, _) =>
         {
             capturedUrl = request.RequestUri?.PathAndQuery;
@@ -151,7 +151,7 @@ public class BudgetApiServiceUncategorizedTests
     public async Task BulkCategorizeTransactionsAsync_CallsCorrectEndpoint()
     {
         // Arrange
-        string? capturedUrl = null;
+        var capturedUrl = string.Empty;
         string? capturedMethod = null;
         var handler = new MockHttpMessageHandler((request, _) =>
         {
