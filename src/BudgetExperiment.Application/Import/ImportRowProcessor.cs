@@ -196,6 +196,14 @@ public sealed class ImportRowProcessor : IImportRowProcessor
         // Clean up the amount string
         var cleaned = amountStr.Trim();
 
+        // Strip leading apostrophe used by CSV sanitization for display safety
+        // (e.g., "'-10.05" → "-10.05")
+        if (cleaned.Length >= 2 && cleaned[0] == '\'' &&
+            cleaned[1] is '=' or '@' or '+' or '-' or '\t' or '\r')
+        {
+            cleaned = cleaned[1..];
+        }
+
         // Handle parentheses as negative (accounting format)
         bool isNegative = cleaned.StartsWith('(') && cleaned.EndsWith(')');
         if (isNegative)

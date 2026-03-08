@@ -645,10 +645,19 @@
                 };
             }
 
+            // Unsanitize row values before sending to API for parsing.
+            // CsvSanitizer prefixes trigger chars (-, +, =, @) with apostrophe for safe display,
+            // but the backend needs the original values for numeric/date parsing.
+            var unsanitizedRows = wizardState.ParseResult!.Rows
+                .Select(row => (IReadOnlyList<string>)row
+                    .Select(CsvSanitizer.UnsanitizeForParsing)
+                    .ToList())
+                .ToList();
+
             var request = new ImportPreviewRequest
             {
                 AccountId = wizardState.SelectedAccountId!.Value,
-                Rows = wizardState.ParseResult!.Rows,
+                Rows = unsanitizedRows,
                 Mappings = mappings,
                 DateFormat = wizardState.DateFormat,
                 AmountMode = wizardState.AmountMode,

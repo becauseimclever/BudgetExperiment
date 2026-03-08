@@ -582,6 +582,81 @@ public class ImportRowProcessorTests
         Assert.Equal(42, result.RowIndex);
     }
 
+    [Fact]
+    public void ProcessRow_SanitizedNegativeAmount_ParsesCorrectly()
+    {
+        // Arrange — CsvSanitizer prefixes '-' values with apostrophe for display safety
+        var row = new List<string> { "01/15/2026", "GROCERY STORE", "'-10.05" };
+        var mappings = CreateMappings(0, 1, 2);
+
+        // Act
+        var result = this._processor.ProcessRow(
+            1,
+            row,
+            mappings,
+            "MM/dd/yyyy",
+            AmountParseMode.NegativeIsExpense,
+            null,
+            [],
+            new Dictionary<string, BudgetCategory>(StringComparer.OrdinalIgnoreCase),
+            [],
+            DisabledDuplicateSettings());
+
+        // Assert
+        Assert.Equal(ImportRowStatus.Valid, result.Status);
+        Assert.Equal(-10.05m, result.Amount);
+    }
+
+    [Fact]
+    public void ProcessRow_SanitizedPositiveAmount_ParsesCorrectly()
+    {
+        // Arrange — CsvSanitizer prefixes '+' values with apostrophe for display safety
+        var row = new List<string> { "01/15/2026", "REFUND", "'+250.00" };
+        var mappings = CreateMappings(0, 1, 2);
+
+        // Act
+        var result = this._processor.ProcessRow(
+            1,
+            row,
+            mappings,
+            "MM/dd/yyyy",
+            AmountParseMode.NegativeIsExpense,
+            null,
+            [],
+            new Dictionary<string, BudgetCategory>(StringComparer.OrdinalIgnoreCase),
+            [],
+            DisabledDuplicateSettings());
+
+        // Assert
+        Assert.Equal(ImportRowStatus.Valid, result.Status);
+        Assert.Equal(250.00m, result.Amount);
+    }
+
+    [Fact]
+    public void ProcessRow_SanitizedNegativeAmount_PositiveIsExpenseMode_ParsesCorrectly()
+    {
+        // Arrange — sanitized negative with PositiveIsExpense mode
+        var row = new List<string> { "01/15/2026", "STORE", "'-45.99" };
+        var mappings = CreateMappings(0, 1, 2);
+
+        // Act
+        var result = this._processor.ProcessRow(
+            1,
+            row,
+            mappings,
+            "MM/dd/yyyy",
+            AmountParseMode.PositiveIsExpense,
+            null,
+            [],
+            new Dictionary<string, BudgetCategory>(StringComparer.OrdinalIgnoreCase),
+            [],
+            DisabledDuplicateSettings());
+
+        // Assert — PositiveIsExpense negates: -(-45.99) = 45.99
+        Assert.Equal(ImportRowStatus.Valid, result.Status);
+        Assert.Equal(45.99m, result.Amount);
+    }
+
     private static List<ColumnMappingDto> CreateMappings(int dateCol, int descCol, int amountCol)
     {
         return
