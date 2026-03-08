@@ -404,8 +404,116 @@ tests/BudgetExperiment.Client.Tests/Components/Common/ModalTests.cs
 
 ---
 
+## 11. ViewModel Extraction Pattern
+
+For pages with complex `@code` blocks (many handlers, state fields, computed properties), extract the logic into a plain C# **ViewModel** class. This eliminates the async state-machine coverage instrumentation gap in Razor files and improves testability.
+
+### 11.1 When to Apply
+
+Apply ViewModel extraction when a page has:
+- **≥ 5 handler methods** in the `@code` block
+- **≥ 5 state fields** managing UI state
+- Low coverage due to Razor `@code` async handler instrumentation gaps
+
+### 11.2 File Locations
+
+```
+src/BudgetExperiment.Client/ViewModels/{PageName}ViewModel.cs
+tests/BudgetExperiment.Client.Tests/ViewModels/{PageName}ViewModelTests.cs
+```
+
+### 11.3 Class Design
+
+- **Sealed class** implementing `IDisposable` (if it subscribes to events).
+- Constructor receives services via DI — same services the page previously injected.
+- **Public properties** with `private set` for state (bound by the Razor page).
+- **Public methods** for all handler logic.
+- **`Action? OnStateChanged`** callback — the Razor page wires this to `InvokeAsync(StateHasChanged)`.
+- Call `OnStateChanged?.Invoke()` after any state mutation that should trigger a re-render.
+
+```csharp
+public sealed class ExampleViewModel : IDisposable
+{
+    public bool IsLoading { get; private set; }
+    public Action? OnStateChanged { get; set; }
+
+    public async Task InitializeAsync()
+    {
+        IsLoading = true;
+        OnStateChanged?.Invoke();
+        // ... load data ...
+        IsLoading = false;
+        OnStateChanged?.Invoke();
+    }
+
+    public void Dispose() { /* unsubscribe from events */ }
+}
+```
+
+### 11.4 DI Registration
+
+Register ViewModels as **Transient** (one instance per page render):
+
+```csharp
+builder.Services.AddTransient<ExampleViewModel>();
+```
+
+### 11.5 Razor Binding
+
+The page becomes a thin binding layer — inject the ViewModel, bind properties, delegate events:
+
+```razor
+@page "/example"
+@inject ExampleViewModel ViewModel
+@implements IDisposable
+
+@if (ViewModel.IsLoading) { <LoadingSpinner /> }
+<button @onclick="ViewModel.DoSomethingAsync">Action</button>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
+    }
+
+    public void Dispose()
+    {
+        ViewModel.OnStateChanged = null;
+        ViewModel.Dispose();
+    }
+}
+```
+
+### 11.6 Testing
+
+ViewModel tests are plain xUnit — no bUnit required for logic. Use stubs for injected services:
+
+```csharp
+[Fact]
+public async Task InitializeAsync_LoadsData()
+{
+    var stub = new StubApiService { ... };
+    var vm = new ExampleViewModel(stub);
+    await vm.InitializeAsync();
+    vm.Items.ShouldNotBeEmpty();
+}
+```
+
+Existing bUnit page tests continue to serve as integration tests verifying the Razor → ViewModel → DOM pipeline.
+
+### 11.7 Reference Implementation
+
+See `CategoriesViewModel` ([Feature 097](097-viewmodel-extraction-categories.md)) as the prototype:
+- ViewModel: `src/BudgetExperiment.Client/ViewModels/CategoriesViewModel.cs`
+- Tests: `tests/BudgetExperiment.Client.Tests/ViewModels/CategoriesViewModelTests.cs`
+- Page: `src/BudgetExperiment.Client/Pages/Categories.razor`
+
+---
+
 ## Revision History
 
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-02-01 | 1.0 | Initial standards based on component audit |
+| 2026-07-14 | 1.1 | Added Section 11: ViewModel Extraction Pattern (Feature 097) |

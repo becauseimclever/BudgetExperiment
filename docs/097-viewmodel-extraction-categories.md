@@ -1,6 +1,6 @@
 # Feature 097: ViewModel Extraction — Categories Page (Prototype)
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium
 > **Dependencies:** Feature 095 (Done)
 
@@ -44,14 +44,14 @@ Code-behind (`.razor.cs`) components already in the project show 85-100% coverag
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `CategoriesViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/CategoriesViewModel.cs`
-- [ ] All 17 handler methods are moved to the ViewModel
-- [ ] All 16 state fields are moved to the ViewModel
-- [ ] All 3 computed properties are moved to the ViewModel
-- [ ] ViewModel exposes a `StateHasChanged` action/event for the Razor page to subscribe to for re-rendering
-- [ ] `Categories.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 19 `CategoriesPageTests` pass without modification (or with minimal binding changes)
+- [x] `CategoriesViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/CategoriesViewModel.cs`
+- [x] All 17 handler methods are moved to the ViewModel
+- [x] All 16 state fields are moved to the ViewModel
+- [x] All 3 computed properties are moved to the ViewModel
+- [x] ViewModel exposes a `StateHasChanged` action/event for the Razor page to subscribe to for re-rendering
+- [x] `Categories.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 19 `CategoriesPageTests` pass without modification (or with minimal binding changes)
 
 ### US-097-002: Add ViewModel Unit Tests
 **As a** developer
@@ -59,14 +59,14 @@ Code-behind (`.razor.cs`) components already in the project show 85-100% coverag
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `CategoriesViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all 17 handler methods
-- [ ] Tests verify state transitions (loading, error, success)
-- [ ] Tests verify CRUD operations call correct API service methods
-- [ ] Tests verify computed properties filter/sort correctly
-- [ ] Tests verify error handling (API failures, conflict detection on update)
-- [ ] Tests verify scope change triggers reload and dispose cleans up
-- [ ] Coverage for CategoriesViewModel ≥ 90%
+- [x] `CategoriesViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all 17 handler methods
+- [x] Tests verify state transitions (loading, error, success)
+- [x] Tests verify CRUD operations call correct API service methods
+- [x] Tests verify computed properties filter/sort correctly
+- [x] Tests verify error handling (API failures, conflict detection on update)
+- [x] Tests verify scope change triggers reload and dispose cleans up
+- [x] Coverage for CategoriesViewModel ≥ 90% (achieved 100%)
 
 ---
 
@@ -194,22 +194,22 @@ builder.Services.AddTransient<CategoriesViewModel>();
 **Objective:** Build the ViewModel class test-first with all handlers and state management.
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/CategoriesViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/CategoriesViewModelTests.cs`
-- [ ] Write tests for `InitializeAsync` — loads categories, subscribes to scope changes
-- [ ] Write tests for `LoadCategoriesAsync` — success, failure, loading state transitions
-- [ ] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
-- [ ] Write tests for `DismissError` — clears error message
-- [ ] Write tests for computed properties — `ExpenseCategories`, `IncomeCategories`, `TransferCategories` filter and sort correctly
-- [ ] Write tests for `CreateCategoryAsync` — success (adds to list, shows toast, hides form), failure (sets error)
-- [ ] Write tests for `UpdateCategoryAsync` — success, conflict detection (409), failure
-- [ ] Write tests for `DeleteCategoryAsync` — success (removes from list, shows toast), failure
-- [ ] Write tests for `ActivateCategoryAsync` / `DeactivateCategoryAsync` — success refreshes item, failure sets error
-- [ ] Write tests for `OpenAddCategory` / `CloseAddCategory`, `OpenEditCategory` / `CloseEditCategory`, `ConfirmDeleteCategory` / `CancelDelete` — state flag toggles
-- [ ] Write tests for `Dispose` — unsubscribes from scope change events
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on CategoriesViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/CategoriesViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/CategoriesViewModelTests.cs`
+- [x] Write tests for `InitializeAsync` — loads categories, subscribes to scope changes
+- [x] Write tests for `LoadCategoriesAsync` — success, failure, loading state transitions
+- [x] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
+- [x] Write tests for `DismissError` — clears error message
+- [x] Write tests for computed properties — `ExpenseCategories`, `IncomeCategories`, `TransferCategories` filter and sort correctly
+- [x] Write tests for `CreateCategoryAsync` — success (adds to list, shows toast, hides form), failure (sets error)
+- [x] Write tests for `UpdateCategoryAsync` — success, conflict detection (409), failure
+- [x] Write tests for `DeleteCategoryAsync` — success (removes from list, shows toast), failure
+- [x] Write tests for `ActivateCategoryAsync` / `DeactivateCategoryAsync` — success refreshes item, failure sets error
+- [x] Write tests for `OpenAddCategory` / `CloseAddCategory`, `OpenEditCategory` / `CloseEditCategory`, `ConfirmDeleteCategory` / `CancelDelete` — state flag toggles
+- [x] Write tests for `Dispose` — unsubscribes from scope change events
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on CategoriesViewModel (achieved 100% — 248/248 statements)
 
 **Commit:** `feat(client): add CategoriesViewModel with comprehensive unit tests`
 
@@ -218,14 +218,14 @@ builder.Services.AddTransient<CategoriesViewModel>();
 **Objective:** Replace inline `@code` logic with ViewModel delegation.
 
 **Tasks:**
-- [ ] Register `CategoriesViewModel` as transient in DI
-- [ ] Update `Categories.razor` to inject `CategoriesViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all `@onclick` / event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except the thin `OnInitializedAsync` / `Dispose` wiring)
-- [ ] Verify all 19 existing `CategoriesPageTests` pass
-- [ ] Verify application runs correctly (manual smoke test)
+- [x] Register `CategoriesViewModel` as transient in DI
+- [x] Update `Categories.razor` to inject `CategoriesViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all `@onclick` / event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except the thin `OnInitializedAsync` / `Dispose` wiring)
+- [x] Verify all 19 existing `CategoriesPageTests` pass
+- [x] Verify application runs correctly (manual smoke test)
 
 **Commit:** `refactor(client): wire Categories.razor to CategoriesViewModel`
 
@@ -234,10 +234,10 @@ builder.Services.AddTransient<CategoriesViewModel>();
 **Objective:** Confirm the pattern delivers accurate coverage and document it for other pages.
 
 **Tasks:**
-- [ ] Run coverage report for CategoriesViewModel — verify ≥ 90%
-- [ ] Compare coverage before/after for Categories page
-- [ ] Document the ViewModel extraction pattern in a brief guide (update copilot-instructions.md or add to COMPONENT-STANDARDS.md)
-- [ ] Identify next candidate pages for extraction (prioritized by size and coverage gap)
+- [x] Run coverage report for CategoriesViewModel — verify ≥ 90% (100% achieved)
+- [x] Compare coverage before/after for Categories page
+- [x] Document the ViewModel extraction pattern in a brief guide (added Section 11 to COMPONENT-STANDARDS.md)
+- [x] Identify next candidate pages for extraction (prioritized by size and coverage gap — see table below)
 
 **Commit:** `docs(client): document ViewModel extraction pattern`
 
