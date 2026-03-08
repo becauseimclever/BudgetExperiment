@@ -177,6 +177,198 @@ public sealed class ToleranceSettingsPanelTests : BunitContext, IAsyncLifetime
         Assert.Equal(5, rows.Count);
     }
 
+    /// <summary>
+    /// Verifies clicking a preset button changes form values and shows save bar.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_ClickStrictPreset_ShowsActionBar()
+    {
+        _reconciliationApi.TolerancesResult = CreateDefaultTolerances();
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        var strictBtn = cut.FindAll(".preset-buttons button").First(b => b.TextContent.Contains("Strict"));
+        strictBtn.Click();
+
+        Assert.Contains("action-bar", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies clicking the Loose preset changes the values.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_ClickLoosePreset_ShowsActionBar()
+    {
+        _reconciliationApi.TolerancesResult = CreateDefaultTolerances();
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        var looseBtn = cut.FindAll(".preset-buttons button").First(b => b.TextContent.Contains("Loose"));
+        looseBtn.Click();
+
+        Assert.Contains("action-bar", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies the moderate preset gets the active class by default.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_DefaultValues_ModeratePresetActive()
+    {
+        _reconciliationApi.TolerancesResult = CreateDefaultTolerances();
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        var moderateBtn = cut.FindAll(".preset-buttons button").First(b => b.TextContent.Contains("Moderate"));
+        Assert.Contains("active", moderateBtn.ClassList);
+    }
+
+    /// <summary>
+    /// Verifies the action bar is not visible when no changes are made.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_NoChanges_HidesActionBar()
+    {
+        _reconciliationApi.TolerancesResult = CreateDefaultTolerances();
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.DoesNotContain("action-bar", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies the Reset button reverts changes.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_ResetButton_RevertsChanges()
+    {
+        _reconciliationApi.TolerancesResult = CreateDefaultTolerances();
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        // Make a change
+        var strictBtn = cut.FindAll(".preset-buttons button").First(b => b.TextContent.Contains("Strict"));
+        strictBtn.Click();
+
+        Assert.Contains("action-bar", cut.Markup);
+
+        // Reset
+        var resetBtn = cut.FindAll(".action-bar button").First(b => b.TextContent.Contains("Reset"));
+        resetBtn.Click();
+
+        Assert.DoesNotContain("action-bar", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies save shows success message on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_Save_ShowsSuccessMessage()
+    {
+        _reconciliationApi.TolerancesResult = CreateDefaultTolerances();
+        _reconciliationApi.UpdateTolerancesSuccess = true;
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        // Make a change
+        var strictBtn = cut.FindAll(".preset-buttons button").First(b => b.TextContent.Contains("Strict"));
+        strictBtn.Click();
+
+        // Save
+        var saveBtn = cut.FindAll(".action-bar button").First(b => b.TextContent.Contains("Save"));
+        saveBtn.Click();
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("success-message", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies save shows error message on failure.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_Save_ShowsErrorOnFailure()
+    {
+        _reconciliationApi.TolerancesResult = CreateDefaultTolerances();
+        _reconciliationApi.UpdateTolerancesSuccess = false;
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        // Make a change
+        var strictBtn = cut.FindAll(".preset-buttons button").First(b => b.TextContent.Contains("Strict"));
+        strictBtn.Click();
+
+        // Save
+        var saveBtn = cut.FindAll(".action-bar button").First(b => b.TextContent.Contains("Save"));
+        saveBtn.Click();
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("error-message", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies loading error shows error message.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_LoadFailure_ShowsError()
+    {
+        _reconciliationApi.ShouldThrowOnGetTolerances = true;
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("error-message", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies the amount tolerance absolute setting row is present.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToleranceSettingsPanel_ShowsAmountToleranceAbsoluteSetting()
+    {
+        _reconciliationApi.TolerancesResult = new MatchingTolerancesDto();
+
+        var cut = Render<ToleranceSettingsPanel>();
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("Amount Tolerance (absolute)", cut.Markup);
+    }
+
+    private static MatchingTolerancesDto CreateDefaultTolerances() => new()
+    {
+        DateToleranceDays = 7,
+        AmountTolerancePercent = 0.10m,
+        AmountToleranceAbsolute = 10.00m,
+        DescriptionSimilarityThreshold = 0.60m,
+        AutoMatchThreshold = 0.85m,
+    };
+
     private sealed class StubReconciliationApiService : IReconciliationApiService
     {
         /// <summary>Gets or sets the tolerances result.</summary>
@@ -185,8 +377,14 @@ public sealed class ToleranceSettingsPanelTests : BunitContext, IAsyncLifetime
         /// <summary>Gets or sets a value indicating whether update succeeds.</summary>
         public bool UpdateTolerancesSuccess { get; set; } = true;
 
+        /// <summary>Gets or sets a value indicating whether GetTolerancesAsync should throw.</summary>
+        public bool ShouldThrowOnGetTolerances { get; set; }
+
         /// <inheritdoc/>
-        public Task<MatchingTolerancesDto?> GetTolerancesAsync() => Task.FromResult(this.TolerancesResult);
+        public Task<MatchingTolerancesDto?> GetTolerancesAsync() =>
+            this.ShouldThrowOnGetTolerances
+                ? throw new HttpRequestException("Network error")
+                : Task.FromResult(this.TolerancesResult);
 
         /// <inheritdoc/>
         public Task<bool> UpdateTolerancesAsync(MatchingTolerancesDto tolerances) => Task.FromResult(this.UpdateTolerancesSuccess);

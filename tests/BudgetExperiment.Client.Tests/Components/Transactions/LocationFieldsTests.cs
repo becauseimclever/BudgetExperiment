@@ -110,6 +110,117 @@ public class LocationFieldsTests : BunitContext
     }
 
     /// <summary>
+    /// Verifies that existing location data pre-populates the form fields.
+    /// </summary>
+    [Fact]
+    public void Render_WithExistingLocation_PrePopulatesFields()
+    {
+        // Arrange
+        var location = new TransactionLocationDto
+        {
+            City = "Portland",
+            StateOrRegion = "OR",
+            Country = "US",
+            PostalCode = "97201",
+        };
+
+        // Act
+        var cut = Render<LocationFields>(parameters => parameters
+            .Add(p => p.IsEnabled, true)
+            .Add(p => p.Location, location));
+
+        // Assert
+        Assert.Equal("Portland", cut.Find("#locCity").GetAttribute("value"));
+        Assert.Equal("OR", cut.Find("#locState").GetAttribute("value"));
+        Assert.Equal("US", cut.Find("#locCountry").GetAttribute("value"));
+        Assert.Equal("97201", cut.Find("#locPostal").GetAttribute("value"));
+    }
+
+    /// <summary>
+    /// Verifies the Use Current Location button is rendered.
+    /// </summary>
+    [Fact]
+    public void Render_WhenEnabled_ShowsUseLocationButton()
+    {
+        // Act
+        var cut = Render<LocationFields>(parameters => parameters
+            .Add(p => p.IsEnabled, true));
+
+        // Assert
+        Assert.Contains("Use Current Location", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies GPS error message when geolocation service is null.
+    /// </summary>
+    [Fact]
+    public void UseCurrentLocation_WithoutGeoService_ShowsError()
+    {
+        // Arrange
+        var cut = Render<LocationFields>(parameters => parameters
+            .Add(p => p.IsEnabled, true)
+            .Add(p => p.GeolocationService, (GeolocationService?)null)
+            .Add(p => p.BudgetApiService, (IBudgetApiService?)null));
+
+        // Act
+        cut.Find(".btn-use-location").Click();
+
+        // Assert
+        Assert.Contains("GPS services are not available", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies the clear button is only shown when location exists.
+    /// </summary>
+    [Fact]
+    public void Render_WithoutLocation_HidesClearButton()
+    {
+        // Act
+        var cut = Render<LocationFields>(parameters => parameters
+            .Add(p => p.IsEnabled, true));
+
+        // Assert
+        Assert.Empty(cut.FindAll(".btn-clear-location"));
+    }
+
+    /// <summary>
+    /// Verifies Save Location button is present.
+    /// </summary>
+    [Fact]
+    public void Render_WhenEnabled_ShowsSaveButton()
+    {
+        // Act
+        var cut = Render<LocationFields>(parameters => parameters
+            .Add(p => p.IsEnabled, true));
+
+        // Assert
+        Assert.Contains("Save Location", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies the location display is rendered when location data exists.
+    /// </summary>
+    [Fact]
+    public void Render_WithLocation_ShowsLocationDisplay()
+    {
+        // Arrange
+        var location = new TransactionLocationDto
+        {
+            City = "Denver",
+            StateOrRegion = "CO",
+            Country = "US",
+        };
+
+        // Act
+        var cut = Render<LocationFields>(parameters => parameters
+            .Add(p => p.IsEnabled, true)
+            .Add(p => p.Location, location));
+
+        // Assert
+        Assert.Contains("location-current", cut.Markup);
+    }
+
+    /// <summary>
     /// When enabled, the "Use Current Location" button is rendered.
     /// </summary>
     [Fact]

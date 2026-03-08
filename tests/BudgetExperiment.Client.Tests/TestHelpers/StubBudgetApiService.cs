@@ -101,6 +101,16 @@ internal class StubBudgetApiService : IBudgetApiService
     public UserSettingsDto? UserSettings { get; set; }
 
     /// <summary>
+    /// Gets or sets the transaction list returned by <see cref="GetAccountTransactionListAsync"/>.
+    /// </summary>
+    public TransactionListDto? TransactionList { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="GetAccountTransactionListAsync"/> should throw.
+    /// </summary>
+    public bool ShouldThrowOnGetTransactionList { get; set; }
+
+    /// <summary>
     /// Gets the list of categorization rules returned by <see cref="GetCategorizationRulesAsync"/>.
     /// </summary>
     public List<CategorizationRuleDto> Rules { get; } = new();
@@ -186,7 +196,15 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<DayDetailDto> GetDayDetailAsync(DateOnly date, Guid? accountId = null) => Task.FromResult(this.DayDetail);
 
     /// <inheritdoc/>
-    public Task<TransactionListDto> GetAccountTransactionListAsync(Guid accountId, DateOnly startDate, DateOnly endDate, bool includeRecurring = true) => Task.FromResult(new TransactionListDto());
+    public Task<TransactionListDto> GetAccountTransactionListAsync(Guid accountId, DateOnly startDate, DateOnly endDate, bool includeRecurring = true)
+    {
+        if (this.ShouldThrowOnGetTransactionList)
+        {
+            throw new HttpRequestException("Server error");
+        }
+
+        return Task.FromResult(this.TransactionList ?? new TransactionListDto());
+    }
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<DailyTotalDto>> GetCalendarSummaryAsync(int year, int month, Guid? accountId = null) => Task.FromResult<IReadOnlyList<DailyTotalDto>>([]);

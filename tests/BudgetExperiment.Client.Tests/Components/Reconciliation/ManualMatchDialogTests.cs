@@ -195,6 +195,161 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         Assert.Contains("transaction-card", cut.Markup);
     }
 
+    /// <summary>
+    /// Verifies that selecting a recurring transfer shows instance date section.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_SelectRecurring_ShowsInstanceDateSection()
+    {
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        cut.Find(".recurring-option").Click();
+
+        Assert.Contains("instance-section", cut.Markup);
+        Assert.Contains("Select Instance Date", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that selecting a recurring transfer applies the selected CSS class.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_SelectRecurring_AppliesSelectedClass()
+    {
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        cut.Find(".recurring-option").Click();
+
+        Assert.Contains("selected", cut.Find(".recurring-option").ClassList);
+    }
+
+    /// <summary>
+    /// Verifies the Create Match button is disabled when no recurring is selected.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_SubmitDisabled_WhenNoRecurringSelected()
+    {
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        var submitBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Create Match"));
+        Assert.True(submitBtn.HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Verifies that the transaction date is shown.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_ShowsTransactionDate()
+    {
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("Mar 1, 2026", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that the dialog shows source and destination account info.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_ShowsAccountInfo_InRecurringOption()
+    {
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("Checking", cut.Markup);
+        Assert.Contains("Savings", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that inactive recurring transfers are filtered out.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_FiltersInactiveRecurring()
+    {
+        _budgetApi.RecurringTransfersResult =
+        [
+            new RecurringTransferDto
+            {
+                Id = Guid.NewGuid(),
+                Description = "Inactive Transfer",
+                Amount = new MoneyDto { Amount = 100m, Currency = "USD" },
+                Frequency = "Monthly",
+                SourceAccountId = Guid.NewGuid(),
+                SourceAccountName = "Src",
+                DestinationAccountId = Guid.NewGuid(),
+                DestinationAccountName = "Dst",
+                IsActive = false,
+            },
+        ];
+
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("empty-state", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies the dialog shows date suggestions when recurring is selected.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ManualMatchDialog_ShowsDateSuggestions_WhenRecurringSelected()
+    {
+        _budgetApi.RecurringTransfersResult = [CreateActiveRecurringTransfer()];
+
+        var cut = Render<ManualMatchDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.Transaction, CreateTransaction()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        cut.Find(".recurring-option").Click();
+
+        Assert.Contains("date-suggestions", cut.Markup);
+        Assert.Contains("Transaction Date", cut.Markup);
+    }
+
     private static TransactionDto CreateTransaction(string description = "Test Transaction") => new()
     {
         Id = Guid.NewGuid(),
@@ -202,6 +357,19 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         Description = description,
         Date = new DateOnly(2026, 3, 1),
         Amount = new MoneyDto { Amount = -75.00m, Currency = "USD" },
+    };
+
+    private static RecurringTransferDto CreateActiveRecurringTransfer() => new()
+    {
+        Id = Guid.NewGuid(),
+        Description = "Monthly Savings",
+        Amount = new MoneyDto { Amount = 500m, Currency = "USD" },
+        Frequency = "Monthly",
+        SourceAccountId = Guid.NewGuid(),
+        SourceAccountName = "Checking",
+        DestinationAccountId = Guid.NewGuid(),
+        DestinationAccountName = "Savings",
+        IsActive = true,
     };
 
     #pragma warning disable SA1201 // Elements should appear in the correct order

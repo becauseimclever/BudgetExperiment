@@ -193,6 +193,212 @@ public sealed class ChatApiServiceTests
         Assert.Null(result);
     }
 
+    /// <summary>
+    /// Verifies that GetOrCreateSessionAsync calls the correct endpoint.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetOrCreateSessionAsync_CallsCorrectEndpoint()
+    {
+        // Arrange
+        string? capturedUrl = null;
+        var handler = new MockHttpMessageHandler((req, _) =>
+        {
+            capturedUrl = req.RequestUri?.PathAndQuery;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new ChatSessionDto { Id = Guid.NewGuid() }),
+            });
+        });
+        var sut = CreateService(handler);
+
+        // Act
+        var result = await sut.GetOrCreateSessionAsync();
+
+        // Assert
+        Assert.Contains("api/v1/chat/sessions", capturedUrl, StringComparison.Ordinal);
+        Assert.NotNull(result);
+    }
+
+    /// <summary>
+    /// Verifies that GetSessionAsync returns null on failure.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetSessionAsync_OnHttpFailure_ReturnsNull()
+    {
+        // Arrange
+        var handler = new MockHttpMessageHandler((_, _) =>
+            throw new HttpRequestException("Network error"));
+        var sut = CreateService(handler);
+
+        // Act
+        var result = await sut.GetSessionAsync(Guid.NewGuid());
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Verifies that GetSessionAsync calls the correct endpoint with session ID.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetSessionAsync_IncludesSessionIdInUrl()
+    {
+        // Arrange
+        string? capturedUrl = null;
+        var sessionId = Guid.NewGuid();
+        var handler = new MockHttpMessageHandler((req, _) =>
+        {
+            capturedUrl = req.RequestUri?.PathAndQuery;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new ChatSessionDto { Id = sessionId }),
+            });
+        });
+        var sut = CreateService(handler);
+
+        // Act
+        await sut.GetSessionAsync(sessionId);
+
+        // Assert
+        Assert.Contains(sessionId.ToString(), capturedUrl, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Verifies that SendMessageAsync returns null on HTTP failure.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SendMessageAsync_OnHttpFailure_ReturnsNull()
+    {
+        // Arrange
+        var handler = new MockHttpMessageHandler((_, _) =>
+            throw new HttpRequestException("Network error"));
+        var sut = CreateService(handler);
+
+        // Act
+        var result = await sut.SendMessageAsync(Guid.NewGuid(), "Hello");
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Verifies that SendMessageAsync calls the correct endpoint.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SendMessageAsync_CallsCorrectEndpoint()
+    {
+        // Arrange
+        string? capturedUrl = null;
+        var sessionId = Guid.NewGuid();
+        var handler = new MockHttpMessageHandler((req, _) =>
+        {
+            capturedUrl = req.RequestUri?.PathAndQuery;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new SendMessageResponse()),
+            });
+        });
+        var sut = CreateService(handler);
+
+        // Act
+        await sut.SendMessageAsync(sessionId, "Test");
+
+        // Assert
+        Assert.Contains($"{sessionId}/messages", capturedUrl, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Verifies that ConfirmActionAsync returns response on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ConfirmActionAsync_OnSuccess_ReturnsResponse()
+    {
+        // Arrange
+        var handler = new MockHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new ConfirmActionResponse()),
+            }));
+        var sut = CreateService(handler);
+
+        // Act
+        var result = await sut.ConfirmActionAsync(Guid.NewGuid());
+
+        // Assert
+        Assert.NotNull(result);
+    }
+
+    /// <summary>
+    /// Verifies that ConfirmActionAsync returns null on failure.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ConfirmActionAsync_OnHttpFailure_ReturnsNull()
+    {
+        // Arrange
+        var handler = new MockHttpMessageHandler((_, _) =>
+            throw new HttpRequestException("Network error"));
+        var sut = CreateService(handler);
+
+        // Act
+        var result = await sut.ConfirmActionAsync(Guid.NewGuid());
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Verifies that CancelActionAsync returns true on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task CancelActionAsync_OnSuccess_ReturnsTrue()
+    {
+        // Arrange
+        var handler = new MockHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
+        var sut = CreateService(handler);
+
+        // Act
+        var result = await sut.CancelActionAsync(Guid.NewGuid());
+
+        // Assert
+        Assert.True(result);
+    }
+
+    /// <summary>
+    /// Verifies that GetMessagesAsync includes session ID in the URL.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetMessagesAsync_IncludesSessionIdInUrl()
+    {
+        // Arrange
+        string? capturedUrl = null;
+        var sessionId = Guid.NewGuid();
+        var handler = new MockHttpMessageHandler((req, _) =>
+        {
+            capturedUrl = req.RequestUri?.PathAndQuery;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new List<ChatMessageDto>()),
+            });
+        });
+        var sut = CreateService(handler);
+
+        // Act
+        await sut.GetMessagesAsync(sessionId);
+
+        // Assert
+        Assert.Contains(sessionId.ToString(), capturedUrl, StringComparison.Ordinal);
+    }
+
     private static ChatApiService CreateService(MockHttpMessageHandler handler)
     {
         var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost") };

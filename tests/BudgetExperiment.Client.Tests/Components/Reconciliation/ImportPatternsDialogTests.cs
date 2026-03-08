@@ -220,6 +220,159 @@ public sealed class ImportPatternsDialogTests : BunitContext, IAsyncLifetime
         Assert.NotEmpty(removeButtons);
     }
 
+    /// <summary>
+    /// Verifies that clicking the Add Pattern button adds the pattern to the list.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ImportPatternsDialog_AddPattern_AddsToList()
+    {
+        _budgetApi.ImportPatternsResult = new ImportPatternsDto { Patterns = [] };
+
+        var cut = Render<ImportPatternsDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.RecurringTransactionId, Guid.NewGuid()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        var input = cut.Find(".add-pattern-input input");
+        input.Input("*NEW PATTERN*");
+        cut.Find(".add-pattern-input button").Click();
+
+        Assert.Contains("NEW PATTERN", cut.Markup);
+        Assert.Single(cut.FindAll(".pattern-item"));
+    }
+
+    /// <summary>
+    /// Verifies that adding a duplicate pattern shows an error.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ImportPatternsDialog_AddDuplicate_ShowsError()
+    {
+        _budgetApi.ImportPatternsResult = new ImportPatternsDto { Patterns = ["*EXISTING*"] };
+
+        var cut = Render<ImportPatternsDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.RecurringTransactionId, Guid.NewGuid()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        var input = cut.Find(".add-pattern-input input");
+        input.Input("*EXISTING*");
+        cut.Find(".add-pattern-input button").Click();
+
+        Assert.Contains("already exists", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that clicking the remove button removes a pattern from the list.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ImportPatternsDialog_RemovePattern_RemovesFromList()
+    {
+        _budgetApi.ImportPatternsResult = new ImportPatternsDto { Patterns = ["*REMOVE ME*"] };
+
+        var cut = Render<ImportPatternsDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.RecurringTransactionId, Guid.NewGuid()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Single(cut.FindAll(".pattern-item"));
+
+        cut.Find(".pattern-item button").Click();
+
+        Assert.Empty(cut.FindAll(".pattern-item"));
+    }
+
+    /// <summary>
+    /// Verifies that clicking Save invokes the OnSaved callback on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ImportPatternsDialog_SaveButton_InvokesOnSaved()
+    {
+        var saved = false;
+        _budgetApi.ImportPatternsResult = new ImportPatternsDto { Patterns = [] };
+
+        var cut = Render<ImportPatternsDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.RecurringTransactionId, Guid.NewGuid())
+            .Add(p => p.OnSaved, () => { saved = true; }));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        var saveBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Save Patterns"));
+        saveBtn.Click();
+
+        await Task.Delay(50);
+
+        Assert.True(saved);
+    }
+
+    /// <summary>
+    /// Verifies that a load failure shows an error message.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ImportPatternsDialog_LoadFailure_ShowsError()
+    {
+        _budgetApi.ShouldThrowOnGetPatterns = true;
+
+        var cut = Render<ImportPatternsDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.RecurringTransactionId, Guid.NewGuid()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("Failed to load patterns", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies that the Save Patterns button text is present.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ImportPatternsDialog_ShowsSaveButton()
+    {
+        _budgetApi.ImportPatternsResult = new ImportPatternsDto { Patterns = [] };
+
+        var cut = Render<ImportPatternsDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.RecurringTransactionId, Guid.NewGuid()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("Save Patterns", cut.Markup);
+    }
+
+    /// <summary>
+    /// Verifies the helper text about wildcards is displayed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ImportPatternsDialog_ShowsHelperText()
+    {
+        _budgetApi.ImportPatternsResult = new ImportPatternsDto { Patterns = [] };
+
+        var cut = Render<ImportPatternsDialog>(parameters => parameters
+            .Add(p => p.IsVisible, true)
+            .Add(p => p.RecurringTransactionId, Guid.NewGuid()));
+
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.Contains("wildcard", cut.Markup);
+    }
+
     #pragma warning disable SA1201 // Elements should appear in the correct order
     private sealed class StubBudgetApiService : IBudgetApiService
     #pragma warning restore SA1201
@@ -227,8 +380,14 @@ public sealed class ImportPatternsDialogTests : BunitContext, IAsyncLifetime
         /// <summary>Gets or sets the import patterns result.</summary>
         public ImportPatternsDto? ImportPatternsResult { get; set; }
 
+        /// <summary>Gets or sets a value indicating whether GetImportPatternsAsync should throw.</summary>
+        public bool ShouldThrowOnGetPatterns { get; set; }
+
         /// <inheritdoc/>
-        public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId) => Task.FromResult(this.ImportPatternsResult);
+        public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId) =>
+            this.ShouldThrowOnGetPatterns
+                ? throw new HttpRequestException("Network error")
+                : Task.FromResult(this.ImportPatternsResult);
 
         /// <inheritdoc/>
         public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns) => Task.FromResult<ImportPatternsDto?>(patterns);

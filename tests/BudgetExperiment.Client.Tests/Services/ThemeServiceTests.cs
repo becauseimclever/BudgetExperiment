@@ -138,6 +138,110 @@ public sealed class ThemeServiceTests : IDisposable
         Assert.Equal("calendar", result);
     }
 
+    /// <summary>
+    /// Verifies Dispose can be called without error.
+    /// </summary>
+    [Fact]
+    public void Dispose_DoesNotThrow()
+    {
+        var sut = new ThemeService(new StubJSRuntime());
+        var ex = Record.Exception(() => sut.Dispose());
+        Assert.Null(ex);
+    }
+
+    /// <summary>
+    /// Verifies that AvailableThemes includes themed options.
+    /// </summary>
+    [Fact]
+    public void AvailableThemes_IncludesThemedOptions()
+    {
+        Assert.Contains(ThemeService.AvailableThemes, t => t.Value == "win95");
+        Assert.Contains(ThemeService.AvailableThemes, t => t.Value == "vscode-dark");
+        Assert.Contains(ThemeService.AvailableThemes, t => t.Value == "geocities");
+    }
+
+    /// <summary>
+    /// Verifies that each theme option has a label and icon.
+    /// </summary>
+    [Fact]
+    public void AvailableThemes_AllHaveLabelAndIcon()
+    {
+        foreach (var theme in ThemeService.AvailableThemes)
+        {
+            Assert.False(string.IsNullOrEmpty(theme.Label));
+            Assert.False(string.IsNullOrEmpty(theme.Icon));
+        }
+    }
+
+    /// <summary>
+    /// Verifies setting theme multiple times only keeps the last value.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetThemeAsync_MultipleSets_KeepsLastValue()
+    {
+        await _sut.SetThemeAsync("dark");
+        await _sut.SetThemeAsync("light");
+        await _sut.SetThemeAsync("vscode-dark");
+
+        Assert.Equal("vscode-dark", _sut.CurrentTheme);
+    }
+
+    /// <summary>
+    /// Verifies that GetResolvedThemeAsync returns light when module is null.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetResolvedThemeAsync_WithoutModule_ReturnsLight()
+    {
+        var result = await _sut.GetResolvedThemeAsync();
+        Assert.Equal("light", result);
+    }
+
+    /// <summary>
+    /// Verifies that GetAccessibilityStateAsync returns defaults without module.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetAccessibilityStateAsync_WithoutModule_ReturnsDefaults()
+    {
+        var result = await _sut.GetAccessibilityStateAsync();
+        Assert.False(result.IsAccessibilityPreferenceDetected);
+        Assert.False(result.WasThemeAutoApplied);
+        Assert.False(result.HasExplicitOverride);
+    }
+
+    /// <summary>
+    /// Verifies GetThemedIcon for geocities theme.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetThemedIcon_GeocitiesTheme_ReturnsThemedIcon()
+    {
+        await _sut.SetThemeAsync("geocities");
+        var result = _sut.GetThemedIcon("calendar");
+        Assert.Equal("geo-calendar", result);
+    }
+
+    /// <summary>
+    /// Verifies that ThemeChanged event listener can be removed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ThemeChanged_UnsubscribedHandler_NotCalled()
+    {
+        var callCount = 0;
+        void Handler(string theme) => callCount++;
+
+        _sut.ThemeChanged += Handler;
+        await _sut.SetThemeAsync("dark");
+        Assert.Equal(1, callCount);
+
+        _sut.ThemeChanged -= Handler;
+        await _sut.SetThemeAsync("light");
+        Assert.Equal(1, callCount);
+    }
+
     /// <inheritdoc/>
     public void Dispose()
     {
