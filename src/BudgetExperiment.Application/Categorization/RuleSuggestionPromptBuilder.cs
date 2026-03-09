@@ -17,20 +17,24 @@ public static class RuleSuggestionPromptBuilder
     /// <param name="uncategorized">Uncategorized transactions to analyze.</param>
     /// <param name="categories">Available budget categories.</param>
     /// <param name="existingRules">Currently configured categorization rules.</param>
+    /// <param name="feedback">Optional historical feedback context to avoid re-suggesting dismissed patterns.</param>
     /// <returns>The AI prompt.</returns>
     public static AiPrompt BuildNewRulePrompt(
         IReadOnlyList<Transaction> uncategorized,
         IReadOnlyList<BudgetCategory> categories,
-        IReadOnlyList<CategorizationRule> existingRules)
+        IReadOnlyList<CategorizationRule> existingRules,
+        SuggestionFeedbackContext? feedback = null)
     {
         var categoryNames = categories.Select(c => c.Name);
         var ruleInfo = existingRules.Select(r => (r.Name, r.Pattern, r.MatchType.ToString()));
-        var descriptions = uncategorized.Select(t => t.Description);
+        var descriptionGroups = DescriptionAggregator.Aggregate(uncategorized);
 
         var userPrompt = AiPrompts.NewRuleSuggestionPrompt
             .Replace("{categories}", AiPrompts.FormatCategories(categoryNames))
             .Replace("{existingRules}", AiPrompts.FormatExistingRules(ruleInfo))
-            .Replace("{descriptions}", AiPrompts.FormatDescriptions(descriptions));
+            .Replace("{descriptions}", AiPrompts.FormatDescriptionGroups(descriptionGroups));
+
+        userPrompt = AppendFeedbackSections(userPrompt, feedback);
 
         return new AiPrompt(
             SystemPrompt: AiPrompts.SystemPrompt,
@@ -117,5 +121,27 @@ public static class RuleSuggestionPromptBuilder
         }
 
         return stats;
+    }
+
+    private static string AppendFeedbackSections(string userPrompt, SuggestionFeedbackContext? feedback)
+    {
+        if (feedback is null)
+        {
+            return userPrompt;
+        }
+
+        if (feedback.DismissedPatterns.Count > 0)
+        {
+            userPrompt += "\n\nPREVIOUSLY DISMISSED (DO NOT re-suggest these patterns):\n"
+                + AiPrompts.FormatDismissedPatterns(feedback.DismissedPatterns);
+        }
+
+        if (feedback.AcceptedExamples.Count > 0)
+        {
+            userPrompt += "\n\nPREVIOUSLY ACCEPTED (examples of suggestions the user found helpful):\n"
+                + AiPrompts.FormatAcceptedExamples(feedback.AcceptedExamples);
+        }
+
+        return userPrompt;
     }
 }

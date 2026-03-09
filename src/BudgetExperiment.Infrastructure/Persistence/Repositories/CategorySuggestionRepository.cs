@@ -115,4 +115,30 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
             _context.CategorySuggestions.RemoveRange(pendingSuggestions);
         }
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<SuggestionStatus, int>> GetCountsByStatusAsync(CancellationToken cancellationToken = default)
+    {
+        var counts = await _context.CategorySuggestions
+            .GroupBy(s => s.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(c => c.Status, c => c.Count);
+    }
+
+    /// <inheritdoc />
+    public async Task<(decimal? AcceptedAvgConfidence, decimal? DismissedAvgConfidence)> GetAverageConfidenceByStatusAsync(CancellationToken cancellationToken = default)
+    {
+        var averages = await _context.CategorySuggestions
+            .Where(s => s.Status == SuggestionStatus.Accepted || s.Status == SuggestionStatus.Dismissed)
+            .GroupBy(s => s.Status)
+            .Select(g => new { Status = g.Key, AvgConfidence = g.Average(s => s.Confidence) })
+            .ToListAsync(cancellationToken);
+
+        var accepted = averages.FirstOrDefault(a => a.Status == SuggestionStatus.Accepted)?.AvgConfidence;
+        var dismissed = averages.FirstOrDefault(a => a.Status == SuggestionStatus.Dismissed)?.AvgConfidence;
+
+        return (accepted, dismissed);
+    }
 }

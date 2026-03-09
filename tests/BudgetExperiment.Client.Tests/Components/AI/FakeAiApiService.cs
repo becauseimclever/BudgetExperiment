@@ -61,4 +61,7 @@ internal sealed class FakeAiApiService : IAiApiService
 
     /// <inheritdoc/>
     public Task<bool> ProvideFeedbackAsync(Guid id, bool isPositive) => Task.FromResult(true);
+
+    /// <inheritdoc/>
+    public Task<SuggestionMetricsDto?> GetMetricsAsync() => Task.FromResult<SuggestionMetricsDto?>(null);
 }

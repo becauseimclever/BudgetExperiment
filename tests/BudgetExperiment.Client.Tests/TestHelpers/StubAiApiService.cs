@@ -52,6 +52,11 @@ internal class StubAiApiService : IAiApiService
     /// </summary>
     public AnalysisResponseDto? AnalyzeResult { get; set; }
 
+    /// <summary>
+    /// Gets or sets the exception to throw from <see cref="GetPendingSuggestionsAsync"/>.
+    /// </summary>
+    public Exception? GetPendingSuggestionsException { get; set; }
+
     /// <inheritdoc/>
     public Task<AiStatusDto?> GetStatusAsync() =>
         Task.FromResult(this.AiStatus);
@@ -77,8 +82,15 @@ internal class StubAiApiService : IAiApiService
         Task.FromResult<IReadOnlyList<RuleSuggestionDto>>([]);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<RuleSuggestionDto>> GetPendingSuggestionsAsync(string? type = null) =>
-        Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(this.PendingSuggestions);
+    public Task<IReadOnlyList<RuleSuggestionDto>> GetPendingSuggestionsAsync(string? type = null)
+    {
+        if (this.GetPendingSuggestionsException != null)
+        {
+            return Task.FromException<IReadOnlyList<RuleSuggestionDto>>(this.GetPendingSuggestionsException);
+        }
+
+        return Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(this.PendingSuggestions);
+    }
 
     /// <inheritdoc/>
     public Task<RuleSuggestionDto?> GetSuggestionAsync(Guid id) =>
@@ -95,4 +107,8 @@ internal class StubAiApiService : IAiApiService
     /// <inheritdoc/>
     public Task<bool> ProvideFeedbackAsync(Guid id, bool isPositive) =>
         Task.FromResult(this.ProvideFeedbackResult);
+
+    /// <inheritdoc/>
+    public Task<SuggestionMetricsDto?> GetMetricsAsync() =>
+        Task.FromResult<SuggestionMetricsDto?>(null);
 }

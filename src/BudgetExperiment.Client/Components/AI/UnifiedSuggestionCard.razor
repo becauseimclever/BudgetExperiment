@@ -1,0 +1,411 @@
+@* SuggestionCard.razor - Unified card for both rule and category suggestions with progressive disclosure *@
+
+@using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Contracts.Dtos
+
+@if (_ruleItem != null)
+{
+    <div class="suggestion-card @GetHighlightClass(_ruleItem.Confidence)">
+        <div class="card-top-row">
+            <div class="confidence-indicator @GetConfidenceClass(_ruleItem.Confidence)" title="@($"Confidence: {(_ruleItem.Confidence * 100):F0}%")">
+                <span class="confidence-dot"></span>
+                <span class="confidence-label">@GetConfidenceLabel(_ruleItem.Confidence)</span>
+            </div>
+            <span class="impact-summary">affects @_ruleItem.AffectedTransactionCount transaction(s)</span>
+        </div>
+
+        <h4 class="card-title">@_ruleItem.Title</h4>
+        <p class="card-description">@_ruleItem.Description</p>
+
+        <div class="card-actions">
+            <Button Variant="ButtonVariant.Success" Size="ButtonSize.Small" IconLeft="check" IsDisabled="@_isProcessing" OnClick="HandleAccept">Accept</Button>
+            <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="x" IsDisabled="@_isProcessing" OnClick="HandleDismiss">Dismiss</Button>
+            <button class="btn btn-ghost btn-sm details-toggle" @onclick="ToggleDetails">
+                <Icon Name="@(_showDetails ? "chevron-up" : "chevron-down")" Size="14" />
+                <span>Details</span>
+            </button>
+        </div>
+
+        @if (_showDetails)
+        {
+            <div class="card-details">
+                @if (!string.IsNullOrEmpty(_ruleItem.SuggestedPattern))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">Pattern:</span>
+                        <code>@_ruleItem.SuggestedPattern</code>
+                        @if (!string.IsNullOrEmpty(_ruleItem.SuggestedMatchType))
+                        {
+                            <span class="detail-muted">(@_ruleItem.SuggestedMatchType)</span>
+                        }
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(_ruleItem.SuggestedCategoryName))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">Category:</span>
+                        <span>@_ruleItem.SuggestedCategoryName</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(_ruleItem.Reasoning))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">Reasoning:</span>
+                        <span>@_ruleItem.Reasoning</span>
+                    </div>
+                }
+                @if (_ruleItem.SampleDescriptions.Count > 0)
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">Sample matches:</span>
+                        <ul class="sample-list">
+                            @foreach (var sample in _ruleItem.SampleDescriptions.Take(5))
+                            {
+                                <li>@sample</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                <div class="detail-feedback">
+                    <span class="feedback-label">Helpful?</span>
+                    <button class="feedback-btn @(_ruleItem.UserFeedbackPositive == true ? "active positive" : "")"
+                            @onclick="() => HandleFeedback(true)"
+                            disabled="@_isProcessing"
+                            title="This suggestion was helpful">
+                        <Icon Name="thumbs-up" Size="14" />
+                    </button>
+                    <button class="feedback-btn @(_ruleItem.UserFeedbackPositive == false ? "active negative" : "")"
+                            @onclick="() => HandleFeedback(false)"
+                            disabled="@_isProcessing"
+                            title="This suggestion was not helpful">
+                        <Icon Name="thumbs-down" Size="14" />
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (_categoryItem != null)
+{
+    <div class="suggestion-card @GetHighlightClass(_categoryItem.Confidence)">
+        <div class="card-top-row">
+            <div class="confidence-indicator @GetConfidenceClass(_categoryItem.Confidence)" title="@($"Confidence: {(_categoryItem.Confidence * 100):F0}%")">
+                <span class="confidence-dot"></span>
+                <span class="confidence-label">@GetConfidenceLabel(_categoryItem.Confidence)</span>
+            </div>
+            <span class="impact-summary">affects @_categoryItem.MatchingTransactionCount transaction(s)</span>
+        </div>
+
+        <h4 class="card-title">Create category "@_categoryItem.SuggestedName"</h4>
+        <p class="card-description">Categorize @_categoryItem.MatchingTransactionCount matching transactions as "@_categoryItem.SuggestedName"</p>
+
+        <div class="card-actions">
+            <Button Variant="ButtonVariant.Success" Size="ButtonSize.Small" IconLeft="check" IsDisabled="@_isProcessing" OnClick="HandleAccept">Accept</Button>
+            <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="x" IsDisabled="@_isProcessing" OnClick="HandleDismiss">Dismiss</Button>
+            <button class="btn btn-ghost btn-sm details-toggle" @onclick="ToggleDetails">
+                <Icon Name="@(_showDetails ? "chevron-up" : "chevron-down")" Size="14" />
+                <span>Details</span>
+            </button>
+        </div>
+
+        @if (_showDetails)
+        {
+            <div class="card-details">
+                @if (_categoryItem.MerchantPatterns.Count > 0)
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">Merchant patterns:</span>
+                        <div class="pattern-chips">
+                            @foreach (var pattern in _categoryItem.MerchantPatterns.Take(8))
+                            {
+                                <span class="pattern-chip">@pattern</span>
+                            }
+                            @if (_categoryItem.MerchantPatterns.Count > 8)
+                            {
+                                <span class="pattern-chip muted">+@(_categoryItem.MerchantPatterns.Count - 8) more</span>
+                            }
+                        </div>
+                    </div>
+                }
+                <div class="detail-row">
+                    <span class="detail-label">Type:</span>
+                    <span>@_categoryItem.SuggestedType</span>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the suggestion item (RuleSuggestionDto or CategorySuggestionDto).
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public object Item { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the callback when the suggestion is accepted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnAccept { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the suggestion is dismissed.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDismiss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when feedback is provided on a rule suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(Guid Id, bool IsPositive)> OnFeedback { get; set; }
+
+    private RuleSuggestionDto? _ruleItem;
+    private CategorySuggestionDto? _categoryItem;
+    private bool _showDetails;
+    private bool _isProcessing;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _ruleItem = Item as RuleSuggestionDto;
+        _categoryItem = Item as CategorySuggestionDto;
+    }
+
+    private void ToggleDetails()
+    {
+        _showDetails = !_showDetails;
+    }
+
+    private Guid GetItemId()
+    {
+        if (_ruleItem != null) return _ruleItem.Id;
+        if (_categoryItem != null) return _categoryItem.Id;
+        return Guid.Empty;
+    }
+
+    private async Task HandleAccept()
+    {
+        if (_isProcessing) return;
+        _isProcessing = true;
+        try
+        {
+            await OnAccept.InvokeAsync(GetItemId());
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task HandleDismiss()
+    {
+        if (_isProcessing) return;
+        _isProcessing = true;
+        try
+        {
+            await OnDismiss.InvokeAsync(GetItemId());
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task HandleFeedback(bool isPositive)
+    {
+        if (_isProcessing) return;
+        await OnFeedback.InvokeAsync((GetItemId(), isPositive));
+    }
+
+    private static string GetConfidenceClass(decimal confidence) =>
+        confidence >= 0.8m ? "high" : confidence >= 0.5m ? "medium" : "low";
+
+    private static string GetConfidenceLabel(decimal confidence) =>
+        confidence >= 0.8m ? "High Confidence" : confidence >= 0.5m ? "Medium Confidence" : "Low Confidence";
+
+    private static string GetHighlightClass(decimal confidence) =>
+        confidence >= 0.8m ? "high-confidence" : string.Empty;
+}
+
+<style>
+    .suggestion-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .suggestion-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .suggestion-card.high-confidence {
+        border-left: 3px solid var(--success, #22c55e);
+    }
+
+    .card-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .confidence-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .confidence-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .confidence-indicator.high .confidence-dot { background: var(--success, #22c55e); }
+    .confidence-indicator.medium .confidence-dot { background: var(--warning, #f59e0b); }
+    .confidence-indicator.low .confidence-dot { background: var(--text-muted, #9ca3af); }
+
+    .confidence-label {
+        font-weight: 500;
+    }
+
+    .confidence-indicator.high .confidence-label { color: var(--success, #22c55e); }
+    .confidence-indicator.medium .confidence-label { color: var(--warning, #f59e0b); }
+    .confidence-indicator.low .confidence-label { color: var(--text-muted, #9ca3af); }
+
+    .impact-summary {
+        color: var(--text-secondary);
+    }
+
+    .card-title {
+        margin: 0 0 0.25rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .card-description {
+        margin: 0 0 0.75rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .details-toggle {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+    }
+
+    .card-details {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        font-size: 0.85rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        min-width: 120px;
+    }
+
+    .detail-muted {
+        color: var(--text-muted);
+    }
+
+    .sample-list {
+        margin: 0;
+        padding-left: 1.2rem;
+        list-style: disc;
+    }
+
+    .sample-list li {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .pattern-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .pattern-chip {
+        background: var(--bg-tertiary, var(--bg-primary));
+        border: 1px solid var(--border-color);
+        border-radius: 0.25rem;
+        padding: 0.15rem 0.5rem;
+        font-size: 0.8rem;
+        font-family: monospace;
+    }
+
+    .pattern-chip.muted {
+        color: var(--text-muted);
+        font-family: inherit;
+    }
+
+    .detail-feedback {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .feedback-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .feedback-btn {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        color: var(--text-secondary);
+        transition: all 0.15s ease;
+    }
+
+    .feedback-btn:hover {
+        border-color: var(--primary);
+    }
+
+    .feedback-btn.active.positive {
+        background: var(--success-bg, rgba(34, 197, 94, 0.1));
+        border-color: var(--success, #22c55e);
+        color: var(--success, #22c55e);
+    }
+
+    .feedback-btn.active.negative {
+        background: var(--danger-bg, rgba(239, 68, 68, 0.1));
+        border-color: var(--danger, #ef4444);
+        color: var(--danger, #ef4444);
+    }
+</style>

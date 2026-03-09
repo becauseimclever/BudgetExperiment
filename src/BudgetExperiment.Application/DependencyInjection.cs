@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IMerchantMappingService, MerchantMappingService>();
         services.AddScoped<ICategorySuggestionDismissalHandler, CategorySuggestionDismissalHandler>();
         services.AddScoped<ICategorySuggestionService, CategorySuggestionService>();
+        services.AddScoped<ISuggestionMetricsService, SuggestionMetricsService>();
         services.AddScoped<IUncategorizedTransactionService, UncategorizedTransactionService>();
         services.AddScoped<IImportMappingService, ImportMappingService>();
         services.AddScoped<IImportDuplicateDetector, ImportDuplicateDetector>();

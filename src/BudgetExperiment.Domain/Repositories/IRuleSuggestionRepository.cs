@@ -67,4 +67,40 @@ public interface IRuleSuggestionRepository : IReadRepository<RuleSuggestion>, IW
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task AddRangeAsync(IEnumerable<RuleSuggestion> suggestions, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the patterns of dismissed new-rule suggestions for feedback-informed prompting.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Distinct patterns from dismissed new-rule suggestions.</returns>
+    Task<IReadOnlyList<string>> GetDismissedNewRulePatternsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets accepted new-rule suggestions with their category IDs for feedback-informed prompting.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Accepted suggestion patterns and their assigned category IDs.</returns>
+    Task<IReadOnlyList<(string Pattern, Guid CategoryId)>> GetAcceptedNewRulesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the count of reviewed suggestions (accepted + dismissed) grouped by type and status.
+    /// Used for computing acceptance rates per suggestion type.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Counts keyed by (type, status).</returns>
+    Task<IReadOnlyDictionary<(SuggestionType Type, SuggestionStatus Status), int>> GetReviewedCountsByTypeAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the count of pending suggestions grouped by type.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Counts keyed by suggestion type.</returns>
+    Task<IReadOnlyDictionary<SuggestionType, int>> GetPendingCountsByTypeAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the average confidence score for accepted and dismissed suggestions.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple of (average accepted confidence, average dismissed confidence). Null if no suggestions in that status.</returns>
+    Task<(decimal? AcceptedAvgConfidence, decimal? DismissedAvgConfidence)> GetAverageConfidenceByStatusAsync(CancellationToken cancellationToken = default);
 }

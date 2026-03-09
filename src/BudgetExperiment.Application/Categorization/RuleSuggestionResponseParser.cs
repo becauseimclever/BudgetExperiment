@@ -40,6 +40,29 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     /// <exception cref="JsonException">Thrown when no JSON object is found in the content.</exception>
     public static string ExtractJson(string content)
     {
+        // Try direct parse first — fastest path for well-formed responses
+        var trimmed = content.Trim();
+        if (trimmed.StartsWith('{') && trimmed.EndsWith('}'))
+        {
+            return trimmed;
+        }
+
+        // Strip markdown code fences: ```json ... ``` or ``` ... ```
+        var fenceStart = content.IndexOf("```", StringComparison.Ordinal);
+        if (fenceStart >= 0)
+        {
+            var lineEnd = content.IndexOf('\n', fenceStart);
+            if (lineEnd >= 0)
+            {
+                var fenceEnd = content.IndexOf("```", lineEnd, StringComparison.Ordinal);
+                if (fenceEnd > lineEnd)
+                {
+                    content = content.Substring(lineEnd + 1, fenceEnd - lineEnd - 1);
+                }
+            }
+        }
+
+        // Fall back to bracket matching
         var jsonStart = content.IndexOf('{');
         var jsonEnd = content.LastIndexOf('}');
 
@@ -52,18 +75,20 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     }
 
     /// <inheritdoc/>
-    public IReadOnlyList<RuleSuggestion> ParseNewRuleSuggestions(
+    public ParseResult<IReadOnlyList<RuleSuggestion>> ParseNewRuleSuggestions(
         string jsonContent,
         IReadOnlyList<BudgetCategory> categories,
         int transactionCount)
     {
+        var diagnostics = new List<string>();
+
         try
         {
             var extracted = ExtractJson(jsonContent);
             var parsed = JsonSerializer.Deserialize<NewRuleSuggestionResponse>(extracted, JsonOptions);
             if (parsed?.Suggestions is null || parsed.Suggestions.Count == 0)
             {
-                return Array.Empty<RuleSuggestion>();
+                return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(Array.Empty<RuleSuggestion>());
             }
 
             var categoryLookup = categories.ToDictionary(c => c.Name, c => c.Id, StringComparer.OrdinalIgnoreCase);
@@ -71,34 +96,37 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
 
             foreach (var item in parsed.Suggestions)
             {
-                var suggestion = CreateNewRuleSuggestion(item, categoryLookup);
+                var suggestion = CreateNewRuleSuggestion(item, categoryLookup, diagnostics);
                 if (suggestion is not null)
                 {
                     suggestions.Add(suggestion);
                 }
             }
 
-            return suggestions;
+            return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(suggestions, diagnostics.Count > 0 ? diagnostics : null);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            return Array.Empty<RuleSuggestion>();
+            diagnostics.Add($"AI response was not valid JSON: {ex.Message}");
+            return ParseResult<IReadOnlyList<RuleSuggestion>>.Fail(Array.Empty<RuleSuggestion>(), diagnostics);
         }
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<RuleSuggestion>> ParseOptimizationSuggestionsAsync(
+    public async Task<ParseResult<IReadOnlyList<RuleSuggestion>>> ParseOptimizationSuggestionsAsync(
         string jsonContent,
         IReadOnlyList<CategorizationRule> rules,
         CancellationToken ct = default)
     {
+        var diagnostics = new List<string>();
+
         try
         {
             var extracted = ExtractJson(jsonContent);
             var parsed = JsonSerializer.Deserialize<OptimizationSuggestionResponse>(extracted, JsonOptions);
             if (parsed?.Suggestions is null || parsed.Suggestions.Count == 0)
             {
-                return Array.Empty<RuleSuggestion>();
+                return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(Array.Empty<RuleSuggestion>());
             }
 
             var ruleLookup = rules.ToDictionary(r => r.Id, r => r);
@@ -113,27 +141,30 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
                 }
             }
 
-            return suggestions;
+            return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(suggestions, diagnostics.Count > 0 ? diagnostics : null);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            return Array.Empty<RuleSuggestion>();
+            diagnostics.Add($"AI response was not valid JSON: {ex.Message}");
+            return ParseResult<IReadOnlyList<RuleSuggestion>>.Fail(Array.Empty<RuleSuggestion>(), diagnostics);
         }
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<RuleSuggestion>> ParseConflictSuggestionsAsync(
+    public async Task<ParseResult<IReadOnlyList<RuleSuggestion>>> ParseConflictSuggestionsAsync(
         string jsonContent,
         IReadOnlyList<CategorizationRule> rules,
         CancellationToken ct = default)
     {
+        var diagnostics = new List<string>();
+
         try
         {
             var extracted = ExtractJson(jsonContent);
             var parsed = JsonSerializer.Deserialize<ConflictDetectionResponse>(extracted, JsonOptions);
             if (parsed?.Conflicts is null || parsed.Conflicts.Count == 0)
             {
-                return Array.Empty<RuleSuggestion>();
+                return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(Array.Empty<RuleSuggestion>());
             }
 
             var ruleLookup = rules.ToDictionary(r => r.Id, r => r);
@@ -148,21 +179,24 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
                 }
             }
 
-            return suggestions;
+            return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(suggestions, diagnostics.Count > 0 ? diagnostics : null);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            return Array.Empty<RuleSuggestion>();
+            diagnostics.Add($"AI response was not valid JSON: {ex.Message}");
+            return ParseResult<IReadOnlyList<RuleSuggestion>>.Fail(Array.Empty<RuleSuggestion>(), diagnostics);
         }
     }
 
     private static RuleSuggestion? CreateNewRuleSuggestion(
         NewRuleSuggestionItem item,
-        Dictionary<string, Guid> categoryLookup)
+        Dictionary<string, Guid> categoryLookup,
+        List<string> diagnostics)
     {
         // Skip if category not found
         if (!categoryLookup.TryGetValue(item.CategoryName ?? string.Empty, out var categoryId))
         {
+            diagnostics.Add($"Skipped suggestion for pattern '{item.Pattern}': unknown category '{item.CategoryName}'");
             return null;
         }
 

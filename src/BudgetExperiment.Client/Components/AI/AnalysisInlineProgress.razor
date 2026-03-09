@@ -1,0 +1,166 @@
+@* AnalysisInlineProgress.razor - Honest inline progress indicator for AI analysis *@
+
+@using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Contracts.Dtos
+
+@if (IsAnalyzing)
+{
+    <div class="analysis-inline-progress analyzing">
+        <div class="progress-indicator">
+            <LoadingSpinner Size="SpinnerSize.Small" />
+            <span class="progress-text">Analyzing...</span>
+            <span class="elapsed-time">@FormatElapsed(ElapsedTime)</span>
+        </div>
+    </div>
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="analysis-inline-progress error">
+        <div class="progress-content">
+            <Icon Name="alert-circle" Size="20" />
+            <span class="error-text">@ErrorMessage</span>
+        </div>
+        <div class="progress-actions">
+            <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" IconLeft="refresh-cw" OnClick="OnRetry">Retry</Button>
+            <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="OnDismiss">Dismiss</Button>
+        </div>
+    </div>
+}
+else if (RuleResult != null || CategoryCount.HasValue)
+{
+    <div class="analysis-inline-progress complete">
+        <div class="progress-content">
+            <Icon Name="check-circle" Size="20" />
+            <span class="result-text">Analysis complete!</span>
+            @if (RuleResult != null)
+            {
+                <span class="result-detail">@RuleResult.NewRuleSuggestions new rules, @RuleResult.OptimizationSuggestions optimizations, @RuleResult.ConflictSuggestions conflicts</span>
+            }
+            @if (CategoryCount.HasValue)
+            {
+                <span class="result-detail">@CategoryCount.Value category suggestion(s)</span>
+            }
+        </div>
+        <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="OnDismiss">Dismiss</Button>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets a value indicating whether analysis is currently running.
+    /// </summary>
+    [Parameter]
+    public bool IsAnalyzing { get; set; }
+
+    /// <summary>
+    /// Gets or sets the elapsed time since analysis started.
+    /// </summary>
+    [Parameter]
+    public TimeSpan ElapsedTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the error message from analysis.
+    /// </summary>
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    /// <summary>
+    /// Gets or sets the rule analysis result.
+    /// </summary>
+    [Parameter]
+    public AnalysisResponseDto? RuleResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the count of category suggestions generated.
+    /// </summary>
+    [Parameter]
+    public int? CategoryCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback to retry analysis.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback to dismiss the progress/result display.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    private static string FormatElapsed(TimeSpan elapsed)
+    {
+        if (elapsed.TotalMinutes >= 1)
+        {
+            return $"{elapsed.Minutes}m {elapsed.Seconds}s";
+        }
+
+        return $"{elapsed.Seconds}s";
+    }
+}
+
+<style>
+    .analysis-inline-progress {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .analysis-inline-progress.analyzing {
+        background: var(--info-bg, rgba(59, 130, 246, 0.08));
+        border: 1px solid var(--info, #3b82f6);
+    }
+
+    .analysis-inline-progress.error {
+        background: var(--danger-bg, rgba(239, 68, 68, 0.08));
+        border: 1px solid var(--danger, #ef4444);
+    }
+
+    .analysis-inline-progress.complete {
+        background: var(--success-bg, rgba(34, 197, 94, 0.08));
+        border: 1px solid var(--success, #22c55e);
+    }
+
+    .progress-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .progress-text {
+        font-weight: 500;
+    }
+
+    .elapsed-time {
+        color: var(--text-muted);
+    }
+
+    .progress-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .result-text {
+        font-weight: 500;
+        color: var(--success, #22c55e);
+    }
+
+    .error-text {
+        color: var(--danger, #ef4444);
+    }
+
+    .result-detail {
+        color: var(--text-secondary);
+    }
+
+    .progress-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>

@@ -13,13 +13,17 @@ public static class AiPrompts
     /// System prompt that sets up the AI's role and constraints.
     /// </summary>
     public const string SystemPrompt = """
-        You are a financial categorization assistant. Your job is to analyze transaction descriptions
-        and suggest categorization rules. You must:
-        1. Identify common patterns in transaction descriptions
-        2. Suggest specific, accurate matching patterns
-        3. Recommend appropriate categories based on similar transactions
-        4. Explain your reasoning clearly
-        5. Never hallucinate or make up transaction data
+        You are a financial transaction categorization assistant specializing in personal banking data.
+        Your job is to analyze transaction descriptions from bank and credit card statements and suggest
+        categorization rules. You must:
+        1. Identify common merchant patterns in transaction descriptions (e.g., WALMART, AMAZON, STARBUCKS)
+        2. Recognize that bank descriptions often contain noise — prefixes like "PURCHASE AUTHORIZED ON",
+           "POS DEBIT", "RECURRING PAYMENT", and suffixes like card numbers, dates, and reference codes
+        3. Suggest specific, accurate matching patterns that target the merchant name, not the noise
+        4. Recommend appropriate categories based on the merchant type (grocery, dining, utilities, etc.)
+        5. Set higher confidence for patterns that appear frequently (10+ transactions)
+        6. Explain your reasoning clearly
+        7. Never hallucinate or make up transaction data
 
         Respond ONLY with valid JSON in the specified format. Do not include any other text, markdown formatting, or code blocks.
         """;
@@ -30,6 +34,8 @@ public static class AiPrompts
     /// </summary>
     public const string NewRuleSuggestionPrompt = """
         Analyze these uncategorized transaction descriptions and suggest categorization rules.
+        Descriptions are grouped by frequency with transaction counts and amount ranges.
+        Prioritize high-frequency, high-value patterns first.
 
         EXISTING CATEGORIES (use only these category names):
         {categories}
@@ -60,11 +66,23 @@ public static class AiPrompts
         - "Exact": exact match (rarely needed)
         - "Regex": regular expression (use sparingly, only for complex patterns)
 
+        GOOD SUGGESTION EXAMPLE (high frequency, specific merchant, correct category):
+        Input: "STARBUCKS — 23 transactions, $4.50–$7.25"
+        Output: {"pattern": "STARBUCKS", "matchType": "Contains", "categoryName": "Dining", "confidence": 0.90, "reasoning": "Starbucks is a coffee shop; 23 transactions indicate a regular pattern", "sampleMatches": ["STARBUCKS STORE 12345"]}
+
+        BAD SUGGESTION EXAMPLE (too generic, low value):
+        Input: "PURCHASE — 5 transactions, $10.00–$500.00"
+        Output: {"pattern": "PURCHASE", "matchType": "Contains", "categoryName": "Shopping", "confidence": 0.50, "reasoning": "Generic purchase"}
+        Why this is bad: "PURCHASE" is too broad — it would match nearly every transaction. Suggest merchant-specific patterns instead.
+
         Guidelines:
         - Confidence should be 0.5-1.0 based on how certain you are
+        - Patterns appearing 10+ times should have higher confidence (0.8+)
         - Only suggest patterns with at least 2 matching transactions
         - Prefer simple Contains matches over complex regex
         - sampleMatches should contain actual descriptions from the input that would match
+        - Avoid overly generic patterns like "PAYMENT", "PURCHASE", "DEBIT" that match too broadly
+        - Focus on merchant names and specific identifiers
         """;
 
     /// <summary>
@@ -191,5 +209,50 @@ public static class AiPrompts
     public static string FormatMatchStats(IEnumerable<(string RuleName, int MatchCount)> stats)
     {
         return string.Join("\n", stats.Select(s => $"- {s.RuleName}: {s.MatchCount} matches"));
+    }
+
+    /// <summary>
+    /// Formats description groups with frequency and amount ranges for enriched prompts.
+    /// </summary>
+    /// <param name="groups">The aggregated description groups.</param>
+    /// <returns>Formatted string for prompt insertion.</returns>
+    public static string FormatDescriptionGroups(IEnumerable<Categorization.DescriptionGroup> groups)
+    {
+        return string.Join("\n", groups.Select((g, i) =>
+        {
+            var line = $"{i + 1}. {g.RepresentativeDescription} — ";
+            var countLabel = g.Count == 1 ? "1 transaction" : $"{g.Count} transactions";
+
+            if (g.MinAmount.HasValue && g.MaxAmount.HasValue)
+            {
+                var amountPart = g.MinAmount == g.MaxAmount
+                    ? $"${g.MinAmount:F2}"
+                    : $"${g.MinAmount:F2}\u2013${g.MaxAmount:F2}";
+                return $"{line}{countLabel}, {amountPart}";
+            }
+
+            return $"{line}{countLabel}";
+        }));
+    }
+
+    /// <summary>
+    /// Formats previously dismissed patterns as a bullet list for the "DO NOT suggest" section.
+    /// </summary>
+    /// <param name="patterns">The dismissed patterns.</param>
+    /// <returns>Formatted string for prompt insertion.</returns>
+    public static string FormatDismissedPatterns(IEnumerable<string> patterns)
+    {
+        return string.Join("\n", patterns.Select(p => $"- {p}"));
+    }
+
+    /// <summary>
+    /// Formats previously accepted suggestion examples for the prompt.
+    /// </summary>
+    /// <param name="examples">The accepted suggestion examples.</param>
+    /// <returns>Formatted string for prompt insertion.</returns>
+    public static string FormatAcceptedExamples(IEnumerable<Categorization.AcceptedSuggestionExample> examples)
+    {
+        return string.Join("\n", examples.Select(e =>
+            $"- Pattern \"{e.Pattern}\" \u2192 Category \"{e.CategoryName}\" (accepted)"));
     }
 }

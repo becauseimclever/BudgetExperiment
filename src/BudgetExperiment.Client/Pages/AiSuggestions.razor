@@ -1,386 +1,225 @@
+@page "/ai"
 @page "/ai/suggestions"
+@page "/category-suggestions"
 @using BudgetExperiment.Client.Components.AI
 @using BudgetExperiment.Client.Components.Common
-@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Client.ViewModels
 @using BudgetExperiment.Contracts.Dtos
 @implements IDisposable
-@inject IAiApiService AiService
-@inject NavigationManager Navigation
+@inject AiSuggestionsViewModel ViewModel
 
-<PageHeader Title="AI Suggestions" Subtitle="Review and manage AI-generated rule suggestions" />
+<PageHeader Title="AI Suggestions" Subtitle="Review and manage AI-generated suggestions" />
 
 <div class="suggestions-page">
     <div class="suggestions-toolbar">
         <div class="toolbar-left">
-            <Button Variant="ButtonVariant.Primary" IconLeft="sparkles" IsDisabled="@(IsAnalyzing || !IsAiAvailable)" OnClick="StartAnalysis">Run AI Analysis</Button>
+            <Button Variant="ButtonVariant.Primary"
+                    IconLeft="sparkles"
+                    IsDisabled="@(ViewModel.IsAnalyzing || !ViewModel.IsAiAvailable)"
+                    IsLoading="@ViewModel.IsAnalyzing"
+                    OnClick="ViewModel.StartAnalysisAsync">
+                Run AI Analysis
+            </Button>
 
-            <Button Variant="ButtonVariant.Secondary" IconLeft="refresh-cw" IsDisabled="@IsLoading" OnClick="RefreshSuggestions">Refresh</Button>
+            <Button Variant="ButtonVariant.Secondary"
+                    IconLeft="refresh-cw"
+                    IsDisabled="@ViewModel.IsLoading"
+                    OnClick="ViewModel.LoadAllSuggestionsAsync">
+                Refresh
+            </Button>
+
+            @if (ViewModel.TotalSuggestionCount > 0)
+            {
+                <Button Variant="ButtonVariant.Secondary"
+                        Size="ButtonSize.Small"
+                        IconLeft="@(ViewModel.IsReviewMode ? "list" : "play")"
+                        OnClick="ViewModel.ToggleReviewMode">
+                    @(ViewModel.IsReviewMode ? "Exit Review" : "Review Mode")
+                </Button>
+            }
         </div>
 
         <div class="toolbar-right">
             <AiStatusBadge />
+
+            @if (ViewModel.TotalSuggestionCount > 1)
+            {
+                <Button Variant="ButtonVariant.Danger"
+                        Size="ButtonSize.Small"
+                        IconLeft="x"
+                        IsDisabled="@ViewModel.IsProcessing"
+                        OnClick="ViewModel.DismissAllAsync">
+                    Dismiss All
+                </Button>
+            }
         </div>
     </div>
 
-    @if (AnalysisResult != null && !ShowProgressDialog)
+    <AnalysisInlineProgress IsAnalyzing="@ViewModel.IsAnalyzing"
+                            ElapsedTime="@ViewModel.AnalysisElapsed"
+                            ErrorMessage="@ViewModel.AnalysisError"
+                            RuleResult="@ViewModel.RuleAnalysisResult"
+                            CategoryCount="@ViewModel.CategoryAnalysisCount"
+                            OnRetry="ViewModel.StartAnalysisAsync"
+                            OnDismiss="ViewModel.DismissAnalysisResult" />
+
+    @if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
-        <AnalysisSummaryCard Result="AnalysisResult"
-                             OnDismiss="DismissAnalysisSummary"
-                             OnViewSuggestions="ScrollToSuggestions" />
+        <ErrorAlert Message="@ViewModel.ErrorMessage" OnDismiss="ViewModel.DismissError" />
     }
 
-    @if (!string.IsNullOrEmpty(ErrorMessage))
+    @if (!string.IsNullOrEmpty(ViewModel.SuccessMessage))
     {
-        <ErrorAlert Message="@ErrorMessage" OnDismiss="DismissError" />
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @ViewModel.SuccessMessage
+            <button type="button" class="btn-close" @onclick="ViewModel.DismissSuccess" aria-label="Close"></button>
+        </div>
     }
 
-    @if (!IsLoading && Suggestions.Count == 0 && AnalysisResult == null && Status?.IsAvailable != true)
+    @if (ViewModel.Metrics is { } metrics && (metrics.Accepted > 0 || metrics.Dismissed > 0))
     {
-        <AiOnboardingPanel />
+        <div class="metrics-summary">
+            <span class="metrics-label">Suggestion Performance:</span>
+            <span class="metrics-stat">
+                <strong>@metrics.Accepted</strong> of <strong>@(metrics.Accepted + metrics.Dismissed)</strong> accepted
+                @if (metrics.AcceptanceRate.HasValue)
+                {
+                    <span class="metrics-rate">(@((metrics.AcceptanceRate.Value * 100).ToString("F0"))%)</span>
+                }
+            </span>
+            @if (metrics.Pending > 0)
+            {
+                <span class="metrics-stat metrics-pending">@metrics.Pending pending</span>
+            }
+        </div>
+    }
+
+    @if (ViewModel.IsLoading)
+    {
+        <LoadingSpinner Message="Loading suggestions..." />
+    }
+    else if (!ViewModel.IsAiAvailable)
+    {
+        <AiSetupBanner State="AiSetupState.NotConfigured" />
+    }
+    else if (ViewModel.IsAllCaughtUp && ViewModel.RuleAnalysisResult == null && !ViewModel.CategoryAnalysisCount.HasValue)
+    {
+        @if (ViewModel.Status != null)
+        {
+            <AiSetupBanner State="AiSetupState.AllCaughtUp" />
+        }
+        else
+        {
+            <AiSetupBanner State="AiSetupState.NoSuggestions" />
+        }
+    }
+    else if (ViewModel.TotalSuggestionCount == 0 && !ViewModel.IsAnalyzing)
+    {
+        <AiSetupBanner State="AiSetupState.NoSuggestions" />
+    }
+    else if (ViewModel.IsReviewMode)
+    {
+        var allItems = GetAllItemsFlat();
+        if (ViewModel.ReviewIndex < allItems.Count)
+        {
+            var currentItem = allItems[ViewModel.ReviewIndex];
+            <div class="review-mode-container">
+                <div class="review-progress">
+                    <span>Suggestion @(ViewModel.ReviewIndex + 1) of @allItems.Count</span>
+                    <div class="review-progress-bar">
+                        <div class="review-progress-fill" style="width: @(((ViewModel.ReviewIndex + 1) * 100.0 / allItems.Count).ToString("F0"))%"></div>
+                    </div>
+                </div>
+
+                <UnifiedSuggestionCard Item="@currentItem"
+                                       OnAccept="HandleReviewAccept"
+                                       OnDismiss="HandleReviewDismiss"
+                                       OnFeedback="HandleReviewFeedback" />
+
+                <div class="review-nav">
+                    <Button Variant="ButtonVariant.Secondary" IconLeft="skip-forward" OnClick="ViewModel.SkipReviewItem">Skip</Button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <AiSetupBanner State="AiSetupState.AllCaughtUp" />
+        }
     }
     else
     {
-        <SuggestionList Suggestions="Suggestions"
-                        IsLoading="IsLoading"
-                        OnAccept="HandleAccept"
-                        OnDismiss="HandleDismiss"
-                        OnFeedback="HandleFeedback"
-                        OnViewDetails="HandleViewDetails" />
+        @foreach (var group in ViewModel.GroupedSuggestions)
+        {
+            <SuggestionGroup Group="@group"
+                             OnAcceptRule="ViewModel.AcceptRuleSuggestionAsync"
+                             OnDismissRule="ViewModel.DismissRuleSuggestionAsync"
+                             OnAcceptCategory="HandleAcceptCategory"
+                             OnDismissCategory="ViewModel.DismissCategorySuggestionAsync"
+                             OnFeedback="HandleFeedback"
+                             OnAcceptAllHighConfidence="ViewModel.AcceptAllHighConfidenceAsync"
+                             IsProcessing="@ViewModel.IsProcessing" />
+        }
     }
-
-    <SuggestionDetailDialog IsVisible="SelectedSuggestion != null"
-                            Suggestion="SelectedSuggestion"
-                            OnClose="CloseDetailDialog"
-                            OnAccept="HandleAccept"
-                            OnDismiss="HandleDismiss"
-                            OnFeedback="HandleFeedback" />
-
-    <AnalysisProgressDialog IsVisible="ShowProgressDialog"
-                            IsRunning="IsAnalyzing"
-                            Result="AnalysisResult"
-                            ErrorMessage="@AnalysisError"
-                            CurrentStep="CurrentAnalysisStep"
-                            ElapsedTime="AnalysisElapsed"
-                            OnClose="CloseProgressDialog"
-                            OnCancel="CancelAnalysis"
-                            OnRetry="StartAnalysis"
-                            OnViewSuggestions="CloseProgressDialogAndScroll" />
 </div>
 
 @code {
-    private IReadOnlyList<RuleSuggestionDto> Suggestions { get; set; } = Array.Empty<RuleSuggestionDto>();
-    private AiStatusDto? Status { get; set; }
-    private AnalysisResponseDto? AnalysisResult { get; set; }
-    private RuleSuggestionDto? SelectedSuggestion { get; set; }
-
-    private bool IsLoading { get; set; }
-    private bool IsAnalyzing { get; set; }
-    private bool ShowProgressDialog { get; set; }
-    private int CurrentAnalysisStep { get; set; }
-    private TimeSpan AnalysisElapsed { get; set; }
-    private string? AnalysisError { get; set; }
-    private System.Timers.Timer? _elapsedTimer;
-    private DateTime _analysisStartTime;
-
-    private bool IsAiAvailable => Status?.IsAvailable == true && Status?.IsEnabled == true;
-    private string? ErrorMessage { get; set; }
-
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        await LoadStatusAsync();
-        await LoadSuggestionsAsync();
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
     }
 
-    private async Task LoadStatusAsync()
+    private async Task HandleAcceptCategory(Guid id)
     {
-        try
-        {
-            Status = await AiService.GetStatusAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Failed to load AI status: {ex.Message}";
-        }
-    }
-
-    private async Task LoadSuggestionsAsync()
-    {
-        IsLoading = true;
-        ErrorMessage = null;
-
-        try
-        {
-            Suggestions = await AiService.GetPendingSuggestionsAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Failed to load suggestions: {ex.Message}";
-            Suggestions = Array.Empty<RuleSuggestionDto>();
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private async Task RefreshSuggestions()
-    {
-        await LoadSuggestionsAsync();
-    }
-
-    private async Task StartAnalysis()
-    {
-        if (IsAnalyzing || !IsAiAvailable)
-        {
-            return;
-        }
-
-        // Reset state
-        IsAnalyzing = true;
-        ShowProgressDialog = true;
-        AnalysisResult = null;
-        AnalysisError = null;
-        CurrentAnalysisStep = 0;
-        AnalysisElapsed = TimeSpan.Zero;
-        _analysisStartTime = DateTime.UtcNow;
-
-        // Start elapsed timer
-        _elapsedTimer = new System.Timers.Timer(1000);
-        _elapsedTimer.Elapsed += OnElapsedTick;
-        _elapsedTimer.Start();
-
-        StateHasChanged();
-
-        try
-        {
-            // Simulate step progression (in real implementation, this would be event-driven)
-            await SimulateProgressSteps();
-
-            AnalysisResult = await AiService.AnalyzeAsync();
-
-            if (AnalysisResult != null)
-            {
-                CurrentAnalysisStep = 6; // All complete
-                await LoadSuggestionsAsync();
-            }
-            else
-            {
-                AnalysisError = "Analysis failed. AI service may be unavailable.";
-            }
-        }
-        catch (Exception ex)
-        {
-            AnalysisError = $"Analysis failed: {ex.Message}";
-        }
-        finally
-        {
-            IsAnalyzing = false;
-            StopElapsedTimer();
-            StateHasChanged();
-        }
-    }
-
-    private async Task SimulateProgressSteps()
-    {
-        // Simulate progress through steps with delays
-        for (int i = 0; i < 5; i++)
-        {
-            CurrentAnalysisStep = i;
-            StateHasChanged();
-            await Task.Delay(500); // Brief delay to show step progression
-        }
-    }
-
-    private void OnElapsedTick(object? sender, System.Timers.ElapsedEventArgs e)
-    {
-        AnalysisElapsed = DateTime.UtcNow - _analysisStartTime;
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void StopElapsedTimer()
-    {
-        if (_elapsedTimer != null)
-        {
-            _elapsedTimer.Stop();
-            _elapsedTimer.Elapsed -= OnElapsedTick;
-            _elapsedTimer.Dispose();
-            _elapsedTimer = null;
-        }
-    }
-
-    private void CancelAnalysis()
-    {
-        // Cancel is mostly cosmetic since we can't cancel the HTTP call easily
-        IsAnalyzing = false;
-        ShowProgressDialog = false;
-        StopElapsedTimer();
-    }
-
-    private void CloseProgressDialog()
-    {
-        ShowProgressDialog = false;
-    }
-
-    private void CloseProgressDialogAndScroll()
-    {
-        ShowProgressDialog = false;
-        // Scroll handled by page layout automatically
-    }
-
-    private void ScrollToSuggestions()
-    {
-        // Suggestions list is already visible, just dismiss the summary card
-    }
-
-    private async Task HandleAccept(Guid id)
-    {
-        try
-        {
-            var rule = await AiService.AcceptSuggestionAsync(id);
-            if (rule != null)
-            {
-                // Remove the accepted suggestion from the list
-                Suggestions = Suggestions.Where(s => s.Id != id).ToList();
-
-                // Close detail dialog if open
-                if (SelectedSuggestion?.Id == id)
-                {
-                    SelectedSuggestion = null;
-                }
-            }
-            else
-            {
-                ErrorMessage = "Failed to accept suggestion.";
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Failed to accept suggestion: {ex.Message}";
-        }
-    }
-
-    private async Task HandleDismiss(Guid id)
-    {
-        try
-        {
-            var success = await AiService.DismissSuggestionAsync(id);
-            if (success)
-            {
-                // Remove the dismissed suggestion from the list
-                Suggestions = Suggestions.Where(s => s.Id != id).ToList();
-
-                // Close detail dialog if open
-                if (SelectedSuggestion?.Id == id)
-                {
-                    SelectedSuggestion = null;
-                }
-            }
-            else
-            {
-                ErrorMessage = "Failed to dismiss suggestion.";
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
-        }
+        await ViewModel.AcceptCategorySuggestionAsync(id);
     }
 
     private async Task HandleFeedback((Guid Id, bool IsPositive) feedback)
     {
-        try
+        await ViewModel.ProvideFeedbackAsync(feedback.Id, feedback.IsPositive);
+    }
+
+    private async Task HandleReviewAccept(Guid id)
+    {
+        var item = GetAllItemsFlat().ElementAtOrDefault(ViewModel.ReviewIndex);
+        if (item is CategorySuggestionDto)
         {
-            var success = await AiService.ProvideFeedbackAsync(feedback.Id, feedback.IsPositive);
-            if (success)
-            {
-                // Update the local suggestion to reflect feedback
-                var suggestion = Suggestions.FirstOrDefault(s => s.Id == feedback.Id);
-                if (suggestion != null)
-                {
-                    // Create a new list with updated feedback (immutable update)
-                    Suggestions = Suggestions.Select(s =>
-                    {
-                        if (s.Id == feedback.Id)
-                        {
-                            return new RuleSuggestionDto
-                            {
-                                Id = s.Id,
-                                Type = s.Type,
-                                Status = s.Status,
-                                Title = s.Title,
-                                Description = s.Description,
-                                Reasoning = s.Reasoning,
-                                Confidence = s.Confidence,
-                                SuggestedPattern = s.SuggestedPattern,
-                                SuggestedMatchType = s.SuggestedMatchType,
-                                SuggestedCategoryId = s.SuggestedCategoryId,
-                                SuggestedCategoryName = s.SuggestedCategoryName,
-                                TargetRuleId = s.TargetRuleId,
-                                TargetRuleName = s.TargetRuleName,
-                                OptimizedPattern = s.OptimizedPattern,
-                                ConflictingRuleIds = s.ConflictingRuleIds,
-                                AffectedTransactionCount = s.AffectedTransactionCount,
-                                SampleDescriptions = s.SampleDescriptions,
-                                CreatedAtUtc = s.CreatedAtUtc,
-                                ReviewedAtUtc = s.ReviewedAtUtc,
-                                UserFeedbackPositive = feedback.IsPositive,
-                            };
-                        }
-
-                        return s;
-                    }).ToList();
-
-                    // Update selected suggestion if it's the one being updated
-                    if (SelectedSuggestion?.Id == feedback.Id)
-                    {
-                        SelectedSuggestion = Suggestions.FirstOrDefault(s => s.Id == feedback.Id);
-                    }
-                }
-            }
+            await ViewModel.AcceptCategorySuggestionAsync(id);
         }
-        catch (Exception ex)
+        else
         {
-            ErrorMessage = $"Failed to submit feedback: {ex.Message}";
+            await ViewModel.AcceptRuleSuggestionAsync(id);
         }
     }
 
-    private async Task HandleViewDetails(Guid id)
+    private async Task HandleReviewDismiss(Guid id)
     {
-        try
+        var item = GetAllItemsFlat().ElementAtOrDefault(ViewModel.ReviewIndex);
+        if (item is CategorySuggestionDto)
         {
-            SelectedSuggestion = await AiService.GetSuggestionAsync(id);
-            if (SelectedSuggestion == null)
-            {
-                // Fall back to local copy
-                SelectedSuggestion = Suggestions.FirstOrDefault(s => s.Id == id);
-            }
+            await ViewModel.DismissCategorySuggestionAsync(id);
         }
-        catch
+        else
         {
-            // Fall back to local copy on error
-            SelectedSuggestion = Suggestions.FirstOrDefault(s => s.Id == id);
+            await ViewModel.DismissRuleSuggestionAsync(id);
         }
     }
 
-    private void CloseDetailDialog()
+    private async Task HandleReviewFeedback((Guid Id, bool IsPositive) feedback)
     {
-        SelectedSuggestion = null;
+        await ViewModel.ProvideFeedbackAsync(feedback.Id, feedback.IsPositive);
     }
 
-    private void DismissError()
+    private List<object> GetAllItemsFlat()
     {
-        ErrorMessage = null;
-    }
-
-    private void DismissAnalysisSummary()
-    {
-        AnalysisResult = null;
+        return ViewModel.GroupedSuggestions.SelectMany(g => g.Items).ToList();
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        StopElapsedTimer();
+        ViewModel.OnStateChanged = null;
+        ViewModel.Dispose();
     }
 }

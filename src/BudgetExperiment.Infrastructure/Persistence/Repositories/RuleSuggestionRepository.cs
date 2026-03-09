@@ -138,4 +138,72 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     {
         await _context.RuleSuggestions.AddRangeAsync(suggestions, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> GetDismissedNewRulePatternsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.RuleSuggestions
+            .Where(s => s.Status == SuggestionStatus.Dismissed
+                && s.Type == SuggestionType.NewRule
+                && s.SuggestedPattern != null)
+            .Select(s => s.SuggestedPattern!)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<(string Pattern, Guid CategoryId)>> GetAcceptedNewRulesAsync(CancellationToken cancellationToken = default)
+    {
+        var results = await _context.RuleSuggestions
+            .Where(s => s.Status == SuggestionStatus.Accepted
+                && s.Type == SuggestionType.NewRule
+                && s.SuggestedPattern != null
+                && s.SuggestedCategoryId != null)
+            .Select(s => new { s.SuggestedPattern, s.SuggestedCategoryId })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return results.Select(r => (r.SuggestedPattern!, r.SuggestedCategoryId!.Value)).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<(SuggestionType Type, SuggestionStatus Status), int>> GetReviewedCountsByTypeAsync(CancellationToken cancellationToken = default)
+    {
+        var counts = await _context.RuleSuggestions
+            .Where(s => s.Status == SuggestionStatus.Accepted || s.Status == SuggestionStatus.Dismissed)
+            .GroupBy(s => new { s.Type, s.Status })
+            .Select(g => new { g.Key.Type, g.Key.Status, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(
+            c => (c.Type, c.Status),
+            c => c.Count);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<SuggestionType, int>> GetPendingCountsByTypeAsync(CancellationToken cancellationToken = default)
+    {
+        var counts = await _context.RuleSuggestions
+            .Where(s => s.Status == SuggestionStatus.Pending)
+            .GroupBy(s => s.Type)
+            .Select(g => new { Type = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(c => c.Type, c => c.Count);
+    }
+
+    /// <inheritdoc />
+    public async Task<(decimal? AcceptedAvgConfidence, decimal? DismissedAvgConfidence)> GetAverageConfidenceByStatusAsync(CancellationToken cancellationToken = default)
+    {
+        var averages = await _context.RuleSuggestions
+            .Where(s => s.Status == SuggestionStatus.Accepted || s.Status == SuggestionStatus.Dismissed)
+            .GroupBy(s => s.Status)
+            .Select(g => new { Status = g.Key, AvgConfidence = g.Average(s => s.Confidence) })
+            .ToListAsync(cancellationToken);
+
+        var accepted = averages.FirstOrDefault(a => a.Status == SuggestionStatus.Accepted)?.AvgConfidence;
+        var dismissed = averages.FirstOrDefault(a => a.Status == SuggestionStatus.Dismissed)?.AvgConfidence;
+
+        return (accepted, dismissed);
+    }
 }

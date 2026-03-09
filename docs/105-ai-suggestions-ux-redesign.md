@@ -1,6 +1,6 @@
 # Feature 105: AI Suggestions UX Redesign
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium
 > **Dependencies:** None (existing AI features functional)
 
@@ -59,10 +59,10 @@ The AI suggestions feature is split across **two independent pages** with differ
 **So that** I don't have to navigate between two pages to act on AI recommendations.
 
 **Acceptance Criteria:**
-- [ ] Single page at `/ai` shows both rule suggestions and category suggestions
-- [ ] Nav menu collapses two AI sub-items into a single "AI Suggestions" link
-- [ ] Old routes (`/ai/suggestions`, `/category-suggestions`) redirect to `/ai`
-- [ ] Suggestions are grouped by type with clear section headers (e.g., "New Categories", "Rule Improvements")
+- [x] Single page at `/ai` shows both rule suggestions and category suggestions
+- [x] Nav menu collapses two AI sub-items into a single "AI Suggestions" link
+- [x] Old routes (`/ai/suggestions`, `/category-suggestions`) redirect to `/ai`
+- [x] Suggestions are grouped by type with clear section headers (e.g., "New Categories", "Rule Improvements")
 
 ### US-105-002: Simplified Suggestion Cards
 
@@ -71,10 +71,10 @@ The AI suggestions feature is split across **two independent pages** with differ
 **So that** I can decide which to accept without reading dense technical details.
 
 **Acceptance Criteria:**
-- [ ] Card shows only: title/name, confidence indicator (visual bar/dot, not percentage), impact summary (e.g., "affects 42 transactions"), and primary action
-- [ ] Technical details (pattern, match type, reasoning, sample descriptions) are hidden behind an expandable "Details" section
-- [ ] High-confidence suggestions (≥80%) have a subtle visual highlight
-- [ ] Cards have consistent layout for both rule and category suggestion types
+- [x] Card shows only: title/name, confidence indicator (visual bar/dot, not percentage), impact summary (e.g., "affects 42 transactions"), and primary action
+- [x] Technical details (pattern, match type, reasoning, sample descriptions) are hidden behind an expandable "Details" section
+- [x] High-confidence suggestions (≥80%) have a subtle visual highlight
+- [x] Cards have consistent layout for both rule and category suggestion types
 
 ### US-105-003: Guided Review Flow
 
@@ -83,10 +83,10 @@ The AI suggestions feature is split across **two independent pages** with differ
 **So that** I can efficiently review and act on the most impactful ones first.
 
 **Acceptance Criteria:**
-- [ ] Suggestions default-sort by a composite score (confidence × impact)
-- [ ] An optional "Review Mode" lets users step through suggestions one at a time (Next/Skip/Accept/Dismiss)
-- [ ] After all suggestions are handled, a completion state is shown ("All caught up!")
-- [ ] Batch actions are available: "Accept All High-Confidence", "Dismiss All"
+- [x] Suggestions default-sort by a composite score (confidence × impact)
+- [x] An optional "Review Mode" lets users step through suggestions one at a time (Next/Skip/Accept/Dismiss)
+- [x] After all suggestions are handled, a completion state is shown ("All caught up!")
+- [x] Batch actions are available: "Accept All High-Confidence", "Dismiss All"
 
 ### US-105-004: Honest Analysis Progress
 
@@ -95,10 +95,10 @@ The AI suggestions feature is split across **two independent pages** with differ
 **So that** I know the system is working and roughly how long it will take.
 
 **Acceptance Criteria:**
-- [ ] Progress indicator shows a single honest state: "Analyzing..." with elapsed time
-- [ ] Remove simulated 6-step progression (`SimulateProgressSteps` with `Task.Delay`)
-- [ ] Result summary appears inline after analysis completes (not in a separate dialog)
-- [ ] Analysis errors show inline with retry option
+- [x] Progress indicator shows a single honest state: "Analyzing..." with elapsed time
+- [x] Remove simulated 6-step progression (`SimulateProgressSteps` with `Task.Delay`)
+- [x] Result summary appears inline after analysis completes (not in a separate dialog)
+- [x] Analysis errors show inline with retry option
 
 ### US-105-005: Setup & Empty State
 
@@ -107,9 +107,9 @@ The AI suggestions feature is split across **two independent pages** with differ
 **So that** I can configure AI and generate my first suggestions.
 
 **Acceptance Criteria:**
-- [ ] When AI is not configured, show a clear setup prompt with link to Settings
-- [ ] When AI is configured but no suggestions exist, show "Run your first analysis" CTA
-- [ ] Empty state explains value proposition in 1-2 sentences, not a 5-feature list
+- [x] When AI is not configured, show a clear setup prompt with link to Settings
+- [x] When AI is configured but no suggestions exist, show "Run your first analysis" CTA
+- [x] Empty state explains value proposition in 1-2 sentences, not a 5-feature list
 
 ---
 
@@ -194,42 +194,42 @@ Each group has a header with count and batch action ("Accept All" for high-confi
 ### Phase 1: Unified Page & Simplified Cards
 
 **Tasks:**
-- [ ] Create unified `AiSuggestions.razor` that loads both rule and category suggestions
-- [ ] Create new `SuggestionCard.razor` with progressive disclosure (collapsed details)
-- [ ] Create `SuggestionGroup.razor` for grouped display with section headers
-- [ ] Add composite scoring (confidence × impact) for default sort
-- [ ] Add redirect routes for backward compatibility
-- [ ] Update NavMenu to single "AI Suggestions" link
-- [ ] Remove `CategorySuggestions.razor` page
-- [ ] Remove `SuggestionList.razor` (replaced by grouping in page)
-- [ ] Remove `SuggestionDetailDialog.razor` (replaced by inline expand)
-- [ ] ViewModel extraction: create `AiSuggestionsViewModel` following established pattern
+- [x] Create unified `AiSuggestions.razor` that loads both rule and category suggestions
+- [x] Create new `SuggestionCard.razor` with progressive disclosure (collapsed details)
+- [x] Create `SuggestionGroup.razor` for grouped display with section headers
+- [x] Add composite scoring (confidence × impact) for default sort
+- [x] Add redirect routes for backward compatibility
+- [x] Update NavMenu to single "AI Suggestions" link
+- [x] Remove `CategorySuggestions.razor` page
+- [x] Remove `SuggestionList.razor` (replaced by grouping in page)
+- [x] Remove `SuggestionDetailDialog.razor` (replaced by inline expand)
+- [x] ViewModel extraction: create `AiSuggestionsViewModel` following established pattern
 
 ### Phase 2: Honest Progress & Empty States
 
 **Tasks:**
-- [ ] Replace `AnalysisProgressDialog` with `AnalysisInlineProgress` (inline, no fake steps)
-- [ ] Remove `SimulateProgressSteps` and `Task.Delay` calls
-- [ ] Replace `AiOnboardingPanel` with streamlined `AiSetupBanner`
-- [ ] Add "All caught up!" completion state
-- [ ] Remove `AnalysisSummaryCard` (integrate summary into inline progress result)
+- [x] Replace `AnalysisProgressDialog` with `AnalysisInlineProgress` (inline, no fake steps)
+- [x] Remove `SimulateProgressSteps` and `Task.Delay` calls
+- [x] Replace `AiOnboardingPanel` with streamlined `AiSetupBanner`
+- [x] Add "All caught up!" completion state
+- [x] Remove `AnalysisSummaryCard` (integrate summary into inline progress result)
 
 ### Phase 3: Review Mode & Batch Actions
 
 **Tasks:**
-- [ ] Add optional "Review Mode" (step-through one at a time)
-- [ ] Add batch actions per group ("Accept All High-Confidence")
-- [ ] Add "Dismiss All" with confirmation
-- [ ] Handle dismissed suggestions (restore capability in a collapsible section or filter)
+- [x] Add optional "Review Mode" (step-through one at a time)
+- [x] Add batch actions per group ("Accept All High-Confidence")
+- [x] Add "Dismiss All" with confirmation
+- [x] Handle dismissed suggestions (restore capability in a collapsible section or filter)
 
 ### Phase 4: Tests & Cleanup
 
 **Tasks:**
-- [ ] Create `AiSuggestionsViewModelTests` with comprehensive coverage
-- [ ] Update existing bUnit tests for renamed/restructured components
-- [ ] Remove orphaned component files and CSS
-- [ ] Verify all existing E2E tests still pass
-- [ ] Update this document status to Done
+- [x] Create `AiSuggestionsViewModelTests` with comprehensive coverage
+- [x] Update existing bUnit tests for renamed/restructured components
+- [x] Remove orphaned component files and CSS
+- [x] Verify all existing E2E tests still pass
+- [x] Update this document status to Done
 
 ---
 

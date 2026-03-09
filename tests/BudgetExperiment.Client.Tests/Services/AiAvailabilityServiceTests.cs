@@ -294,5 +294,8 @@ public class AiAvailabilityServiceTests
 
         public Task<bool> ProvideFeedbackAsync(Guid id, bool isPositive) =>
             Task.FromResult(true);
+
+        public Task<SuggestionMetricsDto?> GetMetricsAsync() =>
+            Task.FromResult<SuggestionMetricsDto?>(null);
     }
 }

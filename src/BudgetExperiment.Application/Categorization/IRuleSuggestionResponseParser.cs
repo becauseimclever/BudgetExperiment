@@ -17,8 +17,8 @@ public interface IRuleSuggestionResponseParser
     /// <param name="jsonContent">The raw AI response text.</param>
     /// <param name="categories">Available budget categories for name-to-ID resolution.</param>
     /// <param name="transactionCount">Number of uncategorized transactions analyzed.</param>
-    /// <returns>Parsed rule suggestions.</returns>
-    IReadOnlyList<RuleSuggestion> ParseNewRuleSuggestions(
+    /// <returns>Parse result with suggestions and diagnostics.</returns>
+    ParseResult<IReadOnlyList<RuleSuggestion>> ParseNewRuleSuggestions(
         string jsonContent,
         IReadOnlyList<BudgetCategory> categories,
         int transactionCount);
@@ -29,8 +29,8 @@ public interface IRuleSuggestionResponseParser
     /// <param name="jsonContent">The raw AI response text.</param>
     /// <param name="rules">Existing categorization rules for ID resolution.</param>
     /// <param name="ct">Cancellation token.</param>
-    /// <returns>Parsed optimization suggestions.</returns>
-    Task<IReadOnlyList<RuleSuggestion>> ParseOptimizationSuggestionsAsync(
+    /// <returns>Parse result with suggestions and diagnostics.</returns>
+    Task<ParseResult<IReadOnlyList<RuleSuggestion>>> ParseOptimizationSuggestionsAsync(
         string jsonContent,
         IReadOnlyList<CategorizationRule> rules,
         CancellationToken ct = default);
@@ -41,8 +41,8 @@ public interface IRuleSuggestionResponseParser
     /// <param name="jsonContent">The raw AI response text.</param>
     /// <param name="rules">Existing categorization rules for ID resolution.</param>
     /// <param name="ct">Cancellation token.</param>
-    /// <returns>Parsed conflict suggestions.</returns>
-    Task<IReadOnlyList<RuleSuggestion>> ParseConflictSuggestionsAsync(
+    /// <returns>Parse result with suggestions and diagnostics.</returns>
+    Task<ParseResult<IReadOnlyList<RuleSuggestion>>> ParseConflictSuggestionsAsync(
         string jsonContent,
         IReadOnlyList<CategorizationRule> rules,
         CancellationToken ct = default);

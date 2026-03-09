@@ -923,6 +923,70 @@ public class RuleSuggestionServiceTests
     }
 
     [Fact]
+    public async Task AnalyzeAllAsync_Skips_NewRule_When_Acceptance_Rate_Below_Threshold()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "TX1");
+        SetupRulesWithCategories(ruleRepo, categoryRepo, ("Rule1", "PATTERN", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "TX1");
+        SetupAiAvailable(aiService);
+
+        // 10 reviewed, only 1 accepted (10% < 20% threshold)
+        suggestionRepo
+            .Setup(r => r.GetReviewedCountsByTypeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(SuggestionType, SuggestionStatus), int>
+            {
+                { (SuggestionType.NewRule, SuggestionStatus.Accepted), 1 },
+                { (SuggestionType.NewRule, SuggestionStatus.Dismissed), 9 },
+            });
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, "{\"suggestions\": []}", null, 100, TimeSpan.FromSeconds(1)));
+
+        // Act
+        var result = await service.AnalyzeAllAsync();
+
+        // Assert — AI should NOT be called for new rules (skipped), but may be called for optimizations/conflicts
+        Assert.Empty(result.NewRuleSuggestions);
+    }
+
+    [Fact]
+    public async Task AnalyzeAllAsync_Does_Not_Skip_When_Insufficient_Review_Data()
+    {
+        // Arrange
+        var (service, aiService, transactionRepo, ruleRepo, categoryRepo, suggestionRepo) = CreateService();
+        SetupUncategorizedTransactions(transactionRepo, "TX1");
+        SetupRulesWithCategories(ruleRepo, categoryRepo, ("Rule1", "PATTERN", GroceryCategoryId));
+        SetupAllTransactions(transactionRepo, "TX1");
+        SetupAiAvailable(aiService);
+
+        // Only 3 reviewed (< 5 threshold), so rate evaluation is skipped
+        suggestionRepo
+            .Setup(r => r.GetReviewedCountsByTypeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(SuggestionType, SuggestionStatus), int>
+            {
+                { (SuggestionType.NewRule, SuggestionStatus.Accepted), 0 },
+                { (SuggestionType.NewRule, SuggestionStatus.Dismissed), 3 },
+            });
+
+        suggestionRepo
+            .Setup(r => r.ExistsPendingWithPatternAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        aiService
+            .Setup(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiResponse(true, "{\"suggestions\": []}", null, 100, TimeSpan.FromSeconds(1)));
+
+        // Act
+        var result = await service.AnalyzeAllAsync();
+
+        // Assert — AI should still be called since not enough data to de-prioritize
+        aiService.Verify(s => s.CompleteAsync(It.IsAny<AiPrompt>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
     public async Task AcceptSuggestionAsync_For_OptimizationSuggestion_Updates_Rule_Pattern()
     {
         // Arrange
@@ -1362,6 +1426,17 @@ public class RuleSuggestionServiceTests
         ruleRepo
             .Setup(r => r.ListAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<CategorizationRule>());
+
+        // Default: no feedback history
+        suggestionRepo
+            .Setup(r => r.GetDismissedNewRulePatternsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<string>());
+        suggestionRepo
+            .Setup(r => r.GetAcceptedNewRulesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<(string, Guid)>());
+        suggestionRepo
+            .Setup(r => r.GetReviewedCountsByTypeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(SuggestionType, SuggestionStatus), int>());
 
         var responseParser = new RuleSuggestionResponseParser(suggestionRepo.Object);
         var acceptanceHandler = new SuggestionAcceptanceHandler(

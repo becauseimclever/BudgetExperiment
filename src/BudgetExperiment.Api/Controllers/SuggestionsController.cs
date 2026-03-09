@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.Categorization;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -21,18 +22,22 @@ public sealed class SuggestionsController : ControllerBase
 {
     private readonly IRuleSuggestionService _suggestionService;
     private readonly IAiService _aiService;
+    private readonly ISuggestionMetricsService _metricsService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SuggestionsController"/> class.
     /// </summary>
     /// <param name="suggestionService">The rule suggestion service.</param>
     /// <param name="aiService">The AI service.</param>
+    /// <param name="metricsService">The suggestion metrics service.</param>
     public SuggestionsController(
         IRuleSuggestionService suggestionService,
-        IAiService aiService)
+        IAiService aiService,
+        ISuggestionMetricsService metricsService)
     {
         this._suggestionService = suggestionService;
         this._aiService = aiService;
+        this._metricsService = metricsService;
     }
 
     /// <summary>
@@ -212,5 +217,18 @@ public sealed class SuggestionsController : ControllerBase
         {
             return this.NotFound(new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Gets aggregated suggestion quality metrics.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The suggestion metrics.</returns>
+    [HttpGet("metrics")]
+    [ProducesResponseType<SuggestionMetricsDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMetricsAsync(CancellationToken cancellationToken)
+    {
+        var metrics = await this._metricsService.GetMetricsAsync(cancellationToken);
+        return this.Ok(metrics);
     }
 }

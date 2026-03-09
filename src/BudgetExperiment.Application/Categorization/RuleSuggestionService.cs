@@ -16,6 +16,16 @@ namespace BudgetExperiment.Application.Categorization;
 /// </summary>
 public sealed class RuleSuggestionService : IRuleSuggestionService
 {
+    /// <summary>
+    /// Minimum number of reviewed suggestions required before acceptance rate is evaluated.
+    /// </summary>
+    internal const int MinReviewedForRateEvaluation = 5;
+
+    /// <summary>
+    /// Acceptance rate threshold below which a suggestion type is de-prioritized.
+    /// </summary>
+    internal const decimal AcceptanceRateThreshold = 0.2m;
+
     private readonly IAiService _aiService;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategorizationRuleRepository _ruleRepository;
@@ -76,7 +86,8 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         var categories = await _categoryRepository.ListAsync(0, int.MaxValue, ct);
         var existingRules = await _ruleRepository.ListAsync(0, int.MaxValue, ct);
 
-        var prompt = RuleSuggestionPromptBuilder.BuildNewRulePrompt(uncategorized, categories, existingRules);
+        var feedback = await BuildFeedbackContextAsync(categories, ct);
+        var prompt = RuleSuggestionPromptBuilder.BuildNewRulePrompt(uncategorized, categories, existingRules, feedback);
 
         var response = await _aiService.CompleteAsync(prompt, ct);
         if (!response.Success)
@@ -84,13 +95,13 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
             return Array.Empty<RuleSuggestion>();
         }
 
-        var suggestions = _responseParser.ParseNewRuleSuggestions(response.Content, categories, uncategorized.Count);
-        if (suggestions.Count == 0)
+        var parseResult = _responseParser.ParseNewRuleSuggestions(response.Content, categories, uncategorized.Count);
+        if (parseResult.Result.Count == 0)
         {
             return Array.Empty<RuleSuggestion>();
         }
 
-        var filteredSuggestions = await FilterDuplicateSuggestionsAsync(suggestions, ct);
+        var filteredSuggestions = await FilterDuplicateSuggestionsAsync(parseResult.Result, ct);
         var limitedSuggestions = filteredSuggestions.Take(maxSuggestions).ToList();
 
         if (limitedSuggestions.Count > 0)
@@ -130,19 +141,19 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
             return Array.Empty<RuleSuggestion>();
         }
 
-        var suggestions = await _responseParser.ParseOptimizationSuggestionsAsync(response.Content, rules, ct);
-        if (suggestions.Count == 0)
+        var parseResult = await _responseParser.ParseOptimizationSuggestionsAsync(response.Content, rules, ct);
+        if (parseResult.Result.Count == 0)
         {
             return Array.Empty<RuleSuggestion>();
         }
 
-        if (suggestions.Count > 0)
+        if (parseResult.Result.Count > 0)
         {
-            await _suggestionRepository.AddRangeAsync(suggestions, ct);
+            await _suggestionRepository.AddRangeAsync(parseResult.Result, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
 
-        return suggestions;
+        return parseResult.Result;
     }
 
     /// <inheritdoc/>
@@ -170,19 +181,19 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
             return Array.Empty<RuleSuggestion>();
         }
 
-        var suggestions = await _responseParser.ParseConflictSuggestionsAsync(response.Content, rules, ct);
-        if (suggestions.Count == 0)
+        var parseResult = await _responseParser.ParseConflictSuggestionsAsync(response.Content, rules, ct);
+        if (parseResult.Result.Count == 0)
         {
             return Array.Empty<RuleSuggestion>();
         }
 
-        if (suggestions.Count > 0)
+        if (parseResult.Result.Count > 0)
         {
-            await _suggestionRepository.AddRangeAsync(suggestions, ct);
+            await _suggestionRepository.AddRangeAsync(parseResult.Result, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
 
-        return suggestions;
+        return parseResult.Result;
     }
 
     /// <inheritdoc/>
@@ -191,15 +202,28 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         CancellationToken ct = default)
     {
         var stopwatch = Stopwatch.StartNew();
+        var skippedTypes = await GetDeprioritizedTypesAsync(ct);
 
-        progress?.Report(new AnalysisProgress { CurrentStep = "Analyzing uncategorized transactions...", PercentComplete = 10 });
-        var newRules = await SuggestNewRulesAsync(ct: ct);
+        IReadOnlyList<RuleSuggestion> newRules = Array.Empty<RuleSuggestion>();
+        if (!skippedTypes.Contains(SuggestionType.NewRule))
+        {
+            progress?.Report(new AnalysisProgress { CurrentStep = "Analyzing uncategorized transactions...", PercentComplete = 10 });
+            newRules = await SuggestNewRulesAsync(ct: ct);
+        }
 
-        progress?.Report(new AnalysisProgress { CurrentStep = "Analyzing rule optimizations...", PercentComplete = 40 });
-        var optimizations = await SuggestOptimizationsAsync(ct);
+        IReadOnlyList<RuleSuggestion> optimizations = Array.Empty<RuleSuggestion>();
+        if (!skippedTypes.Contains(SuggestionType.PatternOptimization))
+        {
+            progress?.Report(new AnalysisProgress { CurrentStep = "Analyzing rule optimizations...", PercentComplete = 40 });
+            optimizations = await SuggestOptimizationsAsync(ct);
+        }
 
-        progress?.Report(new AnalysisProgress { CurrentStep = "Detecting conflicts...", PercentComplete = 70 });
-        var conflicts = await DetectConflictsAsync(ct);
+        IReadOnlyList<RuleSuggestion> conflicts = Array.Empty<RuleSuggestion>();
+        if (!skippedTypes.Contains(SuggestionType.RuleConflict))
+        {
+            progress?.Report(new AnalysisProgress { CurrentStep = "Detecting conflicts...", PercentComplete = 70 });
+            conflicts = await DetectConflictsAsync(ct);
+        }
 
         progress?.Report(new AnalysisProgress { CurrentStep = "Complete", PercentComplete = 100 });
 
@@ -319,5 +343,45 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         }
 
         return filteredSuggestions;
+    }
+
+    private async Task<SuggestionFeedbackContext> BuildFeedbackContextAsync(
+        IReadOnlyList<BudgetCategory> categories,
+        CancellationToken ct)
+    {
+        var dismissedPatterns = await _suggestionRepository.GetDismissedNewRulePatternsAsync(ct);
+
+        var acceptedRules = await _suggestionRepository.GetAcceptedNewRulesAsync(ct);
+        var categoryLookup = categories.ToDictionary(c => c.Id, c => c.Name);
+        var acceptedExamples = acceptedRules
+            .Where(r => categoryLookup.ContainsKey(r.CategoryId))
+            .Select(r => new AcceptedSuggestionExample(r.Pattern, categoryLookup[r.CategoryId]))
+            .ToList();
+
+        return new SuggestionFeedbackContext(dismissedPatterns, acceptedExamples);
+    }
+
+    private async Task<HashSet<SuggestionType>> GetDeprioritizedTypesAsync(CancellationToken ct)
+    {
+        var counts = await _suggestionRepository.GetReviewedCountsByTypeAsync(ct);
+        var skipped = new HashSet<SuggestionType>();
+
+        foreach (var type in new[] { SuggestionType.NewRule, SuggestionType.PatternOptimization, SuggestionType.RuleConflict })
+        {
+            counts.TryGetValue((type, SuggestionStatus.Accepted), out var accepted);
+            counts.TryGetValue((type, SuggestionStatus.Dismissed), out var dismissed);
+            var total = accepted + dismissed;
+
+            if (total >= MinReviewedForRateEvaluation)
+            {
+                var rate = (decimal)accepted / total;
+                if (rate < AcceptanceRateThreshold)
+                {
+                    skipped.Add(type);
+                }
+            }
+        }
+
+        return skipped;
     }
 }

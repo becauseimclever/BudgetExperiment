@@ -1,0 +1,80 @@
+@* AiSetupBanner.razor - Streamlined setup/empty state for AI suggestions *@
+
+@using BudgetExperiment.Client.Components.Common
+
+@if (State == AiSetupState.NotConfigured)
+{
+    <div class="ai-setup-banner">
+        <Icon Name="sparkles" Size="32" />
+        <div class="banner-content">
+            <h3>Set up AI Suggestions</h3>
+            <p>Connect to your local Ollama instance to get AI-powered rule and category suggestions that help organize your transactions.</p>
+            <a href="/settings" class="btn btn-primary btn-sm">
+                <Icon Name="settings" Size="14" />
+                Go to Settings
+            </a>
+        </div>
+    </div>
+}
+else if (State == AiSetupState.NoSuggestions)
+{
+    <div class="ai-setup-banner">
+        <Icon Name="sparkles" Size="32" />
+        <div class="banner-content">
+            <h3>Run your first analysis</h3>
+            <p>AI is configured. Click "Run AI Analysis" above to analyze your transactions and generate suggestions.</p>
+        </div>
+    </div>
+}
+else if (State == AiSetupState.AllCaughtUp)
+{
+    <div class="ai-setup-banner caught-up">
+        <Icon Name="check-circle" Size="32" />
+        <div class="banner-content">
+            <h3>All caught up!</h3>
+            <p>You've reviewed all suggestions. Run a new analysis to check for more.</p>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the current setup state.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public AiSetupState State { get; set; }
+}
+
+<style>
+    .ai-setup-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .ai-setup-banner.caught-up {
+        border-color: var(--success, #22c55e);
+        background: var(--success-bg, rgba(34, 197, 94, 0.05));
+    }
+
+    .banner-content h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .banner-content p {
+        margin: 0 0 0.75rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .banner-content p:last-child {
+        margin-bottom: 0;
+    }
+</style>

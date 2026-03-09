@@ -211,46 +211,19 @@
     <div class="nav-footer" role="list">
         @if (AiAvailability.IsEnabled)
         {
-            <div class="nav-section @(AiAvailability.State == AiAvailabilityState.Unavailable ? "ai-unavailable" : "")">
-                <button class="nav-item nav-section-toggle"
-                        @onclick="ToggleAiToolsSection"
-                        title="@GetAiToolsTooltip()"
-                        aria-expanded="@aiToolsExpanded"
-                        aria-controls="ai-tools-submenu">
-                    <span class="nav-icon" aria-hidden="true"><Icon Name="sparkles" Size="20" /></span>
-                    @if (!IsCollapsed)
+            <NavLink class="@GetAiNavClass()" href="ai" title="AI Suggestions" aria-label="AI Suggestions">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="sparkles" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">AI Suggestions</span>
+                    @if (AiAvailability.State == AiAvailabilityState.Unavailable)
                     {
-                        <span class="nav-text">AI Tools</span>
-                        @if (AiAvailability.State == AiAvailabilityState.Unavailable)
-                        {
-                            <span class="nav-warning-icon" title="@AiAvailability.ErrorMessage" aria-hidden="true">
-                                <Icon Name="alert-triangle" Size="14" />
-                            </span>
-                        }
-                        <span class="nav-chevron @(aiToolsExpanded ? "expanded" : "")" aria-hidden="true">
-                            <Icon Name="chevron-down" Size="16" />
+                        <span class="nav-warning-icon" title="@AiAvailability.ErrorMessage" aria-hidden="true">
+                            <Icon Name="alert-triangle" Size="14" />
                         </span>
                     }
-                </button>
-
-                @if (!IsCollapsed && aiToolsExpanded)
-                {
-                    <ul id="ai-tools-submenu" class="nav-subitems" role="list">
-                        <li>
-                            <NavLink class="nav-item nav-subitem" href="ai/suggestions" title="Smart Insights" aria-label="AI Smart Insights">
-                                <span class="nav-icon" aria-hidden="true"><Icon Name="lightbulb" Size="16" /></span>
-                                <span class="nav-text">Smart Insights</span>
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink class="nav-item nav-subitem" href="category-suggestions" title="Category Suggestions" aria-label="AI Category Suggestions">
-                                <span class="nav-icon" aria-hidden="true"><Icon Name="tag" Size="16" /></span>
-                                <span class="nav-text">Category Suggestions</span>
-                            </NavLink>
-                        </li>
-                    </ul>
                 }
-            </div>
+            </NavLink>
         }
 
         <NavLink class="nav-item" href="settings" title="Settings" aria-label="Application Settings">
@@ -272,13 +245,10 @@
 
     private const string ReportsExpandedStorageKey = "budget-experiment-reports-expanded";
     private const string AccountsExpandedStorageKey = "budget-experiment-accounts-expanded";
-    private const string AiToolsExpandedStorageKey = "budget-experiment-ai-tools-expanded";
-
     private List<AccountDto> accounts = new();
     private bool isAuthenticated;
     private bool reportsExpanded;
     private bool accountsExpanded = true;
-    private bool aiToolsExpanded = true;
     private bool hasLoadedState;
     private bool locationEnabled;
 
@@ -292,12 +262,6 @@
     {
         accountsExpanded = !accountsExpanded;
         await SaveExpandedStateAsync(AccountsExpandedStorageKey, accountsExpanded);
-    }
-
-    private async Task ToggleAiToolsSection()
-    {
-        aiToolsExpanded = !aiToolsExpanded;
-        await SaveExpandedStateAsync(AiToolsExpandedStorageKey, aiToolsExpanded);
     }
 
     private async Task SaveExpandedStateAsync(string key, bool value)
@@ -347,12 +311,6 @@
                 if (bool.TryParse(accountsState, out var accts))
                 {
                     accountsExpanded = accts;
-                }
-
-                var aiToolsState = await JSRuntime.InvokeAsync<string?>("sessionStorage.getItem", AiToolsExpandedStorageKey);
-                if (bool.TryParse(aiToolsState, out var aiTools))
-                {
-                    aiToolsExpanded = aiTools;
                 }
 
                 StateHasChanged();
@@ -418,15 +376,6 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private string GetAiToolsTooltip()
-    {
-        return AiAvailability.State switch
-        {
-            AiAvailabilityState.Unavailable => $"AI Tools (unavailable: {AiAvailability.ErrorMessage})",
-            _ => "AI Tools",
-        };
-    }
-
     /// <inheritdoc/>
     public void Dispose()
     {
@@ -438,5 +387,12 @@
     {
         const int maxLength = 15;
         return name.Length <= maxLength ? name : name[..(maxLength - 2)] + "..";
+    }
+
+    private string GetAiNavClass()
+    {
+        return AiAvailability.State == AiAvailabilityState.Unavailable
+            ? "nav-item ai-unavailable"
+            : "nav-item";
     }
 }

@@ -174,4 +174,24 @@ public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicat
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    /// <summary>
+    /// GET /api/v1/suggestions/metrics returns 200 OK with metrics.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetMetrics_Returns_200_WithMetrics()
+    {
+        // Act
+        var response = await this._client.GetAsync("/api/v1/suggestions/metrics");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var metrics = await response.Content.ReadFromJsonAsync<SuggestionMetricsDto>();
+        Assert.NotNull(metrics);
+        Assert.True(metrics.TotalGenerated >= 0);
+        Assert.True(metrics.Accepted >= 0);
+        Assert.True(metrics.Dismissed >= 0);
+        Assert.True(metrics.Pending >= 0);
+    }
 }

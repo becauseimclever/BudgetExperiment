@@ -57,4 +57,18 @@ public interface ICategorySuggestionRepository : IReadRepository<CategorySuggest
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task DeletePendingByOwnerAsync(string ownerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the count of suggestions grouped by status (across all users).
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Counts keyed by status.</returns>
+    Task<IReadOnlyDictionary<SuggestionStatus, int>> GetCountsByStatusAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the average confidence score for accepted and dismissed suggestions (across all users).
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple of (average accepted confidence, average dismissed confidence). Null if no suggestions in that status.</returns>
+    Task<(decimal? AcceptedAvgConfidence, decimal? DismissedAvgConfidence)> GetAverageConfidenceByStatusAsync(CancellationToken cancellationToken = default);
 }

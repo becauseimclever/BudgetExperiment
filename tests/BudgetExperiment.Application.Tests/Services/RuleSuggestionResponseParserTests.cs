@@ -75,6 +75,96 @@ public class RuleSuggestionResponseParserTests
     }
 
     [Fact]
+    public void ExtractJson_Strips_Markdown_Fence_With_Language_Tag()
+    {
+        var content = "```json\n{\"key\": \"value\"}\n```";
+
+        var result = RuleSuggestionResponseParser.ExtractJson(content);
+
+        Assert.Equal("{\"key\": \"value\"}", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Handles_Nested_Json_Objects()
+    {
+        var content = """{"outer": {"inner": {"deep": true}}}""";
+
+        var result = RuleSuggestionResponseParser.ExtractJson(content);
+
+        Assert.Contains("outer", result);
+        Assert.Contains("inner", result);
+        Assert.Contains("deep", result);
+    }
+
+    [Fact]
+    public void ExtractJson_Throws_On_Empty_String()
+    {
+        Assert.Throws<JsonException>(() =>
+            RuleSuggestionResponseParser.ExtractJson(string.Empty));
+    }
+
+    [Fact]
+    public void ExtractJson_Handles_Json_With_Array_Inside_Preamble()
+    {
+        var content = """
+            Sure! Here are the suggestions:
+            {"suggestions": [{"pattern": "TEST", "confidence": 0.9}]}
+            Let me know if you need more.
+            """;
+
+        var result = RuleSuggestionResponseParser.ExtractJson(content);
+
+        Assert.StartsWith("{", result);
+        Assert.EndsWith("}", result);
+        Assert.Contains("suggestions", result);
+    }
+
+    [Fact]
+    public void ParseNewRuleSuggestions_Returns_ParseResult_With_Diagnostics_On_Invalid_Json()
+    {
+        var categories = CreateCategories(("Groceries", GroceryCategoryId));
+
+        var result = _parser.ParseNewRuleSuggestions("totally not json", categories, 5);
+
+        Assert.False(result.Success);
+        Assert.Empty(result.Result);
+        Assert.NotEmpty(result.Diagnostics);
+        Assert.Contains(result.Diagnostics, d => d.Contains("JSON", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void ParseNewRuleSuggestions_Returns_Diagnostics_For_Unknown_Categories()
+    {
+        var categories = CreateCategories(("Groceries", GroceryCategoryId));
+        var json = """
+            {
+              "suggestions": [
+                {
+                  "pattern": "STARBUCKS",
+                  "matchType": "Contains",
+                  "categoryName": "Coffee",
+                  "confidence": 0.90,
+                  "reasoning": "Starbucks is coffee"
+                },
+                {
+                  "pattern": "WALMART",
+                  "matchType": "Contains",
+                  "categoryName": "Groceries",
+                  "confidence": 0.85,
+                  "reasoning": "Walmart grocery"
+                }
+              ]
+            }
+            """;
+
+        var result = _parser.ParseNewRuleSuggestions(json, categories, 5);
+
+        Assert.True(result.Success);
+        Assert.Single(result.Result);
+        Assert.Contains(result.Diagnostics, d => d.Contains("Coffee", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void ParseNewRuleSuggestions_Returns_Suggestions_From_Valid_Json()
     {
         // Arrange
@@ -98,10 +188,10 @@ public class RuleSuggestionResponseParserTests
         var result = _parser.ParseNewRuleSuggestions(json, categories, 10);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal("WALMART", result[0].SuggestedPattern);
-        Assert.Equal(RuleMatchType.Contains, result[0].SuggestedMatchType);
-        Assert.Equal(GroceryCategoryId, result[0].SuggestedCategoryId);
+        Assert.Single(result.Result);
+        Assert.Equal("WALMART", result.Result[0].SuggestedPattern);
+        Assert.Equal(RuleMatchType.Contains, result.Result[0].SuggestedMatchType);
+        Assert.Equal(GroceryCategoryId, result.Result[0].SuggestedCategoryId);
     }
 
     [Fact]
@@ -127,7 +217,7 @@ public class RuleSuggestionResponseParserTests
         var result = _parser.ParseNewRuleSuggestions(json, categories, 5);
 
         // Assert
-        Assert.Empty(result);
+        Assert.Empty(result.Result);
     }
 
     [Fact]
@@ -140,7 +230,7 @@ public class RuleSuggestionResponseParserTests
         var result = _parser.ParseNewRuleSuggestions("not json at all", categories, 5);
 
         // Assert
-        Assert.Empty(result);
+        Assert.Empty(result.Result);
     }
 
     [Fact]
@@ -165,8 +255,8 @@ public class RuleSuggestionResponseParserTests
         var result = _parser.ParseNewRuleSuggestions(json, categories, 5);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(RuleMatchType.Contains, result[0].SuggestedMatchType);
+        Assert.Single(result.Result);
+        Assert.Equal(RuleMatchType.Contains, result.Result[0].SuggestedMatchType);
     }
 
     [Fact]
@@ -191,8 +281,8 @@ public class RuleSuggestionResponseParserTests
         var result = _parser.ParseNewRuleSuggestions(json, categories, 5);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(1m, result[0].Confidence);
+        Assert.Single(result.Result);
+        Assert.Equal(1m, result.Result[0].Confidence);
     }
 
     [Fact]
@@ -224,9 +314,9 @@ public class RuleSuggestionResponseParserTests
         var result = await _parser.ParseOptimizationSuggestionsAsync(json, rules);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(SuggestionType.UnusedRule, result[0].Type);
-        Assert.Equal(ruleId, result[0].TargetRuleId);
+        Assert.Single(result.Result);
+        Assert.Equal(SuggestionType.UnusedRule, result.Result[0].Type);
+        Assert.Equal(ruleId, result.Result[0].TargetRuleId);
     }
 
     [Fact]
@@ -258,7 +348,7 @@ public class RuleSuggestionResponseParserTests
         var result = await _parser.ParseOptimizationSuggestionsAsync(json, rules);
 
         // Assert
-        Assert.Empty(result);
+        Assert.Empty(result.Result);
     }
 
     [Fact]
@@ -291,9 +381,9 @@ public class RuleSuggestionResponseParserTests
         var result = await _parser.ParseOptimizationSuggestionsAsync(json, rules);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(SuggestionType.PatternOptimization, result[0].Type);
-        Assert.Equal("COMPLEX", result[0].OptimizedPattern);
+        Assert.Single(result.Result);
+        Assert.Equal(SuggestionType.PatternOptimization, result.Result[0].Type);
+        Assert.Equal("COMPLEX", result.Result[0].OptimizedPattern);
     }
 
     [Fact]
@@ -303,7 +393,7 @@ public class RuleSuggestionResponseParserTests
 
         var result = await _parser.ParseOptimizationSuggestionsAsync("broken json", rules);
 
-        Assert.Empty(result);
+        Assert.Empty(result.Result);
     }
 
     [Fact]
@@ -339,9 +429,9 @@ public class RuleSuggestionResponseParserTests
         var result = await _parser.ParseConflictSuggestionsAsync(json, rules);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(SuggestionType.RuleConflict, result[0].Type);
-        Assert.Contains("Contradictory", result[0].Title);
+        Assert.Single(result.Result);
+        Assert.Equal(SuggestionType.RuleConflict, result.Result[0].Type);
+        Assert.Contains("Contradictory", result.Result[0].Title);
     }
 
     [Fact]
@@ -351,7 +441,7 @@ public class RuleSuggestionResponseParserTests
 
         var result = await _parser.ParseConflictSuggestionsAsync("not json", rules);
 
-        Assert.Empty(result);
+        Assert.Empty(result.Result);
     }
 
     [Fact]
@@ -378,7 +468,7 @@ public class RuleSuggestionResponseParserTests
         var result = await _parser.ParseConflictSuggestionsAsync(json, rules);
 
         // Assert
-        Assert.Empty(result);
+        Assert.Empty(result.Result);
     }
 
     private static IReadOnlyList<BudgetCategory> CreateCategories(params (string Name, Guid Id)[] categories)

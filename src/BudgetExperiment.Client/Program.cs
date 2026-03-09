@@ -139,5 +139,6 @@ builder.Services.AddTransient<RecurringViewModel>();
 builder.Services.AddTransient<RecurringTransfersViewModel>();
 builder.Services.AddTransient<TransfersViewModel>();
 builder.Services.AddTransient<OnboardingViewModel>();
+builder.Services.AddTransient<AiSuggestionsViewModel>();
 
 await builder.Build().RunAsync();

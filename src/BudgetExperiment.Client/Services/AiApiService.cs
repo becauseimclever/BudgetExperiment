@@ -278,4 +278,22 @@ public sealed class AiApiService : IAiApiService
             return false;
         }
     }
+
+    /// <inheritdoc />
+    public async Task<SuggestionMetricsDto?> GetMetricsAsync()
+    {
+        try
+        {
+            return await this._httpClient.GetFromJsonAsync<SuggestionMetricsDto>("api/v1/suggestions/metrics", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
 }

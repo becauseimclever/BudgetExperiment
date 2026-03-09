@@ -85,4 +85,10 @@ public interface IAiApiService
     /// <param name="isPositive">Whether the feedback is positive.</param>
     /// <returns>True if successful.</returns>
     Task<bool> ProvideFeedbackAsync(Guid id, bool isPositive);
+
+    /// <summary>
+    /// Gets suggestion quality metrics.
+    /// </summary>
+    /// <returns>The metrics, or null if the request fails.</returns>
+    Task<SuggestionMetricsDto?> GetMetricsAsync();
 }

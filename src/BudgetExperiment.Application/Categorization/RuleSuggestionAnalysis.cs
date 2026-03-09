@@ -40,4 +40,9 @@ public sealed record RuleSuggestionAnalysis
     /// Gets the total duration of the analysis.
     /// </summary>
     public TimeSpan AnalysisDuration { get; init; }
+
+    /// <summary>
+    /// Gets diagnostic warnings from parsing AI responses (e.g., unknown categories, parse failures).
+    /// </summary>
+    public IReadOnlyList<string> Warnings { get; init; } = [];
 }

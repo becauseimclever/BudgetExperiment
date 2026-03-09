@@ -1,0 +1,164 @@
+@* SuggestionGroup.razor - Groups suggestions with header and batch actions *@
+
+@using BudgetExperiment.Client.Components.Common
+@using BudgetExperiment.Client.ViewModels
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="suggestion-group">
+    <div class="group-header">
+        <div class="group-title-section">
+            <Icon Name="@Group.IconName" Size="20" />
+            <h3 class="group-title">@Group.Title</h3>
+            <span class="group-count">@Group.Items.Count</span>
+        </div>
+
+        @if (Group.HighConfidenceCount > 0)
+        {
+            <div class="group-actions">
+                <Button Variant="ButtonVariant.Secondary"
+                        Size="ButtonSize.Small"
+                        IconLeft="check-circle"
+                        IsDisabled="@IsProcessing"
+                        OnClick="HandleAcceptAllHighConfidence">
+                    Accept All High-Confidence (@Group.HighConfidenceCount)
+                </Button>
+            </div>
+        }
+    </div>
+
+    <div class="group-items">
+        @foreach (var item in Group.Items)
+        {
+            <UnifiedSuggestionCard Item="@item"
+                                   OnAccept="HandleItemAccept"
+                                   OnDismiss="HandleItemDismiss"
+                                   OnFeedback="OnFeedback" />
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the suggestion group model.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public SuggestionGroupModel Group { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the callback when accepting a rule suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnAcceptRule { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when dismissing a rule suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDismissRule { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when accepting a category suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnAcceptCategory { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when dismissing a category suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnDismissCategory { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback for feedback on rule suggestions.
+    /// </summary>
+    [Parameter]
+    public EventCallback<(Guid Id, bool IsPositive)> OnFeedback { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback to accept all high-confidence items in this group.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnAcceptAllHighConfidence { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether batch processing is underway.
+    /// </summary>
+    [Parameter]
+    public bool IsProcessing { get; set; }
+
+    private async Task HandleItemAccept(Guid id)
+    {
+        if (Group.Key == "NewCategories")
+        {
+            await OnAcceptCategory.InvokeAsync(id);
+        }
+        else
+        {
+            await OnAcceptRule.InvokeAsync(id);
+        }
+    }
+
+    private async Task HandleItemDismiss(Guid id)
+    {
+        if (Group.Key == "NewCategories")
+        {
+            await OnDismissCategory.InvokeAsync(id);
+        }
+        else
+        {
+            await OnDismissRule.InvokeAsync(id);
+        }
+    }
+
+    private async Task HandleAcceptAllHighConfidence()
+    {
+        await OnAcceptAllHighConfidence.InvokeAsync(Group.Key);
+    }
+}
+
+<style>
+    .suggestion-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .group-title-section {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .group-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .group-count {
+        background: var(--bg-tertiary, var(--bg-primary));
+        border-radius: 50%;
+        width: 1.5rem;
+        height: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .group-items {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+</style>

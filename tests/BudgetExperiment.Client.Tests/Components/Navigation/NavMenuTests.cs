@@ -149,7 +149,7 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
     }
 
     /// <summary>
-    /// Verifies the AI Tools section appears when AI is enabled.
+    /// Verifies the AI Suggestions link appears when AI is enabled.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -161,11 +161,11 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
         await Task.Delay(50);
         cut.Render();
 
-        Assert.Contains("AI Tools", cut.Markup);
+        Assert.Contains("AI Suggestions", cut.Markup);
     }
 
     /// <summary>
-    /// Verifies the AI Tools section is hidden when AI is disabled.
+    /// Verifies the AI Suggestions link is hidden when AI is disabled.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -177,7 +177,7 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
         await Task.Delay(50);
         cut.Render();
 
-        Assert.DoesNotContain("AI Tools", cut.Markup);
+        Assert.DoesNotContain("AI Suggestions", cut.Markup);
     }
 
     /// <summary>
