@@ -5,6 +5,7 @@
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
+using BudgetExperiment.Client.ViewModels;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -26,6 +27,7 @@ public class OnboardingPageTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<IBudgetApiService>(this._apiService);
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddTransient<OnboardingViewModel>();
     }
 
     /// <inheritdoc/>

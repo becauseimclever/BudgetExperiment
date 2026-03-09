@@ -1,23 +1,24 @@
 @page "/onboarding"
 @layout EmptyLayout
 
-@inject IBudgetApiService ApiService
-@inject NavigationManager NavigationManager
+@using BudgetExperiment.Client.ViewModels
+
+@inject OnboardingViewModel ViewModel
 
 <PageTitle>Welcome - Budget Experiment</PageTitle>
 
 <div class="onboarding-overlay">
     <div class="onboarding-card">
         @* Step indicators *@
-        <div class="onboarding-steps" role="progressbar" aria-valuenow="@currentStep" aria-valuemin="1" aria-valuemax="4">
+        <div class="onboarding-steps" role="progressbar" aria-valuenow="@ViewModel.CurrentStep" aria-valuemin="1" aria-valuemax="4">
             @for (var i = 1; i <= 4; i++)
             {
-                var stepClass = i < currentStep ? "completed" : (i == currentStep ? "active" : "");
+                var stepClass = i < ViewModel.CurrentStep ? "completed" : (i == ViewModel.CurrentStep ? "active" : "");
                 <div class="onboarding-step-dot @stepClass" aria-hidden="true"></div>
             }
         </div>
 
-        @switch (currentStep)
+        @switch (ViewModel.CurrentStep)
         {
             case 1:
                 <div class="onboarding-header">
@@ -26,8 +27,8 @@
                 </div>
 
                 <div class="onboarding-actions">
-                    <button class="btn-skip" @onclick="SkipOnboarding">Skip setup</button>
-                    <button class="btn btn-primary" @onclick="NextStep">Get Started</button>
+                    <button class="btn-skip" @onclick="ViewModel.SkipOnboardingAsync">Skip setup</button>
+                    <button class="btn btn-primary" @onclick="ViewModel.NextStep">Get Started</button>
                 </div>
                 break;
 
@@ -44,17 +45,17 @@
                                type="text"
                                class="form-control"
                                placeholder="Search currencies..."
-                               @bind="currencySearch"
+                               @bind="ViewModel.CurrencySearch"
                                @bind:event="oninput"
-                               @onfocus="() => showCurrencyDropdown = true"
+                               @onfocus="() => ViewModel.ShowCurrencyDropdown = true"
                                autocomplete="off" />
-                        @if (showCurrencyDropdown)
+                        @if (ViewModel.ShowCurrencyDropdown)
                         {
                             <div class="currency-dropdown">
-                                @foreach (var currency in FilteredCurrencies)
+                                @foreach (var currency in ViewModel.FilteredCurrencies)
                                 {
-                                    <button class="currency-option @(selectedCurrency == currency.Code ? "selected" : "")"
-                                            @onclick="() => SelectCurrency(currency)">
+                                    <button class="currency-option @(ViewModel.SelectedCurrency == currency.Code ? "selected" : "")"
+                                            @onclick="() => ViewModel.SelectCurrency(currency)">
                                         <span class="currency-code">@currency.Code</span>
                                         <span class="currency-symbol">@currency.Symbol</span>
                                         <span class="currency-name">@currency.Name</span>
@@ -63,12 +64,12 @@
                             </div>
                         }
                     </div>
-                    @if (!string.IsNullOrEmpty(selectedCurrency))
+                    @if (!string.IsNullOrEmpty(ViewModel.SelectedCurrency))
                     {
-                        var selected = CurrencyList.Currencies.FirstOrDefault(c => c.Code == selectedCurrency);
+                        var selected = CurrencyList.Currencies.FirstOrDefault(c => c.Code == ViewModel.SelectedCurrency);
                         if (selected != null)
                         {
-                            <div class="selected-currency" @onclick="() => { showCurrencyDropdown = true; currencySearch = string.Empty; }">
+                            <div class="selected-currency" @onclick="() => { ViewModel.ShowCurrencyDropdown = true; ViewModel.CurrencySearch = string.Empty; }">
                                 <strong>@selected.Code</strong> — @selected.Symbol @selected.Name
                             </div>
                         }
@@ -76,10 +77,10 @@
                 </div>
 
                 <div class="onboarding-actions">
-                    <button class="btn-skip" @onclick="SkipOnboarding">Skip</button>
+                    <button class="btn-skip" @onclick="ViewModel.SkipOnboardingAsync">Skip</button>
                     <div>
-                        <button class="btn btn-secondary" @onclick="PreviousStep">Back</button>
-                        <button class="btn btn-primary" @onclick="NextStep">Next</button>
+                        <button class="btn btn-secondary" @onclick="ViewModel.PreviousStep">Back</button>
+                        <button class="btn btn-primary" @onclick="ViewModel.NextStep">Next</button>
                     </div>
                 </div>
                 break;
@@ -93,22 +94,22 @@
                 <div class="onboarding-field">
                     <label>Week starts on</label>
                     <div class="dow-toggle-group">
-                        <button class="dow-toggle @(selectedFirstDay == DayOfWeek.Sunday ? "active" : "")"
-                                @onclick="() => selectedFirstDay = DayOfWeek.Sunday">
+                        <button class="dow-toggle @(ViewModel.SelectedFirstDay == DayOfWeek.Sunday ? "active" : "")"
+                                @onclick="() => ViewModel.SelectedFirstDay = DayOfWeek.Sunday">
                             Sunday
                         </button>
-                        <button class="dow-toggle @(selectedFirstDay == DayOfWeek.Monday ? "active" : "")"
-                                @onclick="() => selectedFirstDay = DayOfWeek.Monday">
+                        <button class="dow-toggle @(ViewModel.SelectedFirstDay == DayOfWeek.Monday ? "active" : "")"
+                                @onclick="() => ViewModel.SelectedFirstDay = DayOfWeek.Monday">
                             Monday
                         </button>
                     </div>
                 </div>
 
                 <div class="onboarding-actions">
-                    <button class="btn-skip" @onclick="SkipOnboarding">Skip</button>
+                    <button class="btn-skip" @onclick="ViewModel.SkipOnboardingAsync">Skip</button>
                     <div>
-                        <button class="btn btn-secondary" @onclick="PreviousStep">Back</button>
-                        <button class="btn btn-primary" @onclick="NextStep">Next</button>
+                        <button class="btn btn-secondary" @onclick="ViewModel.PreviousStep">Back</button>
+                        <button class="btn btn-primary" @onclick="ViewModel.NextStep">Next</button>
                     </div>
                 </div>
                 break;
@@ -122,23 +123,23 @@
                 <div class="onboarding-summary">
                     <div class="onboarding-summary-item">
                         <span class="onboarding-summary-label">Currency</span>
-                        <span class="onboarding-summary-value">@GetCurrencyDisplay()</span>
+                        <span class="onboarding-summary-value">@ViewModel.GetCurrencyDisplay()</span>
                     </div>
                     <div class="onboarding-summary-item">
                         <span class="onboarding-summary-label">Week starts on</span>
-                        <span class="onboarding-summary-value">@selectedFirstDay</span>
+                        <span class="onboarding-summary-value">@ViewModel.SelectedFirstDay</span>
                     </div>
                 </div>
 
-                @if (!string.IsNullOrEmpty(errorMessage))
+                @if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
                 {
-                    <div class="alert alert-danger">@errorMessage</div>
+                    <div class="alert alert-danger">@ViewModel.ErrorMessage</div>
                 }
 
                 <div class="onboarding-actions">
-                    <button class="btn btn-secondary" @onclick="PreviousStep" disabled="@isSaving">Back</button>
-                    <button class="btn btn-primary" @onclick="CompleteOnboarding" disabled="@isSaving">
-                        @(isSaving ? "Saving..." : "Get Started!")
+                    <button class="btn btn-secondary" @onclick="ViewModel.PreviousStep" disabled="@ViewModel.IsSaving">Back</button>
+                    <button class="btn btn-primary" @onclick="ViewModel.CompleteOnboardingAsync" disabled="@ViewModel.IsSaving">
+                        @(ViewModel.IsSaving ? "Saving..." : "Get Started!")
                     </button>
                 </div>
                 break;
@@ -147,95 +148,8 @@
 </div>
 
 @code {
-    private int currentStep = 1;
-    private string selectedCurrency = "USD";
-    private DayOfWeek selectedFirstDay = DayOfWeek.Sunday;
-    private string currencySearch = string.Empty;
-    private bool showCurrencyDropdown;
-    private bool isSaving;
-    private string? errorMessage;
-
-    private IEnumerable<CurrencyOption> FilteredCurrencies =>
-        string.IsNullOrWhiteSpace(currencySearch)
-            ? CurrencyList.Currencies
-            : CurrencyList.Currencies.Where(c =>
-                c.Code.Contains(currencySearch, StringComparison.OrdinalIgnoreCase) ||
-                c.Name.Contains(currencySearch, StringComparison.OrdinalIgnoreCase));
-
-    private void NextStep()
+    protected override void OnInitialized()
     {
-        if (currentStep < 4)
-        {
-            currentStep++;
-        }
-    }
-
-    private void PreviousStep()
-    {
-        if (currentStep > 1)
-        {
-            currentStep--;
-        }
-    }
-
-    private void SelectCurrency(CurrencyOption currency)
-    {
-        selectedCurrency = currency.Code;
-        currencySearch = string.Empty;
-        showCurrencyDropdown = false;
-    }
-
-    private string GetCurrencyDisplay()
-    {
-        var currency = CurrencyList.Currencies.FirstOrDefault(c => c.Code == selectedCurrency);
-        return currency != null ? $"{currency.Code} — {currency.Symbol} {currency.Name}" : selectedCurrency;
-    }
-
-    private async Task SkipOnboarding()
-    {
-        isSaving = true;
-        errorMessage = null;
-        StateHasChanged();
-
-        try
-        {
-            // Apply defaults (USD, Sunday) and mark onboarding complete
-            await ApiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
-            {
-                PreferredCurrency = "USD",
-                FirstDayOfWeek = DayOfWeek.Sunday,
-            });
-            await ApiService.CompleteOnboardingAsync();
-            NavigationManager.NavigateTo("/", forceLoad: true);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to save: {ex.Message}";
-            isSaving = false;
-        }
-    }
-
-    private async Task CompleteOnboarding()
-    {
-        isSaving = true;
-        errorMessage = null;
-        StateHasChanged();
-
-        try
-        {
-            // Save user preferences
-            await ApiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
-            {
-                PreferredCurrency = selectedCurrency,
-                FirstDayOfWeek = selectedFirstDay,
-            });
-            await ApiService.CompleteOnboardingAsync();
-            NavigationManager.NavigateTo("/", forceLoad: true);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to save: {ex.Message}";
-            isSaving = false;
-        }
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
     }
 }

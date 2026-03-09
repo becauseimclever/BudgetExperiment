@@ -460,6 +460,16 @@ internal class StubBudgetApiService : IBudgetApiService
     /// </summary>
     public UserSettingsDto? UpdateUserSettingsResult { get; set; }
 
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="UpdateUserSettingsAsync"/>.
+    /// </summary>
+    public Exception? UpdateUserSettingsException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="CompleteOnboardingAsync"/>.
+    /// </summary>
+    public Exception? CompleteOnboardingException { get; set; }
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<AccountDto>> GetAccountsAsync()
     {
@@ -846,8 +856,24 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<UserSettingsDto?> GetUserSettingsAsync() => Task.FromResult(this.UserSettings);
 
     /// <inheritdoc/>
-    public Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto) => Task.FromResult(this.UpdateUserSettingsResult);
+    public Task<UserSettingsDto?> UpdateUserSettingsAsync(UserSettingsUpdateDto dto)
+    {
+        if (this.UpdateUserSettingsException != null)
+        {
+            throw this.UpdateUserSettingsException;
+        }
+
+        return Task.FromResult(this.UpdateUserSettingsResult);
+    }
 
     /// <inheritdoc/>
-    public Task<UserSettingsDto?> CompleteOnboardingAsync() => Task.FromResult(this.CompleteOnboardingResult);
+    public Task<UserSettingsDto?> CompleteOnboardingAsync()
+    {
+        if (this.CompleteOnboardingException != null)
+        {
+            throw this.CompleteOnboardingException;
+        }
+
+        return Task.FromResult(this.CompleteOnboardingResult);
+    }
 }

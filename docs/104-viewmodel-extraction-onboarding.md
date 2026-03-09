@@ -1,6 +1,6 @@
 # Feature 104: ViewModel Extraction — Onboarding Page
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Low
 > **Dependencies:** Feature 097 (Done — established pattern)
 
@@ -43,14 +43,14 @@ The Onboarding page ([Onboarding.razor](../src/BudgetExperiment.Client/Pages/Onb
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `OnboardingViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/OnboardingViewModel.cs`
-- [ ] All 6 handler methods are moved to the ViewModel
-- [ ] All 7 state fields are moved to the ViewModel
-- [ ] 1 computed property (`FilteredCurrencies`) is moved to the ViewModel
-- [ ] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
-- [ ] `Onboarding.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 14 `OnboardingPageTests` pass without modification (or with minimal binding changes)
+- [x] `OnboardingViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/OnboardingViewModel.cs`
+- [x] All 6 handler methods are moved to the ViewModel
+- [x] All 7 state fields are moved to the ViewModel
+- [x] 1 computed property (`FilteredCurrencies`) is moved to the ViewModel
+- [x] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
+- [x] `Onboarding.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 14 `OnboardingPageTests` pass without modification (or with minimal binding changes)
 
 ### US-104-002: Add ViewModel Unit Tests
 
@@ -59,13 +59,13 @@ The Onboarding page ([Onboarding.razor](../src/BudgetExperiment.Client/Pages/Onb
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `OnboardingViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all 6 handler methods
-- [ ] Tests verify step navigation (next, previous, boundaries)
-- [ ] Tests verify currency selection and filtering
-- [ ] Tests verify skip and complete onboarding workflows
-- [ ] Tests verify error handling (API failures)
-- [ ] Coverage for OnboardingViewModel ≥ 90%
+- [x] `OnboardingViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all 6 handler methods
+- [x] Tests verify step navigation (next, previous, boundaries)
+- [x] Tests verify currency selection and filtering
+- [x] Tests verify skip and complete onboarding workflows
+- [x] Tests verify error handling (API failures)
+- [x] Coverage for OnboardingViewModel ≥ 90%
 
 ---
 
@@ -137,36 +137,36 @@ builder.Services.AddTransient<OnboardingViewModel>();
 ### Phase 1: Create OnboardingViewModel with Tests (TDD)
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/OnboardingViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/OnboardingViewModelTests.cs`
-- [ ] Write tests for `NextStep` — increments step, respects upper bound
-- [ ] Write tests for `PreviousStep` — decrements step, respects lower bound
-- [ ] Write tests for `SelectCurrency` — sets currency, closes dropdown
-- [ ] Write tests for `GetCurrencyDisplay` — returns formatted currency string
-- [ ] Write tests for `FilteredCurrencies` — filters by code/name, case-insensitive
-- [ ] Write tests for `SkipOnboardingAsync` — calls API, navigates away
-- [ ] Write tests for `CompleteOnboardingAsync` — saves preferences, navigates, handles failure
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on OnboardingViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/OnboardingViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/OnboardingViewModelTests.cs`
+- [x] Write tests for `NextStep` — increments step, respects upper bound
+- [x] Write tests for `PreviousStep` — decrements step, respects lower bound
+- [x] Write tests for `SelectCurrency` — sets currency, closes dropdown
+- [x] Write tests for `GetCurrencyDisplay` — returns formatted currency string
+- [x] Write tests for `FilteredCurrencies` — filters by code/name, case-insensitive
+- [x] Write tests for `SkipOnboardingAsync` — calls API, navigates away
+- [x] Write tests for `CompleteOnboardingAsync` — saves preferences, navigates, handles failure
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on OnboardingViewModel
 
 ### Phase 2: Refactor Onboarding.razor to Use ViewModel
 
 **Tasks:**
-- [ ] Register `OnboardingViewModel` as transient in DI
-- [ ] Update `Onboarding.razor` to inject `OnboardingViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except thin `OnInitializedAsync` wiring)
-- [ ] Verify all 14 existing `OnboardingPageTests` pass
-- [ ] Verify application runs correctly (manual smoke test)
+- [x] Register `OnboardingViewModel` as transient in DI
+- [x] Update `Onboarding.razor` to inject `OnboardingViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except thin `OnInitializedAsync` wiring)
+- [x] Verify all 14 existing `OnboardingPageTests` pass
+- [x] Verify application runs correctly (manual smoke test)
 
 ### Phase 3: Verify Coverage & Finalize
 
 **Tasks:**
-- [ ] Run coverage report for OnboardingViewModel — verify ≥ 90%
-- [ ] Update this document status to Done
+- [x] Run coverage report for OnboardingViewModel — verify ≥ 90%
+- [x] Update this document status to Done
 
 ---
 

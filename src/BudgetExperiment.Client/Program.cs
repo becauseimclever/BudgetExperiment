@@ -138,5 +138,6 @@ builder.Services.AddTransient<BudgetViewModel>();
 builder.Services.AddTransient<RecurringViewModel>();
 builder.Services.AddTransient<RecurringTransfersViewModel>();
 builder.Services.AddTransient<TransfersViewModel>();
+builder.Services.AddTransient<OnboardingViewModel>();
 
 await builder.Build().RunAsync();
