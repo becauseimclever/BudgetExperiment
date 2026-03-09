@@ -2,26 +2,25 @@
 
 @implements IDisposable
 
-@inject IBudgetApiService ApiService
-@inject NavigationManager Navigation
-@inject ScopeService ScopeService
-@inject IChatContextService ChatContext
+@using BudgetExperiment.Client.ViewModels
+
+@inject TransfersViewModel ViewModel
 
 <PageTitle>Transfers - Budget Experiment</PageTitle>
 
 <div class="page-container-wide">
     <PageHeader Title="Transfers">
         <Actions>
-            <Button Variant="ButtonVariant.Success" OnClick="ShowCreateTransfer">+ New Transfer</Button>
+            <Button Variant="ButtonVariant.Success" OnClick="ViewModel.ShowCreateTransfer">+ New Transfer</Button>
         </Actions>
     </PageHeader>
 
     <div class="filter-section">
         <div class="filter-group">
             <label for="accountFilter">Account:</label>
-            <select id="accountFilter" class="form-control" style="width: auto; min-width: 150px;" @bind="selectedAccountId" @bind:after="ApplyFilters">
+            <select id="accountFilter" class="form-control" style="width: auto; min-width: 150px;" @bind="ViewModel.SelectedAccountId" @bind:after="ViewModel.ApplyFilters">
                 <option value="">All Accounts</option>
-                @foreach (var account in accounts)
+                @foreach (var account in ViewModel.Accounts)
                 {
                     <option value="@account.Id">@account.Name</option>
                 }
@@ -29,32 +28,32 @@
         </div>
         <div class="date-filter">
             <label for="fromDate">From:</label>
-            <input type="date" id="fromDate" @bind="fromDate" @bind:after="ApplyFilters" />
+            <input type="date" id="fromDate" @bind="ViewModel.FromDate" @bind:after="ViewModel.ApplyFilters" />
         </div>
         <div class="date-filter">
             <label for="toDate">To:</label>
-            <input type="date" id="toDate" @bind="toDate" @bind:after="ApplyFilters" />
+            <input type="date" id="toDate" @bind="ViewModel.ToDate" @bind:after="ViewModel.ApplyFilters" />
         </div>
-        <Button Variant="ButtonVariant.Secondary" OnClick="ClearFilters">Clear Filters</Button>
+        <Button Variant="ButtonVariant.Secondary" OnClick="ViewModel.ClearFilters">Clear Filters</Button>
     </div>
 
-    @if (isLoading)
+    @if (ViewModel.IsLoading)
     {
         <LoadingSpinner Message="Loading transfers..." />
     }
-    else if (errorMessage != null)
+    else if (ViewModel.ErrorMessage != null)
     {
-        <ErrorAlert Message="@errorMessage"
-                    OnRetry="RetryLoad"
-                    OnDismiss="DismissError"
-                    IsRetrying="@isRetrying" />
+        <ErrorAlert Message="@ViewModel.ErrorMessage"
+                    OnRetry="ViewModel.RetryLoadAsync"
+                    OnDismiss="ViewModel.DismissError"
+                    IsRetrying="@ViewModel.IsRetrying" />
     }
     
-    @if (!isLoading && filteredTransfers.Count == 0 && errorMessage == null)
+    @if (!ViewModel.IsLoading && ViewModel.FilteredTransfers.Count == 0 && ViewModel.ErrorMessage == null)
     {
         <div class="empty-state empty-state-inline">
             <p class="empty-state-description">
-                @if (transfers.Count == 0)
+                @if (ViewModel.Transfers.Count == 0)
                 {
                     <span>No transfers yet. Create one to move money between accounts!</span>
                 }
@@ -65,7 +64,7 @@
             </p>
         </div>
     }
-    else if (!isLoading && errorMessage == null)
+    else if (!ViewModel.IsLoading && ViewModel.ErrorMessage == null)
     {
         <div class="card">
             <table class="table table-hover">
@@ -80,7 +79,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var transfer in filteredTransfers.OrderByDescending(t => t.Date))
+                    @foreach (var transfer in ViewModel.FilteredTransfers.OrderByDescending(t => t.Date))
                     {
                         <tr>
                             <td class="date">@transfer.Date.ToString("MMM d, yyyy")</td>
@@ -91,8 +90,8 @@
                             </td>
                             <td>@(string.IsNullOrWhiteSpace(transfer.Description) ? "-" : transfer.Description)</td>
                             <td class="text-center" style="white-space: nowrap;">
-                                <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" OnClick="() => ShowEditTransfer(transfer)">Edit</Button>
-                                <Button Variant="ButtonVariant.Danger" Size="ButtonSize.Small" OnClick="() => DeleteTransfer(transfer.TransferId)">Delete</Button>
+                                <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" OnClick="() => ViewModel.ShowEditTransfer(transfer)">Edit</Button>
+                                <Button Variant="ButtonVariant.Danger" Size="ButtonSize.Small" OnClick="() => ViewModel.DeleteTransferAsync(transfer.TransferId)">Delete</Button>
                             </td>
                         </tr>
                     }
@@ -101,222 +100,40 @@
         </div>
     }
 
-    <Modal IsVisible="@showTransferDialog" Title="@(editingTransfer == null ? "New Transfer" : "Edit Transfer")" OnClose="HideTransferDialog">
-        @if (editingTransfer == null)
+    <Modal IsVisible="@ViewModel.ShowTransferDialog" Title="@(ViewModel.EditingTransfer == null ? "New Transfer" : "Edit Transfer")" OnClose="ViewModel.HideTransferDialog">
+        @if (ViewModel.EditingTransfer == null)
         {
-            <TransferDialog Accounts="@accounts"
-                            Model="@newTransfer"
-                            OnCreate="CreateTransfer"
-                            OnCancel="HideTransferDialog" />
+            <TransferDialog Accounts="@ViewModel.Accounts"
+                            Model="@ViewModel.NewTransfer"
+                            OnCreate="ViewModel.CreateTransferAsync"
+                            OnCancel="ViewModel.HideTransferDialog" />
         }
         else
         {
-            <TransferDialog Accounts="@accounts"
-                            Model="@newTransfer"
-                            UpdateModel="@editTransfer"
+            <TransferDialog Accounts="@ViewModel.Accounts"
+                            Model="@ViewModel.NewTransfer"
+                            UpdateModel="@ViewModel.EditTransfer"
                             IsEdit="true"
-                            SourceAccountName="@editingTransfer.SourceAccountName"
-                            DestinationAccountName="@editingTransfer.DestinationAccountName"
-                            OnUpdate="UpdateTransfer"
-                            OnCancel="HideTransferDialog" />
+                            SourceAccountName="@ViewModel.EditingTransfer.SourceAccountName"
+                            DestinationAccountName="@ViewModel.EditingTransfer.DestinationAccountName"
+                            OnUpdate="ViewModel.UpdateTransferAsync"
+                            OnCancel="ViewModel.HideTransferDialog" />
         }
     </Modal>
 </div>
 
 @code {
-    private bool isLoading = true;
-    private bool isRetrying;
-    private string? errorMessage;
-    private List<AccountDto> accounts = new();
-    private List<TransferListItemResponse> transfers = new();
-    private List<TransferListItemResponse> filteredTransfers = new();
-
-    // Filters
-    private string selectedAccountId = string.Empty;
-    private DateOnly? fromDate;
-    private DateOnly? toDate;
-
-    // Transfer dialog state
-    private bool showTransferDialog;
-    private CreateTransferRequest newTransfer = new();
-    private UpdateTransferRequest editTransfer = new();
-    private TransferListItemResponse? editingTransfer;
-
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
-        ScopeService.ScopeChanged += OnScopeChanged;
-        ChatContext.SetPageType("transfers");
-        await LoadDataAsync();
-    }
-
-    private async void OnScopeChanged(BudgetScope? _)
-    {
-        await InvokeAsync(async () =>
-        {
-            await LoadDataAsync();
-            StateHasChanged();
-        });
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        ScopeService.ScopeChanged -= OnScopeChanged;
-        ChatContext.ClearContext();
-    }
-
-    private async Task LoadDataAsync()
-    {
-        try
-        {
-            isLoading = true;
-            errorMessage = null;
-
-            var accountsTask = ApiService.GetAccountsAsync();
-            var transfersTask = ApiService.GetTransfersAsync();
-
-            await Task.WhenAll(accountsTask, transfersTask);
-
-            accounts = accountsTask.Result.ToList();
-            transfers = transfersTask.Result.ToList();
-            ApplyFilters();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to load transfers: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task RetryLoad()
-    {
-        isRetrying = true;
-        StateHasChanged();
-
-        try
-        {
-            await LoadDataAsync();
-        }
-        finally
-        {
-            isRetrying = false;
-        }
-    }
-
-    private void DismissError()
-    {
-        errorMessage = null;
-    }
-
-    private void ApplyFilters()
-    {
-        filteredTransfers = transfers;
-
-        if (!string.IsNullOrEmpty(selectedAccountId) && Guid.TryParse(selectedAccountId, out var accountId))
-        {
-            filteredTransfers = filteredTransfers
-                .Where(t => t.SourceAccountId == accountId || t.DestinationAccountId == accountId)
-                .ToList();
-        }
-
-        if (fromDate.HasValue)
-        {
-            filteredTransfers = filteredTransfers
-                .Where(t => t.Date >= fromDate.Value)
-                .ToList();
-        }
-
-        if (toDate.HasValue)
-        {
-            filteredTransfers = filteredTransfers
-                .Where(t => t.Date <= toDate.Value)
-                .ToList();
-        }
-    }
-
-    private void ClearFilters()
-    {
-        selectedAccountId = string.Empty;
-        fromDate = null;
-        toDate = null;
-        ApplyFilters();
-    }
-
-    private void ShowCreateTransfer()
-    {
-        newTransfer = new CreateTransferRequest
-        {
-            Date = DateOnly.FromDateTime(DateTime.Today),
-        };
-        editingTransfer = null;
-        showTransferDialog = true;
-    }
-
-    private void ShowEditTransfer(TransferListItemResponse transfer)
-    {
-        editingTransfer = transfer;
-        editTransfer = new UpdateTransferRequest
-        {
-            Amount = transfer.Amount,
-            Date = transfer.Date,
-            Description = transfer.Description,
-        };
-        showTransferDialog = true;
-    }
-
-    private void HideTransferDialog()
-    {
-        showTransferDialog = false;
-        editingTransfer = null;
-    }
-
-    private async Task CreateTransfer(CreateTransferRequest model)
-    {
-        try
-        {
-            await ApiService.CreateTransferAsync(model);
-            HideTransferDialog();
-            await LoadDataAsync();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to create transfer: {ex.Message}";
-        }
-    }
-
-    private async Task UpdateTransfer(UpdateTransferRequest model)
-    {
-        if (editingTransfer == null)
-        {
-            return;
-        }
-
-        try
-        {
-            await ApiService.UpdateTransferAsync(editingTransfer.TransferId, model);
-            HideTransferDialog();
-            await LoadDataAsync();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to update transfer: {ex.Message}";
-        }
-    }
-
-    private async Task DeleteTransfer(Guid transferId)
-    {
-        try
-        {
-            await ApiService.DeleteTransferAsync(transferId);
-            await LoadDataAsync();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to delete transfer: {ex.Message}";
-        }
+        ViewModel.OnStateChanged = null;
+        ViewModel.Dispose();
     }
 }

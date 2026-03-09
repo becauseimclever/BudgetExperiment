@@ -321,6 +321,11 @@ internal class StubBudgetApiService : IBudgetApiService
     public List<TransferListItemResponse> Transfers { get; } = new();
 
     /// <summary>
+    /// Gets or sets the exception to throw from <see cref="GetTransfersAsync"/>.
+    /// </summary>
+    public Exception? GetTransfersException { get; set; }
+
+    /// <summary>
     /// Gets or sets the spending trends report returned by <see cref="GetSpendingTrendsAsync"/>.
     /// </summary>
     public SpendingTrendsReportDto? SpendingTrends { get; set; }
@@ -429,6 +434,21 @@ internal class StubBudgetApiService : IBudgetApiService
     /// Gets or sets a value indicating whether <see cref="DeleteTransferAsync"/> returns true.
     /// </summary>
     public bool DeleteTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception to throw from <see cref="CreateTransferAsync"/>.
+    /// </summary>
+    public Exception? CreateTransferException { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception to throw from <see cref="UpdateTransferAsync"/>.
+    /// </summary>
+    public Exception? UpdateTransferException { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception to throw from <see cref="DeleteTransferException"/>.
+    /// </summary>
+    public Exception? DeleteTransferException { get; set; }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateSettingsAsync"/>.
@@ -549,19 +569,51 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<ApiResult<RecurringInstanceDto>> ModifyRecurringInstanceAsync(Guid id, DateOnly date, RecurringInstanceModifyDto model, string? version = null) => Task.FromResult(this.ModifyRecurringInstanceResult ?? ApiResult<RecurringInstanceDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<TransferResponse?> CreateTransferAsync(CreateTransferRequest model) => Task.FromResult(this.CreateTransferResult);
+    public Task<TransferResponse?> CreateTransferAsync(CreateTransferRequest model)
+    {
+        if (this.CreateTransferException != null)
+        {
+            throw this.CreateTransferException;
+        }
+
+        return Task.FromResult(this.CreateTransferResult);
+    }
 
     /// <inheritdoc/>
     public Task<TransferResponse?> GetTransferAsync(Guid transferId) => Task.FromResult<TransferResponse?>(null);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<TransferListItemResponse>> GetTransfersAsync(Guid? accountId = null, DateOnly? from = null, DateOnly? to = null, int page = 1, int pageSize = 20) => Task.FromResult<IReadOnlyList<TransferListItemResponse>>(this.Transfers);
+    public Task<IReadOnlyList<TransferListItemResponse>> GetTransfersAsync(Guid? accountId = null, DateOnly? from = null, DateOnly? to = null, int page = 1, int pageSize = 20)
+    {
+        if (this.GetTransfersException != null)
+        {
+            throw this.GetTransfersException;
+        }
+
+        return Task.FromResult<IReadOnlyList<TransferListItemResponse>>(this.Transfers);
+    }
 
     /// <inheritdoc/>
-    public Task<TransferResponse?> UpdateTransferAsync(Guid transferId, UpdateTransferRequest model) => Task.FromResult(this.UpdateTransferResult);
+    public Task<TransferResponse?> UpdateTransferAsync(Guid transferId, UpdateTransferRequest model)
+    {
+        if (this.UpdateTransferException != null)
+        {
+            throw this.UpdateTransferException;
+        }
+
+        return Task.FromResult(this.UpdateTransferResult);
+    }
 
     /// <inheritdoc/>
-    public Task<bool> DeleteTransferAsync(Guid transferId) => Task.FromResult(this.DeleteTransferResult);
+    public Task<bool> DeleteTransferAsync(Guid transferId)
+    {
+        if (this.DeleteTransferException != null)
+        {
+            throw this.DeleteTransferException;
+        }
+
+        return Task.FromResult(this.DeleteTransferResult);
+    }
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null)

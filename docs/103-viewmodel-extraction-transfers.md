@@ -1,6 +1,6 @@
 # Feature 103: ViewModel Extraction — Transfers Page
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium
 > **Dependencies:** Feature 097 (Done — established pattern)
 
@@ -43,13 +43,13 @@ The Transfers page ([Transfers.razor](../src/BudgetExperiment.Client/Pages/Trans
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `TransfersViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/TransfersViewModel.cs`
-- [ ] All 14 handler methods are moved to the ViewModel
-- [ ] All 13 state fields are moved to the ViewModel
-- [ ] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
-- [ ] `Transfers.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 19 `TransfersPageTests` pass without modification (or with minimal binding changes)
+- [x] `TransfersViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/TransfersViewModel.cs`
+- [x] All 14 handler methods are moved to the ViewModel
+- [x] All 13 state fields are moved to the ViewModel
+- [x] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
+- [x] `Transfers.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 19 `TransfersPageTests` pass without modification (or with minimal binding changes)
 
 ### US-103-002: Add ViewModel Unit Tests
 
@@ -58,14 +58,14 @@ The Transfers page ([Transfers.razor](../src/BudgetExperiment.Client/Pages/Trans
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `TransfersViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all 14 handler methods
-- [ ] Tests verify state transitions (loading, error, success)
-- [ ] Tests verify CRUD operations (create, update, delete)
-- [ ] Tests verify filtering (apply filters, clear filters)
-- [ ] Tests verify error handling (API failures)
-- [ ] Tests verify scope change triggers reload and dispose cleans up
-- [ ] Coverage for TransfersViewModel ≥ 90%
+- [x] `TransfersViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all 14 handler methods
+- [x] Tests verify state transitions (loading, error, success)
+- [x] Tests verify CRUD operations (create, update, delete)
+- [x] Tests verify filtering (apply filters, clear filters)
+- [x] Tests verify error handling (API failures)
+- [x] Tests verify scope change triggers reload and dispose cleans up
+- [x] Coverage for TransfersViewModel ≥ 90%
 
 ---
 
@@ -133,37 +133,37 @@ builder.Services.AddTransient<TransfersViewModel>();
 ### Phase 1: Create TransfersViewModel with Tests (TDD)
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/TransfersViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/TransfersViewModelTests.cs`
-- [ ] Write tests for `InitializeAsync` — loads accounts and transfers, subscribes to scope changes, sets chat context
-- [ ] Write tests for `LoadDataAsync` — success, failure, loading state transitions
-- [ ] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
-- [ ] Write tests for `DismissError` — clears error message
-- [ ] Write tests for filtering: `ApplyFilters` (by account, date range), `ClearFilters`
-- [ ] Write tests for CRUD: `CreateTransfer`, `UpdateTransfer`, `DeleteTransfer` — success, failure
-- [ ] Write tests for dialog toggles: `ShowCreateTransfer`/`ShowEditTransfer`/`HideTransferDialog`
-- [ ] Write tests for `Dispose` — unsubscribes from scope change events, clears chat context
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on TransfersViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/TransfersViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/TransfersViewModelTests.cs`
+- [x] Write tests for `InitializeAsync` — loads accounts and transfers, subscribes to scope changes, sets chat context
+- [x] Write tests for `LoadDataAsync` — success, failure, loading state transitions
+- [x] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
+- [x] Write tests for `DismissError` — clears error message
+- [x] Write tests for filtering: `ApplyFilters` (by account, date range), `ClearFilters`
+- [x] Write tests for CRUD: `CreateTransfer`, `UpdateTransfer`, `DeleteTransfer` — success, failure
+- [x] Write tests for dialog toggles: `ShowCreateTransfer`/`ShowEditTransfer`/`HideTransferDialog`
+- [x] Write tests for `Dispose` — unsubscribes from scope change events, clears chat context
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on TransfersViewModel
 
 ### Phase 2: Refactor Transfers.razor to Use ViewModel
 
 **Tasks:**
-- [ ] Register `TransfersViewModel` as transient in DI
-- [ ] Update `Transfers.razor` to inject `TransfersViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
-- [ ] Verify all 19 existing `TransfersPageTests` pass
-- [ ] Verify application runs correctly (manual smoke test)
+- [x] Register `TransfersViewModel` as transient in DI
+- [x] Update `Transfers.razor` to inject `TransfersViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
+- [x] Verify all 19 existing `TransfersPageTests` pass
+- [x] Verify application runs correctly (manual smoke test)
 
 ### Phase 3: Verify Coverage & Finalize
 
 **Tasks:**
-- [ ] Run coverage report for TransfersViewModel — verify ≥ 90%
-- [ ] Update this document status to Done
+- [x] Run coverage report for TransfersViewModel — verify ≥ 90%
+- [x] Update this document status to Done
 
 ---
 
