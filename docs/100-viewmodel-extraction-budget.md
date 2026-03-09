@@ -1,6 +1,6 @@
 # Feature 100: ViewModel Extraction — Budget Page
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium
 > **Dependencies:** Feature 097 (Done — established pattern)
 
@@ -42,14 +42,14 @@ The Budget page ([Budget.razor](../src/BudgetExperiment.Client/Pages/Budget.razo
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `BudgetViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/BudgetViewModel.cs`
-- [ ] All 16 handler methods are moved to the ViewModel
-- [ ] All 9 state fields are moved to the ViewModel
-- [ ] All 3 computed methods are moved to the ViewModel
-- [ ] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
-- [ ] `Budget.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 21 `BudgetPageTests` pass without modification (or with minimal binding changes)
+- [x] `BudgetViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/BudgetViewModel.cs`
+- [x] All 16 handler methods are moved to the ViewModel
+- [x] All 9 state fields are moved to the ViewModel
+- [x] All 3 computed methods are moved to the ViewModel
+- [x] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
+- [x] `Budget.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 21 `BudgetPageTests` pass without modification (or with minimal binding changes)
 
 ### US-100-002: Add ViewModel Unit Tests
 
@@ -58,15 +58,15 @@ The Budget page ([Budget.razor](../src/BudgetExperiment.Client/Pages/Budget.razo
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `BudgetViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all 16 handler methods
-- [ ] Tests verify state transitions (loading, error, success)
-- [ ] Tests verify month navigation (PreviousMonth, NextMonth reload data)
-- [ ] Tests verify budget goal CRUD (save, delete)
-- [ ] Tests verify computed methods (GetOverallStatus, GetModalTitle, IsCreatingNewGoal)
-- [ ] Tests verify error handling (API failures)
-- [ ] Tests verify scope change triggers reload and dispose cleans up
-- [ ] Coverage for BudgetViewModel ≥ 90%
+- [x] `BudgetViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all 16 handler methods
+- [x] Tests verify state transitions (loading, error, success)
+- [x] Tests verify month navigation (PreviousMonth, NextMonth reload data)
+- [x] Tests verify budget goal CRUD (save, delete)
+- [x] Tests verify computed methods (GetOverallStatus, GetModalTitle, IsCreatingNewGoal)
+- [x] Tests verify error handling (API failures)
+- [x] Tests verify scope change triggers reload and dispose cleans up
+- [x] Coverage for BudgetViewModel ≥ 90%
 
 ---
 
@@ -136,40 +136,40 @@ builder.Services.AddTransient<BudgetViewModel>();
 ### Phase 1: Create BudgetViewModel with Tests (TDD)
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/BudgetViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/BudgetViewModelTests.cs`
-- [ ] Write tests for `InitializeAsync` — loads budget, subscribes to scope changes
-- [ ] Write tests for `LoadBudgetAsync` — success, failure, loading state transitions
-- [ ] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
-- [ ] Write tests for `DismissError` — clears error message
-- [ ] Write tests for `PreviousMonth` / `NextMonth` — updates date and reloads
-- [ ] Write tests for computed: `OverallStatus`, `ModalTitle`, `IsCreatingNewGoal`
-- [ ] Write tests for `SaveGoal` — create and update paths
-- [ ] Write tests for `DeleteGoal` — success and failure
-- [ ] Write tests for `ShowEditGoal` / `HideEditGoal` — state flag toggles
-- [ ] Write tests for `NavigateToCategories` — delegates to NavigationManager
-- [ ] Write tests for `Dispose` — unsubscribes from scope change events
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on BudgetViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/BudgetViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/BudgetViewModelTests.cs`
+- [x] Write tests for `InitializeAsync` — loads budget, subscribes to scope changes
+- [x] Write tests for `LoadBudgetAsync` — success, failure, loading state transitions
+- [x] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
+- [x] Write tests for `DismissError` — clears error message
+- [x] Write tests for `PreviousMonth` / `NextMonth` — updates date and reloads
+- [x] Write tests for computed: `OverallStatus`, `ModalTitle`, `IsCreatingNewGoal`
+- [x] Write tests for `SaveGoal` — create and update paths
+- [x] Write tests for `DeleteGoal` — success and failure
+- [x] Write tests for `ShowEditGoal` / `HideEditGoal` — state flag toggles
+- [x] Write tests for `NavigateToCategories` — delegates to NavigationManager
+- [x] Write tests for `Dispose` — unsubscribes from scope change events
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on BudgetViewModel
 
 ### Phase 2: Refactor Budget.razor to Use ViewModel
 
 **Tasks:**
-- [ ] Register `BudgetViewModel` as transient in DI
-- [ ] Update `Budget.razor` to inject `BudgetViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
-- [ ] Verify all 21 existing `BudgetPageTests` pass
-- [ ] Verify application runs correctly (manual smoke test)
+- [x] Register `BudgetViewModel` as transient in DI
+- [x] Update `Budget.razor` to inject `BudgetViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
+- [x] Verify all 21 existing `BudgetPageTests` pass
+- [x] Verify application runs correctly (manual smoke test)
 
 ### Phase 3: Verify Coverage & Finalize
 
 **Tasks:**
-- [ ] Run coverage report for BudgetViewModel — verify ≥ 90%
-- [ ] Update this document status to Done
+- [x] Run coverage report for BudgetViewModel — verify ≥ 90%
+- [x] Update this document status to Done
 
 ---
 

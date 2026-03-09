@@ -134,5 +134,6 @@ builder.Services.AddScoped<VersionService>();
 builder.Services.AddTransient<CategoriesViewModel>();
 builder.Services.AddTransient<RulesViewModel>();
 builder.Services.AddTransient<AccountsViewModel>();
+builder.Services.AddTransient<BudgetViewModel>();
 
 await builder.Build().RunAsync();

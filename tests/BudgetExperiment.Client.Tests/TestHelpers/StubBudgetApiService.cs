@@ -211,6 +211,21 @@ internal class StubBudgetApiService : IBudgetApiService
     public Exception? TestPatternException { get; set; }
 
     /// <summary>
+    /// Gets or sets an exception to throw from <see cref="GetBudgetSummaryAsync"/>.
+    /// </summary>
+    public Exception? GetBudgetSummaryException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="SetBudgetGoalAsync"/>.
+    /// </summary>
+    public Exception? SetBudgetGoalException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="DeleteBudgetGoalAsync"/>.
+    /// </summary>
+    public Exception? DeleteBudgetGoalException { get; set; }
+
+    /// <summary>
     /// Gets or sets the result returned by <see cref="SetBudgetGoalAsync"/>.
     /// </summary>
     public ApiResult<BudgetGoalDto>? SetBudgetGoalResult { get; set; }
@@ -603,16 +618,25 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<IReadOnlyList<BudgetGoalDto>> GetBudgetGoalsByCategoryAsync(Guid categoryId) => Task.FromResult<IReadOnlyList<BudgetGoalDto>>([]);
 
     /// <inheritdoc/>
-    public Task<ApiResult<BudgetGoalDto>> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model, string? version = null) => Task.FromResult(this.SetBudgetGoalResult ?? ApiResult<BudgetGoalDto>.Failure());
+    public Task<ApiResult<BudgetGoalDto>> SetBudgetGoalAsync(Guid categoryId, BudgetGoalSetDto model, string? version = null) =>
+        this.SetBudgetGoalException is not null
+            ? Task.FromException<ApiResult<BudgetGoalDto>>(this.SetBudgetGoalException)
+            : Task.FromResult(this.SetBudgetGoalResult ?? ApiResult<BudgetGoalDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month) => Task.FromResult(this.DeleteBudgetGoalResult);
+    public Task<bool> DeleteBudgetGoalAsync(Guid categoryId, int year, int month) =>
+        this.DeleteBudgetGoalException is not null
+            ? Task.FromException<bool>(this.DeleteBudgetGoalException)
+            : Task.FromResult(this.DeleteBudgetGoalResult);
 
     /// <inheritdoc/>
     public Task<CopyBudgetGoalsResult?> CopyBudgetGoalsAsync(CopyBudgetGoalsRequest request) => Task.FromResult(this.CopyBudgetGoalsResult);
 
     /// <inheritdoc/>
-    public Task<BudgetSummaryDto?> GetBudgetSummaryAsync(int year, int month) => Task.FromResult(this.BudgetSummary);
+    public Task<BudgetSummaryDto?> GetBudgetSummaryAsync(int year, int month) =>
+        this.GetBudgetSummaryException is not null
+            ? Task.FromException<BudgetSummaryDto?>(this.GetBudgetSummaryException)
+            : Task.FromResult(this.BudgetSummary);
 
     /// <inheritdoc/>
     public Task<BudgetProgressDto?> GetCategoryProgressAsync(Guid categoryId, int year, int month) => Task.FromResult<BudgetProgressDto?>(null);

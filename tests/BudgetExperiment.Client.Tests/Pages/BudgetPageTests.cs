@@ -6,6 +6,7 @@ using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
+using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IBudgetApiService>(this._apiService);
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddTransient<BudgetViewModel>();
     }
 
     /// <inheritdoc/>
