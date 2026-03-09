@@ -1,6 +1,6 @@
 # Feature 101: ViewModel Extraction — Recurring Transactions Page
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium
 > **Dependencies:** Feature 097 (Done — established pattern)
 
@@ -42,13 +42,13 @@ The Recurring page ([Recurring.razor](../src/BudgetExperiment.Client/Pages/Recur
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `RecurringViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/RecurringViewModel.cs`
-- [ ] All 23 handler methods are moved to the ViewModel (static helpers may stay or move)
-- [ ] All 18 state fields are moved to the ViewModel
-- [ ] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
-- [ ] `Recurring.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 20 `RecurringPageTests` pass without modification (or with minimal binding changes)
+- [x] `RecurringViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/RecurringViewModel.cs`
+- [x] All 23 handler methods are moved to the ViewModel (static helpers may stay or move)
+- [x] All 18 state fields are moved to the ViewModel
+- [x] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
+- [x] `Recurring.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 20 `RecurringPageTests` pass without modification (or with minimal binding changes)
 
 ### US-101-002: Add ViewModel Unit Tests
 
@@ -57,15 +57,15 @@ The Recurring page ([Recurring.razor](../src/BudgetExperiment.Client/Pages/Recur
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `RecurringViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all handler methods
-- [ ] Tests verify state transitions (loading, error, success)
-- [ ] Tests verify CRUD operations (create, update, delete)
-- [ ] Tests verify lifecycle actions (skip next, pause, resume)
-- [ ] Tests verify import patterns workflow
-- [ ] Tests verify error handling (API failures, conflict detection)
-- [ ] Tests verify scope change triggers reload and dispose cleans up
-- [ ] Coverage for RecurringViewModel ≥ 90%
+- [x] `RecurringViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all handler methods
+- [x] Tests verify state transitions (loading, error, success)
+- [x] Tests verify CRUD operations (create, update, delete)
+- [x] Tests verify lifecycle actions (skip next, pause, resume)
+- [x] Tests verify import patterns workflow
+- [x] Tests verify error handling (API failures, conflict detection)
+- [x] Tests verify scope change triggers reload and dispose cleans up
+- [x] Coverage for RecurringViewModel ≥ 90%
 
 ---
 
@@ -139,39 +139,39 @@ builder.Services.AddTransient<RecurringViewModel>();
 ### Phase 1: Create RecurringViewModel with Tests (TDD)
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/RecurringViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/RecurringViewModelTests.cs`
-- [ ] Write tests for `InitializeAsync` — loads categories and recurring transactions, subscribes to scope changes
-- [ ] Write tests for `LoadRecurringTransactionsAsync` / `LoadCategoriesAsync` — success, failure, loading state
-- [ ] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
-- [ ] Write tests for `DismissError` — clears error message
-- [ ] Write tests for CRUD: `CreateRecurring`, `UpdateRecurring`, `ConfirmDelete` — success, failure, conflict
-- [ ] Write tests for lifecycle: `SkipNext`, `Pause`, `Resume` — success, failure
-- [ ] Write tests for import patterns: `ShowImportPatterns`, `HideImportPatterns`, `HandleImportPatternsSaved`
-- [ ] Write tests for form toggles: `ShowAddForm`/`ShowEditForm`/`HideForm`, `ShowDeleteConfirm`/`CancelDelete`
-- [ ] Write tests for static helpers: `FormatFrequency`, `FormatMoney`
-- [ ] Write tests for `Dispose` — unsubscribes from scope change events, clears chat context
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on RecurringViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/RecurringViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/RecurringViewModelTests.cs`
+- [x] Write tests for `InitializeAsync` — loads categories and recurring transactions, subscribes to scope changes
+- [x] Write tests for `LoadRecurringTransactionsAsync` / `LoadCategoriesAsync` — success, failure, loading state
+- [x] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
+- [x] Write tests for `DismissError` — clears error message
+- [x] Write tests for CRUD: `CreateRecurring`, `UpdateRecurring`, `ConfirmDelete` — success, failure, conflict
+- [x] Write tests for lifecycle: `SkipNext`, `Pause`, `Resume` — success, failure
+- [x] Write tests for import patterns: `ShowImportPatterns`, `HideImportPatterns`, `HandleImportPatternsSaved`
+- [x] Write tests for form toggles: `ShowAddForm`/`ShowEditForm`/`HideForm`, `ShowDeleteConfirm`/`CancelDelete`
+- [x] Write tests for static helpers: `FormatFrequency`, `FormatMoney`
+- [x] Write tests for `Dispose` — unsubscribes from scope change events, clears chat context
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on RecurringViewModel
 
 ### Phase 2: Refactor Recurring.razor to Use ViewModel
 
 **Tasks:**
-- [ ] Register `RecurringViewModel` as transient in DI
-- [ ] Update `Recurring.razor` to inject `RecurringViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
-- [ ] Verify all 20 existing `RecurringPageTests` pass
-- [ ] Verify application runs correctly (manual smoke test)
+- [x] Register `RecurringViewModel` as transient in DI
+- [x] Update `Recurring.razor` to inject `RecurringViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
+- [x] Verify all 20 existing `RecurringPageTests` pass
+- [x] Verify application runs correctly (manual smoke test)
 
 ### Phase 3: Verify Coverage & Finalize
 
 **Tasks:**
-- [ ] Run coverage report for RecurringViewModel — verify ≥ 90%
-- [ ] Update this document status to Done
+- [x] Run coverage report for RecurringViewModel — verify ≥ 90%
+- [x] Update this document status to Done
 
 ---
 

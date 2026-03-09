@@ -356,6 +356,11 @@ internal class StubBudgetApiService : IBudgetApiService
     public TransactionDto? RealizeRecurringTransactionResult { get; set; }
 
     /// <summary>
+    /// Gets or sets the exception thrown by <see cref="GetRecurringTransactionsAsync"/>.
+    /// </summary>
+    public Exception? GetRecurringTransactionsException { get; set; }
+
+    /// <summary>
     /// Gets or sets the result returned by <see cref="CreateRecurringTransactionAsync"/>.
     /// </summary>
     public RecurringTransactionDto? CreateRecurringTransactionResult { get; set; }
@@ -369,6 +374,21 @@ internal class StubBudgetApiService : IBudgetApiService
     /// Gets or sets a value indicating whether <see cref="DeleteRecurringTransactionAsync"/> returns true.
     /// </summary>
     public bool DeleteRecurringTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="SkipNextRecurringAsync"/>.
+    /// </summary>
+    public RecurringTransactionDto? SkipNextRecurringResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="PauseRecurringTransactionAsync"/>.
+    /// </summary>
+    public RecurringTransactionDto? PauseRecurringTransactionResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="ResumeRecurringTransactionAsync"/>.
+    /// </summary>
+    public RecurringTransactionDto? ResumeRecurringTransactionResult { get; set; }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateRecurringTransferAsync"/>.
@@ -468,7 +488,15 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<IReadOnlyList<DailyTotalDto>> GetCalendarSummaryAsync(int year, int month, Guid? accountId = null) => Task.FromResult<IReadOnlyList<DailyTotalDto>>([]);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<RecurringTransactionDto>> GetRecurringTransactionsAsync() => Task.FromResult<IReadOnlyList<RecurringTransactionDto>>(this.RecurringTransactions);
+    public Task<IReadOnlyList<RecurringTransactionDto>> GetRecurringTransactionsAsync()
+    {
+        if (this.GetRecurringTransactionsException != null)
+        {
+            throw this.GetRecurringTransactionsException;
+        }
+
+        return Task.FromResult<IReadOnlyList<RecurringTransactionDto>>(this.RecurringTransactions);
+    }
 
     /// <inheritdoc/>
     public Task<RecurringTransactionDto?> GetRecurringTransactionAsync(Guid id) => Task.FromResult<RecurringTransactionDto?>(null);
@@ -483,13 +511,13 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> DeleteRecurringTransactionAsync(Guid id) => Task.FromResult(this.DeleteRecurringTransactionResult);
 
     /// <inheritdoc/>
-    public Task<RecurringTransactionDto?> PauseRecurringTransactionAsync(Guid id) => Task.FromResult<RecurringTransactionDto?>(null);
+    public Task<RecurringTransactionDto?> PauseRecurringTransactionAsync(Guid id) => Task.FromResult(this.PauseRecurringTransactionResult);
 
     /// <inheritdoc/>
-    public Task<RecurringTransactionDto?> ResumeRecurringTransactionAsync(Guid id) => Task.FromResult<RecurringTransactionDto?>(null);
+    public Task<RecurringTransactionDto?> ResumeRecurringTransactionAsync(Guid id) => Task.FromResult(this.ResumeRecurringTransactionResult);
 
     /// <inheritdoc/>
-    public Task<RecurringTransactionDto?> SkipNextRecurringAsync(Guid id) => Task.FromResult<RecurringTransactionDto?>(null);
+    public Task<RecurringTransactionDto?> SkipNextRecurringAsync(Guid id) => Task.FromResult(this.SkipNextRecurringResult);
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<RecurringInstanceDto>> GetProjectedRecurringAsync(DateOnly from, DateOnly to, Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringInstanceDto>>([]);
