@@ -2,6 +2,48 @@
 
 All notable changes to Budget Experiment.
 
+## [3.22.0] - 2026-03-08
+
+### Refactoring
+
+- **client:** Extract `CategoriesViewModel` from Categories.razor `@code` block — 19 handler methods, 16 state properties, 3 computed properties; Razor file reduced to thin binding layer (Feature 097)
+- **client:** Extract `RulesViewModel` from Rules.razor `@code` block — 16 handler methods, 13 state properties; comprehensive ViewModel unit tests (Feature 098)
+- **client:** Extract `AccountsViewModel` from Accounts.razor `@code` block — 14 handler methods, 11 state properties; ViewModel unit tests (Feature 099)
+- **client:** Extract `BudgetViewModel` from Budget.razor `@code` block — handler methods, state properties, computed properties; ViewModel unit tests (Feature 100)
+- **client:** Extract `RecurringViewModel` from Recurring.razor `@code` block — handler methods and state into testable ViewModel class (Feature 101)
+- **client:** Extract `RecurringTransfersViewModel` from RecurringTransfers.razor `@code` block (Feature 102)
+- **client:** Extract `TransfersViewModel` from Transfers.razor `@code` block (Feature 103)
+- **client:** Extract `OnboardingViewModel` from Onboarding.razor `@code` block — 6 handler methods, 7 state fields, 1 computed property; 33 ViewModel unit tests (Feature 104)
+
+### Features
+
+- **docs:** Establish localization infrastructure for multi-language support (Feature 096)
+
+### Bug Fixes
+
+- **import:** Handle sanitized negative amounts in CSV import — amounts with leading formula-trigger characters now parsed correctly (Feature 094)
+- **test:** Set en-US culture in ChatMessageBubbleTests for CI compatibility
+- **test:** Replace flaky `Task.Delay` with `WaitForAssertion` in MobileChatSheetTests
+
+### Testing
+
+- **client:** Client test coverage phase 2 — API services, P1/P2/P3 page components, chat and display components, service and model tests (Feature 095)
+- **client:** Deepen page handler coverage to reach 65% target
+- **ci:** Add code coverage collection, reporting, and quality gates (Feature 092)
+- **ci:** Exclude SDK/library namespaces and boilerplate from code coverage metrics
+
+### Dependencies
+
+- **deps:** Update EntityFrameworkCore packages to 10.0.3
+- **deps:** Update dotnet-ef tool to 10.0.3
+- **deps:** Bump Microsoft.Build.Tasks.Core 18.0.2 → 18.3.3
+- **deps(ci):** Bump actions/checkout 4 → 6, actions/setup-dotnet 4 → 5, actions/download-artifact 4 → 8, dorny/test-reporter 1 → 2, docker/build-push-action 5 → 6
+
+### Documentation
+
+- **docs:** Add culture-sensitive formatting guidance to copilot instructions (§37)
+- **docs:** Feature docs 097–104 — ViewModel extraction pattern for all page components (all complete)
+
 ## [3.21.0] - 2026-03-07
 
 ### Dependencies
