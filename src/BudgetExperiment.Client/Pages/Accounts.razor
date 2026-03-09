@@ -2,38 +2,37 @@
 
 @implements IDisposable
 
-@inject IBudgetApiService ApiService
-@inject IToastService ToastService
-@inject NavigationManager Navigation
-@inject ScopeService ScopeService
+@using BudgetExperiment.Client.ViewModels
+
+@inject AccountsViewModel ViewModel
 
 <PageTitle>Accounts - Budget Experiment</PageTitle>
 
 <div class="page-container">
     <PageHeader Title="Accounts">
         <Actions>
-            <Button Variant="ButtonVariant.Primary" IconLeft="arrows-horizontal" OnClick="ShowTransfer">Transfer</Button>
-            <Button Variant="ButtonVariant.Success" OnClick="ShowAddAccount">+ Add Account</Button>
+            <Button Variant="ButtonVariant.Primary" IconLeft="arrows-horizontal" OnClick="ViewModel.ShowTransfer">Transfer</Button>
+            <Button Variant="ButtonVariant.Success" OnClick="ViewModel.ShowAddAccount">+ Add Account</Button>
         </Actions>
     </PageHeader>
 
-    <ErrorAlert Message="@errorMessage"
-                OnRetry="RetryLoad"
-                OnDismiss="DismissError"
-                IsRetrying="@isRetrying" />
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                OnRetry="ViewModel.RetryLoadAsync"
+                OnDismiss="ViewModel.DismissError"
+                IsRetrying="@ViewModel.IsRetrying" />
 
-    @if (isLoading)
+    @if (ViewModel.IsLoading)
     {
         <LoadingSpinner Message="Loading accounts..." />
     }
-    else if (accounts.Count == 0 && errorMessage == null)
+    else if (ViewModel.Accounts.Count == 0 && ViewModel.ErrorMessage == null)
     {
         <p class="empty-message">No accounts yet. Create one to get started!</p>
     }
-    else if (errorMessage == null)
+    else if (ViewModel.ErrorMessage == null)
     {
         <div class="card-grid">
-            @foreach (var account in accounts)
+            @foreach (var account in ViewModel.Accounts)
             {
                 <div class="card">
                     <div class="card-body">
@@ -51,299 +50,61 @@
                         </div>
                     </div>
                     <div class="card-footer d-flex gap-2">
-                        <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="edit" OnClick="() => ShowEditAccount(account)" title="Edit account" />
-                        <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" IconLeft="arrows-horizontal" OnClick="() => ShowTransferFrom(account.Id)" title="Transfer from this account" />
-                        <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" OnClick="() => ViewAccount(account.Id)">Transactions</Button>
-                        <Button Variant="ButtonVariant.Danger" Size="ButtonSize.Small" OnClick="() => DeleteAccount(account.Id)">Delete</Button>
+                        <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="edit" OnClick="() => ViewModel.ShowEditAccount(account)" title="Edit account" />
+                        <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" IconLeft="arrows-horizontal" OnClick="() => ViewModel.ShowTransferFrom(account.Id)" title="Transfer from this account" />
+                        <Button Variant="ButtonVariant.Primary" Size="ButtonSize.Small" OnClick="() => ViewModel.ViewAccount(account.Id)">Transactions</Button>
+                        <Button Variant="ButtonVariant.Danger" Size="ButtonSize.Small" OnClick="() => ViewModel.DeleteAccount(account.Id)">Delete</Button>
                     </div>
                 </div>
             }
         </div>
     }
 
-    <Modal IsVisible="@showAddAccount" Title="Add Account" OnClose="HideAddAccount">
-        <AccountForm Model="@newAccount"
-                     OnSubmit="CreateAccount"
-                     OnCancel="HideAddAccount"
-                     IsSubmitting="@isSubmitting" />
+    <Modal IsVisible="@ViewModel.ShowAddForm" Title="Add Account" OnClose="ViewModel.HideAddAccount">
+        <AccountForm Model="@ViewModel.NewAccount"
+                     OnSubmit="ViewModel.CreateAccountAsync"
+                     OnCancel="ViewModel.HideAddAccount"
+                     IsSubmitting="@ViewModel.IsSubmitting" />
     </Modal>
 
-    <Modal IsVisible="@showEditAccount" Title="Edit Account" OnClose="HideEditAccount">
-        <AccountForm Model="@editAccount"
-                     OnSubmit="UpdateAccount"
-                     OnCancel="HideEditAccount"
+    <Modal IsVisible="@ViewModel.ShowEditForm" Title="Edit Account" OnClose="ViewModel.HideEditAccount">
+        <AccountForm Model="@ViewModel.EditAccount"
+                     OnSubmit="ViewModel.UpdateAccountAsync"
+                     OnCancel="ViewModel.HideEditAccount"
                      SubmitButtonText="Save Changes"
-                     IsSubmitting="@isSubmitting" />
+                     IsSubmitting="@ViewModel.IsSubmitting" />
         <div class="alert alert-warning mt-4">
             <Icon Name="alert-triangle" Size="16" /> Changing initial balance will affect all calculated running balances.
         </div>
     </Modal>
 
-    <Modal IsVisible="@showTransfer" Title="Transfer Between Accounts" OnClose="HideTransfer">
-        <TransferDialog Accounts="@accounts"
-                        Model="@newTransfer"
-                        PreSelectedSourceAccountId="@preSelectedSourceAccountId"
-                        OnCreate="CreateTransfer"
-                        OnCancel="HideTransfer" />
+    <Modal IsVisible="@ViewModel.ShowTransferDialog" Title="Transfer Between Accounts" OnClose="ViewModel.HideTransfer">
+        <TransferDialog Accounts="@ViewModel.Accounts"
+                        Model="@ViewModel.NewTransfer"
+                        PreSelectedSourceAccountId="@ViewModel.PreSelectedSourceAccountId"
+                        OnCreate="ViewModel.CreateTransferAsync"
+                        OnCancel="ViewModel.HideTransfer" />
     </Modal>
 
-    <ConfirmDialog IsVisible="@showDeleteConfirm"
+    <ConfirmDialog IsVisible="@ViewModel.ShowDeleteConfirm"
                    Title="Delete Account"
-                   Message="@($"Are you sure you want to delete '{deletingAccount?.Name}'? This will also delete all transactions for this account.")"
+                   Message="@($"Are you sure you want to delete '{ViewModel.DeletingAccount?.Name}'? This will also delete all transactions for this account.")"
                    ConfirmText="Delete"
-                   IsProcessing="@isDeleting"
-                   OnConfirm="ConfirmDelete"
-                   OnCancel="CancelDelete" />
+                   IsProcessing="@ViewModel.IsDeleting"
+                   OnConfirm="ViewModel.ConfirmDeleteAsync"
+                   OnCancel="ViewModel.CancelDelete" />
 </div>
 
 @code {
-    private bool isLoading = true;
-    private bool isRetrying;
-    private bool isSubmitting = false;
-    private string? errorMessage;
-    private List<AccountDto> accounts = new();
-    private bool showAddAccount = false;
-    private AccountCreateDto newAccount = new();
-
-    // Edit state
-    private bool showEditAccount = false;
-    private AccountCreateDto editAccount = new();
-    private Guid? editingAccountId = null;
-    private string? editingVersion;
-
-    // Transfer state
-    private bool showTransfer = false;
-    private CreateTransferRequest newTransfer = new();
-    private Guid? preSelectedSourceAccountId = null;
-
-    // Delete confirmation state
-    private bool showDeleteConfirm = false;
-    private bool isDeleting = false;
-    private AccountDto? deletingAccount = null;
-
     protected override async Task OnInitializedAsync()
     {
-        ScopeService.ScopeChanged += OnScopeChanged;
-        await LoadAccounts();
-    }
-
-    private async void OnScopeChanged(BudgetScope? _)
-    {
-        await InvokeAsync(async () =>
-        {
-            await LoadAccounts();
-            StateHasChanged();
-        });
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
     }
 
     public void Dispose()
     {
-        ScopeService.ScopeChanged -= OnScopeChanged;
-    }
-
-    private async Task LoadAccounts()
-    {
-        isLoading = true;
-        errorMessage = null;
-
-        try
-        {
-            accounts = (await ApiService.GetAccountsAsync()).ToList();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to load accounts: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task RetryLoad()
-    {
-        isRetrying = true;
-        StateHasChanged();
-
-        try
-        {
-            await LoadAccounts();
-        }
-        finally
-        {
-            isRetrying = false;
-        }
-    }
-
-    private void DismissError()
-    {
-        errorMessage = null;
-    }
-
-    private void ShowAddAccount()
-    {
-        newAccount = new AccountCreateDto { Type = "Checking" };
-        showAddAccount = true;
-    }
-
-    private void HideAddAccount()
-    {
-        showAddAccount = false;
-    }
-
-    private void ShowEditAccount(AccountDto account)
-    {
-        editingAccountId = account.Id;
-        editingVersion = account.Version;
-        editAccount = new AccountCreateDto
-        {
-            Name = account.Name,
-            Type = account.Type,
-            InitialBalance = account.InitialBalance,
-            InitialBalanceCurrency = account.InitialBalanceCurrency,
-            InitialBalanceDate = account.InitialBalanceDate,
-        };
-        showEditAccount = true;
-    }
-
-    private void HideEditAccount()
-    {
-        showEditAccount = false;
-        editingAccountId = null;
-    }
-
-    private async Task UpdateAccount(AccountCreateDto model)
-    {
-        if (editingAccountId == null)
-        {
-            return;
-        }
-
-        isSubmitting = true;
-        try
-        {
-            var updateDto = new AccountUpdateDto
-            {
-                Name = model.Name,
-                Type = model.Type,
-                InitialBalance = model.InitialBalance,
-                InitialBalanceCurrency = model.InitialBalanceCurrency,
-                InitialBalanceDate = model.InitialBalanceDate,
-            };
-
-            var result = await ApiService.UpdateAccountAsync(editingAccountId.Value, updateDto, editingVersion);
-            if (result.IsConflict)
-            {
-                ToastService.ShowWarning("This account was modified by another user. Data has been refreshed.", "Conflict");
-                HideEditAccount();
-                await LoadAccounts();
-                return;
-            }
-
-            if (result.IsSuccess)
-            {
-                showEditAccount = false;
-                editingAccountId = null;
-                await LoadAccounts();
-            }
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    private void ShowTransfer()
-    {
-        preSelectedSourceAccountId = null;
-        newTransfer = new CreateTransferRequest();
-        showTransfer = true;
-    }
-
-    private void ShowTransferFrom(Guid accountId)
-    {
-        preSelectedSourceAccountId = accountId;
-        newTransfer = new CreateTransferRequest { SourceAccountId = accountId };
-        showTransfer = true;
-    }
-
-    private void HideTransfer()
-    {
-        showTransfer = false;
-        preSelectedSourceAccountId = null;
-    }
-
-    private async Task CreateTransfer(CreateTransferRequest model)
-    {
-        var result = await ApiService.CreateTransferAsync(model);
-        if (result != null)
-        {
-            showTransfer = false;
-            // Optionally navigate to the transaction view or show a success message
-        }
-    }
-
-    private async Task CreateAccount(AccountCreateDto model)
-    {
-        isSubmitting = true;
-        try
-        {
-            var result = await ApiService.CreateAccountAsync(model);
-            if (result != null)
-            {
-                showAddAccount = false;
-                await LoadAccounts();
-            }
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    private void ViewAccount(Guid id)
-    {
-        Navigation.NavigateTo($"/accounts/{id}/transactions");
-    }
-
-    private void DeleteAccount(Guid id)
-    {
-        deletingAccount = accounts.FirstOrDefault(a => a.Id == id);
-        if (deletingAccount != null)
-        {
-            showDeleteConfirm = true;
-        }
-    }
-
-    private async Task ConfirmDelete()
-    {
-        if (deletingAccount == null)
-        {
-            return;
-        }
-
-        isDeleting = true;
-        StateHasChanged();
-
-        try
-        {
-            var deleted = await ApiService.DeleteAccountAsync(deletingAccount.Id);
-            if (deleted)
-            {
-                showDeleteConfirm = false;
-                deletingAccount = null;
-                await LoadAccounts();
-            }
-        }
-        finally
-        {
-            isDeleting = false;
-        }
-    }
-
-    private void CancelDelete()
-    {
-        showDeleteConfirm = false;
-        deletingAccount = null;
+        ViewModel.OnStateChanged = null;
+        ViewModel.Dispose();
     }
 }

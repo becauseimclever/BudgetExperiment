@@ -1,6 +1,6 @@
 # Feature 099: ViewModel Extraction — Accounts Page
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** High
 > **Dependencies:** Feature 097 (Done — established pattern)
 
@@ -42,13 +42,13 @@ The Accounts page ([Accounts.razor](../src/BudgetExperiment.Client/Pages/Account
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `AccountsViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/AccountsViewModel.cs`
-- [ ] All 20 handler methods are moved to the ViewModel
-- [ ] All 17 state fields are moved to the ViewModel
-- [ ] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
-- [ ] `Accounts.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 20 `AccountsPageTests` pass without modification (or with minimal binding changes)
+- [x] `AccountsViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/AccountsViewModel.cs`
+- [x] All 20 handler methods are moved to the ViewModel
+- [x] All 17 state fields are moved to the ViewModel
+- [x] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
+- [x] `Accounts.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 20 `AccountsPageTests` pass without modification (or with minimal binding changes)
 
 ### US-099-002: Add ViewModel Unit Tests
 
@@ -57,15 +57,15 @@ The Accounts page ([Accounts.razor](../src/BudgetExperiment.Client/Pages/Account
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `AccountsViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all 20 handler methods
-- [ ] Tests verify state transitions (loading, error, success)
-- [ ] Tests verify CRUD operations call correct API service methods
-- [ ] Tests verify transfer creation workflow (show, create, hide)
-- [ ] Tests verify error handling (API failures, conflict detection on update)
-- [ ] Tests verify navigation to account details
-- [ ] Tests verify scope change triggers reload and dispose cleans up
-- [ ] Coverage for AccountsViewModel ≥ 90%
+- [x] `AccountsViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all 20 handler methods
+- [x] Tests verify state transitions (loading, error, success)
+- [x] Tests verify CRUD operations call correct API service methods
+- [x] Tests verify transfer creation workflow (show, create, hide)
+- [x] Tests verify error handling (API failures, conflict detection on update)
+- [x] Tests verify navigation to account details
+- [x] Tests verify scope change triggers reload and dispose cleans up
+- [x] Coverage for AccountsViewModel ≥ 90%
 
 ---
 
@@ -137,38 +137,38 @@ builder.Services.AddTransient<AccountsViewModel>();
 ### Phase 1: Create AccountsViewModel with Tests (TDD)
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/AccountsViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/AccountsViewModelTests.cs`
-- [ ] Write tests for `InitializeAsync` — loads accounts, subscribes to scope changes
-- [ ] Write tests for `LoadAccountsAsync` — success, failure, loading state transitions
-- [ ] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
-- [ ] Write tests for `DismissError` — clears error message
-- [ ] Write tests for CRUD: `CreateAccount`, `UpdateAccount`, `ConfirmDelete` — success, failure, conflict
-- [ ] Write tests for transfer: `ShowTransfer`, `ShowTransferFrom`, `HideTransfer`, `CreateTransfer`
-- [ ] Write tests for navigation: `ViewAccount` — navigates to account details
-- [ ] Write tests for form toggles: `ShowAddAccount`/`HideAddAccount`, `ShowEditAccount`/`HideEditAccount`, `DeleteAccount`/`CancelDelete`
-- [ ] Write tests for `Dispose` — unsubscribes from scope change events
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on AccountsViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/AccountsViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/AccountsViewModelTests.cs`
+- [x] Write tests for `InitializeAsync` — loads accounts, subscribes to scope changes
+- [x] Write tests for `LoadAccountsAsync` — success, failure, loading state transitions
+- [x] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
+- [x] Write tests for `DismissError` — clears error message
+- [x] Write tests for CRUD: `CreateAccount`, `UpdateAccount`, `ConfirmDelete` — success, failure, conflict
+- [x] Write tests for transfer: `ShowTransfer`, `ShowTransferFrom`, `HideTransfer`, `CreateTransfer`
+- [x] Write tests for navigation: `ViewAccount` — navigates to account details
+- [x] Write tests for form toggles: `ShowAddAccount`/`HideAddAccount`, `ShowEditAccount`/`HideEditAccount`, `DeleteAccount`/`CancelDelete`
+- [x] Write tests for `Dispose` — unsubscribes from scope change events
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on AccountsViewModel
 
 ### Phase 2: Refactor Accounts.razor to Use ViewModel
 
 **Tasks:**
-- [ ] Register `AccountsViewModel` as transient in DI
-- [ ] Update `Accounts.razor` to inject `AccountsViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
-- [ ] Verify all 20 existing `AccountsPageTests` pass
+- [x] Register `AccountsViewModel` as transient in DI
+- [x] Update `Accounts.razor` to inject `AccountsViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
+- [x] Verify all 20 existing `AccountsPageTests` pass
 - [ ] Verify application runs correctly (manual smoke test)
 
 ### Phase 3: Verify Coverage & Finalize
 
 **Tasks:**
-- [ ] Run coverage report for AccountsViewModel — verify ≥ 90%
-- [ ] Update this document status to Done
+- [x] Run coverage report for AccountsViewModel — verify ≥ 90%
+- [x] Update this document status to Done
 
 ---
 
