@@ -91,6 +91,11 @@ internal class StubBudgetApiService : IBudgetApiService
     public BudgetCategoryDto? GetCategoryResult { get; set; }
 
     /// <summary>
+    /// Gets or sets an exception to throw from <see cref="GetAccountsAsync"/>.
+    /// </summary>
+    public Exception? GetAccountsException { get; set; }
+
+    /// <summary>
     /// Gets or sets an exception to throw from <see cref="GetCategoriesAsync"/>.
     /// </summary>
     public Exception? GetCategoriesException { get; set; }
@@ -169,6 +174,41 @@ internal class StubBudgetApiService : IBudgetApiService
     /// Gets or sets a value indicating whether <see cref="DeactivateCategorizationRuleAsync"/> returns true.
     /// </summary>
     public bool DeactivateRuleResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="GetCategorizationRulesAsync"/>.
+    /// </summary>
+    public Exception? GetRulesException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="CreateCategorizationRuleAsync"/>.
+    /// </summary>
+    public Exception? CreateRuleException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="UpdateCategorizationRuleAsync"/>.
+    /// </summary>
+    public Exception? UpdateRuleException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="DeleteCategorizationRuleAsync"/>.
+    /// </summary>
+    public Exception? DeleteRuleException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="ActivateCategorizationRuleAsync"/>.
+    /// </summary>
+    public Exception? ActivateRuleException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="DeactivateCategorizationRuleAsync"/>.
+    /// </summary>
+    public Exception? DeactivateRuleException { get; set; }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="TestPatternAsync"/>.
+    /// </summary>
+    public Exception? TestPatternException { get; set; }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="SetBudgetGoalAsync"/>.
@@ -346,7 +386,15 @@ internal class StubBudgetApiService : IBudgetApiService
     public UserSettingsDto? UpdateUserSettingsResult { get; set; }
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<AccountDto>> GetAccountsAsync() => Task.FromResult<IReadOnlyList<AccountDto>>(this.Accounts);
+    public Task<IReadOnlyList<AccountDto>> GetAccountsAsync()
+    {
+        if (this.GetAccountsException != null)
+        {
+            throw this.GetAccountsException;
+        }
+
+        return Task.FromResult<IReadOnlyList<AccountDto>>(this.Accounts);
+    }
 
     /// <inheritdoc/>
     public Task<AccountDto?> GetAccountAsync(Guid id) => Task.FromResult<AccountDto?>(this.Accounts.Find(a => a.Id == id));
@@ -570,28 +618,49 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<BudgetProgressDto?> GetCategoryProgressAsync(Guid categoryId, int year, int month) => Task.FromResult<BudgetProgressDto?>(null);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<CategorizationRuleDto>> GetCategorizationRulesAsync(bool activeOnly = false) => Task.FromResult<IReadOnlyList<CategorizationRuleDto>>(this.Rules);
+    public Task<IReadOnlyList<CategorizationRuleDto>> GetCategorizationRulesAsync(bool activeOnly = false) =>
+        this.GetRulesException is not null
+            ? Task.FromException<IReadOnlyList<CategorizationRuleDto>>(this.GetRulesException)
+            : Task.FromResult<IReadOnlyList<CategorizationRuleDto>>(this.Rules);
 
     /// <inheritdoc/>
     public Task<CategorizationRuleDto?> GetCategorizationRuleAsync(Guid id) => Task.FromResult<CategorizationRuleDto?>(null);
 
     /// <inheritdoc/>
-    public Task<CategorizationRuleDto?> CreateCategorizationRuleAsync(CategorizationRuleCreateDto model) => Task.FromResult(this.CreateRuleResult);
+    public Task<CategorizationRuleDto?> CreateCategorizationRuleAsync(CategorizationRuleCreateDto model) =>
+        this.CreateRuleException is not null
+            ? Task.FromException<CategorizationRuleDto?>(this.CreateRuleException)
+            : Task.FromResult(this.CreateRuleResult);
 
     /// <inheritdoc/>
-    public Task<ApiResult<CategorizationRuleDto>> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model, string? version = null) => Task.FromResult(this.UpdateRuleResult ?? ApiResult<CategorizationRuleDto>.Failure());
+    public Task<ApiResult<CategorizationRuleDto>> UpdateCategorizationRuleAsync(Guid id, CategorizationRuleUpdateDto model, string? version = null) =>
+        this.UpdateRuleException is not null
+            ? Task.FromException<ApiResult<CategorizationRuleDto>>(this.UpdateRuleException)
+            : Task.FromResult(this.UpdateRuleResult ?? ApiResult<CategorizationRuleDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteCategorizationRuleAsync(Guid id) => Task.FromResult(this.DeleteRuleResult);
+    public Task<bool> DeleteCategorizationRuleAsync(Guid id) =>
+        this.DeleteRuleException is not null
+            ? Task.FromException<bool>(this.DeleteRuleException)
+            : Task.FromResult(this.DeleteRuleResult);
 
     /// <inheritdoc/>
-    public Task<bool> ActivateCategorizationRuleAsync(Guid id) => Task.FromResult(this.ActivateRuleResult);
+    public Task<bool> ActivateCategorizationRuleAsync(Guid id) =>
+        this.ActivateRuleException is not null
+            ? Task.FromException<bool>(this.ActivateRuleException)
+            : Task.FromResult(this.ActivateRuleResult);
 
     /// <inheritdoc/>
-    public Task<bool> DeactivateCategorizationRuleAsync(Guid id) => Task.FromResult(this.DeactivateRuleResult);
+    public Task<bool> DeactivateCategorizationRuleAsync(Guid id) =>
+        this.DeactivateRuleException is not null
+            ? Task.FromException<bool>(this.DeactivateRuleException)
+            : Task.FromResult(this.DeactivateRuleResult);
 
     /// <inheritdoc/>
-    public Task<TestPatternResponse?> TestPatternAsync(TestPatternRequest request) => Task.FromResult(this.TestPatternResult);
+    public Task<TestPatternResponse?> TestPatternAsync(TestPatternRequest request) =>
+        this.TestPatternException is not null
+            ? Task.FromException<TestPatternResponse?>(this.TestPatternException)
+            : Task.FromResult(this.TestPatternResult);
 
     /// <inheritdoc/>
     public Task<ApplyRulesResponse?> ApplyCategorizationRulesAsync(ApplyRulesRequest request) => Task.FromResult(this.ApplyRulesResult);

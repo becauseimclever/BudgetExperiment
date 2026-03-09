@@ -1,6 +1,6 @@
 # Feature 098: ViewModel Extraction — Rules Page
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** High
 > **Dependencies:** Feature 097 (Done — established pattern)
 
@@ -42,13 +42,13 @@ The Rules page ([Rules.razor](../src/BudgetExperiment.Client/Pages/Rules.razor))
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `RulesViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/RulesViewModel.cs`
-- [ ] All 23 handler methods are moved to the ViewModel
-- [ ] All 17 state fields are moved to the ViewModel
-- [ ] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
-- [ ] `Rules.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 20 `RulesPageTests` pass without modification (or with minimal binding changes)
+- [x] `RulesViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/RulesViewModel.cs`
+- [x] All 23 handler methods are moved to the ViewModel
+- [x] All 17 state fields are moved to the ViewModel
+- [x] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
+- [x] `Rules.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 20 `RulesPageTests` pass without modification (or with minimal binding changes)
 
 ### US-098-002: Add ViewModel Unit Tests
 
@@ -57,15 +57,15 @@ The Rules page ([Rules.razor](../src/BudgetExperiment.Client/Pages/Rules.razor))
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `RulesViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all 23 handler methods
-- [ ] Tests verify state transitions (loading, error, success)
-- [ ] Tests verify CRUD operations call correct API service methods
-- [ ] Tests verify error handling (API failures, conflict detection on update)
-- [ ] Tests verify pattern testing functionality
-- [ ] Tests verify apply rules workflow
-- [ ] Tests verify scope change triggers reload and dispose cleans up
-- [ ] Coverage for RulesViewModel ≥ 90%
+- [x] `RulesViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all 23 handler methods
+- [x] Tests verify state transitions (loading, error, success)
+- [x] Tests verify CRUD operations call correct API service methods
+- [x] Tests verify error handling (API failures, conflict detection on update)
+- [x] Tests verify pattern testing functionality
+- [x] Tests verify apply rules workflow
+- [x] Tests verify scope change triggers reload and dispose cleans up
+- [x] Coverage for RulesViewModel ≥ 90%
 
 ---
 
@@ -138,41 +138,41 @@ builder.Services.AddTransient<RulesViewModel>();
 ### Phase 1: Create RulesViewModel with Tests (TDD)
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/RulesViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/RulesViewModelTests.cs`
-- [ ] Write tests for `InitializeAsync` — loads rules and categories, subscribes to scope changes
-- [ ] Write tests for `LoadDataAsync` — success, failure, loading state transitions
-- [ ] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
-- [ ] Write tests for `DismissError` — clears error message
-- [ ] Write tests for CRUD: `CreateRule`, `UpdateRule`, `DeleteRule` — success, failure, conflict
-- [ ] Write tests for `ActivateRule` / `DeactivateRule` — success, failure
-- [ ] Write tests for `TestPattern` — success, failure, testing state
-- [ ] Write tests for `ShowApplyRules` / `HideApplyRules` / `OnRulesApplied`
-- [ ] Write tests for `CreateRuleFromTest` — creates rule from test pattern results
-- [ ] Write tests for `NavigateToAiSuggestions` — delegates to NavigationManager
-- [ ] Write tests for form toggles: `ShowAddRule`/`HideAddRule`, `ShowEditRule`/`HideEditRule`, `ConfirmDeleteRule`/`CancelDelete`
-- [ ] Write tests for `Dispose` — unsubscribes from scope change events
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on RulesViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/RulesViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/RulesViewModelTests.cs`
+- [x] Write tests for `InitializeAsync` — loads rules and categories, subscribes to scope changes
+- [x] Write tests for `LoadDataAsync` — success, failure, loading state transitions
+- [x] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
+- [x] Write tests for `DismissError` — clears error message
+- [x] Write tests for CRUD: `CreateRule`, `UpdateRule`, `DeleteRule` — success, failure, conflict
+- [x] Write tests for `ActivateRule` / `DeactivateRule` — success, failure
+- [x] Write tests for `TestPattern` — success, failure, testing state
+- [x] Write tests for `ShowApplyRules` / `HideApplyRules` / `OnRulesApplied`
+- [x] Write tests for `CreateRuleFromTest` — creates rule from test pattern results
+- [x] Write tests for `NavigateToAiSuggestions` — delegates to NavigationManager
+- [x] Write tests for form toggles: `ShowAddRule`/`HideAddRule`, `ShowEditRule`/`HideEditRule`, `ConfirmDeleteRule`/`CancelDelete`
+- [x] Write tests for `Dispose` — unsubscribes from scope change events
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on RulesViewModel
 
 ### Phase 2: Refactor Rules.razor to Use ViewModel
 
 **Tasks:**
-- [ ] Register `RulesViewModel` as transient in DI
-- [ ] Update `Rules.razor` to inject `RulesViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
-- [ ] Verify all 20 existing `RulesPageTests` pass
+- [x] Register `RulesViewModel` as transient in DI
+- [x] Update `Rules.razor` to inject `RulesViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
+- [x] Verify all 20 existing `RulesPageTests` pass
 - [ ] Verify application runs correctly (manual smoke test)
 
 ### Phase 3: Verify Coverage & Finalize
 
 **Tasks:**
-- [ ] Run coverage report for RulesViewModel — verify ≥ 90%
-- [ ] Update this document status to Done
+- [x] Run coverage report for RulesViewModel — verify ≥ 90%
+- [x] Update this document status to Done
 
 ---
 

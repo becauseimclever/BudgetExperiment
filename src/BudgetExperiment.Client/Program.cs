@@ -132,5 +132,7 @@ builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<GeolocationService>();
 builder.Services.AddScoped<VersionService>();
 builder.Services.AddTransient<CategoriesViewModel>();
+builder.Services.AddTransient<RulesViewModel>();
+builder.Services.AddTransient<AccountsViewModel>();
 
 await builder.Build().RunAsync();

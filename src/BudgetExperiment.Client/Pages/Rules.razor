@@ -2,39 +2,38 @@
 
 @implements IDisposable
 
-@inject IBudgetApiService ApiService
-@inject IToastService ToastService
-@inject NavigationManager Navigation
-@inject ScopeService ScopeService
+@using BudgetExperiment.Client.ViewModels
+
+@inject RulesViewModel ViewModel
 
 <PageTitle>Categorization Rules - Budget Experiment</PageTitle>
 
 <div class="page-container">
     <PageHeader Title="Categorization Rules">
         <Actions>
-            <Button Variant="ButtonVariant.Outline" IconLeft="sparkles" OnClick="NavigateToAiSuggestions" title="Get AI-powered rule suggestions">AI Suggestions</Button>
-            <Button Variant="ButtonVariant.Secondary" IconLeft="play" IsDisabled="@(rules.Count == 0)" OnClick="ShowApplyRules">Apply Rules</Button>
-            <Button Variant="ButtonVariant.Success" OnClick="ShowAddRule">+ Add Rule</Button>
+            <Button Variant="ButtonVariant.Outline" IconLeft="sparkles" OnClick="ViewModel.NavigateToAiSuggestions" title="Get AI-powered rule suggestions">AI Suggestions</Button>
+            <Button Variant="ButtonVariant.Secondary" IconLeft="play" IsDisabled="@(ViewModel.Rules.Count == 0)" OnClick="ViewModel.ShowApplyRules">Apply Rules</Button>
+            <Button Variant="ButtonVariant.Success" OnClick="ViewModel.ShowAddRule">+ Add Rule</Button>
         </Actions>
     </PageHeader>
 
-    <ErrorAlert Message="@errorMessage"
-                OnRetry="RetryLoad"
-                OnDismiss="DismissError"
-                IsRetrying="@isRetrying" />
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                OnRetry="ViewModel.RetryLoadAsync"
+                OnDismiss="ViewModel.DismissError"
+                IsRetrying="@ViewModel.IsRetrying" />
 
-    @if (isLoading)
+    @if (ViewModel.IsLoading)
     {
         <LoadingSpinner Message="Loading rules..." />
     }
-    else if (rules.Count == 0 && errorMessage == null)
+    else if (ViewModel.Rules.Count == 0 && ViewModel.ErrorMessage == null)
     {
         <EmptyState Title="No categorization rules yet"
                    Description="Create rules to automatically assign categories to transactions based on their descriptions.">
-            <Button Variant="ButtonVariant.Primary" OnClick="ShowAddRule">Create Your First Rule</Button>
+            <Button Variant="ButtonVariant.Primary" OnClick="ViewModel.ShowAddRule">Create Your First Rule</Button>
         </EmptyState>
     }
-    else if (errorMessage == null)
+    else if (ViewModel.ErrorMessage == null)
     {
         <div class="rules-info mb-3">
             <small class="text-secondary">
@@ -44,399 +43,67 @@
         </div>
 
         <div class="rules-list">
-            @foreach (var rule in rules.OrderBy(r => r.Priority))
+            @foreach (var rule in ViewModel.Rules.OrderBy(r => r.Priority))
             {
                 <RuleCard Rule="@rule"
-                          OnEdit="ShowEditRule"
-                          OnDelete="ConfirmDeleteRule"
-                          OnActivate="ActivateRule"
-                          OnDeactivate="DeactivateRule" />
+                          OnEdit="ViewModel.ShowEditRule"
+                          OnDelete="ViewModel.ConfirmDeleteRule"
+                          OnActivate="ViewModel.ActivateRuleAsync"
+                          OnDeactivate="ViewModel.DeactivateRuleAsync" />
             }
         </div>
 
         <div class="section-divider mt-4 mb-4"></div>
 
-        <RuleTestPanel OnCreateRule="CreateRuleFromTest" />
+        <RuleTestPanel OnCreateRule="ViewModel.CreateRuleFromTest" />
     }
 
-    <ApplyRulesDialog IsVisible="@showApplyRules"
-                      OnClose="HideApplyRules"
-                      OnApplied="OnRulesApplied" />
+    <ApplyRulesDialog IsVisible="@ViewModel.ShowApplyRulesDialog"
+                      OnClose="ViewModel.HideApplyRules"
+                      OnApplied="ViewModel.OnRulesApplied" />
 
-    <Modal IsVisible="@showAddRule" Title="Add Categorization Rule" OnClose="HideAddRule">
-        <RuleForm Model="@newRule"
-                  Categories="@categories"
-                  OnSubmit="CreateRule"
-                  OnCancel="HideAddRule"
-                  OnTestPattern="TestPattern"
-                  IsSubmitting="@isSubmitting"
-                  IsTesting="@isTesting"
-                  TestResult="@testResult" />
+    <Modal IsVisible="@ViewModel.ShowAddForm" Title="Add Categorization Rule" OnClose="ViewModel.HideAddRule">
+        <RuleForm Model="@ViewModel.NewRule"
+                  Categories="@ViewModel.Categories"
+                  OnSubmit="ViewModel.CreateRuleAsync"
+                  OnCancel="ViewModel.HideAddRule"
+                  OnTestPattern="ViewModel.TestPatternAsync"
+                  IsSubmitting="@ViewModel.IsSubmitting"
+                  IsTesting="@ViewModel.IsTesting"
+                  TestResult="@ViewModel.TestResult" />
     </Modal>
 
-    <Modal IsVisible="@showEditRule" Title="Edit Categorization Rule" OnClose="HideEditRule">
-        <RuleForm Model="@editRule"
-                  Categories="@categories"
-                  OnSubmit="UpdateRule"
-                  OnCancel="HideEditRule"
-                  OnTestPattern="TestPattern"
+    <Modal IsVisible="@ViewModel.ShowEditForm" Title="Edit Categorization Rule" OnClose="ViewModel.HideEditRule">
+        <RuleForm Model="@ViewModel.EditRule"
+                  Categories="@ViewModel.Categories"
+                  OnSubmit="ViewModel.UpdateRuleAsync"
+                  OnCancel="ViewModel.HideEditRule"
+                  OnTestPattern="ViewModel.TestPatternAsync"
                   SubmitButtonText="Save Changes"
-                  IsSubmitting="@isSubmitting"
-                  IsTesting="@isTesting"
-                  TestResult="@testResult" />
+                  IsSubmitting="@ViewModel.IsSubmitting"
+                  IsTesting="@ViewModel.IsTesting"
+                  TestResult="@ViewModel.TestResult" />
     </Modal>
 
-    <ConfirmDialog IsVisible="@showDeleteConfirm"
+    <ConfirmDialog IsVisible="@ViewModel.ShowDeleteConfirm"
                    Title="Delete Rule"
-                   Message="@($"Are you sure you want to delete the rule '{deletingRule?.Name}'? This action cannot be undone.")"
+                   Message="@($"Are you sure you want to delete the rule '{ViewModel.DeletingRule?.Name}'? This action cannot be undone.")"
                    ConfirmText="Delete"
-                   IsProcessing="@isDeleting"
-                   OnConfirm="DeleteRule"
-                   OnCancel="CancelDelete" />
+                   IsProcessing="@ViewModel.IsDeleting"
+                   OnConfirm="ViewModel.DeleteRuleAsync"
+                   OnCancel="ViewModel.CancelDelete" />
 </div>
 
 @code {
-    private bool isLoading = true;
-    private bool isRetrying;
-    private bool isSubmitting;
-    private bool isDeleting;
-    private bool isTesting;
-    private string? errorMessage;
-    private List<CategorizationRuleDto> rules = new();
-    private List<BudgetCategoryDto> categories = new();
-
-    // Add state
-    private bool showAddRule;
-    private CategorizationRuleCreateDto newRule = new() { MatchType = "Contains" };
-    private TestPatternResponse? testResult;
-
-    // Edit state
-    private bool showEditRule;
-    private CategorizationRuleCreateDto editRule = new();
-    private Guid? editingRuleId;
-    private string? editingVersion;
-
-    // Delete confirmation state
-    private bool showDeleteConfirm;
-    private CategorizationRuleDto? deletingRule;
-
-    // Apply rules state
-    private bool showApplyRules;
-
-    private void NavigateToAiSuggestions()
-    {
-        Navigation.NavigateTo("/ai/suggestions");
-    }
-
-    /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        ScopeService.ScopeChanged += OnScopeChanged;
-        await LoadDataAsync();
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
     }
 
-    /// <inheritdoc />
     public void Dispose()
     {
-        ScopeService.ScopeChanged -= OnScopeChanged;
-    }
-
-    private async void OnScopeChanged(BudgetScope? _)
-    {
-        await LoadDataAsync();
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task LoadDataAsync()
-    {
-        isLoading = true;
-        errorMessage = null;
-        StateHasChanged();
-
-        try
-        {
-            var rulesTask = ApiService.GetCategorizationRulesAsync();
-            var categoriesTask = ApiService.GetCategoriesAsync(activeOnly: true);
-
-            await Task.WhenAll(rulesTask, categoriesTask);
-
-            rules = (await rulesTask).ToList();
-            categories = (await categoriesTask).ToList();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to load data: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task RetryLoad()
-    {
-        isRetrying = true;
-        await LoadDataAsync();
-        isRetrying = false;
-    }
-
-    private void DismissError()
-    {
-        errorMessage = null;
-    }
-
-    // Add Rule
-    private void ShowAddRule()
-    {
-        newRule = new CategorizationRuleCreateDto { MatchType = "Contains" };
-        testResult = null;
-        showAddRule = true;
-    }
-
-    private void HideAddRule()
-    {
-        showAddRule = false;
-        testResult = null;
-    }
-
-    private async Task CreateRule()
-    {
-        isSubmitting = true;
-        try
-        {
-            var created = await ApiService.CreateCategorizationRuleAsync(newRule);
-            if (created != null)
-            {
-                rules.Add(created);
-                HideAddRule();
-            }
-            else
-            {
-                errorMessage = "Failed to create rule.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to create rule: {ex.Message}";
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    // Edit Rule
-    private void ShowEditRule(CategorizationRuleDto rule)
-    {
-        editingRuleId = rule.Id;
-        editingVersion = rule.Version;
-        editRule = new CategorizationRuleCreateDto
-        {
-            Name = rule.Name,
-            Pattern = rule.Pattern,
-            MatchType = rule.MatchType,
-            CaseSensitive = rule.CaseSensitive,
-            CategoryId = rule.CategoryId,
-        };
-        testResult = null;
-        showEditRule = true;
-    }
-
-    private void HideEditRule()
-    {
-        showEditRule = false;
-        editingRuleId = null;
-        testResult = null;
-    }
-
-    private async Task UpdateRule()
-    {
-        if (editingRuleId == null)
-        {
-            return;
-        }
-
-        isSubmitting = true;
-        try
-        {
-            var updateDto = new CategorizationRuleUpdateDto
-            {
-                Name = editRule.Name,
-                Pattern = editRule.Pattern,
-                MatchType = editRule.MatchType,
-                CaseSensitive = editRule.CaseSensitive,
-                CategoryId = editRule.CategoryId,
-            };
-
-            var updated = await ApiService.UpdateCategorizationRuleAsync(editingRuleId.Value, updateDto, editingVersion);
-            if (updated.IsConflict)
-            {
-                ToastService.ShowWarning("This rule was modified by another user. Data has been refreshed.", "Conflict");
-                HideEditRule();
-                await LoadDataAsync();
-                return;
-            }
-
-            if (updated.IsSuccess)
-            {
-                var index = rules.FindIndex(r => r.Id == editingRuleId.Value);
-                if (index >= 0)
-                {
-                    rules[index] = updated.Data!;
-                }
-
-                HideEditRule();
-            }
-            else
-            {
-                errorMessage = "Failed to update rule.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to update rule: {ex.Message}";
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    // Delete Rule
-    private void ConfirmDeleteRule(CategorizationRuleDto rule)
-    {
-        deletingRule = rule;
-        showDeleteConfirm = true;
-    }
-
-    private void CancelDelete()
-    {
-        showDeleteConfirm = false;
-        deletingRule = null;
-    }
-
-    private async Task DeleteRule()
-    {
-        if (deletingRule == null)
-        {
-            return;
-        }
-
-        isDeleting = true;
-        try
-        {
-            var success = await ApiService.DeleteCategorizationRuleAsync(deletingRule.Id);
-            if (success)
-            {
-                rules.RemoveAll(r => r.Id == deletingRule.Id);
-                showDeleteConfirm = false;
-                deletingRule = null;
-            }
-            else
-            {
-                errorMessage = "Failed to delete rule.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to delete rule: {ex.Message}";
-        }
-        finally
-        {
-            isDeleting = false;
-        }
-    }
-
-    // Activate/Deactivate
-    private async Task ActivateRule(CategorizationRuleDto rule)
-    {
-        try
-        {
-            var success = await ApiService.ActivateCategorizationRuleAsync(rule.Id);
-            if (success)
-            {
-                var index = rules.FindIndex(r => r.Id == rule.Id);
-                if (index >= 0)
-                {
-                    rules[index].IsActive = true;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to activate rule: {ex.Message}";
-        }
-    }
-
-    private async Task DeactivateRule(CategorizationRuleDto rule)
-    {
-        try
-        {
-            var success = await ApiService.DeactivateCategorizationRuleAsync(rule.Id);
-            if (success)
-            {
-                var index = rules.FindIndex(r => r.Id == rule.Id);
-                if (index >= 0)
-                {
-                    rules[index].IsActive = false;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to deactivate rule: {ex.Message}";
-        }
-    }
-
-    // Test Pattern
-    private async Task TestPattern(TestPatternRequest request)
-    {
-        isTesting = true;
-        testResult = null;
-        StateHasChanged();
-
-        try
-        {
-            testResult = await ApiService.TestPatternAsync(request);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to test pattern: {ex.Message}";
-        }
-        finally
-        {
-            isTesting = false;
-        }
-    }
-
-    // Apply Rules
-    private void ShowApplyRules()
-    {
-        showApplyRules = true;
-    }
-
-    private void HideApplyRules()
-    {
-        showApplyRules = false;
-    }
-
-    private void OnRulesApplied(ApplyRulesResponse response)
-    {
-        // Optionally refresh data or show notification
-        // The dialog shows the results, so we just need to handle any side effects
-    }
-
-    // Create Rule from Test Panel
-    private void CreateRuleFromTest((string Pattern, string MatchType, bool CaseSensitive) patternInfo)
-    {
-        newRule = new CategorizationRuleCreateDto
-        {
-            Pattern = patternInfo.Pattern,
-            MatchType = patternInfo.MatchType,
-            CaseSensitive = patternInfo.CaseSensitive,
-        };
-        testResult = null;
-        showAddRule = true;
+        ViewModel.OnStateChanged = null;
+        ViewModel.Dispose();
     }
 }
