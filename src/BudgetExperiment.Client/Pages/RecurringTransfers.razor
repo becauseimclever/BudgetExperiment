@@ -2,46 +2,45 @@
 
 @implements IDisposable
 
-@inject IBudgetApiService ApiService
-@inject IToastService ToastService
-@inject NavigationManager Navigation
-@inject ScopeService ScopeService
+@using BudgetExperiment.Client.ViewModels
+
+@inject RecurringTransfersViewModel ViewModel
 
 <PageTitle>Recurring Transfers - Budget Experiment</PageTitle>
 
 <div class="page-container">
     <PageHeader Title="Recurring Transfers">
         <Actions>
-            <Button Variant="ButtonVariant.Success" OnClick="ShowAddForm">+ Add Recurring Transfer</Button>
+            <Button Variant="ButtonVariant.Success" OnClick="ViewModel.OpenAddForm">+ Add Recurring Transfer</Button>
         </Actions>
     </PageHeader>
 
-    <ErrorAlert Message="@errorMessage"
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
                 IsDismissible="true"
-                IsRetrying="@isRetrying"
-                OnRetry="RetryLoad"
-                OnDismiss="DismissError" />
+                IsRetrying="@ViewModel.IsRetrying"
+                OnRetry="ViewModel.RetryLoadAsync"
+                OnDismiss="ViewModel.DismissError" />
 
-    @if (isLoading)
+    @if (ViewModel.IsLoading)
     {
         <LoadingSpinner Message="Loading recurring transfers..." />
     }
-    else if (errorMessage != null)
+    else if (ViewModel.ErrorMessage != null)
     {
         @* Error is displayed by ErrorAlert above *@
     }
-    else if (recurringTransfers.Count == 0)
+    else if (ViewModel.RecurringTransfers.Count == 0)
     {
         <EmptyState Title="No Recurring Transfers"
                    Description="Set up recurring transfers for automatic money movement between accounts."
                    Icon="repeat">
-            <Button Variant="ButtonVariant.Primary" OnClick="ShowAddForm">Create Your First Recurring Transfer</Button>
+            <Button Variant="ButtonVariant.Primary" OnClick="ViewModel.OpenAddForm">Create Your First Recurring Transfer</Button>
         </EmptyState>
     }
     else
     {
         <div class="recurring-list">
-            @foreach (var transfer in recurringTransfers)
+            @foreach (var transfer in ViewModel.RecurringTransfers)
             {
                 <div class="recurring-card @(transfer.IsActive ? "" : "inactive")">
                     <div class="recurring-card-header">
@@ -53,11 +52,11 @@
                                     <span class="badge-transfer-arrow">→</span>
                                     <span class="badge badge-transfer-to">@transfer.DestinationAccountName</span>
                                 </span>
-                                <span class="badge badge-frequency">@FormatFrequency(transfer)</span>
+                                <span class="badge badge-frequency">@RecurringTransfersViewModel.FormatFrequency(transfer)</span>
                             </div>
                         </div>
                         <div class="recurring-card-amount positive">
-                            @FormatMoney(transfer.Amount)
+                            @RecurringTransfersViewModel.FormatMoney(transfer.Amount)
                         </div>
                     </div>
                     <div class="detail-list">
@@ -86,23 +85,23 @@
                     <div class="recurring-card-actions">
                         @if (transfer.IsActive)
                         {
-                            <button class="btn-action" @onclick="() => SkipNext(transfer)" title="Skip next occurrence">
+                            <button class="btn-action" @onclick="() => ViewModel.SkipNextAsync(transfer)" title="Skip next occurrence">
                                 <Icon Name="skip-forward" Size="16" /> Skip
                             </button>
-                            <button class="btn-action" @onclick="() => Pause(transfer)" title="Pause">
+                            <button class="btn-action" @onclick="() => ViewModel.PauseAsync(transfer)" title="Pause">
                                 <Icon Name="pause" Size="16" /> Pause
                             </button>
                         }
                         else
                         {
-                            <button class="btn-action btn-action-resume" @onclick="() => Resume(transfer)" title="Resume">
+                            <button class="btn-action btn-action-resume" @onclick="() => ViewModel.ResumeAsync(transfer)" title="Resume">
                                 <Icon Name="play" Size="16" /> Resume
                             </button>
                         }
-                        <button class="btn-action btn-action-edit" @onclick="() => ShowEditForm(transfer)" title="Edit">
+                        <button class="btn-action btn-action-edit" @onclick="() => ViewModel.OpenEditForm(transfer)" title="Edit">
                             <Icon Name="edit" Size="16" /> Edit
                         </button>
-                        <button class="btn-action btn-action-delete" @onclick="() => ShowDeleteConfirm(transfer)" title="Delete">
+                        <button class="btn-action btn-action-delete" @onclick="() => ViewModel.OpenDeleteConfirm(transfer)" title="Delete">
                             <Icon Name="trash" Size="16" /> Delete
                         </button>
                     </div>
@@ -111,268 +110,41 @@
         </div>
     }
 
-    <Modal IsVisible="@showAddForm" Title="Add Recurring Transfer" OnClose="HideForm">
-        <RecurringTransferForm Model="@newRecurring"
-                               OnSubmit="CreateRecurring"
-                               OnCancel="HideForm"
-                               IsSubmitting="@isSubmitting" />
+    <Modal IsVisible="@ViewModel.ShowAddForm" Title="Add Recurring Transfer" OnClose="ViewModel.HideForm">
+        <RecurringTransferForm Model="@ViewModel.NewRecurring"
+                               OnSubmit="ViewModel.CreateRecurringAsync"
+                               OnCancel="ViewModel.HideForm"
+                               IsSubmitting="@ViewModel.IsSubmitting" />
     </Modal>
 
-    <Modal IsVisible="@showEditForm" Title="Edit Recurring Transfer" OnClose="HideForm">
-        <EditRecurringTransferForm Model="@editModel"
-                                   OnSubmit="UpdateRecurring"
-                                   OnCancel="HideForm"
-                                   IsSubmitting="@isSubmitting" />
+    <Modal IsVisible="@ViewModel.ShowEditForm" Title="Edit Recurring Transfer" OnClose="ViewModel.HideForm">
+        <EditRecurringTransferForm Model="@ViewModel.EditModel"
+                                   OnSubmit="ViewModel.UpdateRecurringAsync"
+                                   OnCancel="ViewModel.HideForm"
+                                   IsSubmitting="@ViewModel.IsSubmitting" />
     </Modal>
 
-    <ConfirmDialog IsVisible="@showDeleteConfirm"
+    <ConfirmDialog IsVisible="@ViewModel.ShowDeleteConfirm"
                    Title="Delete Recurring Transfer"
-                   Message="@($"Are you sure you want to delete '{deletingTransfer?.Description}'? Future occurrences will no longer be scheduled.")"
+                   Message="@($"Are you sure you want to delete '{ViewModel.DeletingTransfer?.Description}'? Future occurrences will no longer be scheduled.")"
                    ConfirmText="Delete"
-                   IsProcessing="@isDeleting"
-                   OnConfirm="ConfirmDelete"
-                   OnCancel="CancelDelete" />
+                   IsProcessing="@ViewModel.IsDeleting"
+                   OnConfirm="ViewModel.ConfirmDeleteAsync"
+                   OnCancel="ViewModel.CancelDelete" />
 </div>
 
 @code {
-    private bool isLoading = true;
-    private bool isRetrying;
-    private bool isSubmitting = false;
-    private bool isDeleting = false;
-    private string? errorMessage;
-    private List<RecurringTransferDto> recurringTransfers = new();
-
-    private bool showAddForm = false;
-    private bool showEditForm = false;
-    private bool showDeleteConfirm = false;
-
-    private RecurringTransferCreateDto newRecurring = new();
-    private RecurringTransferUpdateDto editModel = new();
-    private Guid editingId;
-    private string? editingVersion;
-    private RecurringTransferDto? deletingTransfer;
-
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
-        ScopeService.ScopeChanged += OnScopeChanged;
-        await LoadRecurringTransfers();
-    }
-
-    private async void OnScopeChanged(BudgetScope? _)
-    {
-        await InvokeAsync(async () =>
-        {
-            await LoadRecurringTransfers();
-            StateHasChanged();
-        });
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        ScopeService.ScopeChanged -= OnScopeChanged;
-    }
-
-    private async Task LoadRecurringTransfers()
-    {
-        isLoading = true;
-        errorMessage = null;
-
-        try
-        {
-            recurringTransfers = (await ApiService.GetRecurringTransfersAsync()).ToList();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Failed to load recurring transfers: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task RetryLoad()
-    {
-        isRetrying = true;
-        StateHasChanged();
-
-        try
-        {
-            await LoadRecurringTransfers();
-        }
-        finally
-        {
-            isRetrying = false;
-        }
-    }
-
-    private void DismissError()
-    {
-        errorMessage = null;
-    }
-
-    private void ShowAddForm()
-    {
-        newRecurring = new RecurringTransferCreateDto
-        {
-            Frequency = "Monthly",
-            StartDate = DateOnly.FromDateTime(DateTime.Today),
-            Amount = new MoneyDto { Currency = "USD", Amount = 0 },
-        };
-        showAddForm = true;
-    }
-
-    private void ShowEditForm(RecurringTransferDto transfer)
-    {
-        editingId = transfer.Id;
-        editingVersion = transfer.Version;
-        editModel = new RecurringTransferUpdateDto
-        {
-            Description = transfer.Description,
-            Amount = transfer.Amount,
-            Frequency = transfer.Frequency,
-            Interval = transfer.Interval,
-            DayOfMonth = transfer.DayOfMonth,
-            DayOfWeek = transfer.DayOfWeek,
-            MonthOfYear = transfer.MonthOfYear,
-            EndDate = transfer.EndDate,
-        };
-        showEditForm = true;
-    }
-
-    private void HideForm()
-    {
-        showAddForm = false;
-        showEditForm = false;
-    }
-
-    private async Task CreateRecurring(RecurringTransferCreateDto model)
-    {
-        isSubmitting = true;
-        try
-        {
-            var result = await ApiService.CreateRecurringTransferAsync(model);
-            if (result != null)
-            {
-                showAddForm = false;
-                await LoadRecurringTransfers();
-            }
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    private async Task UpdateRecurring(RecurringTransferUpdateDto model)
-    {
-        isSubmitting = true;
-        try
-        {
-            var result = await ApiService.UpdateRecurringTransferAsync(editingId, model, editingVersion);
-            if (result.IsConflict)
-            {
-                ToastService.ShowWarning("This recurring transfer was modified by another user. Data has been refreshed.", "Conflict");
-                HideForm();
-                await LoadRecurringTransfers();
-                return;
-            }
-
-            if (result.IsSuccess)
-            {
-                showEditForm = false;
-                await LoadRecurringTransfers();
-            }
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    private async Task SkipNext(RecurringTransferDto transfer)
-    {
-        var result = await ApiService.SkipNextRecurringTransferAsync(transfer.Id);
-        if (result != null)
-        {
-            await LoadRecurringTransfers();
-        }
-    }
-
-    private async Task Pause(RecurringTransferDto transfer)
-    {
-        var result = await ApiService.PauseRecurringTransferAsync(transfer.Id);
-        if (result != null)
-        {
-            await LoadRecurringTransfers();
-        }
-    }
-
-    private async Task Resume(RecurringTransferDto transfer)
-    {
-        var result = await ApiService.ResumeRecurringTransferAsync(transfer.Id);
-        if (result != null)
-        {
-            await LoadRecurringTransfers();
-        }
-    }
-
-    private void ShowDeleteConfirm(RecurringTransferDto transfer)
-    {
-        deletingTransfer = transfer;
-        showDeleteConfirm = true;
-    }
-
-    private async Task ConfirmDelete()
-    {
-        if (deletingTransfer == null)
-        {
-            return;
-        }
-
-        isDeleting = true;
-        StateHasChanged();
-
-        try
-        {
-            var deleted = await ApiService.DeleteRecurringTransferAsync(deletingTransfer.Id);
-            if (deleted)
-            {
-                showDeleteConfirm = false;
-                deletingTransfer = null;
-                await LoadRecurringTransfers();
-            }
-        }
-        finally
-        {
-            isDeleting = false;
-        }
-    }
-
-    private void CancelDelete()
-    {
-        showDeleteConfirm = false;
-        deletingTransfer = null;
-    }
-
-    private static string FormatFrequency(RecurringTransferDto transfer)
-    {
-        return transfer.Frequency switch
-        {
-            "Daily" => "Daily",
-            "Weekly" => $"Weekly on {transfer.DayOfWeek}",
-            "BiWeekly" => $"Bi-Weekly on {transfer.DayOfWeek}",
-            "Monthly" => transfer.DayOfMonth.HasValue ? $"Monthly on day {transfer.DayOfMonth}" : "Monthly",
-            "Quarterly" => transfer.DayOfMonth.HasValue ? $"Quarterly on day {transfer.DayOfMonth}" : "Quarterly",
-            "Yearly" => transfer.DayOfMonth.HasValue ? $"Yearly on day {transfer.DayOfMonth}" : "Yearly",
-            _ => transfer.Frequency,
-        };
-    }
-
-    private static string FormatMoney(MoneyDto money)
-    {
-        return $"{money.Currency} {money.Amount:N2}";
+        ViewModel.OnStateChanged = null;
+        ViewModel.Dispose();
     }
 }

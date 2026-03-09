@@ -401,6 +401,26 @@ internal class StubBudgetApiService : IBudgetApiService
     public bool DeleteRecurringTransferResult { get; set; }
 
     /// <summary>
+    /// Gets or sets the result returned by <see cref="PauseRecurringTransferAsync"/>.
+    /// </summary>
+    public RecurringTransferDto? PauseRecurringTransferTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="ResumeRecurringTransferAsync"/>.
+    /// </summary>
+    public RecurringTransferDto? ResumeRecurringTransferTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="SkipNextRecurringTransferAsync"/>.
+    /// </summary>
+    public RecurringTransferDto? SkipNextRecurringTransferResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception thrown by <see cref="GetRecurringTransfersAsync"/>.
+    /// </summary>
+    public Exception? GetRecurringTransfersException { get; set; }
+
+    /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateTransferAsync"/>.
     /// </summary>
     public TransferResponse? UpdateTransferResult { get; set; }
@@ -544,7 +564,15 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> DeleteTransferAsync(Guid transferId) => Task.FromResult(this.DeleteTransferResult);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringTransferDto>>(this.RecurringTransfers);
+    public Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null)
+    {
+        if (this.GetRecurringTransfersException != null)
+        {
+            throw this.GetRecurringTransfersException;
+        }
+
+        return Task.FromResult<IReadOnlyList<RecurringTransferDto>>(this.RecurringTransfers);
+    }
 
     /// <inheritdoc/>
     public Task<RecurringTransferDto?> GetRecurringTransferAsync(Guid id) => Task.FromResult<RecurringTransferDto?>(null);
@@ -559,13 +587,13 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> DeleteRecurringTransferAsync(Guid id) => Task.FromResult(this.DeleteRecurringTransferResult);
 
     /// <inheritdoc/>
-    public Task<RecurringTransferDto?> PauseRecurringTransferAsync(Guid id) => Task.FromResult<RecurringTransferDto?>(null);
+    public Task<RecurringTransferDto?> PauseRecurringTransferAsync(Guid id) => Task.FromResult(this.PauseRecurringTransferTransferResult);
 
     /// <inheritdoc/>
-    public Task<RecurringTransferDto?> ResumeRecurringTransferAsync(Guid id) => Task.FromResult<RecurringTransferDto?>(null);
+    public Task<RecurringTransferDto?> ResumeRecurringTransferAsync(Guid id) => Task.FromResult(this.ResumeRecurringTransferTransferResult);
 
     /// <inheritdoc/>
-    public Task<RecurringTransferDto?> SkipNextRecurringTransferAsync(Guid id) => Task.FromResult<RecurringTransferDto?>(null);
+    public Task<RecurringTransferDto?> SkipNextRecurringTransferAsync(Guid id) => Task.FromResult(this.SkipNextRecurringTransferResult);
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<RecurringTransferInstanceDto>> GetProjectedRecurringTransfersAsync(DateOnly from, DateOnly to, Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringTransferInstanceDto>>([]);

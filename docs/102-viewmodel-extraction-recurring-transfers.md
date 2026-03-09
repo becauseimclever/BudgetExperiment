@@ -1,6 +1,6 @@
 # Feature 102: ViewModel Extraction — Recurring Transfers Page
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium
 > **Dependencies:** Feature 097 (Done — established pattern)
 
@@ -42,13 +42,13 @@ The Recurring Transfers page ([RecurringTransfers.razor](../src/BudgetExperiment
 **So that** page business logic is testable with plain xUnit and coverage reports accurately.
 
 **Acceptance Criteria:**
-- [ ] `RecurringTransfersViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/RecurringTransfersViewModel.cs`
-- [ ] All 19 handler methods are moved to the ViewModel (static helpers may stay or move)
-- [ ] All 14 state fields are moved to the ViewModel
-- [ ] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
-- [ ] `RecurringTransfers.razor` delegates all logic to the injected ViewModel
-- [ ] ViewModel receives services via constructor injection
-- [ ] All existing 21 `RecurringTransfersPageTests` pass without modification (or with minimal binding changes)
+- [x] `RecurringTransfersViewModel` class exists in `src/BudgetExperiment.Client/ViewModels/RecurringTransfersViewModel.cs`
+- [x] All 19 handler methods are moved to the ViewModel (static helpers may stay or move)
+- [x] All 14 state fields are moved to the ViewModel
+- [x] ViewModel exposes `Action? OnStateChanged` callback for re-rendering
+- [x] `RecurringTransfers.razor` delegates all logic to the injected ViewModel
+- [x] ViewModel receives services via constructor injection
+- [x] All existing 21 `RecurringTransfersPageTests` pass without modification (or with minimal binding changes)
 
 ### US-102-002: Add ViewModel Unit Tests
 
@@ -57,14 +57,14 @@ The Recurring Transfers page ([RecurringTransfers.razor](../src/BudgetExperiment
 **So that** all handler logic has comprehensive and accurately reported coverage.
 
 **Acceptance Criteria:**
-- [ ] `RecurringTransfersViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
-- [ ] Tests cover all handler methods
-- [ ] Tests verify state transitions (loading, error, success)
-- [ ] Tests verify CRUD operations (create, update, delete)
-- [ ] Tests verify lifecycle actions (skip next, pause, resume)
-- [ ] Tests verify error handling (API failures, conflict detection)
-- [ ] Tests verify scope change triggers reload and dispose cleans up
-- [ ] Coverage for RecurringTransfersViewModel ≥ 90%
+- [x] `RecurringTransfersViewModelTests.cs` exists in `tests/BudgetExperiment.Client.Tests/ViewModels/`
+- [x] Tests cover all handler methods
+- [x] Tests verify state transitions (loading, error, success)
+- [x] Tests verify CRUD operations (create, update, delete)
+- [x] Tests verify lifecycle actions (skip next, pause, resume)
+- [x] Tests verify error handling (API failures, conflict detection)
+- [x] Tests verify scope change triggers reload and dispose cleans up
+- [x] Coverage for RecurringTransfersViewModel ≥ 90%
 
 ---
 
@@ -134,38 +134,38 @@ builder.Services.AddTransient<RecurringTransfersViewModel>();
 ### Phase 1: Create RecurringTransfersViewModel with Tests (TDD)
 
 **Tasks:**
-- [ ] Create `src/BudgetExperiment.Client/ViewModels/RecurringTransfersViewModel.cs`
-- [ ] Create `tests/BudgetExperiment.Client.Tests/ViewModels/RecurringTransfersViewModelTests.cs`
-- [ ] Write tests for `InitializeAsync` — loads recurring transfers, subscribes to scope changes
-- [ ] Write tests for `LoadRecurringTransfersAsync` — success, failure, loading state transitions
-- [ ] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
-- [ ] Write tests for `DismissError` — clears error message
-- [ ] Write tests for CRUD: `CreateRecurring`, `UpdateRecurring`, `ConfirmDelete` — success, failure, conflict
-- [ ] Write tests for lifecycle: `SkipNext`, `Pause`, `Resume` — success, failure
-- [ ] Write tests for form toggles: `ShowAddForm`/`ShowEditForm`/`HideForm`, `ShowDeleteConfirm`/`CancelDelete`
-- [ ] Write tests for static helpers: `FormatFrequency`, `FormatMoney`
-- [ ] Write tests for `Dispose` — unsubscribes from scope change events
-- [ ] Write tests for `OnStateChanged` callback — invoked after state mutations
-- [ ] Implement ViewModel to pass all tests
-- [ ] Verify ≥ 90% coverage on RecurringTransfersViewModel
+- [x] Create `src/BudgetExperiment.Client/ViewModels/RecurringTransfersViewModel.cs`
+- [x] Create `tests/BudgetExperiment.Client.Tests/ViewModels/RecurringTransfersViewModelTests.cs`
+- [x] Write tests for `InitializeAsync` — loads recurring transfers, subscribes to scope changes
+- [x] Write tests for `LoadRecurringTransfersAsync` — success, failure, loading state transitions
+- [x] Write tests for `RetryLoadAsync` — sets retrying flag, reloads
+- [x] Write tests for `DismissError` — clears error message
+- [x] Write tests for CRUD: `CreateRecurring`, `UpdateRecurring`, `ConfirmDelete` — success, failure, conflict
+- [x] Write tests for lifecycle: `SkipNext`, `Pause`, `Resume` — success, failure
+- [x] Write tests for form toggles: `ShowAddForm`/`ShowEditForm`/`HideForm`, `ShowDeleteConfirm`/`CancelDelete`
+- [x] Write tests for static helpers: `FormatFrequency`, `FormatMoney`
+- [x] Write tests for `Dispose` — unsubscribes from scope change events
+- [x] Write tests for `OnStateChanged` callback — invoked after state mutations
+- [x] Implement ViewModel to pass all tests
+- [x] Verify ≥ 90% coverage on RecurringTransfersViewModel
 
 ### Phase 2: Refactor RecurringTransfers.razor to Use ViewModel
 
 **Tasks:**
-- [ ] Register `RecurringTransfersViewModel` as transient in DI
-- [ ] Update `RecurringTransfers.razor` to inject `RecurringTransfersViewModel`
-- [ ] Replace all state fields with `ViewModel.PropertyName` bindings
-- [ ] Replace all event handlers with `ViewModel.MethodAsync` calls
-- [ ] Wire `OnStateChanged` callback in `OnInitializedAsync`
-- [ ] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
-- [ ] Verify all 21 existing `RecurringTransfersPageTests` pass
+- [x] Register `RecurringTransfersViewModel` as transient in DI
+- [x] Update `RecurringTransfers.razor` to inject `RecurringTransfersViewModel`
+- [x] Replace all state fields with `ViewModel.PropertyName` bindings
+- [x] Replace all event handlers with `ViewModel.MethodAsync` calls
+- [x] Wire `OnStateChanged` callback in `OnInitializedAsync`
+- [x] Remove `@code` block (except thin `OnInitializedAsync` / `Dispose` wiring)
+- [x] Verify all 21 existing `RecurringTransfersPageTests` pass
 - [ ] Verify application runs correctly (manual smoke test)
 
 ### Phase 3: Verify Coverage & Finalize
 
 **Tasks:**
-- [ ] Run coverage report for RecurringTransfersViewModel — verify ≥ 90%
-- [ ] Update this document status to Done
+- [x] Run coverage report for RecurringTransfersViewModel — verify ≥ 90%
+- [x] Update this document status to Done
 
 ---
 
