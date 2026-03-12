@@ -2,6 +2,27 @@
 
 All notable changes to Budget Experiment.
 
+## [3.23.0] - 2026-03-11
+
+### Features
+
+- **client:** Unified `/transactions` page with paginated, filtered, sorted view of all transactions — inline category assignment, bulk categorize/delete, create-rule-from-transaction, AI suggestion chips, deep-link URL sync, running balance for single-account views (Feature 107)
+- **api:** `GET /api/v1/transactions/paged` endpoint with full filter/sort/pagination support; `PATCH /api/v1/transactions/{id}/category` for quick category assignment; `POST /api/v1/transactions/suggest-categories` for batch AI suggestions
+- **client:** AI Suggestions UX redesign — unified suggestions page with grouped suggestions, review mode, AiSetupBanner, AnalysisInlineProgress, SuggestionGroup, UnifiedSuggestionCard, AiSuggestionsViewModel extraction (Feature 105)
+- **ai:** AI suggestion quality improvements — TransactionDescriptionCleaner, DescriptionAggregator, enriched prompts with frequency/amounts and few-shot examples, hardened response parsing with `ParseResult<T>` diagnostics, feedback-informed suggestions, SuggestionMetricsService with `GET /api/v1/suggestions/metrics` endpoint (Feature 106)
+
+### Testing
+
+- **api:** 23 integration tests for unified transaction endpoints — GET /paged (12), POST /suggest-categories (5), PATCH /{id}/category (6)
+- **application:** 12 unit tests for UnifiedTransactionService — paging, filtering, summary, balance info, running balance
+- **client:** 68 TransactionsViewModel unit tests — initialization, filters, sorting, pagination, selection, bulk operations, suggestions, create-rule, error handling
+- **client:** 9 InlineCategoryPicker + 9 TransactionFilterBar component tests
+
+### Documentation
+
+- **docs:** Feature 105 — AI suggestions UX redesign (complete)
+- **docs:** Feature 107 — Actionable transaction lists (complete)
+
 ## [3.22.0] - 2026-03-08
 
 ### Refactoring
