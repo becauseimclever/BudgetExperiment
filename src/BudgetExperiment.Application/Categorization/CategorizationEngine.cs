@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Categorization;
@@ -193,5 +194,49 @@ public class CategorizationEngine : ICategorizationEngine
         }
 
         return matchingDescriptions;
+    }
+
+    /// <inheritdoc />
+    public async Task<Dictionary<Guid, InlineCategorySuggestionDto>> GetBatchSuggestionsAsync(
+        IReadOnlyList<Guid> transactionIds,
+        CancellationToken cancellationToken = default)
+    {
+        var result = new Dictionary<Guid, InlineCategorySuggestionDto>();
+
+        if (transactionIds.Count == 0)
+        {
+            return result;
+        }
+
+        var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
+        if (rules.Count == 0)
+        {
+            return result;
+        }
+
+        foreach (var transactionId in transactionIds)
+        {
+            var transaction = await this._transactionRepository.GetByIdAsync(transactionId, cancellationToken);
+            if (transaction is null || transaction.CategoryId is not null)
+            {
+                continue;
+            }
+
+            foreach (var rule in rules)
+            {
+                if (rule.Matches(transaction.Description))
+                {
+                    result[transactionId] = new InlineCategorySuggestionDto
+                    {
+                        TransactionId = transactionId,
+                        CategoryId = rule.CategoryId,
+                        CategoryName = rule.Category?.Name ?? string.Empty,
+                    };
+                    break;
+                }
+            }
+        }
+
+        return result;
     }
 }

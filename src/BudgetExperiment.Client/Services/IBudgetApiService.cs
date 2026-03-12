@@ -643,6 +643,30 @@ public interface IBudgetApiService
     /// <returns>True if reordered successfully.</returns>
     Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds);
 
+    // Unified Transaction Operations
+
+    /// <summary>
+    /// Gets a paged, filtered, sorted list of all transactions.
+    /// </summary>
+    /// <param name="filter">The filter, sort, and paging parameters.</param>
+    /// <returns>A paged result of unified transactions with summary and optional balance info.</returns>
+    Task<UnifiedTransactionPageDto> GetUnifiedTransactionsAsync(UnifiedTransactionFilterDto filter);
+
+    /// <summary>
+    /// Updates the category on a single transaction (quick inline assignment).
+    /// </summary>
+    /// <param name="transactionId">The transaction ID.</param>
+    /// <param name="categoryId">The category ID to assign, or null to clear.</param>
+    /// <returns>The updated transaction DTO, or null if not found.</returns>
+    Task<TransactionDto?> UpdateTransactionCategoryAsync(Guid transactionId, Guid? categoryId);
+
+    /// <summary>
+    /// Gets batch category suggestions for uncategorized transactions using existing rules.
+    /// </summary>
+    /// <param name="transactionIds">The transaction IDs to get suggestions for.</param>
+    /// <returns>A response with suggestions keyed by transaction ID.</returns>
+    Task<BatchSuggestCategoriesResponse> GetBatchCategorySuggestionsAsync(IReadOnlyList<Guid> transactionIds);
+
     // Uncategorized Transaction Operations
 
     /// <summary>

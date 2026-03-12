@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 using BudgetExperiment.Application.Export;
 using BudgetExperiment.Application.Settings;
+using BudgetExperiment.Application.Transactions;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 
@@ -58,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<ICategorySuggestionService, CategorySuggestionService>();
         services.AddScoped<ISuggestionMetricsService, SuggestionMetricsService>();
         services.AddScoped<IUncategorizedTransactionService, UncategorizedTransactionService>();
+        services.AddScoped<IUnifiedTransactionService, UnifiedTransactionService>();
         services.AddScoped<IImportMappingService, ImportMappingService>();
         services.AddScoped<IImportDuplicateDetector, ImportDuplicateDetector>();
         services.AddScoped<IImportRowProcessor, ImportRowProcessor>();

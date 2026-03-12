@@ -1,0 +1,546 @@
+@page "/transactions"
+
+@implements IDisposable
+
+@using BudgetExperiment.Client.ViewModels
+
+@inject TransactionsViewModel ViewModel
+@inject IBudgetApiService ApiService
+@inject IToastService ToastService
+
+<PageTitle>Transactions - Budget Experiment</PageTitle>
+
+<div class="page-container-wide">
+    <PageHeader Title="Transactions" Subtitle="@GetSubtitle()" />
+
+    <TransactionFilterBar Filter="@ViewModel.Filter"
+                          Accounts="@ViewModel.Accounts"
+                          Categories="@ViewModel.Categories"
+                          ActiveFilterCount="@ViewModel.ActiveFilterCount"
+                          OnFiltersApplied="ViewModel.ApplyFiltersAsync"
+                          OnFiltersCleared="ViewModel.ClearFiltersAsync" />
+
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                OnRetry="ViewModel.RetryLoadAsync"
+                OnDismiss="ViewModel.DismissError"
+                IsRetrying="@ViewModel.IsRetrying" />
+
+    @if (ViewModel.IsLoading)
+    {
+        <LoadingSpinner Message="Loading transactions..." />
+    }
+    else if (ViewModel.PageData.TotalCount == 0 && ViewModel.ErrorMessage == null)
+    {
+        <EmptyState Icon="list"
+                    Title="No Transactions Found"
+                    Description="Try adjusting your filters to see more transactions." />
+    }
+    else if (ViewModel.ErrorMessage == null)
+    {
+        @if (ViewModel.PageData.Summary != null)
+        {
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value">@ViewModel.PageData.TotalCount</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Income</span>
+                    <span class="stat-value">
+                        <MoneyDisplay Amount="@ViewModel.PageData.Summary.IncomeTotal.Amount" />
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Expenses</span>
+                    <span class="stat-value">
+                        <MoneyDisplay Amount="@ViewModel.PageData.Summary.ExpenseTotal.Amount" />
+                    </span>
+                </div>
+                @if (ViewModel.PageData.Summary.UncategorizedCount > 0)
+                {
+                    <div class="stat-item">
+                        <span class="stat-label">Uncategorized</span>
+                        <span class="stat-value stat-warning">@ViewModel.PageData.Summary.UncategorizedCount</span>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (ViewModel.ShowBalanceColumn && ViewModel.PageData.BalanceInfo != null)
+        {
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Initial Balance</span>
+                    <span class="stat-value">
+                        <MoneyDisplay Amount="@ViewModel.PageData.BalanceInfo.InitialBalance.Amount" />
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Current Balance</span>
+                    <span class="stat-value">
+                        <MoneyDisplay Amount="@ViewModel.PageData.BalanceInfo.CurrentBalance.Amount" />
+                    </span>
+                </div>
+            </div>
+        }
+
+        @if (ViewModel.SelectedCount > 0)
+        {
+            <div class="bulk-action-bar">
+                <span class="selected-count">@ViewModel.SelectedCount selected</span>
+                <div class="bulk-action-controls">
+                    <Button Variant="ButtonVariant.Primary" OnClick="ViewModel.OpenBulkCategorize" IsDisabled="@ViewModel.IsBulkOperationInProgress">Categorize</Button>
+                    <Button Variant="ButtonVariant.Danger" OnClick="ConfirmBulkDelete" IsDisabled="@ViewModel.IsBulkOperationInProgress">Delete</Button>
+                    <Button Variant="ButtonVariant.Secondary" OnClick="ClearSelection">Clear Selection</Button>
+                </div>
+            </div>
+        }
+
+        <div class="card">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" checked="@ViewModel.AllSelected"
+                                   @onchange="() => ViewModel.ToggleSelectAll()" title="Select all on page" />
+                        </th>
+                        <th class="sortable" @onclick='() => ViewModel.ToggleSortAsync("date")'>
+                            Date
+                            @if (ViewModel.Filter.SortBy == "date")
+                            {
+                                <Icon Name="@(ViewModel.Filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                        <th class="sortable" @onclick='() => ViewModel.ToggleSortAsync("description")'>
+                            Description
+                            @if (ViewModel.Filter.SortBy == "description")
+                            {
+                                <Icon Name="@(ViewModel.Filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                        <th class="sortable" @onclick='() => ViewModel.ToggleSortAsync("account")'>
+                            Account
+                            @if (ViewModel.Filter.SortBy == "account")
+                            {
+                                <Icon Name="@(ViewModel.Filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                        <th class="sortable" @onclick='() => ViewModel.ToggleSortAsync("category")'>
+                            Category
+                            @if (ViewModel.Filter.SortBy == "category")
+                            {
+                                <Icon Name="@(ViewModel.Filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                        <th class="text-right sortable" @onclick='() => ViewModel.ToggleSortAsync("amount")'>
+                            Amount
+                            @if (ViewModel.Filter.SortBy == "amount")
+                            {
+                                <Icon Name="@(ViewModel.Filter.SortDescending ? "chevron-down" : "chevron-up")" Size="14" />
+                            }
+                        </th>
+                        @if (ViewModel.ShowBalanceColumn)
+                        {
+                            <th class="text-right">Balance</th>
+                        }
+                        <th class="actions-col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var txn in ViewModel.PageData.Items)
+                    {
+                        <tr class="@(ViewModel.IsSelected(txn.Id) ? "row-selected" : "")">
+                            <td class="checkbox-col">
+                                <input type="checkbox" checked="@ViewModel.IsSelected(txn.Id)"
+                                       @onchange="() => ViewModel.ToggleSelection(txn.Id)" />
+                            </td>
+                            <td class="date">@txn.Date.ToString("MMM d, yyyy")</td>
+                            <td>
+                                @txn.Description
+                                @if (txn.IsRecurring)
+                                {
+                                    <Icon Name="repeat" Size="14" title="Recurring" />
+                                }
+                                @if (txn.IsTransfer)
+                                {
+                                    <Icon Name="arrow-right-left" Size="14" title="Transfer" />
+                                }
+                            </td>
+                            <td>@txn.AccountName</td>
+                            <td>
+                                <InlineCategoryPicker CategoryId="@txn.CategoryId"
+                                                      CategoryName="@txn.CategoryName"
+                                                      Categories="@ViewModel.Categories"
+                                                      OnCategoryChanged="(categoryId) => ViewModel.UpdateTransactionCategoryAsync(txn.Id, categoryId)" />
+                                @if (txn.CategoryId is null && ViewModel.Suggestions.TryGetValue(txn.Id, out var suggestion))
+                                {
+                                    <button class="suggestion-chip" title="Accept suggested category"
+                                            @onclick="() => ViewModel.AcceptSuggestionAsync(txn.Id)">
+                                        <Icon Name="sparkles" Size="12" />
+                                        @suggestion.CategoryName
+                                    </button>
+                                }
+                            </td>
+                            <td class="text-right">
+                                <MoneyDisplay Amount="@txn.Amount.Amount" />
+                            </td>
+                            @if (ViewModel.ShowBalanceColumn)
+                            {
+                                <td class="text-right">
+                                    @if (txn.RunningBalance != null)
+                                    {
+                                        <MoneyDisplay Amount="@txn.RunningBalance.Amount" />
+                                    }
+                                    else
+                                    {
+                                        <span>—</span>
+                                    }
+                                </td>
+                            }
+                            <td class="actions-col">
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="Edit" @onclick="() => OpenEditModal(txn)">
+                                        <Icon Name="pencil" Size="16" />
+                                    </button>
+                                    <button class="btn-icon" title="Create Rule" @onclick="() => ViewModel.OpenCreateRule(txn.Description)">
+                                        <Icon Name="wand-2" Size="16" />
+                                    </button>
+                                    <button class="btn-icon btn-icon-danger" title="Delete" @onclick="() => ConfirmDelete(txn)">
+                                        <Icon Name="trash-2" Size="16" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (ViewModel.PageData.TotalPages > 1)
+        {
+            <div class="pagination-controls">
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevrons-left"
+                        IsDisabled="@(ViewModel.Filter.Page <= 1)"
+                        OnClick="() => ViewModel.GoToPageAsync(1)" />
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-left"
+                        IsDisabled="@(ViewModel.Filter.Page <= 1)"
+                        OnClick="() => ViewModel.GoToPageAsync(ViewModel.Filter.Page - 1)" />
+                <span class="pagination-info">Page @ViewModel.Filter.Page of @ViewModel.PageData.TotalPages</span>
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevron-right"
+                        IsDisabled="@(ViewModel.Filter.Page >= ViewModel.PageData.TotalPages)"
+                        OnClick="() => ViewModel.GoToPageAsync(ViewModel.Filter.Page + 1)" />
+                <Button Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" IconLeft="chevrons-right"
+                        IsDisabled="@(ViewModel.Filter.Page >= ViewModel.PageData.TotalPages)"
+                        OnClick="() => ViewModel.GoToPageAsync(ViewModel.PageData.TotalPages)" />
+                <select class="form-control page-size-select" value="@ViewModel.Filter.PageSize"
+                        @onchange="OnPageSizeChanged">
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+        }
+    }
+</div>
+
+<Modal IsVisible="@showEditModal"
+       Title="Edit Transaction"
+       OnClose="HideEditModal">
+    <TransactionForm
+        ShowAccountSelector="false"
+        FixedAccountId="@editingTransaction?.AccountId"
+        Categories="@ViewModel.Categories"
+        InitialDate="@(editingTransaction?.Date ?? DateOnly.FromDateTime(DateTime.Today))"
+        InitialDescription="@(editingTransaction?.Description ?? "")"
+        InitialAmount="@(editingTransaction?.Amount.Amount ?? 0)"
+        InitialCategoryId="@editingTransaction?.CategoryId"
+        IsSubmitting="@isSubmitting"
+        ErrorMessage="@saveErrorMessage"
+        OnSubmit="@SaveTransaction"
+        OnCancel="@HideEditModal" />
+</Modal>
+
+<ConfirmDialog IsVisible="@showDeleteConfirm"
+               Title="Delete Transaction"
+               Message="@($"Are you sure you want to delete the transaction '{deletingTransaction?.Description}'?")"
+               ConfirmText="Delete"
+               IsProcessing="@isDeleting"
+               OnConfirm="ExecuteDelete"
+               OnCancel="CancelDelete" />
+
+<ConfirmDialog IsVisible="@showBulkDeleteConfirm"
+               Title="Delete Selected Transactions"
+               Message="@($"Are you sure you want to delete {ViewModel.SelectedCount} selected transaction(s)? This action cannot be undone.")"
+               ConfirmText="Delete All"
+               IsProcessing="@ViewModel.IsBulkOperationInProgress"
+               OnConfirm="ExecuteBulkDelete"
+               OnCancel="CancelBulkDelete" />
+
+<Modal IsVisible="@ViewModel.ShowBulkCategorize"
+       Title="Bulk Categorize"
+       OnClose="ViewModel.CloseBulkCategorize">
+    <p>Assign a category to <strong>@ViewModel.SelectedCount</strong> selected transaction(s):</p>
+    <div class="form-group">
+        <select class="form-control" @bind="ViewModel.BulkCategoryId">
+            <option value="">-- Select a category --</option>
+            @foreach (var category in ViewModel.Categories.OrderBy(c => c.Name))
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+    <div class="form-actions">
+        <Button Variant="ButtonVariant.Primary"
+                IsLoading="@ViewModel.IsBulkOperationInProgress"
+                IsDisabled="@(!ViewModel.BulkCategoryId.HasValue || ViewModel.IsBulkOperationInProgress)"
+                OnClick="ViewModel.ExecuteBulkCategorizeAsync">Apply</Button>
+        <Button Variant="ButtonVariant.Secondary"
+                OnClick="ViewModel.CloseBulkCategorize"
+                IsDisabled="@ViewModel.IsBulkOperationInProgress">Cancel</Button>
+    </div>
+</Modal>
+
+<Modal IsVisible="@ViewModel.ShowCreateRule"
+       Title="Create Categorization Rule"
+       OnClose="ViewModel.CloseCreateRule">
+    <RuleForm Model="@ViewModel.NewRule"
+              Categories="@ViewModel.Categories"
+              OnSubmit="ViewModel.CreateRuleAsync"
+              OnCancel="ViewModel.CloseCreateRule"
+              IsSubmitting="@ViewModel.IsCreatingRule" />
+</Modal>
+
+<Modal IsVisible="@ViewModel.ShowApplyRulesPrompt"
+       Title="Apply Categorization Rules"
+       OnClose="ViewModel.DismissApplyRulesPrompt">
+    <p>Would you like to apply categorization rules to uncategorized transactions?</p>
+    <div class="modal-actions">
+        <Button OnClick="ViewModel.ApplyRulesAfterCreationAsync"
+                IsDisabled="@ViewModel.IsApplyingRules">
+            @(ViewModel.IsApplyingRules ? "Applying..." : "Apply Rules")
+        </Button>
+        <Button OnClick="ViewModel.DismissApplyRulesPrompt"
+                IsDisabled="@ViewModel.IsApplyingRules">Skip</Button>
+    </div>
+</Modal>
+
+@code {
+    [SupplyParameterFromQuery(Name = "account")]
+    public string? QueryAccount { get; set; }
+
+    [SupplyParameterFromQuery(Name = "category")]
+    public string? QueryCategory { get; set; }
+
+    [SupplyParameterFromQuery(Name = "uncategorized")]
+    public bool? QueryUncategorized { get; set; }
+
+    [SupplyParameterFromQuery(Name = "startDate")]
+    public string? QueryStartDate { get; set; }
+
+    [SupplyParameterFromQuery(Name = "endDate")]
+    public string? QueryEndDate { get; set; }
+
+    [SupplyParameterFromQuery(Name = "description")]
+    public string? QueryDescription { get; set; }
+
+    [SupplyParameterFromQuery(Name = "minAmount")]
+    public decimal? QueryMinAmount { get; set; }
+
+    [SupplyParameterFromQuery(Name = "maxAmount")]
+    public decimal? QueryMaxAmount { get; set; }
+
+    [SupplyParameterFromQuery(Name = "sortBy")]
+    public string? QuerySortBy { get; set; }
+
+    [SupplyParameterFromQuery(Name = "sortDesc")]
+    public bool? QuerySortDesc { get; set; }
+
+    [SupplyParameterFromQuery(Name = "page")]
+    public int? QueryPage { get; set; }
+
+    [SupplyParameterFromQuery(Name = "pageSize")]
+    public int? QueryPageSize { get; set; }
+
+    private bool showEditModal;
+    private bool isSubmitting;
+    private string? saveErrorMessage;
+    private TransactionDto? editingTransaction;
+
+    private bool showDeleteConfirm;
+    private bool isDeleting;
+    private UnifiedTransactionItemDto? deletingTransaction;
+
+    private bool showBulkDeleteConfirm;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        ViewModel.ApplyQueryParameters(
+            QueryAccount,
+            QueryCategory,
+            QueryUncategorized,
+            QueryStartDate,
+            QueryEndDate,
+            QueryDescription,
+            QueryMinAmount,
+            QueryMaxAmount,
+            QuerySortBy,
+            QuerySortDesc,
+            QueryPage,
+            QueryPageSize);
+        await ViewModel.InitializeAsync();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ViewModel.OnStateChanged = null;
+        ViewModel.Dispose();
+    }
+
+    private string? GetSubtitle()
+    {
+        if (ViewModel.IsLoading || ViewModel.PageData.TotalCount == 0)
+        {
+            return null;
+        }
+
+        return $"{ViewModel.PageData.TotalCount} transactions";
+    }
+
+    private void ClearSelection()
+    {
+        ViewModel.SelectedTransactionIds.Clear();
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var pageSize))
+        {
+            await ViewModel.ChangePageSizeAsync(pageSize);
+        }
+    }
+
+    private async Task OpenEditModal(UnifiedTransactionItemDto txn)
+    {
+        var fullTransaction = await ApiService.GetTransactionAsync(txn.Id);
+        editingTransaction = fullTransaction ?? new TransactionDto
+        {
+            Id = txn.Id,
+            AccountId = txn.AccountId,
+            Date = txn.Date,
+            Description = txn.Description,
+            Amount = txn.Amount,
+            CategoryId = txn.CategoryId,
+        };
+        saveErrorMessage = null;
+        showEditModal = true;
+    }
+
+    private void HideEditModal()
+    {
+        showEditModal = false;
+        editingTransaction = null;
+        saveErrorMessage = null;
+    }
+
+    private async Task SaveTransaction(TransactionCreateDto transaction)
+    {
+        if (editingTransaction == null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        saveErrorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var updateDto = new TransactionUpdateDto
+            {
+                Amount = transaction.Amount,
+                Date = transaction.Date,
+                Description = transaction.Description,
+                CategoryId = transaction.CategoryId,
+            };
+            var result = await ApiService.UpdateTransactionAsync(editingTransaction.Id, updateDto, editingTransaction.Version);
+            if (result.IsConflict)
+            {
+                ToastService.ShowWarning("This transaction was modified by another user. Data has been refreshed.", "Conflict");
+                HideEditModal();
+                await ViewModel.LoadTransactionsAsync();
+                return;
+            }
+
+            if (result.IsSuccess)
+            {
+                HideEditModal();
+                await ViewModel.LoadTransactionsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            saveErrorMessage = $"Failed to save transaction: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ConfirmDelete(UnifiedTransactionItemDto txn)
+    {
+        deletingTransaction = txn;
+        showDeleteConfirm = true;
+    }
+
+    private async Task ExecuteDelete()
+    {
+        if (deletingTransaction == null)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        StateHasChanged();
+
+        try
+        {
+            await ViewModel.DeleteTransactionAsync(deletingTransaction.Id);
+            showDeleteConfirm = false;
+            deletingTransaction = null;
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Failed to delete transaction: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+        deletingTransaction = null;
+    }
+
+    private void ConfirmBulkDelete()
+    {
+        showBulkDeleteConfirm = true;
+    }
+
+    private async Task ExecuteBulkDelete()
+    {
+        showBulkDeleteConfirm = false;
+        await ViewModel.ExecuteBulkDeleteAsync();
+    }
+
+    private void CancelBulkDelete()
+    {
+        showBulkDeleteConfirm = false;
+    }
+}

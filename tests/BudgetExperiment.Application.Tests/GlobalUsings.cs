@@ -17,6 +17,7 @@ global using BudgetExperiment.Application.Reconciliation;
 global using BudgetExperiment.Application.Recurring;
 global using BudgetExperiment.Application.Reports;
 global using BudgetExperiment.Application.Settings;
+global using BudgetExperiment.Application.Transactions;
 
 // Domain namespaces
 global using BudgetExperiment.Domain.Accounts;

@@ -1,0 +1,31 @@
+/* ==========================================================================
+   Suggestion Chip
+   Inline category suggestion for uncategorized transactions
+   ========================================================================== */
+
+.suggestion-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 2px var(--space-2);
+    margin-left: var(--space-1);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.4;
+    color: var(--color-brand-primary);
+    background-color: rgba(var(--color-brand-rgb), 0.1);
+    border: 1px dashed rgba(var(--color-brand-rgb), 0.4);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.suggestion-chip:hover {
+    background-color: rgba(var(--color-brand-rgb), 0.2);
+    border-color: var(--color-brand-primary);
+}
+
+.suggestion-chip .icon {
+    opacity: 0.7;
+}

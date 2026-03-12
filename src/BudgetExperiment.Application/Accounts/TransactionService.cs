@@ -189,6 +189,33 @@ public sealed class TransactionService : ITransactionService
     }
 
     /// <summary>
+    /// Updates the category on a transaction (quick category assignment).
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The category update data.</param>
+    /// <param name="expectedVersion">The expected concurrency token for optimistic concurrency, or null to skip.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction DTO, or null if not found.</returns>
+    public async Task<TransactionDto?> UpdateCategoryAsync(Guid id, TransactionCategoryUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
+    {
+        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        if (expectedVersion is not null)
+        {
+            this._unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
+        }
+
+        transaction.UpdateCategory(dto.CategoryId);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        return AccountMapper.ToTransactionDto(transaction, version);
+    }
+
+    /// <summary>
     /// Clears the location from a transaction.
     /// </summary>
     /// <param name="id">The transaction identifier.</param>

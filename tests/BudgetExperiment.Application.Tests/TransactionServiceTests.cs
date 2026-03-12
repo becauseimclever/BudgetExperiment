@@ -206,4 +206,73 @@ public class TransactionServiceTests
         transactionRepo.Verify(r => r.RemoveAsync(It.IsAny<Transaction>(), default), Times.Never);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
     }
+
+    [Fact]
+    public async Task UpdateCategoryAsync_AssignsCategory_And_ReturnsDto()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var money = MoneyValue.Create("USD", 5m);
+        var transaction = account.AddTransaction(money, new DateOnly(2026, 1, 15), "Coffee");
+        var categoryId = Guid.NewGuid();
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(transaction.Id, default)).ReturnsAsync(transaction);
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+        var dto = new TransactionCategoryUpdateDto { CategoryId = categoryId };
+
+        // Act
+        var result = await service.UpdateCategoryAsync(transaction.Id, dto);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(categoryId, result.CategoryId);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateCategoryAsync_ReturnsNull_WhenNotFound()
+    {
+        // Arrange
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Transaction?)null);
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        // Act
+        var result = await service.UpdateCategoryAsync(Guid.NewGuid(), new TransactionCategoryUpdateDto { CategoryId = Guid.NewGuid() });
+
+        // Assert
+        Assert.Null(result);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateCategoryAsync_ClearsCategory_WhenNullCategoryId()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var money = MoneyValue.Create("USD", 5m);
+        var transaction = account.AddTransaction(money, new DateOnly(2026, 1, 15), "Coffee");
+        transaction.UpdateCategory(Guid.NewGuid()); // pre-assign
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(transaction.Id, default)).ReturnsAsync(transaction);
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        // Act
+        var result = await service.UpdateCategoryAsync(transaction.Id, new TransactionCategoryUpdateDto { CategoryId = null });
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.CategoryId);
+    }
 }

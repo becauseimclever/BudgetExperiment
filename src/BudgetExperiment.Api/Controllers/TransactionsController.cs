@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Application.Categorization;
+using BudgetExperiment.Application.Transactions;
 using BudgetExperiment.Contracts.Dtos;
 
 using Microsoft.AspNetCore.Authorization;
@@ -22,16 +23,26 @@ public sealed class TransactionsController : ControllerBase
 {
     private readonly TransactionService _service;
     private readonly IUncategorizedTransactionService _uncategorizedService;
+    private readonly IUnifiedTransactionService _unifiedService;
+    private readonly ICategorizationEngine _categorizationEngine;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionsController"/> class.
     /// </summary>
     /// <param name="service">The transaction service.</param>
     /// <param name="uncategorizedService">The uncategorized transaction service.</param>
-    public TransactionsController(TransactionService service, IUncategorizedTransactionService uncategorizedService)
+    /// <param name="unifiedService">The unified transaction service.</param>
+    /// <param name="categorizationEngine">The categorization engine for rule-based suggestions.</param>
+    public TransactionsController(
+        TransactionService service,
+        IUncategorizedTransactionService uncategorizedService,
+        IUnifiedTransactionService unifiedService,
+        ICategorizationEngine categorizationEngine)
     {
         this._service = service;
         this._uncategorizedService = uncategorizedService;
+        this._unifiedService = unifiedService;
+        this._categorizationEngine = categorizationEngine;
     }
 
     /// <summary>
@@ -208,6 +219,94 @@ public sealed class TransactionsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets a unified, paginated, filtered, and sorted list of all transactions across all accounts.
+    /// </summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="categoryId">Optional category filter.</param>
+    /// <param name="uncategorized">If true, show only uncategorized transactions.</param>
+    /// <param name="startDate">Optional start date filter (inclusive).</param>
+    /// <param name="endDate">Optional end date filter (inclusive).</param>
+    /// <param name="description">Optional description search (contains, case-insensitive).</param>
+    /// <param name="minAmount">Optional minimum amount filter (absolute value).</param>
+    /// <param name="maxAmount">Optional maximum amount filter (absolute value).</param>
+    /// <param name="sortBy">Sort field: date (default), description, amount, category, account.</param>
+    /// <param name="sortDescending">Sort direction (default: true for descending).</param>
+    /// <param name="page">Page number (1-based, default: 1).</param>
+    /// <param name="pageSize">Page size (default: 50, max: 100).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A paged list of unified transactions with summary and optional balance info.</returns>
+    [HttpGet("paged")]
+    [ProducesResponseType<UnifiedTransactionPageDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPagedAsync(
+        [FromQuery] Guid? accountId,
+        [FromQuery] Guid? categoryId,
+        [FromQuery] bool? uncategorized,
+        [FromQuery] DateOnly? startDate,
+        [FromQuery] DateOnly? endDate,
+        [FromQuery] string? description,
+        [FromQuery] decimal? minAmount,
+        [FromQuery] decimal? maxAmount,
+        [FromQuery] string sortBy = "date",
+        [FromQuery] bool sortDescending = true,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var filter = new UnifiedTransactionFilterDto
+        {
+            AccountId = accountId,
+            CategoryId = categoryId,
+            Uncategorized = uncategorized,
+            StartDate = startDate,
+            EndDate = endDate,
+            Description = description,
+            MinAmount = minAmount,
+            MaxAmount = maxAmount,
+            SortBy = sortBy,
+            SortDescending = sortDescending,
+            Page = page,
+            PageSize = pageSize,
+        };
+
+        var result = await this._unifiedService.GetPagedAsync(filter, cancellationToken);
+
+        this.Response.Headers["X-Pagination-TotalCount"] = result.TotalCount.ToString();
+
+        return this.Ok(result);
+    }
+
+    /// <summary>
+    /// Returns rule-based category suggestions for a batch of transactions.
+    /// Only returns suggestions for uncategorized transactions that have a matching rule.
+    /// </summary>
+    /// <param name="request">The request containing transaction IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A response mapping transaction IDs to suggested categories.</returns>
+    [HttpPost("suggest-categories")]
+    [ProducesResponseType<BatchSuggestCategoriesResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SuggestCategoriesAsync(
+        [FromBody] BatchSuggestCategoriesRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.TransactionIds.Count == 0)
+        {
+            return this.BadRequest("At least one transaction ID is required.");
+        }
+
+        if (request.TransactionIds.Count > 100)
+        {
+            return this.BadRequest("Maximum 100 transactions per request.");
+        }
+
+        var suggestions = await this._categorizationEngine.GetBatchSuggestionsAsync(
+            request.TransactionIds,
+            cancellationToken);
+
+        return this.Ok(new BatchSuggestCategoriesResponse { Suggestions = suggestions });
+    }
+
+    /// <summary>
     /// Bulk categorizes multiple transactions with the specified category.
     /// </summary>
     /// <param name="request">The bulk categorize request containing transaction IDs and category ID.</param>
@@ -258,6 +357,43 @@ public sealed class TransactionsController : ControllerBase
         }
 
         var transaction = await this._service.UpdateLocationAsync(id, dto, expectedVersion, cancellationToken);
+        if (transaction is null)
+        {
+            return this.NotFound();
+        }
+
+        if (transaction.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{transaction.Version}\"";
+        }
+
+        return this.Ok(transaction);
+    }
+
+    /// <summary>
+    /// Updates the category on a transaction (quick category assignment).
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The category update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction.</returns>
+    [HttpPatch("{id:guid}/category")]
+    [ProducesResponseType<TransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateCategoryAsync(
+        Guid id,
+        [FromBody] TransactionCategoryUpdateDto dto,
+        CancellationToken cancellationToken)
+    {
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var transaction = await this._service.UpdateCategoryAsync(id, dto, expectedVersion, cancellationToken);
         if (transaction is null)
         {
             return this.NotFound();

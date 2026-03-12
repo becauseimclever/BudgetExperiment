@@ -271,6 +271,9 @@ public class ChatActionExecutorTests
         public Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
             Task.FromResult<TransactionDto?>(null);
 
+        public Task<TransactionDto?> UpdateCategoryAsync(Guid id, TransactionCategoryUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult<TransactionDto?>(null);
+
         public Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);
 

@@ -335,6 +335,107 @@ internal sealed class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetUnifiedPagedAsync(
+        Guid? accountId = null,
+        Guid? categoryId = null,
+        bool? uncategorized = null,
+        DateOnly? startDate = null,
+        DateOnly? endDate = null,
+        string? descriptionContains = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        string sortBy = "date",
+        bool sortDescending = true,
+        int skip = 0,
+        int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<Transaction> query = this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category);
+
+        // Apply filters
+        if (accountId.HasValue)
+        {
+            query = query.Where(t => t.AccountId == accountId.Value);
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(t => t.CategoryId == categoryId.Value);
+        }
+
+        if (uncategorized == true)
+        {
+            query = query.Where(t => t.CategoryId == null);
+        }
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(t => t.Date >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(t => t.Date <= endDate.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(descriptionContains))
+        {
+            query = query.Where(t => t.Description.ToLower().Contains(descriptionContains.ToLower()));
+        }
+
+        if (minAmount.HasValue)
+        {
+            var min = minAmount.Value;
+            query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) >= min);
+        }
+
+        if (maxAmount.HasValue)
+        {
+            var max = maxAmount.Value;
+            query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) <= max);
+        }
+
+        // Get total count before paging
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        IOrderedQueryable<Transaction> orderedQuery = sortBy.ToUpperInvariant() switch
+        {
+            "AMOUNT" => sortDescending
+                ? query.OrderByDescending(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount)
+                : query.OrderBy(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount),
+            "DESCRIPTION" => sortDescending
+                ? query.OrderByDescending(t => t.Description)
+                : query.OrderBy(t => t.Description),
+            "CATEGORY" => sortDescending
+                ? query.OrderByDescending(t => t.Category != null ? t.Category.Name : string.Empty)
+                : query.OrderBy(t => t.Category != null ? t.Category.Name : string.Empty),
+            "ACCOUNT" => sortDescending
+                ? query.OrderByDescending(t => this._context.Accounts
+                    .Where(a => a.Id == t.AccountId)
+                    .Select(a => a.Name)
+                    .FirstOrDefault())
+                : query.OrderBy(t => this._context.Accounts
+                    .Where(a => a.Id == t.AccountId)
+                    .Select(a => a.Name)
+                    .FirstOrDefault()),
+            _ => sortDescending
+                ? query.OrderByDescending(t => t.Date)
+                : query.OrderBy(t => t.Date),
+        };
+
+        // Secondary sort for stability
+        var items = await orderedQuery
+            .ThenByDescending(t => t.CreatedAtUtc)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
     /// <summary>
     /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
     /// in this repository MUST call this method to prevent cross-scope data leaks.

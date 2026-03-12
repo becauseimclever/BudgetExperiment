@@ -1010,6 +1010,131 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<UnifiedTransactionPageDto> GetUnifiedTransactionsAsync(UnifiedTransactionFilterDto filter)
+    {
+        try
+        {
+            var queryParams = new List<string>();
+
+            if (filter.AccountId.HasValue)
+            {
+                queryParams.Add($"accountId={filter.AccountId.Value}");
+            }
+
+            if (filter.CategoryId.HasValue)
+            {
+                queryParams.Add($"categoryId={filter.CategoryId.Value}");
+            }
+
+            if (filter.Uncategorized.HasValue)
+            {
+                queryParams.Add($"uncategorized={filter.Uncategorized.Value}");
+            }
+
+            if (filter.StartDate.HasValue)
+            {
+                queryParams.Add($"startDate={filter.StartDate.Value:yyyy-MM-dd}");
+            }
+
+            if (filter.EndDate.HasValue)
+            {
+                queryParams.Add($"endDate={filter.EndDate.Value:yyyy-MM-dd}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Description))
+            {
+                queryParams.Add($"description={Uri.EscapeDataString(filter.Description)}");
+            }
+
+            if (filter.MinAmount.HasValue)
+            {
+                queryParams.Add($"minAmount={filter.MinAmount.Value}");
+            }
+
+            if (filter.MaxAmount.HasValue)
+            {
+                queryParams.Add($"maxAmount={filter.MaxAmount.Value}");
+            }
+
+            queryParams.Add($"sortBy={filter.SortBy}");
+            queryParams.Add($"sortDescending={filter.SortDescending}");
+            queryParams.Add($"page={filter.Page}");
+            queryParams.Add($"pageSize={filter.PageSize}");
+
+            var queryString = string.Join("&", queryParams);
+            var result = await this._httpClient.GetFromJsonAsync<UnifiedTransactionPageDto>(
+                $"api/v1/transactions/paged?{queryString}",
+                JsonOptions);
+
+            return result ?? new UnifiedTransactionPageDto();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new UnifiedTransactionPageDto();
+        }
+        catch (HttpRequestException)
+        {
+            return new UnifiedTransactionPageDto();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<TransactionDto?> UpdateTransactionCategoryAsync(Guid transactionId, Guid? categoryId)
+    {
+        try
+        {
+            var dto = new TransactionCategoryUpdateDto { CategoryId = categoryId };
+            var response = await this._httpClient.PatchAsJsonAsync(
+                $"api/v1/transactions/{transactionId}/category",
+                dto,
+                JsonOptions);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<BatchSuggestCategoriesResponse> GetBatchCategorySuggestionsAsync(IReadOnlyList<Guid> transactionIds)
+    {
+        try
+        {
+            var request = new BatchSuggestCategoriesRequest { TransactionIds = transactionIds };
+            var response = await this._httpClient.PostAsJsonAsync(
+                "api/v1/transactions/suggest-categories",
+                request,
+                JsonOptions);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new BatchSuggestCategoriesResponse();
+            }
+
+            return await response.Content.ReadFromJsonAsync<BatchSuggestCategoriesResponse>(JsonOptions)
+                ?? new BatchSuggestCategoriesResponse();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new BatchSuggestCategoriesResponse();
+        }
+        catch (HttpRequestException)
+        {
+            return new BatchSuggestCategoriesResponse();
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<UncategorizedTransactionPageDto> GetUncategorizedTransactionsAsync(UncategorizedTransactionFilterDto filter)
     {
         try

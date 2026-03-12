@@ -551,7 +551,7 @@ public sealed class AccountsViewModelTests : IDisposable
 
         this._sut.ViewAccount(id);
 
-        this._navigationManager.LastNavigatedUri.ShouldBe($"/accounts/{id}/transactions");
+        this._navigationManager.LastNavigatedUri.ShouldBe($"/transactions?account={id}");
     }
 
     // --- DeleteAccount ---

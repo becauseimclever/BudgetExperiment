@@ -167,7 +167,7 @@ public sealed class ImportSummaryCardTests : BunitContext, IAsyncLifetime
             .Add(p => p.AccountId, accountId));
 
         var link = cut.Find("a.btn-primary");
-        Assert.Contains($"accounts/{accountId}/transactions", link.GetAttribute("href") ?? string.Empty);
+        Assert.Contains($"transactions?account={accountId}", link.GetAttribute("href") ?? string.Empty);
     }
 
     /// <summary>

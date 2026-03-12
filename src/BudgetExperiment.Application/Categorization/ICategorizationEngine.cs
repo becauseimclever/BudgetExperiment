@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Categorization;
@@ -46,5 +47,16 @@ public interface ICategorizationEngine
         string pattern,
         bool caseSensitive,
         int limit = 10,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets category suggestions for a batch of transactions using existing rules.
+    /// Only returns suggestions for transactions that have a matching rule.
+    /// </summary>
+    /// <param name="transactionIds">The transaction IDs to get suggestions for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A dictionary of transaction ID to inline suggestion.</returns>
+    Task<Dictionary<Guid, InlineCategorySuggestionDto>> GetBatchSuggestionsAsync(
+        IReadOnlyList<Guid> transactionIds,
         CancellationToken cancellationToken = default);
 }

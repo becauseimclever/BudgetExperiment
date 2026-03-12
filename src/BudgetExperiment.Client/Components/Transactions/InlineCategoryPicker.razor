@@ -1,0 +1,76 @@
+@* InlineCategoryPicker - Clickable inline category assignment for transaction table rows *@
+
+@if (_isEditing)
+{
+    <select class="form-control inline-category-select" style="width: auto; min-width: 150px;"
+            @onchange="OnCategorySelected"
+            @onblur="CancelEdit">
+        <option value="">Uncategorized</option>
+        @foreach (var category in Categories.Where(c => c.IsActive))
+        {
+            <option value="@category.Id" selected="@(CategoryId == category.Id)">@category.Name</option>
+        }
+    </select>
+}
+else
+{
+    <span class="@CssClass" @onclick="StartEdit" title="Click to change category">
+        @DisplayText
+    </span>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the current category ID (null = uncategorized).
+    /// </summary>
+    [Parameter]
+    public Guid? CategoryId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current category name (null = uncategorized).
+    /// </summary>
+    [Parameter]
+    public string? CategoryName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the available categories.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<BudgetCategoryDto> Categories { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the callback when a category is selected.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid?> OnCategoryChanged { get; set; }
+
+    private bool _isEditing;
+
+    private string DisplayText => CategoryName ?? "Uncategorized";
+
+    private string CssClass => CategoryId.HasValue
+        ? "category-label category-clickable"
+        : "text-muted category-clickable";
+
+    private void StartEdit()
+    {
+        _isEditing = true;
+    }
+
+    private void CancelEdit()
+    {
+        _isEditing = false;
+    }
+
+    private async Task OnCategorySelected(ChangeEventArgs e)
+    {
+        _isEditing = false;
+        var value = e.Value?.ToString();
+        Guid? newCategoryId = string.IsNullOrEmpty(value) ? null : Guid.Parse(value);
+
+        if (newCategoryId != CategoryId)
+        {
+            await OnCategoryChanged.InvokeAsync(newCategoryId);
+        }
+    }
+}

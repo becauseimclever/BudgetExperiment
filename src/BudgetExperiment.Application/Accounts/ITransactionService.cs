@@ -66,6 +66,16 @@ public interface ITransactionService
     Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Updates the category on a transaction (quick category assignment).
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="dto">The category update data.</param>
+    /// <param name="expectedVersion">The expected concurrency token for optimistic concurrency, or null to skip.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated transaction DTO, or null if not found.</returns>
+    Task<TransactionDto?> UpdateCategoryAsync(Guid id, TransactionCategoryUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Clears the location from a transaction.
     /// </summary>
     /// <param name="id">The transaction identifier.</param>

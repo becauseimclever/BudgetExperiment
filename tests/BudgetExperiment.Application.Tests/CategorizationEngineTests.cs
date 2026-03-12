@@ -318,6 +318,138 @@ public class CategorizationEngineTests
         Assert.Equal("WALMART STORE", result[0]);
     }
 
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Returns_Empty_When_No_TransactionIds()
+    {
+        // Arrange
+        var (engine, _, _) = CreateEngine(new List<CategorizationRule>());
+
+        // Act
+        var result = await engine.GetBatchSuggestionsAsync([]);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Returns_Empty_When_No_Rules_Exist()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var (engine, _, _) = CreateEngine(new List<CategorizationRule>(), new List<Transaction> { transaction });
+
+        // Act
+        var result = await engine.GetBatchSuggestionsAsync([transaction.Id]);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Returns_Suggestion_When_Rule_Matches()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE #123");
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Grocery Rule", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var (engine, _, _) = CreateEngine(rules, new List<Transaction> { transaction });
+
+        // Act
+        var result = await engine.GetBatchSuggestionsAsync([transaction.Id]);
+
+        // Assert
+        Assert.Single(result);
+        Assert.True(result.ContainsKey(transaction.Id));
+        Assert.Equal(GroceryCategoryId, result[transaction.Id].CategoryId);
+        Assert.Equal(transaction.Id, result[transaction.Id].TransactionId);
+    }
+
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Skips_Already_Categorized_Transactions()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        transaction.UpdateCategory(Guid.NewGuid()); // Already categorized
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Grocery Rule", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var (engine, _, _) = CreateEngine(rules, new List<Transaction> { transaction });
+
+        // Act
+        var result = await engine.GetBatchSuggestionsAsync([transaction.Id]);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Skips_Transactions_Without_Matching_Rules()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "TARGET STORE");
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var (engine, _, _) = CreateEngine(rules, new List<Transaction> { transaction });
+
+        // Act
+        var result = await engine.GetBatchSuggestionsAsync([transaction.Id]);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Returns_Multiple_Suggestions_For_Multiple_Transactions()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var txn1 = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var txn2 = Transaction.Create(accountId, MoneyValue.Create("USD", -15m), new DateOnly(2026, 1, 16), "UBER TRIP");
+        var txn3 = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 17), "RANDOM STORE");
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Grocery", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+            CategorizationRule.Create("Transport", RuleMatchType.Contains, "UBER", TransportCategoryId, priority: 2),
+        };
+        var transactions = new List<Transaction> { txn1, txn2, txn3 };
+        var (engine, _, _) = CreateEngine(rules, transactions);
+
+        // Act
+        var result = await engine.GetBatchSuggestionsAsync([txn1.Id, txn2.Id, txn3.Id]);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.Equal(GroceryCategoryId, result[txn1.Id].CategoryId);
+        Assert.Equal(TransportCategoryId, result[txn2.Id].CategoryId);
+        Assert.False(result.ContainsKey(txn3.Id));
+    }
+
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Skips_Unknown_TransactionIds()
+    {
+        // Arrange
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Grocery", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var (engine, _, _) = CreateEngine(rules);
+
+        // Act
+        var result = await engine.GetBatchSuggestionsAsync([Guid.NewGuid()]);
+
+        // Assert
+        Assert.Empty(result);
+    }
+
     private static (CategorizationEngine Engine, Mock<ICategorizationRuleRepository> RuleRepo, Mock<ITransactionRepository> TransactionRepo)
         CreateEngine(List<CategorizationRule> rules, List<Transaction>? transactions = null)
     {

@@ -251,6 +251,26 @@ internal class StubBudgetApiService : IBudgetApiService
     public bool DeleteTransactionResult { get; set; }
 
     /// <summary>
+    /// Gets or sets an exception to throw from <see cref="DeleteTransactionAsync"/>.
+    /// </summary>
+    public Exception? DeleteTransactionException { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="BulkCategorizeTransactionsAsync"/>.
+    /// </summary>
+    public BulkCategorizeResponse BulkCategorizeResult { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="BulkCategorizeTransactionsAsync"/>.
+    /// </summary>
+    public Exception? BulkCategorizeException { get; set; }
+
+    /// <summary>
+    /// Gets the last bulk categorize request sent.
+    /// </summary>
+    public BulkCategorizeRequest? LastBulkCategorizeRequest { get; private set; }
+
+    /// <summary>
     /// Gets or sets the transfer returned by <see cref="CreateTransferAsync"/>.
     /// </summary>
     public TransferResponse? CreateTransferResult { get; set; }
@@ -294,6 +314,26 @@ internal class StubBudgetApiService : IBudgetApiService
     /// Gets or sets the uncategorized transaction page returned by <see cref="GetUncategorizedTransactionsAsync"/>.
     /// </summary>
     public UncategorizedTransactionPageDto UncategorizedPage { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the unified transaction page returned by <see cref="GetUnifiedTransactionsAsync"/>.
+    /// </summary>
+    public UnifiedTransactionPageDto UnifiedPage { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="UpdateTransactionCategoryAsync"/>.
+    /// </summary>
+    public TransactionDto? UpdateTransactionCategoryResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the last filter passed to <see cref="GetUnifiedTransactionsAsync"/>.
+    /// </summary>
+    public UnifiedTransactionFilterDto? LastUnifiedFilter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the batch category suggestions returned by <see cref="GetBatchCategorySuggestionsAsync"/>.
+    /// </summary>
+    public BatchSuggestCategoriesResponse BatchSuggestionsResult { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the paycheck allocation summary returned by <see cref="GetPaycheckAllocationAsync"/>.
@@ -506,7 +546,9 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<ApiResult<TransactionDto>> UpdateTransactionAsync(Guid id, TransactionUpdateDto model, string? version = null) => Task.FromResult(this.UpdateTransactionResult ?? ApiResult<TransactionDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<bool> DeleteTransactionAsync(Guid id) => Task.FromResult(this.DeleteTransactionResult);
+    public Task<bool> DeleteTransactionAsync(Guid id) => this.DeleteTransactionException != null
+        ? Task.FromException<bool>(this.DeleteTransactionException)
+        : Task.FromResult(this.DeleteTransactionResult);
 
     /// <inheritdoc/>
     public Task<ApiResult<TransactionDto>> UpdateTransactionLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? version = null) => Task.FromResult(this.UpdateTransactionLocationResult ?? ApiResult<TransactionDto>.Failure());
@@ -811,10 +853,29 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds) => Task.FromResult(false);
 
     /// <inheritdoc/>
+    public Task<UnifiedTransactionPageDto> GetUnifiedTransactionsAsync(UnifiedTransactionFilterDto filter)
+    {
+        this.LastUnifiedFilter = filter;
+        return Task.FromResult(this.UnifiedPage);
+    }
+
+    /// <inheritdoc/>
+    public Task<TransactionDto?> UpdateTransactionCategoryAsync(Guid transactionId, Guid? categoryId) => Task.FromResult(this.UpdateTransactionCategoryResult);
+
+    /// <inheritdoc/>
+    public Task<BatchSuggestCategoriesResponse> GetBatchCategorySuggestionsAsync(IReadOnlyList<Guid> transactionIds) => Task.FromResult(this.BatchSuggestionsResult);
+
+    /// <inheritdoc/>
     public Task<UncategorizedTransactionPageDto> GetUncategorizedTransactionsAsync(UncategorizedTransactionFilterDto filter) => Task.FromResult(this.UncategorizedPage);
 
     /// <inheritdoc/>
-    public Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request) => Task.FromResult(new BulkCategorizeResponse());
+    public Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request)
+    {
+        this.LastBulkCategorizeRequest = request;
+        return this.BulkCategorizeException != null
+            ? Task.FromException<BulkCategorizeResponse>(this.BulkCategorizeException)
+            : Task.FromResult(this.BulkCategorizeResult);
+    }
 
     /// <inheritdoc/>
     public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month) => Task.FromResult<MonthlyCategoryReportDto?>(null);

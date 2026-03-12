@@ -161,4 +161,37 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     /// <returns>Transactions with non-null location.</returns>
     Task<IReadOnlyList<Transaction>> GetAllWithLocationAsync(
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets transactions with filtering, sorting, and paging for the unified transaction list.
+    /// Includes Category navigation property. Supports sorting by account name and category name.
+    /// </summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="categoryId">Optional category filter.</param>
+    /// <param name="uncategorized">If true, return only uncategorized transactions.</param>
+    /// <param name="startDate">Optional start date filter (inclusive).</param>
+    /// <param name="endDate">Optional end date filter (inclusive).</param>
+    /// <param name="descriptionContains">Optional description contains filter (case-insensitive).</param>
+    /// <param name="minAmount">Optional minimum amount filter (absolute value).</param>
+    /// <param name="maxAmount">Optional maximum amount filter (absolute value).</param>
+    /// <param name="sortBy">Sort field: "date", "description", "amount", "category", "account".</param>
+    /// <param name="sortDescending">Sort direction (true = descending).</param>
+    /// <param name="skip">Number of records to skip.</param>
+    /// <param name="take">Number of records to take.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the paged items and total count.</returns>
+    Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetUnifiedPagedAsync(
+        Guid? accountId = null,
+        Guid? categoryId = null,
+        bool? uncategorized = null,
+        DateOnly? startDate = null,
+        DateOnly? endDate = null,
+        string? descriptionContains = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        string sortBy = "date",
+        bool sortDescending = true,
+        int skip = 0,
+        int take = 50,
+        CancellationToken cancellationToken = default);
 }

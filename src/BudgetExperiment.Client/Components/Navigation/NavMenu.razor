@@ -96,11 +96,11 @@
         </li>
 
         <li>
-            <NavLink class="nav-item" href="uncategorized" title="Uncategorized Transactions" aria-label="Uncategorized Transactions">
-                <span class="nav-icon" aria-hidden="true"><Icon Name="inbox" Size="20" /></span>
+            <NavLink class="nav-item" href="transactions" title="All Transactions" aria-label="All Transactions">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="list" Size="20" /></span>
                 @if (!IsCollapsed)
                 {
-                    <span class="nav-text">Uncategorized</span>
+                    <span class="nav-text">Transactions</span>
                 }
             </NavLink>
         </li>
@@ -187,7 +187,7 @@
                     @foreach (var account in accounts)
                     {
                         <li>
-                            <NavLink class="nav-item nav-subitem" href="@($"accounts/{account.Id}/transactions")" title="@account.Name" aria-label="@($"View {account.Name} transactions")">
+                            <NavLink class="nav-item nav-subitem" href="@($"transactions?account={account.Id}")" title="@account.Name" aria-label="@($"View {account.Name} transactions")">
                                 <span class="nav-icon" aria-hidden="true"><Icon Name="credit-card" Size="16" /></span>
                                 <span class="nav-text">@TruncateName(account.Name)</span>
                             </NavLink>

@@ -361,7 +361,7 @@ public sealed class AccountsViewModel : IDisposable
     /// <param name="id">The account ID.</param>
     public void ViewAccount(Guid id)
     {
-        this._navigation.NavigateTo($"/accounts/{id}/transactions");
+        this._navigation.NavigateTo($"/transactions?account={id}");
     }
 
     /// <summary>
