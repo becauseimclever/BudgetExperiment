@@ -57,7 +57,7 @@ jobs:
           dotnet test BudgetExperiment.sln \
             --configuration Release \
             --no-build \
-            --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency" \
+            --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency&Category!=Performance" \
             --collect:"XPlat Code Coverage" \
             --settings coverlet.runsettings \
             --logger "trx" \

@@ -1,0 +1,141 @@
+name: Performance Tests
+
+on:
+  # Scheduled: full load test suite weekly (Sunday 03:00 UTC)
+  schedule:
+    - cron: '0 3 * * 0'
+
+  # PR: smoke profile as a lightweight gate
+  pull_request:
+    branches: [main]
+
+  # Manual: run any profile on-demand
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Load profile to run (Smoke, Load, Stress, Spike)'
+        required: false
+        default: 'Load'
+        type: choice
+        options:
+          - Smoke
+          - Load
+          - Stress
+          - Spike
+
+concurrency:
+  group: perf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  performance:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    env:
+      ConnectionStrings__AppDb: "Host=localhost;Database=test;Username=test;Password=test"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore & Build
+        run: |
+          dotnet restore BudgetExperiment.sln
+          dotnet build BudgetExperiment.sln --configuration Release --no-restore
+
+      # Determine which profile to run:
+      # PR → Smoke (fast gate), Schedule → Load (full baseline), Manual → user choice
+      - name: Determine profile
+        id: profile
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "filter=Category=Performance&Category=Smoke" >> $GITHUB_OUTPUT
+            echo "name=Smoke" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "filter=Category=Performance" >> $GITHUB_OUTPUT
+            echo "name=Load" >> $GITHUB_OUTPUT
+          else
+            echo "filter=Category=Performance&Category=${{ github.event.inputs.profile || 'Load' }}" >> $GITHUB_OUTPUT
+            echo "name=${{ github.event.inputs.profile || 'Load' }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run performance tests
+        run: |
+          dotnet test tests/BudgetExperiment.Performance.Tests/BudgetExperiment.Performance.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --filter "${{ steps.profile.outputs.filter }}" \
+            --logger "trx" \
+            --results-directory ./TestResults
+
+      # NBomber writes reports to tests/BudgetExperiment.Performance.Tests/reports/
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-reports-${{ steps.profile.outputs.name }}-${{ github.run_number }}
+          path: tests/BudgetExperiment.Performance.Tests/reports/
+          retention-days: 90
+
+      - name: Evaluate performance against baseline
+        id: baseline
+        if: always()
+        run: |
+          # Find the most recent CSV report
+          REPORT_CSV=$(find tests/BudgetExperiment.Performance.Tests/reports/ -name '*.csv' 2>/dev/null | sort | tail -1)
+          BASELINE="tests/BudgetExperiment.Performance.Tests/baselines/baseline.json"
+          THRESHOLDS="tests/BudgetExperiment.Performance.Tests/perf-thresholds.json"
+
+          if [ -n "$REPORT_CSV" ] && [ -f "$REPORT_CSV" ]; then
+            COMPARER_ARGS="$REPORT_CSV"
+            if [ -f "$BASELINE" ]; then
+              COMPARER_ARGS="$COMPARER_ARGS $BASELINE"
+            fi
+            if [ -f "$THRESHOLDS" ]; then
+              COMPARER_ARGS="$COMPARER_ARGS --thresholds $THRESHOLDS"
+            fi
+
+            dotnet run --project tests/BudgetExperiment.Performance.Tests/Tools/BaselineComparer/ \
+              --configuration Release --no-build \
+              -- $COMPARER_ARGS > perf-summary.md || echo "regression=true" >> $GITHUB_OUTPUT
+          else
+            echo "## Performance Results" > perf-summary.md
+            echo "" >> perf-summary.md
+            echo "No CSV reports found. Check the test run logs for errors." >> perf-summary.md
+          fi
+          cat perf-summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Post performance PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: performance
+          recreate: true
+          path: perf-summary.md
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-test-results
+          path: ./TestResults/*.trx
+          retention-days: 7

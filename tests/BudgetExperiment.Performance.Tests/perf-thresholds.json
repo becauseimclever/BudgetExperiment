@@ -1,0 +1,6 @@
+{
+  "maxLatencyRegressionPercent": 15,
+  "maxThroughputRegressionPercent": 10,
+  "maxErrorRateAbsolute": 1.0,
+  "failOnRegression": true
+}
