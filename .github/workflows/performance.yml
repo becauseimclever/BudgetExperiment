@@ -89,7 +89,7 @@ jobs:
 
       # NBomber writes reports to tests/BudgetExperiment.Performance.Tests/reports/
       - name: Upload performance reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: performance-reports-${{ steps.profile.outputs.name }}-${{ github.run_number }}
@@ -133,7 +133,7 @@ jobs:
           path: perf-summary.md
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: perf-test-results
