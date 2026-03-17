@@ -18,6 +18,7 @@ public sealed class OnboardingViewModelTests
 {
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubNavigationManager _navigationManager = new();
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly OnboardingViewModel _sut;
 
     /// <summary>
@@ -25,7 +26,7 @@ public sealed class OnboardingViewModelTests
     /// </summary>
     public OnboardingViewModelTests()
     {
-        this._sut = new OnboardingViewModel(this._apiService, this._navigationManager);
+        this._sut = new OnboardingViewModel(this._apiService, this._navigationManager, this._apiErrorContext);
     }
 
     // --- Initial State ---

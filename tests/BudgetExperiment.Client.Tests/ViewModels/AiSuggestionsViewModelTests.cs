@@ -17,6 +17,7 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     private readonly StubAiApiService _aiService = new();
     private readonly StubCategorySuggestionApiService _categoryService = new();
     private readonly StubAiAvailabilityService _availabilityService = new();
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly AiSuggestionsViewModel _sut;
     private int _stateChangedCount;
 
@@ -28,7 +29,8 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
         this._sut = new AiSuggestionsViewModel(
             this._aiService,
             this._categoryService,
-            this._availabilityService);
+            this._availabilityService,
+            this._apiErrorContext);
         this._sut.OnStateChanged = () => this._stateChangedCount++;
     }
 

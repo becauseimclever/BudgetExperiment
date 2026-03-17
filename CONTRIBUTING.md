@@ -242,3 +242,7 @@ Inject `IStringLocalizer<SharedResources>` and reference resource keys:
 ## 📬 Questions?
 
 Open an issue on GitHub for questions or discussions about contributing.
+
+## 🐛 Reporting Bugs
+
+When reporting a bug, please include a **debug log** if possible. When an error occurs in the UI, a "Debug Log" download button appears in the error alert. Click it to download a sanitized JSON file containing diagnostic information — all personally identifiable information is automatically redacted before the file is generated. Attach the downloaded `.json` file to your GitHub issue to help the maintainer diagnose the problem quickly.

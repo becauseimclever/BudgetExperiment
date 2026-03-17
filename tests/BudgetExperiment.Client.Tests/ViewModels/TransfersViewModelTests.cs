@@ -20,6 +20,7 @@ public sealed class TransfersViewModelTests : IDisposable
     private readonly StubBudgetApiService _apiService = new();
     private readonly ScopeService _scopeService;
     private readonly StubChatContextService _chatContext = new();
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly TransfersViewModel _sut;
 
     /// <summary>
@@ -31,7 +32,8 @@ public sealed class TransfersViewModelTests : IDisposable
         this._sut = new TransfersViewModel(
             this._apiService,
             this._scopeService,
-            this._chatContext);
+            this._chatContext,
+            this._apiErrorContext);
     }
 
     /// <inheritdoc/>

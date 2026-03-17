@@ -22,6 +22,7 @@ public sealed class RulesViewModelTests : IDisposable
     private readonly StubToastService _toastService = new();
     private readonly ScopeService _scopeService;
     private readonly StubNavigationManager _navigationManager = new();
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly RulesViewModel _sut;
 
     /// <summary>
@@ -34,7 +35,8 @@ public sealed class RulesViewModelTests : IDisposable
             this._apiService,
             this._toastService,
             this._navigationManager,
-            this._scopeService);
+            this._scopeService,
+            this._apiErrorContext);
     }
 
     /// <inheritdoc/>

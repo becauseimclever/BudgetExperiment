@@ -22,6 +22,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     private readonly StubToastService _toastService = new();
     private readonly StubNavigationManager _navigationManager = new();
     private readonly ScopeService _scopeService;
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly TransactionsViewModel _sut;
 
     /// <summary>
@@ -34,7 +35,8 @@ public sealed class TransactionsViewModelTests : IDisposable
             this._apiService,
             this._toastService,
             this._navigationManager,
-            this._scopeService);
+            this._scopeService,
+            this._apiErrorContext);
     }
 
     /// <inheritdoc/>

@@ -133,6 +133,50 @@ Every log entry is automatically enriched with:
 | `ApplicationVersion` | Assembly informational version |
 | `TraceId` / `SpanId` | W3C trace context (populated by ASP.NET Core) |
 
+## Debug Log Export
+
+When an error occurs in the UI, users can download a **sanitized debug log bundle** and attach it to a GitHub issue. The bundle contains the exception details, recent log entries leading up to the error, and environment metadata — with all personally identifiable information (PII) stripped before the file is assembled.
+
+### How It Works
+
+1. When an API call returns an error with a `traceId`, the `ErrorAlert` component shows a **"Debug Log"** download button.
+2. Clicking it calls `GET /api/v1/debug/logs/{traceId}`, which returns an indented JSON file.
+3. The user can review the file, then attach it to a GitHub issue.
+
+### Configuration
+
+| Setting | Env Var | Default | Description |
+|---------|---------|---------|-------------|
+| `Observability:DebugExport:Enabled` | `Observability__DebugExport__Enabled` | `true` | Enable/disable the debug export feature. Only active when Serilog is configured. |
+| `Observability:DebugExport:BufferSize` | `Observability__DebugExport__BufferSize` | `1000` | Maximum number of log entries retained in the in-memory circular buffer. |
+| `Observability:DebugExport:RetentionSeconds` | `Observability__DebugExport__RetentionSeconds` | `300` | How long entries are kept (seconds) before expiry. Default: 5 minutes. |
+
+### What's Included
+
+- Exception type, sanitized message, and full stack trace
+- `traceId` for cross-referencing with server-side logs (if available)
+- Recent log entries from the same request pipeline (up to 50 entries or 30 seconds)
+- App version, .NET runtime version, OS description, environment name
+- HTTP method, route template, status code, elapsed time
+
+### What's Excluded (PII Redaction)
+
+The sanitizer uses an **allowlist** approach — only explicitly safe properties pass through. Everything else is stripped or replaced with `[REDACTED]`:
+
+- User identity (UserId, Username, Email)
+- Account names → replaced with `Account-{hash}`
+- Transaction descriptions, financial amounts
+- Location data, external references
+- Authentication tokens, IP addresses
+- Raw request/response bodies (never captured)
+- Request path parameters (route template used instead of raw URL)
+
+The exported file includes a `_redactionSummary` showing how many fields were redacted and what categories.
+
+### Disabling
+
+Set `Observability:DebugExport:Enabled` to `false` to disable the feature without code changes. The in-memory buffer will not be allocated, the Serilog sink will not register, the API endpoint returns 501, and the download button is hidden in the UI.
+
 ## Disabling Features
 
 All opt-in features are disabled by leaving their activation setting empty or removing it:
@@ -140,5 +184,6 @@ All opt-in features are disabled by leaving their activation setting empty or re
 - **File logging**: Remove or empty `Observability:File:Path`
 - **Seq**: Remove or empty `Observability:Seq:Url`
 - **OTLP**: Remove or empty `Observability:Otlp:Endpoint`
+- **Debug export**: Set `Observability:DebugExport:Enabled` to `false`
 
 No code changes, no feature flags — just configuration.
