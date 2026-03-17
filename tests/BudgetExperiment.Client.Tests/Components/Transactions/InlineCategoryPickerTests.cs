@@ -25,6 +25,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
         this._categories = new List<BudgetCategoryDto>
         {
             new() { Id = Guid.NewGuid(), Name = "Groceries", IsActive = true },

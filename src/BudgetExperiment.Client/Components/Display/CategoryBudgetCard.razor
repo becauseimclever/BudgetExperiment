@@ -1,5 +1,7 @@
 @* CategoryBudgetCard.razor - Display card for category budget progress *@
 
+@inject CultureService Culture
+
 <div class="card category-budget-card @GetStatusClass()">
     <div class="card-body">
         <div class="category-budget-header">
@@ -38,11 +40,11 @@
                 <span class="budget-remaining @(Progress.RemainingAmount.Amount < 0 ? "text-expense" : "text-income")">
                     @if (Progress.RemainingAmount.Amount >= 0)
                     {
-                        <span>@Progress.RemainingAmount.Amount.ToString("C") remaining</span>
+                        <span>@Progress.RemainingAmount.Amount.FormatCurrency(Culture.CurrentCulture) remaining</span>
                     }
                     else
                     {
-                        <span>@Math.Abs(Progress.RemainingAmount.Amount).ToString("C") over budget</span>
+                        <span>@Math.Abs(Progress.RemainingAmount.Amount).FormatCurrency(Culture.CurrentCulture) over budget</span>
                     }
                 </span>
             }

@@ -22,6 +22,7 @@ public sealed class EditRecurringTransferFormTests : BunitContext, IAsyncLifetim
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

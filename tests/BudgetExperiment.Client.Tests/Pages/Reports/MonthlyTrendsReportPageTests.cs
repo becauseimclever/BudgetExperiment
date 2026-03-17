@@ -30,6 +30,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

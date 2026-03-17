@@ -1,5 +1,7 @@
 @* CalendarBudgetCategoryRow.razor - Individual category row with progress and edit actions *@
 
+@inject CultureService Culture
+
 <div class="budget-category-row @GetStatusClass()">
     <div class="category-info">
         @if (!string.IsNullOrEmpty(Progress.CategoryIcon))
@@ -20,9 +22,9 @@
         }
         else
         {
-            <span class="amount-spent">@Progress.SpentAmount.Amount.ToString("C")</span>
+            <span class="amount-spent">@Progress.SpentAmount.Amount.FormatCurrency(Culture.CurrentCulture)</span>
             <span class="amount-separator">/</span>
-            <span class="amount-target">@Progress.TargetAmount.Amount.ToString("C")</span>
+            <span class="amount-target">@Progress.TargetAmount.Amount.FormatCurrency(Culture.CurrentCulture)</span>
         }
     </div>
 

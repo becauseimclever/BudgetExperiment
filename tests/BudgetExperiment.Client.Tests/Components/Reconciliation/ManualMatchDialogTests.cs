@@ -27,6 +27,7 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
         _budgetApi = new StubBudgetApiService();
         _reconciliationApi = new StubReconciliationApiService();
         Services.AddSingleton<IBudgetApiService>(_budgetApi);

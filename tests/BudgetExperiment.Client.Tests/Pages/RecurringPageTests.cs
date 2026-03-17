@@ -30,6 +30,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
         this.Services.AddTransient<RecurringViewModel>();
     }

@@ -22,6 +22,7 @@ public class IconTests : BunitContext, IDisposable
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <summary>

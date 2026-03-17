@@ -23,6 +23,7 @@ public sealed class TransactionTablePaginationTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     [Fact]

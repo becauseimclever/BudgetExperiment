@@ -128,8 +128,10 @@ builder.Services.AddScoped<IReconciliationApiService, ReconciliationApiService>(
 builder.Services.AddScoped<IExportDownloadService, ExportDownloadService>();
 builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddScoped<IFormStateService, FormStateService>();
+builder.Services.AddLocalization();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<GeolocationService>();
+builder.Services.AddScoped<CultureService>();
 builder.Services.AddScoped<VersionService>();
 builder.Services.AddTransient<CategoriesViewModel>();
 builder.Services.AddTransient<RulesViewModel>();

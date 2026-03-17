@@ -25,6 +25,7 @@ public sealed class ToleranceSettingsPanelTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
         _reconciliationApi = new StubReconciliationApiService();
         Services.AddSingleton<IReconciliationApiService>(_reconciliationApi);
     }

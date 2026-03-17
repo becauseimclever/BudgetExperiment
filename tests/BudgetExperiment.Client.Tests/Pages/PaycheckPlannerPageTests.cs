@@ -29,6 +29,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

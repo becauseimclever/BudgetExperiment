@@ -7,6 +7,7 @@
 @inject IBudgetApiService ApiService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
+@inject CultureService Culture
 
 <div class="calendar-insights-panel @(IsExpanded ? "expanded" : "collapsed")">
     <button type="button"
@@ -22,7 +23,7 @@
             @if (_report != null)
             {
                 <span class="summary-net @GetNetClass()">
-                    Net: @GetNetAmount().ToString("C")
+                    Net: @GetNetAmount().FormatCurrency(Culture.CurrentCulture)
                 </span>
             }
         </div>
@@ -44,11 +45,11 @@
                     <div class="insights-summary-grid">
                         <div class="insights-stat">
                             <span class="stat-label">Income</span>
-                            <span class="stat-value stat-income">@_report.TotalIncome.Amount.ToString("C")</span>
+                            <span class="stat-value stat-income">@_report.TotalIncome.Amount.FormatCurrency(Culture.CurrentCulture)</span>
                         </div>
                         <div class="insights-stat">
                             <span class="stat-label">Spending</span>
-                            <span class="stat-value stat-spending">@_report.TotalSpending.Amount.ToString("C")</span>
+                            <span class="stat-value stat-spending">@_report.TotalSpending.Amount.FormatCurrency(Culture.CurrentCulture)</span>
                             <TrendIndicator CurrentValue="@_report.TotalSpending.Amount"
                                             PreviousValue="@(_previousReport?.TotalSpending.Amount ?? 0m)"
                                             HasData="@(_previousReport != null)"
@@ -57,7 +58,7 @@
                         </div>
                         <div class="insights-stat">
                             <span class="stat-label">Net</span>
-                            <span class="stat-value @GetNetClass()">@GetNetAmount().ToString("C")</span>
+                            <span class="stat-value @GetNetClass()">@GetNetAmount().FormatCurrency(Culture.CurrentCulture)</span>
                         </div>
                         <div class="insights-stat">
                             <span class="stat-label">Transactions</span>
@@ -87,7 +88,7 @@
                                         <div class="insights-category-row">
                                             <span class="category-color-dot" style="background: @(category.CategoryColor ?? "#6b7280")"></span>
                                             <span class="category-name">@category.CategoryName</span>
-                                            <span class="category-amount">@category.Amount.Amount.ToString("C")</span>
+                                            <span class="category-amount">@category.Amount.Amount.FormatCurrency(Culture.CurrentCulture)</span>
                                         </div>
                                     }
                                 </div>

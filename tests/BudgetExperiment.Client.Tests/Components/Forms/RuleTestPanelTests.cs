@@ -25,6 +25,7 @@ public sealed class RuleTestPanelTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
         Services.AddSingleton<IBudgetApiService>(_stubApiService);
     }
 

@@ -5,6 +5,7 @@
 @using BudgetExperiment.Client.ViewModels
 
 @inject AccountsViewModel ViewModel
+@inject CultureService Culture
 
 <PageTitle>Accounts - Budget Experiment</PageTitle>
 
@@ -44,7 +45,7 @@
                         <div class="mt-3 text-sm">
                             <span class="text-secondary">Initial Balance:</span>
                             <span class="font-semibold ml-1 @(account.InitialBalance < 0 ? "text-expense" : "")">
-                                @(account.InitialBalance.ToString("C"))
+                                @(account.InitialBalance.FormatCurrency(Culture.CurrentCulture))
                             </span>
                             <span class="text-disabled text-xs ml-1">(as of @account.InitialBalanceDate.ToString("M/d/yyyy"))</span>
                         </div>

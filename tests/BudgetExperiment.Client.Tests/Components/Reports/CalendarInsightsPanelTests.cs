@@ -28,6 +28,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         this._stubApiService = new StubBudgetApiService();
         this.Services.AddSingleton<IBudgetApiService>(this._stubApiService);
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

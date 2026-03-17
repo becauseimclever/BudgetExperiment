@@ -22,6 +22,7 @@ public sealed class ConfidenceBadgeTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

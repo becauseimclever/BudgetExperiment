@@ -32,6 +32,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IImportApiService>(this._importApi);
         this.Services.AddSingleton<ICsvParserService>(this._csvParser);
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

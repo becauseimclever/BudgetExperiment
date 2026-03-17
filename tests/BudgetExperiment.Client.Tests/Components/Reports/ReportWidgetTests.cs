@@ -22,6 +22,7 @@ public class ReportWidgetTests : BunitContext, IAsyncLifetime
     public ReportWidgetTests()
     {
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

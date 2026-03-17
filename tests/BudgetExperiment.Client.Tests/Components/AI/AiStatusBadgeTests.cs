@@ -25,6 +25,7 @@ public sealed class AiStatusBadgeTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
         _aiService = new FakeAiApiService();
         Services.AddSingleton<IAiApiService>(_aiService);
     }

@@ -25,6 +25,7 @@ public sealed class QuickAddFormTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

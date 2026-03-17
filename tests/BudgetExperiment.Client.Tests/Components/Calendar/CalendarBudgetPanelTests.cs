@@ -25,6 +25,7 @@ public class CalendarBudgetPanelTests : BunitContext, IAsyncLifetime
         // Mock JS interop for ThemeService
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

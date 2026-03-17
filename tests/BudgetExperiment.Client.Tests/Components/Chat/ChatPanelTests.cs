@@ -28,6 +28,7 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IChatApiService>(this._chatApi);
         this.Services.AddSingleton<IChatContextService>(this._chatContext);
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

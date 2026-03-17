@@ -1,3 +1,5 @@
+@inject CultureService Culture
+
 <div class="import-preview-table">
     <div class="preview-header d-flex justify-content-between align-items-center mb-3">
         <div>
@@ -101,7 +103,7 @@
                         <td class="amount-col text-end @(row.Amount < 0 ? "text-danger" : "text-success")">
                             @if (row.Amount.HasValue)
                             {
-                                @row.Amount.Value.ToString("C")
+                                @row.Amount.Value.FormatCurrency(Culture.CurrentCulture)
                             }
                             else
                             {
@@ -204,7 +206,7 @@
             @if (SelectedAmount != 0)
             {
                 <span class="ms-2">
-                    Total: <strong class="@(SelectedAmount < 0 ? "text-danger" : "text-success")">@SelectedAmount.ToString("C")</strong>
+                    Total: <strong class="@(SelectedAmount < 0 ? "text-danger" : "text-success")">@SelectedAmount.FormatCurrency(Culture.CurrentCulture)</strong>
                 </span>
             }
         </div>

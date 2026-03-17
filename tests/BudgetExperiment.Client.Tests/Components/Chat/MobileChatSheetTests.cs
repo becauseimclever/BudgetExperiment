@@ -25,6 +25,7 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IChatApiService>(this.chatApi);
         this.Services.AddSingleton<IChatContextService>(this.chatContext);
     }

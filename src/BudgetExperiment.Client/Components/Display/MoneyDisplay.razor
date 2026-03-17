@@ -1,5 +1,7 @@
 @* MoneyDisplay.razor - Formatted currency display with positive/negative coloring *@
 
+@inject CultureService Culture
+
 <span class="money-display @ColorClass">@FormattedAmount</span>
 
 @code {
@@ -35,7 +37,7 @@
     {
         get
         {
-            var formatted = Amount.ToString("C");
+            var formatted = Amount.FormatCurrency(Culture.CurrentCulture);
             if (ShowPositiveSign && Amount > 0)
             {
                 formatted = "+" + formatted;

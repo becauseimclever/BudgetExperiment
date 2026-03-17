@@ -22,6 +22,7 @@ public class WeekSummaryTests : BunitContext, IAsyncLifetime
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

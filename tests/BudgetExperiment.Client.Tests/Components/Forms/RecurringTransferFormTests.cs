@@ -27,6 +27,7 @@ public sealed class RecurringTransferFormTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
         Services.AddSingleton<IBudgetApiService>(_stubApiService);
     }
 

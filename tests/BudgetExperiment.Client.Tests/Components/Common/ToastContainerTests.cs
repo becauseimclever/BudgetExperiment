@@ -24,6 +24,7 @@ public sealed class ToastContainerTests : BunitContext, IAsyncLifetime
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<IToastService>(_toastService);
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

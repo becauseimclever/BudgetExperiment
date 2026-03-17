@@ -27,6 +27,7 @@ public class OnboardingPageTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<IBudgetApiService>(this._apiService);
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
         this.Services.AddTransient<OnboardingViewModel>();
     }
 

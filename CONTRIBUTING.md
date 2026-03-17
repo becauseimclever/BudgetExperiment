@@ -201,6 +201,44 @@ The following libraries are **not allowed** in this project:
 
 ---
 
+## 🌐 Localization (i18n)
+
+The project uses the standard ASP.NET Core localization framework with `IStringLocalizer<SharedResources>`.
+
+### How to Add a New Language
+
+1. **Create a resource file**: Copy `src/BudgetExperiment.Client/Resources/SharedResources.resx` to `SharedResources.{culture}.resx` (e.g., `SharedResources.es.resx` for Spanish).
+2. **Translate the values**: Keep the `name` attributes identical; translate only the `<value>` elements.
+3. **Register the culture** in `src/BudgetExperiment.Api/Program.cs`:
+   ```csharp
+   var supportedCultures = new[] { "en-US", "es" };  // add new culture code
+   ```
+4. **Build and test**: The localization framework resolves strings automatically based on the `Accept-Language` header or culture cookie.
+
+### Currency Formatting
+
+All currency formatting uses `CultureService.CurrentCulture` via the `FormatCurrency()` extension method. Never use bare `ToString("C")` — always pass an explicit `IFormatProvider`.
+
+```razor
+@inject CultureService Culture
+
+@Amount.FormatCurrency(Culture.CurrentCulture)
+```
+
+### Localization Pattern (Components)
+
+Inject `IStringLocalizer<SharedResources>` and reference resource keys:
+
+```razor
+@using BudgetExperiment.Client.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> Loc
+
+<h1>@Loc["Layout_AppName"]</h1>
+```
+
+---
+
 ## 📬 Questions?
 
 Open an issue on GitHub for questions or discussions about contributing.

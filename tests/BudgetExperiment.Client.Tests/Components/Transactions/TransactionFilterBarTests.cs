@@ -23,6 +23,7 @@ public sealed class TransactionFilterBarTests : BunitContext
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <summary>

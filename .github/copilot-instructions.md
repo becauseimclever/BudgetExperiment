@@ -271,3 +271,12 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 - **Always** set `CultureInfo.CurrentCulture` to a known culture (e.g., `CultureInfo.GetCultureInfo("en-US")`) in test constructors or setup when tests assert on formatted currency, number, or date strings.
 - Prefer explicit `IFormatProvider` overloads (e.g., `ToString("C", CultureInfo.GetCultureInfo("en-US"))`) in production code when the output is user-visible and must be deterministic.
 - This applies to all test projects, not just Client tests.
+
+## 38. Localization (i18n)
+- **Framework**: ASP.NET Core localization via `Microsoft.Extensions.Localization`. Configured in both API and Client `Program.cs`.
+- **Default culture**: `en-US`. Only supported culture for now; additional cultures added by creating `SharedResources.{culture}.resx` files and registering the culture in `RequestLocalizationOptions`.
+- **Resource files**: `src/BudgetExperiment.Client/Resources/SharedResources.resx` (en-US baseline). Marker class: `SharedResources.cs`.
+- **String lookup**: Use `IStringLocalizer<SharedResources>` in Razor components. Access strings by key: `@Loc["Layout_AppName"]`.
+- **Currency formatting**: All client-side currency formatting MUST use the `FormatCurrency()` extension method with `CultureService.CurrentCulture`. Never use bare `ToString("C")` without an explicit `IFormatProvider`.
+- **CultureService**: Scoped client-side service that detects browser language and timezone via JS interop (`culture.js`). Exposes `CurrentCulture` and `CurrentTimeZone`.
+- **Adding a new language**: (1) Add `SharedResources.{code}.resx`, (2) register culture in API `Program.cs` `supportedCultures` array, (3) done.

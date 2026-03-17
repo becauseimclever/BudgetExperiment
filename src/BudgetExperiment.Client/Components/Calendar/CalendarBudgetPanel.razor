@@ -1,5 +1,7 @@
 @* CalendarBudgetPanel.razor - Collapsible budget summary panel for calendar view *@
 
+@inject CultureService Culture
+
 @if (Summary != null)
 {
     <div class="calendar-budget-panel @(IsExpanded ? "expanded" : "collapsed")">
@@ -14,7 +16,7 @@
             </div>
             <div class="panel-summary-inline" @onclick:stopPropagation="true">
                 <span class="summary-quick">
-                    @Summary.TotalSpent.Amount.ToString("C") / @Summary.TotalBudgeted.Amount.ToString("C")
+                    @Summary.TotalSpent.Amount.FormatCurrency(Culture.CurrentCulture) / @Summary.TotalBudgeted.Amount.FormatCurrency(Culture.CurrentCulture)
                 </span>
                 <span class="summary-percent @GetOverallStatusClass()">
                     @Summary.OverallPercentUsed.ToString("N0")%

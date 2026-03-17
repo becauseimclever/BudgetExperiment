@@ -65,6 +65,9 @@ public partial class Program
         // Client configuration (exposed via /api/v1/config endpoint)
         ConfigureClientConfig(builder.Services, builder.Configuration);
 
+        // Localization
+        builder.Services.AddLocalization();
+
         // Domain, Application & Infrastructure
         builder.Services.AddDomain();
         builder.Services.AddApplication();
@@ -128,6 +131,15 @@ public partial class Program
 
         app.UseHttpsRedirection();
         app.UseCors("dev");
+
+        // Localization — default to en-US, additional cultures added via follow-up features
+        var supportedCultures = new[] { "en-US" };
+        app.UseRequestLocalization(options =>
+        {
+            options.SetDefaultCulture("en-US")
+                .AddSupportedCultures(supportedCultures)
+                .AddSupportedUICultures(supportedCultures);
+        });
 
         // Request timeouts middleware - must be before endpoints
         app.UseRequestTimeouts();

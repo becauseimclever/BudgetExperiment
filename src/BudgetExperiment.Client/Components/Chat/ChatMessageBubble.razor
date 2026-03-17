@@ -2,6 +2,8 @@
 
 @using BudgetExperiment.Contracts.Dtos
 
+@inject CultureService Culture
+
 <div class="chat-message @GetMessageClass()">
     <div class="message-bubble">
         <div class="message-content">
@@ -44,7 +46,7 @@
                             {
                                 <div class="detail-row">
                                     <span class="detail-label">Amount:</span>
-                                    <span class="detail-value amount">@Message.Action.Amount.Value.ToString("C")</span>
+                                    <span class="detail-value amount">@Message.Action.Amount.Value.FormatCurrency(Culture.CurrentCulture)</span>
                                 </div>
                             }
 

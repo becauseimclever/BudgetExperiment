@@ -24,6 +24,7 @@ public class ChatMessageBubbleTests : BunitContext, IAsyncLifetime
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

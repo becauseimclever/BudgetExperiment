@@ -21,6 +21,7 @@ public class WidgetConfigPanelTests : BunitContext, IAsyncLifetime
     public WidgetConfigPanelTests()
     {
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

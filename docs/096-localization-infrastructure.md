@@ -1,5 +1,5 @@
 # Feature 096: Localization Infrastructure (i18n Preparation)
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
@@ -37,11 +37,11 @@ Prepare the application for multi-language and multi-culture support by establis
 **So that** formatting (currency, dates) matches my preferences without manual configuration
 
 **Acceptance Criteria:**
-- [ ] Browser timezone detected via `Intl.DateTimeFormat().resolvedOptions().timeZone` JS interop
-- [ ] Browser language detected via `navigator.language` JS interop
-- [ ] Detected values stored in a `CultureService` (scoped, client-side)
+- [x] Browser timezone detected via `Intl.DateTimeFormat().resolvedOptions().timeZone` JS interop
+- [x] Browser language detected via `navigator.language` JS interop
+- [x] Detected values stored in a `CultureService` (scoped, client-side)
 - [ ] `UserSettings.TimeZoneId` wired to detected timezone on first load
-- [ ] Fallback to `en-US` if detection fails
+- [x] Fallback to `en-US` if detection fails
 
 ### Formatting Consistency
 
@@ -51,10 +51,10 @@ Prepare the application for multi-language and multi-culture support by establis
 **So that** the output is deterministic regardless of host OS locale
 
 **Acceptance Criteria:**
-- [ ] All `ToString("C")` calls in Razor components replaced with explicit `IFormatProvider`
-- [ ] Chart codebehind formatting uses the same `CultureService`
-- [ ] API export formatting continues to use `InvariantCulture` (no change)
-- [ ] No CI test failures due to culture-dependent formatting
+- [x] All `ToString("C")` calls in Razor components replaced with explicit `IFormatProvider`
+- [x] Chart codebehind formatting uses the same `CultureService`
+- [x] API export formatting continues to use `InvariantCulture` (no change)
+- [x] No CI test failures due to culture-dependent formatting
 
 ### Localization Plumbing
 
@@ -64,12 +64,12 @@ Prepare the application for multi-language and multi-culture support by establis
 **So that** adding new languages later is a matter of adding `.resx` files
 
 **Acceptance Criteria:**
-- [ ] `Microsoft.Extensions.Localization` configured in API and Client
-- [ ] `RequestLocalizationOptions` middleware registered with `en-US` as default and only supported culture
-- [ ] Shared resource file (`SharedResources.resx`) created with English strings as the baseline
-- [ ] `IStringLocalizer<SharedResources>` injectable and functional
-- [ ] At least one page/component converted to use `IStringLocalizer` as a reference pattern
-- [ ] Documentation added on how to add a new language (add `.resx`, register culture)
+- [x] `Microsoft.Extensions.Localization` configured in API and Client
+- [x] `RequestLocalizationOptions` middleware registered with `en-US` as default and only supported culture
+- [x] Shared resource file (`SharedResources.resx`) created with English strings as the baseline
+- [x] `IStringLocalizer<SharedResources>` injectable and functional
+- [x] At least one page/component converted to use `IStringLocalizer` as a reference pattern
+- [x] Documentation added on how to add a new language (add `.resx`, register culture)
 
 ---
 
@@ -137,22 +137,22 @@ None — `UserSettings.TimeZoneId` already exists in the domain model.
 **Objective:** Detect browser language and timezone, expose via `CultureService`
 
 **Tasks:**
-- [ ] Create `wwwroot/js/culture.js` with `detectCulture()` function
-- [ ] Create `CultureService` in Client (scoped, calls JS interop on init)
-- [ ] Register `CultureService` in Client `Program.cs`
+- [x] Create `wwwroot/js/culture.js` with `detectCulture()` function
+- [x] Create `CultureService` in Client (scoped, calls JS interop on init)
+- [x] Register `CultureService` in Client `Program.cs`
 - [ ] Wire detected timezone to `UserSettings.TimeZoneId` persistence
-- [ ] Write unit tests for `CultureService` (mock JS interop)
+- [x] Write unit tests for `CultureService` (mock JS interop)
 
 ### Phase 2: Localization Middleware & Resource Files
 
 **Objective:** Set up ASP.NET Core localization framework in both projects
 
 **Tasks:**
-- [ ] Add `Microsoft.Extensions.Localization` to Client project
-- [ ] Create `Resources/SharedResources.resx` with initial en-US strings (representative sample, not full extraction)
-- [ ] Create `SharedResources.cs` marker class
-- [ ] Configure `AddLocalization()` and `UseRequestLocalization()` in API `Program.cs`
-- [ ] Configure `AddLocalization()` in Client `Program.cs`
+- [x] Add `Microsoft.Extensions.Localization` to Client project
+- [x] Create `Resources/SharedResources.resx` with initial en-US strings (representative sample, not full extraction)
+- [x] Create `SharedResources.cs` marker class
+- [x] Configure `AddLocalization()` and `UseRequestLocalization()` in API `Program.cs`
+- [x] Configure `AddLocalization()` in Client `Program.cs`
 - [ ] Write integration test verifying localization resolves en-US strings
 
 ### Phase 3: Centralize Currency Formatting
@@ -160,33 +160,33 @@ None — `UserSettings.TimeZoneId` already exists in the domain model.
 **Objective:** Replace all ad-hoc `ToString("C")` with explicit culture-aware formatting
 
 **Tasks:**
-- [ ] Create currency formatting extension method or helper
-- [ ] Update all `ToString("C")` calls in Razor components to use explicit `IFormatProvider` via `CultureService`
-- [ ] Update chart codebehind formatting to use `CultureService`
-- [ ] Verify API export formatting unchanged (`InvariantCulture`)
-- [ ] Ensure all client test classes set `CultureInfo.CurrentCulture` per section 37 guidelines
-- [ ] Run full test suite — no culture-related failures
+- [x] Create currency formatting extension method or helper
+- [x] Update all `ToString("C")` calls in Razor components to use explicit `IFormatProvider` via `CultureService`
+- [x] Update chart codebehind formatting to use `CultureService`
+- [x] Verify API export formatting unchanged (`InvariantCulture`)
+- [x] Ensure all client test classes set `CultureInfo.CurrentCulture` per section 37 guidelines
+- [x] Run full test suite — no culture-related failures
 
 ### Phase 4: IStringLocalizer Pattern Demo
 
 **Objective:** Convert one representative component to `IStringLocalizer` as a reference for future work
 
 **Tasks:**
-- [ ] Pick a component with moderate string usage (e.g., `MainLayout.razor` nav items)
-- [ ] Extract hardcoded strings to `SharedResources.resx`
-- [ ] Inject `IStringLocalizer<SharedResources>` and replace hardcoded strings
+- [x] Pick a component with moderate string usage (e.g., `MainLayout.razor` nav items)
+- [x] Extract hardcoded strings to `SharedResources.resx`
+- [x] Inject `IStringLocalizer<SharedResources>` and replace hardcoded strings
 - [ ] Write test verifying localized strings render correctly
-- [ ] Document the pattern in a brief section in `CONTRIBUTING.md` or inline comments
+- [x] Document the pattern in a brief section in `CONTRIBUTING.md` or inline comments
 
 ### Phase 5: Documentation & Cleanup
 
 **Objective:** Document the localization approach and how to add languages in the future
 
 **Tasks:**
-- [ ] Update copilot-instructions.md with localization guidelines (new section)
-- [ ] Add brief "Adding a New Language" guide to `docs/` or `CONTRIBUTING.md`
-- [ ] Update this feature doc status to Done
-- [ ] Remove any TODO comments
+- [x] Update copilot-instructions.md with localization guidelines (new section)
+- [x] Add brief "Adding a New Language" guide to `docs/` or `CONTRIBUTING.md`
+- [x] Update this feature doc status to Done
+- [x] Remove any TODO comments
 
 ---
 

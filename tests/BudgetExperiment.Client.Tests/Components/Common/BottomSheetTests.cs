@@ -25,6 +25,7 @@ public class BottomSheetTests : BunitContext, IAsyncLifetime
         // Setup JS interop mocks for bottom-sheet.js module and ThemeService
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     /// <inheritdoc/>

@@ -1,3 +1,5 @@
+@inject CultureService Culture
+
 <div class="duplicate-warning-card alert alert-info">
     <div class="d-flex align-items-start gap-3">
         <div class="warning-icon">
@@ -35,7 +37,7 @@
                                     <td class="description-cell" title="@row.Description">
                                         @TruncateText(row.Description, 30)
                                     </td>
-                                    <td class="text-end">@row.Amount?.ToString("C")</td>
+                                    <td class="text-end">@row.Amount.FormatCurrency(Culture.CurrentCulture)</td>
                                     <td class="text-secondary small">@row.StatusMessage</td>
                                 </tr>
                             }

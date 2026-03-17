@@ -26,6 +26,7 @@ public sealed class ImportPatternsDialogTests : BunitContext, IAsyncLifetime
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
         _budgetApi = new StubBudgetApiService();
         Services.AddSingleton<IBudgetApiService>(_budgetApi);
     }

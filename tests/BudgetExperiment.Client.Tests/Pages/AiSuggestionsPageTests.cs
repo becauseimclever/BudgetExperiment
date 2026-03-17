@@ -32,6 +32,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<ICategorySuggestionApiService>(this._categoryService);
         this.Services.AddSingleton<IAiAvailabilityService>(this._availabilityService);
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
         this.Services.AddTransient<AiSuggestionsViewModel>();
     }
 

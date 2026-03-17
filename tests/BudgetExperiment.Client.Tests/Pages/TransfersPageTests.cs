@@ -30,6 +30,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IBudgetApiService>(this._apiService);
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
+        this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
         this.Services.AddTransient<TransfersViewModel>();
     }

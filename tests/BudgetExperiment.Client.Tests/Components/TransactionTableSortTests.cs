@@ -23,6 +23,7 @@ public sealed class TransactionTableSortTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     [Fact]

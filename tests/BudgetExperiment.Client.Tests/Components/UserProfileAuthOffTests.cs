@@ -98,6 +98,7 @@ public class UserProfileAuthOffTests : BunitContext, IAsyncLifetime
         Services.AddCascadingAuthenticationState();
         Services.AddSingleton<IAuthorizationService, AlwaysAllowAuthorizationService>();
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     private void RegisterUnauthenticatedUser()
@@ -111,6 +112,7 @@ public class UserProfileAuthOffTests : BunitContext, IAsyncLifetime
         Services.AddCascadingAuthenticationState();
         Services.AddSingleton<IAuthorizationService, DenyAllAuthorizationService>();
         Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>();
     }
 
     private sealed class FakeAuthStateProvider : AuthenticationStateProvider
