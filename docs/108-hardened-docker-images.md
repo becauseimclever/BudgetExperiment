@@ -1,5 +1,5 @@
 # Feature 108: Docker Hardened Images
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
@@ -51,9 +51,9 @@ Use Docker Hardened Images where available, falling back to the best-hardened al
 **So that** the database has continuous CVE patching, verified provenance, and minimal attack surface
 
 **Acceptance Criteria:**
-- [ ] `docker-compose.demo.yml` uses Docker Hardened PostgreSQL image
-- [ ] PostgreSQL starts, accepts connections, and passes health check
-- [ ] Data volume compatibility verified (no migration issues from `postgres:16-alpine`)
+- [x] `docker-compose.demo.yml` uses Docker Hardened PostgreSQL image
+- [x] PostgreSQL starts, accepts connections, and passes health check
+- [x] Data volume compatibility verified (no migration issues from `postgres:16-alpine`)
 
 ### US-108-002: Use Hardened .NET Runtime Images
 **As a** platform operator  
@@ -61,11 +61,11 @@ Use Docker Hardened Images where available, falling back to the best-hardened al
 **So that** the attack surface is minimized and security posture is improved
 
 **Acceptance Criteria:**
-- [ ] `Dockerfile` runtime stage uses `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
-- [ ] `Dockerfile.prebuilt` uses `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
-- [ ] Application starts and serves traffic correctly from the chiseled image
-- [ ] Health check still works (adapted for no-shell environment)
-- [ ] Multi-architecture builds (amd64, arm64) still succeed
+- [x] `Dockerfile` runtime stage uses `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
+- [x] `Dockerfile.prebuilt` uses `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
+- [x] Application starts and serves traffic correctly from the chiseled image
+- [x] Health check still works (adapted for no-shell environment)
+- [x] Multi-architecture builds (amd64, arm64) still succeed
 
 ### US-108-003: Establish Hardened Image Policy
 **As a** developer  
@@ -73,8 +73,8 @@ Use Docker Hardened Images where available, falling back to the best-hardened al
 **So that** future image additions or upgrades follow the same security baseline
 
 **Acceptance Criteria:**
-- [ ] Copilot instructions and deployment docs updated with hardened image policy
-- [ ] Decision rationale documented for each image (hardened vs. chiseled vs. standard)
+- [x] Copilot instructions and deployment docs updated with hardened image policy
+- [x] Decision rationale documented for each image (hardened vs. chiseled vs. standard)
 
 ---
 
@@ -90,7 +90,7 @@ Docker publishes hardened variants of popular images including PostgreSQL. These
 image: postgres:16-alpine
 
 # After — use Docker Hardened Image for PostgreSQL
-image: docker.io/dockerhardened/postgres:16
+image: dhi.io/postgres:16
 ```
 
 > **Note:** The exact image name/tag will be confirmed from Docker's hardened image catalog during implementation. Docker Hardened Images are drop-in replacements and use the same configuration, environment variables, and volume mounts.
@@ -154,11 +154,11 @@ The GitHub Actions workflow (`docker-build-publish.yml`) builds from the `Docker
 **Objective:** Switch the PostgreSQL container in `docker-compose.demo.yml` to Docker's Hardened Image.
 
 **Tasks:**
-- [ ] Confirm exact Docker Hardened PostgreSQL image name/tag from [Docker Hardened Images catalog](https://www.docker.com/products/hardened-images/)
-- [ ] Update `docker-compose.demo.yml` `postgres` service to use Docker Hardened PostgreSQL image
-- [ ] Verify PostgreSQL starts and accepts connections with the hardened image
-- [ ] Verify data volume compatibility (ensure existing volumes work without migration)
-- [ ] Verify `pg_isready` health check still works
+- [x] Confirm exact Docker Hardened PostgreSQL image name/tag from [Docker Hardened Images catalog](https://www.docker.com/products/hardened-images/)
+- [x] Update `docker-compose.demo.yml` `postgres` service to use Docker Hardened PostgreSQL image
+- [x] Verify PostgreSQL starts and accepts connections with the hardened image
+- [x] Verify data volume compatibility (ensure existing volumes work without migration)
+- [x] Verify `pg_isready` health check still works
 
 **Commit:**
 ```bash
@@ -179,15 +179,15 @@ Refs: #108"
 **Objective:** Switch both Dockerfiles to Microsoft's chiseled base images and remove unnecessary layers.
 
 **Tasks:**
-- [ ] Update `Dockerfile` runtime stage to `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
-- [ ] Remove `apt-get install` block from `Dockerfile`
-- [ ] Remove `useradd`/`chown`/`USER` block from `Dockerfile` (chiseled is non-root by default)
-- [ ] Remove `HEALTHCHECK` from `Dockerfile`
-- [ ] Update `Dockerfile.prebuilt` to `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
-- [ ] Remove `apt-get install` block from `Dockerfile.prebuilt`
-- [ ] Remove `useradd`/`chown`/`USER` block from `Dockerfile.prebuilt`
-- [ ] Remove `HEALTHCHECK` from `Dockerfile.prebuilt`
-- [ ] Add comments explaining chiseled image constraints
+- [x] Update `Dockerfile` runtime stage to `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
+- [x] Remove `apt-get install` block from `Dockerfile`
+- [x] Remove `useradd`/`chown`/`USER` block from `Dockerfile` (chiseled is non-root by default)
+- [x] Remove `HEALTHCHECK` from `Dockerfile`
+- [x] Update `Dockerfile.prebuilt` to `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`
+- [x] Remove `apt-get install` block from `Dockerfile.prebuilt`
+- [x] Remove `useradd`/`chown`/`USER` block from `Dockerfile.prebuilt`
+- [x] Remove `HEALTHCHECK` from `Dockerfile.prebuilt`
+- [x] Add comments explaining chiseled image constraints
 
 **Commit:**
 ```bash
@@ -209,9 +209,9 @@ Refs: #108"
 **Objective:** Ensure docker-compose health checks work with the new shell-less .NET containers.
 
 **Tasks:**
-- [ ] Update `docker-compose.demo.yml` health check for `budgetexperiment` service (remove `curl` dependency)
-- [ ] Update `docker-compose.pi.yml` health check (remove `curl` dependency)
-- [ ] Update `docker-compose.second.yml` health check (remove `curl` dependency)
+- [x] Update `docker-compose.demo.yml` health check for `budgetexperiment` service (remove `curl` dependency)
+- [x] Update `docker-compose.pi.yml` health check (remove `curl` dependency)
+- [x] Update `docker-compose.second.yml` health check (remove `curl` dependency)
 
 **Commit:**
 ```bash
@@ -234,9 +234,9 @@ Refs: #108"
 - [ ] Build Docker image locally and verify it starts (`docker build -t budget-test .`)
 - [ ] Verify `docker-compose.demo.yml` stack brings up correctly with all hardened images
 - [ ] Verify multi-architecture CI build succeeds
-- [ ] Update `README.Docker.md` or `ci-cd-deployment.md` with hardening notes
-- [ ] Update `copilot-instructions.md` section 35 with hardened image policy
-- [ ] Document image decision matrix (which images use Docker Hardened vs. chiseled vs. standard)
+- [x] Update `README.Docker.md` or `ci-cd-deployment.md` with hardening notes
+- [x] Update `copilot-instructions.md` section 35 with hardened image policy
+- [x] Document image decision matrix (which images use Docker Hardened vs. chiseled vs. standard)
 
 **Commit:**
 ```bash

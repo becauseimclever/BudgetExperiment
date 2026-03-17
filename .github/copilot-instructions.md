@@ -257,8 +257,14 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 - **Deployment**: Raspberry Pi uses `docker-compose.pi.yml` to pull and run images from ghcr.io.
 - **Database Connection**: Passed via environment variable `ConnectionStrings__AppDb` from `.env` file (never committed).
 - **Legacy Scripts**: All legacy local build/deploy scripts (e.g., `build-docker-windows.ps1`, `deploy-to-pi.ps1`, `deploy.sh`) have been removed from the repository. Do not add or reference local Docker scripts. Use CI/CD-built images and deploy by pulling with `docker compose` on the target device.
-- **Documentation**: See `README.Docker.md` for deployment guide, `DEPLOY-QUICKSTART.md` for quick Pi setup.
+- **Documentation**: See `DEPLOY-QUICKSTART.md` for quick Pi setup. See `docs/ci-cd-deployment.md` for full CI/CD architecture.
 - **Important**: Do NOT create or suggest local Docker build workflows. Direct users to CI/CD pipeline or standard .NET local development.
+- **Hardened Image Policy**:
+  - **.NET runtime**: Use Microsoft `noble-chiseled` images (`mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled`) — distroless Ubuntu, non-root by default, no shell/package manager. .NET is not in Docker's Hardened Images catalog.
+  - **PostgreSQL**: Use Docker Hardened Image (`dhi.io/postgres:16`) — continuously patched, SLSA provenance, drop-in replacement.
+  - **.NET SDK (build stage only)**: Standard `mcr.microsoft.com/dotnet/sdk:10.0` — not deployed, no hardening required.
+  - **No HEALTHCHECK in Dockerfiles** — chiseled images have no shell or curl. Health monitoring via external access to `/health` endpoint.
+  - **Policy**: When adding any new Docker image, always check the [Docker Hardened Images catalog](https://www.docker.com/products/hardened-images/) first. Use the hardened variant if available; otherwise use the most minimal official variant (Alpine, slim, or distroless).
 
 ## 36. Feature Documentation Lifecycle
 - When implementing a feature from a `docs/` feature document (e.g., `docs/086-suggestions-controller-service-compliance.md`), **update the document** as work progresses:

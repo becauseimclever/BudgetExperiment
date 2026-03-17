@@ -33,24 +33,13 @@ RUN dotnet publish "src/BudgetExperiment.Api/BudgetExperiment.Api.csproj" \
     /p:UseAppHost=false \
     /p:MinVerVersionOverride=${VERSION}
 
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# Runtime stage — chiseled: distroless Ubuntu Noble, non-root (UID 1654) by default,
+# no shell/package manager, ~50% smaller than standard images.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS runtime
 WORKDIR /app
-
-# Install necessary dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy published application
 COPY --from=build /app/publish .
-
-# Create a non-root user for security (use UID 1001 to avoid conflicts)
-RUN useradd -m -u 1001 appuser && \
-    chown -R appuser:appuser /app
-USER appuser
 
 # Expose port
 EXPOSE 8080
@@ -59,9 +48,8 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+# No HEALTHCHECK — chiseled images have no shell or curl.
+# Health monitoring via docker-compose or external access to /health endpoint.
 
 # Entry point
 ENTRYPOINT ["dotnet", "BudgetExperiment.Api.dll"]

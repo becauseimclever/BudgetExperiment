@@ -18,7 +18,10 @@
 
 services:
   postgres:
-    image: postgres:16-alpine
+    # Docker Hardened Image (dhi.io): continuously patched, SLSA provenance, minimal attack surface.
+    # Drop-in replacement for postgres:16-alpine.
+    # Fallback: postgres:16-alpine (if Docker Hardened Images subscription unavailable).
+    image: dhi.io/postgres:16
     container_name: budgetexperiment-db
     environment:
       POSTGRES_USER: budget
@@ -65,12 +68,8 @@ services:
     networks:
       - budget-demo
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # No container-level healthcheck — chiseled .NET images have no shell or curl.
+    # Monitor via external HTTP access to /health endpoint.
 
 volumes:
   postgres_data:

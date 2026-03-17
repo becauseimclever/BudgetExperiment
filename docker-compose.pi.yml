@@ -48,13 +48,8 @@ services:
     
     restart: unless-stopped
     
-    # Health check
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # No container-level healthcheck — chiseled .NET images have no shell or curl.
+    # Monitor via external HTTP access to /health endpoint.
     
     # Resource limits (adjust based on your Raspberry Pi model)
     deploy:
