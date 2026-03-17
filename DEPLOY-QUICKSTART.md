@@ -412,3 +412,16 @@ Replace `raspberry-pi.local` with your Pi's IP address if hostname doesn't work.
 2. Verify all prerequisites are met
 3. Ensure database is accessible from the Pi
 4. Check firewall settings on both Pi and database server
+
+## Optional: Observability
+
+Add centralized logging with Seq (free single-user license) — no code changes required:
+
+```bash
+docker compose -f docker-compose.pi.yml -f docker-compose.observability.yml up -d
+```
+
+- Seq UI at `http://<your-host>:8081`
+- For OTLP export to Grafana/Jaeger, set `Observability__Otlp__Endpoint` in your `.env`
+
+See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for full configuration reference.

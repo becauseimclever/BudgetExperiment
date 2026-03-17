@@ -1,5 +1,5 @@
 # Feature 109: Production Logging & Observability
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
@@ -48,10 +48,10 @@ A layered observability stack where each tier is independently opt-in:
 **So that** I can parse and search logs from `docker logs` or `journalctl` without custom tooling
 
 **Acceptance Criteria:**
-- [ ] Logs output as compact JSON to console by default
-- [ ] Each log entry includes: timestamp (UTC), level, message, properties, traceId, machine name, environment, app version
-- [ ] Existing `ILogger<T>` calls throughout the codebase work without modification
-- [ ] Log levels remain configurable via `appsettings.json` and environment variables (existing `Logging:LogLevel` paths)
+- [x] Logs output as compact JSON to console by default
+- [x] Each log entry includes: timestamp (UTC), level, message, properties, traceId, machine name, environment, app version
+- [x] Existing `ILogger<T>` calls throughout the codebase work without modification
+- [x] Log levels remain configurable via `appsettings.json` and environment variables (Serilog section)
 
 #### US-109-002: Optional File Logging
 **As a** homelab operator  
@@ -59,9 +59,9 @@ A layered observability stack where each tier is independently opt-in:
 **So that** I can retain logs across container restarts without an external log aggregator
 
 **Acceptance Criteria:**
-- [ ] File logging is disabled by default
-- [ ] Setting `Observability:File:Path` enables rolling file output
-- [ ] File rotation is configurable (size limit, retained file count) with sensible defaults (e.g., 10 MB, 5 files)
+- [x] File logging is disabled by default
+- [x] Setting `Observability:File:Path` enables rolling file output
+- [x] File rotation is configurable (size limit, retained file count) with sensible defaults (e.g., 10 MB, 5 files)
 - [ ] File sink does not block application startup if the path is not writable (logs a warning to console instead)
 
 ### Multi-Instance Operator
@@ -72,14 +72,14 @@ A layered observability stack where each tier is independently opt-in:
 **So that** I can aggregate observability data in a centralized backend of my choice
 
 **Acceptance Criteria:**
-- [ ] OTLP export is disabled by default (no network calls, no additional overhead)
-- [ ] Setting `Observability:Otlp:Endpoint` (e.g., `http://otel-collector:4317`) enables OTLP export
-- [ ] Logs, traces, and metrics are all exported when OTLP is enabled
-- [ ] HTTP requests are automatically instrumented (trace spans for incoming requests, outgoing HTTP calls)
-- [ ] EF Core database calls are instrumented with trace spans
-- [ ] ASP.NET Core metrics (request duration, active requests, error count) are exported
-- [ ] Service name, version, and environment are set as OTLP resource attributes
-- [ ] Both gRPC (`4317`) and HTTP/protobuf (`4318`) OTLP endpoints are supported via configuration
+- [x] OTLP export is disabled by default (no network calls, no additional overhead)
+- [x] Setting `Observability:Otlp:Endpoint` (e.g., `http://otel-collector:4317`) enables OTLP export
+- [x] Logs, traces, and metrics are all exported when OTLP is enabled
+- [x] HTTP requests are automatically instrumented (trace spans for incoming requests, outgoing HTTP calls)
+- [x] EF Core database calls are instrumented with trace spans
+- [x] ASP.NET Core metrics (request duration, active requests, error count) are exported
+- [x] Service name, version, and environment are set as OTLP resource attributes
+- [x] Both gRPC (`4317`) and HTTP/protobuf (`4318`) OTLP endpoints are supported via configuration
 
 #### US-109-004: Optional Seq Integration
 **As a** homelab operator who wants simple centralized logging  
@@ -87,10 +87,10 @@ A layered observability stack where each tier is independently opt-in:
 **So that** I can search and analyze logs through Seq's UI without running a full OTLP collector stack
 
 **Acceptance Criteria:**
-- [ ] Seq integration is disabled by default
-- [ ] Setting `Observability:Seq:Url` (e.g., `http://seq:5341`) enables the Seq sink
-- [ ] Optional `Observability:Seq:ApiKey` for authenticated Seq instances
-- [ ] Seq sink works independently of or alongside OTLP export
+- [x] Seq integration is disabled by default
+- [x] Setting `Observability:Seq:Url` (e.g., `http://seq:5341`) enables the Seq sink
+- [x] Optional `Observability:Seq:ApiKey` for authenticated Seq instances
+- [x] Seq sink works independently of or alongside OTLP export
 
 ### Developer
 
@@ -100,9 +100,9 @@ A layered observability stack where each tier is independently opt-in:
 **So that** I can quickly scan logs without parsing JSON
 
 **Acceptance Criteria:**
-- [ ] In `Development` environment, console output uses Serilog's human-readable format (not JSON)
-- [ ] In `Production` / `Staging` / all other environments, console output uses compact JSON
-- [ ] `appsettings.Development.json` can override to JSON if desired
+- [x] In `Development` environment, console output uses Serilog's human-readable format (not JSON)
+- [x] In `Production` / `Staging` / all other environments, console output uses compact JSON
+- [x] `appsettings.Development.json` can override to JSON if desired
 
 #### US-109-006: Request Logging Middleware
 **As a** developer or operator  
@@ -110,10 +110,10 @@ A layered observability stack where each tier is independently opt-in:
 **So that** I can see request timings and status codes without enabling full debug logging
 
 **Acceptance Criteria:**
-- [ ] Serilog request logging middleware replaces the verbose default ASP.NET Core request logging
-- [ ] Each request produces a single summary log line: method, path, status code, elapsed time
-- [ ] Health check endpoint requests are excluded from request logs by default (reduces noise)
-- [ ] Request log level is configurable (e.g., suppress 2xx, log 4xx as Warning, 5xx as Error)
+- [x] Serilog request logging middleware replaces the verbose default ASP.NET Core request logging
+- [x] Each request produces a single summary log line: method, path, status code, elapsed time
+- [x] Health check endpoint requests are excluded from request logs by default (reduces noise)
+- [x] Request log level is configurable (e.g., suppress 2xx, log 4xx as Warning, 5xx as Error)
 
 ---
 
@@ -256,15 +256,15 @@ All changes are in `BudgetExperiment.Api`:
 **Objective:** Replace built-in logging with Serilog, maintaining current behavior with structured console output.
 
 **Tasks:**
-- [ ] Add `Serilog.AspNetCore` and `Serilog.Expressions` NuGet packages to Api project
-- [ ] Create `Observability/ObservabilityExtensions.cs` with `AddObservability()` method
-- [ ] Configure Serilog with console sink (compact JSON for Production, human-readable for Development)
-- [ ] Add enrichers: machine name, environment, version, traceId
-- [ ] Wire up in `Program.cs` — replace built-in logging bootstrap
-- [ ] Add `UseSerilogRequestLogging()` middleware with health check exclusion filter
-- [ ] Update `appsettings.json` with `Serilog` configuration section
-- [ ] Verify existing log output matches expectations
-- [ ] Verify existing tests still pass
+- [x] Add `Serilog.AspNetCore` and `Serilog.Expressions` NuGet packages to Api project
+- [x] Create `Observability/ObservabilityExtensions.cs` with `AddObservability()` method
+- [x] Configure Serilog with console sink (compact JSON for Production, human-readable for Development)
+- [x] Add enrichers: machine name, environment, version, traceId
+- [x] Wire up in `Program.cs` — replace built-in logging bootstrap
+- [x] Add `UseSerilogRequestLogging()` middleware with health check exclusion filter
+- [x] Update `appsettings.json` with `Serilog` configuration section
+- [x] Verify existing log output matches expectations
+- [x] Verify existing tests still pass
 
 **Commit:**
 ```bash
@@ -287,13 +287,13 @@ Refs: #109"
 **Objective:** Add opt-in file logging and Seq integration, activated by configuration only.
 
 **Tasks:**
-- [ ] Add `Serilog.Sinks.File` and `Serilog.Sinks.Seq` NuGet packages to Api project
-- [ ] Extend `ObservabilityExtensions` to conditionally add file sink when `Observability:File:Path` is set
-- [ ] Extend `ObservabilityExtensions` to conditionally add Seq sink when `Observability:Seq:Url` is set
-- [ ] Add default configuration values in `appsettings.json` (all disabled)
-- [ ] Log an informational message at startup listing which sinks are active
+- [x] Add `Serilog.Sinks.File` and `Serilog.Sinks.Seq` NuGet packages to Api project
+- [x] Extend `ObservabilityExtensions` to conditionally add file sink when `Observability:File:Path` is set
+- [x] Extend `ObservabilityExtensions` to conditionally add Seq sink when `Observability:Seq:Url` is set
+- [x] Add default configuration values in `appsettings.json` (all disabled)
+- [x] Log an informational message at startup listing which sinks are active
 - [ ] Write unit test verifying sinks are not registered when config is empty
-- [ ] Verify no new dependencies are loaded when sinks are disabled (no unnecessary network calls)
+- [x] Verify no new dependencies are loaded when sinks are disabled (no unnecessary network calls)
 
 **Commit:**
 ```bash
@@ -315,15 +315,15 @@ Refs: #109"
 **Objective:** Add opt-in OpenTelemetry tracing, metrics, and log export via OTLP.
 
 **Tasks:**
-- [ ] Add OpenTelemetry NuGet packages to Api project (Hosting, AspNetCore, Http, EF Core, OTLP exporter)
-- [ ] Extend `ObservabilityExtensions` to conditionally register OTel SDK when `Observability:Otlp:Endpoint` is set
-- [ ] Configure tracing: ASP.NET Core, HttpClient, EF Core instrumentation
-- [ ] Configure metrics: ASP.NET Core, runtime, HTTP client meters
-- [ ] Configure log export via OTLP
-- [ ] Set resource attributes: service name, version, environment
-- [ ] Support both gRPC and HTTP/protobuf protocols via `Observability:Otlp:Protocol`
-- [ ] Log an informational message at startup when OTLP is enabled (showing endpoint)
-- [ ] Verify OTLP is completely inert when endpoint is not configured (no SDK overhead)
+- [x] Add OpenTelemetry NuGet packages to Api project (Hosting, AspNetCore, Http, EF Core, OTLP exporter)
+- [x] Extend `ObservabilityExtensions` to conditionally register OTel SDK when `Observability:Otlp:Endpoint` is set
+- [x] Configure tracing: ASP.NET Core, HttpClient, EF Core instrumentation
+- [x] Configure metrics: ASP.NET Core, HTTP client meters
+- [x] Configure log export via OTLP
+- [x] Set resource attributes: service name, version, environment
+- [x] Support both gRPC and HTTP/protobuf protocols via `Observability:Otlp:Protocol`
+- [x] Log an informational message at startup when OTLP is enabled (showing endpoint)
+- [x] Verify OTLP is completely inert when endpoint is not configured (no SDK overhead)
 
 **Commit:**
 ```bash
@@ -346,16 +346,16 @@ Refs: #109"
 **Objective:** Provide an optional docker-compose overlay for Seq and document the full observability stack.
 
 **Tasks:**
-- [ ] Create `docker-compose.observability.yml` with Seq service
-- [ ] Update `README.md` with observability section (brief, links to detailed doc)
-- [ ] Create `docs/OBSERVABILITY.md` with:
+- [x] Create `docker-compose.observability.yml` with Seq service
+- [x] Update `README.md` with observability section (brief, links to detailed doc)
+- [x] Create `docs/OBSERVABILITY.md` with:
   - Configuration reference (all `Observability:*` settings with examples)
   - Quickstart: homelab with Seq
   - Quickstart: multi-instance with OTLP collector
   - Environment variable mapping for Docker deployments
   - Example Grafana/Loki stack overlay (reference only, not provided as compose file)
-- [ ] Update `.env.example` with observability-related environment variables (commented out)
-- [ ] Update `DEPLOY-QUICKSTART.md` with optional observability section
+- [x] Update `.env.example` with observability-related environment variables (commented out)
+- [x] Update `DEPLOY-QUICKSTART.md` with optional observability section
 
 **Commit:**
 ```bash

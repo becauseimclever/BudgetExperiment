@@ -109,6 +109,7 @@ Tests under `tests/` mirroring structure:
 - API: Use `WebApplicationFactory` for endpoint tests (happy + failure paths).
 - UI: Optional bUnit for component logic; keep thin components.
 - Performance / Load: Add later if needed.
+- **Excluding performance tests**: Always exclude `Category=Performance` tests when running tests (e.g., `--filter "Category!=Performance"`), unless the user explicitly asks to run performance tests.
 - NO: FluentAssertions, AutoFixture.
 
 ## 16. Logging & Observability

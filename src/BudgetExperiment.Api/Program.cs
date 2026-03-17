@@ -7,6 +7,7 @@ using Asp.Versioning;
 using BudgetExperiment.Api;
 using BudgetExperiment.Api.Authentication;
 using BudgetExperiment.Api.HealthChecks;
+using BudgetExperiment.Api.Observability;
 using BudgetExperiment.Application;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure;
@@ -21,6 +22,9 @@ using Microsoft.IdentityModel.Tokens;
 
 using Scalar.AspNetCore;
 
+using Serilog;
+using Serilog.Events;
+
 /// <summary>
 /// Application entry point.
 /// </summary>
@@ -34,6 +38,9 @@ public partial class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        // Observability: Serilog structured logging + optional OTLP, Seq, file sinks
+        builder.AddObservability();
 
         // Add controllers + OpenAPI (ASP.NET Core built-in OpenAPI services).
         builder.Services.AddControllers();
@@ -130,6 +137,28 @@ public partial class Program
         });
 
         app.UseHttpsRedirection();
+
+        // Serilog request logging — single summary line per request, excludes health checks
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.GetLevel = (httpContext, elapsed, ex) =>
+            {
+                // Exclude health check endpoints from request logging
+                if (httpContext.Request.Path.StartsWithSegments("/health"))
+                {
+                    return LogEventLevel.Verbose;
+                }
+
+                return ex != null
+                    ? LogEventLevel.Error
+                    : httpContext.Response.StatusCode >= 500
+                        ? LogEventLevel.Error
+                        : httpContext.Response.StatusCode >= 400
+                            ? LogEventLevel.Warning
+                            : LogEventLevel.Information;
+            };
+        });
+
         app.UseCors("dev");
 
         // Localization — default to en-US, additional cultures added via follow-up features

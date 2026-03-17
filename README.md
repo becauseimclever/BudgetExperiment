@@ -312,7 +312,20 @@ A natural language interface for managing your finances through conversation.
 
 Like the AI Rule Suggestions, all chat processing happens locally via Ollama. Your conversation and financial data stay on your machine.
 
-## �📖 Documentation
+## 📡 Observability
+
+Structured logging via Serilog with opt-in integrations — no infrastructure required by default.
+
+| Feature | Default | Enable Via |
+|---------|---------|------------|
+| Structured console logs | **ON** (JSON in prod, readable in dev) | Always active |
+| Rolling file logs | OFF | `Observability:File:Path` |
+| Seq centralized logging | OFF | `Observability:Seq:Url` |
+| OpenTelemetry (OTLP) traces/metrics/logs | OFF | `Observability:Otlp:Endpoint` |
+
+See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for full configuration reference.
+
+## 📖 Documentation
 
 - [Copilot Instructions](.github/copilot-instructions.md) - Comprehensive engineering guide
 - [CHANGELOG.md](CHANGELOG.md) - Version history and release notes

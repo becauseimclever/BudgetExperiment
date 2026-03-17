@@ -1,0 +1,27 @@
+# Optional observability overlay — adds a Seq instance for centralized log search.
+# Usage: docker compose -f docker-compose.pi.yml -f docker-compose.observability.yml up -d
+#
+# Seq free single-user license: no cost, no external dependencies.
+# Access the Seq UI at http://<host>:8081
+#
+# To also enable OTLP export alongside Seq, set Observability__Otlp__Endpoint
+# in your .env or docker-compose override.
+
+services:
+  seq:
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:5341"  # Ingestion
+      - "8081:80"    # UI
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
+
+  budget-app:
+    environment:
+      - Observability__Seq__Url=http://seq:5341
+
+volumes:
+  seq-data:
