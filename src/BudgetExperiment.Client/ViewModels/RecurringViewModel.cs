@@ -18,6 +18,7 @@ public sealed class RecurringViewModel : IDisposable
     private readonly IToastService _toastService;
     private readonly ScopeService _scopeService;
     private readonly IChatContextService _chatContextService;
+    private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RecurringViewModel"/> class.
@@ -26,16 +27,19 @@ public sealed class RecurringViewModel : IDisposable
     /// <param name="toastService">The toast notification service.</param>
     /// <param name="scopeService">The budget scope service.</param>
     /// <param name="chatContextService">The chat context service.</param>
+    /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public RecurringViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
         ScopeService scopeService,
-        IChatContextService chatContextService)
+        IChatContextService chatContextService,
+        IApiErrorContext apiErrorContext)
     {
         this._apiService = apiService;
         this._toastService = toastService;
         this._scopeService = scopeService;
         this._chatContextService = chatContextService;
+        this._apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
@@ -67,6 +71,11 @@ public sealed class RecurringViewModel : IDisposable
     /// Gets the current error message, if any.
     /// </summary>
     public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// Gets the traceId from the API error response that caused the current error, if any.
+    /// </summary>
+    public string? ErrorTraceId { get; private set; }
 
     /// <summary>
     /// Gets the list of recurring transactions.
@@ -183,6 +192,7 @@ public sealed class RecurringViewModel : IDisposable
     {
         this.IsLoading = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
 
         try
         {
@@ -191,6 +201,7 @@ public sealed class RecurringViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load recurring transactions: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -211,6 +222,7 @@ public sealed class RecurringViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load categories: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
     }
 
@@ -239,6 +251,7 @@ public sealed class RecurringViewModel : IDisposable
     public void DismissError()
     {
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
     }
 

@@ -17,16 +17,19 @@ public sealed class OnboardingViewModel
 {
     private readonly IBudgetApiService _apiService;
     private readonly NavigationManager _navigationManager;
+    private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OnboardingViewModel"/> class.
     /// </summary>
     /// <param name="apiService">The budget API service.</param>
     /// <param name="navigationManager">The navigation manager.</param>
-    public OnboardingViewModel(IBudgetApiService apiService, NavigationManager navigationManager)
+    /// <param name="apiErrorContext">The API error context for trace ID tracking.</param>
+    public OnboardingViewModel(IBudgetApiService apiService, NavigationManager navigationManager, IApiErrorContext apiErrorContext)
     {
         this._apiService = apiService;
         this._navigationManager = navigationManager;
+        this._apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
@@ -68,6 +71,11 @@ public sealed class OnboardingViewModel
     /// Gets the current error message, if any.
     /// </summary>
     public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// Gets the trace ID associated with the current error, if any.
+    /// </summary>
+    public string? ErrorTraceId { get; private set; }
 
     /// <summary>
     /// Gets the filtered list of currencies based on the search term.
@@ -133,6 +141,7 @@ public sealed class OnboardingViewModel
     {
         this.IsSaving = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
 
         try
@@ -148,6 +157,7 @@ public sealed class OnboardingViewModel
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to save: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             this.IsSaving = false;
             this.NotifyStateChanged();
         }
@@ -161,6 +171,7 @@ public sealed class OnboardingViewModel
     {
         this.IsSaving = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
 
         try
@@ -176,6 +187,7 @@ public sealed class OnboardingViewModel
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to save: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             this.IsSaving = false;
             this.NotifyStateChanged();
         }

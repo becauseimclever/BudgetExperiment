@@ -1,4 +1,6 @@
-@* ErrorAlert.razor - Reusable error display component with retry support *@
+@* ErrorAlert.razor - Reusable error display component with retry support and debug log download *@
+@inject IExportDownloadService ExportDownloadService
+@inject IToastService ToastService
 
 @if (!string.IsNullOrEmpty(Message))
 {
@@ -14,6 +16,19 @@
             </div>
         </div>
         <div class="error-alert-actions">
+            @if (!string.IsNullOrEmpty(TraceId))
+            {
+                <button class="error-alert-debug-download" @onclick="HandleDownloadDebugLog" disabled="@_isDownloading" title="Download debug log for issue reporting">
+                    @if (_isDownloading)
+                    {
+                        <span>Downloading...</span>
+                    }
+                    else
+                    {
+                        <span><Icon Name="download" Size="16" /> Debug Log</span>
+                    }
+                </button>
+            }
             @if (OnRetry.HasDelegate)
             {
                 <button class="error-alert-retry" @onclick="HandleRetry" disabled="@IsRetrying">
@@ -36,6 +51,8 @@
 }
 
 @code {
+    private bool _isDownloading;
+
     /// <summary>
     /// Gets or sets the error message to display.
     /// </summary>
@@ -47,6 +64,12 @@
     /// </summary>
     [Parameter]
     public string? Details { get; set; }
+
+    /// <summary>
+    /// Gets or sets the traceId from the API error response. When set, a debug log download button is shown.
+    /// </summary>
+    [Parameter]
+    public string? TraceId { get; set; }
 
     /// <summary>
     /// Gets or sets whether the alert can be dismissed.
@@ -71,6 +94,28 @@
     /// </summary>
     [Parameter]
     public EventCallback OnDismiss { get; set; }
+
+    private async Task HandleDownloadDebugLog()
+    {
+        if (string.IsNullOrEmpty(TraceId))
+        {
+            return;
+        }
+
+        _isDownloading = true;
+        try
+        {
+            var result = await ExportDownloadService.DownloadAsync($"api/v1/debug/logs/{TraceId}");
+            if (!result.Success)
+            {
+                ToastService.ShowWarning(result.ErrorMessage ?? "Debug log unavailable.");
+            }
+        }
+        finally
+        {
+            _isDownloading = false;
+        }
+    }
 
     private async Task HandleRetry()
     {

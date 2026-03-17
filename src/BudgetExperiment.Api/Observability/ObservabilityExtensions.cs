@@ -38,6 +38,8 @@ public static class ObservabilityExtensions
             ?? Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
             ?? "unknown";
 
+        ConfigureDebugLogBuffer(builder, configuration);
+        builder.Services.AddSingleton<ILogSanitizer, LogSanitizer>();
         ConfigureSerilog(builder, configuration, environment);
         ConfigureOpenTelemetry(builder, configuration, serviceName, serviceVersion, environment);
 
@@ -66,7 +68,30 @@ public static class ObservabilityExtensions
             sinks.Add($"OTLP ({otlpEndpoint})");
         }
 
+        var debugExportEnabled = configuration.GetValue("Observability:DebugExport:Enabled", true);
+        if (debugExportEnabled)
+        {
+            sinks.Add("DebugBuffer");
+        }
+
         Log.Information("Observability sinks active: {ActiveSinks}", string.Join(", ", sinks));
+    }
+
+    private static void ConfigureDebugLogBuffer(
+        WebApplicationBuilder builder,
+        IConfiguration configuration)
+    {
+        var enabled = configuration.GetValue("Observability:DebugExport:Enabled", true);
+        if (!enabled)
+        {
+            return;
+        }
+
+        var bufferSize = configuration.GetValue("Observability:DebugExport:BufferSize", 1000);
+        var retentionSeconds = configuration.GetValue("Observability:DebugExport:RetentionSeconds", 300);
+
+        var buffer = new DebugLogBuffer(bufferSize, TimeSpan.FromSeconds(retentionSeconds));
+        builder.Services.AddSingleton<IDebugLogBuffer>(buffer);
     }
 
     private static void ConfigureSerilog(
@@ -113,6 +138,13 @@ public static class ObservabilityExtensions
                     retainedFileCountLimit: retainedFileCount,
                     rollOnFileSizeLimit: true,
                     shared: false);
+            }
+
+            // Optional debug buffer sink
+            var debugBuffer = services.GetService<IDebugLogBuffer>();
+            if (debugBuffer != null)
+            {
+                loggerConfiguration.WriteTo.Sink(new DebugBufferSink(debugBuffer));
             }
 
             // Optional Seq sink

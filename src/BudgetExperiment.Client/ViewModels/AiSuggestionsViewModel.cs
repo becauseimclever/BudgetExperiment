@@ -15,6 +15,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
     private readonly IAiApiService _aiService;
     private readonly ICategorySuggestionApiService _categoryService;
     private readonly IAiAvailabilityService _availabilityService;
+    private readonly IApiErrorContext _apiErrorContext;
 
     private System.Timers.Timer? _elapsedTimer;
     private DateTime _analysisStartTime;
@@ -26,14 +27,17 @@ public sealed class AiSuggestionsViewModel : IDisposable
     /// <param name="aiService">The AI API service for rule suggestions.</param>
     /// <param name="categoryService">The category suggestion API service.</param>
     /// <param name="availabilityService">The AI availability service.</param>
+    /// <param name="apiErrorContext">The API error context for trace ID tracking.</param>
     public AiSuggestionsViewModel(
         IAiApiService aiService,
         ICategorySuggestionApiService categoryService,
-        IAiAvailabilityService availabilityService)
+        IAiAvailabilityService availabilityService,
+        IApiErrorContext apiErrorContext)
     {
         this._aiService = aiService;
         this._categoryService = categoryService;
         this._availabilityService = availabilityService;
+        this._apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
@@ -75,6 +79,11 @@ public sealed class AiSuggestionsViewModel : IDisposable
     /// Gets the current error message.
     /// </summary>
     public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// Gets the trace ID associated with the current error, if any.
+    /// </summary>
+    public string? ErrorTraceId { get; private set; }
 
     /// <summary>
     /// Gets the current success message.
@@ -171,6 +180,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load AI status: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
     }
 
@@ -182,6 +192,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
     {
         this.IsLoading = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
 
         try
         {
@@ -197,6 +208,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load suggestions: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             this.RuleSuggestions = Array.Empty<RuleSuggestionDto>();
             this.CategorySuggestions = Array.Empty<CategorySuggestionDto>();
         }
@@ -301,11 +313,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to accept suggestion.";
+                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to accept suggestion: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -333,11 +347,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to dismiss suggestion.";
+                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -385,11 +401,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to accept category suggestion.";
+                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to accept category suggestion: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -417,11 +435,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to dismiss suggestion.";
+                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -479,6 +499,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to submit feedback: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
 
         this.NotifyStateChanged();
@@ -534,6 +555,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to accept suggestions: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -569,6 +591,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to dismiss all suggestions: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
             await this.LoadAllSuggestionsAsync();
         }
         finally
@@ -614,6 +637,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
     public void DismissError()
     {
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
     }
 

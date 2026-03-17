@@ -17,6 +17,7 @@ public sealed class TransactionsViewModel : IDisposable
     private readonly IToastService _toastService;
     private readonly Microsoft.AspNetCore.Components.NavigationManager _navigation;
     private readonly ScopeService _scopeService;
+    private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionsViewModel"/> class.
@@ -25,16 +26,19 @@ public sealed class TransactionsViewModel : IDisposable
     /// <param name="toastService">The toast notification service.</param>
     /// <param name="navigation">The navigation manager.</param>
     /// <param name="scopeService">The budget scope service.</param>
+    /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public TransactionsViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
         Microsoft.AspNetCore.Components.NavigationManager navigation,
-        ScopeService scopeService)
+        ScopeService scopeService,
+        IApiErrorContext apiErrorContext)
     {
         this._apiService = apiService;
         this._toastService = toastService;
         this._navigation = navigation;
         this._scopeService = scopeService;
+        this._apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
@@ -56,6 +60,11 @@ public sealed class TransactionsViewModel : IDisposable
     /// Gets the current error message, if any.
     /// </summary>
     public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// Gets the traceId from the API error response that caused the current error, if any.
+    /// </summary>
+    public string? ErrorTraceId { get; private set; }
 
     /// <summary>
     /// Gets the current filter, sort, and pagination state.
@@ -393,6 +402,7 @@ public sealed class TransactionsViewModel : IDisposable
     {
         this.IsLoading = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
 
         try
@@ -402,6 +412,7 @@ public sealed class TransactionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load transactions: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -805,6 +816,7 @@ public sealed class TransactionsViewModel : IDisposable
     public void DismissError()
     {
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
     }
 
@@ -872,6 +884,7 @@ public sealed class TransactionsViewModel : IDisposable
     {
         this.IsLoading = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
 
         try
@@ -889,6 +902,7 @@ public sealed class TransactionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load transactions: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {

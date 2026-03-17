@@ -22,6 +22,7 @@ public sealed class RecurringViewModelTests : IDisposable
     private readonly StubToastService _toastService = new();
     private readonly ScopeService _scopeService;
     private readonly StubChatContextService _chatContext = new();
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly RecurringViewModel _sut;
 
     /// <summary>
@@ -34,7 +35,8 @@ public sealed class RecurringViewModelTests : IDisposable
             this._apiService,
             this._toastService,
             this._scopeService,
-            this._chatContext);
+            this._chatContext,
+            this._apiErrorContext);
     }
 
     /// <inheritdoc/>

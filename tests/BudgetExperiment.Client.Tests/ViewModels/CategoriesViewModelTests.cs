@@ -21,6 +21,7 @@ public sealed class CategoriesViewModelTests : IDisposable
     private readonly StubToastService _toastService = new();
     private readonly ScopeService _scopeService;
     private readonly StubChatContextService _chatContext = new();
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly CategoriesViewModel _sut;
 
     /// <summary>
@@ -33,7 +34,8 @@ public sealed class CategoriesViewModelTests : IDisposable
             this._apiService,
             this._toastService,
             this._scopeService,
-            this._chatContext);
+            this._chatContext,
+            this._apiErrorContext);
     }
 
     /// <inheritdoc/>

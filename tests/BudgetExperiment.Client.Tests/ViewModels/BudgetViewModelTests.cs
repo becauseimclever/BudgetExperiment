@@ -22,6 +22,7 @@ public sealed class BudgetViewModelTests : IDisposable
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubNavigationManager _navigationManager = new();
     private readonly ScopeService _scopeService;
+    private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly BudgetViewModel _sut;
 
     /// <summary>
@@ -33,7 +34,8 @@ public sealed class BudgetViewModelTests : IDisposable
         this._sut = new BudgetViewModel(
             this._apiService,
             this._navigationManager,
-            this._scopeService);
+            this._scopeService,
+            this._apiErrorContext);
     }
 
     /// <inheritdoc/>

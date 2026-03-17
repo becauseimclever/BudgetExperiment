@@ -90,12 +90,18 @@ builder.Services.AddSingleton<ScopeService>();
 // Register the ScopeMessageHandler as transient (DelegatingHandler instances should be transient)
 builder.Services.AddTransient<ScopeMessageHandler>();
 
+// Register ApiErrorContext (scoped) and ProblemDetailsHandler for traceId extraction from ProblemDetails
+builder.Services.AddScoped<ApiErrorContext>();
+builder.Services.AddScoped<IApiErrorContext>(sp => sp.GetRequiredService<ApiErrorContext>());
+builder.Services.AddTransient<ProblemDetailsHandler>();
+
 if (isAuthOff)
 {
     // Auth-off mode: no token handlers needed — API accepts all requests
     builder.Services.AddHttpClient(
         "BudgetApi",
         client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+        .AddHttpMessageHandler<ProblemDetailsHandler>()
         .AddHttpMessageHandler<ScopeMessageHandler>();
 }
 else
@@ -108,6 +114,7 @@ else
     builder.Services.AddHttpClient(
         "BudgetApi",
         client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+        .AddHttpMessageHandler<ProblemDetailsHandler>()
         .AddHttpMessageHandler<TokenRefreshHandler>()
         .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>()
         .AddHttpMessageHandler<ScopeMessageHandler>();

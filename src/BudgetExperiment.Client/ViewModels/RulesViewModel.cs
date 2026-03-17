@@ -19,6 +19,7 @@ public sealed class RulesViewModel : IDisposable
     private readonly IToastService _toastService;
     private readonly NavigationManager _navigationManager;
     private readonly ScopeService _scopeService;
+    private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RulesViewModel"/> class.
@@ -27,16 +28,19 @@ public sealed class RulesViewModel : IDisposable
     /// <param name="toastService">The toast notification service.</param>
     /// <param name="navigationManager">The navigation manager.</param>
     /// <param name="scopeService">The budget scope service.</param>
+    /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public RulesViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
         NavigationManager navigationManager,
-        ScopeService scopeService)
+        ScopeService scopeService,
+        IApiErrorContext apiErrorContext)
     {
         this._apiService = apiService;
         this._toastService = toastService;
         this._navigationManager = navigationManager;
         this._scopeService = scopeService;
+        this._apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
@@ -73,6 +77,11 @@ public sealed class RulesViewModel : IDisposable
     /// Gets the current error message, if any.
     /// </summary>
     public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// Gets the traceId from the API error response that caused the current error, if any.
+    /// </summary>
+    public string? ErrorTraceId { get; private set; }
 
     /// <summary>
     /// Gets the list of categorization rules.
@@ -152,6 +161,7 @@ public sealed class RulesViewModel : IDisposable
     {
         this.IsLoading = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
 
         try
         {
@@ -166,6 +176,7 @@ public sealed class RulesViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load data: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -198,6 +209,7 @@ public sealed class RulesViewModel : IDisposable
     public void DismissError()
     {
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
     }
 

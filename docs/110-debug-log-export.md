@@ -1,5 +1,5 @@
 # Feature 110: Debug Log Export for Issue Reporting
-> **Status:** Planning  
+> **Status:** In Progress  
 > **Depends On:** [Feature 109: Production Logging & Observability](109-production-logging-observability.md)
 
 ## Overview

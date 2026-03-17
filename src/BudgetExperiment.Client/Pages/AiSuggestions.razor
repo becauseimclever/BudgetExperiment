@@ -65,7 +65,7 @@
 
     @if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
     {
-        <ErrorAlert Message="@ViewModel.ErrorMessage" OnDismiss="ViewModel.DismissError" />
+        <ErrorAlert Message="@ViewModel.ErrorMessage" TraceId="@ViewModel.ErrorTraceId" OnDismiss="ViewModel.DismissError" />
     }
 
     @if (!string.IsNullOrEmpty(ViewModel.SuccessMessage))

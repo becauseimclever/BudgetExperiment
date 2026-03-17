@@ -17,6 +17,7 @@ public sealed class TransfersViewModel : IDisposable
     private readonly IBudgetApiService _apiService;
     private readonly ScopeService _scopeService;
     private readonly IChatContextService _chatContextService;
+    private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransfersViewModel"/> class.
@@ -24,14 +25,17 @@ public sealed class TransfersViewModel : IDisposable
     /// <param name="apiService">The budget API service.</param>
     /// <param name="scopeService">The budget scope service.</param>
     /// <param name="chatContextService">The chat context service.</param>
+    /// <param name="apiErrorContext">The API error context for trace ID tracking.</param>
     public TransfersViewModel(
         IBudgetApiService apiService,
         ScopeService scopeService,
-        IChatContextService chatContextService)
+        IChatContextService chatContextService,
+        IApiErrorContext apiErrorContext)
     {
         this._apiService = apiService;
         this._scopeService = scopeService;
         this._chatContextService = chatContextService;
+        this._apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
@@ -53,6 +57,11 @@ public sealed class TransfersViewModel : IDisposable
     /// Gets the current error message, if any.
     /// </summary>
     public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// Gets the trace ID associated with the current error, if any.
+    /// </summary>
+    public string? ErrorTraceId { get; private set; }
 
     /// <summary>
     /// Gets the list of accounts for the filter dropdown.
@@ -125,6 +134,7 @@ public sealed class TransfersViewModel : IDisposable
         {
             this.IsLoading = true;
             this.ErrorMessage = null;
+            this.ErrorTraceId = null;
 
             var accountsTask = this._apiService.GetAccountsAsync();
             var transfersTask = this._apiService.GetTransfersAsync();
@@ -138,6 +148,7 @@ public sealed class TransfersViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load transfers: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -170,6 +181,7 @@ public sealed class TransfersViewModel : IDisposable
     public void DismissError()
     {
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
     }
 
     /// <summary>
@@ -266,6 +278,7 @@ public sealed class TransfersViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to create transfer: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
     }
 
@@ -290,6 +303,7 @@ public sealed class TransfersViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to update transfer: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
     }
 
@@ -308,6 +322,7 @@ public sealed class TransfersViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to delete transfer: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
     }
 

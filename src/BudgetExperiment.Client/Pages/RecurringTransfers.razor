@@ -16,6 +16,7 @@
     </PageHeader>
 
     <ErrorAlert Message="@ViewModel.ErrorMessage"
+                TraceId="@ViewModel.ErrorTraceId"
                 IsDismissible="true"
                 IsRetrying="@ViewModel.IsRetrying"
                 OnRetry="ViewModel.RetryLoadAsync"

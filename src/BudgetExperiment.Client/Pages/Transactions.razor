@@ -21,6 +21,7 @@
                           OnFiltersCleared="ViewModel.ClearFiltersAsync" />
 
     <ErrorAlert Message="@ViewModel.ErrorMessage"
+                TraceId="@ViewModel.ErrorTraceId"
                 OnRetry="ViewModel.RetryLoadAsync"
                 OnDismiss="ViewModel.DismissError"
                 IsRetrying="@ViewModel.IsRetrying" />

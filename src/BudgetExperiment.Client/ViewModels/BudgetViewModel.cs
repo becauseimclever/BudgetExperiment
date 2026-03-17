@@ -18,6 +18,7 @@ public sealed class BudgetViewModel : IDisposable
     private readonly IBudgetApiService _apiService;
     private readonly NavigationManager _navigationManager;
     private readonly ScopeService _scopeService;
+    private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetViewModel"/> class.
@@ -25,14 +26,17 @@ public sealed class BudgetViewModel : IDisposable
     /// <param name="apiService">The budget API service.</param>
     /// <param name="navigationManager">The navigation manager.</param>
     /// <param name="scopeService">The budget scope service.</param>
+    /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public BudgetViewModel(
         IBudgetApiService apiService,
         NavigationManager navigationManager,
-        ScopeService scopeService)
+        ScopeService scopeService,
+        IApiErrorContext apiErrorContext)
     {
         this._apiService = apiService;
         this._navigationManager = navigationManager;
         this._scopeService = scopeService;
+        this._apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
@@ -59,6 +63,11 @@ public sealed class BudgetViewModel : IDisposable
     /// Gets the current error message, if any.
     /// </summary>
     public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// Gets the traceId from the API error response that caused the current error, if any.
+    /// </summary>
+    public string? ErrorTraceId { get; private set; }
 
     /// <summary>
     /// Gets the budget summary data.
@@ -139,6 +148,7 @@ public sealed class BudgetViewModel : IDisposable
     {
         this.IsLoading = true;
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
 
         try
         {
@@ -147,6 +157,7 @@ public sealed class BudgetViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load budget: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -179,6 +190,7 @@ public sealed class BudgetViewModel : IDisposable
     public void DismissError()
     {
         this.ErrorMessage = null;
+        this.ErrorTraceId = null;
         this.NotifyStateChanged();
     }
 
@@ -265,6 +277,7 @@ public sealed class BudgetViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to save budget goal: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -306,6 +319,7 @@ public sealed class BudgetViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to delete budget goal: {ex.Message}";
+            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
         }
         finally
         {
