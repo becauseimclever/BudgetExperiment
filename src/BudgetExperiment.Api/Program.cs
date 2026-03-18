@@ -214,9 +214,16 @@ public partial class Program
 
         // Serve index.html with embedded client config to eliminate startup fetch round-trip.
         // Config JSON is injected once at startup and cached for the lifetime of the process.
+        // Only applies to non-API paths so unmatched API routes return proper 404s.
         var configInjectedHtml = BuildConfigInjectedIndexHtml(app);
         app.MapFallback(async context =>
         {
+            if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                return;
+            }
+
             context.Response.ContentType = "text/html; charset=utf-8";
             context.Response.Headers.CacheControl = "no-cache";
             await context.Response.WriteAsync(configInjectedHtml);
