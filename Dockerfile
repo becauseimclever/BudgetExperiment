@@ -48,6 +48,9 @@ EXPOSE 8080
 # Environment variables (can be overridden at runtime)
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+# Disable globalization-invariant mode so ICU cultures (en-US) work correctly.
+# The chiseled-extra image includes ICU but still defaults to invariant mode.
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 # No HEALTHCHECK — chiseled images have no shell or curl.
 # Health monitoring via docker-compose or external access to /health endpoint.
