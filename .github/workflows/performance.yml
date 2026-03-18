@@ -89,7 +89,7 @@ jobs:
 
       # NBomber writes reports to tests/BudgetExperiment.Performance.Tests/reports/
       - name: Upload performance reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: performance-reports-${{ steps.profile.outputs.name }}-${{ github.run_number }}
@@ -126,14 +126,14 @@ jobs:
 
       - name: Post performance PR comment
         if: github.event_name == 'pull_request' && always()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: performance
           recreate: true
           path: perf-summary.md
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: perf-test-results
