@@ -2,10 +2,11 @@
 # Uses pre-compiled .NET publish output (framework-dependent)
 # Much faster than building inside Docker - same output works on all architectures
 #
-# Runtime: chiseled — distroless Ubuntu Noble, non-root (UID 1654) by default,
-# no shell/package manager, ~50% smaller than standard images.
+# Runtime: chiseled-extra — distroless Ubuntu Noble with ICU globalization data,
+# non-root (UID 1654) by default, no shell/package manager.
+# The -extra variant is required because the app uses culture-aware localization (en-US).
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra
 
 WORKDIR /app
 
@@ -18,6 +19,9 @@ EXPOSE 8080
 # Environment variables (can be overridden at runtime)
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+# Disable globalization-invariant mode so ICU cultures (en-US) work correctly.
+# The chiseled-extra image includes ICU but still defaults to invariant mode.
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 # No HEALTHCHECK — chiseled images have no shell or curl.
 # Health monitoring via docker-compose or external access to /health endpoint.
