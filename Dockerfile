@@ -33,9 +33,10 @@ RUN dotnet publish "src/BudgetExperiment.Api/BudgetExperiment.Api.csproj" \
     /p:UseAppHost=false \
     /p:MinVerVersionOverride=${VERSION}
 
-# Runtime stage — chiseled: distroless Ubuntu Noble, non-root (UID 1654) by default,
-# no shell/package manager, ~50% smaller than standard images.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS runtime
+# Runtime stage — chiseled-extra: distroless Ubuntu Noble with ICU globalization data,
+# non-root (UID 1654) by default, no shell/package manager.
+# The -extra variant is required because the app uses culture-aware localization (en-US).
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runtime
 WORKDIR /app
 
 # Copy published application
