@@ -4,6 +4,17 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+	</PropertyGroup>
+
+	<!-- Publish-time optimizations: trim unused IL, use hybrid globalization -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<PublishTrimmed>true</PublishTrimmed>
+		<TrimMode>partial</TrimMode>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<HybridGlobalization>true</HybridGlobalization>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -21,6 +32,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\BudgetExperiment.Contracts\BudgetExperiment.Contracts.csproj" />
 		<ProjectReference Include="..\BudgetExperiment.Shared\BudgetExperiment.Shared.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
 	</ItemGroup>
 
 </Project>

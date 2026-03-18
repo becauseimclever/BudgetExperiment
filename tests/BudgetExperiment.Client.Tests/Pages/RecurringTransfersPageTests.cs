@@ -32,6 +32,8 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
+        this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
+        this.Services.AddSingleton<IApiErrorContext>(new ApiErrorContext());
         this.Services.AddTransient<RecurringTransfersViewModel>();
     }
 

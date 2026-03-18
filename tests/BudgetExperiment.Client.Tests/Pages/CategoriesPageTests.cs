@@ -33,6 +33,8 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
+        this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
+        this.Services.AddSingleton<IApiErrorContext>(new ApiErrorContext());
         this.Services.AddTransient<CategoriesViewModel>();
     }
 

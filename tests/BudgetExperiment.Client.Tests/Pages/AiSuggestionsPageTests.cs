@@ -33,6 +33,9 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IAiAvailabilityService>(this._availabilityService);
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
+        this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
+        this.Services.AddSingleton<IToastService>(new ToastService());
+        this.Services.AddSingleton<IApiErrorContext>(new ApiErrorContext());
         this.Services.AddTransient<AiSuggestionsViewModel>();
     }
 

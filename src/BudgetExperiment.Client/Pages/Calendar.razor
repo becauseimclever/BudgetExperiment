@@ -237,11 +237,14 @@
         currentDate = new DateOnly(Year, Month, 1);
             ChatContext.SetPageType("calendar");
             UpdateChatContext();
-        await LoadAccounts();
-        await LoadCategories();
-        await LoadCalendarData();
-        await LoadPastDueItems();
-        await LoadBudgetSummary();
+
+        // Fire all independent data loads in parallel for faster initial render
+        await Task.WhenAll(
+            LoadAccounts(),
+            LoadCategories(),
+            LoadCalendarData(),
+            LoadPastDueItems(),
+            LoadBudgetSummary());
     }
 
     protected override async Task OnParametersSetAsync()

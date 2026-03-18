@@ -32,6 +32,9 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
+        this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
+        this.Services.AddSingleton<IToastService>(new ToastService());
+        this.Services.AddSingleton<IApiErrorContext>(new ApiErrorContext());
         this.Services.AddTransient<TransfersViewModel>();
     }
 

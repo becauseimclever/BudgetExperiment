@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Text.Json;
+
 using Asp.Versioning;
 
 using BudgetExperiment.Api;
@@ -16,6 +18,7 @@ using BudgetExperiment.Infrastructure.Seeding;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -68,6 +71,18 @@ public partial class Program
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IUserContext, UserContext>();
         ConfigureAuthentication(builder.Services, builder.Configuration);
+
+        // Response compression (Brotli > Gzip) for API JSON payloads
+        builder.Services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+        builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+        {
+            options.Level = System.IO.Compression.CompressionLevel.Fastest;
+        });
 
         // Client configuration (exposed via /api/v1/config endpoint)
         ConfigureClientConfig(builder.Services, builder.Configuration);
@@ -136,6 +151,9 @@ public partial class Program
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
         });
 
+        // Response compression — before static files and routing so all responses benefit
+        app.UseResponseCompression();
+
         app.UseHttpsRedirection();
 
         // Serilog request logging — single summary line per request, excludes health checks
@@ -194,8 +212,15 @@ public partial class Program
         app.MapControllers();
         app.MapHealthChecks("/health");
 
-        // Fallback to index.html for client-side routes.
-        app.MapFallbackToFile("index.html");
+        // Serve index.html with embedded client config to eliminate startup fetch round-trip.
+        // Config JSON is injected once at startup and cached for the lifetime of the process.
+        var configInjectedHtml = BuildConfigInjectedIndexHtml(app);
+        app.MapFallback(async context =>
+        {
+            context.Response.ContentType = "text/html; charset=utf-8";
+            context.Response.Headers.CacheControl = "no-cache";
+            await context.Response.WriteAsync(configInjectedHtml);
+        });
 
         await app.RunAsync().ConfigureAwait(false);
     }
@@ -463,5 +488,37 @@ public partial class Program
                 "Do NOT expose this instance to the internet. " +
                 "Set 'Authentication:Mode' to 'OIDC' to enable authentication.");
         }
+    }
+
+    /// <summary>
+    /// Reads the static index.html and injects the client config as an inline JSON script tag.
+    /// The result is cached for the process lifetime to avoid repeated file I/O.
+    /// </summary>
+    /// <param name="app">The web application (must call after UseBlazorFrameworkFiles/UseStaticFiles).</param>
+    /// <returns>The HTML string with embedded config.</returns>
+    private static string BuildConfigInjectedIndexHtml(WebApplication app)
+    {
+        var fileInfo = app.Environment.WebRootFileProvider.GetFileInfo("index.html");
+        if (!fileInfo.Exists)
+        {
+            throw new FileNotFoundException("index.html not found in WebRootFileProvider.");
+        }
+
+        string html;
+        using (var stream = fileInfo.CreateReadStream())
+        using (var reader = new StreamReader(stream))
+        {
+            html = reader.ReadToEnd();
+        }
+
+        var configOptions = app.Services.GetRequiredService<IOptions<ClientConfigOptions>>();
+        var configDto = configOptions.Value.ToDto();
+        var configJson = JsonSerializer.Serialize(configDto, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        // Escape closing script tags in JSON to prevent premature tag termination
+        configJson = configJson.Replace("</", "<\\/");
+
+        var scriptTag = $"    <script id=\"app-config\" type=\"application/json\">{configJson}</script>";
+        return html.Replace("</head>", $"{scriptTag}\n</head>");
     }
 }
