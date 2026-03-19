@@ -16,6 +16,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     private readonly ICategorySuggestionRepository _suggestionRepository;
     private readonly IDismissedSuggestionPatternRepository _dismissedRepository;
     private readonly IMerchantMappingService _merchantMappingService;
+    private readonly IAiService _aiService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserContext _userContext;
     private readonly ICategorySuggestionDismissalHandler _dismissalHandler;
@@ -28,6 +29,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     /// <param name="suggestionRepository">Suggestion repository.</param>
     /// <param name="dismissedRepository">Dismissed pattern repository.</param>
     /// <param name="merchantMappingService">Merchant mapping service.</param>
+    /// <param name="aiService">AI service for category discovery.</param>
     /// <param name="unitOfWork">Unit of work.</param>
     /// <param name="userContext">User context.</param>
     /// <param name="dismissalHandler">The suggestion dismissal handler.</param>
@@ -37,6 +39,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         ICategorySuggestionRepository suggestionRepository,
         IDismissedSuggestionPatternRepository dismissedRepository,
         IMerchantMappingService merchantMappingService,
+        IAiService aiService,
         IUnitOfWork unitOfWork,
         IUserContext userContext,
         ICategorySuggestionDismissalHandler dismissalHandler)
@@ -46,6 +49,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         _suggestionRepository = suggestionRepository;
         _dismissedRepository = dismissedRepository;
         _merchantMappingService = merchantMappingService;
+        _aiService = aiService;
         _unitOfWork = unitOfWork;
         _userContext = userContext;
         _dismissalHandler = dismissalHandler;
@@ -74,6 +78,11 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
 
         var suggestions = await BuildSuggestionsFromPatternsAsync(
             categoryGroups, existingCategoryNames, ownerId, cancellationToken);
+
+        // AI category discovery for unmatched descriptions
+        var aiSuggestions = await DiscoverAiCategoriesAsync(
+            uncategorized, patternMatches, existingCategoryNames, ownerId, cancellationToken);
+        suggestions.AddRange(aiSuggestions);
 
         if (suggestions.Count > 0)
         {
@@ -259,6 +268,25 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         return Math.Min(0.99m, countConfidence + patternBoost);
     }
 
+    private static bool IsNearDuplicate(string candidateName, HashSet<string> existingNames)
+    {
+        var normalizedCandidate = candidateName.Trim().ToUpperInvariant();
+
+        foreach (var existing in existingNames)
+        {
+            var normalizedExisting = existing.Trim().ToUpperInvariant();
+
+            // Check if one contains the other
+            if (normalizedCandidate.Contains(normalizedExisting, StringComparison.Ordinal)
+                || normalizedExisting.Contains(normalizedCandidate, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private async Task<HashSet<string>> GetExistingCategoryNamesAsync(CancellationToken cancellationToken)
     {
         var existingCategories = await _categoryRepository.GetActiveAsync(cancellationToken);
@@ -305,5 +333,121 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         }
 
         return suggestions;
+    }
+
+    private async Task<List<CategorySuggestion>> DiscoverAiCategoriesAsync(
+        IReadOnlyList<Transaction> uncategorized,
+        IReadOnlyList<PatternMatch> patternMatches,
+        HashSet<string> existingCategoryNames,
+        string ownerId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var status = await _aiService.GetStatusAsync(cancellationToken);
+            if (!status.IsAvailable)
+            {
+                return [];
+            }
+
+            // Identify transactions not matched by any pattern
+            var matchedPatterns = patternMatches.Select(p => p.Pattern).ToList();
+            var unmatchedTransactions = uncategorized
+                .Where(t => !matchedPatterns.Any(p =>
+                    t.Description.Contains(p, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (unmatchedTransactions.Count == 0)
+            {
+                return [];
+            }
+
+            var unmatchedGroups = DescriptionAggregator.Aggregate(unmatchedTransactions);
+            if (unmatchedGroups.Count == 0)
+            {
+                return [];
+            }
+
+            // Collect dismissed category names
+            var dismissedNames = await GetDismissedCategoryNamesAsync(ownerId, cancellationToken);
+
+            var prompt = CategoryDiscoveryPromptBuilder.Build(
+                unmatchedGroups,
+                existingCategoryNames.ToList(),
+                dismissedNames);
+
+            var response = await _aiService.CompleteAsync(prompt, cancellationToken);
+            if (!response.Success)
+            {
+                return [];
+            }
+
+            var discovered = CategoryDiscoveryResponseParser.Parse(response.Content);
+            if (discovered.Count == 0)
+            {
+                return [];
+            }
+
+            return await ConvertDiscoveredToSuggestionsAsync(
+                discovered, existingCategoryNames, ownerId, cancellationToken);
+        }
+        catch (Exception)
+        {
+            // Graceful degradation: AI failure should not block pattern-based suggestions
+            return [];
+        }
+    }
+
+    private async Task<List<CategorySuggestion>> ConvertDiscoveredToSuggestionsAsync(
+        IReadOnlyList<DiscoveredCategory> discovered,
+        HashSet<string> existingCategoryNames,
+        string ownerId,
+        CancellationToken cancellationToken)
+    {
+        var suggestions = new List<CategorySuggestion>();
+
+        foreach (var category in discovered)
+        {
+            // Skip categories that match or closely resemble existing ones
+            if (existingCategoryNames.Contains(category.CategoryName))
+            {
+                continue;
+            }
+
+            if (IsNearDuplicate(category.CategoryName, existingCategoryNames))
+            {
+                continue;
+            }
+
+            if (await _dismissedRepository.IsDismissedAsync(ownerId, category.CategoryName, cancellationToken))
+            {
+                continue;
+            }
+
+            var suggestion = CategorySuggestion.Create(
+                category.CategoryName,
+                CategoryType.Expense,
+                category.MatchedDescriptions,
+                category.MatchedDescriptions.Count,
+                category.Confidence,
+                ownerId,
+                category.Icon,
+                category.Color,
+                CategorySuggestionSource.AiDiscovered,
+                category.Reasoning);
+
+            suggestions.Add(suggestion);
+        }
+
+        return suggestions;
+    }
+
+    private async Task<List<string>> GetDismissedCategoryNamesAsync(
+        string ownerId,
+        CancellationToken cancellationToken)
+    {
+        var dismissed = await _suggestionRepository.GetByStatusAsync(
+            ownerId, SuggestionStatus.Dismissed, 0, 1000, cancellationToken);
+        return dismissed.Select(s => s.SuggestedName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 }

@@ -89,9 +89,15 @@ else if (_categoryItem != null)
 {
     <div class="suggestion-card @GetHighlightClass(_categoryItem.Confidence)">
         <div class="card-top-row">
-            <div class="confidence-indicator @GetConfidenceClass(_categoryItem.Confidence)" title="@($"Confidence: {(_categoryItem.Confidence * 100):F0}%")">
-                <span class="confidence-dot"></span>
-                <span class="confidence-label">@GetConfidenceLabel(_categoryItem.Confidence)</span>
+            <div class="card-top-left">
+                <div class="confidence-indicator @GetConfidenceClass(_categoryItem.Confidence)" title="@($"Confidence: {(_categoryItem.Confidence * 100):F0}%")">
+                    <span class="confidence-dot"></span>
+                    <span class="confidence-label">@GetConfidenceLabel(_categoryItem.Confidence)</span>
+                </div>
+                @if (_categoryItem.Source == "AiDiscovered")
+                {
+                    <span class="ai-badge" title="Discovered by AI analysis">AI</span>
+                }
             </div>
             <span class="impact-summary">affects @_categoryItem.MatchingTransactionCount transaction(s)</span>
         </div>
@@ -131,6 +137,13 @@ else if (_categoryItem != null)
                     <span class="detail-label">Type:</span>
                     <span>@_categoryItem.SuggestedType</span>
                 </div>
+                @if (!string.IsNullOrEmpty(_categoryItem.Reasoning))
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">AI Reasoning:</span>
+                        <span class="ai-reasoning">@_categoryItem.Reasoning</span>
+                    </div>
+                }
             </div>
         }
     </div>
@@ -254,6 +267,28 @@ else if (_categoryItem != null)
         justify-content: space-between;
         margin-bottom: 0.5rem;
         font-size: 0.8rem;
+    }
+
+    .card-top-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .ai-badge {
+        background: var(--primary, #6366f1);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.1rem 0.4rem;
+        border-radius: 0.25rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .ai-reasoning {
+        color: var(--text-secondary);
+        font-style: italic;
     }
 
     .confidence-indicator {

@@ -278,6 +278,87 @@ public class CategorySuggestionTests
         Assert.Contains("dismissed", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Create_Defaults_Source_To_PatternMatch()
+    {
+        // Arrange & Act
+        var suggestion = CreateValidSuggestion();
+
+        // Assert
+        Assert.Equal(CategorySuggestionSource.PatternMatch, suggestion.Source);
+    }
+
+    [Fact]
+    public void Create_Defaults_Reasoning_To_Null()
+    {
+        // Arrange & Act
+        var suggestion = CreateValidSuggestion();
+
+        // Assert
+        Assert.Null(suggestion.Reasoning);
+    }
+
+    [Fact]
+    public void Create_With_AiDiscovered_Source_Sets_Source()
+    {
+        // Arrange & Act
+        var suggestion = CategorySuggestion.Create(
+            "Home Improvement",
+            CategoryType.Expense,
+            new[] { "HOME DEPOT", "LOWES" },
+            8,
+            0.85m,
+            ValidOwnerId,
+            "🔨",
+            "#8B4513",
+            CategorySuggestionSource.AiDiscovered,
+            "Multiple transactions at hardware stores suggest a distinct spending category.");
+
+        // Assert
+        Assert.Equal(CategorySuggestionSource.AiDiscovered, suggestion.Source);
+    }
+
+    [Fact]
+    public void Create_With_Reasoning_Sets_Reasoning()
+    {
+        // Arrange
+        var reasoning = "Multiple transactions at hardware stores suggest a distinct spending category.";
+
+        // Act
+        var suggestion = CategorySuggestion.Create(
+            "Home Improvement",
+            CategoryType.Expense,
+            new[] { "HOME DEPOT", "LOWES" },
+            8,
+            0.85m,
+            ValidOwnerId,
+            "🔨",
+            "#8B4513",
+            CategorySuggestionSource.AiDiscovered,
+            reasoning);
+
+        // Assert
+        Assert.Equal(reasoning, suggestion.Reasoning);
+    }
+
+    [Fact]
+    public void Create_With_PatternMatch_Source_Explicitly_Sets_Source()
+    {
+        // Arrange & Act
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.75m,
+            ValidOwnerId,
+            source: CategorySuggestionSource.PatternMatch);
+
+        // Assert
+        Assert.Equal(CategorySuggestionSource.PatternMatch, suggestion.Source);
+        Assert.Null(suggestion.Reasoning);
+    }
+
     private static CategorySuggestion CreateValidSuggestion()
     {
         return CategorySuggestion.Create(

@@ -21,6 +21,7 @@ public class CategorySuggestionServiceTests
     private readonly Mock<ICategorySuggestionRepository> _suggestionRepoMock;
     private readonly Mock<IDismissedSuggestionPatternRepository> _dismissedRepoMock;
     private readonly Mock<IMerchantMappingService> _merchantMappingServiceMock;
+    private readonly Mock<IAiService> _aiServiceMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IUserContext> _userContextMock;
     private readonly CategorySuggestionService _service;
@@ -32,10 +33,15 @@ public class CategorySuggestionServiceTests
         _suggestionRepoMock = new Mock<ICategorySuggestionRepository>();
         _dismissedRepoMock = new Mock<IDismissedSuggestionPatternRepository>();
         _merchantMappingServiceMock = new Mock<IMerchantMappingService>();
+        _aiServiceMock = new Mock<IAiService>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _userContextMock = new Mock<IUserContext>();
 
         _userContextMock.Setup(u => u.UserId).Returns(TestOwnerId);
+
+        // Default: AI not available (existing tests should not be affected by AI)
+        _aiServiceMock.Setup(a => a.GetStatusAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiServiceStatus(false, null, "Not configured"));
 
         _service = new CategorySuggestionService(
             _transactionRepoMock.Object,
@@ -43,6 +49,7 @@ public class CategorySuggestionServiceTests
             _suggestionRepoMock.Object,
             _dismissedRepoMock.Object,
             _merchantMappingServiceMock.Object,
+            _aiServiceMock.Object,
             _unitOfWorkMock.Object,
             _userContextMock.Object,
             new Mock<ICategorySuggestionDismissalHandler>().Object);

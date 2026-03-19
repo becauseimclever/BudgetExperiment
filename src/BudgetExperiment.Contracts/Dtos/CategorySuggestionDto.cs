@@ -55,6 +55,16 @@ public sealed record CategorySuggestionDto
     public required string Status { get; init; }
 
     /// <summary>
+    /// Gets the source of this suggestion (PatternMatch or AiDiscovered).
+    /// </summary>
+    public required string Source { get; init; }
+
+    /// <summary>
+    /// Gets the AI reasoning for this suggestion (only set for AI-discovered suggestions).
+    /// </summary>
+    public string? Reasoning { get; init; }
+
+    /// <summary>
     /// Gets when the suggestion was created.
     /// </summary>
     public required DateTime CreatedAtUtc { get; init; }

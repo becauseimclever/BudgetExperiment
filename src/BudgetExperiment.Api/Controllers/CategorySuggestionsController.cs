@@ -334,6 +334,8 @@ public sealed class CategorySuggestionsController : ControllerBase
             MerchantPatterns = suggestion.MerchantPatterns,
             MatchingTransactionCount = suggestion.MatchingTransactionCount,
             Status = suggestion.Status.ToString(),
+            Source = suggestion.Source.ToString(),
+            Reasoning = suggestion.Reasoning,
             CreatedAtUtc = suggestion.CreatedAtUtc,
         };
     }

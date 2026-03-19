@@ -684,6 +684,7 @@ public class CategorySuggestionApiServiceTests
             MerchantPatterns = new List<string> { "TEST" },
             MatchingTransactionCount = 5,
             Status = "Pending",
+            Source = "PatternMatch",
             CreatedAtUtc = DateTime.UtcNow,
         };
     }

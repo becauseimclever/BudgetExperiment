@@ -1,6 +1,6 @@
 # Feature 114: AI-Powered Category Discovery
 
-> **Status:** Planning
+> **Status:** Done
 > **Priority:** Medium
 > **Dependencies:** Feature 105 (AI Suggestions UX Redesign — Done), Feature 106 (AI Suggestion Quality — Done)
 

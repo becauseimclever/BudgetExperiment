@@ -160,6 +160,72 @@ public static class AiPrompts
         """;
 
     /// <summary>
+    /// System prompt for category discovery AI analysis.
+    /// </summary>
+    public const string CategoryDiscoverySystemPrompt = """
+        You are a personal finance assistant. Your task is to analyze uncategorized transaction descriptions
+        and suggest logical spending categories that the user doesn't have yet.
+        You must:
+        1. Group related transactions into meaningful spending categories
+        2. Suggest descriptive, user-friendly category names (e.g., "Home Improvement" not "HOMEDEPOT_LOWES_GROUP")
+        3. Assign a confidence score (0.0\u20131.0) based on how coherently the transactions cluster together
+        4. Explain your reasoning in 1\u20132 sentences
+        5. Consider spending frequency and amounts when grouping
+        6. Never hallucinate or make up transaction data
+
+        Respond ONLY with valid JSON in the specified format. Do not include any other text, markdown formatting, or code blocks.
+        """;
+
+    /// <summary>
+    /// User prompt template for AI category discovery.
+    /// Placeholders: {existingCategories}, {dismissedCategories}, {descriptions}.
+    /// </summary>
+    public const string CategoryDiscoveryPrompt = """
+        Analyze these uncategorized transaction descriptions and suggest NEW spending categories.
+        Descriptions are grouped by frequency with transaction counts and amount ranges.
+
+        THE USER ALREADY HAS THESE CATEGORIES (DO NOT suggest these or similar names):
+        {existingCategories}
+
+        {dismissedSection}
+
+        UNCATEGORIZED TRANSACTION DESCRIPTIONS TO ANALYZE:
+        {descriptions}
+
+        Group related transactions and suggest new categories. Respond with this exact JSON structure:
+        [
+          {
+            "categoryName": "descriptive category name",
+            "icon": "single emoji",
+            "color": "#hexcolor",
+            "confidence": 0.85,
+            "reasoning": "1-2 sentence explanation of why these transactions form a category",
+            "matchedDescriptions": ["DESCRIPTION1", "DESCRIPTION2"]
+          }
+        ]
+
+        FEW-SHOT EXAMPLES:
+
+        Example 1 \u2014 Good suggestion (hardware stores cluster):
+        Input descriptions: "HOME DEPOT \u2014 5 transactions, $25.00\u2013$350.00", "LOWES \u2014 3 transactions, $15.00\u2013$200.00", "ACE HARDWARE \u2014 2 transactions, $8.00\u2013$45.00"
+        Output:
+        [{"categoryName": "Home Improvement", "icon": "\ud83d\udd28", "color": "#8B4513", "confidence": 0.85, "reasoning": "Multiple transactions at hardware stores and home supply retailers suggest a distinct spending category.", "matchedDescriptions": ["HOME DEPOT", "LOWES", "ACE HARDWARE"]}]
+
+        Example 2 \u2014 Good suggestion (pet-related cluster):
+        Input descriptions: "PETCO \u2014 4 transactions, $20.00\u2013$80.00", "PETSMART \u2014 3 transactions, $15.00\u2013$60.00", "VET CLINIC \u2014 2 transactions, $50.00\u2013$200.00"
+        Output:
+        [{"categoryName": "Pet Care", "icon": "\ud83d\udc3e", "color": "#4CAF50", "confidence": 0.80, "reasoning": "Transactions at pet stores and veterinary clinics indicate ongoing pet-related expenses.", "matchedDescriptions": ["PETCO", "PETSMART", "VET CLINIC"]}]
+
+        Guidelines:
+        - Only suggest categories with at least 2 matching descriptions
+        - Confidence 0.8+ for clear clusters with 3+ descriptions
+        - Confidence 0.5-0.8 for less certain groupings
+        - Category names should be 1-3 words, title case, user-friendly
+        - Each description should appear in at most one category
+        - Prefer fewer, well-defined categories over many vague ones
+        """;
+
+    /// <summary>
     /// Formats the categories list for inclusion in prompts.
     /// </summary>
     /// <param name="categories">The category names.</param>

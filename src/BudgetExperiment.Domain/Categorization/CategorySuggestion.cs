@@ -77,6 +77,16 @@ public sealed class CategorySuggestion
     public SuggestionStatus Status { get; private set; }
 
     /// <summary>
+    /// Gets the source of this suggestion (pattern-based or AI-discovered).
+    /// </summary>
+    public CategorySuggestionSource Source { get; private set; }
+
+    /// <summary>
+    /// Gets the AI reasoning for this suggestion (only set for AI-discovered suggestions).
+    /// </summary>
+    public string? Reasoning { get; private set; }
+
+    /// <summary>
     /// Gets the owner user ID.
     /// </summary>
     public string OwnerId { get; private set; } = string.Empty;
@@ -97,6 +107,8 @@ public sealed class CategorySuggestion
     /// <param name="ownerId">The owner user ID.</param>
     /// <param name="suggestedIcon">Optional suggested icon identifier.</param>
     /// <param name="suggestedColor">Optional suggested color (hex code).</param>
+    /// <param name="source">The source of this suggestion (defaults to PatternMatch).</param>
+    /// <param name="reasoning">Optional AI reasoning for this suggestion.</param>
     /// <returns>A new <see cref="CategorySuggestion"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static CategorySuggestion Create(
@@ -107,7 +119,9 @@ public sealed class CategorySuggestion
         decimal confidence,
         string ownerId,
         string? suggestedIcon = null,
-        string? suggestedColor = null)
+        string? suggestedColor = null,
+        CategorySuggestionSource source = CategorySuggestionSource.PatternMatch,
+        string? reasoning = null)
     {
         ValidateName(suggestedName);
         ValidateConfidence(confidence);
@@ -130,6 +144,8 @@ public sealed class CategorySuggestion
             Status = SuggestionStatus.Pending,
             OwnerId = ownerId,
             CreatedAtUtc = DateTime.UtcNow,
+            Source = source,
+            Reasoning = reasoning?.Trim(),
         };
     }
 

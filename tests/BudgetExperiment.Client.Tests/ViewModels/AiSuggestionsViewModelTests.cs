@@ -594,6 +594,7 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
             MerchantPatterns = new[] { "PATTERN1", "PATTERN2" },
             MatchingTransactionCount = 15,
             Status = "Pending",
+            Source = "PatternMatch",
             CreatedAtUtc = DateTime.UtcNow,
         };
     }

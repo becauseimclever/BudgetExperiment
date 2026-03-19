@@ -64,6 +64,15 @@ internal sealed class CategorySuggestionConfiguration : IEntityTypeConfiguration
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.Property(s => s.Source)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(CategorySuggestionSource.PatternMatch);
+
+        builder.Property(s => s.Reasoning)
+            .HasMaxLength(1000);
+
         builder.Property(s => s.OwnerId)
             .IsRequired()
             .HasMaxLength(255);
