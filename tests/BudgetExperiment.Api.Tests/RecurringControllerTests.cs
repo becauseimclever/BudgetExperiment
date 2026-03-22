@@ -102,17 +102,17 @@ public sealed class RecurringControllerTests : IClassFixture<CustomWebApplicatio
     }
 
     /// <summary>
-    /// POST /api/v1/recurring/realize-batch returns 400 when no body is provided.
+    /// POST /api/v1/recurring/realize-batch returns 415 when no Content-Type is set (absent body).
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task RealizeBatch_Returns_400_WhenBodyIsAbsent()
+    public async Task RealizeBatch_Returns_415_WhenBodyIsAbsent()
     {
         // Act
         var response = await _client.PostAsync("/api/v1/recurring/realize-batch", null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
     }
 
     /// <summary>

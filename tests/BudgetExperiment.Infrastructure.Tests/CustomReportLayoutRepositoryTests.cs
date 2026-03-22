@@ -31,7 +31,7 @@ public class CustomReportLayoutRepositoryTests : IClassFixture<PostgreSqlFixture
         await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
         var repository = new CustomReportLayoutRepository(context, FakeUserContext.CreateDefault());
-        var layout = CustomReportLayout.CreateShared("Monthly Spending", "{\"type\":\"bar\"}", userId);
+        var layout = CustomReportLayout.CreateShared("Monthly Spending", "{\"type\": \"bar\"}", userId);
 
         // Act
         await repository.AddAsync(layout);
@@ -45,7 +45,7 @@ public class CustomReportLayoutRepositoryTests : IClassFixture<PostgreSqlFixture
         Assert.NotNull(retrieved);
         Assert.Equal(layout.Id, retrieved.Id);
         Assert.Equal("Monthly Spending", retrieved.Name);
-        Assert.Equal("{\"type\":\"bar\"}", retrieved.LayoutJson);
+        Assert.Equal("{\"type\": \"bar\"}", retrieved.LayoutJson);
         Assert.Equal(BudgetScope.Shared, retrieved.Scope);
         Assert.Null(retrieved.OwnerUserId);
     }
