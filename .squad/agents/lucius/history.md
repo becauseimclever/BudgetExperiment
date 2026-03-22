@@ -129,3 +129,67 @@ Conducted comprehensive backend code review (Domain, Application, Infrastructure
 - **Concurrent agent awareness**: Alfred (frontend/architecture agent) was working on controller interface changes (doc 124) simultaneously. When stashing/popping, check for other agents' unstaged changes in the working tree before making assumptions about baseline state.
 - **Interfaces must be complete before switching controllers**: When changing `RecurringTransfersController` from `RecurringTransferService` to `IRecurringTransferService`, ensure the interface has ALL methods the controller uses. Missing methods cause CS1061. Always cross-check concrete class public API against the interface before the switch.
 - **PowerShell -replace with -NoNewline on CRLF files**: Using `Set-Content -NoNewline` on CRLF files preserves the content correctly. The `this\._` regex in PowerShell does not escape the dot specially (it's already literal in a character sequence context). The replacement `this\._` → `_` is safe for this codebase.
+
+### 2026-03-22T18-23-42Z — Session Close: Batch 2+3 Complete
+
+**Cross-Team Summary:**
+
+- **From Barbara:** Testcontainers migration complete; real concurrency bug found and fixed in `IUnitOfWork.MarkAsModified`. API tests now run against PostgreSQL. 55 new high-value tests added. Vanity enum tests cleaned up (12 deleted).
+- **From Alfred:** DIP verdict complete — all 3 controllers VERDICT A. Interfaces already existed but were incomplete. These expansions were handled by Lucius.
+- **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed. PR ready for merge.
+
+### 2026-03-22: Feature 111 performance optimizations
+
+- Added AsNoTracking/AsNoTrackingWithIdentityResolution to read-only repository queries while preserving tracking for update paths.
+- Parallelized CalendarGridService, TransactionListService, and DayDetailService reads via scoped parallel query helper with fallback for test constructors.
+- Bounded account transaction eager loading to a 90-day lookback and added range/name lookup repository extensions for targeted account name retrieval.
+- Registered DbContextFactory for future parallel query support.
+
+### 2026-03-22 — Feature 111: Complete Implementation (Lucius)
+
+**Feature 111: Pragmatic Performance Optimizations** fully implemented across three areas:
+
+#### Area 1: AsNoTracking Propagation
+- Added AsNoTracking/AsNoTrackingWithIdentityResolution to all read-only repository queries
+- Preserved change tracking on update paths (critical for concurrency)
+- No regression in entity refresh behavior
+
+#### Area 2: Parallelized Hot Paths
+- CalendarGridService: 9+ sequential queries → parallelized via scoped helper
+- TransactionListService: Similar parallelization for transaction fetching
+- DayDetailService: Orchestration-level parallelization
+- Registered `IDbContextFactory<BudgetDbContext>` for future parallel context usage
+- Fallback behavior for test constructors when scope factory unavailable
+
+#### Area 3: Bounded Eager Loading
+- AccountRepository: Reduced eager loading to 90-day lookback window (production Pis with large histories need this bound)
+- Added non-breaking extension interfaces: `IAccountTransactionRangeRepository`, `IAccountNameLookupRepository`
+- DayDetailService now uses targeted account-name lookup instead of loading full history
+
+**Architectural Notes:**
+- `IDbContextFactory` could not be injected directly into Application services without layering conflicts; scoped query helpers + fallback providers preserve scope filtering and test constructors
+- Extension interfaces avoid breaking changes to existing `IAccountRepository` implementers and tests
+- No areas skipped
+
+**Result:** Build green (-warnaserror enabled). Feature 111 documentation status updated to Done.
+
+### 2026-03-22 — CI Fix: performance.yml Action Versions (Lucius)
+
+**Task:** Fix non-existent GitHub Actions version references in `.github/workflows/performance.yml`.
+
+**Root Cause:** Four action references used versions that do not exist on GitHub Actions:
+- `actions/checkout@v6` (latest major: v4)
+- `actions/upload-artifact@v7` (2 occurrences; latest major: v4)
+- `actions/setup-dotnet@v5` (latest major: v4)
+- `actions/cache@v5` (latest major: v4)
+
+The task only flagged checkout and upload-artifact, but setup-dotnet@v5 and cache@v5 were caught during the audit and corrected in the same pass.
+
+**Fix Applied:** All five occurrences updated to v4. No workflow logic, job structure, or environment variables changed.
+
+**Validation:** Python script confirmed all `uses:` references are now `@v4` (except `marocchino/sticky-pull-request-comment@v3` which is correct). YAML structure verified by visual review — no indentation errors.
+
+**Commit:** `ci: fix GitHub Actions version references in performance.yml` on branch `feature/code-quality-review`.
+
+**Impact:** Performance workflow has never successfully executed on GitHub Actions due to this bug. With these corrections, scheduled, PR, and manual workflow_dispatch runs should now reach the test execution step.
+

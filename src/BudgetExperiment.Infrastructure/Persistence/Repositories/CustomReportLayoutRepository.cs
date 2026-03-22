@@ -38,6 +38,7 @@ internal sealed class CustomReportLayoutRepository : ICustomReportLayoutReposito
     public async Task<IReadOnlyList<CustomReportLayout>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.CustomReportLayouts)
+            .AsNoTracking()
             .OrderByDescending(l => l.UpdatedAtUtc)
             .ToListAsync(cancellationToken);
     }
@@ -46,6 +47,7 @@ internal sealed class CustomReportLayoutRepository : ICustomReportLayoutReposito
     public async Task<IReadOnlyList<CustomReportLayout>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.CustomReportLayouts)
+            .AsNoTracking()
             .OrderByDescending(l => l.UpdatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -56,6 +58,7 @@ internal sealed class CustomReportLayoutRepository : ICustomReportLayoutReposito
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.CustomReportLayouts)
+            .AsNoTracking()
             .LongCountAsync(cancellationToken);
     }
 

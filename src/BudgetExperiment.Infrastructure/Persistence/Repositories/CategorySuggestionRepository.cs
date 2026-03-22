@@ -35,6 +35,7 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
     public async Task<IReadOnlyList<CategorySuggestion>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.CategorySuggestions
+            .AsNoTracking()
             .OrderByDescending(s => s.CreatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -44,7 +45,9 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.CategorySuggestions.LongCountAsync(cancellationToken);
+        return await _context.CategorySuggestions
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -64,6 +67,7 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
     public async Task<IReadOnlyList<CategorySuggestion>> GetPendingByOwnerAsync(string ownerId, CancellationToken cancellationToken = default)
     {
         return await _context.CategorySuggestions
+            .AsNoTracking()
             .Where(s => s.OwnerId == ownerId && s.Status == SuggestionStatus.Pending)
             .OrderByDescending(s => s.CreatedAtUtc)
             .ToListAsync(cancellationToken);
@@ -78,6 +82,7 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
         CancellationToken cancellationToken = default)
     {
         return await _context.CategorySuggestions
+            .AsNoTracking()
             .Where(s => s.OwnerId == ownerId && s.Status == status)
             .OrderByDescending(s => s.CreatedAtUtc)
             .Skip(skip)
@@ -121,6 +126,7 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
     public async Task<IReadOnlyDictionary<SuggestionStatus, int>> GetCountsByStatusAsync(CancellationToken cancellationToken = default)
     {
         var counts = await _context.CategorySuggestions
+            .AsNoTracking()
             .GroupBy(s => s.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
@@ -132,6 +138,7 @@ internal sealed class CategorySuggestionRepository : ICategorySuggestionReposito
     public async Task<(decimal? AcceptedAvgConfidence, decimal? DismissedAvgConfidence)> GetAverageConfidenceByStatusAsync(CancellationToken cancellationToken = default)
     {
         var averages = await _context.CategorySuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Accepted || s.Status == SuggestionStatus.Dismissed)
             .GroupBy(s => s.Status)
             .Select(g => new { Status = g.Key, AvgConfidence = g.Average(s => s.Confidence) })

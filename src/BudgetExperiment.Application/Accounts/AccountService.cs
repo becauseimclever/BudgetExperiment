@@ -12,6 +12,7 @@ namespace BudgetExperiment.Application.Accounts;
 /// </summary>
 public sealed class AccountService
 {
+    private const int DefaultTransactionLookbackDays = 90;
     private readonly IAccountRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserContext _userContext;
@@ -37,7 +38,9 @@ public sealed class AccountService
     /// <returns>The account DTO, or null if not found.</returns>
     public async Task<AccountDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var account = await _repository.GetByIdWithTransactionsAsync(id, cancellationToken);
+        var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var startDate = endDate.AddDays(-DefaultTransactionLookbackDays);
+        var account = await _repository.GetByIdWithTransactionsAsync(id, startDate, endDate, cancellationToken);
         if (account is null)
         {
             return null;

@@ -35,6 +35,7 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
     public async Task<IReadOnlyList<ChatMessage>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.ChatMessages
+            .AsNoTracking()
             .OrderByDescending(m => m.CreatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -44,7 +45,9 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.ChatMessages.LongCountAsync(cancellationToken);
+        return await _context.ChatMessages
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -67,6 +70,7 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
         CancellationToken cancellationToken = default)
     {
         return await _context.ChatMessages
+            .AsNoTracking()
             .Where(m => m.SessionId == sessionId)
             .OrderBy(m => m.CreatedAtUtc)
             .Take(limit)
@@ -79,6 +83,7 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
         CancellationToken cancellationToken = default)
     {
         return await _context.ChatMessages
+            .AsNoTracking()
             .Where(m => m.SessionId == sessionId && m.ActionStatus == ChatActionStatus.Pending)
             .OrderBy(m => m.CreatedAtUtc)
             .ToListAsync(cancellationToken);

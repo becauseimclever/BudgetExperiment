@@ -38,6 +38,7 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     public async Task<BudgetCategory?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.BudgetCategories)
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Name == name, cancellationToken);
     }
 
@@ -45,6 +46,7 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     public async Task<IReadOnlyList<BudgetCategory>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.BudgetCategories)
+            .AsNoTracking()
             .Where(c => c.IsActive)
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
@@ -55,6 +57,7 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     public async Task<IReadOnlyList<BudgetCategory>> GetByTypeAsync(CategoryType type, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.BudgetCategories)
+            .AsNoTracking()
             .Where(c => c.Type == type)
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
@@ -65,6 +68,7 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     public async Task<IReadOnlyList<BudgetCategory>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.BudgetCategories)
+            .AsNoTracking()
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
             .ToListAsync(cancellationToken);
@@ -75,6 +79,7 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     {
         var idList = ids.ToList();
         return await this.ApplyScopeFilter(_context.BudgetCategories)
+            .AsNoTracking()
             .Where(c => idList.Contains(c.Id))
             .ToListAsync(cancellationToken);
     }
@@ -83,6 +88,7 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     public async Task<IReadOnlyList<BudgetCategory>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.BudgetCategories)
+            .AsNoTracking()
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
             .Skip(skip)
@@ -93,7 +99,9 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(_context.BudgetCategories).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.BudgetCategories)
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />

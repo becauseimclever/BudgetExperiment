@@ -102,3 +102,23 @@ Feature Doc 124 (Controller Abstractions Assessment) should note this finding wh
 **Pragmatic SOLID Application:** The directive says interfaces should "earn their cost." Here, the interfaces already exist — using them costs nothing. Leaving concrete injection in place when interfaces exist and are registered is technical debt, not pragmatism.
 
 **Pre-existing Issues Noted:** Repository has multiple unrelated build errors (IUnitOfWork.MarkAsModified not implemented, SA1117/SA1127/SA1210 StyleCop violations) that block `-warnaserror` builds.
+
+### 2026-03-22T18-23-42Z — Session Close: Batch 2+3 Complete
+
+**Cross-Team Summary:**
+
+- **From Lucius:** Flattened 9 deeply nested methods (improved readability), removed 1,474 `this._` usages (reduced verbosity), expanded 2 service interfaces (+8 methods total), switched 3 controllers to interface injection. Service interfaces now complete for DIP assessment.
+- **From Barbara:** Testcontainers migration complete; real concurrency bug found and fixed in `IUnitOfWork.MarkAsModified`. API tests now run against PostgreSQL. 55 new high-value tests added. Vanity enum tests cleaned up (12 deleted).
+- **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed. PR ready for merge.
+
+**Assessment Outcome:** DIP verdicts delivered (Verdict A for all 3 controllers). Interfaces already existed but were incomplete — work prioritized to Lucius for expansion. All 3 controllers now ready for interface injection transition.
+
+### 2026-03-22 — Feature 112 Performance Testing Architectural Review (Alfred)
+
+Completed comprehensive review of Feature 112 (API Performance Testing) scope and design requirements. Key finding: **performance test baselines captured against EF Core in-memory provider are unreliable for detecting real regressions in production.**
+
+**Issue:** In-memory baselines mask I/O latency, query planning overhead, and concurrency behavior. Example: CalendarGridService makes 9+ sequential queries. In-memory shows ~10ms total; real PostgreSQL on a Raspberry Pi shows ~50-100ms. A baseline built on in-memory data won't catch a 2× latency regression because the starting point was artificially low.
+
+**Decision:** Baselines MUST be captured against real PostgreSQL via `PERF_USE_REAL_DB=true` flag (already implemented in `PerformanceWebApplicationFactory`). This requires Docker/Testcontainers in CI. Local baseline capture must use a real PostgreSQL instance. PR smoke tests can continue using in-memory for speed (they're sanity checks, not baselines).
+
+**Documentation:** Decision merged to `decisions.md`; findings integrated into engineering guide's performance testing section.

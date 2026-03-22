@@ -38,6 +38,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     public async Task<IReadOnlyList<ReconciliationMatch>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.ReconciliationMatches)
+            .AsNoTracking()
             .OrderByDescending(m => m.CreatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -48,6 +49,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.ReconciliationMatches)
+            .AsNoTracking()
             .LongCountAsync(cancellationToken);
     }
 
@@ -68,6 +70,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     public async Task<IReadOnlyList<ReconciliationMatch>> GetPendingMatchesAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.ReconciliationMatches)
+            .AsNoTracking()
             .Where(m => m.Status == ReconciliationMatchStatus.Suggested)
             .OrderByDescending(m => m.ConfidenceScore)
             .ThenByDescending(m => m.CreatedAtUtc)
@@ -82,6 +85,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.ReconciliationMatches)
+            .AsNoTracking()
             .Where(m => m.RecurringTransactionId == recurringTransactionId)
             .Where(m => m.RecurringInstanceDate >= startDate && m.RecurringInstanceDate <= endDate)
             .OrderBy(m => m.RecurringInstanceDate)
@@ -94,6 +98,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.ReconciliationMatches)
+            .AsNoTracking()
             .Where(m => m.ImportedTransactionId == transactionId)
             .OrderByDescending(m => m.ConfidenceScore)
             .ToListAsync(cancellationToken);
@@ -109,6 +114,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
         return await this.ApplyScopeFilter(_context.ReconciliationMatches)
+            .AsNoTracking()
             .Where(m => m.RecurringInstanceDate >= startDate && m.RecurringInstanceDate <= endDate)
             .OrderBy(m => m.RecurringInstanceDate)
             .ThenByDescending(m => m.ConfidenceScore)

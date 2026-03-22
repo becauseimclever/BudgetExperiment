@@ -35,6 +35,7 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
     public async Task<IReadOnlyList<RecurringChargeSuggestion>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.RecurringChargeSuggestions
+            .AsNoTracking()
             .OrderByDescending(s => s.Confidence)
             .Skip(skip)
             .Take(take)
@@ -44,7 +45,9 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.RecurringChargeSuggestions.LongCountAsync(cancellationToken);
+        return await _context.RecurringChargeSuggestions
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -81,6 +84,7 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
         }
 
         return await query
+            .AsNoTracking()
             .OrderByDescending(s => s.Confidence)
             .Skip(skip)
             .Take(take)
@@ -105,7 +109,9 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
             query = query.Where(s => s.Status == status.Value);
         }
 
-        return await query.LongCountAsync(cancellationToken);
+        return await query
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />

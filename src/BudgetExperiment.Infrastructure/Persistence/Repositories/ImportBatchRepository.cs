@@ -35,6 +35,7 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     public async Task<IReadOnlyList<ImportBatch>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.ImportBatches
+            .AsNoTracking()
             .OrderByDescending(b => b.ImportedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -44,7 +45,9 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.ImportBatches.LongCountAsync(cancellationToken);
+        return await _context.ImportBatches
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -64,6 +67,7 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     public async Task<IReadOnlyList<ImportBatch>> GetByUserAsync(Guid userId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         return await _context.ImportBatches
+            .AsNoTracking()
             .Where(b => b.UserId == userId)
             .OrderByDescending(b => b.ImportedAtUtc)
             .Skip(skip)
@@ -75,6 +79,7 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     public async Task<IReadOnlyList<ImportBatch>> GetByAccountAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         return await _context.ImportBatches
+            .AsNoTracking()
             .Where(b => b.AccountId == accountId)
             .OrderByDescending(b => b.ImportedAtUtc)
             .ToListAsync(cancellationToken);
@@ -84,6 +89,7 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     public async Task<IReadOnlyList<ImportBatch>> GetByMappingAsync(Guid mappingId, CancellationToken cancellationToken = default)
     {
         return await _context.ImportBatches
+            .AsNoTracking()
             .Where(b => b.MappingId == mappingId)
             .OrderByDescending(b => b.ImportedAtUtc)
             .ToListAsync(cancellationToken);
