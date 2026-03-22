@@ -22,96 +22,50 @@ Tests under `tests/` mirror the src structure.
 - No FluentAssertions, no AutoFixture, no AutoMapper
 - Migrations live in Infrastructure; EF types never leave Infrastructure
 
-## Learnings
+## Core Context
 
-<!-- Append new learnings below. Each entry is something lasting about the project. -->
+### Initial Code Quality Review (2026-03-22)
 
-### 2026-03-22: Backend Code Quality Deep-Dive Review
+Conducted comprehensive backend code review finding B+ architecture. **Critical Issues:** 6 methods with 3+ nesting levels, ExceptionHandlingMiddleware using brittle string matching instead of enum, 3 services with redundant concrete registrations. **Positives:** Zero infrastructure types in Domain, comprehensive scope filtering, no primitive obsession, no commented code, StyleCop enforced with zero global suppressions.
 
-Conducted comprehensive backend code review (Domain, Application, Infrastructure, API). Key findings:
+**Method Length Statistics:** 54 violations (40 in Application, 19 in Infrastructure configs). Priority: Refactor 6 critically nested methods, then tackle 26 methods in 21-40 line range.
 
-**Architecture Quality: B+ (Strong fundamentals with targeted improvements needed)**
+### Quick-Win Fixes Applied (2026-03-22)
 
-- **Domain Layer**: Rich, behavior-focused entities with proper value objects. No infrastructure leakage detected. 21 repository interfaces, 4 domain services, comprehensive scope management (Shared/Personal). Zero anemic models found.
-- **Application Layer**: 87 services properly orchestrating domain objects. Explicit mapping (no AutoMapper). Main issue: 54 methods exceed 20-line guideline (6 with critical 3+ level nesting).
-- **Infrastructure Layer**: Excellent EF Core fluent configuration isolates persistence concerns. Repository scope filtering prevents cross-tenant data leaks. Optimistic concurrency via PostgreSQL xmin properly configured.
-- **API Layer**: Textbook REST with proper HTTP verbs/status codes, DTOs-only exposure, RFC 7807 Problem Details, ETag concurrency support. OpenAPI + Scalar configured correctly.
+1. **ExceptionHandlingMiddleware Enum-Based Routing:** Created `DomainExceptionType` enum (Validation, NotFound) in `Domain.Common`. Updated `DomainException` to accept optional type parameter (defaults to Validation). Updated all 17 "not found" throw sites to pass `DomainExceptionType.NotFound`. Removed string matching from middleware.
 
-**Critical Issues (Address First):**
-1. Six methods with 3+ nesting levels need immediate refactoring (TransactionListService recurring instance methods, ImportExecuteRequestValidator, RuleSuggestionResponseParser, etc.)
-2. ExceptionHandlingMiddleware uses brittle string matching instead of DomainException.ExceptionType enum
-3. Three services registered as both interface + concrete ("backward compatibility" with no justification found)
+2. **Redundant DI Registrations:** Investigated all three "backward compat" concrete registrations (`TransactionService`, `RecurringTransactionService`, `RecurringTransferService`). Found concrete consumers in API controllers. Updated comments to name actual consumers rather than vague "backward compatibility".
 
-**Positive Highlights:**
-- Zero infrastructure types in Domain (perfect abstraction)
-- Comprehensive scope filtering at repository level (security win)
-- No primitive obsession (proper value object usage throughout)
-- No commented-out code found
-- StyleCop warnings-as-errors enforced with zero global suppressions
+3. **DateTime.Now → DateTime.UtcNow:** Replaced 3 occurrences in `Reconciliation.razor` (field initializers, year-range loop).
 
-**Method Length Statistics:** 54 violations (40 in Application, 19 in Infrastructure configs, ~10 spread across layers). Configuration files are acceptable (EF fluent API verbosity). Priority: Refactor 6 critically nested methods, then tackle 26 methods in 21-40 line range.
-
-### 2026-03-22: Backend Code Quality Deep-Dive Review
-
-Conducted comprehensive backend code review (Domain, Application, Infrastructure, API). Key findings:
-
-**Architecture Quality: B+ (Strong fundamentals with targeted improvements needed)**
-
-- **Domain Layer**: Rich, behavior-focused entities with proper value objects. No infrastructure leakage detected. 21 repository interfaces, 4 domain services, comprehensive scope management (Shared/Personal). Zero anemic models found.
-- **Application Layer**: 87 services properly orchestrating domain objects. Explicit mapping (no AutoMapper). Main issue: 54 methods exceed 20-line guideline (6 with critical 3+ level nesting).
-- **Infrastructure Layer**: Excellent EF Core fluent configuration isolates persistence concerns. Repository scope filtering prevents cross-tenant data leaks. Optimistic concurrency via PostgreSQL xmin properly configured.
-- **API Layer**: Textbook REST with proper HTTP verbs/status codes, DTOs-only exposure, RFC 7807 Problem Details, ETag concurrency support. OpenAPI + Scalar configured correctly.
-
-**Critical Issues (Address First):**
-1. Six methods with 3+ nesting levels need immediate refactoring (TransactionListService recurring instance methods, ImportExecuteRequestValidator, RuleSuggestionResponseParser, etc.)
-2. ExceptionHandlingMiddleware uses brittle string matching instead of DomainException.ExceptionType enum
-3. Three services registered as both interface + concrete ("backward compatibility" with no justification found)
-
-**Positive Highlights:**
-- Zero infrastructure types in Domain (perfect abstraction)
-- Comprehensive scope filtering at repository level (security win)
-- No primitive obsession (proper value object usage throughout)
-- No commented-out code found
-- StyleCop warnings-as-errors enforced with zero global suppressions
-
-**Method Length Statistics:** 54 violations (40 in Application, 19 in Infrastructure configs, ~10 spread across layers). Configuration files are acceptable (EF fluent API verbosity). Priority: Refactor 6 critically nested methods, then tackle 26 methods in 21-40 line range.
-
-**Technical Debt:** Manageable. Main issue is method extraction discipline, not architectural problems. No refactoring at layer boundaries needed. Incremental cleanup viable without breaking changes.
-
-### 2026-03-22: Three Quick-Win Code Quality Fixes Applied
-
-**Fix 1: ExceptionHandlingMiddleware — enum-based routing (done)**
-
-- Created `DomainExceptionType` enum (`Validation = 0`, `NotFound = 1`) in `BudgetExperiment.Domain.Common`.
-- Updated `DomainException` to accept an optional `DomainExceptionType` parameter (defaults to `Validation` so all existing callers without a type remain valid).
-- Updated `ExceptionHandlingMiddleware` to `switch (domainEx.ExceptionType)` — no more string matching.
-- Updated all 17 "not found" throw sites across Domain, Application (Recurring, Accounts, Import, Categorization) to pass `DomainExceptionType.NotFound`.
-- Updated existing middleware test to use typed constructor.
-
-**Fix 2: Redundant DI registrations — comments corrected (done)**
-
-- Investigated all three "backward compat" concrete registrations: `TransactionService`, `RecurringTransactionService`, `RecurringTransferService`.
-- Found concrete consumers in the API controllers (`TransactionsController`, `RecurringTransactionsController`, `RecurringTransfersController` each inject the concrete type directly).
-- Updated comments in `DependencyInjection.cs` to name the actual consumer rather than vague "backward compatibility".
-- No registrations removed — all three are legitimately needed.
-
-**Fix 3: DateTime.Now → DateTime.UtcNow in Reconciliation.razor (done)**
-
-- Replaced `DateTime.Now.Month/.Year` (3 occurrences) with `DateTime.UtcNow` for field initializers and year-range loop.
-
-**Also fixed (pre-existing build error):**
-- `PostgreSqlFixture.cs`: Updated `new PostgreSqlBuilder()` → `new PostgreSqlBuilder("postgres:16")` (obsolete parameterless constructor).
+4. **PostgreSqlFixture Constructor:** Updated `new PostgreSqlBuilder()` → `new PostgreSqlBuilder("postgres:16")` (parameterless constructor obsolete).
 
 **Result:** Build clean (0 warnings, 0 errors), 5415 tests pass, 1 pre-existing skip.
 
-### Cross-Agent Note: DI Validation & Architectural Clarity (2026-03-22T10-04-29)
+### Performance Optimizations (2026-03-22)
 
-**Finding:** All three concrete service registrations (`TransactionService`, `RecurringTransactionService`, `RecurringTransferService`) are load-bearing — controllers directly inject the concrete types. Comments clarified to name actual consumers.
+**Feature 111: Pragmatic Performance Optimizations** implemented across three areas:
+- **Area 1 (AsNoTracking):** Added AsNoTracking/AsNoTrackingWithIdentityResolution to all read-only repository queries while preserving tracking on update paths.
+- **Area 2 (Parallelized Hot Paths):** CalendarGridService (9+ sequential queries), TransactionListService, DayDetailService. Registered `IDbContextFactory<BudgetDbContext>` for future parallel support. Fallback behavior for test constructors.
+- **Area 3 (Bounded Eager Loading):** AccountRepository reduced eager loading to 90-day lookback window; added extension interfaces `IAccountTransactionRangeRepository`, `IAccountNameLookupRepository`; DayDetailService uses targeted name lookup.
 
-**Relevance to Feature Doc 124:** When Alfred assesses DIP for `TransactionsController`, `RecurringTransactionsController`, and other controller abstractions, these findings provide the DI implementation context. Extracting interfaces requires changes to both service registration and controller injection sites. Assessment should use pragmatic directive: interface only if realistic substitution scenario exists.
+**Bug Fixed:** Feature 111 DI bug — removed unused `AddDbContextFactory` Singleton registration that broke DI validation (commit `599483a`).
 
+**Result:** Build green (-warnaserror enabled). Feature 111 documentation updated to Done.
+
+### GitHub Actions Version Fixes (2026-03-22)
+
+**Performance CI Workflow (`performance.yml`):** Fixed non-existent action versions blocking entire performance pipeline:
+- `actions/checkout@v6` → `actions/checkout@v4`
+- `actions/setup-dotnet@v5` → `actions/setup-dotnet@v4`
+- `actions/cache@v5` → `actions/cache@v4`
+- `actions/upload-artifact@v7` → `actions/upload-artifact@v4` (2 occurrences)
+
+**Impact:** Performance CI workflow can now execute successfully on GitHub Actions.
 
 ## Learnings
+
+<!-- Append new learnings below. Each entry is something lasting about the project. -->
 
 ### Nesting Flattening Session (2025)
 - **Guard clauses are the primary tool**: Inverting conditions to return/throw early eliminates one nesting level per guard without adding abstraction overhead.
@@ -138,58 +92,4 @@ Conducted comprehensive backend code review (Domain, Application, Infrastructure
 - **From Alfred:** DIP verdict complete — all 3 controllers VERDICT A. Interfaces already existed but were incomplete. These expansions were handled by Lucius.
 - **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed. PR ready for merge.
 
-### 2026-03-22: Feature 111 performance optimizations
-
-- Added AsNoTracking/AsNoTrackingWithIdentityResolution to read-only repository queries while preserving tracking for update paths.
-- Parallelized CalendarGridService, TransactionListService, and DayDetailService reads via scoped parallel query helper with fallback for test constructors.
-- Bounded account transaction eager loading to a 90-day lookback and added range/name lookup repository extensions for targeted account name retrieval.
-- Registered DbContextFactory for future parallel query support.
-
-### 2026-03-22 — Feature 111: Complete Implementation (Lucius)
-
-**Feature 111: Pragmatic Performance Optimizations** fully implemented across three areas:
-
-#### Area 1: AsNoTracking Propagation
-- Added AsNoTracking/AsNoTrackingWithIdentityResolution to all read-only repository queries
-- Preserved change tracking on update paths (critical for concurrency)
-- No regression in entity refresh behavior
-
-#### Area 2: Parallelized Hot Paths
-- CalendarGridService: 9+ sequential queries → parallelized via scoped helper
-- TransactionListService: Similar parallelization for transaction fetching
-- DayDetailService: Orchestration-level parallelization
-- Registered `IDbContextFactory<BudgetDbContext>` for future parallel context usage
-- Fallback behavior for test constructors when scope factory unavailable
-
-#### Area 3: Bounded Eager Loading
-- AccountRepository: Reduced eager loading to 90-day lookback window (production Pis with large histories need this bound)
-- Added non-breaking extension interfaces: `IAccountTransactionRangeRepository`, `IAccountNameLookupRepository`
-- DayDetailService now uses targeted account-name lookup instead of loading full history
-
-**Architectural Notes:**
-- `IDbContextFactory` could not be injected directly into Application services without layering conflicts; scoped query helpers + fallback providers preserve scope filtering and test constructors
-- Extension interfaces avoid breaking changes to existing `IAccountRepository` implementers and tests
-- No areas skipped
-
-**Result:** Build green (-warnaserror enabled). Feature 111 documentation status updated to Done.
-
-### 2026-03-22 — CI Fix: performance.yml Action Versions (Lucius)
-
-**Task:** Fix non-existent GitHub Actions version references in `.github/workflows/performance.yml`.
-
-**Root Cause:** Four action references used versions that do not exist on GitHub Actions:
-- `actions/checkout@v6` (latest major: v4)
-- `actions/upload-artifact@v7` (2 occurrences; latest major: v4)
-- `actions/setup-dotnet@v5` (latest major: v4)
-- `actions/cache@v5` (latest major: v4)
-
-The task only flagged checkout and upload-artifact, but setup-dotnet@v5 and cache@v5 were caught during the audit and corrected in the same pass.
-
-**Fix Applied:** All five occurrences updated to v4. No workflow logic, job structure, or environment variables changed.
-
-**Validation:** Python script confirmed all `uses:` references are now `@v4` (except `marocchino/sticky-pull-request-comment@v3` which is correct). YAML structure verified by visual review — no indentation errors.
-
-**Commit:** `ci: fix GitHub Actions version references in performance.yml` on branch `feature/code-quality-review`.
-
-**Impact:** Performance workflow has never successfully executed on GitHub Actions due to this bug. With these corrections, scheduled, PR, and manual workflow_dispatch runs should now reach the test execution step.
 
