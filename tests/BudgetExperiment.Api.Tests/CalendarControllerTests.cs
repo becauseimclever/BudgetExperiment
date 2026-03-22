@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Calendar API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class CalendarControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

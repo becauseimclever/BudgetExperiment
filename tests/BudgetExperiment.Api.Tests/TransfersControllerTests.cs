@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Transfers API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

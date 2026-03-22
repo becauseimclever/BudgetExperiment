@@ -9,6 +9,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Export API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

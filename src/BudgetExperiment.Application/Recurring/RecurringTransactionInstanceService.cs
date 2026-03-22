@@ -91,6 +91,11 @@ public sealed class RecurringTransactionInstanceService : IRecurringTransactionI
         if (expectedVersion is not null)
         {
             _unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
+
+            // Mark as modified so EF Core executes an UPDATE and checks the xmin concurrency token.
+            // Without this, the parent entity is never updated (only the exception child is), so
+            // PostgreSQL's xmin check would never trigger.
+            _unitOfWork.MarkAsModified(recurring);
         }
 
         var exception = await _repository.GetExceptionAsync(id, instanceDate, cancellationToken);

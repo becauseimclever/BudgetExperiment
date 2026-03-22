@@ -22,9 +22,10 @@ using Microsoft.Extensions.Options;
 namespace BudgetExperiment.Api.Tests;
 
 /// <summary>
-/// Custom factory for API integration tests with authentication enabled.
+/// Custom factory for API integration tests with real authentication middleware enabled,
+/// backed by a real PostgreSQL Testcontainer.
 /// </summary>
-public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Program>
+public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     /// <summary>
     /// The test username used for authenticated requests.
@@ -36,7 +37,16 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
     /// </summary>
     public static readonly Guid TestUserId = new("11111111-1111-1111-1111-111111111111");
 
-    private readonly string _dbName = "TestDb_Auth_" + Guid.NewGuid().ToString();
+    private readonly ApiPostgreSqlFixture _dbFixture;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthEnabledWebApplicationFactory"/> class.
+    /// </summary>
+    /// <param name="dbFixture">The shared PostgreSQL container fixture.</param>
+    public AuthEnabledWebApplicationFactory(ApiPostgreSqlFixture dbFixture)
+    {
+        this._dbFixture = dbFixture;
+    }
 
     /// <summary>
     /// Creates an unauthenticated <see cref="HttpClient"/> for the API.
@@ -69,13 +79,25 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
     }
 
     /// <inheritdoc />
+    public async Task InitializeAsync()
+    {
+        using var scope = this.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+        await db.Database.EnsureCreatedAsync();
+        TruncateAllTables(db);
+    }
+
+    /// <inheritdoc />
+    public new async Task DisposeAsync() => await base.DisposeAsync();
+
+    /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureAppConfiguration((context, config) =>
+        builder.ConfigureAppConfiguration((_, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:AppDb"] = "Host=localhost;Database=test",
+                ["ConnectionStrings:AppDb"] = this._dbFixture.ConnectionString,
                 ["Authentication:Authentik:Enabled"] = "true",
                 ["Authentication:Authentik:Authority"] = "https://test.auth.local",
             });
@@ -83,7 +105,7 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
 
         builder.ConfigureServices(services =>
         {
-            // Remove the Npgsql-configured DbContext
+            // Remove the Npgsql-configured DbContext and IUnitOfWork registered by production code
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<BudgetDbContext>));
             if (descriptor != null)
@@ -91,7 +113,6 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
                 services.Remove(descriptor);
             }
 
-            // Remove existing IUnitOfWork registration
             var uowDescriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(IUnitOfWork));
             if (uowDescriptor != null)
@@ -99,19 +120,10 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
                 services.Remove(uowDescriptor);
             }
 
-            // Build a separate internal service provider for InMemory only
-            var inMemoryServiceProvider = new ServiceCollection()
-                .AddEntityFrameworkInMemoryDatabase()
-                .BuildServiceProvider();
-
-            // Create a fresh DbContext with only InMemory using isolated provider
+            // Point the app at the Testcontainer database
             services.AddDbContext<BudgetDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(this._dbName)
-                       .UseInternalServiceProvider(inMemoryServiceProvider);
-            });
+                options.UseNpgsql(this._dbFixture.ConnectionString));
 
-            // Register IUnitOfWork for the test DbContext
             services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
 
             // Override authentication with a test scheme
@@ -120,7 +132,29 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
                 options.DefaultAuthenticateScheme = "Test";
                 options.DefaultChallengeScheme = "Test";
             })
-            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
         });
+    }
+
+    private static void TruncateAllTables(BudgetDbContext context)
+    {
+        var tableNames = context.Model
+            .GetEntityTypes()
+            .Select(e => e.GetTableName())
+            .Where(name => name != null)
+            .Distinct()
+            .ToList();
+
+        if (tableNames.Count == 0)
+        {
+            return;
+        }
+
+        var quotedTables = string.Join(", ", tableNames.Select(t => $"\"{t}\""));
+
+        // Table names are sourced from the EF model, not user input; suppression is safe here.
+#pragma warning disable EF1002
+        context.Database.ExecuteSqlRaw($"TRUNCATE TABLE {quotedTables} CASCADE");
+#pragma warning restore EF1002
     }
 }

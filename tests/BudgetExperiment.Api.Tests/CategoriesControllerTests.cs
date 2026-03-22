@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Categories API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

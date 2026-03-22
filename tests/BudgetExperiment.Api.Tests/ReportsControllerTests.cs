@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Reports API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

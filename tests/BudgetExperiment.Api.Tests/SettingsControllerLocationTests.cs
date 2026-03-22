@@ -11,6 +11,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the DELETE /api/v1/settings/location-data endpoint.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class SettingsControllerLocationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

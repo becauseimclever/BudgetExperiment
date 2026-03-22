@@ -9,6 +9,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests verifying API versioning infrastructure is properly configured.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

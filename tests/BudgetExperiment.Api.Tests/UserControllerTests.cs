@@ -1,4 +1,4 @@
-// <copyright file="UserControllerTests.cs" company="BecauseImClever">
+﻿// <copyright file="UserControllerTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -11,10 +11,26 @@ namespace BudgetExperiment.Api.Tests;
 
 /// <summary>
 /// Integration tests for the User API endpoints.
-/// Each test uses an isolated database to avoid state sharing.
+/// Each test resets the database in the constructor to ensure full state isolation,
+/// matching the previous per-test inline factory pattern.
 /// </summary>
-public sealed class UserControllerTests
+[Collection("ApiDb")]
+public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
+    private readonly HttpClient _client;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserControllerTests"/> class.
+    /// </summary>
+    /// <param name="factory">The shared test factory.</param>
+    public UserControllerTests(CustomWebApplicationFactory factory)
+    {
+        // Each test gets a clean database — required because user settings are keyed
+        // by TestUserId and several tests depend on the provisioned default values.
+        factory.ResetDatabase();
+        this._client = factory.CreateApiClient();
+    }
+
     /// <summary>
     /// GET /api/v1/user/me returns 200 OK with user profile.
     /// </summary>
@@ -22,12 +38,8 @@ public sealed class UserControllerTests
     [Fact]
     public async Task GetProfile_Returns_200_WithProfile()
     {
-        // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
-
         // Act
-        var response = await client.GetAsync("/api/v1/user/me");
+        var response = await this._client.GetAsync("/api/v1/user/me");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -44,12 +56,8 @@ public sealed class UserControllerTests
     [Fact]
     public async Task GetSettings_Returns_200_AndProvisionsDefaults()
     {
-        // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
-
         // Act
-        var response = await client.GetAsync("/api/v1/user/settings");
+        var response = await this._client.GetAsync("/api/v1/user/settings");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -67,12 +75,8 @@ public sealed class UserControllerTests
     [Fact]
     public async Task UpdateSettings_Returns_200_WithUpdatedSettings()
     {
-        // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
-
-        // First provision settings
-        await client.GetAsync("/api/v1/user/settings");
+        // Arrange - provision settings first
+        await this._client.GetAsync("/api/v1/user/settings");
 
         var updateDto = new UserSettingsUpdateDto
         {
@@ -82,7 +86,7 @@ public sealed class UserControllerTests
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
+        var response = await this._client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -100,12 +104,8 @@ public sealed class UserControllerTests
     [Fact]
     public async Task GetScope_Returns_200_WithScope()
     {
-        // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
-
         // Act
-        var response = await client.GetAsync("/api/v1/user/scope");
+        var response = await this._client.GetAsync("/api/v1/user/scope");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -123,12 +123,10 @@ public sealed class UserControllerTests
     public async Task SetScope_Returns_200_WithScope()
     {
         // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
         var scopeDto = new ScopeDto { Scope = "Personal" };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
+        var response = await this._client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -144,12 +142,8 @@ public sealed class UserControllerTests
     [Fact]
     public async Task GetSettings_Returns_OnboardingFieldDefaults()
     {
-        // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
-
         // Act
-        var response = await client.GetAsync("/api/v1/user/settings");
+        var response = await this._client.GetAsync("/api/v1/user/settings");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -166,10 +160,8 @@ public sealed class UserControllerTests
     [Fact]
     public async Task UpdateSettings_Updates_FirstDayOfWeek()
     {
-        // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
-        await client.GetAsync("/api/v1/user/settings");
+        // Arrange - provision settings first
+        await this._client.GetAsync("/api/v1/user/settings");
 
         var updateDto = new UserSettingsUpdateDto
         {
@@ -177,7 +169,7 @@ public sealed class UserControllerTests
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
+        var response = await this._client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -193,13 +185,11 @@ public sealed class UserControllerTests
     [Fact]
     public async Task CompleteOnboarding_Returns_200_WithOnboardedTrue()
     {
-        // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
-        await client.GetAsync("/api/v1/user/settings");
+        // Arrange - provision settings first
+        await this._client.GetAsync("/api/v1/user/settings");
 
         // Act
-        var response = await client.PostAsync("/api/v1/user/settings/complete-onboarding", null);
+        var response = await this._client.PostAsync("/api/v1/user/settings/complete-onboarding", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -216,12 +206,10 @@ public sealed class UserControllerTests
     public async Task SetScope_WithInvalidScope_Returns_400()
     {
         // Arrange
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateApiClient();
         var scopeDto = new ScopeDto { Scope = "InvalidScope" };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
+        var response = await this._client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

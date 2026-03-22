@@ -149,6 +149,13 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     }
 
     /// <inheritdoc />
+    public void MarkAsModified<T>(T entity)
+        where T : class
+    {
+        this.Entry(entity).State = EntityState.Modified;
+    }
+
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BudgetDbContext).Assembly);

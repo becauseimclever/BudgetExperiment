@@ -14,6 +14,7 @@ namespace BudgetExperiment.Api.Tests;
 /// Integration tests for the unified transaction list endpoints
 /// (GET /paged, POST /suggest-categories, PATCH /{id}/category).
 /// </summary>
+[Collection("ApiDb")]
 public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

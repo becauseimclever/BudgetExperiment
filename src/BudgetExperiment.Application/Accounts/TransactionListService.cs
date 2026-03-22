@@ -196,6 +196,49 @@ public sealed class TransactionListService : ITransactionListService
         return dailyBalances;
     }
 
+    private static bool IsRealizedAsTransaction(IReadOnlyList<Transaction> transactions, Guid recurringTransactionId, DateOnly date)
+        => transactions.Any(t => t.RecurringTransactionId == recurringTransactionId && t.Date == date);
+
+    private static bool IsRealizedAsTransfer(IReadOnlyList<Transaction> transactions, Guid recurringTransferId, DateOnly date)
+        => transactions.Any(t => t.RecurringTransferId == recurringTransferId && t.Date == date);
+
+    private static TransactionListItemDto BuildRecurringTransactionItem(RecurringInstanceInfoValue instance, DateOnly date)
+        => new()
+        {
+            Id = instance.RecurringTransactionId,
+            Type = "recurring",
+            Date = date,
+            Description = instance.Description,
+            Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
+            CategoryId = instance.CategoryId,
+            CategoryName = instance.CategoryName,
+            CreatedAtUtc = null,
+            IsModified = instance.IsModified,
+            RecurringTransactionId = instance.RecurringTransactionId,
+            RecurringTransferId = null,
+            IsTransfer = false,
+            TransferId = null,
+            TransferDirection = null,
+        };
+
+    private static TransactionListItemDto BuildRecurringTransferItem(RecurringTransferInstanceInfoValue instance, DateOnly date)
+        => new()
+        {
+            Id = instance.RecurringTransferId,
+            Type = "recurring-transfer",
+            Date = date,
+            Description = instance.Description,
+            Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
+            CategoryId = null,
+            CreatedAtUtc = null,
+            IsModified = instance.IsModified,
+            RecurringTransactionId = null,
+            RecurringTransferId = instance.RecurringTransferId,
+            IsTransfer = true,
+            TransferId = null,
+            TransferDirection = instance.TransferDirection,
+        };
+
     private async Task AddRecurringTransactionInstancesAsync(
         Guid accountId,
         DateOnly startDate,
@@ -211,36 +254,16 @@ public sealed class TransactionListService : ITransactionListService
             endDate,
             cancellationToken);
 
-        // Add recurring instances (excluding those that already have realized transactions)
         foreach (var (date, instances) in recurringInstances)
         {
             foreach (var instance in instances.Where(i => i.AccountId == accountId))
             {
-                // Check if there's already a transaction for this recurring instance on this date
-                var hasRealized = transactions.Any(t =>
-                    t.RecurringTransactionId == instance.RecurringTransactionId &&
-                    t.Date == date);
-
-                if (!hasRealized)
+                if (IsRealizedAsTransaction(transactions, instance.RecurringTransactionId, date))
                 {
-                    items.Add(new TransactionListItemDto
-                    {
-                        Id = instance.RecurringTransactionId,
-                        Type = "recurring",
-                        Date = date,
-                        Description = instance.Description,
-                        Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
-                        CategoryId = instance.CategoryId,
-                        CategoryName = instance.CategoryName,
-                        CreatedAtUtc = null,
-                        IsModified = instance.IsModified,
-                        RecurringTransactionId = instance.RecurringTransactionId,
-                        RecurringTransferId = null,
-                        IsTransfer = false,
-                        TransferId = null,
-                        TransferDirection = null,
-                    });
+                    continue;
                 }
+
+                items.Add(BuildRecurringTransactionItem(instance, date));
             }
         }
     }
@@ -265,30 +288,12 @@ public sealed class TransactionListService : ITransactionListService
         {
             foreach (var instance in instances)
             {
-                // Check if there's already a transaction for this recurring transfer instance on this date
-                var hasRealized = transactions.Any(t =>
-                    t.RecurringTransferId == instance.RecurringTransferId &&
-                    t.Date == date);
-
-                if (!hasRealized)
+                if (IsRealizedAsTransfer(transactions, instance.RecurringTransferId, date))
                 {
-                    items.Add(new TransactionListItemDto
-                    {
-                        Id = instance.RecurringTransferId,
-                        Type = "recurring-transfer",
-                        Date = date,
-                        Description = instance.Description,
-                        Amount = new MoneyDto { Currency = instance.Amount.Currency, Amount = instance.Amount.Amount },
-                        CategoryId = null,
-                        CreatedAtUtc = null,
-                        IsModified = instance.IsModified,
-                        RecurringTransactionId = null,
-                        RecurringTransferId = instance.RecurringTransferId,
-                        IsTransfer = true,
-                        TransferId = null,
-                        TransferDirection = instance.TransferDirection,
-                    });
+                    continue;
                 }
+
+                items.Add(BuildRecurringTransferItem(instance, date));
             }
         }
     }

@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the CustomReports API endpoints (ETag/concurrency).
 /// </summary>
+[Collection("ApiDb")]
 public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

@@ -16,6 +16,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Chat API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;

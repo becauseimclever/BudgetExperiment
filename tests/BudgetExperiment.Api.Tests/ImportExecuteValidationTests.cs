@@ -16,6 +16,7 @@ namespace BudgetExperiment.Api.Tests;
 /// Verifies that oversized, malformed, or abusive import requests are rejected
 /// with appropriate HTTP status codes and ProblemDetails responses.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

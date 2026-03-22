@@ -9,6 +9,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for API authorization and authentication.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplicationFactory>
 {
     private readonly HttpClient _unauthenticatedClient;

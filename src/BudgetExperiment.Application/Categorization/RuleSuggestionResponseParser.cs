@@ -51,15 +51,7 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
         var fenceStart = content.IndexOf("```", StringComparison.Ordinal);
         if (fenceStart >= 0)
         {
-            var lineEnd = content.IndexOf('\n', fenceStart);
-            if (lineEnd >= 0)
-            {
-                var fenceEnd = content.IndexOf("```", lineEnd, StringComparison.Ordinal);
-                if (fenceEnd > lineEnd)
-                {
-                    content = content.Substring(lineEnd + 1, fenceEnd - lineEnd - 1);
-                }
-            }
+            content = ExtractFromCodeFence(content, fenceStart);
         }
 
         // Fall back to bracket matching
@@ -186,6 +178,23 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
             diagnostics.Add($"AI response was not valid JSON: {ex.Message}");
             return ParseResult<IReadOnlyList<RuleSuggestion>>.Fail(Array.Empty<RuleSuggestion>(), diagnostics);
         }
+    }
+
+    private static string ExtractFromCodeFence(string content, int fenceStart)
+    {
+        var lineEnd = content.IndexOf('\n', fenceStart);
+        if (lineEnd < 0)
+        {
+            return content;
+        }
+
+        var fenceEnd = content.IndexOf("```", lineEnd, StringComparison.Ordinal);
+        if (fenceEnd <= lineEnd)
+        {
+            return content;
+        }
+
+        return content.Substring(lineEnd + 1, fenceEnd - lineEnd - 1);
     }
 
     private static RuleSuggestion? CreateNewRuleSuggestion(

@@ -12,8 +12,10 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Version API endpoint.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
+    private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
     /// <summary>
@@ -22,6 +24,7 @@ public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationF
     /// <param name="factory">The test factory.</param>
     public VersionControllerTests(CustomWebApplicationFactory factory)
     {
+        this._factory = factory;
         this._client = factory.CreateApiClient();
     }
 
@@ -52,8 +55,7 @@ public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetVersion_IsAccessibleAnonymously()
     {
         // Arrange - use client without auth header
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateClient(); // no auth header
+        using var client = this._factory.CreateClient(); // no auth header
 
         // Act
         var response = await client.GetAsync("/api/v1/version");

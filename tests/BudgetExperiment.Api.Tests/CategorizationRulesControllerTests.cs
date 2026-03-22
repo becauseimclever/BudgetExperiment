@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the CategorizationRules API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

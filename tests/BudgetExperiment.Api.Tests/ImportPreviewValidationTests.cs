@@ -16,6 +16,7 @@ namespace BudgetExperiment.Api.Tests;
 /// Verifies that oversized preview requests are rejected with appropriate
 /// HTTP status codes and ProblemDetails responses.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ImportPreviewValidationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

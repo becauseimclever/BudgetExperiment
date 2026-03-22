@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the MerchantMappings API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

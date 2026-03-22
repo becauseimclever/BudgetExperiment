@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the RecurringTransactions API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

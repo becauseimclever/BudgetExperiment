@@ -116,13 +116,7 @@ public static class ChatActionParser
         {
             foreach (var opt in optsProp.EnumerateArray())
             {
-                var label = opt.TryGetProperty("label", out var lProp) ? lProp.GetString() ?? string.Empty : string.Empty;
-                var value = opt.TryGetProperty("value", out var vProp) ? vProp.GetString() ?? string.Empty : string.Empty;
-                Guid? entityId = opt.TryGetProperty("entityId", out var eProp) && eProp.ValueKind == JsonValueKind.String
-                    ? Guid.TryParse(eProp.GetString(), out var eid) ? eid : null
-                    : null;
-
-                options.Add(new ClarificationOption { Label = label, Value = value, EntityId = entityId });
+                options.Add(ParseClarificationOption(opt));
             }
         }
 
@@ -434,5 +428,22 @@ public static class ChatActionParser
         }
 
         return null;
+    }
+
+    private static ClarificationOption ParseClarificationOption(JsonElement opt)
+    {
+        var label = opt.TryGetProperty("label", out var lProp) ? lProp.GetString() ?? string.Empty : string.Empty;
+        var value = opt.TryGetProperty("value", out var vProp) ? vProp.GetString() ?? string.Empty : string.Empty;
+        return new ClarificationOption { Label = label, Value = value, EntityId = ParseEntityId(opt) };
+    }
+
+    private static Guid? ParseEntityId(JsonElement opt)
+    {
+        if (!opt.TryGetProperty("entityId", out var eProp) || eProp.ValueKind != JsonValueKind.String)
+        {
+            return null;
+        }
+
+        return Guid.TryParse(eProp.GetString(), out var eid) ? eid : null;
     }
 }

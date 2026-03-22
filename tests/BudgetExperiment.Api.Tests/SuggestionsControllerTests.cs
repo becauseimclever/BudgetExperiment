@@ -11,6 +11,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the AI Suggestions API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class SuggestionsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
