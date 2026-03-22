@@ -138,7 +138,41 @@ Completed comprehensive audit of all performance test files across the solution.
 
 **Deliverable:** 8 actionable decisions merged to `decisions.md` with rationale and implementation guidance.
 
-### 2026-07-20 — Feature 111 Regression Check
+### 2026-07-20 — Performance Test Infrastructure Fixes
+
+**Task:** Fix two bugs reported by Fortinbra.
+
+#### Fix 1: Seeder data accumulation across tests
+
+**Problem:** `TestDataSeeder.SeedAsync` was called in `IAsyncLifetime.InitializeAsync` (per-test) while the factory was shared via `IClassFixture`. The in-memory EF Core database persisted between calls, so each test in a class seeded on top of the previous test's data. The last test in a 5-test class ran against a 5× larger database.
+
+**Fix:**
+- Added `await db.Database.EnsureDeletedAsync()` immediately before seeding in the in-memory path. This drops and recreates the in-memory database to a clean slate before each test.
+- Removed the static `FirstAccountId` property from `TestDataSeeder` (static fields are logical races when multiple test classes use the same type). Changed `SeedAsync` to return `Task<Guid>` instead.
+- Updated `StressTests` (the only caller that needed `FirstAccountId`) to capture the returned Guid as an instance field `_firstAccountId`.
+- `SmokeTests` and `LoadTests` already discarded the return value — no changes needed.
+
+#### Fix 2: Reclassify mislabelled CategorizationEngine tests
+
+**Problem:** Two tests in `CategorizationEnginePerformanceTests` wore `[Trait("Category", "Performance")]` (via class-level attribute) but had no timing assertions:
+1. `ApplyRulesAsync_MultipleCalls_UsesCachedRules` — asserted `ruleRepo` called `Times.Once`. Pure cache-correctness test.
+2. `ApplyRulesAsync_StringRulesEvaluatedFirst_RegexRulesSkippedWhenStringMatches` — had a `Stopwatch` declared but never asserted against (dead code). Was a correctness test.
+
+**Fix:**
+- Removed class-level `[Trait("Category", "Performance")]` from `CategorizationEnginePerformanceTests`.
+- Added `[Trait("Category", "Performance")]` directly to `ApplyRulesAsync_100Rules_1000Transactions_CompletesWithinThreshold` (the sole genuine timing test).
+- Removed both mislabelled tests from the performance file and moved them to `CategorizationEngineTests`.
+  - Cache test rewritten without reflection (shared-cache-via-reflection approach replaced by calling the same engine instance twice — cleaner, less fragile).
+  - String-rules test renamed `ApplyRulesAsync_StringRuleMatchesAllTransactions_RegexRuleNeverApplied`; dead `Stopwatch` removed; uses `Assert.Equal/Assert.All` consistent with the host file.
+- Removed `CreateEngineWithSharedCache` helper (no longer needed after removing its only caller).
+
+**Verification:**
+- `--filter "Category!=Performance"`: 982 tests pass; both reclassified tests appear and pass.
+- `--filter "Category=Performance"`: Only 1 test runs (`ApplyRulesAsync_100Rules_1000Transactions_CompletesWithinThreshold`, 111ms).
+- Full solution build: 0 errors, 0 warnings.
+
+**Commit:** `cf62096`
+
 
 **Task:** Verify Feature 111 (AsNoTracking, CalendarGridService parallelism, bounded eager loading) doesn't break existing tests.
 

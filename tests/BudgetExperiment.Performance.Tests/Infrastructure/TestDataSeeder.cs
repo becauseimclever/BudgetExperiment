@@ -78,6 +78,7 @@ public static class TestDataSeeder
     private static List<Account> SeedAccounts(BudgetDbContext db)
     {
         var accounts = new List<Account>();
+        var openDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-8));
         for (int i = 0; i < AccountNames.Length; i++)
         {
             var account = Account.CreateShared(
@@ -85,7 +86,7 @@ public static class TestDataSeeder
                 AccountTypes[i],
                 PerformanceWebApplicationFactory.TestUserId,
                 MoneyValue.Create("USD", 1000m * (i + 1)),
-                new DateOnly(2025, 7, 1));
+                openDate);
             db.Accounts.Add(account);
             accounts.Add(account);
         }
@@ -96,8 +97,8 @@ public static class TestDataSeeder
     private static void SeedTransactions(BudgetDbContext db, List<Account> accounts, List<BudgetCategory> categories)
     {
         var random = new Random(42); // Deterministic seed for reproducibility
-        var startDate = new DateOnly(2025, 9, 1);
-        var endDate = new DateOnly(2026, 3, 15);
+        var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6));
+        var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
         var totalDays = endDate.DayNumber - startDate.DayNumber;
 
         for (int i = 0; i < 750; i++)
@@ -139,7 +140,7 @@ public static class TestDataSeeder
                 desc,
                 MoneyValue.Create("USD", amount),
                 RecurrencePatternValue.CreateMonthly(1, dayOfMonth),
-                new DateOnly(2025, 9, 1),
+                DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6)),
                 categoryId: category.Id);
             db.RecurringTransactions.Add(recurring);
         }
@@ -147,15 +148,18 @@ public static class TestDataSeeder
 
     private static void SeedBudgetGoals(BudgetDbContext db, List<BudgetCategory> categories)
     {
-        // Create goals for current and next few months
-        for (int month = 1; month <= 6; month++)
+        // Create goals centered on the current month (2 months back, current, 3 months forward)
+        // so that scenario queries for the current year/month always find matching data.
+        var now = DateTime.UtcNow;
+        for (int offset = -2; offset <= 3; offset++)
         {
+            var goalDate = now.AddMonths(offset);
             foreach (var category in categories)
             {
                 var goal = BudgetGoal.Create(
                     category.Id,
-                    2026,
-                    month,
+                    goalDate.Year,
+                    goalDate.Month,
                     MoneyValue.Create("USD", 500m));
                 db.BudgetGoals.Add(goal);
             }
