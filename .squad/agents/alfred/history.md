@@ -112,3 +112,13 @@ Feature Doc 124 (Controller Abstractions Assessment) should note this finding wh
 - **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed. PR ready for merge.
 
 **Assessment Outcome:** DIP verdicts delivered (Verdict A for all 3 controllers). Interfaces already existed but were incomplete — work prioritized to Lucius for expansion. All 3 controllers now ready for interface injection transition.
+
+### 2026-03-22 — Feature 112 Performance Testing Architectural Review (Alfred)
+
+Completed comprehensive review of Feature 112 (API Performance Testing) scope and design requirements. Key finding: **performance test baselines captured against EF Core in-memory provider are unreliable for detecting real regressions in production.**
+
+**Issue:** In-memory baselines mask I/O latency, query planning overhead, and concurrency behavior. Example: CalendarGridService makes 9+ sequential queries. In-memory shows ~10ms total; real PostgreSQL on a Raspberry Pi shows ~50-100ms. A baseline built on in-memory data won't catch a 2× latency regression because the starting point was artificially low.
+
+**Decision:** Baselines MUST be captured against real PostgreSQL via `PERF_USE_REAL_DB=true` flag (already implemented in `PerformanceWebApplicationFactory`). This requires Docker/Testcontainers in CI. Local baseline capture must use a real PostgreSQL instance. PR smoke tests can continue using in-memory for speed (they're sanity checks, not baselines).
+
+**Documentation:** Decision merged to `decisions.md`; findings integrated into engineering guide's performance testing section.

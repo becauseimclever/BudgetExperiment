@@ -112,6 +112,32 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 - Added InfraDb-scoped integration tests for AppSettings, CustomReportLayout, RecurringChargeSuggestion, and UserSettings repositories.
 - Added detached-entity SaveAsync coverage for UserSettings to ensure Update attaches and persists.
 
+### 2026-03-22 — Performance Test Audit: 45 Tests Categorized
+
+Completed comprehensive audit of all performance test files across the solution. **Findings:** 45 total tests categorized as:
+- **17 genuine performance tests:** Real-world latency assertions with meaningful thresholds
+- **28 noise tests:** 12 vanity enum tests + 2 correctness tests mislabeled as performance + 21 unit tests of helper infrastructure
+
+**Critical Issues Found:**
+
+1. **`PerformanceWebApplicationFactory` defaults to EF Core InMemory** — must switch to Testcontainers PostgreSQL to capture realistic baselines. Current approach cannot predict real production performance.
+
+2. **Baseline infrastructure inactive** — No `baseline.json` committed. Every CI run reports "No Baseline Yet." 15%/10% regression thresholds have never been applied.
+
+3. **Stress/Spike tests incomplete** — check error rate only; missing p99 latency thresholds.
+
+4. **CI workflow actions broken** — `.github/workflows/performance.yml` pins actions to non-existent versions (v6, v7). Entire performance CI pipeline cannot run.
+
+5. **Hardcoded scenario dates** — Over time, drift from seeded data, measuring performance on increasingly anachronistic datasets.
+
+6. **E2E tests brittle** — All 7 Playwright tests fail if demo server unavailable, breaking PR gates for unrelated code changes.
+
+7. **CategorizationEnginePerformanceTests reclassified** — Two tests lack timing assertions; test behavioral correctness, not performance. Should move to core test suite.
+
+8. **CategorizationEngine threshold too loose** — 5000ms threshold only catches 50× regressions. Recommend lowering to 500ms for 5× detection.
+
+**Deliverable:** 8 actionable decisions merged to `decisions.md` with rationale and implementation guidance.
+
 ### 2026-03-22T18-23-42Z — Session Close: Batch 2+3 Complete
 
 **Cross-Team Summary:**

@@ -139,8 +139,37 @@ Conducted comprehensive backend code review (Domain, Application, Infrastructure
 - **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed. PR ready for merge.
 
 ### 2026-03-22: Feature 111 performance optimizations
+
 - Added AsNoTracking/AsNoTrackingWithIdentityResolution to read-only repository queries while preserving tracking for update paths.
 - Parallelized CalendarGridService, TransactionListService, and DayDetailService reads via scoped parallel query helper with fallback for test constructors.
 - Bounded account transaction eager loading to a 90-day lookback and added range/name lookup repository extensions for targeted account name retrieval.
 - Registered DbContextFactory for future parallel query support.
+
+### 2026-03-22 — Feature 111: Complete Implementation (Lucius)
+
+**Feature 111: Pragmatic Performance Optimizations** fully implemented across three areas:
+
+#### Area 1: AsNoTracking Propagation
+- Added AsNoTracking/AsNoTrackingWithIdentityResolution to all read-only repository queries
+- Preserved change tracking on update paths (critical for concurrency)
+- No regression in entity refresh behavior
+
+#### Area 2: Parallelized Hot Paths
+- CalendarGridService: 9+ sequential queries → parallelized via scoped helper
+- TransactionListService: Similar parallelization for transaction fetching
+- DayDetailService: Orchestration-level parallelization
+- Registered `IDbContextFactory<BudgetDbContext>` for future parallel context usage
+- Fallback behavior for test constructors when scope factory unavailable
+
+#### Area 3: Bounded Eager Loading
+- AccountRepository: Reduced eager loading to 90-day lookback window (production Pis with large histories need this bound)
+- Added non-breaking extension interfaces: `IAccountTransactionRangeRepository`, `IAccountNameLookupRepository`
+- DayDetailService now uses targeted account-name lookup instead of loading full history
+
+**Architectural Notes:**
+- `IDbContextFactory` could not be injected directly into Application services without layering conflicts; scoped query helpers + fallback providers preserve scope filtering and test constructors
+- Extension interfaces avoid breaking changes to existing `IAccountRepository` implementers and tests
+- No areas skipped
+
+**Result:** Build green (-warnaserror enabled). Feature 111 documentation status updated to Done.
 
