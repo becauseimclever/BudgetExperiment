@@ -35,6 +35,7 @@ internal sealed class ImportMappingRepository : IImportMappingRepository
     public async Task<IReadOnlyList<ImportMapping>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.ImportMappings
+            .AsNoTracking()
             .OrderByDescending(m => m.LastUsedAtUtc)
             .ThenBy(m => m.Name)
             .Skip(skip)
@@ -45,7 +46,9 @@ internal sealed class ImportMappingRepository : IImportMappingRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.ImportMappings.LongCountAsync(cancellationToken);
+        return await _context.ImportMappings
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -65,6 +68,7 @@ internal sealed class ImportMappingRepository : IImportMappingRepository
     public async Task<IReadOnlyList<ImportMapping>> GetByUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.ImportMappings
+            .AsNoTracking()
             .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.LastUsedAtUtc)
             .ThenBy(m => m.Name)
@@ -75,6 +79,7 @@ internal sealed class ImportMappingRepository : IImportMappingRepository
     public async Task<ImportMapping?> GetByNameAsync(Guid userId, string name, CancellationToken cancellationToken = default)
     {
         return await _context.ImportMappings
+            .AsNoTracking()
             .FirstOrDefaultAsync(m => m.UserId == userId && m.Name == name, cancellationToken);
     }
 }

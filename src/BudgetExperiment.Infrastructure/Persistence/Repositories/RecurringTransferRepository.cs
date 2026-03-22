@@ -47,6 +47,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     public async Task<IReadOnlyList<RecurringTransfer>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
     }
@@ -55,6 +56,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     public async Task<IReadOnlyList<RecurringTransfer>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.SourceAccountId == accountId || r.DestinationAccountId == accountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -64,6 +66,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     public async Task<IReadOnlyList<RecurringTransfer>> GetBySourceAccountIdAsync(Guid sourceAccountId, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.SourceAccountId == sourceAccountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -73,6 +76,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     public async Task<IReadOnlyList<RecurringTransfer>> GetByDestinationAccountIdAsync(Guid destinationAccountId, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.DestinationAccountId == destinationAccountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -82,6 +86,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     public async Task<IReadOnlyList<RecurringTransfer>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.IsActive)
             .OrderBy(r => r.NextOccurrence)
             .ToListAsync(cancellationToken);
@@ -91,6 +96,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     public async Task<IReadOnlyList<RecurringTransfer>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .OrderBy(r => r.Description)
             .Skip(skip)
             .Take(take)
@@ -100,7 +106,9 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(_context.RecurringTransfers).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -124,6 +132,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
         CancellationToken cancellationToken = default)
     {
         return await _context.RecurringTransferExceptions
+            .AsNoTracking()
             .Where(e => e.RecurringTransferId == recurringTransferId)
             .Where(e => e.OriginalDate >= fromDate && e.OriginalDate <= toDate)
             .OrderBy(e => e.OriginalDate)

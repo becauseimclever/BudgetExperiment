@@ -35,6 +35,7 @@ internal sealed class LearnedMerchantMappingRepository : ILearnedMerchantMapping
     public async Task<IReadOnlyList<LearnedMerchantMapping>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.LearnedMerchantMappings
+            .AsNoTracking()
             .OrderByDescending(m => m.UpdatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -44,7 +45,9 @@ internal sealed class LearnedMerchantMappingRepository : ILearnedMerchantMapping
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.LearnedMerchantMappings.LongCountAsync(cancellationToken);
+        return await _context.LearnedMerchantMappings
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -65,6 +68,7 @@ internal sealed class LearnedMerchantMappingRepository : ILearnedMerchantMapping
     {
         var normalizedPattern = pattern.Trim().ToUpperInvariant();
         return await _context.LearnedMerchantMappings
+            .AsNoTracking()
             .FirstOrDefaultAsync(m => m.OwnerId == ownerId && m.MerchantPattern == normalizedPattern, cancellationToken);
     }
 
@@ -82,6 +86,7 @@ internal sealed class LearnedMerchantMappingRepository : ILearnedMerchantMapping
     public async Task<IReadOnlyList<LearnedMerchantMapping>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
         return await _context.LearnedMerchantMappings
+            .AsNoTracking()
             .Where(m => m.CategoryId == categoryId)
             .OrderBy(m => m.MerchantPattern)
             .ToListAsync(cancellationToken);

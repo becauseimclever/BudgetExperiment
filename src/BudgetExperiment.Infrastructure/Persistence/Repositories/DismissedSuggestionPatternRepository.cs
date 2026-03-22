@@ -28,6 +28,7 @@ internal sealed class DismissedSuggestionPatternRepository : IDismissedSuggestio
     public async Task<DismissedSuggestionPattern?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.DismissedSuggestionPatterns
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
@@ -35,6 +36,7 @@ internal sealed class DismissedSuggestionPatternRepository : IDismissedSuggestio
     public async Task<IReadOnlyList<DismissedSuggestionPattern>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.DismissedSuggestionPatterns
+            .AsNoTracking()
             .OrderByDescending(p => p.DismissedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -44,7 +46,9 @@ internal sealed class DismissedSuggestionPatternRepository : IDismissedSuggestio
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.DismissedSuggestionPatterns.LongCountAsync(cancellationToken);
+        return await _context.DismissedSuggestionPatterns
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -65,6 +69,7 @@ internal sealed class DismissedSuggestionPatternRepository : IDismissedSuggestio
     {
         var normalizedPattern = pattern.Trim().ToUpperInvariant();
         return await _context.DismissedSuggestionPatterns
+            .AsNoTracking()
             .AnyAsync(p => p.OwnerId == ownerId && p.Pattern == normalizedPattern, cancellationToken);
     }
 
@@ -72,6 +77,7 @@ internal sealed class DismissedSuggestionPatternRepository : IDismissedSuggestio
     public async Task<IReadOnlyList<DismissedSuggestionPattern>> GetByOwnerAsync(string ownerId, CancellationToken cancellationToken = default)
     {
         return await _context.DismissedSuggestionPatterns
+            .AsNoTracking()
             .Where(p => p.OwnerId == ownerId)
             .OrderByDescending(p => p.DismissedAtUtc)
             .ToListAsync(cancellationToken);
@@ -82,6 +88,7 @@ internal sealed class DismissedSuggestionPatternRepository : IDismissedSuggestio
     {
         var normalizedPattern = pattern.Trim().ToUpperInvariant();
         return await _context.DismissedSuggestionPatterns
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.OwnerId == ownerId && p.Pattern == normalizedPattern, cancellationToken);
     }
 

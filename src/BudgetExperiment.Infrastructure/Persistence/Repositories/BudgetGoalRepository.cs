@@ -54,6 +54,7 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     public async Task<IReadOnlyList<BudgetGoal>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.BudgetGoals)
+            .AsNoTracking()
             .Where(g => g.CategoryId == categoryId)
             .OrderByDescending(g => g.Year)
             .ThenByDescending(g => g.Month)
@@ -64,6 +65,7 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     public async Task<IReadOnlyList<BudgetGoal>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.BudgetGoals)
+            .AsNoTracking()
             .OrderByDescending(g => g.Year)
             .ThenByDescending(g => g.Month)
             .Skip(skip)
@@ -74,7 +76,9 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(_context.BudgetGoals).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.BudgetGoals)
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />

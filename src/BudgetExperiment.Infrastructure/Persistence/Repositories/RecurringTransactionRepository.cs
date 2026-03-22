@@ -50,6 +50,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     {
         return await this.ApplyScopeFilter(_context.RecurringTransactions)
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
     }
@@ -59,6 +60,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     {
         return await this.ApplyScopeFilter(_context.RecurringTransactions)
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .Where(r => r.AccountId == accountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -69,6 +71,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     {
         return await this.ApplyScopeFilter(_context.RecurringTransactions)
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .Where(r => r.IsActive)
             .OrderBy(r => r.NextOccurrence)
             .ToListAsync(cancellationToken);
@@ -79,6 +82,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     {
         return await this.ApplyScopeFilter(_context.RecurringTransactions)
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .OrderBy(r => r.Description)
             .Skip(skip)
             .Take(take)
@@ -88,7 +92,9 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(_context.RecurringTransactions).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.RecurringTransactions)
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -112,6 +118,7 @@ internal sealed class RecurringTransactionRepository : IRecurringTransactionRepo
         CancellationToken cancellationToken = default)
     {
         return await _context.RecurringTransactionExceptions
+            .AsNoTracking()
             .Where(e => e.RecurringTransactionId == recurringTransactionId)
             .Where(e => e.OriginalDate >= fromDate && e.OriginalDate <= toDate)
             .OrderBy(e => e.OriginalDate)

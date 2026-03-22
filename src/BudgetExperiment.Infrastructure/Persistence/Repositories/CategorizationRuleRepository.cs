@@ -37,6 +37,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     {
         return await _context.CategorizationRules
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .OrderBy(r => r.Priority)
             .ThenBy(r => r.Name)
             .Skip(skip)
@@ -47,7 +48,9 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.CategorizationRules.LongCountAsync(cancellationToken);
+        return await _context.CategorizationRules
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -68,6 +71,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     {
         return await _context.CategorizationRules
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .Where(r => r.IsActive)
             .OrderBy(r => r.Priority)
             .ThenBy(r => r.Name)
@@ -79,6 +83,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     {
         return await _context.CategorizationRules
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .Where(r => r.CategoryId == categoryId)
             .OrderBy(r => r.Priority)
             .ThenBy(r => r.Name)
@@ -124,6 +129,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     {
         var query = _context.CategorizationRules
             .Include(r => r.Category)
+            .AsNoTrackingWithIdentityResolution()
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))

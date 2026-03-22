@@ -41,6 +41,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     {
         return await this.ApplyScopeFilter(_context.Transactions)
             .Include(t => t.Category)
+            .AsNoTrackingWithIdentityResolution()
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.CreatedAtUtc)
             .Skip(skip)
@@ -51,7 +52,9 @@ internal sealed class TransactionRepository : ITransactionRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(_context.Transactions).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.Transactions)
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -63,6 +66,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     {
         var query = this.ApplyScopeFilter(_context.Transactions)
             .Include(t => t.Category)
+            .AsNoTrackingWithIdentityResolution()
             .Where(t => t.Date >= startDate && t.Date <= endDate);
 
         if (accountId.HasValue)
@@ -87,6 +91,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
         var query = this.ApplyScopeFilter(_context.Transactions)
+            .AsNoTracking()
             .Where(t => t.Date >= startDate && t.Date <= endDate);
 
         if (accountId.HasValue)
@@ -137,6 +142,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     {
         return await this.ApplyScopeFilter(_context.Transactions)
             .Include(t => t.Category)
+            .AsNoTrackingWithIdentityResolution()
             .FirstOrDefaultAsync(
                 t => t.RecurringTransactionId == recurringTransactionId
                     && t.RecurringInstanceDate == instanceDate,
@@ -151,6 +157,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     {
         return await this.ApplyScopeFilter(_context.Transactions)
             .Include(t => t.Category)
+            .AsNoTrackingWithIdentityResolution()
             .Where(t => t.RecurringTransferId == recurringTransferId
                 && t.RecurringTransferInstanceDate == instanceDate)
             .OrderBy(t => t.TransferDirection)
@@ -229,6 +236,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         CancellationToken cancellationToken = default)
     {
         var query = this.ApplyScopeFilter(_context.Transactions)
+            .AsNoTracking()
             .Where(t => t.CategoryId == null);
 
         // Apply filters
@@ -306,6 +314,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     public async Task<IReadOnlyList<string>> GetAllDescriptionsAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.Transactions)
+            .AsNoTracking()
             .Select(t => t.Description)
             .Distinct()
             .OrderBy(d => d)
@@ -320,6 +329,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(_context.Transactions)
+            .AsNoTracking()
             .Where(t => t.AccountId == accountId
                 && t.Date >= startDate
                 && t.Date <= endDate)
@@ -364,7 +374,8 @@ internal sealed class TransactionRepository : ITransactionRepository
         CancellationToken cancellationToken = default)
     {
         IQueryable<Transaction> query = this.ApplyScopeFilter(_context.Transactions)
-            .Include(t => t.Category);
+            .Include(t => t.Category)
+            .AsNoTrackingWithIdentityResolution();
 
         // Apply filters
         if (accountId.HasValue)
