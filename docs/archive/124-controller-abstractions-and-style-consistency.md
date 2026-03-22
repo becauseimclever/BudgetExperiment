@@ -1,5 +1,5 @@
 # Feature 124: Controller Abstractions Assessment and Style Consistency
-> **Status:** Done (DIP Assessment Complete)
+> **Status:** Done
 
 ## Overview
 
@@ -72,16 +72,16 @@ Some Application service classes access private fields with the explicit `this.`
 - [x] Each of the three controllers (`TransactionsController`, `RecurringTransactionsController`, `RecurringTransfersController`) is assessed: does a realistic substitution scenario exist?
   - A scenario is "realistic" if it is needed for testability (e.g., mocking in unit tests), pluggability (e.g., swapping implementations based on config), or is already anticipated by another feature doc.
   - **Result:** Interfaces already exist; zero-cost to use them. Verdict A for all three.
-- [ ] Controllers updated to inject interfaces (implementation required)
-- [ ] Interfaces expanded to include missing methods (implementation required)
-- [ ] DI registrations cleaned up (remove duplicate concrete registrations) (implementation required)
+- [x] Controllers updated to inject interfaces (implementation required)
+- [x] Interfaces expanded to include missing methods (implementation required)
+- [x] DI registrations cleaned up (remove duplicate concrete registrations) (implementation required)
 
 ### Style Consistency
 
-- [ ] `.editorconfig` is updated to add the `dotnet_style_qualification_for_field = false:warning` rule (or equivalent) so that `this._field` style is flagged.
-- [ ] All existing `this._field` usages in Application services are updated to `_field`.
-- [ ] `dotnet format --verify-no-changes` passes after the style update.
-- [ ] No StyleCop or analyzer warnings introduced.
+- [x] `.editorconfig` is updated to add the `dotnet_style_qualification_for_field = false:warning` rule (or equivalent) so that `this._field` style is flagged.
+- [x] All existing `this._field` usages in Application services are updated to `_field`.
+- [x] `dotnet format --verify-no-changes` passes after the style update.
+- [x] No StyleCop or analyzer warnings introduced.
 
 ---
 
