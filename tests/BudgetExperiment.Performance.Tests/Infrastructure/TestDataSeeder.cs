@@ -7,6 +7,7 @@ using BudgetExperiment.Domain.Common;
 using BudgetExperiment.Domain.Recurring;
 using BudgetExperiment.Infrastructure.Persistence;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Performance.Tests.Infrastructure;
@@ -35,13 +36,24 @@ public static class TestDataSeeder
 
     /// <summary>
     /// Seeds the database with realistic data for performance testing.
+    /// When <see cref="PerformanceWebApplicationFactory.UseRealDb"/> is true,
+    /// skips seeding but resolves <see cref="FirstAccountId"/> from the existing data.
     /// </summary>
     /// <param name="factory">The web application factory providing the service scope.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task SeedAsync(PerformanceWebApplicationFactory factory)
     {
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+        if (PerformanceWebApplicationFactory.UseRealDb)
+        {
+            using var realScope = factory.Services.CreateScope();
+            var realDb = realScope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+            var account = await realDb.Accounts.FirstOrDefaultAsync();
+            FirstAccountId = account?.Id ?? Guid.Empty;
+            return;
+        }
+
+        using var seedScope = factory.Services.CreateScope();
+        var db = seedScope.ServiceProvider.GetRequiredService<BudgetDbContext>();
 
         var categories = SeedCategories(db);
         var accounts = SeedAccounts(db);

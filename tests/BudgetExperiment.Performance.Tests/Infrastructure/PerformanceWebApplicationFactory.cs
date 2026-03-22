@@ -15,8 +15,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace BudgetExperiment.Performance.Tests.Infrastructure;
 
 /// <summary>
-/// Custom <see cref="WebApplicationFactory{TEntryPoint}"/> for performance tests
-/// using an in-memory database and auto-authentication.
+/// Custom <see cref="WebApplicationFactory{TEntryPoint}"/> for performance tests.
+/// By default uses an in-memory database. Set environment variable <c>PERF_USE_REAL_DB=true</c>
+/// to use the real PostgreSQL database from user secrets (same as debug sessions).
 /// </summary>
 public sealed class PerformanceWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -33,6 +34,12 @@ public sealed class PerformanceWebApplicationFactory : WebApplicationFactory<Pro
     private readonly string _dbName = "PerfDb_" + Guid.NewGuid().ToString();
 
     /// <summary>
+    /// Gets a value indicating whether the factory is configured to use the real database.
+    /// </summary>
+    public static bool UseRealDb { get; } =
+        string.Equals(Environment.GetEnvironmentVariable("PERF_USE_REAL_DB"), "true", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Creates an <see cref="HttpClient"/> pre-configured with test authentication.
     /// </summary>
     /// <returns>An authenticated <see cref="HttpClient"/>.</returns>
@@ -40,11 +47,38 @@ public sealed class PerformanceWebApplicationFactory : WebApplicationFactory<Pro
     {
         var client = this.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("TestAuto", "authenticated");
+        client.Timeout = TimeSpan.FromSeconds(30);
         return client;
     }
 
     /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        if (UseRealDb)
+        {
+            ConfigureRealDb(builder);
+        }
+        else
+        {
+            this.ConfigureInMemoryDb(builder);
+        }
+    }
+
+    private static void ConfigureRealDb(IWebHostBuilder builder)
+    {
+        // Keep the real Npgsql DbContext from AddInfrastructure — only override auth
+        builder.ConfigureServices(services =>
+        {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = "TestAuto";
+                options.DefaultChallengeScheme = "TestAuto";
+            })
+            .AddScheme<AuthenticationSchemeOptions, AutoAuthenticatingTestHandler>("TestAuto", options => { });
+        });
+    }
+
+    private void ConfigureInMemoryDb(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((context, config) =>
         {

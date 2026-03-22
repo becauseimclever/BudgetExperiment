@@ -6,17 +6,16 @@ using NBomber.CSharp;
 namespace BudgetExperiment.Performance.Tests.Profiles;
 
 /// <summary>
-/// Stress test profile: ramps to 30 concurrent requests per second
-/// over 30 seconds, then sustains for another 30 seconds.
-/// Scaled for in-memory WebApplicationFactory testing; 30 req/s is 3x
-/// the load test baseline, pushing beyond normal load while remaining
-/// completable on local hardware.
+/// Reduced stress profile for the calendar endpoint, which performs 9 sequential
+/// DB queries per request and degrades rapidly at high concurrency.
+/// Uses 25 req/s (vs 100 for the standard stress profile) to identify degradation
+/// without creating an unbounded request backlog.
 /// </summary>
-public static class StressProfile
+public static class CalendarStressProfile
 {
     /// <summary>
-    /// Gets the stress load simulation: ramp to 30 req/s over 30 seconds,
-    /// then sustain 30 req/s for another 30 seconds.
+    /// Gets the calendar stress simulation: ramp to 25 req/s over 30 seconds,
+    /// then sustain 25 req/s for 30 seconds.
     /// </summary>
     /// <returns>A load simulation array.</returns>
     public static LoadSimulation[] Simulations()
@@ -24,11 +23,11 @@ public static class StressProfile
         return
         [
             Simulation.RampingInject(
-                rate: 30,
+                rate: 25,
                 interval: TimeSpan.FromSeconds(1),
                 during: TimeSpan.FromSeconds(30)),
             Simulation.Inject(
-                rate: 30,
+                rate: 25,
                 interval: TimeSpan.FromSeconds(1),
                 during: TimeSpan.FromSeconds(30)),
         ];
