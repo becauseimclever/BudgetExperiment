@@ -41,7 +41,7 @@ public sealed class RecurringTransactionRealizationService : IRecurringTransacti
         var recurring = await _repository.GetByIdAsync(recurringTransactionId, cancellationToken);
         if (recurring is null)
         {
-            throw new DomainException("Recurring transaction not found.");
+            throw new DomainException("Recurring transaction not found.", DomainExceptionType.NotFound);
         }
 
         // Check if already realized

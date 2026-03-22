@@ -33,6 +33,33 @@ Tests mirror structure under `tests/`.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-06-XX — Code Quality Review Feature Docs (Docs 121–124)
+
+**Review Scope:** Full code quality review findings from branch `feature/code-quality-review`, grouped into four actionable feature docs.
+
+**Key Findings & Decisions:**
+
+1. **Both test database strategies are wrong.** Infrastructure tests use EF Core's in-memory provider; API tests use `UseInMemoryDatabase()`. Both miss PostgreSQL-specific behaviour. Feature 121 (Testcontainers) is the correct fix and is a prerequisite for meaningful repository integration tests.
+
+2. **Test coverage gaps are concentrated in newer features.** `RecurringChargeSuggestionsController` and `RecurringController` (two endpoints) have zero test coverage. Four repositories (`AppSettingsRepository`, `CustomReportLayoutRepository`, `RecurringChargeSuggestionRepository`, `UserSettingsRepository`) are also untested. These should land together with the Testcontainers migration to avoid testing against in-memory from day one.
+
+3. **Vanity enum tests inflate coverage metrics without providing regression value.** ~20 tests assert `(int)Enum.Member == N`. These should be removed; only replace with a serialisation-contract test if the integer value is part of a stored or transmitted contract.
+
+4. **`ExceptionHandlingMiddleware` string matching is a latent bug.** The domain already has `DomainException.ExceptionType`. Switching on the enum is strictly superior. This was the highest-risk backend quality finding.
+
+5. **DIP is applied judiciously per Fortinbra's directive.** Feature 124 requires explicit assessment per controller before extracting interfaces — not blanket extraction. Controllers with no realistic substitution scenario and no unit-test isolation need retain their concrete dependencies; the decision is recorded in `decisions.md`.
+
+6. **`this._field` style conflicts with `_camelCase` convention.** StyleCop `SA1101` (if enabled) directly conflicts with `IDE0003`. Must check `stylecop.json` before applying the `.editorconfig` fix to avoid a rule collision that produces contradictory warnings.
+
+### Cross-Agent Note: DI Findings (2026-03-22T10-04-29)
+
+**From Lucius (Backend):** Investigation of three "backward compatibility" concrete DI registrations revealed they are all **legitimately needed**. Controllers inject the concrete types directly:
+- `TransactionsController` → `TransactionService`
+- `RecurringTransactionsController` → `RecurringTransactionService`  
+- `RecurringTransfersController` → `RecurringTransferService`
+
+Feature Doc 124 (Controller Abstractions Assessment) should note this finding when assessing DIP for each controller. Current concrete injection is load-bearing; refactoring requires controller changes, not just interface extraction.
+
 ### 2026-03-22 — Full Architecture Review
 
 **Review Scope:** Complete solution architecture and code quality assessment.

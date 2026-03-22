@@ -61,3 +61,27 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 3. Add tests for 4 untested repositories
 4. Remove vanity enum tests (or document rationale)
 5. Fill behavioral test gaps in TransactionService and AccountService
+
+### 2026-07-15 — Testcontainers Migration: Infrastructure Tests
+
+**What changed:**
+- Replaced `InMemoryDbFixture` (SQLite in-memory) with `PostgreSqlFixture` (Testcontainers, `postgres:16`)
+- All 16 repository test classes updated to inject `PostgreSqlFixture` instead of `InMemoryDbFixture`
+- `InMemoryDbCollection` collection definition updated to use `PostgreSqlFixture` (collection name "InMemoryDb" retained to minimise diff)
+- `InMemoryDbFixture.cs` deleted; `PostgreSqlFixture.cs` created
+- `Microsoft.EntityFrameworkCore.Sqlite` removed from test project; `Testcontainers.PostgreSql 4.11.0` added
+
+**Isolation strategy:** One container per collection (`IAsyncLifetime` on the collection fixture). Each `CreateContext()` call truncates all tables via `TRUNCATE ... CASCADE` before returning the context, giving each test a clean slate without spawning a new container. `CreateSharedContext()` simply opens a second context to the same PostgreSQL database (no truncation) — identical semantics to the old shared-connection SQLite approach because tests always call `SaveChangesAsync()` before the shared context reads.
+
+**Compatibility notes:**
+- `PostgreSqlBuilder` 4.11.0 requires passing the image name to the constructor: `new PostgreSqlBuilder("postgres:16")`. The parameterless constructor is marked `[Obsolete]` and was treated as an error.
+- `ExecuteSqlRaw` with an interpolated string triggers EF1002 (escalated to error). Suppressed with a scoped `#pragma warning disable EF1002` since the table names come from the EF model, not user input.
+- No SQLite-specific test patterns were found; all 183 tests passed against PostgreSQL without any logic changes.
+
+**Result:** 183/183 tests pass. Docker must be running for the Infrastructure test suite.
+
+### Cross-Agent Note: Testcontainers API & DI Findings (2026-03-22T10-04-29)
+
+**API Changes:** Testcontainers 4.11.0 requires explicit image name in PostgreSqlBuilder constructor.
+
+**From Lucius (Backend):** The concrete DI registrations investigated in Fix 2 are all load-bearing — controllers inject directly. This is important context for future Feature 124 (Controller Abstractions) work: assess DIP per controller, noting that changes require updating both service registration and controller injection sites.

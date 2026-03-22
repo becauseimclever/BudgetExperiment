@@ -14,13 +14,13 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class CategorizationRuleRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorizationRuleRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public CategorizationRuleRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public CategorizationRuleRepositoryTests(PostgreSqlFixture fixture)
     {
         this._fixture = fixture;
     }

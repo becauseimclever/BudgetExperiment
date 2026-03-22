@@ -115,7 +115,7 @@ public sealed class ImportService : IImportService
         var userId = this.GetRequiredUserId();
 
         var account = await this._accountRepository.GetByIdAsync(request.AccountId, cancellationToken)
-            ?? throw new DomainException($"Account with ID '{request.AccountId}' not found.");
+            ?? throw new DomainException($"Account with ID '{request.AccountId}' not found.", DomainExceptionType.NotFound);
 
         if (request.Transactions.Count == 0)
         {

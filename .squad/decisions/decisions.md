@@ -353,7 +353,92 @@ private void Configure(EntityTypeBuilder<T> builder)
 ## Next Review
 Estimated: 1 week (after critical decisions 5, 6, 10 completed)
 
+---
+
+## Implementation Status Update (2026-03-22T10-04-29)
+
+**Major Progress:**
+
+### COMPLETED
+
+**Decision 10: Migrate to Testcontainers (PostgreSQL)** — ✅ DONE
+- Infrastructure tests migrated from SQLite to Testcontainers PostgreSQL
+- PostgreSqlFixture created with TRUNCATE isolation strategy
+- All 16 repository test classes updated; InMemoryDbFixture deleted
+- Test result: 183/183 passing, no SQLite-specific logic found
+- Docker required for test suite (validate Docker endpoint at build time)
+- **Note:** API tests (CustomWebApplicationFactory) still use EF InMemoryDatabase — separate task
+
+**Decision 6: Fix Exception Handling String Matching** — ✅ DONE
+- Created `DomainExceptionType` enum (Validation = 0, NotFound = 1)
+- Updated `DomainException` to accept optional DomainExceptionType (defaults to Validation for backward compatibility)
+- Switched `ExceptionHandlingMiddleware` to `switch (domainEx.ExceptionType)` pattern
+- Updated all 17 "not found" throw sites across Domain/Application to pass DomainExceptionType.NotFound
+- Middleware unit test updated
+- No string matching — clean, exhaustive, type-safe
+
+**Decision 3: DateTime.Now in Client** — ✅ DONE
+- Replaced all 3 occurrences of `DateTime.Now` in Reconciliation.razor with `DateTime.UtcNow`
+- Field initializers and year-range loop updated
+- Aligns with UTC-everywhere policy
+
+**Decision 7: Remove/Clarify Redundant Concrete Service Registrations** — ✅ DONE
+- Investigated all three "backward compatibility" registrations
+- Found all three are **legitimately required**:
+  - `TransactionService` ← consumed by `TransactionsController`
+  - `RecurringTransactionService` ← consumed by `RecurringTransactionsController`
+  - `RecurringTransferService` ← consumed by `RecurringTransfersController`
+- Updated DependencyInjection.cs comments to name actual consumers
+- No registrations removed; clarity improved
+
+### PENDING
+
+**Decision 1: Controllers Should Depend on Interfaces (DIP Enforcement)** — Pending
+- Assigned to Alfred (Architecture Lead)
+- Three controllers still inject concrete types; requires assessment per Fortinbra pragmatic directive
+
+**Decision 2: Enforce Consistent Field Access Style** — Pending
+- Mixed `_field` vs `this._field` usage
+- Recommend standardize to `this._fieldName` (majority pattern)
+- Requires `.editorconfig` update or StyleCop rule enforcement
+
+**Decision 5: Refactor Six Critically Nested Methods** — Pending
+- Six methods with 3+ nesting levels identified
+- TransactionListService, ImportExecuteRequestValidator, RuleSuggestionResponseParser, etc.
+- Requires method extraction following guard clause pattern
+
+**Decision 8: Long Methods (21-40 Lines) Refactoring Plan** — Deferred
+- 26 candidates identified; deferring to next sprint after critical methods completed
+
+**Decision 11: Add API Controller Tests (2 Untested Controllers)** — Pending
+- RecurringChargeSuggestionsController (4 endpoints)
+- RecurringController (2 endpoints)
+- Depends on Decision 10 (Testcontainers migration for API tests)
+
+**Decision 12: Add Repository Tests (4 Untested Repositories)** — Pending
+- AppSettingsRepository, CustomReportLayoutRepository, RecurringChargeSuggestionRepository, UserSettingsRepository
+- Depends on Decision 10 (completed for Infrastructure)
+
+**Decision 13: Behavioral Test Gaps in Services** — Deferred
+- TransactionService missing tests for UpdateAsync, ClearLocationAsync, ClearAllLocationDataAsync, GetByDateRangeAsync
+- AccountService missing GetAllAsync tests
+- Domain entity coverage gaps (BudgetCategory, BudgetGoal, BudgetProgress)
+
+**Decision 14: Remove or Justify Vanity Enum Tests** — Deferred
+- ~20 enum integer-value tests identified (compile-time behavior, not domain logic)
+- Requires team decision (Alfred): delete or document rationale
+
+---
+
 ## Approval
-**Pending Alfred review of:**
-- Decision 10 (Testcontainers migration approach)
-- Decision 14 (Vanity tests: delete or document?)
+
+**Completed (2026-03-22):**
+- ✅ Testcontainers migration (Infrastructure)
+- ✅ Exception handling enum routing
+- ✅ DateTime.Now → DateTime.UtcNow
+- ✅ DI registration clarification
+
+**Pending:**
+- Alfred review of remaining DIP assessments (Decision 1)
+- Alfred decision on vanity enum tests (Decision 14)
+- Lucius refactoring plan for 6 critically nested methods (Decision 5)

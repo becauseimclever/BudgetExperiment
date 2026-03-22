@@ -100,7 +100,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         var account = await this._accountRepository.GetByIdAsync(dto.AccountId, cancellationToken);
         if (account is null)
         {
-            throw new DomainException("Account not found.");
+            throw new DomainException("Account not found.", DomainExceptionType.NotFound);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);

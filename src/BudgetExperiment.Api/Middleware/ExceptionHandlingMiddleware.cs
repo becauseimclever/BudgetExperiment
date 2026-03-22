@@ -66,15 +66,13 @@ public sealed class ExceptionHandlingMiddleware
             status = StatusCodes.Status409Conflict;
             title = "Conflict";
         }
-        else if (ex is DomainException de && de.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        else if (ex is DomainException de)
         {
-            status = (int)HttpStatusCode.NotFound;
-            title = "Not Found";
-        }
-        else if (ex is DomainException)
-        {
-            status = StatusCodes.Status400BadRequest;
-            title = "Domain Validation Error";
+            (status, title) = de.ExceptionType switch
+            {
+                DomainExceptionType.NotFound => ((int)HttpStatusCode.NotFound, "Not Found"),
+                _ => (StatusCodes.Status400BadRequest, "Domain Validation Error"),
+            };
         }
         else
         {

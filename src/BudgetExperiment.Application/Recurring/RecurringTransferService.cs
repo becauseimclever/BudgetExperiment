@@ -125,13 +125,13 @@ public sealed class RecurringTransferService : IRecurringTransferService
         var sourceAccount = await this._accountRepository.GetByIdAsync(dto.SourceAccountId, cancellationToken);
         if (sourceAccount is null)
         {
-            throw new DomainException("Source account not found.");
+            throw new DomainException("Source account not found.", DomainExceptionType.NotFound);
         }
 
         var destAccount = await this._accountRepository.GetByIdAsync(dto.DestinationAccountId, cancellationToken);
         if (destAccount is null)
         {
-            throw new DomainException("Destination account not found.");
+            throw new DomainException("Destination account not found.", DomainExceptionType.NotFound);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);

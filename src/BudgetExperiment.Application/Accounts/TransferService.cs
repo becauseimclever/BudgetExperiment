@@ -49,10 +49,10 @@ public sealed class TransferService : ITransferService
 
         // Load accounts
         var sourceAccount = await this._accountRepository.GetByIdAsync(request.SourceAccountId, cancellationToken)
-            ?? throw new DomainException("Source account not found.");
+            ?? throw new DomainException("Source account not found.", DomainExceptionType.NotFound);
 
         var destinationAccount = await this._accountRepository.GetByIdAsync(request.DestinationAccountId, cancellationToken)
-            ?? throw new DomainException("Destination account not found.");
+            ?? throw new DomainException("Destination account not found.", DomainExceptionType.NotFound);
 
         // Generate the transfer ID
         var transferId = Guid.NewGuid();

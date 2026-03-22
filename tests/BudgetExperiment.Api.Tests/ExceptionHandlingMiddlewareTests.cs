@@ -156,7 +156,7 @@ public sealed class ExceptionHandlingMiddlewareTests
     }
 
     /// <summary>
-    /// Middleware returns 404 ProblemDetails for DomainException containing "not found".
+    /// Middleware returns 404 ProblemDetails for DomainException with NotFound type.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -168,7 +168,7 @@ public sealed class ExceptionHandlingMiddlewareTests
         context.Response.Body = new MemoryStream();
 
         var middleware = new ExceptionHandlingMiddleware(
-            _ => throw new DomainException("Account not found."),
+            _ => throw new DomainException("Account not found.", DomainExceptionType.NotFound),
             this._logger);
 
         // Act

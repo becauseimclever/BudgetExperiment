@@ -37,7 +37,7 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
         CancellationToken ct = default)
     {
         var suggestion = await _suggestionRepository.GetByIdAsync(suggestionId, ct)
-            ?? throw new DomainException($"Suggestion {suggestionId} not found");
+            ?? throw new DomainException($"Suggestion {suggestionId} not found", DomainExceptionType.NotFound);
 
         var rule = suggestion.Type switch
         {
@@ -64,7 +64,7 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
         CancellationToken ct = default)
     {
         var suggestion = await _suggestionRepository.GetByIdAsync(suggestionId, ct)
-            ?? throw new DomainException($"Suggestion {suggestionId} not found");
+            ?? throw new DomainException($"Suggestion {suggestionId} not found", DomainExceptionType.NotFound);
 
         suggestion.Dismiss(reason);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -77,7 +77,7 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
         CancellationToken ct = default)
     {
         var suggestion = await _suggestionRepository.GetByIdAsync(suggestionId, ct)
-            ?? throw new DomainException($"Suggestion {suggestionId} not found");
+            ?? throw new DomainException($"Suggestion {suggestionId} not found", DomainExceptionType.NotFound);
 
         suggestion.ProvideFeedback(isPositive);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -119,7 +119,7 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
         }
 
         var rule = await _ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, ct)
-            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found");
+            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found", DomainExceptionType.NotFound);
 
         rule.Update(
             name: rule.Name,
@@ -141,7 +141,7 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
         }
 
         var rule = await _ruleRepository.GetByIdAsync(suggestion.TargetRuleId.Value, ct)
-            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found");
+            ?? throw new DomainException($"Target rule {suggestion.TargetRuleId} not found", DomainExceptionType.NotFound);
 
         rule.Deactivate();
 

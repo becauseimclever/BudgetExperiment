@@ -80,7 +80,7 @@ public sealed class TransactionService : ITransactionService
         var account = await this._accountRepository.GetByIdAsync(dto.AccountId, cancellationToken);
         if (account is null)
         {
-            throw new DomainException("Account not found.");
+            throw new DomainException("Account not found.", DomainExceptionType.NotFound);
         }
 
         // Determine category: use manual category if provided, otherwise auto-categorize

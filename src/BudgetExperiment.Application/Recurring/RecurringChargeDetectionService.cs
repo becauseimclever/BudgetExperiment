@@ -141,7 +141,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         CancellationToken cancellationToken = default)
     {
         var suggestion = await this._suggestionRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new DomainException($"Suggestion with ID '{id}' not found.");
+            ?? throw new DomainException($"Suggestion with ID '{id}' not found.", DomainExceptionType.NotFound);
 
         if (suggestion.Status != SuggestionStatus.Pending)
         {
@@ -178,7 +178,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
     public async Task DismissAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var suggestion = await this._suggestionRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new DomainException($"Suggestion with ID '{id}' not found.");
+            ?? throw new DomainException($"Suggestion with ID '{id}' not found.", DomainExceptionType.NotFound);
 
         suggestion.Dismiss();
         await this._unitOfWork.SaveChangesAsync(cancellationToken);

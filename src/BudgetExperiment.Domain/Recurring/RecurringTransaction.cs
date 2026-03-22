@@ -326,7 +326,7 @@ public sealed class RecurringTransaction
     {
         if (!this._importPatterns.Remove(pattern))
         {
-            throw new DomainException("Import pattern not found.");
+            throw new DomainException("Import pattern not found.", DomainExceptionType.NotFound);
         }
 
         this.UpdatedAtUtc = DateTime.UtcNow;
