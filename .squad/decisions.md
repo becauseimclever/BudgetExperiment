@@ -182,6 +182,69 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
+### 8. Performance Test Infrastructure Fixes — Round 1: Data Accumulation & Classification (2026-03-22)
+
+**Author:** Barbara
+
+#### 8.1 TestDataSeeder Reset Pattern
+**Decision:** `TestDataSeeder.SeedAsync` must call `db.Database.EnsureDeletedAsync()` before seeding when using the EF Core in-memory provider.
+
+**Rationale:** The factory (and its in-memory database) is shared across all tests in a class via `IClassFixture`. Without a reset, each seed appended 750 transactions on top of the previous seed. The last test in a 5-method class ran against a 5× larger database than the first, producing inconsistent latency measurements.
+
+**Implementation:**
+- Added `EnsureDeletedAsync()` call at start of `SeedAsync`
+- Removed static `FirstAccountId` property (race condition)
+- Changed `SeedAsync` signature to `Task<Guid>` return type (callers receive account ID)
+
+**Result:** Clean slate per test method; consistent dataset sizes in performance measurements.
+
+#### 8.2 Reclassify Two CategorizationEngine Tests
+**Decision:** Two incorrectly-tagged `[Trait("Category", "Performance")]` tests moved to correctness suite.
+
+| Test | Reason | New Location |
+|---|---|---|
+| `ApplyRulesAsync_MultipleCalls_UsesCachedRules` | No timing assertion; asserts cache behavior | `CategorizationEngineTests` |
+| `ApplyRulesAsync_StringRulesEvaluatedFirst_RegexRulesSkippedWhenStringMatches` | No timing assertion; asserts rule evaluation order | Renamed to `ApplyRulesAsync_StringRuleMatchesAllTransactions_RegexRuleNeverApplied` in `CategorizationEngineTests` |
+
+**Rationale:** Tests without timing assertions excluded from regular CI (per `--filter "Category!=Performance"`). Correctness regressions (cache miss, rule order failure) would be undetected. Reclassification ensures both paths run in standard test suite.
+
+**Result:** `CategorizationEnginePerformanceTests` now has exactly one performance test (100 rules × 1000 transactions with 5000ms threshold).
+
+---
+
+### 9. Performance Test Infrastructure Fixes — Round 2: Latency Thresholds & Relative Dates (2026-03-22)
+
+**Author:** Barbara
+
+#### 9.1 Latency Thresholds for Stress/Spike Tests
+**Decision:** Add P99 latency assertions to `Transactions_StressTest`, `Calendar_StressTest`, and `Transactions_SpikeTest`.
+
+| Test | Threshold | Rationale |
+|---|---|---|
+| `Transactions_StressTest` | P99 < 5000ms | 5× baseline p99 (1000ms). Sustained 100 req/s causes queuing; threshold catches catastrophic regressions without flapping under Testcontainers variance. |
+| `Calendar_StressTest` | P99 < 10000ms | ~3× baseline p99 (3000ms). Calendar stress uses reduced 25 req/s profile; accounts for queuing while endpoint still has 9 serial DB queries. |
+| `Transactions_SpikeTest` | P99 < 8000ms | 8× baseline p99 (1000ms). Spike bursts cause sudden queue growth; deliberately looser than stress to block *infinite* slowness, not enforce production SLAs. |
+
+**Rationale:** Stress/spike tests were only checking error rates (< 5% failures). Without latency assertions, degradation under load is undetected. Multiplier-based thresholds provide regression detection while tolerating performance test environment variance.
+
+**Result:** Stress/spike tests now fail on latency regressions, not just crash-detection.
+
+#### 9.2 Relative Dates in Scenario Queries
+**Decision:** Replace all hardcoded date literals with `DateTime.UtcNow`-relative expressions.
+
+**Changes:**
+- `TransactionsScenario`: queries `DateTime.UtcNow.AddMonths(-6)` → today
+- `CalendarScenario` / `BudgetsScenario`: use current `DateTime.UtcNow.Year` / `Month`
+- `TestDataSeeder`: seeds transactions 6 months ago → today (matches scenario query range exactly)
+
+**Rationale:** Hardcoded dates (`2025-09-01`, `2026-03-15`) drift from seeded data over time. By mid-2027, scenario queries would find zero seeded data despite tests still passing (seeded data never changes). Relative dates ensure performance tests always measure against a populated dataset regardless of calendar date.
+
+**Invariant:** Transaction scenario query range exactly matches seeder's transaction date range; performance is always measured against a full dataset.
+
+**Result:** Performance test datasets remain relevant as calendar time advances; measurements remain meaningful indefinitely.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

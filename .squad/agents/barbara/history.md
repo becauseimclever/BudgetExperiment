@@ -171,7 +171,36 @@ Completed comprehensive audit of all performance test files across the solution.
 - `--filter "Category=Performance"`: Only 1 test runs (`ApplyRulesAsync_100Rules_1000Transactions_CompletesWithinThreshold`, 111ms).
 - Full solution build: 0 errors, 0 warnings.
 
-**Commit:** `cf62096`
+### 2026-07-20 — Stress/Spike Latency Thresholds + Relative Scenario Dates
+
+**Task (from Fortinbra):** Two remaining performance test infrastructure fixes.
+
+#### Fix 1: Latency thresholds added to stress/spike tests
+
+**What changed in `StressTests.cs`:**
+- `Transactions_StressTest`: Added `stats.Ok.Latency.Percent99 < 5000` — 5× the baseline load p99 (1 000 ms). Stress tests sustain 100 req/s; queuing is expected but infinite slowness must not pass.
+- `Calendar_StressTest`: Added `stats.Ok.Latency.Percent99 < 10000` — ~3× the baseline load p99 (3 000 ms). Calendar already runs a reduced profile (25 req/s); the 10 s ceiling is generous enough to tolerate Testcontainers latency while still catching catastrophic regressions.
+- `Transactions_SpikeTest`: Added `stats.Ok.Latency.Percent99 < 8000` — 8× the baseline load p99 (1 000 ms). Spike bursts cause request queuing, so the threshold is deliberately looser than stress. The goal is to block infinite slowness, not enforce SLAs.
+
+All three scenarios already had the `stats.Fail.Request.Percent < 5` error-rate assertion; the latency assertions were added alongside it.
+
+#### Fix 2: Relative dates in scenario files and seeder
+
+**Scenarios updated:**
+- `TransactionsScenario.cs`: `startDate=2025-09-01&endDate=2026-03-15` → `DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6))` to `DateOnly.FromDateTime(DateTime.UtcNow)`, formatted `yyyy-MM-dd`. Computed once at `Create()` time for consistent query range within a run.
+- `CalendarScenario.cs`: `year=2026&month=3` → `DateTime.UtcNow.Year` / `DateTime.UtcNow.Month`.
+- `BudgetsScenario.cs`: same as Calendar.
+
+**Seeder updated (`TestDataSeeder.cs`):**
+- Account open date: `DateTime.UtcNow.AddMonths(-8)` (first of month).
+- Transaction range: 6 months ago to today.
+- Recurring transaction start: 6 months ago.
+- Budget goals: `offset = -2 to +3` months around now (6 goals per category, spanning 2 months past → 3 months forward), ensuring the current month always has goals for the budget scenario query.
+
+**Verification:** Build clean (0 errors, 0 warnings). 5,409 non-performance tests pass (1 pre-existing unrelated failure in `SuggestionsControllerTests.GetMetrics_Returns_200_WithMetrics` — not caused by these changes).
+
+**Commit:** `d325b44`
+
 
 
 **Task:** Verify Feature 111 (AsNoTracking, CalendarGridService parallelism, bounded eager loading) doesn't break existing tests.
