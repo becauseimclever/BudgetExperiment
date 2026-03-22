@@ -32,7 +32,6 @@ public static class DependencyInjection
         services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
 
         services.AddDbContext<BudgetDbContext>(options => options.UseNpgsql(cs));
-        services.AddDbContextFactory<BudgetDbContext>(options => options.UseNpgsql(cs));
 
         // Register IUnitOfWork
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
