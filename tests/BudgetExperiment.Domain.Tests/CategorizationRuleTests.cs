@@ -607,4 +607,43 @@ public class CategorizationRuleTests
         Assert.True(rule.Matches("SAMPLE TEST (ABC) DATA"));
         Assert.False(rule.Matches("SAMPLE TEST ABC DATA"));
     }
+
+    [Theory]
+    [InlineData("(a+)+")]
+    [InlineData("(a*)+")]
+    [InlineData("(a+)*")]
+    [InlineData("([a-z]+)+")]
+    public void Create_With_Nested_Quantifier_Regex_Throws_DomainException(string pattern)
+    {
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            CategorizationRule.Create("Bad Regex", RuleMatchType.Regex, pattern, ValidCategoryId));
+        Assert.Contains("nested quantifiers", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("WALMART.*STORE")]
+    [InlineData("[0-9]+")]
+    [InlineData("^TEST$")]
+    [InlineData("(foo|bar)+")]
+    public void Create_With_Safe_Regex_Succeeds(string pattern)
+    {
+        // Act
+        var rule = CategorizationRule.Create("Safe Regex", RuleMatchType.Regex, pattern, ValidCategoryId);
+
+        // Assert
+        Assert.Equal(pattern, rule.Pattern);
+    }
+
+    [Fact]
+    public void Update_With_Nested_Quantifier_Regex_Throws_DomainException()
+    {
+        // Arrange
+        var rule = CategorizationRule.Create("Test", RuleMatchType.Contains, "TEST", ValidCategoryId);
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(() =>
+            rule.Update("Test", RuleMatchType.Regex, "(a+)+", ValidCategoryId, false));
+        Assert.Contains("nested quantifiers", ex.Message);
+    }
 }

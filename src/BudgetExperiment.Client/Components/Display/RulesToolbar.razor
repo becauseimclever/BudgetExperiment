@@ -1,0 +1,170 @@
+@* RulesToolbar.razor - Search and filter toolbar for the rules listing *@
+
+<div class="filter-section">
+    <div class="filter-group">
+        <label for="rulesSearch">Search:</label>
+        <input type="text" id="rulesSearch" class="form-control" style="width: 200px;"
+               placeholder="Search name or pattern..."
+               value="@SearchText"
+               @oninput="OnSearchInput" />
+    </div>
+    <div class="filter-group">
+        <label for="rulesCategoryFilter">Category:</label>
+        <select id="rulesCategoryFilter" class="form-control" style="width: auto; min-width: 150px;"
+                value="@CategoryIdString" @onchange="HandleCategoryChanged">
+            <option value="">All Categories</option>
+            @foreach (var category in Categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="rulesStatusFilter">Status:</label>
+        <select id="rulesStatusFilter" class="form-control" style="width: auto; min-width: 120px;"
+                value="@(Status ?? string.Empty)" @onchange="HandleStatusChanged">
+            <option value="">All</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        @if (ActiveFilterCount > 0)
+        {
+            <Badge Text="@ActiveFilterCount.ToString()" />
+        }
+        <Button Variant="ButtonVariant.Secondary" OnClick="OnClearFiltersClicked" IsDisabled="@(ActiveFilterCount == 0)">Clear Filters</Button>
+    </div>
+    <div class="filter-group ms-auto">
+        <div class="view-toggle" role="group" aria-label="View mode">
+            <button class="btn btn-sm @(ViewMode == RulesViewMode.Table ? "btn-primary" : "btn-outline-secondary")"
+                    @onclick="() => OnViewModeChanged.InvokeAsync(RulesViewMode.Table)"
+                    aria-pressed="@(ViewMode == RulesViewMode.Table ? "true" : "false")"
+                    title="Table view">
+                <Icon Name="list" Size="16" />
+            </button>
+            <button class="btn btn-sm @(ViewMode == RulesViewMode.Card ? "btn-primary" : "btn-outline-secondary")"
+                    @onclick="() => OnViewModeChanged.InvokeAsync(RulesViewMode.Card)"
+                    aria-pressed="@(ViewMode == RulesViewMode.Card ? "true" : "false")"
+                    title="Card view">
+                <Icon Name="grid" Size="16" />
+            </button>
+        </div>
+        <Button Variant="@(IsGrouped ? ButtonVariant.Primary : ButtonVariant.Outline)"
+                OnClick="OnGroupToggleClicked"
+                title="Group rules by category">
+            Group by Category
+        </Button>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the current search text.
+    /// </summary>
+    [Parameter]
+    public string? SearchText { get; set; }
+
+    /// <summary>
+    /// Gets or sets the selected category ID filter.
+    /// </summary>
+    [Parameter]
+    public Guid? CategoryId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the selected status filter.
+    /// </summary>
+    [Parameter]
+    public string? Status { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of categories for the dropdown.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<BudgetCategoryDto> Categories { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the number of active filters.
+    /// </summary>
+    [Parameter]
+    public int ActiveFilterCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when search text changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string?> OnSearchChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when category filter changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid?> OnCategoryChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when status filter changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string?> OnStatusChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when clear filters is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClearFilters { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether grouping is active.
+    /// </summary>
+    [Parameter]
+    public bool IsGrouped { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current view mode (Table or Card).
+    /// </summary>
+    [Parameter]
+    public RulesViewMode ViewMode { get; set; } = RulesViewMode.Table;
+
+    /// <summary>
+    /// Gets or sets the callback when the view mode changes.
+    /// </summary>
+    [Parameter]
+    public EventCallback<RulesViewMode> OnViewModeChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the group toggle is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnGroupToggle { get; set; }
+
+    private string CategoryIdString => CategoryId?.ToString() ?? string.Empty;
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        await OnSearchChanged.InvokeAsync(string.IsNullOrWhiteSpace(value) ? null : value);
+    }
+
+    private async Task HandleCategoryChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        Guid? categoryId = Guid.TryParse(value, out var parsed) ? parsed : null;
+        await OnCategoryChanged.InvokeAsync(categoryId);
+    }
+
+    private async Task HandleStatusChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        await OnStatusChanged.InvokeAsync(string.IsNullOrEmpty(value) ? null : value);
+    }
+
+    private async Task OnClearFiltersClicked()
+    {
+        await OnClearFilters.InvokeAsync();
+    }
+
+    private async Task OnGroupToggleClicked()
+    {
+        await OnGroupToggle.InvokeAsync();
+    }
+}

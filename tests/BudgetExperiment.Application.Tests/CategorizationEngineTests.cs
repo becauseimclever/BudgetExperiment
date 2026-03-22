@@ -3,6 +3,9 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
+using Microsoft.Extensions.Caching.Memory;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -450,6 +453,112 @@ public class CategorizationEngineTests
         Assert.Empty(result);
     }
 
+    [Fact]
+    public async Task ApplyRulesAsync_Uses_GetByIdsAsync_Instead_Of_N_Plus_1()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var transactions = new List<Transaction>
+        {
+            Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE"),
+            Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "UBER TRIP"),
+        };
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var (engine, _, transactionRepo) = CreateEngine(rules, transactions);
+
+        // Act
+        await engine.ApplyRulesAsync(transactions.Select(t => t.Id));
+
+        // Assert - GetByIdsAsync called once (batch), GetByIdAsync never called
+        transactionRepo.Verify(r => r.GetByIdsAsync(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
+        transactionRepo.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetBatchSuggestionsAsync_Uses_GetByIdsAsync_Instead_Of_N_Plus_1()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var txn1 = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var txn2 = Transaction.Create(accountId, MoneyValue.Create("USD", -15m), new DateOnly(2026, 1, 16), "UBER TRIP");
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Grocery", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var transactions = new List<Transaction> { txn1, txn2 };
+        var (engine, _, transactionRepo) = CreateEngine(rules, transactions);
+
+        // Act
+        await engine.GetBatchSuggestionsAsync([txn1.Id, txn2.Id]);
+
+        // Assert - GetByIdsAsync called once (batch), GetByIdAsync never called
+        transactionRepo.Verify(r => r.GetByIdsAsync(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
+        transactionRepo.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FindMatchingCategoryAsync_Uses_Cached_Rules_On_Second_Call()
+    {
+        // Arrange
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var (engine, ruleRepo, _) = CreateEngine(rules);
+
+        // Act - call twice
+        await engine.FindMatchingCategoryAsync("WALMART STORE #1");
+        await engine.FindMatchingCategoryAsync("WALMART STORE #2");
+
+        // Assert - repository only queried once (second call hits cache)
+        ruleRepo.Verify(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task InvalidateRuleCache_Forces_Fresh_Load_On_Next_Call()
+    {
+        // Arrange
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
+        };
+        var (engine, ruleRepo, _) = CreateEngine(rules);
+
+        // Act - first call populates cache
+        await engine.FindMatchingCategoryAsync("WALMART STORE");
+        engine.InvalidateRuleCache();
+        await engine.FindMatchingCategoryAsync("WALMART STORE");
+
+        // Assert - repository queried twice (cache invalidated between calls)
+        ruleRepo.Verify(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ApplyRulesAsync_Evaluates_StringRules_Before_RegexRules()
+    {
+        // Arrange: regex rule has HIGHER priority (lower number) but string rules should be tried first within each group
+        // Both rules match "WALMART STORE", but the regex rule has lower priority number and would normally win.
+        // With partitioned evaluation, string rules are checked before regex, but we still respect priority within each group.
+        // This test verifies that when a string rule matches, the regex rule is never evaluated.
+        var accountId = Guid.NewGuid();
+        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var containsRule = CategorizationRule.Create("Walmart Contains", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 10);
+        var regexRule = CategorizationRule.Create("Walmart Regex", RuleMatchType.Regex, "WALMART.*STORE", TransportCategoryId, priority: 5);
+
+        var rules = new List<CategorizationRule> { regexRule, containsRule }; // regex first by priority
+        var (engine, _, _) = CreateEngine(rules, new List<Transaction> { transaction });
+
+        // Act
+        var result = await engine.ApplyRulesAsync(new[] { transaction.Id });
+
+        // Assert - string rule matched first even though regex has higher priority
+        Assert.Equal(1, result.Categorized);
+        Assert.Equal(GroceryCategoryId, transaction.CategoryId);
+    }
+
     private static (CategorizationEngine Engine, Mock<ICategorizationRuleRepository> RuleRepo, Mock<ITransactionRepository> TransactionRepo)
         CreateEngine(List<CategorizationRule> rules, List<Transaction>? transactions = null)
     {
@@ -466,9 +575,15 @@ public class CategorizationEngineTests
                 .ReturnsAsync(transaction);
         }
 
-        var unitOfWork = new Mock<IUnitOfWork>();
+        // Setup batch loading for GetByIdsAsync
+        transactionRepo.Setup(r => r.GetByIdsAsync(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<Guid> ids, CancellationToken _) =>
+                transactions.Where(t => ids.Contains(t.Id)).ToList());
 
-        var engine = new CategorizationEngine(ruleRepo.Object, transactionRepo.Object, unitOfWork.Object);
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var cache = new MemoryCache(new MemoryCacheOptions());
+
+        var engine = new CategorizationEngine(ruleRepo.Object, transactionRepo.Object, unitOfWork.Object, cache);
         return (engine, ruleRepo, transactionRepo);
     }
 }

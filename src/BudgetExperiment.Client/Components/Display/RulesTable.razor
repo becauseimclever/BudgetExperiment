@@ -1,0 +1,304 @@
+@* RulesTable.razor - Compact table view for categorization rules *@
+
+@if (Rules.Count == 0)
+{
+    <p class="empty-state empty-state-inline">No rules match the current filters.</p>
+}
+else
+{
+    <table class="table table-hover" role="grid" aria-label="Categorization rules"
+           @onkeydown="HandleKeyDown" @onkeydown:preventDefault="@_preventKeyDefault">
+        <thead>
+            <tr>
+                <th class="rules-table-select" role="columnheader">
+                    <input type="checkbox"
+                           checked="@AreAllSelected"
+                           @onchange="OnSelectAllToggle"
+                           title="Select all on page"
+                           aria-label="Select all rules on page" />
+                </th>
+                <th class="rules-table-priority sortable-header" role="columnheader"
+                    aria-sort="@GetAriaSortValue(SortFieldPriority)"
+                    @onclick="@(() => OnSort.InvokeAsync(SortFieldPriority))"
+                    title="Sort by priority">
+                    Priority @((MarkupString)GetSortIndicator(SortFieldPriority))
+                </th>
+                <th class="sortable-header" role="columnheader"
+                    aria-sort="@GetAriaSortValue(SortFieldName)"
+                    @onclick="@(() => OnSort.InvokeAsync(SortFieldName))"
+                    title="Sort by name">
+                    Name @((MarkupString)GetSortIndicator(SortFieldName))
+                </th>
+                <th role="columnheader">Pattern</th>
+                <th role="columnheader">Match Type</th>
+                <th class="sortable-header" role="columnheader"
+                    aria-sort="@GetAriaSortValue(SortFieldCategory)"
+                    @onclick="@(() => OnSort.InvokeAsync(SortFieldCategory))"
+                    title="Sort by category">
+                    Category @((MarkupString)GetSortIndicator(SortFieldCategory))
+                </th>
+                <th role="columnheader">Status</th>
+                <th class="actions" role="columnheader">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Rules.Count; i++)
+            {
+                var rule = Rules[i];
+                var rowIndex = i;
+                <tr class="@GetRowClass(rule, rowIndex)" role="row"
+                    tabindex="@(rowIndex == _focusedIndex ? 0 : -1)"
+                    id="@GetRowId(rowIndex)"
+                    @onfocus="() => SetFocusedIndex(rowIndex)"
+                    aria-selected="@IsSelected(rule.Id).ToString().ToLowerInvariant()">
+                    <td class="rules-table-select">
+                        <input type="checkbox"
+                               checked="@IsSelected(rule.Id)"
+                               @onchange="() => OnSelectionToggled.InvokeAsync(rule.Id)"
+                               tabindex="-1"
+                               aria-label="@($"Select rule {rule.Name}")" />
+                    </td>
+                    <td class="rules-table-priority">
+                        <span class="badge badge-secondary" title="Priority (lower = evaluated first)">#@rule.Priority</span>
+                    </td>
+                    <td>@rule.Name</td>
+                    <td><code class="rule-pattern">@rule.Pattern</code></td>
+                    <td>
+                        <span class="badge @GetMatchTypeBadgeClass(rule.MatchType)">@rule.MatchType</span>
+                        @if (rule.CaseSensitive)
+                        {
+                            <span class="badge badge-secondary" title="Case sensitive">Aa</span>
+                        }
+                    </td>
+                    <td>@(rule.CategoryName ?? "Unknown")</td>
+                    <td>
+                        @if (rule.IsActive)
+                        {
+                            <span class="badge badge-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">Inactive</span>
+                        }
+                    </td>
+                    <td class="actions">
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-secondary" @onclick="() => OnEdit.InvokeAsync(rule)" tabindex="-1" title="Edit rule">
+                                <Icon Name="edit" Size="14" />
+                            </button>
+                            @if (rule.IsActive)
+                            {
+                                <button class="btn btn-sm btn-warning" @onclick="() => OnDeactivate.InvokeAsync(rule)" tabindex="-1" title="Deactivate rule">
+                                    <Icon Name="pause" Size="14" />
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-success" @onclick="() => OnActivate.InvokeAsync(rule)" tabindex="-1" title="Activate rule">
+                                    <Icon Name="play" Size="14" />
+                                </button>
+                            }
+                            <button class="btn btn-sm btn-danger" @onclick="() => OnDelete.InvokeAsync(rule)" tabindex="-1" title="Delete rule">
+                                <Icon Name="trash" Size="14" />
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private const string SortFieldPriority = "priority";
+    private const string SortFieldName = "name";
+    private const string SortFieldCategory = "category";
+
+    private int _focusedIndex = -1;
+    private bool _preventKeyDefault;
+
+    /// <summary>
+    /// Gets or sets the rules to display.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<CategorizationRuleDto> Rules { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the current sort field.
+    /// </summary>
+    [Parameter]
+    public string? SortBy { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current sort direction ("asc" or "desc").
+    /// </summary>
+    [Parameter]
+    public string? SortDirection { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when edit is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnEdit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when delete is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnDelete { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when activate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnActivate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when deactivate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<CategorizationRuleDto> OnDeactivate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a sort header is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnSort { get; set; }
+
+    /// <summary>
+    /// Gets or sets the set of currently selected rule IDs.
+    /// </summary>
+    [Parameter]
+    public IReadOnlySet<Guid> SelectedIds { get; set; } = new HashSet<Guid>();
+
+    /// <summary>
+    /// Gets or sets a value indicating whether all rules on the current page are selected.
+    /// </summary>
+    [Parameter]
+    public bool AreAllSelected { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when a row checkbox is toggled.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> OnSelectionToggled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when the select-all header checkbox is toggled.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSelectAllToggle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when Escape is pressed to clear selection.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClearSelection { get; set; }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        _preventKeyDefault = false;
+
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _preventKeyDefault = true;
+                MoveFocus(1);
+                break;
+            case "ArrowUp":
+                _preventKeyDefault = true;
+                MoveFocus(-1);
+                break;
+            case "Enter":
+                if (_focusedIndex >= 0 && _focusedIndex < Rules.Count)
+                {
+                    _preventKeyDefault = true;
+                    await OnEdit.InvokeAsync(Rules[_focusedIndex]);
+                }
+
+                break;
+            case " ":
+                if (_focusedIndex >= 0 && _focusedIndex < Rules.Count)
+                {
+                    _preventKeyDefault = true;
+                    await OnSelectionToggled.InvokeAsync(Rules[_focusedIndex].Id);
+                }
+
+                break;
+            case "Escape":
+                _preventKeyDefault = true;
+                await OnClearSelection.InvokeAsync();
+                break;
+        }
+    }
+
+    private void MoveFocus(int direction)
+    {
+        var newIndex = _focusedIndex + direction;
+        if (newIndex >= 0 && newIndex < Rules.Count)
+        {
+            _focusedIndex = newIndex;
+        }
+        else if (_focusedIndex < 0 && Rules.Count > 0)
+        {
+            _focusedIndex = 0;
+        }
+    }
+
+    private void SetFocusedIndex(int index)
+    {
+        _focusedIndex = index;
+    }
+
+    private string GetRowClass(CategorizationRuleDto rule, int index)
+    {
+        var classes = new List<string>();
+        if (!rule.IsActive)
+        {
+            classes.Add("row-inactive");
+        }
+
+        if (index == _focusedIndex)
+        {
+            classes.Add("row-focused");
+        }
+
+        return string.Join(' ', classes);
+    }
+
+    private static string GetRowId(int index) => $"rules-row-{index}";
+
+    private string GetSortIndicator(string field)
+    {
+        if (SortBy != field)
+        {
+            return "<span class=\"sort-indicator sort-inactive\">\u2195</span>";
+        }
+
+        var arrow = SortDirection == "desc" ? "\u25BC" : "\u25B2";
+        return $"<span class=\"sort-indicator sort-active\">{arrow}</span>";
+    }
+
+    private string GetAriaSortValue(string field)
+    {
+        if (SortBy != field)
+        {
+            return "none";
+        }
+
+        return SortDirection == "desc" ? "descending" : "ascending";
+    }
+
+    private static string GetMatchTypeBadgeClass(string matchType)
+    {
+        return matchType switch
+        {
+            "Exact" => "badge-primary",
+            "Contains" or "StartsWith" or "EndsWith" => "badge-info",
+            "Regex" => "badge-warning",
+            _ => "badge-secondary",
+        };
+    }
+
+    private bool IsSelected(Guid ruleId) => SelectedIds.Contains(ruleId);
+}

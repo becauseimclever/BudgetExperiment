@@ -109,4 +109,89 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
             rule.SetPriority(newPriority);
         }
     }
+
+    /// <inheritdoc />
+    public async Task<(IReadOnlyList<CategorizationRule> Items, int TotalCount)> ListPagedAsync(
+        int page,
+        int pageSize,
+        string? search = null,
+        Guid? categoryId = null,
+        bool? isActive = null,
+        string? sortBy = null,
+        string? sortDirection = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = this._context.CategorizationRules
+            .Include(r => r.Category)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToUpperInvariant();
+            query = query.Where(r =>
+                r.Name.ToUpper().Contains(searchLower) ||
+                r.Pattern.ToUpper().Contains(searchLower));
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(r => r.CategoryId == categoryId.Value);
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(r => r.IsActive == isActive.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        query = ApplySort(query, sortBy, sortDirection);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CategorizationRule>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        return await this._context.CategorizationRules
+            .Include(r => r.Category)
+            .Where(r => ids.Contains(r.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task RemoveBulkAsync(IReadOnlyList<CategorizationRule> rules)
+    {
+        this._context.CategorizationRules.RemoveRange(rules);
+        return Task.CompletedTask;
+    }
+
+    private static IQueryable<CategorizationRule> ApplySort(
+        IQueryable<CategorizationRule> query,
+        string? sortBy,
+        string? sortDirection)
+    {
+        var descending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+        return sortBy?.ToUpperInvariant() switch
+        {
+            "NAME" => descending
+                ? query.OrderByDescending(r => r.Name)
+                : query.OrderBy(r => r.Name),
+            "CATEGORY" => descending
+                ? query.OrderByDescending(r => r.Category!.Name).ThenBy(r => r.Priority)
+                : query.OrderBy(r => r.Category!.Name).ThenBy(r => r.Priority),
+            "CREATEDAT" => descending
+                ? query.OrderByDescending(r => r.CreatedAtUtc)
+                : query.OrderBy(r => r.CreatedAtUtc),
+            _ => descending
+                ? query.OrderByDescending(r => r.Priority).ThenByDescending(r => r.Name)
+                : query.OrderBy(r => r.Priority).ThenBy(r => r.Name),
+        };
+    }
 }

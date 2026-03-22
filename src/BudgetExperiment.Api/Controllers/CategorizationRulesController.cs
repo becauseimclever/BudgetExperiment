@@ -31,15 +31,51 @@ public sealed class CategorizationRulesController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all categorization rules.
+    /// Gets categorization rules. When page/pageSize are provided, returns a paginated response.
+    /// Otherwise returns all rules for backward compatibility.
     /// </summary>
-    /// <param name="activeOnly">If true, returns only active rules.</param>
+    /// <param name="activeOnly">If true, returns only active rules (non-paginated mode only).</param>
+    /// <param name="page">Page number (1-based) for paginated results.</param>
+    /// <param name="pageSize">Number of items per page.</param>
+    /// <param name="search">Search text to filter by rule name or pattern.</param>
+    /// <param name="categoryId">Category ID to filter by.</param>
+    /// <param name="status">Status filter: "active", "inactive", or null for all.</param>
+    /// <param name="sortBy">Sort field: "priority", "name", "category", "createdAt".</param>
+    /// <param name="sortDirection">Sort direction: "asc" or "desc".</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of categorization rules.</returns>
+    /// <returns>A list of categorization rules or a paged response.</returns>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<CategorizationRuleDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllAsync([FromQuery] bool activeOnly = false, CancellationToken cancellationToken = default)
+    [ProducesResponseType<CategorizationRulePageResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllAsync(
+        [FromQuery] bool activeOnly = false,
+        [FromQuery] int? page = null,
+        [FromQuery] int? pageSize = null,
+        [FromQuery] string? search = null,
+        [FromQuery] Guid? categoryId = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDirection = null,
+        CancellationToken cancellationToken = default)
     {
+        if (page.HasValue || pageSize.HasValue)
+        {
+            var request = new CategorizationRuleListRequest
+            {
+                Page = page ?? 1,
+                PageSize = pageSize ?? 25,
+                Search = search,
+                CategoryId = categoryId,
+                Status = status,
+                SortBy = sortBy,
+                SortDirection = sortDirection,
+            };
+
+            var pagedResult = await this._service.ListPagedAsync(request, cancellationToken);
+            this.Response.Headers["X-Pagination-TotalCount"] = pagedResult.TotalCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return this.Ok(pagedResult);
+        }
+
         var rules = await this._service.GetAllAsync(activeOnly, cancellationToken);
         return this.Ok(rules);
     }
@@ -221,5 +257,65 @@ public sealed class CategorizationRulesController : ControllerBase
     {
         var result = await this._service.ApplyRulesAsync(request, cancellationToken);
         return this.Ok(result);
+    }
+
+    /// <summary>
+    /// Bulk deletes categorization rules.
+    /// </summary>
+    /// <param name="request">The bulk action request containing rule IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of deleted rules.</returns>
+    [HttpDelete("bulk")]
+    [ProducesResponseType<BulkRuleActionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> BulkDeleteAsync([FromBody] BulkRuleActionRequest request, CancellationToken cancellationToken)
+    {
+        if (request.Ids.Count == 0)
+        {
+            return this.BadRequest("No rule IDs provided.");
+        }
+
+        var count = await this._service.BulkDeleteAsync(request.Ids, cancellationToken);
+        return this.Ok(new BulkRuleActionResponse { AffectedCount = count });
+    }
+
+    /// <summary>
+    /// Bulk activates categorization rules.
+    /// </summary>
+    /// <param name="request">The bulk action request containing rule IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of activated rules.</returns>
+    [HttpPost("bulk/activate")]
+    [ProducesResponseType<BulkRuleActionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> BulkActivateAsync([FromBody] BulkRuleActionRequest request, CancellationToken cancellationToken)
+    {
+        if (request.Ids.Count == 0)
+        {
+            return this.BadRequest("No rule IDs provided.");
+        }
+
+        var count = await this._service.BulkActivateAsync(request.Ids, cancellationToken);
+        return this.Ok(new BulkRuleActionResponse { AffectedCount = count });
+    }
+
+    /// <summary>
+    /// Bulk deactivates categorization rules.
+    /// </summary>
+    /// <param name="request">The bulk action request containing rule IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of deactivated rules.</returns>
+    [HttpPost("bulk/deactivate")]
+    [ProducesResponseType<BulkRuleActionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> BulkDeactivateAsync([FromBody] BulkRuleActionRequest request, CancellationToken cancellationToken)
+    {
+        if (request.Ids.Count == 0)
+        {
+            return this.BadRequest("No rule IDs provided.");
+        }
+
+        var count = await this._service.BulkDeactivateAsync(request.Ids, cancellationToken);
+        return this.Ok(new BulkRuleActionResponse { AffectedCount = count });
     }
 }

@@ -49,6 +49,35 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     }
 
     /// <inheritdoc/>
+    public async Task<CategorizationRulePageResponse> ListPagedAsync(CategorizationRuleListRequest request, CancellationToken cancellationToken = default)
+    {
+        bool? isActive = request.Status?.ToUpperInvariant() switch
+        {
+            "ACTIVE" => true,
+            "INACTIVE" => false,
+            _ => null,
+        };
+
+        var (items, totalCount) = await this._repository.ListPagedAsync(
+            request.Page,
+            request.PageSize,
+            request.Search,
+            request.CategoryId,
+            isActive,
+            request.SortBy,
+            request.SortDirection,
+            cancellationToken);
+
+        return new CategorizationRulePageResponse
+        {
+            Items = items.Select(r => CategorizationMapper.ToDto(r)).ToList(),
+            TotalCount = totalCount,
+            Page = request.Page,
+            PageSize = request.PageSize,
+        };
+    }
+
+    /// <inheritdoc/>
     public async Task<CategorizationRuleDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var rule = await this._repository.GetByIdAsync(id, cancellationToken);
@@ -81,6 +110,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         await this._repository.AddAsync(rule, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
 
         // Re-fetch to include category navigation property
         var created = await this._repository.GetByIdAsync(rule.Id, cancellationToken);
@@ -108,6 +138,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         rule.Update(dto.Name, matchType, dto.Pattern, dto.CategoryId, dto.CaseSensitive);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
 
         // Re-fetch to include category navigation property
         var updated = await this._repository.GetByIdAsync(rule.Id, cancellationToken);
@@ -139,6 +170,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         }
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
 
         // Re-fetch all rules to get the complete list with navigation properties
         var allRules = await this._repository.ListAsync(0, int.MaxValue, cancellationToken);
@@ -189,6 +221,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         await this._repository.RemoveAsync(rule, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
         return true;
     }
 
@@ -203,6 +236,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         rule.Activate();
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
         return true;
     }
 
@@ -217,7 +251,69 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         rule.Deactivate();
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
         return true;
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> BulkDeleteAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var rules = await this._repository.GetByIdsAsync(ids, cancellationToken);
+        if (rules.Count == 0)
+        {
+            return 0;
+        }
+
+        await this._repository.RemoveBulkAsync(rules);
+        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
+        return rules.Count;
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> BulkActivateAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var rules = await this._repository.GetByIdsAsync(ids, cancellationToken);
+        var count = 0;
+        foreach (var rule in rules)
+        {
+            if (!rule.IsActive)
+            {
+                rule.Activate();
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            this._engine.InvalidateRuleCache();
+        }
+
+        return count;
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> BulkDeactivateAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var rules = await this._repository.GetByIdsAsync(ids, cancellationToken);
+        var count = 0;
+        foreach (var rule in rules)
+        {
+            if (rule.IsActive)
+            {
+                rule.Deactivate();
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            this._engine.InvalidateRuleCache();
+        }
+
+        return count;
     }
 
     /// <inheritdoc/>
@@ -226,6 +322,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         var priorities = ruleIds.Select((id, index) => (RuleId: id, NewPriority: index + 1)).ToList();
         await this._repository.ReorderPrioritiesAsync(priorities, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        this._engine.InvalidateRuleCache();
     }
 
     /// <inheritdoc/>

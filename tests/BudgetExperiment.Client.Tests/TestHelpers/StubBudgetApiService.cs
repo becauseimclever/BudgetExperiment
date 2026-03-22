@@ -296,6 +296,36 @@ internal class StubBudgetApiService : IBudgetApiService
     public ApplyRulesResponse? ApplyRulesResult { get; set; }
 
     /// <summary>
+    /// Gets or sets the result returned by <see cref="BulkDeleteCategorizationRulesAsync"/>.
+    /// </summary>
+    public BulkRuleActionResponse? BulkDeleteResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception thrown by <see cref="BulkDeleteCategorizationRulesAsync"/>.
+    /// </summary>
+    public Exception? BulkDeleteException { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="BulkActivateCategorizationRulesAsync"/>.
+    /// </summary>
+    public BulkRuleActionResponse? BulkActivateResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception thrown by <see cref="BulkActivateCategorizationRulesAsync"/>.
+    /// </summary>
+    public Exception? BulkActivateException { get; set; }
+
+    /// <summary>
+    /// Gets or sets the result returned by <see cref="BulkDeactivateCategorizationRulesAsync"/>.
+    /// </summary>
+    public BulkRuleActionResponse? BulkDeactivateResult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the exception thrown by <see cref="BulkDeactivateCategorizationRulesAsync"/>.
+    /// </summary>
+    public Exception? BulkDeactivateException { get; set; }
+
+    /// <summary>
     /// Gets or sets the result returned by <see cref="GetTransactionAsync"/>.
     /// </summary>
     public TransactionDto? GetTransactionResult { get; set; }
@@ -808,6 +838,18 @@ internal class StubBudgetApiService : IBudgetApiService
             : Task.FromResult<IReadOnlyList<CategorizationRuleDto>>(this.Rules);
 
     /// <inheritdoc/>
+    public Task<CategorizationRulePageResponse> GetCategorizationRulesPagedAsync(CategorizationRuleListRequest request) =>
+        this.GetRulesException is not null
+            ? Task.FromException<CategorizationRulePageResponse>(this.GetRulesException)
+            : Task.FromResult(new CategorizationRulePageResponse
+            {
+                Items = this.Rules,
+                TotalCount = this.Rules.Count,
+                Page = request.Page,
+                PageSize = request.PageSize,
+            });
+
+    /// <inheritdoc/>
     public Task<CategorizationRuleDto?> GetCategorizationRuleAsync(Guid id) => Task.FromResult<CategorizationRuleDto?>(null);
 
     /// <inheritdoc/>
@@ -851,6 +893,24 @@ internal class StubBudgetApiService : IBudgetApiService
 
     /// <inheritdoc/>
     public Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds) => Task.FromResult(false);
+
+    /// <inheritdoc/>
+    public Task<BulkRuleActionResponse?> BulkDeleteCategorizationRulesAsync(IReadOnlyList<Guid> ids) =>
+        this.BulkDeleteException is not null
+            ? Task.FromException<BulkRuleActionResponse?>(this.BulkDeleteException)
+            : Task.FromResult(this.BulkDeleteResult);
+
+    /// <inheritdoc/>
+    public Task<BulkRuleActionResponse?> BulkActivateCategorizationRulesAsync(IReadOnlyList<Guid> ids) =>
+        this.BulkActivateException is not null
+            ? Task.FromException<BulkRuleActionResponse?>(this.BulkActivateException)
+            : Task.FromResult(this.BulkActivateResult);
+
+    /// <inheritdoc/>
+    public Task<BulkRuleActionResponse?> BulkDeactivateCategorizationRulesAsync(IReadOnlyList<Guid> ids) =>
+        this.BulkDeactivateException is not null
+            ? Task.FromException<BulkRuleActionResponse?>(this.BulkDeactivateException)
+            : Task.FromResult(this.BulkDeactivateResult);
 
     /// <inheritdoc/>
     public Task<UnifiedTransactionPageDto> GetUnifiedTransactionsAsync(UnifiedTransactionFilterDto filter)

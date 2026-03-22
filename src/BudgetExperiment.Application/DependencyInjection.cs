@@ -21,6 +21,7 @@ public static class DependencyInjection
     /// <returns>Same collection for chaining.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddMemoryCache();
         services.AddScoped<ICurrencyProvider, UserSettingsCurrencyProvider>();
         services.AddScoped<AccountService>();
         services.AddScoped<ITransactionService, TransactionService>();

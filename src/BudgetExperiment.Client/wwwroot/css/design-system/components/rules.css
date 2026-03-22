@@ -20,6 +20,80 @@
 }
 
 /* ==========================================================================
+   Category Groups
+   ========================================================================== */
+
+/* ==========================================================================
+   Sortable Table Headers
+   ========================================================================== */
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sortable-header:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.sort-indicator {
+  font-size: var(--font-size-xs);
+  margin-left: var(--space-1);
+  vertical-align: middle;
+}
+
+.sort-inactive {
+  opacity: 0.3;
+}
+
+.sort-active {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Category Groups (continued)
+   ========================================================================== */
+
+.category-group {
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.category-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface-alt);
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.category-group-header:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.category-group-toggle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  width: 1em;
+  text-align: center;
+}
+
+.category-group-name {
+  flex: 1;
+}
+
+/* ==========================================================================
    Rule Card
    ========================================================================== */
 
@@ -207,4 +281,89 @@
 .section-divider {
   height: 1px;
   background-color: var(--color-border-subtle);
+}
+
+/* ==========================================================================
+   Selection & Bulk Actions
+   ========================================================================== */
+
+.rules-table-select {
+  width: 2.5rem;
+  text-align: center;
+}
+
+.bulk-action-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+
+.bulk-action-count {
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.bulk-action-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.bulk-action-clear {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* ==========================================================================
+   View Toggle
+   ========================================================================== */
+
+.view-toggle {
+  display: inline-flex;
+  gap: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.view-toggle .btn {
+  border-radius: 0;
+}
+
+.view-toggle .btn:first-child {
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.view-toggle .btn:last-child {
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+/* ==========================================================================
+   Card Grid Layout
+   ========================================================================== */
+
+.rules-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-3);
+}
+
+/* ==========================================================================
+   Table Row States
+   ========================================================================== */
+
+.row-inactive {
+  opacity: 0.6;
+}
+
+.row-focused {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }

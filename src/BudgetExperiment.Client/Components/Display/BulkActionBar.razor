@@ -1,0 +1,69 @@
+@* BulkActionBar.razor - Sticky bar for bulk rule operations *@
+
+@if (SelectedCount > 0)
+{
+    <div class="bulk-action-bar" role="toolbar" aria-label="Bulk actions">
+        <span class="bulk-action-count">@SelectedCount rule(s) selected</span>
+        <div class="bulk-action-buttons">
+            <Button Variant="ButtonVariant.Success"
+                    Size="ButtonSize.Small"
+                    IconLeft="play"
+                    IsDisabled="@IsProcessing"
+                    OnClick="OnActivate"
+                    title="Activate selected rules">Activate</Button>
+            <Button Variant="ButtonVariant.Warning"
+                    Size="ButtonSize.Small"
+                    IconLeft="pause"
+                    IsDisabled="@IsProcessing"
+                    OnClick="OnDeactivate"
+                    title="Deactivate selected rules">Deactivate</Button>
+            <Button Variant="ButtonVariant.Danger"
+                    Size="ButtonSize.Small"
+                    IconLeft="trash"
+                    IsDisabled="@IsProcessing"
+                    OnClick="OnDelete"
+                    title="Delete selected rules">Delete</Button>
+        </div>
+        <button class="btn btn-sm btn-ghost bulk-action-clear" @onclick="OnClearSelection" title="Clear selection">
+            <Icon Name="x" Size="14" /> Clear
+        </button>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the number of selected rules.
+    /// </summary>
+    [Parameter]
+    public int SelectedCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a bulk operation is in progress.
+    /// </summary>
+    [Parameter]
+    public bool IsProcessing { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when delete is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when activate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnActivate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when deactivate is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDeactivate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback when clear selection is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClearSelection { get; set; }
+}

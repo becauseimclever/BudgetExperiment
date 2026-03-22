@@ -5,16 +5,27 @@
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
+using Microsoft.Extensions.Caching.Memory;
+
 namespace BudgetExperiment.Application.Categorization;
 
 /// <summary>
 /// Implementation of <see cref="ICategorizationEngine"/> for applying auto-categorization rules to transactions.
+/// Uses batch transaction loading, in-memory rule caching, and string-first evaluation for performance.
 /// </summary>
 public class CategorizationEngine : ICategorizationEngine
 {
+    /// <summary>
+    /// Cache key for active rules ordered by priority.
+    /// </summary>
+    internal const string ActiveRulesCacheKey = "CategorizationEngine_ActiveRules";
+
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
+
     private readonly ICategorizationRuleRepository _ruleRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMemoryCache _cache;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorizationEngine"/> class.
@@ -22,14 +33,17 @@ public class CategorizationEngine : ICategorizationEngine
     /// <param name="ruleRepository">The categorization rule repository.</param>
     /// <param name="transactionRepository">The transaction repository.</param>
     /// <param name="unitOfWork">The unit of work for persisting changes.</param>
+    /// <param name="cache">The memory cache for caching active rules.</param>
     public CategorizationEngine(
         ICategorizationRuleRepository ruleRepository,
         ITransactionRepository transactionRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMemoryCache cache)
     {
         this._ruleRepository = ruleRepository;
         this._transactionRepository = transactionRepository;
         this._unitOfWork = unitOfWork;
+        this._cache = cache;
     }
 
     /// <inheritdoc />
@@ -42,17 +56,8 @@ public class CategorizationEngine : ICategorizationEngine
             return null;
         }
 
-        var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
-
-        foreach (var rule in rules)
-        {
-            if (rule.Matches(description))
-            {
-                return rule.CategoryId;
-            }
-        }
-
-        return null;
+        var rules = await this.GetCachedActiveRulesAsync(cancellationToken);
+        return FindFirstMatch(rules, description);
     }
 
     /// <inheritdoc />
@@ -61,7 +66,7 @@ public class CategorizationEngine : ICategorizationEngine
         bool overwriteExisting = false,
         CancellationToken cancellationToken = default)
     {
-        var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
+        var rules = await this.GetCachedActiveRulesAsync(cancellationToken);
 
         var totalProcessed = 0;
         var categorized = 0;
@@ -74,33 +79,31 @@ public class CategorizationEngine : ICategorizationEngine
 
         if (transactionIds == null)
         {
-            // Process all uncategorized transactions
             transactions = await this._transactionRepository.GetUncategorizedAsync(cancellationToken);
         }
         else
         {
-            // Process specific transactions
+            var idList = transactionIds.ToList();
+            var allFetched = await this._transactionRepository.GetByIdsAsync(idList, cancellationToken);
+
             var transactionList = new List<Transaction>();
-            foreach (var id in transactionIds)
+            foreach (var transaction in allFetched)
             {
-                var transaction = await this._transactionRepository.GetByIdAsync(id, cancellationToken);
-                if (transaction != null)
+                if (overwriteExisting || transaction.CategoryId == null)
                 {
-                    // Skip already-categorized transactions unless overwriteExisting is true
-                    if (overwriteExisting || transaction.CategoryId == null)
-                    {
-                        transactionList.Add(transaction);
-                    }
-                    else
-                    {
-                        // Track as skipped due to existing category
-                        skippedDueToExisting++;
-                    }
+                    transactionList.Add(transaction);
+                }
+                else
+                {
+                    skippedDueToExisting++;
                 }
             }
 
             transactions = transactionList;
         }
+
+        // Partition rules: string rules first, then regex rules
+        var (stringRules, regexRules) = PartitionRules(rules);
 
         foreach (var transaction in transactions)
         {
@@ -108,16 +111,8 @@ public class CategorizationEngine : ICategorizationEngine
 
             try
             {
-                Guid? matchedCategoryId = null;
-
-                foreach (var rule in rules)
-                {
-                    if (rule.Matches(transaction.Description))
-                    {
-                        matchedCategoryId = rule.CategoryId;
-                        break;
-                    }
-                }
+                var matchedCategoryId = FindFirstMatch(stringRules, transaction.Description)
+                    ?? FindFirstMatch(regexRules, transaction.Description);
 
                 if (matchedCategoryId.HasValue)
                 {
@@ -161,12 +156,11 @@ public class CategorizationEngine : ICategorizationEngine
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
-        // Create a temporary rule to leverage the Matches logic
         var testRule = CategorizationRule.Create(
             name: "Test Rule",
             pattern: pattern,
             matchType: matchType,
-            categoryId: Guid.NewGuid(), // Dummy category, we just need the Matches method
+            categoryId: Guid.NewGuid(),
             caseSensitive: caseSensitive);
 
         var allDescriptions = await this._transactionRepository.GetAllDescriptionsAsync(cancellationToken);
@@ -208,35 +202,89 @@ public class CategorizationEngine : ICategorizationEngine
             return result;
         }
 
-        var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
+        var rules = await this.GetCachedActiveRulesAsync(cancellationToken);
         if (rules.Count == 0)
         {
             return result;
         }
 
-        foreach (var transactionId in transactionIds)
+        var transactions = await this._transactionRepository.GetByIdsAsync(transactionIds, cancellationToken);
+
+        foreach (var transaction in transactions)
         {
-            var transaction = await this._transactionRepository.GetByIdAsync(transactionId, cancellationToken);
-            if (transaction is null || transaction.CategoryId is not null)
+            if (transaction.CategoryId is not null)
             {
                 continue;
             }
 
-            foreach (var rule in rules)
+            var matchedCategoryId = FindFirstMatch(rules, transaction.Description);
+            if (matchedCategoryId.HasValue)
             {
-                if (rule.Matches(transaction.Description))
+                var matchedRule = rules.First(r => r.CategoryId == matchedCategoryId.Value && r.Matches(transaction.Description));
+                result[transaction.Id] = new InlineCategorySuggestionDto
                 {
-                    result[transactionId] = new InlineCategorySuggestionDto
-                    {
-                        TransactionId = transactionId,
-                        CategoryId = rule.CategoryId,
-                        CategoryName = rule.Category?.Name ?? string.Empty,
-                    };
-                    break;
-                }
+                    TransactionId = transaction.Id,
+                    CategoryId = matchedCategoryId.Value,
+                    CategoryName = matchedRule.Category?.Name ?? string.Empty,
+                };
             }
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Invalidates the cached active rules, forcing a fresh load on next access.
+    /// Called by <see cref="CategorizationRuleService"/> after rule CRUD operations.
+    /// </summary>
+    public void InvalidateRuleCache()
+    {
+        this._cache.Remove(ActiveRulesCacheKey);
+    }
+
+    private static Guid? FindFirstMatch(IReadOnlyList<CategorizationRule> rules, string description)
+    {
+        foreach (var rule in rules)
+        {
+            if (rule.Matches(description))
+            {
+                return rule.CategoryId;
+            }
+        }
+
+        return null;
+    }
+
+    private static (IReadOnlyList<CategorizationRule> StringRules, IReadOnlyList<CategorizationRule> RegexRules) PartitionRules(
+        IReadOnlyList<CategorizationRule> rules)
+    {
+        var stringRules = new List<CategorizationRule>();
+        var regexRules = new List<CategorizationRule>();
+
+        foreach (var rule in rules)
+        {
+            if (rule.MatchType == RuleMatchType.Regex)
+            {
+                regexRules.Add(rule);
+            }
+            else
+            {
+                stringRules.Add(rule);
+            }
+        }
+
+        return (stringRules, regexRules);
+    }
+
+    private async Task<IReadOnlyList<CategorizationRule>> GetCachedActiveRulesAsync(CancellationToken cancellationToken)
+    {
+        if (this._cache.TryGetValue(ActiveRulesCacheKey, out IReadOnlyList<CategorizationRule>? cached) && cached is not null)
+        {
+            return cached;
+        }
+
+        var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
+        this._cache.Set(ActiveRulesCacheKey, rules, CacheDuration);
+        return rules;
     }
 }

@@ -123,6 +123,16 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets multiple transactions by their IDs in a single batch query.
+    /// </summary>
+    /// <param name="ids">The transaction IDs to fetch.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Transactions matching the provided IDs.</returns>
+    Task<IReadOnlyList<Transaction>> GetByIdsAsync(
+        IReadOnlyList<Guid> ids,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all unique transaction descriptions for pattern analysis.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>

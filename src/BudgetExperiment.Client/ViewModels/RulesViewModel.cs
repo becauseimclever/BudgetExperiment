@@ -2,10 +2,12 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Shared.Budgeting;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace BudgetExperiment.Client.ViewModels;
 
@@ -15,11 +17,18 @@ namespace BudgetExperiment.Client.ViewModels;
 /// </summary>
 public sealed class RulesViewModel : IDisposable
 {
+    private const string ViewModeStorageKey = "budget-experiment-rules-view-mode";
+    private const string PageSizeStorageKey = "budget-experiment-rules-page-size";
+
     private readonly IBudgetApiService _apiService;
     private readonly IToastService _toastService;
     private readonly NavigationManager _navigationManager;
     private readonly ScopeService _scopeService;
     private readonly IApiErrorContext _apiErrorContext;
+    private readonly IJSRuntime _jsRuntime;
+    private readonly HashSet<string> _collapsedCategories = new(StringComparer.Ordinal);
+    private readonly HashSet<Guid> _selectedRuleIds = new();
+    private CancellationTokenSource? _searchDebounce;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RulesViewModel"/> class.
@@ -29,18 +38,21 @@ public sealed class RulesViewModel : IDisposable
     /// <param name="navigationManager">The navigation manager.</param>
     /// <param name="scopeService">The budget scope service.</param>
     /// <param name="apiErrorContext">The API error context for traceId capture.</param>
+    /// <param name="jsRuntime">The JavaScript runtime for localStorage access.</param>
     public RulesViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
         NavigationManager navigationManager,
         ScopeService scopeService,
-        IApiErrorContext apiErrorContext)
+        IApiErrorContext apiErrorContext,
+        IJSRuntime jsRuntime)
     {
         this._apiService = apiService;
         this._toastService = toastService;
         this._navigationManager = navigationManager;
         this._scopeService = scopeService;
         this._apiErrorContext = apiErrorContext;
+        this._jsRuntime = jsRuntime;
     }
 
     /// <summary>
@@ -74,6 +86,37 @@ public sealed class RulesViewModel : IDisposable
     public bool IsTesting { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether a bulk operation is in progress.
+    /// </summary>
+    public bool IsBulkOperating { get; private set; }
+
+    /// <summary>
+    /// Gets the set of currently selected rule IDs.
+    /// </summary>
+    public IReadOnlySet<Guid> SelectedRuleIds => this._selectedRuleIds;
+
+    /// <summary>
+    /// Gets the number of currently selected rules.
+    /// </summary>
+    public int SelectedCount => this._selectedRuleIds.Count;
+
+    /// <summary>
+    /// Gets a value indicating whether any rules are currently selected.
+    /// </summary>
+    public bool HasSelection => this._selectedRuleIds.Count > 0;
+
+    /// <summary>
+    /// Gets a value indicating whether all rules on the current page are selected.
+    /// </summary>
+    public bool AreAllOnPageSelected =>
+        this.Rules.Count > 0 && this.Rules.All(r => this._selectedRuleIds.Contains(r.Id));
+
+    /// <summary>
+    /// Gets a value indicating whether the bulk delete confirmation dialog is visible.
+    /// </summary>
+    public bool ShowBulkDeleteConfirm { get; private set; }
+
+    /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
     public string? ErrorMessage { get; private set; }
@@ -92,6 +135,128 @@ public sealed class RulesViewModel : IDisposable
     /// Gets the list of categories for rule assignment.
     /// </summary>
     public List<BudgetCategoryDto> Categories { get; private set; } = new();
+
+    /// <summary>
+    /// Gets the current page number (1-based).
+    /// </summary>
+    public int CurrentPage { get; private set; } = 1;
+
+    /// <summary>
+    /// Gets the page size.
+    /// </summary>
+    public int PageSize { get; private set; } = 25;
+
+    /// <summary>
+    /// Gets the total count of matching rules.
+    /// </summary>
+    public int TotalCount { get; private set; }
+
+    /// <summary>
+    /// Gets the total number of pages.
+    /// </summary>
+    public int TotalPages { get; private set; }
+
+    /// <summary>
+    /// Gets the current search text filter.
+    /// </summary>
+    public string? SearchText { get; private set; }
+
+    /// <summary>
+    /// Gets the selected category ID filter.
+    /// </summary>
+    public Guid? SelectedCategoryId { get; private set; }
+
+    /// <summary>
+    /// Gets the selected status filter (null = all, "Active", "Inactive").
+    /// </summary>
+    public string? SelectedStatus { get; private set; }
+
+    /// <summary>
+    /// Gets the current sort field (e.g., "priority", "name", "category", "createdAt").
+    /// </summary>
+    public string? SortBy { get; private set; }
+
+    /// <summary>
+    /// Gets the current sort direction ("asc" or "desc").
+    /// </summary>
+    public string? SortDirection { get; private set; }
+
+    /// <summary>
+    /// Gets the current view mode (Table or Card).
+    /// </summary>
+    public RulesViewMode ViewMode { get; private set; } = RulesViewMode.Table;
+
+    /// <summary>
+    /// Gets the number of active rules in the current result set.
+    /// </summary>
+    public int ActiveRuleCount => this.Rules.Count(r => r.IsActive);
+
+    /// <summary>
+    /// Gets the number of rules on the current page (after filtering).
+    /// </summary>
+    public int FilteredCount => this.Rules.Count;
+
+    /// <summary>
+    /// Gets a value indicating whether rules are grouped by category.
+    /// </summary>
+    public bool IsGroupedByCategory { get; private set; }
+
+    /// <summary>
+    /// Gets the rules grouped by category name, sorted by priority within each group.
+    /// Returns an empty dictionary when grouping is disabled.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<CategorizationRuleDto>> GroupedRules
+    {
+        get
+        {
+            if (!this.IsGroupedByCategory)
+            {
+                return new Dictionary<string, IReadOnlyList<CategorizationRuleDto>>();
+            }
+
+            return this.Rules
+                .GroupBy(r => r.CategoryName ?? "Unknown")
+                .OrderBy(g => g.Key)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (IReadOnlyList<CategorizationRuleDto>)g.OrderBy(r => r.Priority).ToList());
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether any filters are active.
+    /// </summary>
+    public bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(this.SearchText) ||
+        this.SelectedCategoryId.HasValue ||
+        !string.IsNullOrEmpty(this.SelectedStatus);
+
+    /// <summary>
+    /// Gets the number of active filters.
+    /// </summary>
+    public int ActiveFilterCount
+    {
+        get
+        {
+            var count = 0;
+            if (!string.IsNullOrWhiteSpace(this.SearchText))
+            {
+                count++;
+            }
+
+            if (this.SelectedCategoryId.HasValue)
+            {
+                count++;
+            }
+
+            if (!string.IsNullOrEmpty(this.SelectedStatus))
+            {
+                count++;
+            }
+
+            return count;
+        }
+    }
 
     /// <summary>
     /// Gets a value indicating whether the add rule form is visible.
@@ -150,6 +315,7 @@ public sealed class RulesViewModel : IDisposable
     public async Task InitializeAsync()
     {
         this._scopeService.ScopeChanged += this.OnScopeChanged;
+        await this.LoadPreferencesAsync();
         await this.LoadDataAsync();
     }
 
@@ -165,12 +331,26 @@ public sealed class RulesViewModel : IDisposable
 
         try
         {
-            var rulesTask = this._apiService.GetCategorizationRulesAsync();
+            var request = new CategorizationRuleListRequest
+            {
+                Page = this.CurrentPage,
+                PageSize = this.PageSize,
+                Search = this.SearchText,
+                CategoryId = this.SelectedCategoryId,
+                Status = this.SelectedStatus,
+                SortBy = this.SortBy,
+                SortDirection = this.SortDirection,
+            };
+
+            var rulesTask = this._apiService.GetCategorizationRulesPagedAsync(request);
             var categoriesTask = this._apiService.GetCategoriesAsync(activeOnly: true);
 
             await Task.WhenAll(rulesTask, categoriesTask);
 
-            this.Rules = (await rulesTask).ToList();
+            var pagedResult = await rulesTask;
+            this.Rules = pagedResult.Items.ToList();
+            this.TotalCount = pagedResult.TotalCount;
+            this.TotalPages = pagedResult.TotalPages;
             this.Categories = (await categoriesTask).ToList();
         }
         catch (Exception ex)
@@ -543,10 +723,418 @@ public sealed class RulesViewModel : IDisposable
         this.NotifyStateChanged();
     }
 
+    /// <summary>
+    /// Sets the search text with debounced data reload (300ms).
+    /// </summary>
+    /// <param name="search">The search text.</param>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task SetSearchAsync(string? search)
+    {
+        this.SearchText = search;
+        this._searchDebounce?.Cancel();
+        this._searchDebounce = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(300, this._searchDebounce.Token);
+            this.CurrentPage = 1;
+            await this.LoadDataAsync();
+            this.NotifyStateChanged();
+        }
+        catch (TaskCanceledException)
+        {
+            // Debounce cancelled by a newer keystroke — expected
+        }
+    }
+
+    /// <summary>
+    /// Sets the category filter and reloads data.
+    /// </summary>
+    /// <param name="categoryId">The category ID, or null for all.</param>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task SetCategoryFilterAsync(Guid? categoryId)
+    {
+        this.SelectedCategoryId = categoryId;
+        this.CurrentPage = 1;
+        await this.LoadDataAsync();
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Sets the status filter and reloads data.
+    /// </summary>
+    /// <param name="status">The status string ("Active", "Inactive"), or null for all.</param>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task SetStatusFilterAsync(string? status)
+    {
+        this.SelectedStatus = status;
+        this.CurrentPage = 1;
+        await this.LoadDataAsync();
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Clears all filters and reloads data.
+    /// </summary>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task ClearFiltersAsync()
+    {
+        this.SearchText = null;
+        this.SelectedCategoryId = null;
+        this.SelectedStatus = null;
+        this.SortBy = null;
+        this.SortDirection = null;
+        this.CurrentPage = 1;
+        await this.LoadDataAsync();
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Changes the current page and reloads data.
+    /// </summary>
+    /// <param name="page">The new page number.</param>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task ChangePageAsync(int page)
+    {
+        this.CurrentPage = page;
+        await this.LoadDataAsync();
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Changes the page size, resets to page 1, and reloads data.
+    /// </summary>
+    /// <param name="pageSize">The new page size.</param>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task ChangePageSizeAsync(int pageSize)
+    {
+        this.PageSize = pageSize;
+        this.CurrentPage = 1;
+        await this.SavePreferenceAsync(PageSizeStorageKey, pageSize.ToString());
+        await this.LoadDataAsync();
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Sets the view mode and persists the preference to localStorage.
+    /// </summary>
+    /// <param name="mode">The view mode to set.</param>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task SetViewModeAsync(RulesViewMode mode)
+    {
+        if (this.ViewMode == mode)
+        {
+            return;
+        }
+
+        this.ViewMode = mode;
+        await this.SavePreferenceAsync(ViewModeStorageKey, mode.ToString());
+        this.NotifyStateChanged();
+    }
+
     /// <inheritdoc/>
     public void Dispose()
     {
         this._scopeService.ScopeChanged -= this.OnScopeChanged;
+        this._searchDebounce?.Cancel();
+        this._searchDebounce?.Dispose();
+    }
+
+    /// <summary>
+    /// Toggles selection of a single rule.
+    /// </summary>
+    /// <param name="ruleId">The rule ID to toggle.</param>
+    public void ToggleRuleSelection(Guid ruleId)
+    {
+        if (!this._selectedRuleIds.Remove(ruleId))
+        {
+            this._selectedRuleIds.Add(ruleId);
+        }
+
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Returns whether a specific rule is currently selected.
+    /// </summary>
+    /// <param name="ruleId">The rule ID.</param>
+    /// <returns>True if the rule is selected.</returns>
+    public bool IsRuleSelected(Guid ruleId) => this._selectedRuleIds.Contains(ruleId);
+
+    /// <summary>
+    /// Selects all rules on the current page.
+    /// </summary>
+    public void SelectAllOnPage()
+    {
+        foreach (var rule in this.Rules)
+        {
+            this._selectedRuleIds.Add(rule.Id);
+        }
+
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Deselects all rules on the current page.
+    /// </summary>
+    public void DeselectAllOnPage()
+    {
+        foreach (var rule in this.Rules)
+        {
+            this._selectedRuleIds.Remove(rule.Id);
+        }
+
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Toggles the select-all state: selects all if not all are selected, otherwise deselects all.
+    /// </summary>
+    public void ToggleSelectAllOnPage()
+    {
+        if (this.AreAllOnPageSelected)
+        {
+            this.DeselectAllOnPage();
+        }
+        else
+        {
+            this.SelectAllOnPage();
+        }
+    }
+
+    /// <summary>
+    /// Clears all selections.
+    /// </summary>
+    public void ClearSelection()
+    {
+        this._selectedRuleIds.Clear();
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Shows the bulk delete confirmation dialog.
+    /// </summary>
+    public void ConfirmBulkDelete()
+    {
+        this.ShowBulkDeleteConfirm = true;
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Cancels the bulk delete confirmation.
+    /// </summary>
+    public void CancelBulkDelete()
+    {
+        this.ShowBulkDeleteConfirm = false;
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Bulk deletes the currently selected rules.
+    /// </summary>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task BulkDeleteAsync()
+    {
+        if (this._selectedRuleIds.Count == 0)
+        {
+            return;
+        }
+
+        this.IsBulkOperating = true;
+        this.ShowBulkDeleteConfirm = false;
+        this.NotifyStateChanged();
+
+        try
+        {
+            var ids = this._selectedRuleIds.ToList();
+            var result = await this._apiService.BulkDeleteCategorizationRulesAsync(ids);
+            if (result is not null)
+            {
+                this._toastService.ShowSuccess($"Deleted {result.AffectedCount} rule(s).");
+                this._selectedRuleIds.Clear();
+                await this.LoadDataAsync();
+            }
+            else
+            {
+                this.ErrorMessage = "Failed to bulk delete rules.";
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = $"Failed to bulk delete rules: {ex.Message}";
+        }
+        finally
+        {
+            this.IsBulkOperating = false;
+        }
+    }
+
+    /// <summary>
+    /// Bulk activates the currently selected rules.
+    /// </summary>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task BulkActivateAsync()
+    {
+        if (this._selectedRuleIds.Count == 0)
+        {
+            return;
+        }
+
+        this.IsBulkOperating = true;
+        this.NotifyStateChanged();
+
+        try
+        {
+            var ids = this._selectedRuleIds.ToList();
+            var result = await this._apiService.BulkActivateCategorizationRulesAsync(ids);
+            if (result is not null)
+            {
+                this._toastService.ShowSuccess($"Activated {result.AffectedCount} rule(s).");
+                this._selectedRuleIds.Clear();
+                await this.LoadDataAsync();
+            }
+            else
+            {
+                this.ErrorMessage = "Failed to bulk activate rules.";
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = $"Failed to bulk activate rules: {ex.Message}";
+        }
+        finally
+        {
+            this.IsBulkOperating = false;
+        }
+    }
+
+    /// <summary>
+    /// Bulk deactivates the currently selected rules.
+    /// </summary>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task BulkDeactivateAsync()
+    {
+        if (this._selectedRuleIds.Count == 0)
+        {
+            return;
+        }
+
+        this.IsBulkOperating = true;
+        this.NotifyStateChanged();
+
+        try
+        {
+            var ids = this._selectedRuleIds.ToList();
+            var result = await this._apiService.BulkDeactivateCategorizationRulesAsync(ids);
+            if (result is not null)
+            {
+                this._toastService.ShowSuccess($"Deactivated {result.AffectedCount} rule(s).");
+                this._selectedRuleIds.Clear();
+                await this.LoadDataAsync();
+            }
+            else
+            {
+                this.ErrorMessage = "Failed to bulk deactivate rules.";
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = $"Failed to bulk deactivate rules: {ex.Message}";
+        }
+        finally
+        {
+            this.IsBulkOperating = false;
+        }
+    }
+
+    /// <summary>
+    /// Toggles sorting by the specified field. If already sorting by this field, reverses direction.
+    /// A new field defaults to ascending.
+    /// </summary>
+    /// <param name="field">The sort field name (e.g., "priority", "name", "category", "createdAt").</param>
+    /// <returns>A task representing the async operation.</returns>
+    public async Task ToggleSortAsync(string field)
+    {
+        if (this.SortBy == field)
+        {
+            this.SortDirection = this.SortDirection == "asc" ? "desc" : "asc";
+        }
+        else
+        {
+            this.SortBy = field;
+            this.SortDirection = "asc";
+        }
+
+        this.CurrentPage = 1;
+        await this.LoadDataAsync();
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Toggles the group-by-category view mode.
+    /// </summary>
+    public void ToggleGroupByCategory()
+    {
+        this.IsGroupedByCategory = !this.IsGroupedByCategory;
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Toggles the collapsed state of a category group.
+    /// </summary>
+    /// <param name="categoryName">The category name whose collapse state to toggle.</param>
+    public void ToggleCategoryCollapse(string categoryName)
+    {
+        if (!this._collapsedCategories.Add(categoryName))
+        {
+            this._collapsedCategories.Remove(categoryName);
+        }
+
+        this.NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Returns whether a category group is collapsed.
+    /// </summary>
+    /// <param name="categoryName">The category name.</param>
+    /// <returns>True if the category group is collapsed.</returns>
+    public bool IsCategoryCollapsed(string categoryName) =>
+        this._collapsedCategories.Contains(categoryName);
+
+    private async Task LoadPreferencesAsync()
+    {
+        try
+        {
+            var savedViewMode = await this._jsRuntime.InvokeAsync<string?>(
+                "localStorage.getItem", ViewModeStorageKey);
+            if (!string.IsNullOrEmpty(savedViewMode) && Enum.TryParse<RulesViewMode>(savedViewMode, out var mode))
+            {
+                this.ViewMode = mode;
+            }
+
+            var savedPageSize = await this._jsRuntime.InvokeAsync<string?>(
+                "localStorage.getItem", PageSizeStorageKey);
+            if (!string.IsNullOrEmpty(savedPageSize) && int.TryParse(savedPageSize, out var size) && size is 10 or 25 or 50 or 100)
+            {
+                this.PageSize = size;
+            }
+        }
+        catch (JSException)
+        {
+            // Ignore localStorage errors (SSR / prerender)
+        }
+    }
+
+    private async Task SavePreferenceAsync(string key, string value)
+    {
+        try
+        {
+            await this._jsRuntime.InvokeVoidAsync("localStorage.setItem", key, value);
+        }
+        catch (JSException)
+        {
+            // Ignore localStorage errors
+        }
     }
 
     private async void OnScopeChanged(BudgetScope? scope)

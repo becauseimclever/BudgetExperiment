@@ -260,14 +260,27 @@ public sealed class CategorizationRule
 
         if (matchType == RuleMatchType.Regex)
         {
+            var trimmed = pattern.Trim();
             try
             {
-                _ = new Regex(pattern.Trim(), RegexOptions.None, RegexTimeout);
+                _ = new Regex(trimmed, RegexOptions.None, RegexTimeout);
             }
             catch (ArgumentException)
             {
                 throw new DomainException("Invalid regex pattern.");
             }
+
+            ValidateRegexComplexity(trimmed);
+        }
+    }
+
+    private static void ValidateRegexComplexity(string pattern)
+    {
+        // Reject nested quantifiers like (a+)+, (a*)+, (a+)*, etc.
+        // These cause catastrophic backtracking and are the primary source of ReDoS.
+        if (Regex.IsMatch(pattern, @"[+*]\s*[)\]]\s*[+*]", RegexOptions.None, RegexTimeout))
+        {
+            throw new DomainException("Regex pattern contains nested quantifiers which can cause catastrophic backtracking.");
         }
     }
 
@@ -289,7 +302,7 @@ public sealed class CategorizationRule
 
     private static Regex BuildRegex(string pattern, bool caseSensitive)
     {
-        var options = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+        var options = RegexOptions.Compiled | (caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
         return new Regex(pattern, options, RegexTimeout);
     }
 

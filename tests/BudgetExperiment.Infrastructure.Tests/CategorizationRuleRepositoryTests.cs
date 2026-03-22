@@ -304,6 +304,106 @@ public class CategorizationRuleRepositoryTests
         Assert.Null(retrieved);
     }
 
+    [Fact]
+    public async Task ListPagedAsync_Returns_Correct_Page_And_Count()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var category = await this.CreateCategoryAsync(context, "Paged");
+        var repository = new CategorizationRuleRepository(context);
+
+        for (var i = 1; i <= 5; i++)
+        {
+            await repository.AddAsync(
+                CategorizationRule.Create($"PagedRule{i}", RuleMatchType.Contains, $"P{i}", category.Id, priority: i));
+        }
+
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new CategorizationRuleRepository(verifyContext);
+        var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 2);
+
+        // Assert
+        Assert.Equal(2, items.Count);
+        Assert.Equal(5, totalCount);
+    }
+
+    [Fact]
+    public async Task ListPagedAsync_Filters_By_Search()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var category = await this.CreateCategoryAsync(context, "SearchCat");
+        var repository = new CategorizationRuleRepository(context);
+
+        await repository.AddAsync(CategorizationRule.Create("Walmart Rule", RuleMatchType.Contains, "WALMART", category.Id, priority: 1));
+        await repository.AddAsync(CategorizationRule.Create("Target Rule", RuleMatchType.Contains, "TARGET", category.Id, priority: 2));
+        await repository.AddAsync(CategorizationRule.Create("Other", RuleMatchType.Contains, "WALMART SUPERCENTER", category.Id, priority: 3));
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new CategorizationRuleRepository(verifyContext);
+        var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 25, search: "walmart");
+
+        // Assert
+        Assert.Equal(2, totalCount);
+        Assert.All(items, r => Assert.True(
+            r.Name.Contains("walmart", StringComparison.OrdinalIgnoreCase) ||
+            r.Pattern.Contains("walmart", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    [Fact]
+    public async Task ListPagedAsync_Filters_By_IsActive()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var category = await this.CreateCategoryAsync(context, "ActiveFilter");
+        var repository = new CategorizationRuleRepository(context);
+
+        var activeRule = CategorizationRule.Create("Active", RuleMatchType.Contains, "ACT", category.Id, priority: 1);
+        var inactiveRule = CategorizationRule.Create("Inactive", RuleMatchType.Contains, "INA", category.Id, priority: 2);
+        inactiveRule.Deactivate();
+
+        await repository.AddAsync(activeRule);
+        await repository.AddAsync(inactiveRule);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new CategorizationRuleRepository(verifyContext);
+        var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 25, isActive: true);
+
+        // Assert
+        Assert.Equal(1, totalCount);
+        Assert.All(items, r => Assert.True(r.IsActive));
+    }
+
+    [Fact]
+    public async Task ListPagedAsync_Filters_By_CategoryId()
+    {
+        // Arrange
+        await using var context = this._fixture.CreateContext();
+        var cat1 = await this.CreateCategoryAsync(context, "CatFilter1");
+        var cat2 = await this.CreateCategoryAsync(context, "CatFilter2");
+        var repository = new CategorizationRuleRepository(context);
+
+        await repository.AddAsync(CategorizationRule.Create("R1", RuleMatchType.Contains, "RE1", cat1.Id, priority: 1));
+        await repository.AddAsync(CategorizationRule.Create("R2", RuleMatchType.Contains, "RE2", cat2.Id, priority: 2));
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        var verifyRepo = new CategorizationRuleRepository(verifyContext);
+        var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 25, categoryId: cat1.Id);
+
+        // Assert
+        Assert.Equal(1, totalCount);
+        Assert.All(items, r => Assert.Equal(cat1.Id, r.CategoryId));
+    }
+
     private async Task<BudgetCategory> CreateCategoryAsync(BudgetDbContext context, string name)
     {
         var category = BudgetCategory.Create(name, CategoryType.Expense);

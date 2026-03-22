@@ -291,6 +291,17 @@ internal sealed class TransactionRepository : ITransactionRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetByIdsAsync(
+        IReadOnlyList<Guid> ids,
+        CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(this._context.Transactions)
+            .Include(t => t.Category)
+            .Where(t => ids.Contains(t.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<string>> GetAllDescriptionsAsync(CancellationToken cancellationToken = default)
     {
         return await this.ApplyScopeFilter(this._context.Transactions)

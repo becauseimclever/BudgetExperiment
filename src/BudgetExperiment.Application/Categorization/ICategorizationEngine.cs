@@ -59,4 +59,10 @@ public interface ICategorizationEngine
     Task<Dictionary<Guid, InlineCategorySuggestionDto>> GetBatchSuggestionsAsync(
         IReadOnlyList<Guid> transactionIds,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Invalidates the cached active rules, forcing a fresh load on next access.
+    /// Should be called after rule CRUD operations.
+    /// </summary>
+    void InvalidateRuleCache();
 }

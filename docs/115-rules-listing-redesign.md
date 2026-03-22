@@ -1,5 +1,5 @@
 # Feature 115: Rules Listing Redesign
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
@@ -38,10 +38,10 @@ The categorization rules page currently renders every rule as a full card in a s
 **So that** the page loads quickly and I can navigate through rules without endless scrolling
 
 **Acceptance Criteria:**
-- [ ] Rules are displayed in pages of 25 (configurable: 10, 25, 50, 100)
-- [ ] Pagination controls show current page, total pages, and total rule count
-- [ ] Page size preference persists across sessions (local storage)
-- [ ] API returns paginated results with `X-Pagination-TotalCount` header
+- [x] Rules are displayed in pages of 25 (configurable: 10, 25, 50, 100)
+- [x] Pagination controls show current page, total pages, and total rule count
+- [x] Page size preference persists across sessions (local storage) *(Slice 7)*
+- [x] API returns paginated results with `X-Pagination-TotalCount` header
 
 #### US-115-002: Search Rules
 **As a** user looking for a specific rule  
@@ -49,10 +49,10 @@ The categorization rules page currently renders every rule as a full card in a s
 **So that** I can quickly find and edit a rule without scrolling
 
 **Acceptance Criteria:**
-- [ ] Search input with debounced (300ms) server-side filtering
-- [ ] Searches against rule name and pattern text (case-insensitive)
-- [ ] Search results show match count
-- [ ] Clear search button resets to full list
+- [x] Search input with debounced (300ms) server-side filtering
+- [x] Searches against rule name and pattern text (case-insensitive)
+- [x] Search results show match count
+- [x] Clear search button resets to full list
 
 #### US-115-003: Filter by Category
 **As a** user managing rules for a specific category  
@@ -60,9 +60,9 @@ The categorization rules page currently renders every rule as a full card in a s
 **So that** I can review and manage related rules together
 
 **Acceptance Criteria:**
-- [ ] Category dropdown filter showing all categories with rule counts
-- [ ] "All Categories" option to reset filter
-- [ ] Filter combines with search (AND logic)
+- [x] Category dropdown filter showing all categories with rule counts
+- [x] "All Categories" option to reset filter
+- [x] Filter combines with search (AND logic)
 
 #### US-115-004: Filter by Status
 **As a** user  
@@ -70,8 +70,8 @@ The categorization rules page currently renders every rule as a full card in a s
 **So that** I can focus on active rules or review deactivated ones
 
 **Acceptance Criteria:**
-- [ ] Status filter: All, Active Only, Inactive Only
-- [ ] Filter combines with category filter and search
+- [x] Status filter: All, Active Only, Inactive Only
+- [x] Filter combines with category filter and search
 
 ### Compact Display
 
@@ -81,11 +81,11 @@ The categorization rules page currently renders every rule as a full card in a s
 **So that** I can see more rules at a glance without scrolling
 
 **Acceptance Criteria:**
-- [ ] Table view with columns: Priority, Name, Pattern, Match Type, Category, Status, Actions
-- [ ] Sortable columns (click header to sort by that column)
-- [ ] Row actions (edit, activate/deactivate, delete) in a compact action column
-- [ ] Table view is the default for lists > 10 rules
-- [ ] View toggle (table/card) persists in local storage
+- [x] Table view with columns: Priority, Name, Pattern, Match Type, Category, Status, Actions
+- [x] Sortable columns (click header to sort by that column)
+- [x] Row actions (edit, activate/deactivate, delete) in a compact action column
+- [x] Table view is the default for lists > 10 rules
+- [x] View toggle (table/card) persists in local storage *(Slice 7)*
 
 #### US-115-006: Group by Category
 **As a** user  
@@ -93,10 +93,10 @@ The categorization rules page currently renders every rule as a full card in a s
 **So that** I can see all rules feeding into each category in one place
 
 **Acceptance Criteria:**
-- [ ] "Group by Category" toggle in the toolbar
-- [ ] Each category is a collapsible section header showing category name and rule count
-- [ ] Rules within each group are sorted by priority
-- [ ] Collapsed state persists during the session
+- [x] "Group by Category" toggle in the toolbar
+- [x] Each category is a collapsible section header showing category name and rule count
+- [x] Rules within each group are sorted by priority
+- [x] Collapsed state persists during the session
 
 ### Bulk Operations
 
@@ -106,11 +106,11 @@ The categorization rules page currently renders every rule as a full card in a s
 **So that** I can efficiently manage rules in bulk instead of one at a time
 
 **Acceptance Criteria:**
-- [ ] Checkbox selection on each row/card
-- [ ] "Select All" on current page
-- [ ] Bulk action toolbar appears when items are selected: Delete, Activate, Deactivate
-- [ ] Confirmation dialog for bulk delete showing count
-- [ ] Success toast showing number of affected rules
+- [x] Checkbox selection on each row/card
+- [x] "Select All" on current page
+- [x] Bulk action toolbar appears when items are selected: Delete, Activate, Deactivate
+- [x] Confirmation dialog for bulk delete showing count
+- [x] Success toast showing number of affected rules
 
 ---
 
@@ -234,19 +234,19 @@ Each slice is a vertical cut delivering testable, deployable value from API thro
 **Objective:** Replace the unbounded rule list with a paginated table view — API through UI in one slice.
 
 **Tasks:**
-- [ ] Add `CategorizationRuleListRequest` and `CategorizationRulePageResponse` to Contracts
-- [ ] Add `ListPagedAsync` to `ICategorizationRuleRepository` interface
-- [ ] Implement `ListPagedAsync` in `CategorizationRuleRepository` (EF Core `Skip`/`Take`, ordered by priority)
-- [ ] Add `ListPagedAsync` to `ICategorizationRuleService` and implement in `CategorizationRuleService`
-- [ ] Update `CategorizationRulesController` GET endpoint to accept `page` and `pageSize` params, return `X-Pagination-TotalCount` header
-- [ ] Update `IBudgetApiService` client to call paginated endpoint
-- [ ] Create `RulesPagination` component (page nav, page size selector, total count)
-- [ ] Create `RulesTable` component (compact table: Priority, Name, Pattern, Match Type, Category, Status, Actions)
-- [ ] Update `RulesViewModel` with pagination state (`CurrentPage`, `PageSize`, `TotalCount`)
-- [ ] Refactor `Rules.razor` to use `RulesTable` + `RulesPagination` as default view
-- [ ] Write unit tests: service pagination logic, ViewModel pagination state
-- [ ] Write bUnit tests: `RulesTable` renders columns, `RulesPagination` emits page changes
-- [ ] Write API integration test: paginated GET returns correct page/count
+- [x] Add `CategorizationRuleListRequest` and `CategorizationRulePageResponse` to Contracts
+- [x] Add `ListPagedAsync` to `ICategorizationRuleRepository` interface
+- [x] Implement `ListPagedAsync` in `CategorizationRuleRepository` (EF Core `Skip`/`Take`, ordered by priority)
+- [x] Add `ListPagedAsync` to `ICategorizationRuleService` and implement in `CategorizationRuleService`
+- [x] Update `CategorizationRulesController` GET endpoint to accept `page` and `pageSize` params, return `X-Pagination-TotalCount` header
+- [x] Update `IBudgetApiService` client to call paginated endpoint
+- [x] Create `RulesPagination` component (page nav, page size selector, total count)
+- [x] Create `RulesTable` component (compact table: Priority, Name, Pattern, Match Type, Category, Status, Actions)
+- [x] Update `RulesViewModel` with pagination state (`CurrentPage`, `PageSize`, `TotalCount`)
+- [x] Refactor `Rules.razor` to use `RulesTable` + `RulesPagination` as default view
+- [x] Write unit tests: service pagination logic, ViewModel pagination state
+- [x] Write bUnit tests: `RulesTable` renders columns, `RulesPagination` emits page changes
+- [x] Write API integration test: paginated GET returns correct page/count
 
 **Commit:**
 ```bash
@@ -268,17 +268,17 @@ Refs: #115"
 **Objective:** Add search by name/pattern and filter by category/status — full vertical slice from DB query to UI toolbar.
 
 **Tasks:**
-- [ ] Extend `ListPagedAsync` repository to support `search`, `categoryId`, `isActive` filter params
-- [ ] Add database index on `Name` column for search performance
-- [ ] Extend `ListPagedAsync` service to pass through filter params
-- [ ] Update controller GET endpoint to accept `search`, `categoryId`, `status` query params
-- [ ] Update `IBudgetApiService` client to pass filter params
-- [ ] Create `RulesToolbar` component (search input with debounce, category dropdown, status filter)
-- [ ] Update `RulesViewModel` with filter state (`SearchText`, `FilterCategoryId`, `FilterStatus`)
-- [ ] Wire toolbar changes to reload paginated data (reset to page 1 on filter change)
-- [ ] Write unit tests: repository filtering queries, service filter pass-through
-- [ ] Write bUnit tests: toolbar emits filter events, debounced search
-- [ ] Write ViewModel tests: filter changes reset page, trigger reload
+- [x] Extend `ListPagedAsync` repository to support `search`, `categoryId`, `isActive` filter params
+- [x] Add database index on `Name` column for search performance
+- [x] Extend `ListPagedAsync` service to pass through filter params
+- [x] Update controller GET endpoint to accept `search`, `categoryId`, `status` query params
+- [x] Update `IBudgetApiService` client to pass filter params
+- [x] Create `RulesToolbar` component (search input with debounce, category dropdown, status filter)
+- [x] Update `RulesViewModel` with filter state (`SearchText`, `FilterCategoryId`, `FilterStatus`)
+- [x] Wire toolbar changes to reload paginated data (reset to page 1 on filter change)
+- [x] Write unit tests: repository filtering queries, service filter pass-through
+- [x] Write bUnit tests: toolbar emits filter events, debounced search
+- [x] Write ViewModel tests: filter changes reset page, trigger reload
 
 **Commit:**
 ```bash
@@ -299,12 +299,12 @@ Refs: #115"
 **Objective:** Add server-side sorting by clicking table column headers.
 
 **Tasks:**
-- [ ] Extend `ListPagedAsync` repository to support `sortBy` and `sortDirection` params
-- [ ] Extend service and controller to pass through sort params
-- [ ] Update `RulesTable` headers to be clickable with sort direction indicators
-- [ ] Update `RulesViewModel` with sort state (`SortBy`, `SortDirection`)
-- [ ] Write unit tests: repository sort queries, ViewModel sort state toggle
-- [ ] Write bUnit test: clicking header emits sort event
+- [x] Extend `ListPagedAsync` repository to support `sortBy` and `sortDirection` params
+- [x] Extend service and controller to pass through sort params
+- [x] Update `RulesTable` headers to be clickable with sort direction indicators
+- [x] Update `RulesViewModel` with sort state (`SortBy`, `SortDirection`)
+- [x] Write unit tests: repository sort queries, ViewModel sort state toggle
+- [x] Write bUnit test: clicking header emits sort event
 
 **Commit:**
 ```bash
@@ -324,12 +324,12 @@ Refs: #115"
 **Objective:** Add a toggle to view rules grouped under collapsible category headers.
 
 **Tasks:**
-- [ ] Add group-by-category toggle to `RulesToolbar`
-- [ ] Create grouped view rendering in `Rules.razor` (category section headers with rule count, collapsible)
-- [ ] Update `RulesViewModel` with `IsGroupedByCategory` state and grouping logic
-- [ ] When grouped, sort within each category group by priority
-- [ ] Write ViewModel tests: grouping logic, collapse state
-- [ ] Write bUnit test: grouped sections render with correct counts
+- [x] Add group-by-category toggle to `RulesToolbar`
+- [x] Create grouped view rendering in `Rules.razor` (category section headers with rule count, collapsible)
+- [x] Update `RulesViewModel` with `IsGroupedByCategory` state and grouping logic
+- [x] When grouped, sort within each category group by priority
+- [x] Write ViewModel tests: grouping logic, collapse state
+- [x] Write bUnit test: grouped sections render with correct counts
 
 **Commit:**
 ```bash
@@ -349,18 +349,18 @@ Refs: #115"
 **Objective:** Add multi-select and bulk delete/activate/deactivate — full vertical slice from API endpoints to selection UI.
 
 **Tasks:**
-- [ ] Add `BulkRuleActionRequest` to Contracts
-- [ ] Add `BulkDeleteAsync`, `BulkActivateAsync`, `BulkDeactivateAsync` to repository interface and implementation
-- [ ] Add bulk methods to service interface and implementation
-- [ ] Add bulk endpoints to controller (`DELETE bulk`, `POST bulk/activate`, `POST bulk/deactivate`)
-- [ ] Add checkbox column to `RulesTable` with "Select All" on current page
-- [ ] Create `BulkActionBar` component (sticky bar with selected count and action buttons)
-- [ ] Update `RulesViewModel` with selection state and bulk action methods
-- [ ] Add confirmation dialog for bulk delete
-- [ ] Update `IBudgetApiService` with bulk API calls
-- [ ] Write unit tests: service bulk operations, ViewModel selection logic
-- [ ] Write bUnit tests: checkbox selection, bulk action bar visibility
-- [ ] Write API integration tests: bulk endpoints
+- [x] Add `BulkRuleActionRequest` to Contracts
+- [x] Add `BulkDeleteAsync`, `BulkActivateAsync`, `BulkDeactivateAsync` to repository interface and implementation
+- [x] Add bulk methods to service interface and implementation
+- [x] Add bulk endpoints to controller (`DELETE bulk`, `POST bulk/activate`, `POST bulk/deactivate`)
+- [x] Add checkbox column to `RulesTable` with "Select All" on current page
+- [x] Create `BulkActionBar` component (sticky bar with selected count and action buttons)
+- [x] Update `RulesViewModel` with selection state and bulk action methods
+- [x] Add confirmation dialog for bulk delete
+- [x] Update `IBudgetApiService` with bulk API calls
+- [x] Write unit tests: service bulk operations, ViewModel selection logic
+- [x] Write bUnit tests: checkbox selection, bulk action bar visibility
+- [x] Write API integration tests: bulk endpoints
 
 **Commit:**
 ```bash
@@ -381,13 +381,13 @@ Refs: #115"
 **Objective:** Fix the critical performance issues in the categorization engine for applying rules at scale.
 
 **Tasks:**
-- [ ] Add `GetByIdsAsync(IReadOnlyList<Guid>)` to `ITransactionRepository` and implement — replace N+1 loop in `ApplyRulesAsync`
-- [ ] Add `IMemoryCache`-based caching for active rules in `CategorizationEngine` (short TTL, invalidated on rule CRUD)
-- [ ] Add `RegexOptions.Compiled` to `BuildRegex` for cached rule instances
-- [ ] Partition rule evaluation: evaluate string rules first, then regex rules only for unmatched transactions
-- [ ] Add regex complexity validation at rule creation (reject nested quantifiers)
-- [ ] Write unit tests: batch transaction fetch, cache hit/miss, evaluation ordering
-- [ ] Write performance regression test: apply 100 rules against 1000 transactions within threshold
+- [x] Add `GetByIdsAsync(IReadOnlyList<Guid>)` to `ITransactionRepository` and implement — replace N+1 loop in `ApplyRulesAsync`
+- [x] Add `IMemoryCache`-based caching for active rules in `CategorizationEngine` (short TTL, invalidated on rule CRUD)
+- [x] Add `RegexOptions.Compiled` to `BuildRegex` for cached rule instances
+- [x] Partition rule evaluation: evaluate string rules first, then regex rules only for unmatched transactions
+- [x] Add regex complexity validation at rule creation (reject nested quantifiers)
+- [x] Write unit tests: batch transaction fetch, cache hit/miss, evaluation ordering
+- [x] Write performance regression test: apply 100 rules against 1000 transactions within threshold
 
 **Commit:**
 ```bash
@@ -409,12 +409,12 @@ Refs: #115"
 **Objective:** Allow switching between table and card views, persist user preferences.
 
 **Tasks:**
-- [ ] Add view toggle (table/card) to `RulesToolbar`
-- [ ] Preserve existing `RuleCard` component for card view mode
-- [ ] Persist view preference and page size in local storage via JS interop
-- [ ] Add rule count indicators to page header (total, active, filtered)
-- [ ] Write ViewModel test: view toggle state
-- [ ] Write bUnit test: correct view renders based on toggle
+- [x] Add view toggle (table/card) to `RulesToolbar`
+- [x] Preserve existing `RuleCard` component for card view mode
+- [x] Persist view preference and page size in local storage via JS interop
+- [x] Add rule count indicators to page header (total, active, filtered)
+- [x] Write ViewModel test: view toggle state
+- [x] Write bUnit test: correct view renders based on toggle
 
 **Commit:**
 ```bash
@@ -434,12 +434,12 @@ Refs: #115"
 **Objective:** Final polish, accessibility audit, and documentation.
 
 **Tasks:**
-- [ ] Verify keyboard navigation in table (tab through rows, Enter to edit)
-- [ ] Add ARIA labels to table, sort indicators, pagination controls
-- [ ] Update OpenAPI spec documentation for new/modified endpoints
-- [ ] Add XML comments for new public APIs
-- [ ] Manual testing with 200+ rules dataset
-- [ ] Review and clean up any TODO comments
+- [x] Verify keyboard navigation in table (tab through rows, Enter to edit)
+- [x] Add ARIA labels to table, sort indicators, pagination controls
+- [x] Update OpenAPI spec documentation for new/modified endpoints
+- [x] Add XML comments for new public APIs
+- [x] Manual testing with 200+ rules dataset
+- [x] Review and clean up any TODO comments
 
 **Commit:**
 ```bash

@@ -924,6 +924,45 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<CategorizationRulePageResponse> GetCategorizationRulesPagedAsync(CategorizationRuleListRequest request)
+    {
+        var queryParams = new List<string>
+        {
+            $"page={request.Page}",
+            $"pageSize={request.PageSize}",
+        };
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            queryParams.Add($"search={Uri.EscapeDataString(request.Search)}");
+        }
+
+        if (request.CategoryId.HasValue)
+        {
+            queryParams.Add($"categoryId={request.CategoryId.Value}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            queryParams.Add($"status={Uri.EscapeDataString(request.Status)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.SortBy))
+        {
+            queryParams.Add($"sortBy={Uri.EscapeDataString(request.SortBy)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.SortDirection))
+        {
+            queryParams.Add($"sortDirection={Uri.EscapeDataString(request.SortDirection)}");
+        }
+
+        var url = $"api/v1/categorizationrules?{string.Join("&", queryParams)}";
+        var result = await this._httpClient.GetFromJsonAsync<CategorizationRulePageResponse>(url, JsonOptions);
+        return result ?? new CategorizationRulePageResponse();
+    }
+
+    /// <inheritdoc />
     public async Task<CategorizationRuleDto?> GetCategorizationRuleAsync(Guid id)
     {
         try
@@ -1007,6 +1046,49 @@ public sealed class BudgetApiService : IBudgetApiService
         var request = new ReorderRulesRequest { RuleIds = ruleIds };
         var response = await this._httpClient.PutAsJsonAsync("api/v1/categorizationrules/reorder", request, JsonOptions);
         return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
+    public async Task<BulkRuleActionResponse?> BulkDeleteCategorizationRulesAsync(IReadOnlyList<Guid> ids)
+    {
+        var request = new BulkRuleActionRequest { Ids = ids };
+        var httpRequest = new HttpRequestMessage(HttpMethod.Delete, "api/v1/categorizationrules/bulk")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+        var response = await this._httpClient.SendAsync(httpRequest);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<BulkRuleActionResponse>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<BulkRuleActionResponse?> BulkActivateCategorizationRulesAsync(IReadOnlyList<Guid> ids)
+    {
+        var request = new BulkRuleActionRequest { Ids = ids };
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/categorizationrules/bulk/activate", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<BulkRuleActionResponse>(JsonOptions);
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<BulkRuleActionResponse?> BulkDeactivateCategorizationRulesAsync(IReadOnlyList<Guid> ids)
+    {
+        var request = new BulkRuleActionRequest { Ids = ids };
+        var response = await this._httpClient.PostAsJsonAsync("api/v1/categorizationrules/bulk/deactivate", request, JsonOptions);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<BulkRuleActionResponse>(JsonOptions);
+        }
+
+        return null;
     }
 
     /// <inheritdoc />

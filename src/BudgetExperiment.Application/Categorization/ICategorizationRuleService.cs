@@ -20,6 +20,14 @@ public interface ICategorizationRuleService
     Task<IReadOnlyList<CategorizationRuleDto>> GetAllAsync(bool activeOnly = false, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lists categorization rules with server-side pagination, filtering, and sorting.
+    /// </summary>
+    /// <param name="request">The paged list request parameters.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A paged response of categorization rules.</returns>
+    Task<CategorizationRulePageResponse> ListPagedAsync(CategorizationRuleListRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a categorization rule by ID.
     /// </summary>
     /// <param name="id">The rule identifier.</param>
@@ -94,6 +102,30 @@ public interface ICategorizationRuleService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deactivated, false if not found.</returns>
     Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes multiple rules by ID.
+    /// </summary>
+    /// <param name="ids">The rule identifiers.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of rules deleted.</returns>
+    Task<int> BulkDeleteAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Activates multiple rules by ID.
+    /// </summary>
+    /// <param name="ids">The rule identifiers.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of rules activated.</returns>
+    Task<int> BulkActivateAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deactivates multiple rules by ID.
+    /// </summary>
+    /// <param name="ids">The rule identifiers.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of rules deactivated.</returns>
+    Task<int> BulkDeactivateAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Reorders rules by setting new priorities.

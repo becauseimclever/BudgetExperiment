@@ -12,7 +12,7 @@
     <PageHeader Title="Categorization Rules">
         <Actions>
             <Button Variant="ButtonVariant.Outline" IconLeft="sparkles" OnClick="ViewModel.NavigateToAiSuggestions" title="Get AI-powered rule suggestions">AI Suggestions</Button>
-            <Button Variant="ButtonVariant.Secondary" IconLeft="play" IsDisabled="@(ViewModel.Rules.Count == 0)" OnClick="ViewModel.ShowApplyRules">Apply Rules</Button>
+            <Button Variant="ButtonVariant.Secondary" IconLeft="play" IsDisabled="@(ViewModel.TotalCount == 0)" OnClick="ViewModel.ShowApplyRules">Apply Rules</Button>
             <Button Variant="ButtonVariant.Success" OnClick="ViewModel.ShowAddRule">+ Add Rule</Button>
         </Actions>
     </PageHeader>
@@ -23,36 +23,143 @@
                 OnDismiss="ViewModel.DismissError"
                 IsRetrying="@ViewModel.IsRetrying" />
 
+    <RulesToolbar SearchText="@ViewModel.SearchText"
+                  CategoryId="@ViewModel.SelectedCategoryId"
+                  Status="@ViewModel.SelectedStatus"
+                  Categories="@ViewModel.Categories"
+                  ActiveFilterCount="@ViewModel.ActiveFilterCount"
+                  IsGrouped="@ViewModel.IsGroupedByCategory"
+                  ViewMode="@ViewModel.ViewMode"
+                  OnSearchChanged="ViewModel.SetSearchAsync"
+                  OnCategoryChanged="ViewModel.SetCategoryFilterAsync"
+                  OnStatusChanged="ViewModel.SetStatusFilterAsync"
+                  OnClearFilters="ViewModel.ClearFiltersAsync"
+                  OnViewModeChanged="ViewModel.SetViewModeAsync"
+                  OnGroupToggle="ViewModel.ToggleGroupByCategory" />
+
+    <BulkActionBar SelectedCount="@ViewModel.SelectedCount"
+                   IsProcessing="@ViewModel.IsBulkOperating"
+                   OnDelete="ViewModel.ConfirmBulkDelete"
+                   OnActivate="ViewModel.BulkActivateAsync"
+                   OnDeactivate="ViewModel.BulkDeactivateAsync"
+                   OnClearSelection="ViewModel.ClearSelection" />
+
     @if (ViewModel.IsLoading)
     {
         <LoadingSpinner Message="Loading rules..." />
     }
-    else if (ViewModel.Rules.Count == 0 && ViewModel.ErrorMessage == null)
+    else if (ViewModel.TotalCount == 0 && ViewModel.ErrorMessage == null && !ViewModel.HasActiveFilters)
     {
         <EmptyState Title="No categorization rules yet"
                    Description="Create rules to automatically assign categories to transactions based on their descriptions.">
             <Button Variant="ButtonVariant.Primary" OnClick="ViewModel.ShowAddRule">Create Your First Rule</Button>
         </EmptyState>
     }
+    else if (ViewModel.TotalCount == 0 && ViewModel.ErrorMessage == null && ViewModel.HasActiveFilters)
+    {
+        <EmptyState Title="No rules match the current filters"
+                   Description="Try adjusting your search or filter criteria.">
+            <Button Variant="ButtonVariant.Secondary" OnClick="ViewModel.ClearFiltersAsync">Clear Filters</Button>
+        </EmptyState>
+    }
     else if (ViewModel.ErrorMessage == null)
     {
         <div class="rules-info mb-3">
             <small class="text-secondary">
-                Rules are evaluated in priority order (lowest number first). 
-                The first matching rule assigns the category.
+                @ViewModel.TotalCount rule(s) total
+                &middot; @ViewModel.ActiveRuleCount active on this page
+                @if (ViewModel.HasActiveFilters)
+                {
+                    @: &middot; @ViewModel.FilteredCount shown (filtered)
+                }
+                &middot; Rules are evaluated in priority order (lowest number first).
             </small>
         </div>
 
-        <div class="rules-list">
-            @foreach (var rule in ViewModel.Rules.OrderBy(r => r.Priority))
+        @if (ViewModel.IsGroupedByCategory)
+        {
+            @foreach (var group in ViewModel.GroupedRules)
             {
-                <RuleCard Rule="@rule"
-                          OnEdit="ViewModel.ShowEditRule"
-                          OnDelete="ViewModel.ConfirmDeleteRule"
-                          OnActivate="ViewModel.ActivateRuleAsync"
-                          OnDeactivate="ViewModel.DeactivateRuleAsync" />
+                <div class="category-group">
+                    <button class="category-group-header" @onclick="() => ViewModel.ToggleCategoryCollapse(group.Key)" aria-expanded="@(!ViewModel.IsCategoryCollapsed(group.Key))">
+                        <span class="category-group-toggle">@(ViewModel.IsCategoryCollapsed(group.Key) ? "\u25B6" : "\u25BC")</span>
+                        <span class="category-group-name">@group.Key</span>
+                        <Badge Text="@group.Value.Count.ToString()" />
+                    </button>
+                    @if (!ViewModel.IsCategoryCollapsed(group.Key))
+                    {
+                        @if (ViewModel.ViewMode == RulesViewMode.Table)
+                        {
+                            <RulesTable Rules="@group.Value"
+                                        SortBy="@ViewModel.SortBy"
+                                        SortDirection="@ViewModel.SortDirection"
+                                        SelectedIds="@ViewModel.SelectedRuleIds"
+                                        AreAllSelected="@ViewModel.AreAllOnPageSelected"
+                                        OnSelectionToggled="ViewModel.ToggleRuleSelection"
+                                        OnSelectAllToggle="ViewModel.ToggleSelectAllOnPage"
+                                        OnEdit="ViewModel.ShowEditRule"
+                                        OnDelete="ViewModel.ConfirmDeleteRule"
+                                        OnActivate="ViewModel.ActivateRuleAsync"
+                                        OnDeactivate="ViewModel.DeactivateRuleAsync"
+                                        OnSort="ViewModel.ToggleSortAsync"
+                                        OnClearSelection="ViewModel.ClearSelection" />
+                        }
+                        else
+                        {
+                            <div class="rules-card-grid">
+                                @foreach (var rule in group.Value)
+                                {
+                                    <RuleCard Rule="@rule"
+                                              OnEdit="ViewModel.ShowEditRule"
+                                              OnDelete="ViewModel.ConfirmDeleteRule"
+                                              OnActivate="ViewModel.ActivateRuleAsync"
+                                              OnDeactivate="ViewModel.DeactivateRuleAsync" />
+                                }
+                            </div>
+                        }
+                    }
+                </div>
             }
-        </div>
+        }
+        else
+        {
+            @if (ViewModel.ViewMode == RulesViewMode.Table)
+            {
+                <RulesTable Rules="@ViewModel.Rules"
+                            SortBy="@ViewModel.SortBy"
+                            SortDirection="@ViewModel.SortDirection"
+                            SelectedIds="@ViewModel.SelectedRuleIds"
+                            AreAllSelected="@ViewModel.AreAllOnPageSelected"
+                            OnSelectionToggled="ViewModel.ToggleRuleSelection"
+                            OnSelectAllToggle="ViewModel.ToggleSelectAllOnPage"
+                            OnEdit="ViewModel.ShowEditRule"
+                            OnDelete="ViewModel.ConfirmDeleteRule"
+                            OnActivate="ViewModel.ActivateRuleAsync"
+                            OnDeactivate="ViewModel.DeactivateRuleAsync"
+                            OnSort="ViewModel.ToggleSortAsync"
+                            OnClearSelection="ViewModel.ClearSelection" />
+            }
+            else
+            {
+                <div class="rules-card-grid">
+                    @foreach (var rule in ViewModel.Rules)
+                    {
+                        <RuleCard Rule="@rule"
+                                  OnEdit="ViewModel.ShowEditRule"
+                                  OnDelete="ViewModel.ConfirmDeleteRule"
+                                  OnActivate="ViewModel.ActivateRuleAsync"
+                                  OnDeactivate="ViewModel.DeactivateRuleAsync" />
+                    }
+                </div>
+            }
+        }
+
+        <RulesPagination CurrentPage="@ViewModel.CurrentPage"
+                         PageSize="@ViewModel.PageSize"
+                         TotalCount="@ViewModel.TotalCount"
+                         TotalPages="@ViewModel.TotalPages"
+                         OnPageChanged="ViewModel.ChangePageAsync"
+                         OnPageSizeChanged="ViewModel.ChangePageSizeAsync" />
 
         <div class="section-divider mt-4 mb-4"></div>
 
@@ -93,6 +200,14 @@
                    IsProcessing="@ViewModel.IsDeleting"
                    OnConfirm="ViewModel.DeleteRuleAsync"
                    OnCancel="ViewModel.CancelDelete" />
+
+    <ConfirmDialog IsVisible="@ViewModel.ShowBulkDeleteConfirm"
+                   Title="Bulk Delete Rules"
+                   Message="@($"Are you sure you want to delete {ViewModel.SelectedCount} rule(s)? This action cannot be undone.")"
+                   ConfirmText="Delete All"
+                   IsProcessing="@ViewModel.IsBulkOperating"
+                   OnConfirm="ViewModel.BulkDeleteAsync"
+                   OnCancel="ViewModel.CancelBulkDelete" />
 </div>
 
 @code {

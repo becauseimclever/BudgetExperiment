@@ -579,6 +579,13 @@ public interface IBudgetApiService
     Task<IReadOnlyList<CategorizationRuleDto>> GetCategorizationRulesAsync(bool activeOnly = false);
 
     /// <summary>
+    /// Gets categorization rules with server-side pagination, filtering, and sorting.
+    /// </summary>
+    /// <param name="request">The paged list request parameters.</param>
+    /// <returns>A paged response of categorization rules.</returns>
+    Task<CategorizationRulePageResponse> GetCategorizationRulesPagedAsync(CategorizationRuleListRequest request);
+
+    /// <summary>
     /// Gets a categorization rule by ID.
     /// </summary>
     /// <param name="id">The rule ID.</param>
@@ -642,6 +649,27 @@ public interface IBudgetApiService
     /// <param name="ruleIds">The ordered list of rule IDs. The index becomes the new priority.</param>
     /// <returns>True if reordered successfully.</returns>
     Task<bool> ReorderCategorizationRulesAsync(IReadOnlyList<Guid> ruleIds);
+
+    /// <summary>
+    /// Bulk deletes categorization rules.
+    /// </summary>
+    /// <param name="ids">The IDs of rules to delete.</param>
+    /// <returns>The bulk action response with affected count.</returns>
+    Task<BulkRuleActionResponse?> BulkDeleteCategorizationRulesAsync(IReadOnlyList<Guid> ids);
+
+    /// <summary>
+    /// Bulk activates categorization rules.
+    /// </summary>
+    /// <param name="ids">The IDs of rules to activate.</param>
+    /// <returns>The bulk action response with affected count.</returns>
+    Task<BulkRuleActionResponse?> BulkActivateCategorizationRulesAsync(IReadOnlyList<Guid> ids);
+
+    /// <summary>
+    /// Bulk deactivates categorization rules.
+    /// </summary>
+    /// <param name="ids">The IDs of rules to deactivate.</param>
+    /// <returns>The bulk action response with affected count.</returns>
+    Task<BulkRuleActionResponse?> BulkDeactivateCategorizationRulesAsync(IReadOnlyList<Guid> ids);
 
     // Unified Transaction Operations
 

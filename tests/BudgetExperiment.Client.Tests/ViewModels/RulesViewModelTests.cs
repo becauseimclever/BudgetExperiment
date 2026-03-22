@@ -36,7 +36,8 @@ public sealed class RulesViewModelTests : IDisposable
             this._toastService,
             this._navigationManager,
             this._scopeService,
-            this._apiErrorContext);
+            this._apiErrorContext,
+            new StubJSRuntime());
     }
 
     /// <inheritdoc/>
@@ -1190,6 +1191,1088 @@ public sealed class RulesViewModelTests : IDisposable
         called.ShouldBeTrue();
     }
 
+    // --- Pagination ---
+
+    /// <summary>
+    /// Verifies that InitializeAsync sets pagination properties from the paged response.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InitializeAsync_SetsPaginationProperties()
+    {
+        this._apiService.Rules.Add(CreateRule("Rule1", "P1", "Contains"));
+        this._apiService.Rules.Add(CreateRule("Rule2", "P2", "Contains"));
+
+        await this._sut.InitializeAsync();
+
+        this._sut.CurrentPage.ShouldBe(1);
+        this._sut.PageSize.ShouldBe(25);
+        this._sut.TotalCount.ShouldBe(2);
+    }
+
+    /// <summary>
+    /// Verifies ChangePageAsync updates CurrentPage and reloads data.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ChangePageAsync_UpdatesCurrentPage()
+    {
+        await this._sut.InitializeAsync();
+
+        await this._sut.ChangePageAsync(3);
+
+        this._sut.CurrentPage.ShouldBe(3);
+    }
+
+    /// <summary>
+    /// Verifies ChangePageAsync invokes OnStateChanged.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ChangePageAsync_NotifiesStateChanged()
+    {
+        await this._sut.InitializeAsync();
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        await this._sut.ChangePageAsync(2);
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies ChangePageSizeAsync updates PageSize and resets to page 1.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ChangePageSizeAsync_UpdatesPageSizeAndResetsPage()
+    {
+        await this._sut.InitializeAsync();
+        await this._sut.ChangePageAsync(3);
+        this._sut.CurrentPage.ShouldBe(3);
+
+        await this._sut.ChangePageSizeAsync(50);
+
+        this._sut.PageSize.ShouldBe(50);
+        this._sut.CurrentPage.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies ChangePageSizeAsync invokes OnStateChanged.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ChangePageSizeAsync_NotifiesStateChanged()
+    {
+        await this._sut.InitializeAsync();
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        await this._sut.ChangePageSizeAsync(10);
+
+        called.ShouldBeTrue();
+    }
+
+    // --- Filter Methods ---
+
+    /// <summary>
+    /// Verifies that SetSearchAsync updates SearchText.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetSearchAsync_UpdatesSearchText()
+    {
+        await this._sut.SetSearchAsync("grocery");
+
+        this._sut.SearchText.ShouldBe("grocery");
+    }
+
+    /// <summary>
+    /// Verifies that SetSearchAsync resets page to 1 after debounce.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetSearchAsync_ResetsPageToOne()
+    {
+        await this._sut.InitializeAsync();
+        await this._sut.ChangePageAsync(3);
+        this._sut.CurrentPage.ShouldBe(3);
+
+        await this._sut.SetSearchAsync("test");
+
+        this._sut.CurrentPage.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies that SetSearchAsync notifies state changed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetSearchAsync_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        await this._sut.SetSearchAsync("test");
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that SetCategoryFilterAsync updates SelectedCategoryId.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetCategoryFilterAsync_UpdatesCategoryId()
+    {
+        var categoryId = Guid.NewGuid();
+
+        await this._sut.SetCategoryFilterAsync(categoryId);
+
+        this._sut.SelectedCategoryId.ShouldBe(categoryId);
+    }
+
+    /// <summary>
+    /// Verifies that SetCategoryFilterAsync resets page to 1.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetCategoryFilterAsync_ResetsPageToOne()
+    {
+        await this._sut.InitializeAsync();
+        await this._sut.ChangePageAsync(3);
+
+        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+
+        this._sut.CurrentPage.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies that SetCategoryFilterAsync notifies state changed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetCategoryFilterAsync_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that SetStatusFilterAsync updates SelectedStatus.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetStatusFilterAsync_UpdatesSelectedStatus()
+    {
+        await this._sut.SetStatusFilterAsync("Active");
+
+        this._sut.SelectedStatus.ShouldBe("Active");
+    }
+
+    /// <summary>
+    /// Verifies that SetStatusFilterAsync resets page to 1.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetStatusFilterAsync_ResetsPageToOne()
+    {
+        await this._sut.InitializeAsync();
+        await this._sut.ChangePageAsync(3);
+
+        await this._sut.SetStatusFilterAsync("Active");
+
+        this._sut.CurrentPage.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies that SetStatusFilterAsync notifies state changed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetStatusFilterAsync_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        await this._sut.SetStatusFilterAsync("Inactive");
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that ClearFiltersAsync resets all filter state.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ClearFiltersAsync_ResetsAllFilters()
+    {
+        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+        await this._sut.SetStatusFilterAsync("Active");
+
+        // Directly set search to avoid debounce issues in test
+        await this._sut.SetSearchAsync("test");
+
+        await this._sut.ClearFiltersAsync();
+
+        this._sut.SearchText.ShouldBeNull();
+        this._sut.SelectedCategoryId.ShouldBeNull();
+        this._sut.SelectedStatus.ShouldBeNull();
+        this._sut.CurrentPage.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies that ClearFiltersAsync notifies state changed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ClearFiltersAsync_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        await this._sut.ClearFiltersAsync();
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that HasActiveFilters is false when no filters are set.
+    /// </summary>
+    [Fact]
+    public void HasActiveFilters_FalseWhenNoFilters()
+    {
+        this._sut.HasActiveFilters.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that HasActiveFilters is true when search text is set.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task HasActiveFilters_TrueWhenSearchSet()
+    {
+        await this._sut.SetSearchAsync("test");
+
+        this._sut.HasActiveFilters.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that HasActiveFilters is true when category is set.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task HasActiveFilters_TrueWhenCategorySet()
+    {
+        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+
+        this._sut.HasActiveFilters.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that HasActiveFilters is true when status is set.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task HasActiveFilters_TrueWhenStatusSet()
+    {
+        await this._sut.SetStatusFilterAsync("Active");
+
+        this._sut.HasActiveFilters.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that ActiveFilterCount returns the correct count.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ActiveFilterCount_ReturnsCorrectCount()
+    {
+        this._sut.ActiveFilterCount.ShouldBe(0);
+
+        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+        this._sut.ActiveFilterCount.ShouldBe(1);
+
+        await this._sut.SetStatusFilterAsync("Active");
+        this._sut.ActiveFilterCount.ShouldBe(2);
+
+        await this._sut.SetSearchAsync("test");
+        this._sut.ActiveFilterCount.ShouldBe(3);
+    }
+
+    // --- Group by Category ---
+
+    // --- Sort ---
+
+    /// <summary>
+    /// Verifies that SortBy and SortDirection default to null.
+    /// </summary>
+    [Fact]
+    public void Sort_DefaultsToNull()
+    {
+        this._sut.SortBy.ShouldBeNull();
+        this._sut.SortDirection.ShouldBeNull();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleSortAsync sets SortBy and defaults to ascending for a new field.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToggleSortAsync_SetsSortField_WhenNewField()
+    {
+        await this._sut.ToggleSortAsync("name");
+
+        this._sut.SortBy.ShouldBe("name");
+        this._sut.SortDirection.ShouldBe("asc");
+    }
+
+    /// <summary>
+    /// Verifies that ToggleSortAsync toggles direction when sorting by the same field.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToggleSortAsync_TogglesDirection_WhenSameField()
+    {
+        await this._sut.ToggleSortAsync("name");
+        this._sut.SortDirection.ShouldBe("asc");
+
+        await this._sut.ToggleSortAsync("name");
+        this._sut.SortDirection.ShouldBe("desc");
+
+        await this._sut.ToggleSortAsync("name");
+        this._sut.SortDirection.ShouldBe("asc");
+    }
+
+    /// <summary>
+    /// Verifies that ToggleSortAsync resets direction when switching to a different field.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToggleSortAsync_ResetsDirection_WhenDifferentField()
+    {
+        await this._sut.ToggleSortAsync("name");
+        await this._sut.ToggleSortAsync("name");
+        this._sut.SortDirection.ShouldBe("desc");
+
+        await this._sut.ToggleSortAsync("priority");
+        this._sut.SortBy.ShouldBe("priority");
+        this._sut.SortDirection.ShouldBe("asc");
+    }
+
+    /// <summary>
+    /// Verifies that ToggleSortAsync resets page to 1.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToggleSortAsync_ResetsPageToOne()
+    {
+        await this._sut.InitializeAsync();
+        await this._sut.ChangePageAsync(3);
+        this._sut.CurrentPage.ShouldBe(3);
+
+        await this._sut.ToggleSortAsync("name");
+
+        this._sut.CurrentPage.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies that ToggleSortAsync notifies state changed.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToggleSortAsync_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        await this._sut.ToggleSortAsync("name");
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that ClearFiltersAsync also resets sort state.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ClearFiltersAsync_ResetsSort()
+    {
+        await this._sut.ToggleSortAsync("name");
+        this._sut.SortBy.ShouldNotBeNull();
+
+        await this._sut.ClearFiltersAsync();
+
+        this._sut.SortBy.ShouldBeNull();
+        this._sut.SortDirection.ShouldBeNull();
+    }
+
+    // --- Group by Category (continued) ---
+
+    /// <summary>
+    /// Verifies that IsGroupedByCategory is false by default.
+    /// </summary>
+    [Fact]
+    public void IsGroupedByCategory_DefaultsFalse()
+    {
+        this._sut.IsGroupedByCategory.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleGroupByCategory toggles the grouping state.
+    /// </summary>
+    [Fact]
+    public void ToggleGroupByCategory_TogglesState()
+    {
+        this._sut.ToggleGroupByCategory();
+        this._sut.IsGroupedByCategory.ShouldBeTrue();
+
+        this._sut.ToggleGroupByCategory();
+        this._sut.IsGroupedByCategory.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleGroupByCategory notifies state changed.
+    /// </summary>
+    [Fact]
+    public void ToggleGroupByCategory_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        this._sut.ToggleGroupByCategory();
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that GroupedRules groups rules by CategoryName.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GroupedRules_GroupsByCategoryName()
+    {
+        var groceryId = Guid.NewGuid();
+        var utilityId = Guid.NewGuid();
+        this._apiService.Rules.Add(CreateRuleWithCategory("Grocery Rule", "GROCERY", "Contains", groceryId, "Groceries"));
+        this._apiService.Rules.Add(CreateRuleWithCategory("Utility Rule", "ELECTRIC", "Contains", utilityId, "Utilities"));
+        this._apiService.Rules.Add(CreateRuleWithCategory("Grocery Rule 2", "FOOD", "Contains", groceryId, "Groceries"));
+
+        await this._sut.InitializeAsync();
+        this._sut.ToggleGroupByCategory();
+
+        var groups = this._sut.GroupedRules;
+        groups.Count.ShouldBe(2);
+        groups.ShouldContainKey("Groceries");
+        groups.ShouldContainKey("Utilities");
+        groups["Groceries"].Count.ShouldBe(2);
+        groups["Utilities"].Count.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies that GroupedRules sorts rules within each group by priority.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GroupedRules_SortsWithinGroupByPriority()
+    {
+        var catId = Guid.NewGuid();
+        this._apiService.Rules.Add(CreateRuleWithCategory("Low Priority", "LOW", "Contains", catId, "Groceries", priority: 10));
+        this._apiService.Rules.Add(CreateRuleWithCategory("High Priority", "HIGH", "Contains", catId, "Groceries", priority: 1));
+
+        await this._sut.InitializeAsync();
+        this._sut.ToggleGroupByCategory();
+
+        var group = this._sut.GroupedRules["Groceries"];
+        group[0].Name.ShouldBe("High Priority");
+        group[1].Name.ShouldBe("Low Priority");
+    }
+
+    /// <summary>
+    /// Verifies that GroupedRules returns empty when not grouped.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GroupedRules_ReturnsEmpty_WhenNotGrouped()
+    {
+        this._apiService.Rules.Add(CreateRule("Rule1", "PATTERN", "Contains"));
+        await this._sut.InitializeAsync();
+
+        this._sut.GroupedRules.Count.ShouldBe(0);
+    }
+
+    /// <summary>
+    /// Verifies that GroupedRules handles rules with null CategoryName.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GroupedRules_HandlesNullCategoryName()
+    {
+        this._apiService.Rules.Add(CreateRuleWithCategory("Rule1", "PATTERN", "Contains", Guid.NewGuid(), null));
+        await this._sut.InitializeAsync();
+        this._sut.ToggleGroupByCategory();
+
+        var groups = this._sut.GroupedRules;
+        groups.Count.ShouldBe(1);
+        groups.ShouldContainKey("Unknown");
+    }
+
+    /// <summary>
+    /// Verifies that collapsed category state is tracked.
+    /// </summary>
+    [Fact]
+    public void ToggleCategoryCollapse_TracksCollapsedState()
+    {
+        this._sut.ToggleCategoryCollapse("Groceries");
+        this._sut.IsCategoryCollapsed("Groceries").ShouldBeTrue();
+
+        this._sut.ToggleCategoryCollapse("Groceries");
+        this._sut.IsCategoryCollapsed("Groceries").ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that categories are expanded by default.
+    /// </summary>
+    [Fact]
+    public void IsCategoryCollapsed_DefaultsFalse()
+    {
+        this._sut.IsCategoryCollapsed("AnyCategory").ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleCategoryCollapse notifies state changed.
+    /// </summary>
+    [Fact]
+    public void ToggleCategoryCollapse_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        this._sut.ToggleCategoryCollapse("Groceries");
+
+        called.ShouldBeTrue();
+    }
+
+    // --- Selection ---
+
+    /// <summary>
+    /// Verifies that no rules are selected by default.
+    /// </summary>
+    [Fact]
+    public void Selection_DefaultsToEmpty()
+    {
+        this._sut.SelectedCount.ShouldBe(0);
+        this._sut.HasSelection.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleRuleSelection adds a rule to selection.
+    /// </summary>
+    [Fact]
+    public void ToggleRuleSelection_AddsRule()
+    {
+        var id = Guid.NewGuid();
+        this._sut.ToggleRuleSelection(id);
+
+        this._sut.SelectedCount.ShouldBe(1);
+        this._sut.IsRuleSelected(id).ShouldBeTrue();
+        this._sut.HasSelection.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleRuleSelection removes a previously selected rule.
+    /// </summary>
+    [Fact]
+    public void ToggleRuleSelection_RemovesWhenAlreadySelected()
+    {
+        var id = Guid.NewGuid();
+        this._sut.ToggleRuleSelection(id);
+        this._sut.ToggleRuleSelection(id);
+
+        this._sut.SelectedCount.ShouldBe(0);
+        this._sut.IsRuleSelected(id).ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleRuleSelection notifies state changed.
+    /// </summary>
+    [Fact]
+    public void ToggleRuleSelection_NotifiesStateChanged()
+    {
+        var called = false;
+        this._sut.OnStateChanged = () => called = true;
+
+        this._sut.ToggleRuleSelection(Guid.NewGuid());
+
+        called.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that SelectAllOnPage selects all rules on the current page.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SelectAllOnPage_SelectsAllCurrentRules()
+    {
+        var rule1 = CreateRule("R1", "p1", "Contains");
+        var rule2 = CreateRule("R2", "p2", "Contains");
+        this._apiService.Rules.Add(rule1);
+        this._apiService.Rules.Add(rule2);
+        await this._sut.InitializeAsync();
+
+        this._sut.SelectAllOnPage();
+
+        this._sut.SelectedCount.ShouldBe(2);
+        this._sut.IsRuleSelected(rule1.Id).ShouldBeTrue();
+        this._sut.IsRuleSelected(rule2.Id).ShouldBeTrue();
+        this._sut.AreAllOnPageSelected.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that DeselectAllOnPage removes all current page rules from selection.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task DeselectAllOnPage_RemovesCurrentPageFromSelection()
+    {
+        var rule1 = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule1);
+        await this._sut.InitializeAsync();
+
+        this._sut.SelectAllOnPage();
+        this._sut.DeselectAllOnPage();
+
+        this._sut.SelectedCount.ShouldBe(0);
+        this._sut.AreAllOnPageSelected.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleSelectAllOnPage selects all when not all selected.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToggleSelectAllOnPage_SelectsAll_WhenNotAllSelected()
+    {
+        var rule1 = CreateRule("R1", "p1", "Contains");
+        var rule2 = CreateRule("R2", "p2", "Contains");
+        this._apiService.Rules.Add(rule1);
+        this._apiService.Rules.Add(rule2);
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule1.Id);
+        this._sut.ToggleSelectAllOnPage();
+
+        this._sut.AreAllOnPageSelected.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that ToggleSelectAllOnPage deselects all when all are selected.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ToggleSelectAllOnPage_DeselectsAll_WhenAllSelected()
+    {
+        var rule1 = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule1);
+        await this._sut.InitializeAsync();
+
+        this._sut.SelectAllOnPage();
+        this._sut.ToggleSelectAllOnPage();
+
+        this._sut.AreAllOnPageSelected.ShouldBeFalse();
+        this._sut.SelectedCount.ShouldBe(0);
+    }
+
+    /// <summary>
+    /// Verifies that ClearSelection removes all selections.
+    /// </summary>
+    [Fact]
+    public void ClearSelection_RemovesAll()
+    {
+        this._sut.ToggleRuleSelection(Guid.NewGuid());
+        this._sut.ToggleRuleSelection(Guid.NewGuid());
+        this._sut.ClearSelection();
+
+        this._sut.SelectedCount.ShouldBe(0);
+        this._sut.HasSelection.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that AreAllOnPageSelected returns false when no rules are loaded.
+    /// </summary>
+    [Fact]
+    public void AreAllOnPageSelected_ReturnsFalse_WhenNoRules()
+    {
+        this._sut.AreAllOnPageSelected.ShouldBeFalse();
+    }
+
+    // --- Bulk Delete ---
+
+    /// <summary>
+    /// Verifies that ConfirmBulkDelete shows the confirmation dialog.
+    /// </summary>
+    [Fact]
+    public void ConfirmBulkDelete_ShowsDialog()
+    {
+        this._sut.ConfirmBulkDelete();
+
+        this._sut.ShowBulkDeleteConfirm.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that CancelBulkDelete hides the confirmation dialog.
+    /// </summary>
+    [Fact]
+    public void CancelBulkDelete_HidesDialog()
+    {
+        this._sut.ConfirmBulkDelete();
+        this._sut.CancelBulkDelete();
+
+        this._sut.ShowBulkDeleteConfirm.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that BulkDeleteAsync does nothing when no rules are selected.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeleteAsync_DoesNothing_WhenNoSelection()
+    {
+        await this._sut.BulkDeleteAsync();
+
+        this._sut.ErrorMessage.ShouldBeNull();
+        this._sut.IsBulkOperating.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that BulkDeleteAsync calls API and clears selection on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeleteAsync_ClearsSelection_OnSuccess()
+    {
+        var rule = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkDeleteResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkDeleteAsync();
+
+        this._sut.SelectedCount.ShouldBe(0);
+        this._sut.IsBulkOperating.ShouldBeFalse();
+        this._sut.ShowBulkDeleteConfirm.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that BulkDeleteAsync shows toast on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeleteAsync_ShowsToast_OnSuccess()
+    {
+        var rule = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkDeleteResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkDeleteAsync();
+
+        this._toastService.LastSuccessMessage.ShouldBe("Deleted 1 rule(s).");
+    }
+
+    /// <summary>
+    /// Verifies that BulkDeleteAsync sets error when API returns null.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeleteAsync_SetsError_WhenApiFails()
+    {
+        var rule = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkDeleteResult = null;
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkDeleteAsync();
+
+        this._sut.ErrorMessage.ShouldBe("Failed to bulk delete rules.");
+    }
+
+    /// <summary>
+    /// Verifies that BulkDeleteAsync sets error on exception.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeleteAsync_SetsError_OnException()
+    {
+        var rule = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkDeleteException = new InvalidOperationException("Network error");
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkDeleteAsync();
+
+        this._sut.ErrorMessage.ShouldNotBeNull();
+        this._sut.ErrorMessage.ShouldContain("Network error");
+    }
+
+    // --- Bulk Activate ---
+
+    /// <summary>
+    /// Verifies that BulkActivateAsync clears selection and shows toast on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkActivateAsync_ClearsSelection_OnSuccess()
+    {
+        var rule = CreateRule("R1", "p1", "Contains", isActive: false);
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkActivateResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkActivateAsync();
+
+        this._sut.SelectedCount.ShouldBe(0);
+        this._sut.IsBulkOperating.ShouldBeFalse();
+        this._toastService.LastSuccessMessage.ShouldBe("Activated 1 rule(s).");
+    }
+
+    /// <summary>
+    /// Verifies that BulkActivateAsync sets error when API returns null.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkActivateAsync_SetsError_WhenApiFails()
+    {
+        var rule = CreateRule("R1", "p1", "Contains", isActive: false);
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkActivateResult = null;
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkActivateAsync();
+
+        this._sut.ErrorMessage.ShouldBe("Failed to bulk activate rules.");
+    }
+
+    /// <summary>
+    /// Verifies that BulkActivateAsync does nothing when no selection.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkActivateAsync_DoesNothing_WhenNoSelection()
+    {
+        await this._sut.BulkActivateAsync();
+
+        this._sut.ErrorMessage.ShouldBeNull();
+    }
+
+    // --- Bulk Deactivate ---
+
+    /// <summary>
+    /// Verifies that BulkDeactivateAsync clears selection and shows toast on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeactivateAsync_ClearsSelection_OnSuccess()
+    {
+        var rule = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkDeactivateResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkDeactivateAsync();
+
+        this._sut.SelectedCount.ShouldBe(0);
+        this._sut.IsBulkOperating.ShouldBeFalse();
+        this._toastService.LastSuccessMessage.ShouldBe("Deactivated 1 rule(s).");
+    }
+
+    /// <summary>
+    /// Verifies that BulkDeactivateAsync sets error when API returns null.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeactivateAsync_SetsError_WhenApiFails()
+    {
+        var rule = CreateRule("R1", "p1", "Contains");
+        this._apiService.Rules.Add(rule);
+        this._apiService.BulkDeactivateResult = null;
+        await this._sut.InitializeAsync();
+
+        this._sut.ToggleRuleSelection(rule.Id);
+        await this._sut.BulkDeactivateAsync();
+
+        this._sut.ErrorMessage.ShouldBe("Failed to bulk deactivate rules.");
+    }
+
+    /// <summary>
+    /// Verifies that BulkDeactivateAsync does nothing when no selection.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeactivateAsync_DoesNothing_WhenNoSelection()
+    {
+        await this._sut.BulkDeactivateAsync();
+
+        this._sut.ErrorMessage.ShouldBeNull();
+    }
+
+    // --- View Mode ---
+
+    /// <summary>
+    /// Verifies the default view mode is Table.
+    /// </summary>
+    [Fact]
+    public void ViewMode_DefaultsToTable()
+    {
+        this._sut.ViewMode.ShouldBe(RulesViewMode.Table);
+    }
+
+    /// <summary>
+    /// Verifies SetViewModeAsync changes the view mode and notifies state change.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetViewModeAsync_ChangesViewMode()
+    {
+        var stateChangedCount = 0;
+        this._sut.OnStateChanged = () => stateChangedCount++;
+
+        await this._sut.SetViewModeAsync(RulesViewMode.Card);
+
+        this._sut.ViewMode.ShouldBe(RulesViewMode.Card);
+        stateChangedCount.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// Verifies SetViewModeAsync does nothing when mode is the same.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task SetViewModeAsync_SameMode_DoesNotNotify()
+    {
+        var stateChangedCount = 0;
+        this._sut.OnStateChanged = () => stateChangedCount++;
+
+        await this._sut.SetViewModeAsync(RulesViewMode.Table);
+
+        stateChangedCount.ShouldBe(0);
+    }
+
+    // --- Active Rule Count ---
+
+    /// <summary>
+    /// Verifies ActiveRuleCount returns the number of active rules on the current page.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task ActiveRuleCount_ReturnsCountOfActiveRules()
+    {
+        this._apiService.Rules.Add(CreateRule("R1", "pat1", "Contains", isActive: true));
+        this._apiService.Rules.Add(CreateRule("R2", "pat2", "Contains", isActive: false));
+        this._apiService.Rules.Add(CreateRule("R3", "pat3", "Contains", isActive: true));
+
+        await this._sut.InitializeAsync();
+
+        this._sut.ActiveRuleCount.ShouldBe(2);
+    }
+
+    /// <summary>
+    /// Verifies FilteredCount returns the number of rules on the current page.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task FilteredCount_ReturnsPageRuleCount()
+    {
+        this._apiService.Rules.Add(CreateRule("R1", "pat1", "Contains"));
+        this._apiService.Rules.Add(CreateRule("R2", "pat2", "Contains"));
+
+        await this._sut.InitializeAsync();
+
+        this._sut.FilteredCount.ShouldBe(2);
+    }
+
+    // --- Preference Persistence ---
+
+    /// <summary>
+    /// Verifies that InitializeAsync loads view mode preference from localStorage.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InitializeAsync_LoadsViewModePreference()
+    {
+        var jsRuntime = new ConfigurableJSRuntime();
+        jsRuntime.SetStorageItem("budget-experiment-rules-view-mode", "Card");
+        var sut = new RulesViewModel(
+            this._apiService,
+            this._toastService,
+            this._navigationManager,
+            this._scopeService,
+            this._apiErrorContext,
+            jsRuntime);
+
+        await sut.InitializeAsync();
+
+        sut.ViewMode.ShouldBe(RulesViewMode.Card);
+        sut.Dispose();
+    }
+
+    /// <summary>
+    /// Verifies that InitializeAsync loads page size preference from localStorage.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InitializeAsync_LoadsPageSizePreference()
+    {
+        var jsRuntime = new ConfigurableJSRuntime();
+        jsRuntime.SetStorageItem("budget-experiment-rules-page-size", "50");
+        var sut = new RulesViewModel(
+            this._apiService,
+            this._toastService,
+            this._navigationManager,
+            this._scopeService,
+            this._apiErrorContext,
+            jsRuntime);
+
+        await sut.InitializeAsync();
+
+        sut.PageSize.ShouldBe(50);
+        sut.Dispose();
+    }
+
+    /// <summary>
+    /// Verifies that an invalid page size from localStorage is ignored.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InitializeAsync_InvalidPageSize_UsesDefault()
+    {
+        var jsRuntime = new ConfigurableJSRuntime();
+        jsRuntime.SetStorageItem("budget-experiment-rules-page-size", "999");
+        var sut = new RulesViewModel(
+            this._apiService,
+            this._toastService,
+            this._navigationManager,
+            this._scopeService,
+            this._apiErrorContext,
+            jsRuntime);
+
+        await sut.InitializeAsync();
+
+        sut.PageSize.ShouldBe(25);
+        sut.Dispose();
+    }
+
     private static CategorizationRuleDto CreateRule(
         string name,
         string pattern,
@@ -1206,6 +2289,30 @@ public sealed class RulesViewModelTests : IDisposable
             CaseSensitive = false,
             CategoryId = Guid.NewGuid(),
             CategoryName = "Test Category",
+            Priority = priority,
+            IsActive = isActive,
+            CreatedAt = DateTime.UtcNow,
+        };
+    }
+
+    private static CategorizationRuleDto CreateRuleWithCategory(
+        string name,
+        string pattern,
+        string matchType,
+        Guid categoryId,
+        string? categoryName,
+        int priority = 1,
+        bool isActive = true)
+    {
+        return new CategorizationRuleDto
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            Pattern = pattern,
+            MatchType = matchType,
+            CaseSensitive = false,
+            CategoryId = categoryId,
+            CategoryName = categoryName,
             Priority = priority,
             IsActive = isActive,
             CreatedAt = DateTime.UtcNow,
@@ -1242,12 +2349,18 @@ public sealed class RulesViewModelTests : IDisposable
         /// </summary>
         public bool WarningShown { get; private set; }
 
+        /// <summary>
+        /// Gets the last success message shown.
+        /// </summary>
+        public string? LastSuccessMessage { get; private set; }
+
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];
 
         /// <inheritdoc/>
         public void ShowSuccess(string message, string? title = null)
         {
+            this.LastSuccessMessage = message;
         }
 
         /// <inheritdoc/>
@@ -1285,6 +2398,33 @@ public sealed class RulesViewModelTests : IDisposable
         /// <inheritdoc/>
         /// <returns>A default value.</returns>
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) => default;
+    }
+
+    /// <summary>
+    /// Configurable IJSRuntime that can return stored localStorage values.
+    /// </summary>
+    private sealed class ConfigurableJSRuntime : IJSRuntime
+    {
+        private readonly Dictionary<string, string> _storage = new(StringComparer.Ordinal);
+
+        public void SetStorageItem(string key, string value) => this._storage[key] = value;
+
+        /// <inheritdoc/>
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        {
+            if (identifier == "localStorage.getItem" && args?.Length > 0 && args[0] is string key && this._storage.TryGetValue(key, out var val))
+            {
+                return new ValueTask<TValue>((TValue)(object)val);
+            }
+
+            return default;
+        }
+
+        /// <inheritdoc/>
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
+        {
+            return this.InvokeAsync<TValue>(identifier, args);
+        }
     }
 
     /// <summary>

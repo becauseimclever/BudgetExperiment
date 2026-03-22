@@ -580,4 +580,291 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         var updated = await response.Content.ReadFromJsonAsync<CategorizationRuleDto>();
         Assert.Equal("Updated Without ETag", updated!.Name);
     }
+
+    /// <summary>
+    /// GET /api/v1/categorizationrules?page=1&amp;pageSize=10 returns 200 OK with paged response and TotalCount header.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetPaged_Returns_200_WithPagedResponse_And_TotalCountHeader()
+    {
+        // Arrange - create a category and a few rules
+        var categoryDto = new BudgetCategoryCreateDto { Name = "Pagination Test", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        for (var i = 0; i < 3; i++)
+        {
+            var ruleDto = new CategorizationRuleCreateDto
+            {
+                Name = $"Paged Rule {i}",
+                Pattern = $"PAGED{i}",
+                MatchType = "Contains",
+                CategoryId = category!.Id,
+            };
+            await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+        }
+
+        // Act
+        var response = await this._client.GetAsync("/api/v1/categorizationrules?page=1&pageSize=2");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var paged = await response.Content.ReadFromJsonAsync<CategorizationRulePageResponse>();
+        Assert.NotNull(paged);
+        Assert.True(paged.Items.Count <= 2);
+        Assert.True(paged.TotalCount >= 3);
+        Assert.Equal(1, paged.Page);
+        Assert.Equal(2, paged.PageSize);
+
+        Assert.True(response.Headers.Contains("X-Pagination-TotalCount"));
+        var totalCountHeader = response.Headers.GetValues("X-Pagination-TotalCount").First();
+        Assert.True(int.Parse(totalCountHeader) >= 3);
+    }
+
+    /// <summary>
+    /// GET /api/v1/categorizationrules without page param returns the legacy array format.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetAll_Without_Page_Params_Returns_Legacy_Array()
+    {
+        // Act
+        var response = await this._client.GetAsync("/api/v1/categorizationrules");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var rules = await response.Content.ReadFromJsonAsync<List<CategorizationRuleDto>>();
+        Assert.NotNull(rules);
+
+        // The legacy format should NOT contain the X-Pagination-TotalCount header
+        Assert.False(response.Headers.Contains("X-Pagination-TotalCount"));
+    }
+
+    /// <summary>
+    /// DELETE /api/v1/categorizationrules/bulk deletes multiple rules and returns affected count.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDelete_Returns_200_WithAffectedCount()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "BulkDelete Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var ids = new List<Guid>();
+        for (var i = 0; i < 3; i++)
+        {
+            var ruleDto = new CategorizationRuleCreateDto
+            {
+                Name = $"BulkDelete Rule {i}",
+                Pattern = $"BULKDEL{i}",
+                MatchType = "Contains",
+                CategoryId = category!.Id,
+            };
+            var resp = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+            var created = await resp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+            ids.Add(created!.Id);
+        }
+
+        var request = new BulkRuleActionRequest { Ids = ids };
+
+        // Act
+        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/categorizationrules/bulk")
+        {
+            Content = JsonContent.Create(request),
+        };
+        var response = await this._client.SendAsync(deleteRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BulkRuleActionResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(3, result.AffectedCount);
+
+        // Verify rules are gone
+        foreach (var id in ids)
+        {
+            var getResp = await this._client.GetAsync($"/api/v1/categorizationrules/{id}");
+            Assert.Equal(HttpStatusCode.NotFound, getResp.StatusCode);
+        }
+    }
+
+    /// <summary>
+    /// DELETE /api/v1/categorizationrules/bulk with empty IDs returns 400.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDelete_WithEmptyIds_Returns_400()
+    {
+        // Arrange
+        var request = new BulkRuleActionRequest { Ids = [] };
+
+        // Act
+        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/categorizationrules/bulk")
+        {
+            Content = JsonContent.Create(request),
+        };
+        var response = await this._client.SendAsync(deleteRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// POST /api/v1/categorizationrules/bulk/activate activates multiple rules and returns affected count.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkActivate_Returns_200_WithAffectedCount()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "BulkActivate Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var ids = new List<Guid>();
+        for (var i = 0; i < 2; i++)
+        {
+            var ruleDto = new CategorizationRuleCreateDto
+            {
+                Name = $"BulkActivate Rule {i}",
+                Pattern = $"BULKACT{i}",
+                MatchType = "Contains",
+                CategoryId = category!.Id,
+            };
+            var resp = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+            var created = await resp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+            ids.Add(created!.Id);
+
+            // Deactivate so we can test bulk activate
+            await this._client.PostAsync($"/api/v1/categorizationrules/{created.Id}/deactivate", null);
+        }
+
+        var request = new BulkRuleActionRequest { Ids = ids };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/activate", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BulkRuleActionResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result.AffectedCount);
+
+        // Verify rules are active
+        foreach (var id in ids)
+        {
+            var getResp = await this._client.GetAsync($"/api/v1/categorizationrules/{id}");
+            var rule = await getResp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+            Assert.True(rule!.IsActive);
+        }
+    }
+
+    /// <summary>
+    /// POST /api/v1/categorizationrules/bulk/activate with empty IDs returns 400.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkActivate_WithEmptyIds_Returns_400()
+    {
+        // Arrange
+        var request = new BulkRuleActionRequest { Ids = [] };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/activate", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// POST /api/v1/categorizationrules/bulk/deactivate deactivates multiple rules and returns affected count.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeactivate_Returns_200_WithAffectedCount()
+    {
+        // Arrange
+        var categoryDto = new BudgetCategoryCreateDto { Name = "BulkDeactivate Category", Type = "Expense" };
+        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
+
+        var ids = new List<Guid>();
+        for (var i = 0; i < 2; i++)
+        {
+            var ruleDto = new CategorizationRuleCreateDto
+            {
+                Name = $"BulkDeactivate Rule {i}",
+                Pattern = $"BULKDEACT{i}",
+                MatchType = "Contains",
+                CategoryId = category!.Id,
+            };
+            var resp = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+            var created = await resp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+            ids.Add(created!.Id);
+        }
+
+        var request = new BulkRuleActionRequest { Ids = ids };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/deactivate", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BulkRuleActionResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result.AffectedCount);
+
+        // Verify rules are inactive
+        foreach (var id in ids)
+        {
+            var getResp = await this._client.GetAsync($"/api/v1/categorizationrules/{id}");
+            var rule = await getResp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
+            Assert.False(rule!.IsActive);
+        }
+    }
+
+    /// <summary>
+    /// POST /api/v1/categorizationrules/bulk/deactivate with empty IDs returns 400.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDeactivate_WithEmptyIds_Returns_400()
+    {
+        // Arrange
+        var request = new BulkRuleActionRequest { Ids = [] };
+
+        // Act
+        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/deactivate", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// DELETE /api/v1/categorizationrules/bulk with non-existent IDs returns 200 with zero affected.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task BulkDelete_WithNonExistentIds_Returns_200_WithZeroAffected()
+    {
+        // Arrange
+        var request = new BulkRuleActionRequest { Ids = [Guid.NewGuid(), Guid.NewGuid()] };
+
+        // Act
+        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/categorizationrules/bulk")
+        {
+            Content = JsonContent.Create(request),
+        };
+        var response = await this._client.SendAsync(deleteRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BulkRuleActionResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(0, result.AffectedCount);
+    }
 }
