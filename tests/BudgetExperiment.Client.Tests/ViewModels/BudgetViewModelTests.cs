@@ -8,8 +8,10 @@ using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Shared.Budgeting;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -30,18 +32,18 @@ public sealed class BudgetViewModelTests : IDisposable
     /// </summary>
     public BudgetViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new BudgetViewModel(
-            this._apiService,
-            this._navigationManager,
-            this._scopeService,
-            this._apiErrorContext);
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new BudgetViewModel(
+            _apiService,
+            _navigationManager,
+            _scopeService,
+            _apiErrorContext);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -53,12 +55,12 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsBudgetSummary()
     {
-        this._apiService.BudgetSummary = CreateSummary();
+        _apiService.BudgetSummary = CreateSummary();
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Summary.ShouldNotBeNull();
-        this._sut.Summary.TotalBudgeted.Amount.ShouldBe(5000m);
+        _sut.Summary.ShouldNotBeNull();
+        _sut.Summary.TotalBudgeted.Amount.ShouldBe(5000m);
     }
 
     /// <summary>
@@ -68,9 +70,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -80,13 +82,13 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetBudgetSummaryException = new HttpRequestException("Server error");
+        _apiService.GetBudgetSummaryException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load budget");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load budget");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- LoadBudgetAsync ---
@@ -98,14 +100,14 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task LoadBudgetAsync_ClearsErrorMessage()
     {
-        this._apiService.GetBudgetSummaryException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetBudgetSummaryException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.GetBudgetSummaryException = null;
-        await this._sut.LoadBudgetAsync();
+        _apiService.GetBudgetSummaryException = null;
+        await _sut.LoadBudgetAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -115,12 +117,12 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task LoadBudgetAsync_SetsSummaryToNull_WhenApiReturnsNull()
     {
-        this._apiService.BudgetSummary = null;
+        _apiService.BudgetSummary = null;
 
-        await this._sut.LoadBudgetAsync();
+        await _sut.LoadBudgetAsync();
 
-        this._sut.Summary.ShouldBeNull();
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.Summary.ShouldBeNull();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- RetryLoadAsync ---
@@ -132,13 +134,13 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_ReloadsBudget()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.BudgetSummary = CreateSummary();
+        await _sut.InitializeAsync();
+        _apiService.BudgetSummary = CreateSummary();
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
-        this._sut.Summary.ShouldNotBeNull();
-        this._sut.IsRetrying.ShouldBeFalse();
+        _sut.Summary.ShouldNotBeNull();
+        _sut.IsRetrying.ShouldBeFalse();
     }
 
     /// <summary>
@@ -149,9 +151,9 @@ public sealed class BudgetViewModelTests : IDisposable
     public async Task RetryLoadAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -165,13 +167,13 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task DismissError_ClearsErrorMessage()
     {
-        this._apiService.GetBudgetSummaryException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetBudgetSummaryException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -181,9 +183,9 @@ public sealed class BudgetViewModelTests : IDisposable
     public void DismissError_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         callCount.ShouldBe(1);
     }
@@ -197,11 +199,11 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task PreviousMonthAsync_MovesDateBackOneMonth()
     {
-        var originalDate = this._sut.CurrentDate;
+        var originalDate = _sut.CurrentDate;
 
-        await this._sut.PreviousMonthAsync();
+        await _sut.PreviousMonthAsync();
 
-        this._sut.CurrentDate.ShouldBe(originalDate.AddMonths(-1));
+        _sut.CurrentDate.ShouldBe(originalDate.AddMonths(-1));
     }
 
     /// <summary>
@@ -211,12 +213,12 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task PreviousMonthAsync_ReloadsBudget()
     {
-        this._apiService.BudgetSummary = CreateSummary();
+        _apiService.BudgetSummary = CreateSummary();
 
-        await this._sut.PreviousMonthAsync();
+        await _sut.PreviousMonthAsync();
 
-        this._sut.Summary.ShouldNotBeNull();
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.Summary.ShouldNotBeNull();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -226,11 +228,11 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task NextMonthAsync_MovesDateForwardOneMonth()
     {
-        var originalDate = this._sut.CurrentDate;
+        var originalDate = _sut.CurrentDate;
 
-        await this._sut.NextMonthAsync();
+        await _sut.NextMonthAsync();
 
-        this._sut.CurrentDate.ShouldBe(originalDate.AddMonths(1));
+        _sut.CurrentDate.ShouldBe(originalDate.AddMonths(1));
     }
 
     /// <summary>
@@ -240,12 +242,12 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task NextMonthAsync_ReloadsBudget()
     {
-        this._apiService.BudgetSummary = CreateSummary();
+        _apiService.BudgetSummary = CreateSummary();
 
-        await this._sut.NextMonthAsync();
+        await _sut.NextMonthAsync();
 
-        this._sut.Summary.ShouldNotBeNull();
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.Summary.ShouldNotBeNull();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- Computed Properties ---
@@ -256,7 +258,7 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void OverallStatus_ReturnsNoBudgetSet_WhenSummaryIsNull()
     {
-        this._sut.OverallStatus.ShouldBe("NoBudgetSet");
+        _sut.OverallStatus.ShouldBe("NoBudgetSet");
     }
 
     /// <summary>
@@ -266,10 +268,10 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task OverallStatus_ReturnsOnTrack_WhenUnder80Percent()
     {
-        this._apiService.BudgetSummary = CreateSummary(overallPercentUsed: 50m);
-        await this._sut.InitializeAsync();
+        _apiService.BudgetSummary = CreateSummary(overallPercentUsed: 50m);
+        await _sut.InitializeAsync();
 
-        this._sut.OverallStatus.ShouldBe("OnTrack");
+        _sut.OverallStatus.ShouldBe("OnTrack");
     }
 
     /// <summary>
@@ -279,10 +281,10 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task OverallStatus_ReturnsWarning_WhenBetween80And100Percent()
     {
-        this._apiService.BudgetSummary = CreateSummary(overallPercentUsed: 85m);
-        await this._sut.InitializeAsync();
+        _apiService.BudgetSummary = CreateSummary(overallPercentUsed: 85m);
+        await _sut.InitializeAsync();
 
-        this._sut.OverallStatus.ShouldBe("Warning");
+        _sut.OverallStatus.ShouldBe("Warning");
     }
 
     /// <summary>
@@ -292,10 +294,10 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task OverallStatus_ReturnsWarning_AtExactly80Percent()
     {
-        this._apiService.BudgetSummary = CreateSummary(overallPercentUsed: 80m);
-        await this._sut.InitializeAsync();
+        _apiService.BudgetSummary = CreateSummary(overallPercentUsed: 80m);
+        await _sut.InitializeAsync();
 
-        this._sut.OverallStatus.ShouldBe("Warning");
+        _sut.OverallStatus.ShouldBe("Warning");
     }
 
     /// <summary>
@@ -305,10 +307,10 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task OverallStatus_ReturnsOverBudget_WhenAtOrOver100Percent()
     {
-        this._apiService.BudgetSummary = CreateSummary(overallPercentUsed: 110m);
-        await this._sut.InitializeAsync();
+        _apiService.BudgetSummary = CreateSummary(overallPercentUsed: 110m);
+        await _sut.InitializeAsync();
 
-        this._sut.OverallStatus.ShouldBe("OverBudget");
+        _sut.OverallStatus.ShouldBe("OverBudget");
     }
 
     /// <summary>
@@ -318,10 +320,10 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task OverallStatus_ReturnsOverBudget_AtExactly100Percent()
     {
-        this._apiService.BudgetSummary = CreateSummary(overallPercentUsed: 100m);
-        await this._sut.InitializeAsync();
+        _apiService.BudgetSummary = CreateSummary(overallPercentUsed: 100m);
+        await _sut.InitializeAsync();
 
-        this._sut.OverallStatus.ShouldBe("OverBudget");
+        _sut.OverallStatus.ShouldBe("OverBudget");
     }
 
     /// <summary>
@@ -330,9 +332,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void ModalTitle_ReturnsSetBudgetGoal_WhenCreatingNew()
     {
-        this._sut.ShowEditGoal(CreateProgress(status: "NoBudgetSet"));
+        _sut.ShowEditGoal(CreateProgress(status: "NoBudgetSet"));
 
-        this._sut.ModalTitle.ShouldBe("Set Budget Goal");
+        _sut.ModalTitle.ShouldBe("Set Budget Goal");
     }
 
     /// <summary>
@@ -341,9 +343,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void ModalTitle_ReturnsEditBudgetGoal_WhenEditingExisting()
     {
-        this._sut.ShowEditGoal(CreateProgress(status: "OnTrack"));
+        _sut.ShowEditGoal(CreateProgress(status: "OnTrack"));
 
-        this._sut.ModalTitle.ShouldBe("Edit Budget Goal");
+        _sut.ModalTitle.ShouldBe("Edit Budget Goal");
     }
 
     /// <summary>
@@ -352,9 +354,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void IsCreatingNewGoal_ReturnsTrue_WhenNoBudgetSet()
     {
-        this._sut.ShowEditGoal(CreateProgress(status: "NoBudgetSet"));
+        _sut.ShowEditGoal(CreateProgress(status: "NoBudgetSet"));
 
-        this._sut.IsCreatingNewGoal.ShouldBeTrue();
+        _sut.IsCreatingNewGoal.ShouldBeTrue();
     }
 
     /// <summary>
@@ -363,9 +365,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void IsCreatingNewGoal_ReturnsFalse_WhenExistingGoal()
     {
-        this._sut.ShowEditGoal(CreateProgress(status: "OnTrack"));
+        _sut.ShowEditGoal(CreateProgress(status: "OnTrack"));
 
-        this._sut.IsCreatingNewGoal.ShouldBeFalse();
+        _sut.IsCreatingNewGoal.ShouldBeFalse();
     }
 
     /// <summary>
@@ -374,7 +376,7 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void IsCreatingNewGoal_ReturnsFalse_WhenNoEditingProgress()
     {
-        this._sut.IsCreatingNewGoal.ShouldBeFalse();
+        _sut.IsCreatingNewGoal.ShouldBeFalse();
     }
 
     // --- ShowEditGoal / HideEditGoal ---
@@ -387,11 +389,11 @@ public sealed class BudgetViewModelTests : IDisposable
     {
         var progress = CreateProgress(targetAmount: 500m);
 
-        this._sut.ShowEditGoal(progress);
+        _sut.ShowEditGoal(progress);
 
-        this._sut.ShowEditGoalModal.ShouldBeTrue();
-        this._sut.EditingProgress.ShouldBe(progress);
-        this._sut.EditTargetAmount.ShouldBe(500m);
+        _sut.ShowEditGoalModal.ShouldBeTrue();
+        _sut.EditingProgress.ShouldBe(progress);
+        _sut.EditTargetAmount.ShouldBe(500m);
     }
 
     /// <summary>
@@ -401,9 +403,9 @@ public sealed class BudgetViewModelTests : IDisposable
     public void ShowEditGoal_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.ShowEditGoal(CreateProgress());
+        _sut.ShowEditGoal(CreateProgress());
 
         callCount.ShouldBe(1);
     }
@@ -414,12 +416,12 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void HideEditGoal_ClearsModalState()
     {
-        this._sut.ShowEditGoal(CreateProgress());
+        _sut.ShowEditGoal(CreateProgress());
 
-        this._sut.HideEditGoal();
+        _sut.HideEditGoal();
 
-        this._sut.ShowEditGoalModal.ShouldBeFalse();
-        this._sut.EditingProgress.ShouldBeNull();
+        _sut.ShowEditGoalModal.ShouldBeFalse();
+        _sut.EditingProgress.ShouldBeNull();
     }
 
     /// <summary>
@@ -429,9 +431,9 @@ public sealed class BudgetViewModelTests : IDisposable
     public void HideEditGoal_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.HideEditGoal();
+        _sut.HideEditGoal();
 
         callCount.ShouldBe(1);
     }
@@ -445,9 +447,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task SaveGoalAsync_DoesNothing_WhenNoEditingProgress()
     {
-        await this._sut.SaveGoalAsync();
+        await _sut.SaveGoalAsync();
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -458,8 +460,8 @@ public sealed class BudgetViewModelTests : IDisposable
     public async Task SaveGoalAsync_ClosesModalAndReloads_OnSuccess()
     {
         var categoryId = Guid.NewGuid();
-        this._sut.ShowEditGoal(CreateProgress(categoryId: categoryId));
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        _sut.ShowEditGoal(CreateProgress(categoryId: categoryId));
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
         {
             Id = Guid.NewGuid(),
             CategoryId = categoryId,
@@ -468,11 +470,11 @@ public sealed class BudgetViewModelTests : IDisposable
             Month = DateTime.Today.Month,
         });
 
-        await this._sut.SaveGoalAsync();
+        await _sut.SaveGoalAsync();
 
-        this._sut.ShowEditGoalModal.ShouldBeFalse();
-        this._sut.EditingProgress.ShouldBeNull();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditGoalModal.ShouldBeFalse();
+        _sut.EditingProgress.ShouldBeNull();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -482,13 +484,13 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task SaveGoalAsync_SetsErrorMessage_WhenApiReturnsFailure()
     {
-        this._sut.ShowEditGoal(CreateProgress());
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Failure();
+        _sut.ShowEditGoal(CreateProgress());
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Failure();
 
-        await this._sut.SaveGoalAsync();
+        await _sut.SaveGoalAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to save budget goal.");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBe("Failed to save budget goal.");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -498,14 +500,14 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task SaveGoalAsync_SetsErrorMessage_WhenExceptionThrown()
     {
-        this._sut.ShowEditGoal(CreateProgress());
-        this._apiService.SetBudgetGoalException = new HttpRequestException("Network error");
+        _sut.ShowEditGoal(CreateProgress());
+        _apiService.SetBudgetGoalException = new HttpRequestException("Network error");
 
-        await this._sut.SaveGoalAsync();
+        await _sut.SaveGoalAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to save budget goal");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to save budget goal");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -517,9 +519,9 @@ public sealed class BudgetViewModelTests : IDisposable
     {
         var categoryId = Guid.NewGuid();
         var progress = CreateProgress(categoryId: categoryId, currency: "EUR");
-        this._sut.ShowEditGoal(progress);
-        this._sut.EditTargetAmount = 750m;
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        _sut.ShowEditGoal(progress);
+        _sut.EditTargetAmount = 750m;
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
         {
             Id = Guid.NewGuid(),
             CategoryId = categoryId,
@@ -528,10 +530,10 @@ public sealed class BudgetViewModelTests : IDisposable
             Month = DateTime.Today.Month,
         });
 
-        await this._sut.SaveGoalAsync();
+        await _sut.SaveGoalAsync();
 
-        this._sut.ShowEditGoalModal.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditGoalModal.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -543,8 +545,8 @@ public sealed class BudgetViewModelTests : IDisposable
     {
         var categoryId = Guid.NewGuid();
         var progress = CreateProgress(categoryId: categoryId, currency: string.Empty);
-        this._sut.ShowEditGoal(progress);
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        _sut.ShowEditGoal(progress);
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
         {
             Id = Guid.NewGuid(),
             CategoryId = categoryId,
@@ -553,9 +555,9 @@ public sealed class BudgetViewModelTests : IDisposable
             Month = DateTime.Today.Month,
         });
 
-        await this._sut.SaveGoalAsync();
+        await _sut.SaveGoalAsync();
 
-        this._sut.ShowEditGoalModal.ShouldBeFalse();
+        _sut.ShowEditGoalModal.ShouldBeFalse();
     }
 
     // --- DeleteGoalAsync ---
@@ -567,9 +569,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task DeleteGoalAsync_DoesNothing_WhenNoEditingProgress()
     {
-        await this._sut.DeleteGoalAsync();
+        await _sut.DeleteGoalAsync();
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -579,14 +581,14 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task DeleteGoalAsync_ClosesModalAndReloads_OnSuccess()
     {
-        this._sut.ShowEditGoal(CreateProgress());
-        this._apiService.DeleteBudgetGoalResult = true;
+        _sut.ShowEditGoal(CreateProgress());
+        _apiService.DeleteBudgetGoalResult = true;
 
-        await this._sut.DeleteGoalAsync();
+        await _sut.DeleteGoalAsync();
 
-        this._sut.ShowEditGoalModal.ShouldBeFalse();
-        this._sut.EditingProgress.ShouldBeNull();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditGoalModal.ShouldBeFalse();
+        _sut.EditingProgress.ShouldBeNull();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -596,13 +598,13 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task DeleteGoalAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._sut.ShowEditGoal(CreateProgress());
-        this._apiService.DeleteBudgetGoalResult = false;
+        _sut.ShowEditGoal(CreateProgress());
+        _apiService.DeleteBudgetGoalResult = false;
 
-        await this._sut.DeleteGoalAsync();
+        await _sut.DeleteGoalAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to delete budget goal.");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBe("Failed to delete budget goal.");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -612,14 +614,14 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task DeleteGoalAsync_SetsErrorMessage_WhenExceptionThrown()
     {
-        this._sut.ShowEditGoal(CreateProgress());
-        this._apiService.DeleteBudgetGoalException = new HttpRequestException("Network error");
+        _sut.ShowEditGoal(CreateProgress());
+        _apiService.DeleteBudgetGoalException = new HttpRequestException("Network error");
 
-        await this._sut.DeleteGoalAsync();
+        await _sut.DeleteGoalAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to delete budget goal");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to delete budget goal");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- NavigateToCategories ---
@@ -630,9 +632,9 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void NavigateToCategories_NavigatesToCategoriesPage()
     {
-        this._sut.NavigateToCategories();
+        _sut.NavigateToCategories();
 
-        this._navigationManager.LastNavigatedUri.ShouldBe("/categories");
+        _navigationManager.LastNavigatedUri.ShouldBe("/categories");
     }
 
     // --- Scope Change ---
@@ -644,15 +646,15 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task ScopeChange_ReloadsBudget()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.BudgetSummary = CreateSummary();
+        await _sut.InitializeAsync();
+        _apiService.BudgetSummary = CreateSummary();
 
-        await this._scopeService.SetScopeAsync(BudgetScope.Personal);
+        await _scopeService.SetScopeAsync(BudgetScope.Personal);
 
         // Allow async void to complete
         await Task.Delay(50);
 
-        this._sut.Summary.ShouldNotBeNull();
+        _sut.Summary.ShouldNotBeNull();
     }
 
     /// <summary>
@@ -663,10 +665,10 @@ public sealed class BudgetViewModelTests : IDisposable
     public async Task ScopeChange_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
-        await this._sut.InitializeAsync();
+        _sut.OnStateChanged = () => callCount++;
+        await _sut.InitializeAsync();
 
-        await this._scopeService.SetScopeAsync(BudgetScope.Shared);
+        await _scopeService.SetScopeAsync(BudgetScope.Shared);
 
         // Allow async void to complete
         await Task.Delay(50);
@@ -683,16 +685,16 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_UnsubscribesFromScopeChanges()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Dispose();
+        await _sut.InitializeAsync();
+        _sut.Dispose();
 
         // Changing scope after dispose should not cause issues
-        this._apiService.BudgetSummary = CreateSummary();
-        await this._scopeService.SetScopeAsync(BudgetScope.Personal);
+        _apiService.BudgetSummary = CreateSummary();
+        await _scopeService.SetScopeAsync(BudgetScope.Personal);
         await Task.Delay(50);
 
         // Summary should remain null since the handler was unsubscribed
-        this._sut.Summary.ShouldBeNull();
+        _sut.Summary.ShouldBeNull();
     }
 
     // --- OnStateChanged Callback ---
@@ -704,9 +706,9 @@ public sealed class BudgetViewModelTests : IDisposable
     public void OnStateChanged_InvokedAfterShowEditGoal()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.ShowEditGoal(CreateProgress());
+        _sut.ShowEditGoal(CreateProgress());
 
         callCount.ShouldBe(1);
     }
@@ -718,9 +720,9 @@ public sealed class BudgetViewModelTests : IDisposable
     public void OnStateChanged_InvokedAfterHideEditGoal()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.HideEditGoal();
+        _sut.HideEditGoal();
 
         callCount.ShouldBe(1);
     }
@@ -732,9 +734,9 @@ public sealed class BudgetViewModelTests : IDisposable
     public void OnStateChanged_InvokedAfterDismissError()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         callCount.ShouldBe(1);
     }
@@ -745,10 +747,10 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void OnStateChanged_NoExceptionWhenNull()
     {
-        this._sut.OnStateChanged = null;
+        _sut.OnStateChanged = null;
 
         // Should not throw
-        this._sut.DismissError();
+        _sut.DismissError();
     }
 
     // --- Initial State ---
@@ -759,15 +761,15 @@ public sealed class BudgetViewModelTests : IDisposable
     [Fact]
     public void InitialState_HasCorrectDefaults()
     {
-        this._sut.IsLoading.ShouldBeTrue();
-        this._sut.IsRetrying.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
-        this._sut.ErrorMessage.ShouldBeNull();
-        this._sut.Summary.ShouldBeNull();
-        this._sut.CurrentDate.ShouldBe(DateTime.Today);
-        this._sut.ShowEditGoalModal.ShouldBeFalse();
-        this._sut.EditingProgress.ShouldBeNull();
-        this._sut.EditTargetAmount.ShouldBe(0m);
+        _sut.IsLoading.ShouldBeTrue();
+        _sut.IsRetrying.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBeNull();
+        _sut.Summary.ShouldBeNull();
+        _sut.CurrentDate.ShouldBe(DateTime.Today);
+        _sut.ShowEditGoalModal.ShouldBeFalse();
+        _sut.EditingProgress.ShouldBeNull();
+        _sut.EditTargetAmount.ShouldBe(0m);
     }
 
     // --- Helpers ---
@@ -791,15 +793,15 @@ public sealed class BudgetViewModelTests : IDisposable
         string status = "OnTrack",
         decimal targetAmount = 500m,
         string? currency = "USD") => new()
-    {
-        CategoryId = categoryId ?? Guid.NewGuid(),
-        CategoryName = "Groceries",
-        TargetAmount = new MoneyDto { Amount = targetAmount, Currency = currency ?? "USD" },
-        SpentAmount = new MoneyDto { Amount = 300m, Currency = currency ?? "USD" },
-        RemainingAmount = new MoneyDto { Amount = targetAmount - 300m, Currency = currency ?? "USD" },
-        PercentUsed = targetAmount > 0 ? (300m / targetAmount * 100m) : 0m,
-        Status = status,
-    };
+        {
+            CategoryId = categoryId ?? Guid.NewGuid(),
+            CategoryName = "Groceries",
+            TargetAmount = new MoneyDto { Amount = targetAmount, Currency = currency ?? "USD" },
+            SpentAmount = new MoneyDto { Amount = 300m, Currency = currency ?? "USD" },
+            RemainingAmount = new MoneyDto { Amount = targetAmount - 300m, Currency = currency ?? "USD" },
+            PercentUsed = targetAmount > 0 ? (300m / targetAmount * 100m) : 0m,
+            Status = status,
+        };
 
     /// <summary>
     /// Stub NavigationManager for testing navigation calls.
@@ -817,7 +819,10 @@ public sealed class BudgetViewModelTests : IDisposable
         /// <summary>
         /// Gets the last URI that was navigated to.
         /// </summary>
-        public string? LastNavigatedUri { get; private set; }
+        public string? LastNavigatedUri
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         protected override void NavigateToCore(string uri, bool forceLoad)

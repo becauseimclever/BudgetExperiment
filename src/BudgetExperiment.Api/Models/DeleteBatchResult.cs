@@ -12,5 +12,8 @@ public sealed record DeleteBatchResult
     /// <summary>
     /// Gets the number of transactions deleted.
     /// </summary>
-    public int DeletedCount { get; init; }
+    public int DeletedCount
+    {
+        get; init;
+    }
 }

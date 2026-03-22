@@ -12,27 +12,42 @@ public sealed record ImportLocationPreview
     /// <summary>
     /// Gets the parsed city name.
     /// </summary>
-    public string? City { get; init; }
+    public string? City
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the parsed state or region abbreviation.
     /// </summary>
-    public string? StateOrRegion { get; init; }
+    public string? StateOrRegion
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the parsed country code (ISO 3166-1 alpha-2).
     /// </summary>
-    public string? Country { get; init; }
+    public string? Country
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the parsed postal code.
     /// </summary>
-    public string? PostalCode { get; init; }
+    public string? PostalCode
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the confidence score (0.0 to 1.0) of the parsed location.
     /// </summary>
-    public decimal Confidence { get; init; }
+    public decimal Confidence
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this parsed location is accepted for import.

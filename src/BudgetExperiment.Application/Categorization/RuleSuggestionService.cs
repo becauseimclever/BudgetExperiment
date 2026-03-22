@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Diagnostics;
+
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 

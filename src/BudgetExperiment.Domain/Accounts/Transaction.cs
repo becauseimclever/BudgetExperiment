@@ -29,12 +29,18 @@ public sealed class Transaction
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the account this transaction belongs to.
     /// </summary>
-    public Guid AccountId { get; private set; }
+    public Guid AccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the monetary amount of the transaction.
@@ -44,7 +50,10 @@ public sealed class Transaction
     /// <summary>
     /// Gets the date of the transaction.
     /// </summary>
-    public DateOnly Date { get; private set; }
+    public DateOnly Date
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the description of the transaction.
@@ -54,32 +63,50 @@ public sealed class Transaction
     /// <summary>
     /// Gets the optional category identifier linking to a BudgetCategory.
     /// </summary>
-    public Guid? CategoryId { get; private set; }
+    public Guid? CategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the associated budget category (navigation property for queries).
     /// </summary>
-    public BudgetCategory? Category { get; private set; }
+    public BudgetCategory? Category
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the transaction was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the transaction was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the recurring transaction this was generated from (null for manual transactions).
     /// </summary>
-    public Guid? RecurringTransactionId { get; private set; }
+    public Guid? RecurringTransactionId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the scheduled date this transaction was generated for from the recurring transaction.
     /// </summary>
-    public DateOnly? RecurringInstanceDate { get; private set; }
+    public DateOnly? RecurringInstanceDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this transaction was generated from a recurring transaction.
@@ -89,12 +116,18 @@ public sealed class Transaction
     /// <summary>
     /// Gets the identifier linking paired transfer transactions (null for non-transfer transactions).
     /// </summary>
-    public Guid? TransferId { get; private set; }
+    public Guid? TransferId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the direction of this transaction in a transfer (null for non-transfer transactions).
     /// </summary>
-    public TransferDirection? TransferDirection { get; private set; }
+    public TransferDirection? TransferDirection
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this transaction is part of a transfer between accounts.
@@ -104,12 +137,18 @@ public sealed class Transaction
     /// <summary>
     /// Gets the identifier of the recurring transfer this was generated from (null for non-recurring transfers).
     /// </summary>
-    public Guid? RecurringTransferId { get; private set; }
+    public Guid? RecurringTransferId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the scheduled date this transaction was generated for from the recurring transfer.
     /// </summary>
-    public DateOnly? RecurringTransferInstanceDate { get; private set; }
+    public DateOnly? RecurringTransferInstanceDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this transaction was generated from a recurring transfer.
@@ -119,27 +158,42 @@ public sealed class Transaction
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID of who created this transaction.
     /// </summary>
-    public Guid CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the import batch this transaction was created from (null for manual transactions).
     /// </summary>
-    public Guid? ImportBatchId { get; private set; }
+    public Guid? ImportBatchId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the external reference/ID from the imported CSV (null if not from import or not mapped).
     /// </summary>
-    public string? ExternalReference { get; private set; }
+    public string? ExternalReference
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this transaction was created via CSV import.
@@ -149,7 +203,10 @@ public sealed class Transaction
     /// <summary>
     /// Gets the geographic location of the transaction (null if not set).
     /// </summary>
-    public TransactionLocationValue? Location { get; private set; }
+    public TransactionLocationValue? Location
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new transaction.

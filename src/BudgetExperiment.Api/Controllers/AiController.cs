@@ -37,10 +37,10 @@ public sealed class AiController : ControllerBase
         IAppSettingsService settingsService,
         ILogger<AiController> logger)
     {
-        this._aiService = aiService;
-        this._suggestionService = suggestionService;
-        this._settingsService = settingsService;
-        this._logger = logger;
+        _aiService = aiService;
+        _suggestionService = suggestionService;
+        _settingsService = settingsService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -52,8 +52,8 @@ public sealed class AiController : ControllerBase
     [ProducesResponseType<AiStatusDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStatusAsync(CancellationToken cancellationToken)
     {
-        var status = await this._aiService.GetStatusAsync(cancellationToken);
-        var settings = await this._settingsService.GetAiSettingsAsync(cancellationToken);
+        var status = await _aiService.GetStatusAsync(cancellationToken);
+        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
 
         return this.Ok(new AiStatusDto
         {
@@ -74,7 +74,7 @@ public sealed class AiController : ControllerBase
     [ProducesResponseType<IReadOnlyList<AiModelDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetModelsAsync(CancellationToken cancellationToken)
     {
-        var models = await this._aiService.GetAvailableModelsAsync(cancellationToken);
+        var models = await _aiService.GetAvailableModelsAsync(cancellationToken);
 
         var dtos = models.Select(m => new AiModelDto
         {
@@ -95,7 +95,7 @@ public sealed class AiController : ControllerBase
     [ProducesResponseType<AiSettingsDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSettingsAsync(CancellationToken cancellationToken)
     {
-        var settings = await this._settingsService.GetAiSettingsAsync(cancellationToken);
+        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
 
         return this.Ok(new AiSettingsDto
         {
@@ -129,7 +129,7 @@ public sealed class AiController : ControllerBase
             request.TimeoutSeconds,
             request.IsEnabled);
 
-        await this._settingsService.UpdateAiSettingsAsync(settingsData, cancellationToken);
+        await _settingsService.UpdateAiSettingsAsync(settingsData, cancellationToken);
 
         return this.Ok(request);
     }
@@ -146,12 +146,12 @@ public sealed class AiController : ControllerBase
     [ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
     public async Task<IActionResult> AnalyzeAsync(CancellationToken cancellationToken)
     {
-        this._logger.LogInformation("Starting AI analysis request");
+        _logger.LogInformation("Starting AI analysis request");
 
-        var status = await this._aiService.GetStatusAsync(cancellationToken);
+        var status = await _aiService.GetStatusAsync(cancellationToken);
         if (!status.IsAvailable)
         {
-            this._logger.LogWarning("AI service is not available: {ErrorMessage}", status.ErrorMessage);
+            _logger.LogWarning("AI service is not available: {ErrorMessage}", status.ErrorMessage);
             return this.StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
                 new { message = "AI service is not available", error = status.ErrorMessage });
@@ -159,10 +159,10 @@ public sealed class AiController : ControllerBase
 
         try
         {
-            this._logger.LogInformation("AI service is available, starting analysis...");
-            var analysis = await this._suggestionService.AnalyzeAllAsync(progress: null, ct: cancellationToken);
+            _logger.LogInformation("AI service is available, starting analysis...");
+            var analysis = await _suggestionService.AnalyzeAllAsync(progress: null, ct: cancellationToken);
 
-            this._logger.LogInformation(
+            _logger.LogInformation(
                 "AI analysis completed in {Duration:F2}s. Found {NewRules} new rule suggestions, {Optimizations} optimizations, {Conflicts} conflicts",
                 analysis.AnalysisDuration.TotalSeconds,
                 analysis.NewRuleSuggestions.Count,
@@ -182,12 +182,12 @@ public sealed class AiController : ControllerBase
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             // Client disconnected or cancelled - return 499 (Client Closed Request, nginx convention)
-            this._logger.LogInformation("AI analysis was cancelled by client");
+            _logger.LogInformation("AI analysis was cancelled by client");
             return this.StatusCode(499, new { message = "Client cancelled the request" });
         }
         catch (OperationCanceledException ex)
         {
-            this._logger.LogWarning(ex, "AI analysis timed out");
+            _logger.LogWarning(ex, "AI analysis timed out");
             return this.StatusCode(
                 StatusCodes.Status504GatewayTimeout,
                 new
@@ -198,7 +198,7 @@ public sealed class AiController : ControllerBase
         }
         catch (HttpRequestException ex)
         {
-            this._logger.LogError(ex, "Failed to communicate with AI service during analysis");
+            _logger.LogError(ex, "Failed to communicate with AI service during analysis");
             return this.StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
                 new

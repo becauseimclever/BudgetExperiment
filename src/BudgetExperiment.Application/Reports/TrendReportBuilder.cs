@@ -25,8 +25,8 @@ public sealed class TrendReportBuilder : ITrendReportBuilder
         ITransactionRepository transactionRepository,
         ICurrencyProvider currencyProvider)
     {
-        this._transactionRepository = transactionRepository;
-        this._currencyProvider = currencyProvider;
+        _transactionRepository = transactionRepository;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -48,8 +48,8 @@ public sealed class TrendReportBuilder : ITrendReportBuilder
         var startDate = new DateOnly(resolvedEndYear, resolvedEndMonth, 1)
             .AddMonths(-(months - 1));
 
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-        var transactions = await this._transactionRepository.GetByDateRangeAsync(
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
+        var transactions = await _transactionRepository.GetByDateRangeAsync(
             startDate, endDate, accountId: null, cancellationToken);
 
         var nonTransferTransactions = transactions.Where(t => !t.IsTransfer).ToList();

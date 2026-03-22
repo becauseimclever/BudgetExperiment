@@ -8,8 +8,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -27,7 +30,7 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     public RulesPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
@@ -119,8 +122,8 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsRules_WhenRulesExist()
     {
-        this._apiService.Rules.Add(CreateRule("Grocery Matcher", "GROCERY", "Contains"));
-        this._apiService.Categories.Add(CreateCategory("Groceries"));
+        _apiService.Rules.Add(CreateRule("Grocery Matcher", "GROCERY", "Contains"));
+        _apiService.Categories.Add(CreateCategory("Groceries"));
 
         var cut = Render<Rules>();
 
@@ -133,8 +136,8 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsPriorityInfo_WhenRulesExist()
     {
-        this._apiService.Rules.Add(CreateRule("Test Rule", "test", "Contains"));
-        this._apiService.Categories.Add(CreateCategory("Misc"));
+        _apiService.Rules.Add(CreateRule("Test Rule", "test", "Contains"));
+        _apiService.Categories.Add(CreateCategory("Misc"));
 
         var cut = Render<Rules>();
 
@@ -147,9 +150,9 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleRules()
     {
-        this._apiService.Rules.Add(CreateRule("Rule A", "PATTERN_A", "Contains", priority: 1));
-        this._apiService.Rules.Add(CreateRule("Rule B", "PATTERN_B", "Exact", priority: 2));
-        this._apiService.Categories.Add(CreateCategory("Cat A"));
+        _apiService.Rules.Add(CreateRule("Rule A", "PATTERN_A", "Contains", priority: 1));
+        _apiService.Rules.Add(CreateRule("Rule B", "PATTERN_B", "Exact", priority: 2));
+        _apiService.Categories.Add(CreateCategory("Cat A"));
 
         var cut = Render<Rules>();
 
@@ -186,7 +189,7 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void AddRuleButton_OpensModal()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries"));
+        _apiService.Categories.Add(CreateCategory("Groceries"));
 
         var cut = Render<Rules>();
         var addBtn = cut.FindAll("button").First(b => b.TextContent.Contains("Add Rule"));
@@ -203,8 +206,8 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     public void CreateRule_AddsRuleToList_WhenSuccessful()
     {
         var newRule = CreateRule("Grocery Rule", "GROCERY", "Contains");
-        this._apiService.CreateRuleResult = newRule;
-        this._apiService.Categories.Add(CreateCategory("Groceries"));
+        _apiService.CreateRuleResult = newRule;
+        _apiService.Categories.Add(CreateCategory("Groceries"));
 
         var cut = Render<Rules>();
 
@@ -220,10 +223,10 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteRule_RemovesRuleFromList_WhenSuccessful()
     {
-        this._apiService.DeleteRuleResult = true;
+        _apiService.DeleteRuleResult = true;
         var rule = CreateRule("ToDelete", "DELETE_ME", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.Categories.Add(CreateCategory("Misc"));
+        _apiService.Rules.Add(rule);
+        _apiService.Categories.Add(CreateCategory("Misc"));
 
         var cut = Render<Rules>();
 
@@ -236,10 +239,10 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ActivateRule_WorksSuccessfully()
     {
-        this._apiService.ActivateRuleResult = true;
+        _apiService.ActivateRuleResult = true;
         var rule = CreateRule("Inactive Rule", "PATTERN", "Contains", isActive: false);
-        this._apiService.Rules.Add(rule);
-        this._apiService.Categories.Add(CreateCategory("Misc"));
+        _apiService.Rules.Add(rule);
+        _apiService.Categories.Add(CreateCategory("Misc"));
 
         var cut = Render<Rules>();
 
@@ -252,10 +255,10 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeactivateRule_WorksSuccessfully()
     {
-        this._apiService.DeactivateRuleResult = true;
+        _apiService.DeactivateRuleResult = true;
         var rule = CreateRule("Active Rule", "ACTIVE", "Exact");
-        this._apiService.Rules.Add(rule);
-        this._apiService.Categories.Add(CreateCategory("Misc"));
+        _apiService.Rules.Add(rule);
+        _apiService.Categories.Add(CreateCategory("Misc"));
 
         var cut = Render<Rules>();
 
@@ -268,10 +271,10 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void UpdateRule_HandlesConflict()
     {
-        this._apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Conflict();
+        _apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Conflict();
         var rule = CreateRule("Conflicting Rule", "CONFLICT", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.Categories.Add(CreateCategory("Misc"));
+        _apiService.Rules.Add(rule);
+        _apiService.Categories.Add(CreateCategory("Misc"));
 
         var cut = Render<Rules>();
 
@@ -296,9 +299,9 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void InactiveRules_AreDisplayed()
     {
-        this._apiService.Rules.Add(CreateRule("Active Rule", "ACTIVE", "Contains", isActive: true));
-        this._apiService.Rules.Add(CreateRule("Inactive Rule", "INACTIVE", "Contains", isActive: false));
-        this._apiService.Categories.Add(CreateCategory("Misc"));
+        _apiService.Rules.Add(CreateRule("Active Rule", "ACTIVE", "Contains", isActive: true));
+        _apiService.Rules.Add(CreateRule("Inactive Rule", "INACTIVE", "Contains", isActive: false));
+        _apiService.Categories.Add(CreateCategory("Misc"));
 
         var cut = Render<Rules>();
 
@@ -311,8 +314,8 @@ public class RulesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ApplyRulesButton_IsPresent_WhenRulesExist()
     {
-        this._apiService.Rules.Add(CreateRule("Rule A", "A", "Contains"));
-        this._apiService.Categories.Add(CreateCategory("Misc"));
+        _apiService.Rules.Add(CreateRule("Rule A", "A", "Contains"));
+        _apiService.Categories.Add(CreateCategory("Misc"));
 
         var cut = Render<Rules>();
 

@@ -27,7 +27,10 @@ internal sealed class StubAiAvailabilityService : IAiAvailabilityService
     public bool IsFullyOperational { get; set; } = true;
 
     /// <inheritdoc/>
-    public string? ErrorMessage { get; set; }
+    public string? ErrorMessage
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public Task RefreshAsync() => Task.CompletedTask;

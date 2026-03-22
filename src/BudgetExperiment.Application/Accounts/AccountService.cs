@@ -24,9 +24,9 @@ public sealed class AccountService
     /// <param name="userContext">The user context for scope and user identification.</param>
     public AccountService(IAccountRepository repository, IUnitOfWork unitOfWork, IUserContext userContext)
     {
-        this._repository = repository;
-        this._unitOfWork = unitOfWork;
-        this._userContext = userContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _userContext = userContext;
     }
 
     /// <summary>
@@ -37,13 +37,13 @@ public sealed class AccountService
     /// <returns>The account DTO, or null if not found.</returns>
     public async Task<AccountDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var account = await this._repository.GetByIdWithTransactionsAsync(id, cancellationToken);
+        var account = await _repository.GetByIdWithTransactionsAsync(id, cancellationToken);
         if (account is null)
         {
             return null;
         }
 
-        var version = this._unitOfWork.GetConcurrencyToken(account);
+        var version = _unitOfWork.GetConcurrencyToken(account);
         return AccountMapper.ToDto(account, version);
     }
 
@@ -54,7 +54,7 @@ public sealed class AccountService
     /// <returns>A list of account DTOs.</returns>
     public async Task<IReadOnlyList<AccountDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var accounts = await this._repository.GetAllAsync(cancellationToken);
+        var accounts = await _repository.GetAllAsync(cancellationToken);
         return accounts.Select(AccountMapper.ToDto).ToList();
     }
 
@@ -77,7 +77,7 @@ public sealed class AccountService
             throw new DomainException($"Invalid scope: {dto.Scope}. Valid values are 'Shared' or 'Personal'.");
         }
 
-        var userId = this._userContext.UserIdAsGuid
+        var userId = _userContext.UserIdAsGuid
             ?? throw new DomainException("User is not authenticated.");
 
         var initialBalance = MoneyValue.Create(dto.InitialBalanceCurrency, dto.InitialBalance);
@@ -90,8 +90,8 @@ public sealed class AccountService
             _ => throw new DomainException($"Invalid scope: {scope}"),
         };
 
-        await this._repository.AddAsync(account, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(account, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return AccountMapper.ToDto(account);
     }
 
@@ -106,7 +106,7 @@ public sealed class AccountService
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public async Task<AccountDto?> UpdateAsync(Guid id, AccountUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var account = await this._repository.GetByIdAsync(id, cancellationToken);
+        var account = await _repository.GetByIdAsync(id, cancellationToken);
         if (account is null)
         {
             return null;
@@ -114,7 +114,7 @@ public sealed class AccountService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(account, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(account, expectedVersion);
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Name))
@@ -143,8 +143,8 @@ public sealed class AccountService
             account.UpdateInitialBalance(newBalance, newDate);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(account);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(account);
         return AccountMapper.ToDto(account, version);
     }
 
@@ -156,14 +156,14 @@ public sealed class AccountService
     /// <returns>True if removed, false if not found.</returns>
     public async Task<bool> RemoveAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var account = await this._repository.GetByIdAsync(id, cancellationToken);
+        var account = await _repository.GetByIdAsync(id, cancellationToken);
         if (account is null)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(account, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(account, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

@@ -10,7 +10,10 @@ namespace BudgetExperiment.Client.Services;
 public sealed class ApiErrorContext : IApiErrorContext
 {
     /// <inheritdoc/>
-    public string? LastTraceId { get; private set; }
+    public string? LastTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Sets the traceId from a ProblemDetails response.

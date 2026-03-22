@@ -827,6 +827,88 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.ToTable("ReconciliationMatches", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetExperiment.Domain.Recurring.RecurringChargeSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AcceptedRecurringTransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Confidence")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("numeric(3,2)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DetectedFrequency")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("DetectedInterval")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("FirstOccurrence")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("LastOccurrence")
+                        .HasColumnType("date");
+
+                    b.Property<int>("MatchingTransactionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NormalizedDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SampleDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "Status");
+
+                    b.HasIndex("NormalizedDescription", "AccountId");
+
+                    b.ToTable("RecurringChargeSuggestions", (string)null);
+                });
+
             modelBuilder.Entity("BudgetExperiment.Domain.Recurring.RecurringTransaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1472,6 +1554,36 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("RecurringTransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BudgetExperiment.Domain.Recurring.RecurringChargeSuggestion", b =>
+                {
+                    b.OwnsOne("BudgetExperiment.Domain.Common.MoneyValue", "AverageAmount", b1 =>
+                        {
+                            b1.Property<Guid>("RecurringChargeSuggestionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("AverageAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("AverageAmountCurrency");
+
+                            b1.HasKey("RecurringChargeSuggestionId");
+
+                            b1.ToTable("RecurringChargeSuggestions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringChargeSuggestionId");
+                        });
+
+                    b.Navigation("AverageAmount")
                         .IsRequired();
                 });
 

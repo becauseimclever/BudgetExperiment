@@ -7,8 +7,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -28,9 +31,9 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     public AiSuggestionsPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IAiApiService>(this._aiService);
-        this.Services.AddSingleton<ICategorySuggestionApiService>(this._categoryService);
-        this.Services.AddSingleton<IAiAvailabilityService>(this._availabilityService);
+        this.Services.AddSingleton<IAiApiService>(_aiService);
+        this.Services.AddSingleton<ICategorySuggestionApiService>(_categoryService);
+        this.Services.AddSingleton<IAiAvailabilityService>(_availabilityService);
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
@@ -98,7 +101,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsSetupBanner_WhenAiNotAvailable()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = false, IsEnabled = false };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = false, IsEnabled = false };
 
         var cut = Render<AiSuggestions>();
 
@@ -146,7 +149,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsConnectedStatus()
     {
-        this._aiService.AiStatus = new AiStatusDto
+        _aiService.AiStatus = new AiStatusDto
         {
             IsAvailable = true,
             CurrentModel = "gpt-4",
@@ -163,7 +166,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsDisconnectedStatus()
     {
-        this._aiService.AiStatus = new AiStatusDto
+        _aiService.AiStatus = new AiStatusDto
         {
             IsAvailable = false,
         };
@@ -179,8 +182,8 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsPendingSuggestions()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = Guid.NewGuid(),
             Title = "Starbucks Rule",
@@ -202,8 +205,8 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleSuggestions()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = Guid.NewGuid(),
             Title = "Netflix Rule",
@@ -213,7 +216,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
             AffectedTransactionCount = 3,
             Type = "NewRule",
         });
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = Guid.NewGuid(),
             Title = "Walmart Rule",
@@ -236,7 +239,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsEmptyState_WhenNoSuggestions()
     {
-        this._aiService.AiStatus = new AiStatusDto
+        _aiService.AiStatus = new AiStatusDto
         {
             IsAvailable = true,
             IsEnabled = true,
@@ -255,7 +258,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void RunAnalysis_IsDisabled_WhenAiNotAvailable()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = false, IsEnabled = false };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = false, IsEnabled = false };
 
         var cut = Render<AiSuggestions>();
 
@@ -270,8 +273,8 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     public void HandleAccept_RemovesSuggestion_WhenSuccessful()
     {
         var suggestionId = Guid.NewGuid();
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = suggestionId,
             Title = "Accept Target Rule",
@@ -281,7 +284,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
             AffectedTransactionCount = 5,
             Type = "NewRule",
         });
-        this._aiService.AcceptSuggestionResult = new CategorizationRuleDto
+        _aiService.AcceptSuggestionResult = new CategorizationRuleDto
         {
             Id = Guid.NewGuid(),
             Name = "Accept Target Rule",
@@ -314,8 +317,8 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     public void HandleAccept_ShowsError_WhenApiFails()
     {
         var suggestionId = Guid.NewGuid();
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = suggestionId,
             SuggestedPattern = "FAIL_ACCEPT",
@@ -324,7 +327,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
             AffectedTransactionCount = 2,
             Type = "NewRule",
         });
-        this._aiService.AcceptSuggestionResult = null;
+        _aiService.AcceptSuggestionResult = null;
 
         var cut = Render<AiSuggestions>();
 
@@ -342,8 +345,8 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     public void HandleDismiss_RemovesSuggestion_WhenSuccessful()
     {
         var suggestionId = Guid.NewGuid();
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = suggestionId,
             Title = "Dismiss Target Rule",
@@ -353,7 +356,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
             AffectedTransactionCount = 1,
             Type = "NewRule",
         });
-        this._aiService.DismissSuggestionResult = true;
+        _aiService.DismissSuggestionResult = true;
 
         var cut = Render<AiSuggestions>();
 
@@ -373,8 +376,8 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     public void HandleDismiss_ShowsError_WhenApiFails()
     {
         var suggestionId = Guid.NewGuid();
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = suggestionId,
             SuggestedPattern = "FAIL_DISMISS",
@@ -383,7 +386,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
             AffectedTransactionCount = 1,
             Type = "NewRule",
         });
-        this._aiService.DismissSuggestionResult = false;
+        _aiService.DismissSuggestionResult = false;
 
         var cut = Render<AiSuggestions>();
 
@@ -401,8 +404,8 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     public void HandleFeedback_UpdatesSuggestion_WhenSuccessful()
     {
         var suggestionId = Guid.NewGuid();
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
-        this._aiService.PendingSuggestions.Add(new RuleSuggestionDto
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "gpt-4" };
+        _aiService.PendingSuggestions.Add(new RuleSuggestionDto
         {
             Id = suggestionId,
             Title = "Feedback Target Rule",
@@ -412,7 +415,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
             AffectedTransactionCount = 3,
             Type = "NewRule",
         });
-        this._aiService.ProvideFeedbackResult = true;
+        _aiService.ProvideFeedbackResult = true;
 
         var cut = Render<AiSuggestions>();
 
@@ -425,13 +428,13 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void StartAnalysis_ProcessesResult_WhenAiAvailable()
     {
-        this._aiService.AiStatus = new AiStatusDto
+        _aiService.AiStatus = new AiStatusDto
         {
             IsAvailable = true,
             IsEnabled = true,
             CurrentModel = "gpt-4",
         };
-        this._aiService.AnalyzeResult = new AnalysisResponseDto
+        _aiService.AnalyzeResult = new AnalysisResponseDto
         {
             NewRuleSuggestions = 5,
         };
@@ -450,7 +453,7 @@ public class AiSuggestionsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void StartAnalysis_DoesNotRun_WhenAiNotEnabled()
     {
-        this._aiService.AiStatus = new AiStatusDto
+        _aiService.AiStatus = new AiStatusDto
         {
             IsAvailable = true,
             IsEnabled = false,

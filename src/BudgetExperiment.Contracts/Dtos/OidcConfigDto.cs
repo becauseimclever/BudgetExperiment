@@ -14,12 +14,18 @@ public sealed class OidcConfigDto
     /// <summary>
     /// Gets the OIDC authority URL (issuer).
     /// </summary>
-    public required string Authority { get; init; }
+    public required string Authority
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the OAuth2 client ID (public identifier, NOT a secret for PKCE flows).
     /// </summary>
-    public required string ClientId { get; init; }
+    public required string ClientId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the OAuth2 response type (typically "code" for PKCE).

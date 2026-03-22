@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;

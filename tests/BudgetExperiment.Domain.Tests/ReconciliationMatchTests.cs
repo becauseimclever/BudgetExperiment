@@ -26,25 +26,25 @@ public class ReconciliationMatchTests
 
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore,
             amountVariance,
             dateOffsetDays,
             BudgetScope.Personal,
-            this._ownerUserId);
+            _ownerUserId);
 
         // Assert
         Assert.NotEqual(Guid.Empty, match.Id);
-        Assert.Equal(this._importedTransactionId, match.ImportedTransactionId);
-        Assert.Equal(this._recurringTransactionId, match.RecurringTransactionId);
-        Assert.Equal(this._instanceDate, match.RecurringInstanceDate);
+        Assert.Equal(_importedTransactionId, match.ImportedTransactionId);
+        Assert.Equal(_recurringTransactionId, match.RecurringTransactionId);
+        Assert.Equal(_instanceDate, match.RecurringInstanceDate);
         Assert.Equal(confidenceScore, match.ConfidenceScore);
         Assert.Equal(amountVariance, match.AmountVariance);
         Assert.Equal(dateOffsetDays, match.DateOffsetDays);
         Assert.Equal(BudgetScope.Personal, match.Scope);
-        Assert.Equal(this._ownerUserId, match.OwnerUserId);
+        Assert.Equal(_ownerUserId, match.OwnerUserId);
         Assert.NotEqual(default, match.CreatedAtUtc);
         Assert.Null(match.ResolvedAtUtc);
     }
@@ -57,9 +57,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             score,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -78,9 +78,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             score,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -99,9 +99,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             score,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -117,9 +117,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -137,8 +137,8 @@ public class ReconciliationMatchTests
         var ex = Assert.Throws<DomainException>(() =>
             ReconciliationMatch.Create(
                 Guid.Empty,
-                this._recurringTransactionId,
-                this._instanceDate,
+                _recurringTransactionId,
+                _instanceDate,
                 confidenceScore: 0.75m,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
@@ -154,9 +154,9 @@ public class ReconciliationMatchTests
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
             ReconciliationMatch.Create(
-                this._importedTransactionId,
+                _importedTransactionId,
                 Guid.Empty,
-                this._instanceDate,
+                _instanceDate,
                 confidenceScore: 0.75m,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
@@ -174,9 +174,9 @@ public class ReconciliationMatchTests
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
             ReconciliationMatch.Create(
-                this._importedTransactionId,
-                this._recurringTransactionId,
-                this._instanceDate,
+                _importedTransactionId,
+                _recurringTransactionId,
+                _instanceDate,
                 score,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
@@ -191,9 +191,9 @@ public class ReconciliationMatchTests
     {
         // Arrange
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -213,9 +213,9 @@ public class ReconciliationMatchTests
     {
         // Arrange
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -235,9 +235,9 @@ public class ReconciliationMatchTests
     {
         // Arrange
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.90m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -260,9 +260,9 @@ public class ReconciliationMatchTests
     {
         // Arrange
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -293,9 +293,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -313,9 +313,9 @@ public class ReconciliationMatchTests
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
             ReconciliationMatch.Create(
-                this._importedTransactionId,
-                this._recurringTransactionId,
-                this._instanceDate,
+                _importedTransactionId,
+                _recurringTransactionId,
+                _instanceDate,
                 confidenceScore: 0.75m,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
@@ -333,9 +333,9 @@ public class ReconciliationMatchTests
 
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance,
             dateOffsetDays: 0,
@@ -354,9 +354,9 @@ public class ReconciliationMatchTests
 
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance,
             dateOffsetDays: 0,
@@ -375,9 +375,9 @@ public class ReconciliationMatchTests
 
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays,
@@ -396,9 +396,9 @@ public class ReconciliationMatchTests
 
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays,
@@ -414,9 +414,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -432,13 +432,13 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.CreateManualLink(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             amountVariance: 5.00m,
             dateOffsetDays: 2,
             BudgetScope.Personal,
-            this._ownerUserId);
+            _ownerUserId);
 
         // Assert
         Assert.Equal(MatchSource.Manual, match.Source);
@@ -449,9 +449,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.CreateManualLink(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             amountVariance: 0m,
             dateOffsetDays: 0,
             BudgetScope.Shared,
@@ -467,9 +467,9 @@ public class ReconciliationMatchTests
     {
         // Act
         var match = ReconciliationMatch.CreateManualLink(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             amountVariance: 0m,
             dateOffsetDays: 0,
             BudgetScope.Shared,
@@ -487,8 +487,8 @@ public class ReconciliationMatchTests
         var ex = Assert.Throws<DomainException>(() =>
             ReconciliationMatch.CreateManualLink(
                 Guid.Empty,
-                this._recurringTransactionId,
-                this._instanceDate,
+                _recurringTransactionId,
+                _instanceDate,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
                 BudgetScope.Shared,
@@ -503,9 +503,9 @@ public class ReconciliationMatchTests
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
             ReconciliationMatch.CreateManualLink(
-                this._importedTransactionId,
+                _importedTransactionId,
                 Guid.Empty,
-                this._instanceDate,
+                _instanceDate,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
                 BudgetScope.Shared,
@@ -520,9 +520,9 @@ public class ReconciliationMatchTests
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
             ReconciliationMatch.CreateManualLink(
-                this._importedTransactionId,
-                this._recurringTransactionId,
-                this._instanceDate,
+                _importedTransactionId,
+                _recurringTransactionId,
+                _instanceDate,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
                 BudgetScope.Personal,
@@ -536,9 +536,9 @@ public class ReconciliationMatchTests
     {
         // Arrange - Create an accepted match
         var match = ReconciliationMatch.CreateManualLink(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             amountVariance: 0m,
             dateOffsetDays: 0,
             BudgetScope.Shared,
@@ -556,9 +556,9 @@ public class ReconciliationMatchTests
     {
         // Arrange
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.90m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -578,9 +578,9 @@ public class ReconciliationMatchTests
     {
         // Arrange - Create a suggested (not yet resolved) match
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
@@ -597,9 +597,9 @@ public class ReconciliationMatchTests
     {
         // Arrange
         var match = ReconciliationMatch.Create(
-            this._importedTransactionId,
-            this._recurringTransactionId,
-            this._instanceDate,
+            _importedTransactionId,
+            _recurringTransactionId,
+            _instanceDate,
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,

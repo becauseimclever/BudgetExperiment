@@ -22,7 +22,10 @@ public sealed record ImportPatternValue
     /// <summary>
     /// Gets the pattern string (uppercase, trimmed).
     /// </summary>
-    public string Pattern { get; }
+    public string Pattern
+    {
+        get;
+    }
 
     /// <summary>
     /// Creates a new import pattern with validation and normalization.

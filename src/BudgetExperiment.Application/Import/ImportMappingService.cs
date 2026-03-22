@@ -24,23 +24,23 @@ public sealed class ImportMappingService : IImportMappingService
     /// <param name="unitOfWork">The unit of work.</param>
     public ImportMappingService(IImportMappingRepository repository, IUserContext userContext, IUnitOfWork unitOfWork)
     {
-        this._repository = repository;
-        this._userContext = userContext;
-        this._unitOfWork = unitOfWork;
+        _repository = repository;
+        _userContext = userContext;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportMappingDto>> GetUserMappingsAsync(CancellationToken cancellationToken = default)
     {
         var userId = this.GetRequiredUserId();
-        var mappings = await this._repository.GetByUserAsync(userId, cancellationToken);
+        var mappings = await _repository.GetByUserAsync(userId, cancellationToken);
         return mappings.Select(m => ToDto(m)).ToList();
     }
 
     /// <inheritdoc />
     public async Task<ImportMappingDto?> GetMappingAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var mapping = await this._repository.GetByIdAsync(id, cancellationToken);
+        var mapping = await _repository.GetByIdAsync(id, cancellationToken);
         if (mapping is null)
         {
             return null;
@@ -53,7 +53,7 @@ public sealed class ImportMappingService : IImportMappingService
             return null;
         }
 
-        var version = this._unitOfWork.GetConcurrencyToken(mapping);
+        var version = _unitOfWork.GetConcurrencyToken(mapping);
         return ToDto(mapping, version);
     }
 
@@ -63,7 +63,7 @@ public sealed class ImportMappingService : IImportMappingService
         var userId = this.GetRequiredUserId();
 
         // Check for duplicate name
-        var existing = await this._repository.GetByNameAsync(userId, request.Name, cancellationToken);
+        var existing = await _repository.GetByNameAsync(userId, request.Name, cancellationToken);
         if (existing is not null)
         {
             throw new DomainException($"A mapping with the name '{request.Name}' already exists.");
@@ -102,8 +102,8 @@ public sealed class ImportMappingService : IImportMappingService
             mapping.UpdateIndicatorSettings(indicatorSettings);
         }
 
-        await this._repository.AddAsync(mapping, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(mapping, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(mapping);
     }
 
@@ -111,7 +111,7 @@ public sealed class ImportMappingService : IImportMappingService
     public async Task<ImportMappingDto?> UpdateMappingAsync(Guid id, UpdateImportMappingRequest request, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
         var userId = this.GetRequiredUserId();
-        var mapping = await this._repository.GetByIdAsync(id, cancellationToken);
+        var mapping = await _repository.GetByIdAsync(id, cancellationToken);
 
         if (mapping is null || mapping.UserId != userId)
         {
@@ -120,13 +120,13 @@ public sealed class ImportMappingService : IImportMappingService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(mapping, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(mapping, expectedVersion);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Name) && request.Name != mapping.Name)
         {
             // Check for duplicate name
-            var existing = await this._repository.GetByNameAsync(userId, request.Name, cancellationToken);
+            var existing = await _repository.GetByNameAsync(userId, request.Name, cancellationToken);
             if (existing is not null && existing.Id != id)
             {
                 throw new DomainException($"A mapping with the name '{request.Name}' already exists.");
@@ -167,8 +167,8 @@ public sealed class ImportMappingService : IImportMappingService
             mapping.UpdateIndicatorSettings(indicatorSettings);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(mapping);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(mapping);
         return ToDto(mapping, version);
     }
 
@@ -176,15 +176,15 @@ public sealed class ImportMappingService : IImportMappingService
     public async Task<bool> DeleteMappingAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var userId = this.GetRequiredUserId();
-        var mapping = await this._repository.GetByIdAsync(id, cancellationToken);
+        var mapping = await _repository.GetByIdAsync(id, cancellationToken);
 
         if (mapping is null || mapping.UserId != userId)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(mapping, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(mapping, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -197,7 +197,7 @@ public sealed class ImportMappingService : IImportMappingService
         }
 
         var userId = this.GetRequiredUserId();
-        var mappings = await this._repository.GetByUserAsync(userId, cancellationToken);
+        var mappings = await _repository.GetByUserAsync(userId, cancellationToken);
 
         // Find a mapping where the headers match (by checking if column headers match)
         foreach (var mapping in mappings)
@@ -333,7 +333,7 @@ public sealed class ImportMappingService : IImportMappingService
 
     private Guid GetRequiredUserId()
     {
-        return this._userContext.UserIdAsGuid
+        return _userContext.UserIdAsGuid
             ?? throw new DomainException("User ID is required for import mapping operations.");
     }
 }

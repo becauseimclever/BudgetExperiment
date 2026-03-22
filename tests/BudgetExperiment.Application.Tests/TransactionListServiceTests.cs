@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;

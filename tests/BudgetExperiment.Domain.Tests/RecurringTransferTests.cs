@@ -19,22 +19,22 @@ public class RecurringTransferTests
     public void Create_With_Valid_Parameters_Creates_RecurringTransfer()
     {
         var result = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(this._validSourceAccountId, result.SourceAccountId);
-        Assert.Equal(this._validDestinationAccountId, result.DestinationAccountId);
+        Assert.Equal(_validSourceAccountId, result.SourceAccountId);
+        Assert.Equal(_validDestinationAccountId, result.DestinationAccountId);
         Assert.Equal("Monthly Savings", result.Description);
-        Assert.Equal(this._validAmount, result.Amount);
-        Assert.Equal(this._validPattern, result.RecurrencePatternValue);
-        Assert.Equal(this._validStartDate, result.StartDate);
+        Assert.Equal(_validAmount, result.Amount);
+        Assert.Equal(_validPattern, result.RecurrencePatternValue);
+        Assert.Equal(_validStartDate, result.StartDate);
         Assert.Null(result.EndDate);
-        Assert.Equal(this._validStartDate, result.NextOccurrence);
+        Assert.Equal(_validStartDate, result.NextOccurrence);
         Assert.True(result.IsActive);
         Assert.Null(result.LastGeneratedDate);
     }
@@ -45,12 +45,12 @@ public class RecurringTransferTests
         var endDate = new DateOnly(2027, 2, 1);
 
         var result = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate,
+            _validAmount,
+            _validPattern,
+            _validStartDate,
             endDate);
 
         Assert.Equal(endDate, result.EndDate);
@@ -62,11 +62,11 @@ public class RecurringTransferTests
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
                 Guid.Empty,
-                this._validDestinationAccountId,
+                _validDestinationAccountId,
                 "Monthly Savings",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Source account ID is required", ex.Message);
     }
@@ -76,12 +76,12 @@ public class RecurringTransferTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
+                _validSourceAccountId,
                 Guid.Empty,
                 "Monthly Savings",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Destination account ID is required", ex.Message);
     }
@@ -96,9 +96,9 @@ public class RecurringTransferTests
                 sameAccountId,
                 sameAccountId,
                 "Invalid Transfer",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Source and destination accounts must be different", ex.Message);
     }
@@ -108,12 +108,12 @@ public class RecurringTransferTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
-                this._validDestinationAccountId,
+                _validSourceAccountId,
+                _validDestinationAccountId,
                 null!,
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Description is required", ex.Message);
     }
@@ -123,12 +123,12 @@ public class RecurringTransferTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
-                this._validDestinationAccountId,
+                _validSourceAccountId,
+                _validDestinationAccountId,
                 "   ",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Description is required", ex.Message);
     }
@@ -138,12 +138,12 @@ public class RecurringTransferTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
-                this._validDestinationAccountId,
+                _validSourceAccountId,
+                _validDestinationAccountId,
                 "Monthly Savings",
                 null!,
-                this._validPattern,
-                this._validStartDate));
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Amount is required", ex.Message);
     }
@@ -155,12 +155,12 @@ public class RecurringTransferTests
 
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
-                this._validDestinationAccountId,
+                _validSourceAccountId,
+                _validDestinationAccountId,
                 "Monthly Savings",
                 zeroAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Transfer amount must be positive", ex.Message);
     }
@@ -172,12 +172,12 @@ public class RecurringTransferTests
 
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
-                this._validDestinationAccountId,
+                _validSourceAccountId,
+                _validDestinationAccountId,
                 "Monthly Savings",
                 negativeAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Transfer amount must be positive", ex.Message);
     }
@@ -187,12 +187,12 @@ public class RecurringTransferTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
-                this._validDestinationAccountId,
+                _validSourceAccountId,
+                _validDestinationAccountId,
                 "Monthly Savings",
-                this._validAmount,
+                _validAmount,
                 null!,
-                this._validStartDate));
+                _validStartDate));
 
         Assert.Contains("Recurrence pattern is required", ex.Message);
     }
@@ -204,12 +204,12 @@ public class RecurringTransferTests
 
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransfer.Create(
-                this._validSourceAccountId,
-                this._validDestinationAccountId,
+                _validSourceAccountId,
+                _validDestinationAccountId,
                 "Monthly Savings",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate,
+                _validAmount,
+                _validPattern,
+                _validStartDate,
                 endDate));
 
         Assert.Contains("End date must be on or after start date", ex.Message);
@@ -219,12 +219,12 @@ public class RecurringTransferTests
     public void Create_Trims_Description()
     {
         var result = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "  Monthly Savings  ",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         Assert.Equal("Monthly Savings", result.Description);
     }
@@ -233,12 +233,12 @@ public class RecurringTransferTests
     public void Update_With_Valid_Parameters_Updates_Properties()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var newAmount = MoneyValue.Create("USD", 750m);
         var newPattern = RecurrencePatternValue.CreateMonthly(1, 15);
@@ -256,17 +256,17 @@ public class RecurringTransferTests
     public void Update_With_Zero_Amount_Throws()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var zeroAmount = MoneyValue.Create("USD", 0m);
 
         var ex = Assert.Throws<DomainException>(() =>
-            recurringTransfer.Update("Savings", zeroAmount, this._validPattern, null));
+            recurringTransfer.Update("Savings", zeroAmount, _validPattern, null));
 
         Assert.Contains("Transfer amount must be positive", ex.Message);
     }
@@ -275,17 +275,17 @@ public class RecurringTransferTests
     public void Update_With_Negative_Amount_Throws()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var negativeAmount = MoneyValue.Create("USD", -100m);
 
         var ex = Assert.Throws<DomainException>(() =>
-            recurringTransfer.Update("Savings", negativeAmount, this._validPattern, null));
+            recurringTransfer.Update("Savings", negativeAmount, _validPattern, null));
 
         Assert.Contains("Transfer amount must be positive", ex.Message);
     }
@@ -294,12 +294,12 @@ public class RecurringTransferTests
     public void Pause_Sets_IsActive_To_False()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         recurringTransfer.Pause();
 
@@ -310,12 +310,12 @@ public class RecurringTransferTests
     public void Resume_When_Paused_Recalculates_NextOccurrence_From_Today()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         recurringTransfer.Pause();
         var resumeDate = new DateOnly(2026, 3, 15);
@@ -329,12 +329,12 @@ public class RecurringTransferTests
     public void Resume_When_Already_Active_Does_Nothing()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var originalNextOccurrence = recurringTransfer.NextOccurrence;
         var resumeDate = new DateOnly(2026, 3, 15);
@@ -349,12 +349,12 @@ public class RecurringTransferTests
     public void AdvanceToNextOccurrence_Updates_NextOccurrence_And_LastGeneratedDate()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var originalNext = recurringTransfer.NextOccurrence;
 
@@ -368,12 +368,12 @@ public class RecurringTransferTests
     public void AdvanceToNextOccurrence_When_Inactive_Throws()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         recurringTransfer.Pause();
 
@@ -388,12 +388,12 @@ public class RecurringTransferTests
     {
         var endDate = new DateOnly(2026, 2, 28);
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate,
+            _validAmount,
+            _validPattern,
+            _validStartDate,
             endDate);
 
         recurringTransfer.AdvanceToNextOccurrence();
@@ -405,12 +405,12 @@ public class RecurringTransferTests
     public void SkipNextOccurrence_Advances_Without_Setting_LastGeneratedDate()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var originalNext = recurringTransfer.NextOccurrence;
         var originalLastGenerated = recurringTransfer.LastGeneratedDate;
@@ -425,12 +425,12 @@ public class RecurringTransferTests
     public void SkipNextOccurrence_When_Inactive_Throws()
     {
         var recurringTransfer = RecurringTransfer.Create(
-            this._validSourceAccountId,
-            this._validDestinationAccountId,
+            _validSourceAccountId,
+            _validDestinationAccountId,
             "Monthly Savings",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         recurringTransfer.Pause();
 

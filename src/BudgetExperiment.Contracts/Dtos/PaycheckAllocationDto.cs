@@ -25,5 +25,8 @@ public sealed class PaycheckAllocationDto
     public MoneyDto AnnualAmount { get; set; } = new();
 
     /// <summary>Gets or sets the optional recurring transaction identifier.</summary>
-    public Guid? RecurringTransactionId { get; set; }
+    public Guid? RecurringTransactionId
+    {
+        get; set;
+    }
 }

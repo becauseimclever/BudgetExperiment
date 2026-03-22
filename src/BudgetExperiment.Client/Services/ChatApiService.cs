@@ -29,7 +29,7 @@ public sealed class ChatApiService : IChatApiService
     /// <param name="httpClient">The HTTP client.</param>
     public ChatApiService(HttpClient httpClient)
     {
-        this._httpClient = httpClient;
+        _httpClient = httpClient;
     }
 
     /// <inheritdoc />
@@ -37,7 +37,7 @@ public sealed class ChatApiService : IChatApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync("api/v1/chat/sessions", null);
+            var response = await _httpClient.PostAsync("api/v1/chat/sessions", null);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ChatSessionDto>(JsonOptions);
         }
@@ -57,7 +57,7 @@ public sealed class ChatApiService : IChatApiService
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<ChatSessionDto>(
+            return await _httpClient.GetFromJsonAsync<ChatSessionDto>(
                 $"api/v1/chat/sessions/{sessionId}",
                 JsonOptions);
         }
@@ -77,7 +77,7 @@ public sealed class ChatApiService : IChatApiService
     {
         try
         {
-            var result = await this._httpClient.GetFromJsonAsync<List<ChatMessageDto>>(
+            var result = await _httpClient.GetFromJsonAsync<List<ChatMessageDto>>(
                 $"api/v1/chat/sessions/{sessionId}/messages?limit={limit}",
                 JsonOptions);
             return result ?? [];
@@ -103,7 +103,7 @@ public sealed class ChatApiService : IChatApiService
                 Content = content,
                 Context = context,
             };
-            var response = await this._httpClient.PostAsJsonAsync(
+            var response = await _httpClient.PostAsJsonAsync(
                 $"api/v1/chat/sessions/{sessionId}/messages",
                 request,
                 JsonOptions);
@@ -126,7 +126,7 @@ public sealed class ChatApiService : IChatApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync(
+            var response = await _httpClient.PostAsync(
                 $"api/v1/chat/messages/{messageId}/confirm",
                 null);
             response.EnsureSuccessStatusCode();
@@ -148,7 +148,7 @@ public sealed class ChatApiService : IChatApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync(
+            var response = await _httpClient.PostAsync(
                 $"api/v1/chat/messages/{messageId}/cancel",
                 null);
             return response.IsSuccessStatusCode;
@@ -169,7 +169,7 @@ public sealed class ChatApiService : IChatApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync(
+            var response = await _httpClient.PostAsync(
                 $"api/v1/chat/sessions/{sessionId}/close",
                 null);
             return response.IsSuccessStatusCode;

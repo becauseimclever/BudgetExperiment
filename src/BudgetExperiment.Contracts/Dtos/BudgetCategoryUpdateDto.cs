@@ -12,20 +12,32 @@ public sealed class BudgetCategoryUpdateDto
     /// <summary>
     /// Gets or sets the category name.
     /// </summary>
-    public string? Name { get; set; }
+    public string? Name
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the icon identifier.
     /// </summary>
-    public string? Icon { get; set; }
+    public string? Icon
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the hex color code.
     /// </summary>
-    public string? Color { get; set; }
+    public string? Color
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the sort order.
     /// </summary>
-    public int? SortOrder { get; set; }
+    public int? SortOrder
+    {
+        get; set;
+    }
 }

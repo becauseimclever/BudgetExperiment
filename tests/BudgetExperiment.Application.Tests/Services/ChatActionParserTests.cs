@@ -4,7 +4,9 @@
 
 using BudgetExperiment.Application.Chat;
 using BudgetExperiment.Domain;
+
 using Shouldly;
+
 using Xunit;
 
 namespace BudgetExperiment.Application.Tests.Services;

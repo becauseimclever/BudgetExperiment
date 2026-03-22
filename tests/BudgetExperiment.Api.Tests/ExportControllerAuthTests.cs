@@ -9,6 +9,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Auth tests for export endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ExportControllerAuthTests : IClassFixture<AuthEnabledWebApplicationFactory>
 {
     private readonly AuthEnabledWebApplicationFactory factory;

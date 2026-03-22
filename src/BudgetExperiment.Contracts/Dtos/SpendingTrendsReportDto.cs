@@ -22,5 +22,8 @@ public sealed class SpendingTrendsReportDto
     public string TrendDirection { get; set; } = "stable";
 
     /// <summary>Gets or sets the trend percentage change.</summary>
-    public decimal TrendPercentage { get; set; }
+    public decimal TrendPercentage
+    {
+        get; set;
+    }
 }

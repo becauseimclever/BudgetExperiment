@@ -12,7 +12,10 @@ public sealed class BudgetCategoryDto
     /// <summary>
     /// Gets or sets the category identifier.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category name.
@@ -22,12 +25,18 @@ public sealed class BudgetCategoryDto
     /// <summary>
     /// Gets or sets the icon identifier.
     /// </summary>
-    public string? Icon { get; set; }
+    public string? Icon
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the hex color code.
     /// </summary>
-    public string? Color { get; set; }
+    public string? Color
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category type (Expense, Income, Transfer).
@@ -37,15 +46,24 @@ public sealed class BudgetCategoryDto
     /// <summary>
     /// Gets or sets the sort order.
     /// </summary>
-    public int SortOrder { get; set; }
+    public int SortOrder
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether the category is active.
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool IsActive
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the concurrency token for optimistic concurrency.
     /// </summary>
-    public string? Version { get; set; }
+    public string? Version
+    {
+        get; set;
+    }
 }

@@ -14,22 +14,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class CategorizationRuleRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorizationRuleRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public CategorizationRuleRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public CategorizationRuleRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_Rule()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "Groceries");
         var repository = new CategorizationRuleRepository(context);
         var rule = CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", category.Id, priority: 10);
@@ -39,7 +39,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(rule.Id);
 
@@ -58,7 +58,7 @@ public class CategorizationRuleRepositoryTests
     public async Task GetByIdAsync_Returns_Null_When_Not_Found()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorizationRuleRepository(context);
 
         // Act
@@ -72,7 +72,7 @@ public class CategorizationRuleRepositoryTests
     public async Task GetByIdAsync_Includes_Category()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "Transportation");
         var repository = new CategorizationRuleRepository(context);
         var rule = CategorizationRule.Create("Uber", RuleMatchType.StartsWith, "UBER", category.Id);
@@ -81,7 +81,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(rule.Id);
 
@@ -95,7 +95,7 @@ public class CategorizationRuleRepositoryTests
     public async Task GetActiveByPriorityAsync_Returns_Active_Rules_Ordered_By_Priority()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "Shopping");
         var repository = new CategorizationRuleRepository(context);
 
@@ -112,7 +112,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var rules = await verifyRepo.GetActiveByPriorityAsync();
 
@@ -127,7 +127,7 @@ public class CategorizationRuleRepositoryTests
     public async Task GetByCategoryAsync_Returns_Rules_For_Category()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category1 = await this.CreateCategoryAsync(context, "Food");
         var category2 = await this.CreateCategoryAsync(context, "Entertainment");
         var repository = new CategorizationRuleRepository(context);
@@ -142,7 +142,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var rules = await verifyRepo.GetByCategoryAsync(category1.Id);
 
@@ -155,7 +155,7 @@ public class CategorizationRuleRepositoryTests
     public async Task GetNextPriorityAsync_Returns_MaxPriority_Plus_One()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "Utilities");
         var repository = new CategorizationRuleRepository(context);
 
@@ -167,7 +167,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var nextPriority = await verifyRepo.GetNextPriorityAsync();
 
@@ -179,7 +179,7 @@ public class CategorizationRuleRepositoryTests
     public async Task GetNextPriorityAsync_Returns_One_When_No_Rules_Exist()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorizationRuleRepository(context);
 
         // Act
@@ -193,7 +193,7 @@ public class CategorizationRuleRepositoryTests
     public async Task ReorderPrioritiesAsync_Updates_Multiple_Rule_Priorities()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "Bills");
         var repository = new CategorizationRuleRepository(context);
 
@@ -217,7 +217,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var rules = await verifyRepo.GetActiveByPriorityAsync();
 
@@ -233,7 +233,7 @@ public class CategorizationRuleRepositoryTests
     public async Task ListAsync_Returns_Paginated_Rules()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "General");
         var repository = new CategorizationRuleRepository(context);
 
@@ -246,7 +246,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var page = await verifyRepo.ListAsync(skip: 1, take: 2);
 
@@ -260,7 +260,7 @@ public class CategorizationRuleRepositoryTests
     public async Task CountAsync_Returns_Total_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "Misc");
         var repository = new CategorizationRuleRepository(context);
 
@@ -273,7 +273,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var count = await verifyRepo.CountAsync();
 
@@ -285,7 +285,7 @@ public class CategorizationRuleRepositoryTests
     public async Task RemoveAsync_Deletes_Rule()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "ToDelete");
         var repository = new CategorizationRuleRepository(context);
 
@@ -298,7 +298,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(rule.Id);
         Assert.Null(retrieved);
@@ -308,7 +308,7 @@ public class CategorizationRuleRepositoryTests
     public async Task ListPagedAsync_Returns_Correct_Page_And_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "Paged");
         var repository = new CategorizationRuleRepository(context);
 
@@ -321,7 +321,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 2);
 
@@ -334,7 +334,7 @@ public class CategorizationRuleRepositoryTests
     public async Task ListPagedAsync_Filters_By_Search()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "SearchCat");
         var repository = new CategorizationRuleRepository(context);
 
@@ -344,7 +344,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 25, search: "walmart");
 
@@ -359,7 +359,7 @@ public class CategorizationRuleRepositoryTests
     public async Task ListPagedAsync_Filters_By_IsActive()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = await this.CreateCategoryAsync(context, "ActiveFilter");
         var repository = new CategorizationRuleRepository(context);
 
@@ -372,7 +372,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 25, isActive: true);
 
@@ -385,7 +385,7 @@ public class CategorizationRuleRepositoryTests
     public async Task ListPagedAsync_Filters_By_CategoryId()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var cat1 = await this.CreateCategoryAsync(context, "CatFilter1");
         var cat2 = await this.CreateCategoryAsync(context, "CatFilter2");
         var repository = new CategorizationRuleRepository(context);
@@ -395,7 +395,7 @@ public class CategorizationRuleRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorizationRuleRepository(verifyContext);
         var (items, totalCount) = await verifyRepo.ListPagedAsync(page: 1, pageSize: 25, categoryId: cat1.Id);
 

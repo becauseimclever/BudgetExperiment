@@ -12,5 +12,8 @@ public sealed class DismissSuggestionRequest
     /// <summary>
     /// Gets or sets the optional reason for dismissal.
     /// </summary>
-    public string? Reason { get; set; }
+    public string? Reason
+    {
+        get; set;
+    }
 }

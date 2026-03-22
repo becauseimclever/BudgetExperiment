@@ -21,7 +21,10 @@ public sealed record PaycheckAllocationWarningValue
     /// <summary>
     /// Gets the warning type.
     /// </summary>
-    public AllocationWarningType Type { get; private init; }
+    public AllocationWarningType Type
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Gets the warning message.
@@ -31,7 +34,10 @@ public sealed record PaycheckAllocationWarningValue
     /// <summary>
     /// Gets the optional amount associated with the warning (e.g., shortfall amount).
     /// </summary>
-    public MoneyValue? Amount { get; private init; }
+    public MoneyValue? Amount
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Creates a new warning.

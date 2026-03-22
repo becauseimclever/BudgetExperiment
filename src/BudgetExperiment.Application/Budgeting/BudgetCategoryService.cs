@@ -31,36 +31,36 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
         IUnitOfWork unitOfWork,
         ICurrencyProvider currencyProvider)
     {
-        this._repository = repository;
-        this._goalRepository = goalRepository;
-        this._unitOfWork = unitOfWork;
-        this._currencyProvider = currencyProvider;
+        _repository = repository;
+        _goalRepository = goalRepository;
+        _unitOfWork = unitOfWork;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
     public async Task<BudgetCategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await this._repository.GetByIdAsync(id, cancellationToken);
+        var category = await _repository.GetByIdAsync(id, cancellationToken);
         if (category is null)
         {
             return null;
         }
 
-        var version = this._unitOfWork.GetConcurrencyToken(category);
+        var version = _unitOfWork.GetConcurrencyToken(category);
         return BudgetMapper.ToDto(category, version);
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetCategoryDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var categories = await this._repository.GetAllAsync(cancellationToken);
+        var categories = await _repository.GetAllAsync(cancellationToken);
         return categories.Select(BudgetMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetCategoryDto>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        var categories = await this._repository.GetActiveAsync(cancellationToken);
+        var categories = await _repository.GetActiveAsync(cancellationToken);
         return categories.Select(BudgetMapper.ToDto).ToList();
     }
 
@@ -73,26 +73,26 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
         }
 
         var category = BudgetCategory.Create(dto.Name, categoryType, dto.Icon, dto.Color);
-        await this._repository.AddAsync(category, cancellationToken);
+        await _repository.AddAsync(category, cancellationToken);
 
         // If initial budget is provided and category is Expense type, create a budget goal for the current month
         if (dto.InitialBudget != null && dto.InitialBudget.Amount > 0 && categoryType == CategoryType.Expense)
         {
             var now = DateTime.UtcNow;
-            var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+            var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
             var targetAmount = MoneyValue.Create(dto.InitialBudget.Currency ?? currency, dto.InitialBudget.Amount);
             var goal = BudgetGoal.Create(category.Id, now.Year, now.Month, targetAmount);
-            await this._goalRepository.AddAsync(goal, cancellationToken);
+            await _goalRepository.AddAsync(goal, cancellationToken);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return BudgetMapper.ToDto(category);
     }
 
     /// <inheritdoc/>
     public async Task<BudgetCategoryDto?> UpdateAsync(Guid id, BudgetCategoryUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var category = await this._repository.GetByIdAsync(id, cancellationToken);
+        var category = await _repository.GetByIdAsync(id, cancellationToken);
         if (category is null)
         {
             return null;
@@ -100,7 +100,7 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(category, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(category, expectedVersion);
         }
 
         category.Update(
@@ -109,50 +109,50 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
             dto.Color ?? category.Color,
             dto.SortOrder ?? category.SortOrder);
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(category);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(category);
         return BudgetMapper.ToDto(category, version);
     }
 
     /// <inheritdoc/>
     public async Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await this._repository.GetByIdAsync(id, cancellationToken);
+        var category = await _repository.GetByIdAsync(id, cancellationToken);
         if (category is null)
         {
             return false;
         }
 
         category.Deactivate();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
     /// <inheritdoc/>
     public async Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await this._repository.GetByIdAsync(id, cancellationToken);
+        var category = await _repository.GetByIdAsync(id, cancellationToken);
         if (category is null)
         {
             return false;
         }
 
         category.Activate();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
     /// <inheritdoc/>
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await this._repository.GetByIdAsync(id, cancellationToken);
+        var category = await _repository.GetByIdAsync(id, cancellationToken);
         if (category is null)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(category, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(category, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

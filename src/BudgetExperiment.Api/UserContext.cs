@@ -45,17 +45,17 @@ public sealed class UserContext : IUserContext
     public string? AvatarUrl => this.GetClaimValue(ClaimConstants.Picture);
 
     /// <inheritdoc/>
-    public bool IsAuthenticated => this.httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+    public bool IsAuthenticated => httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 
     /// <inheritdoc/>
-    public BudgetScope? CurrentScope => this.currentScope;
+    public BudgetScope? CurrentScope => currentScope;
 
-    private ClaimsPrincipal? User => this.httpContextAccessor.HttpContext?.User;
+    private ClaimsPrincipal? User => httpContextAccessor.HttpContext?.User;
 
     /// <inheritdoc/>
     public void SetScope(BudgetScope? scope)
     {
-        this.currentScope = scope;
+        currentScope = scope;
     }
 
     /// <summary>

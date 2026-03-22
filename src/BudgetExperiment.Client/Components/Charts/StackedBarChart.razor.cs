@@ -3,7 +3,9 @@
 // </copyright>
 
 using System.Globalization;
+
 using BudgetExperiment.Client.Components.Charts.Shared;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -59,7 +61,10 @@ public partial class StackedBarChart
     /// Gets or sets the callback for segment clicks.
     /// </summary>
     [Parameter]
-    public EventCallback<(GroupedBarData Group, string SeriesId)> OnSegmentClick { get; set; }
+    public EventCallback<(GroupedBarData Group, string SeriesId)> OnSegmentClick
+    {
+        get; set;
+    }
 
     private static double MarginLeft => 48;
 
@@ -101,7 +106,10 @@ public partial class StackedBarChart
 
     private IReadOnlyList<GroupInfo> ComputedGroups => BuildGroups();
 
-    private HoveredSegmentInfo? HoveredSegment { get; set; }
+    private HoveredSegmentInfo? HoveredSegment
+    {
+        get; set;
+    }
 
     private static decimal CalculateNiceStep(decimal max)
     {
@@ -302,20 +310,35 @@ public partial class StackedBarChart
     {
         public string GroupLabel { get; set; } = string.Empty;
 
-        public double LabelX { get; set; }
+        public double LabelX
+        {
+            get; set;
+        }
 
         public List<StackedSegmentInfo> Segments { get; set; } = [];
     }
 
     private sealed class StackedSegmentInfo
     {
-        public double X { get; set; }
+        public double X
+        {
+            get; set;
+        }
 
-        public double Y { get; set; }
+        public double Y
+        {
+            get; set;
+        }
 
-        public double Width { get; set; }
+        public double Width
+        {
+            get; set;
+        }
 
-        public double Height { get; set; }
+        public double Height
+        {
+            get; set;
+        }
 
         public string Color { get; set; } = string.Empty;
 
@@ -327,7 +350,10 @@ public partial class StackedBarChart
 
         public string FormattedValue { get; set; } = string.Empty;
 
-        public decimal Value { get; set; }
+        public decimal Value
+        {
+            get; set;
+        }
 
         public GroupedBarData Group { get; set; } = null!;
 

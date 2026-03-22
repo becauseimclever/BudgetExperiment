@@ -10,28 +10,52 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class UnifiedTransactionFilterDto
 {
     /// <summary>Gets or sets the optional account filter.</summary>
-    public Guid? AccountId { get; set; }
+    public Guid? AccountId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional category filter.</summary>
-    public Guid? CategoryId { get; set; }
+    public Guid? CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether to show only uncategorized transactions.</summary>
-    public bool? Uncategorized { get; set; }
+    public bool? Uncategorized
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional start date filter (inclusive).</summary>
-    public DateOnly? StartDate { get; set; }
+    public DateOnly? StartDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional end date filter (inclusive).</summary>
-    public DateOnly? EndDate { get; set; }
+    public DateOnly? EndDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional description search (contains, case-insensitive).</summary>
-    public string? Description { get; set; }
+    public string? Description
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional minimum amount filter (absolute value).</summary>
-    public decimal? MinAmount { get; set; }
+    public decimal? MinAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional maximum amount filter (absolute value).</summary>
-    public decimal? MaxAmount { get; set; }
+    public decimal? MaxAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the sort field: "date", "description", "amount", "category", "account" (default: "date").</summary>
     public string SortBy { get; set; } = "date";

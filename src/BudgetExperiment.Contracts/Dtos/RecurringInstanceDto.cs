@@ -10,13 +10,22 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class RecurringInstanceDto
 {
     /// <summary>Gets or sets the recurring transaction identifier.</summary>
-    public Guid RecurringTransactionId { get; set; }
+    public Guid RecurringTransactionId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the scheduled date of this instance.</summary>
-    public DateOnly ScheduledDate { get; set; }
+    public DateOnly ScheduledDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the effective date (may differ if rescheduled).</summary>
-    public DateOnly EffectiveDate { get; set; }
+    public DateOnly EffectiveDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the amount (may be modified from series).</summary>
     public MoneyDto Amount { get; set; } = new();
@@ -28,20 +37,38 @@ public sealed class RecurringInstanceDto
     public string AccountName { get; set; } = string.Empty;
 
     /// <summary>Gets or sets a value indicating whether this instance has modifications.</summary>
-    public bool IsModified { get; set; }
+    public bool IsModified
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether this instance is skipped.</summary>
-    public bool IsSkipped { get; set; }
+    public bool IsSkipped
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether a transaction has been generated for this instance.</summary>
-    public bool IsGenerated { get; set; }
+    public bool IsGenerated
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the generated transaction ID (null if not yet generated).</summary>
-    public Guid? GeneratedTransactionId { get; set; }
+    public Guid? GeneratedTransactionId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional category identifier.</summary>
-    public Guid? CategoryId { get; set; }
+    public Guid? CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the category name (null if uncategorized).</summary>
-    public string? CategoryName { get; set; }
+    public string? CategoryName
+    {
+        get; set;
+    }
 }

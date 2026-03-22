@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Transfers API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -22,7 +23,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     /// <param name="factory">The test factory.</param>
     public TransfersControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -47,7 +48,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transfers", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transfers", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -80,7 +81,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transfers", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transfers", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -103,7 +104,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transfers", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transfers", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -129,11 +130,11 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
             Date = new DateOnly(2026, 1, 10),
         };
 
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transfers", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transfers", createRequest);
         var createdTransfer = await createResponse.Content.ReadFromJsonAsync<TransferResponse>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/transfers/{createdTransfer!.TransferId}");
+        var response = await _client.GetAsync($"/api/v1/transfers/{createdTransfer!.TransferId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -150,7 +151,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/transfers/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/transfers/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -164,7 +165,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     public async Task List_Returns_200_WithPaginationHeader()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transfers");
+        var response = await _client.GetAsync("/api/v1/transfers");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -194,7 +195,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
             Date = new DateOnly(2026, 1, 10),
         };
 
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transfers", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transfers", createRequest);
         var createdTransfer = await createResponse.Content.ReadFromJsonAsync<TransferResponse>();
 
         var updateRequest = new UpdateTransferRequest
@@ -206,7 +207,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/transfers/{createdTransfer!.TransferId}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/api/v1/transfers/{createdTransfer!.TransferId}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -233,7 +234,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/transfers/{Guid.NewGuid()}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/api/v1/transfers/{Guid.NewGuid()}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -259,17 +260,17 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
             Date = new DateOnly(2026, 1, 10),
         };
 
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transfers", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transfers", createRequest);
         var createdTransfer = await createResponse.Content.ReadFromJsonAsync<TransferResponse>();
 
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/transfers/{createdTransfer!.TransferId}");
+        var response = await _client.DeleteAsync($"/api/v1/transfers/{createdTransfer!.TransferId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify transfer is gone
-        var getResponse = await this._client.GetAsync($"/api/v1/transfers/{createdTransfer.TransferId}");
+        var getResponse = await _client.GetAsync($"/api/v1/transfers/{createdTransfer.TransferId}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -281,7 +282,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
     public async Task Delete_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/transfers/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/transfers/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -289,7 +290,11 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
 
     private async Task<AccountDto> CreateAccountAsync(string name, string type)
     {
-        var response = await this._client.PostAsJsonAsync("/api/v1/accounts", new { name, type });
+        var response = await _client.PostAsJsonAsync("/api/v1/accounts", new
+        {
+            name,
+            type,
+        });
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<AccountDto>())!;
     }

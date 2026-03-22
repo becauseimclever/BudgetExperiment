@@ -12,42 +12,66 @@ public class ChatPageContext
     /// <summary>
     /// Gets or sets the current account ID, if viewing an account-related page.
     /// </summary>
-    public Guid? CurrentAccountId { get; set; }
+    public Guid? CurrentAccountId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the current account name, if viewing an account-related page.
     /// </summary>
-    public string? CurrentAccountName { get; set; }
+    public string? CurrentAccountName
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the current category ID, if viewing a category-related page.
     /// </summary>
-    public Guid? CurrentCategoryId { get; set; }
+    public Guid? CurrentCategoryId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the current category name, if viewing a category-related page.
     /// </summary>
-    public string? CurrentCategoryName { get; set; }
+    public string? CurrentCategoryName
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the page type (e.g., "transactions", "transfers", "recurring").
     /// </summary>
-    public string? PageType { get; set; }
+    public string? PageType
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the year being viewed on the calendar.
     /// </summary>
-    public int? CalendarViewedYear { get; set; }
+    public int? CalendarViewedYear
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the month being viewed on the calendar (1-12).
     /// </summary>
-    public int? CalendarViewedMonth { get; set; }
+    public int? CalendarViewedMonth
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the selected date on the calendar.
     /// </summary>
-    public DateOnly? SelectedDate { get; set; }
+    public DateOnly? SelectedDate
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a summary of the context for the AI prompt.

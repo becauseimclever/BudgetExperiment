@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the MerchantMappings API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -23,7 +24,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
     /// <param name="factory">The test factory.</param>
     public MerchantMappingsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -34,7 +35,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
     public async Task GetLearned_Returns_200()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/merchantmappings");
+        var response = await _client.GetAsync("/api/v1/merchantmappings");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -59,13 +60,13 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/merchantmappings/learn", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/merchantmappings/learn", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify the mapping was persisted
-        var getResponse = await this._client.GetAsync("/api/v1/merchantmappings");
+        var getResponse = await _client.GetAsync("/api/v1/merchantmappings");
         var mappings = await getResponse.Content.ReadFromJsonAsync<List<LearnedMerchantMappingDto>>();
         Assert.NotNull(mappings);
         Assert.Contains(mappings, m => m.CategoryId == category.Id);
@@ -86,7 +87,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/merchantmappings/learn", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/merchantmappings/learn", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -107,7 +108,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/merchantmappings/learn", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/merchantmappings/learn", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -121,7 +122,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
     public async Task Delete_NonExistent_Returns_404()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/merchantmappings/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/merchantmappings/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -136,7 +137,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
     {
         // Arrange - create a category and learn a mapping
         var category = await CreateCategoryAsync("Delete Test Category");
-        await this._client.PostAsJsonAsync(
+        await _client.PostAsJsonAsync(
             "/api/v1/merchantmappings/learn",
             new LearnMerchantMappingRequest
             {
@@ -144,18 +145,18 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
                 CategoryId = category.Id,
             });
 
-        var getResponse = await this._client.GetAsync("/api/v1/merchantmappings");
+        var getResponse = await _client.GetAsync("/api/v1/merchantmappings");
         var mappings = await getResponse.Content.ReadFromJsonAsync<List<LearnedMerchantMappingDto>>();
         var mapping = Assert.Single(mappings!, m => m.CategoryId == category.Id);
 
         // Act
-        var deleteResponse = await this._client.DeleteAsync($"/api/v1/merchantmappings/{mapping.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/merchantmappings/{mapping.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         // Verify the mapping is gone
-        var verifyResponse = await this._client.GetAsync("/api/v1/merchantmappings");
+        var verifyResponse = await _client.GetAsync("/api/v1/merchantmappings");
         var remaining = await verifyResponse.Content.ReadFromJsonAsync<List<LearnedMerchantMappingDto>>();
         Assert.DoesNotContain(remaining!, m => m.Id == mapping.Id);
     }
@@ -169,7 +170,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
     {
         // Arrange
         var category = await CreateCategoryAsync("DTO Shape Category");
-        await this._client.PostAsJsonAsync(
+        await _client.PostAsJsonAsync(
             "/api/v1/merchantmappings/learn",
             new LearnMerchantMappingRequest
             {
@@ -178,7 +179,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
             });
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/merchantmappings");
+        var response = await _client.GetAsync("/api/v1/merchantmappings");
         var mappings = await response.Content.ReadFromJsonAsync<List<LearnedMerchantMappingDto>>();
         var mapping = Assert.Single(mappings!, m => m.CategoryId == category.Id);
 
@@ -195,7 +196,7 @@ public sealed class MerchantMappingsControllerTests : IClassFixture<CustomWebApp
     private async Task<BudgetCategoryDto> CreateCategoryAsync(string name)
     {
         var createDto = new BudgetCategoryCreateDto { Name = name, Type = "Expense" };
-        var response = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<BudgetCategoryDto>())!;
     }

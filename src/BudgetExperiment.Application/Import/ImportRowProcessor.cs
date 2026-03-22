@@ -39,7 +39,7 @@ public sealed class ImportRowProcessor : IImportRowProcessor
     /// <param name="duplicateDetector">The duplicate detector.</param>
     public ImportRowProcessor(IImportDuplicateDetector duplicateDetector)
     {
-        this._duplicateDetector = duplicateDetector;
+        _duplicateDetector = duplicateDetector;
     }
 
     /// <inheritdoc />
@@ -85,7 +85,7 @@ public sealed class ImportRowProcessor : IImportRowProcessor
         Guid? duplicateOfId = null;
         if (duplicateSettings.Enabled && date.HasValue && amount.HasValue && errors.Count == 0)
         {
-            duplicateOfId = this._duplicateDetector.FindDuplicate(
+            duplicateOfId = _duplicateDetector.FindDuplicate(
                 date.Value, amount.Value, description, existingTransactions, duplicateSettings);
         }
 
@@ -125,21 +125,12 @@ public sealed class ImportRowProcessor : IImportRowProcessor
             return [];
         }
 
-        var dates = new List<DateOnly>();
-        foreach (var row in rows)
-        {
-            if (dateMapping.ColumnIndex >= 0 && dateMapping.ColumnIndex < row.Count)
-            {
-                var dateStr = row[dateMapping.ColumnIndex];
-                var date = ParseDate(dateStr, dateFormat);
-                if (date.HasValue)
-                {
-                    dates.Add(date.Value);
-                }
-            }
-        }
-
-        return dates;
+        return rows
+            .Where(row => dateMapping.ColumnIndex >= 0 && dateMapping.ColumnIndex < row.Count)
+            .Select(row => ParseDate(row[dateMapping.ColumnIndex], dateFormat))
+            .Where(d => d.HasValue)
+            .Select(d => d!.Value)
+            .ToList();
     }
 
     internal static DateOnly? ParseDate(string dateStr, string preferredFormat)
@@ -373,28 +364,27 @@ public sealed class ImportRowProcessor : IImportRowProcessor
         List<string> errors,
         List<string> warnings)
     {
-        if (!string.IsNullOrEmpty(amountStr))
+        if (string.IsNullOrEmpty(amountStr))
         {
-            var rawAmount = ParseAmountValue(amountStr);
-            if (rawAmount.HasValue)
-            {
-                var signMultiplier = GetIndicatorSignMultiplier(indicatorValue, indicatorSettings);
-                if (signMultiplier.HasValue)
-                {
-                    return Math.Abs(rawAmount.Value) * signMultiplier.Value;
-                }
+            errors.Add("Amount is required when using indicator column mode");
+            return null;
+        }
 
-                // Unrecognized indicator - use the amount as-is but add warning
-                warnings.Add($"Unrecognized indicator value: '{indicatorValue}'");
-                return rawAmount.Value;
-            }
-
+        var rawAmount = ParseAmountValue(amountStr);
+        if (!rawAmount.HasValue)
+        {
             errors.Add($"Could not parse amount: '{amountStr}'");
             return null;
         }
 
-        errors.Add("Amount is required when using indicator column mode");
-        return null;
+        var signMultiplier = GetIndicatorSignMultiplier(indicatorValue, indicatorSettings);
+        if (!signMultiplier.HasValue)
+        {
+            warnings.Add($"Unrecognized indicator value: '{indicatorValue}'");
+            return rawAmount.Value;
+        }
+
+        return Math.Abs(rawAmount.Value) * signMultiplier.Value;
     }
 
     private static decimal? ParseStandardAmount(string amountStr, AmountParseMode amountMode, List<string> errors)
@@ -465,15 +455,13 @@ public sealed class ImportRowProcessor : IImportRowProcessor
         }
 
         // Priority 2: Auto-categorization rules (only if no CSV category matched)
-        if (!string.IsNullOrWhiteSpace(description))
+        var matchedRule = string.IsNullOrWhiteSpace(description)
+            ? null
+            : rules.FirstOrDefault(r => r.Matches(description));
+
+        if (matchedRule is not null)
         {
-            foreach (var rule in rules)
-            {
-                if (rule.Matches(description))
-                {
-                    return new CategorizationResult(rule.CategoryId, CategorySource.AutoRule, rule.Name, rule.Id);
-                }
-            }
+            return new CategorizationResult(matchedRule.CategoryId, CategorySource.AutoRule, matchedRule.Name, matchedRule.Id);
         }
 
         return new CategorizationResult(null, CategorySource.None, null, null);

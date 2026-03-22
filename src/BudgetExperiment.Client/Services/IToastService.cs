@@ -17,7 +17,10 @@ public interface IToastService
     /// <summary>
     /// Gets the currently active toasts.
     /// </summary>
-    IReadOnlyList<ToastItem> Toasts { get; }
+    IReadOnlyList<ToastItem> Toasts
+    {
+        get;
+    }
 
     /// <summary>
     /// Shows a success toast notification.

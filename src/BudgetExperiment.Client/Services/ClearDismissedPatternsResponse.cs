@@ -12,5 +12,8 @@ public record ClearDismissedPatternsResponse
     /// <summary>
     /// Gets the number of dismissed patterns that were cleared.
     /// </summary>
-    public int ClearedCount { get; init; }
+    public int ClearedCount
+    {
+        get; init;
+    }
 }

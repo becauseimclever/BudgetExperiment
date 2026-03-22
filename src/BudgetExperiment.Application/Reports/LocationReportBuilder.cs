@@ -20,7 +20,7 @@ public sealed class LocationReportBuilder : ILocationReportBuilder
     /// <param name="transactionRepository">The transaction repository.</param>
     public LocationReportBuilder(ITransactionRepository transactionRepository)
     {
-        this._transactionRepository = transactionRepository;
+        _transactionRepository = transactionRepository;
     }
 
     /// <inheritdoc/>
@@ -30,7 +30,7 @@ public sealed class LocationReportBuilder : ILocationReportBuilder
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var transactions = await this._transactionRepository.GetByDateRangeAsync(
+        var transactions = await _transactionRepository.GetByDateRangeAsync(
             startDate, endDate, accountId, cancellationToken);
 
         var nonTransferTransactions = transactions.Where(t => !t.IsTransfer).ToList();

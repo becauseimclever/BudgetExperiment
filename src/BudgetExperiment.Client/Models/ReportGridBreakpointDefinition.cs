@@ -12,5 +12,8 @@ public sealed class ReportGridBreakpointDefinition
     /// <summary>
     /// Gets or sets the number of columns for the breakpoint.
     /// </summary>
-    public int Columns { get; set; }
+    public int Columns
+    {
+        get; set;
+    }
 }

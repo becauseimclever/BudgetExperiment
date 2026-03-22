@@ -5,9 +5,10 @@
 namespace BudgetExperiment.Infrastructure.Tests;
 
 /// <summary>
-/// Collection definition for tests using the in-memory SQLite database.
+/// Collection definition for infrastructure tests using a PostgreSQL Testcontainer.
+/// The container starts once and is shared across all test classes in the collection.
 /// </summary>
 [CollectionDefinition("InMemoryDb")]
-public sealed class InMemoryDbCollection : ICollectionFixture<InMemoryDbFixture>
+public sealed class InMemoryDbCollection : ICollectionFixture<PostgreSqlFixture>
 {
 }

@@ -12,7 +12,10 @@ public sealed class RuleSuggestionDto
     /// <summary>
     /// Gets or sets the suggestion identifier.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the suggestion type (NewRule, PatternOptimization, RuleConsolidation, RuleConflict, UnusedRule).
@@ -42,42 +45,66 @@ public sealed class RuleSuggestionDto
     /// <summary>
     /// Gets or sets the confidence level (0.0 to 1.0).
     /// </summary>
-    public decimal Confidence { get; set; }
+    public decimal Confidence
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the suggested pattern for new rules.
     /// </summary>
-    public string? SuggestedPattern { get; set; }
+    public string? SuggestedPattern
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the suggested match type (Contains, Exact, StartsWith, EndsWith, Regex).
     /// </summary>
-    public string? SuggestedMatchType { get; set; }
+    public string? SuggestedMatchType
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the suggested category ID for new rules.
     /// </summary>
-    public Guid? SuggestedCategoryId { get; set; }
+    public Guid? SuggestedCategoryId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the suggested category name for display.
     /// </summary>
-    public string? SuggestedCategoryName { get; set; }
+    public string? SuggestedCategoryName
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the target rule ID for optimization suggestions.
     /// </summary>
-    public Guid? TargetRuleId { get; set; }
+    public Guid? TargetRuleId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the target rule name for display.
     /// </summary>
-    public string? TargetRuleName { get; set; }
+    public string? TargetRuleName
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the optimized pattern for pattern optimization suggestions.
     /// </summary>
-    public string? OptimizedPattern { get; set; }
+    public string? OptimizedPattern
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the conflicting rule IDs for conflict/consolidation suggestions.
@@ -87,7 +114,10 @@ public sealed class RuleSuggestionDto
     /// <summary>
     /// Gets or sets the number of transactions affected by this suggestion.
     /// </summary>
-    public int AffectedTransactionCount { get; set; }
+    public int AffectedTransactionCount
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets sample transaction descriptions that match this suggestion.
@@ -97,15 +127,24 @@ public sealed class RuleSuggestionDto
     /// <summary>
     /// Gets or sets when the suggestion was created (UTC).
     /// </summary>
-    public DateTime CreatedAtUtc { get; set; }
+    public DateTime CreatedAtUtc
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets when the suggestion was reviewed (UTC), if applicable.
     /// </summary>
-    public DateTime? ReviewedAtUtc { get; set; }
+    public DateTime? ReviewedAtUtc
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the user's feedback (true = positive, false = negative, null = no feedback).
     /// </summary>
-    public bool? UserFeedbackPositive { get; set; }
+    public bool? UserFeedbackPositive
+    {
+        get; set;
+    }
 }

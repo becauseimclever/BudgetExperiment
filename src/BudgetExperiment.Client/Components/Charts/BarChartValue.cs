@@ -13,7 +13,10 @@ public class BarChartValue
     public string Series { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the value.</summary>
-    public decimal Value { get; set; }
+    public decimal Value
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the color.</summary>
     public string Color { get; set; } = "#6366f1";

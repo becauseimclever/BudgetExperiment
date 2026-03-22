@@ -27,7 +27,7 @@ public sealed class TransfersController : ControllerBase
     /// <param name="service">The transfer service.</param>
     public TransfersController(ITransferService service)
     {
-        this._service = service;
+        _service = service;
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public sealed class TransfersController : ControllerBase
         [FromBody] CreateTransferRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await this._service.CreateAsync(request, cancellationToken);
+        var result = await _service.CreateAsync(request, cancellationToken);
         var locationUri = $"/api/v1/transfers/{result.TransferId}";
         return this.Created(locationUri, result);
     }
@@ -63,7 +63,7 @@ public sealed class TransfersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid transferId, CancellationToken cancellationToken)
     {
-        var result = await this._service.GetByIdAsync(transferId, cancellationToken);
+        var result = await _service.GetByIdAsync(transferId, cancellationToken);
         if (result is null)
         {
             return this.NotFound();
@@ -107,7 +107,7 @@ public sealed class TransfersController : ControllerBase
             pageSize = 100;
         }
 
-        var result = await this._service.ListAsync(accountId, from, to, page, pageSize, cancellationToken);
+        var result = await _service.ListAsync(accountId, from, to, page, pageSize, cancellationToken);
         this.Response.Headers["X-Pagination-TotalCount"] = result.TotalCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
         return this.Ok(result);
     }
@@ -131,7 +131,7 @@ public sealed class TransfersController : ControllerBase
         [FromBody] UpdateTransferRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await this._service.UpdateAsync(transferId, request, cancellationToken);
+        var result = await _service.UpdateAsync(transferId, request, cancellationToken);
         if (result is null)
         {
             return this.NotFound();
@@ -153,7 +153,7 @@ public sealed class TransfersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid transferId, CancellationToken cancellationToken)
     {
-        var deleted = await this._service.DeleteAsync(transferId, cancellationToken);
+        var deleted = await _service.DeleteAsync(transferId, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();

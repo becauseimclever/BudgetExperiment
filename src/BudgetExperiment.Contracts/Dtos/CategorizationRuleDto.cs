@@ -12,7 +12,10 @@ public sealed class CategorizationRuleDto
     /// <summary>
     /// Gets or sets the rule identifier.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the rule name.
@@ -32,40 +35,64 @@ public sealed class CategorizationRuleDto
     /// <summary>
     /// Gets or sets a value indicating whether matching is case-sensitive.
     /// </summary>
-    public bool CaseSensitive { get; set; }
+    public bool CaseSensitive
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the target category identifier.
     /// </summary>
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the target category name.
     /// </summary>
-    public string? CategoryName { get; set; }
+    public string? CategoryName
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the priority (lower = evaluated first).
     /// </summary>
-    public int Priority { get; set; }
+    public int Priority
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether the rule is active.
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool IsActive
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the creation timestamp (UTC).
     /// </summary>
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the last modification timestamp (UTC).
     /// </summary>
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the concurrency version token for optimistic concurrency.
     /// </summary>
-    public string? Version { get; set; }
+    public string? Version
+    {
+        get; set;
+    }
 }

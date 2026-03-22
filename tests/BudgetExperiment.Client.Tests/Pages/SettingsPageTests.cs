@@ -3,13 +3,17 @@
 // </copyright>
 
 using System.Net.Http;
+
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -28,8 +32,8 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     public SettingsPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
-        this.Services.AddSingleton<IAiApiService>(this._aiApiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
+        this.Services.AddSingleton<IAiApiService>(_aiApiService);
         this.Services.AddSingleton(new VersionService(new HttpClient()));
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
@@ -238,7 +242,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteLocationDataResult_IsConfigurable()
     {
-        this._apiService.DeleteLocationDataResult = new LocationDataClearedDto
+        _apiService.DeleteLocationDataResult = new LocationDataClearedDto
         {
             ClearedCount = 10,
         };
@@ -255,7 +259,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void AiTab_ShowsStatus()
     {
-        this._aiApiService.AiStatus = new AiStatusDto
+        _aiApiService.AiStatus = new AiStatusDto
         {
             IsAvailable = true,
             CurrentModel = "gpt-4",
@@ -300,7 +304,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     public void ClickAiTab_SwitchesTab()
     {
         SetupSettingsData();
-        this._aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
+        _aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
 
         var cut = Render<Settings>();
         var aiTab = cut.FindAll("button.settings-tab")[1];
@@ -317,7 +321,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     public void ClickGeneralTab_RestoresGeneralContent()
     {
         SetupSettingsData();
-        this._aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
+        _aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
 
         var cut = Render<Settings>();
 
@@ -353,7 +357,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     public void DeleteLocationData_ShowsConfirmation()
     {
         SetupSettingsData(enableLocation: true);
-        this._apiService.DeleteLocationDataResult = new LocationDataClearedDto { ClearedCount = 5 };
+        _apiService.DeleteLocationDataResult = new LocationDataClearedDto { ClearedCount = 5 };
 
         var cut = Render<Settings>();
 
@@ -372,7 +376,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     public void ConfirmDeleteLocationData_ShowsSuccess()
     {
         SetupSettingsData(enableLocation: true);
-        this._apiService.DeleteLocationDataResult = new LocationDataClearedDto { ClearedCount = 5 };
+        _apiService.DeleteLocationDataResult = new LocationDataClearedDto { ClearedCount = 5 };
 
         var cut = Render<Settings>();
 
@@ -407,7 +411,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     public void AiTab_ShowsAboutLocalAi()
     {
         SetupSettingsData();
-        this._aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
+        _aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
 
         var cut = Render<Settings>();
         cut.FindAll("button.settings-tab")[1].Click();
@@ -417,14 +421,14 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
 
     private void SetupSettingsData(bool enableLocation = false)
     {
-        this._apiService.AppSettings = new AppSettingsDto
+        _apiService.AppSettings = new AppSettingsDto
         {
             AutoRealizePastDueItems = true,
             PastDueLookbackDays = 30,
             EnableLocationData = enableLocation,
         };
 
-        this._apiService.UserSettings = new UserSettingsDto
+        _apiService.UserSettings = new UserSettingsDto
         {
             UserId = Guid.NewGuid(),
             DefaultScope = "Personal",

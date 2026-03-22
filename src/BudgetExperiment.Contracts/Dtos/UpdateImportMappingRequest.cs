@@ -12,35 +12,56 @@ public sealed record UpdateImportMappingRequest
     /// <summary>
     /// Gets the new name (if changing).
     /// </summary>
-    public string? Name { get; init; }
+    public string? Name
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the new column mappings (if changing).
     /// </summary>
-    public IReadOnlyList<ColumnMappingDto>? ColumnMappings { get; init; }
+    public IReadOnlyList<ColumnMappingDto>? ColumnMappings
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the new date format (if changing).
     /// </summary>
-    public string? DateFormat { get; init; }
+    public string? DateFormat
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the new amount parse mode (if changing).
     /// </summary>
-    public AmountParseMode? AmountMode { get; init; }
+    public AmountParseMode? AmountMode
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the new duplicate detection settings (if changing).
     /// </summary>
-    public DuplicateDetectionSettingsDto? DuplicateSettings { get; init; }
+    public DuplicateDetectionSettingsDto? DuplicateSettings
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of rows to skip at the beginning of the file (if changing).
     /// </summary>
-    public int? RowsToSkip { get; init; }
+    public int? RowsToSkip
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the new debit/credit indicator settings (if changing).
     /// </summary>
-    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings
+    {
+        get; init;
+    }
 }

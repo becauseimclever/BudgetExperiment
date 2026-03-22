@@ -17,7 +17,7 @@ public sealed class ExportService : IExportService
     /// <param name="formatters">Available formatters.</param>
     public ExportService(IEnumerable<IExportFormatter> formatters)
     {
-        this._formatters = formatters.ToList();
+        _formatters = formatters.ToList();
     }
 
     /// <inheritdoc />
@@ -27,7 +27,7 @@ public sealed class ExportService : IExportService
         string fileName,
         CancellationToken cancellationToken = default)
     {
-        var formatter = this._formatters.FirstOrDefault(f => f.Format == format);
+        var formatter = _formatters.FirstOrDefault(f => f.Format == format);
         if (formatter is null)
         {
             throw new InvalidOperationException($"No export formatter registered for {format}.");

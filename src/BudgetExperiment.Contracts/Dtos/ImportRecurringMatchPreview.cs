@@ -12,7 +12,10 @@ public sealed record ImportRecurringMatchPreview
     /// <summary>
     /// Gets the recurring transaction ID.
     /// </summary>
-    public Guid RecurringTransactionId { get; init; }
+    public Guid RecurringTransactionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the recurring transaction description.
@@ -22,17 +25,26 @@ public sealed record ImportRecurringMatchPreview
     /// <summary>
     /// Gets the instance date that would be matched.
     /// </summary>
-    public DateOnly InstanceDate { get; init; }
+    public DateOnly InstanceDate
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the expected amount from the recurring transaction.
     /// </summary>
-    public decimal ExpectedAmount { get; init; }
+    public decimal ExpectedAmount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the confidence score (0.0 to 1.0).
     /// </summary>
-    public decimal ConfidenceScore { get; init; }
+    public decimal ConfidenceScore
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the confidence level (High, Medium, Low).
@@ -42,5 +54,8 @@ public sealed record ImportRecurringMatchPreview
     /// <summary>
     /// Gets a value indicating whether this match would be auto-applied.
     /// </summary>
-    public bool WouldAutoMatch { get; init; }
+    public bool WouldAutoMatch
+    {
+        get; init;
+    }
 }

@@ -27,14 +27,14 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     /// <param name="factory">The web application factory.</param>
     public StressTests(PerformanceWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        await TestDataSeeder.SeedAsync(this._factory);
+        await TestDataSeeder.SeedAsync(_factory);
     }
 
     /// <inheritdoc/>
@@ -47,7 +47,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     public void TransactionsWrite_LoadTest()
     {
         var scenario = TransactionsWriteScenario.Create(
-            this._client,
+            _client,
             TestDataSeeder.FirstAccountId,
             LoadProfile.Simulations())
             .WithThresholds(
@@ -70,7 +70,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     [Fact]
     public void RecurringTransactions_LoadTest()
     {
-        var scenario = RecurringTransactionsScenario.Create(this._client, LoadProfile.Simulations())
+        var scenario = RecurringTransactionsScenario.Create(_client, LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 500),
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),
@@ -94,7 +94,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     [Fact]
     public void Transactions_StressTest()
     {
-        var scenario = TransactionsScenario.Create(this._client, StressProfile.Simulations())
+        var scenario = TransactionsScenario.Create(_client, StressProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Fail.Request.Percent < 5));
 
@@ -117,7 +117,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     [Fact]
     public void Calendar_StressTest()
     {
-        var scenario = CalendarScenario.Create(this._client, CalendarStressProfile.Simulations())
+        var scenario = CalendarScenario.Create(_client, CalendarStressProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Fail.Request.Percent < 5));
 
@@ -138,7 +138,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     [Fact]
     public void Transactions_SpikeTest()
     {
-        var scenario = TransactionsScenario.Create(this._client, SpikeProfile.Simulations())
+        var scenario = TransactionsScenario.Create(_client, SpikeProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Fail.Request.Percent < 5));
 

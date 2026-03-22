@@ -29,12 +29,18 @@ public sealed record BillInfoValue
     /// <summary>
     /// Gets the recurrence frequency of the bill.
     /// </summary>
-    public RecurrenceFrequency Frequency { get; private init; }
+    public RecurrenceFrequency Frequency
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Gets the optional source recurring transaction identifier.
     /// </summary>
-    public Guid? SourceRecurringTransactionId { get; private init; }
+    public Guid? SourceRecurringTransactionId
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Creates a new <see cref="BillInfoValue"/> instance.

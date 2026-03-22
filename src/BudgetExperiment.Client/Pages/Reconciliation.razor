@@ -49,7 +49,7 @@
                 }
             </select>
             <select @bind="selectedYear" class="form-select">
-                @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                @for (int y = DateTime.UtcNow.Year - 2; y <= DateTime.UtcNow.Year + 1; y++)
                 {
                     <option value="@y">@y</option>
                 }
@@ -270,8 +270,8 @@
     private RecurringInstanceStatusDto? selectedInstance;
     private string unlinkConfirmMessage = "Are you sure you want to unlink this match?";
 
-    private int selectedMonth = DateTime.Now.Month;
-    private int selectedYear = DateTime.Now.Year;
+    private int selectedMonth = DateTime.UtcNow.Month;
+    private int selectedYear = DateTime.UtcNow.Year;
     private string? selectedAccountId;
     private string selectedStatus = "";
 

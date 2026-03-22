@@ -36,25 +36,25 @@ public sealed class ImportBatchManager : IImportBatchManager
         IUserContext userContext,
         IUnitOfWork unitOfWork)
     {
-        this._batchRepository = batchRepository;
-        this._mappingRepository = mappingRepository;
-        this._accountRepository = accountRepository;
-        this._transactionRepository = transactionRepository;
-        this._userContext = userContext;
-        this._unitOfWork = unitOfWork;
+        _batchRepository = batchRepository;
+        _mappingRepository = mappingRepository;
+        _accountRepository = accountRepository;
+        _transactionRepository = transactionRepository;
+        _userContext = userContext;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportBatchDto>> GetImportHistoryAsync(CancellationToken cancellationToken = default)
     {
         var userId = this.GetRequiredUserId();
-        var batches = await this._batchRepository.GetByUserAsync(userId, cancellationToken: cancellationToken);
+        var batches = await _batchRepository.GetByUserAsync(userId, cancellationToken: cancellationToken);
 
         var result = new List<ImportBatchDto>();
         foreach (var batch in batches.OrderByDescending(b => b.ImportedAtUtc))
         {
             string? mappingName = await this.ResolveMappingNameAsync(batch.MappingId, cancellationToken);
-            var account = await this._accountRepository.GetByIdAsync(batch.AccountId, cancellationToken);
+            var account = await _accountRepository.GetByIdAsync(batch.AccountId, cancellationToken);
 
             result.Add(new ImportBatchDto
             {
@@ -78,7 +78,7 @@ public sealed class ImportBatchManager : IImportBatchManager
     {
         var userId = this.GetRequiredUserId();
 
-        var batch = await this._batchRepository.GetByIdAsync(batchId, cancellationToken);
+        var batch = await _batchRepository.GetByIdAsync(batchId, cancellationToken);
         if (batch is null)
         {
             return 0;
@@ -89,23 +89,23 @@ public sealed class ImportBatchManager : IImportBatchManager
             throw new DomainException("Cannot delete import batch owned by another user.");
         }
 
-        var transactions = await this._transactionRepository.GetByImportBatchAsync(batchId, cancellationToken);
+        var transactions = await _transactionRepository.GetByImportBatchAsync(batchId, cancellationToken);
         var count = transactions.Count;
 
         foreach (var transaction in transactions)
         {
-            await this._transactionRepository.RemoveAsync(transaction, cancellationToken);
+            await _transactionRepository.RemoveAsync(transaction, cancellationToken);
         }
 
         batch.MarkDeleted();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return count;
     }
 
     private Guid GetRequiredUserId()
     {
-        return this._userContext.UserIdAsGuid
+        return _userContext.UserIdAsGuid
             ?? throw new DomainException("User ID is required for import operations.");
     }
 
@@ -116,7 +116,7 @@ public sealed class ImportBatchManager : IImportBatchManager
             return null;
         }
 
-        var mapping = await this._mappingRepository.GetByIdAsync(mappingId.Value, cancellationToken);
+        var mapping = await _mappingRepository.GetByIdAsync(mappingId.Value, cancellationToken);
         return mapping?.Name;
     }
 }

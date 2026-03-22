@@ -20,7 +20,7 @@ public sealed class LocationParserServiceTests
     public void Parse_CityState_ReturnsLocation(string input, string expectedCity, string expectedState)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         Assert.NotNull(result);
@@ -34,7 +34,7 @@ public sealed class LocationParserServiceTests
     public void Parse_CityCommaState_ReturnsLocation(string input, string expectedCity, string expectedState)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         Assert.NotNull(result);
@@ -46,7 +46,7 @@ public sealed class LocationParserServiceTests
     public void Parse_CityStateZip_ReturnsLocationWithPostal()
     {
         // Act
-        var result = this.sut.ParseFromDescription("SEATTLE WA 98101");
+        var result = sut.ParseFromDescription("SEATTLE WA 98101");
 
         // Assert
         Assert.NotNull(result);
@@ -63,7 +63,7 @@ public sealed class LocationParserServiceTests
         string input, string? expectedCity, string? expectedState, string? expectedPostal)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         if (expectedCity is null)
@@ -89,7 +89,7 @@ public sealed class LocationParserServiceTests
     public void Parse_MultiWordCity_HandlesCorrectly(string input, string expectedCity, string expectedState)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         Assert.NotNull(result);
@@ -106,7 +106,7 @@ public sealed class LocationParserServiceTests
     public void Parse_NoLocation_ReturnsNull(string input)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         Assert.Null(result);
@@ -118,7 +118,7 @@ public sealed class LocationParserServiceTests
     public void Parse_StateOnly_ReturnsNull(string input)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert — a bare state abbreviation without a city should not match
         Assert.Null(result);
@@ -128,7 +128,7 @@ public sealed class LocationParserServiceTests
     public void Parse_InvalidState_ReturnsNull()
     {
         // Act
-        var result = this.sut.ParseFromDescription("SEATTLE ZZ");
+        var result = sut.ParseFromDescription("SEATTLE ZZ");
 
         // Assert
         Assert.Null(result);
@@ -138,7 +138,7 @@ public sealed class LocationParserServiceTests
     public void Parse_SetsSourceToParsed()
     {
         // Act
-        var result = this.sut.ParseFromDescription("SEATTLE WA");
+        var result = sut.ParseFromDescription("SEATTLE WA");
 
         // Assert
         Assert.NotNull(result);
@@ -152,7 +152,7 @@ public sealed class LocationParserServiceTests
     public void Parse_SetsCorrectCountryCode(string input, string expectedCountry)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         Assert.NotNull(result);
@@ -166,7 +166,7 @@ public sealed class LocationParserServiceTests
         var descriptions = new[] { "SEATTLE WA", "ONLINE PURCHASE", "AUSTIN TX" };
 
         // Act
-        var results = this.sut.ParseBatch(descriptions);
+        var results = sut.ParseBatch(descriptions);
 
         // Assert
         Assert.Equal(3, results.Count);
@@ -185,7 +185,7 @@ public sealed class LocationParserServiceTests
         var descriptions = new[] { "SEATTLE WA 98101", "ONLINE PURCHASE" };
 
         // Act
-        var results = this.sut.ParseBatch(descriptions);
+        var results = sut.ParseBatch(descriptions);
 
         // Assert — matched results should have non-zero confidence
         Assert.True(results[0].Confidence > 0m);
@@ -200,7 +200,7 @@ public sealed class LocationParserServiceTests
         string input, string expectedCity, string expectedProvince, string expectedCountry)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         Assert.NotNull(result);
@@ -256,7 +256,7 @@ public sealed class LocationParserServiceTests
         _ = description; // Used for test readability only
 
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         if (expectedCity is null)
@@ -276,7 +276,7 @@ public sealed class LocationParserServiceTests
     public void Parse_CityCommaStateZip_ReturnsLocationWithPostal()
     {
         // Act
-        var result = this.sut.ParseFromDescription("Seattle, WA 98101");
+        var result = sut.ParseFromDescription("Seattle, WA 98101");
 
         // Assert
         Assert.NotNull(result);
@@ -289,7 +289,7 @@ public sealed class LocationParserServiceTests
     public void Parse_NullDescription_ReturnsNull()
     {
         // Act
-        var result = this.sut.ParseFromDescription(null!);
+        var result = sut.ParseFromDescription(null!);
 
         // Assert
         Assert.Null(result);
@@ -299,7 +299,7 @@ public sealed class LocationParserServiceTests
     public void ParseBatch_EmptyInput_ReturnsEmptyList()
     {
         // Act
-        var results = this.sut.ParseBatch(Array.Empty<string>());
+        var results = sut.ParseBatch(Array.Empty<string>());
 
         // Assert
         Assert.Empty(results);
@@ -313,7 +313,7 @@ public sealed class LocationParserServiceTests
         string input, string expectedCity, string expectedState, string expectedCountry)
     {
         // Act
-        var result = this.sut.ParseFromDescription(input);
+        var result = sut.ParseFromDescription(input);
 
         // Assert
         Assert.NotNull(result);
@@ -329,7 +329,7 @@ public sealed class LocationParserServiceTests
         var descriptions = new[] { "SEATTLE WA", "RANDOM TEXT" };
 
         // Act
-        var results = this.sut.ParseBatch(descriptions);
+        var results = sut.ParseBatch(descriptions);
 
         // Assert
         Assert.NotNull(results[0].MatchedPattern);

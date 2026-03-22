@@ -18,20 +18,20 @@ public class RecurringTransactionTests
     public void Create_With_Valid_Parameters_Creates_RecurringTransaction()
     {
         var result = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(this._validAccountId, result.AccountId);
+        Assert.Equal(_validAccountId, result.AccountId);
         Assert.Equal("Monthly Rent", result.Description);
-        Assert.Equal(this._validAmount, result.Amount);
-        Assert.Equal(this._validPattern, result.RecurrencePatternValue);
-        Assert.Equal(this._validStartDate, result.StartDate);
+        Assert.Equal(_validAmount, result.Amount);
+        Assert.Equal(_validPattern, result.RecurrencePatternValue);
+        Assert.Equal(_validStartDate, result.StartDate);
         Assert.Null(result.EndDate);
-        Assert.Equal(this._validStartDate, result.NextOccurrence);
+        Assert.Equal(_validStartDate, result.NextOccurrence);
         Assert.True(result.IsActive);
         Assert.Null(result.LastGeneratedDate);
     }
@@ -42,11 +42,11 @@ public class RecurringTransactionTests
         var endDate = new DateOnly(2027, 1, 15);
 
         var result = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate,
+            _validAmount,
+            _validPattern,
+            _validStartDate,
             endDate);
 
         Assert.Equal(endDate, result.EndDate);
@@ -59,9 +59,9 @@ public class RecurringTransactionTests
             RecurringTransaction.Create(
                 Guid.Empty,
                 "Monthly Rent",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Account ID is required", ex.Message);
     }
@@ -71,11 +71,11 @@ public class RecurringTransactionTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransaction.Create(
-                this._validAccountId,
+                _validAccountId,
                 null!,
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Description is required", ex.Message);
     }
@@ -85,11 +85,11 @@ public class RecurringTransactionTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransaction.Create(
-                this._validAccountId,
+                _validAccountId,
                 "   ",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate));
+                _validAmount,
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Description is required", ex.Message);
     }
@@ -99,11 +99,11 @@ public class RecurringTransactionTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransaction.Create(
-                this._validAccountId,
+                _validAccountId,
                 "Monthly Rent",
                 null!,
-                this._validPattern,
-                this._validStartDate));
+                _validPattern,
+                _validStartDate));
 
         Assert.Contains("Amount is required", ex.Message);
     }
@@ -113,11 +113,11 @@ public class RecurringTransactionTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransaction.Create(
-                this._validAccountId,
+                _validAccountId,
                 "Monthly Rent",
-                this._validAmount,
+                _validAmount,
                 null!,
-                this._validStartDate));
+                _validStartDate));
 
         Assert.Contains("Recurrence pattern is required", ex.Message);
     }
@@ -129,11 +129,11 @@ public class RecurringTransactionTests
 
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransaction.Create(
-                this._validAccountId,
+                _validAccountId,
                 "Monthly Rent",
-                this._validAmount,
-                this._validPattern,
-                this._validStartDate,
+                _validAmount,
+                _validPattern,
+                _validStartDate,
                 endDate));
 
         Assert.Contains("End date must be on or after start date", ex.Message);
@@ -143,11 +143,11 @@ public class RecurringTransactionTests
     public void Create_Trims_Description()
     {
         var result = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "  Monthly Rent  ",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         Assert.Equal("Monthly Rent", result.Description);
     }
@@ -156,11 +156,11 @@ public class RecurringTransactionTests
     public void Pause_Sets_IsActive_To_False()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         recurring.Pause();
 
@@ -171,11 +171,11 @@ public class RecurringTransactionTests
     public void Resume_Sets_IsActive_To_True()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         recurring.Pause();
 
         recurring.Resume();
@@ -187,11 +187,11 @@ public class RecurringTransactionTests
     public void AdvanceNextOccurrence_Updates_NextOccurrence_To_Pattern_Calculated_Date()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         recurring.AdvanceNextOccurrence();
 
@@ -202,11 +202,11 @@ public class RecurringTransactionTests
     public void AdvanceNextOccurrence_Updates_LastGeneratedDate()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         var originalNextOccurrence = recurring.NextOccurrence;
 
         recurring.AdvanceNextOccurrence();
@@ -219,11 +219,11 @@ public class RecurringTransactionTests
     {
         var endDate = new DateOnly(2026, 2, 1); // Before the next occurrence after Jan 15
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate,
+            _validAmount,
+            _validPattern,
+            _validStartDate,
             endDate);
 
         recurring.AdvanceNextOccurrence();
@@ -235,11 +235,11 @@ public class RecurringTransactionTests
     public void Update_With_Valid_Parameters_Updates_Properties()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var newAmount = MoneyValue.Create("USD", -1500m);
         var newPattern = RecurrencePatternValue.CreateMonthly(1, 1);
@@ -262,17 +262,17 @@ public class RecurringTransactionTests
     public void Update_With_Empty_Description_Throws()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var ex = Assert.Throws<DomainException>(() =>
             recurring.Update(
                 string.Empty,
-                this._validAmount,
-                this._validPattern,
+                _validAmount,
+                _validPattern,
                 null,
                 null));
 
@@ -283,19 +283,19 @@ public class RecurringTransactionTests
     public void Update_With_EndDate_Before_StartDate_Throws()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var invalidEndDate = new DateOnly(2025, 1, 1);
 
         var ex = Assert.Throws<DomainException>(() =>
             recurring.Update(
                 "Monthly Rent",
-                this._validAmount,
-                this._validPattern,
+                _validAmount,
+                _validPattern,
                 invalidEndDate,
                 null));
 
@@ -306,11 +306,11 @@ public class RecurringTransactionTests
     public void GetOccurrencesBetween_Returns_All_Occurrences_In_Range()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var from = new DateOnly(2026, 1, 1);
         var to = new DateOnly(2026, 4, 30);
@@ -329,11 +329,11 @@ public class RecurringTransactionTests
     {
         var endDate = new DateOnly(2026, 3, 1);
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate,
+            _validAmount,
+            _validPattern,
+            _validStartDate,
             endDate);
 
         var from = new DateOnly(2026, 1, 1);
@@ -350,10 +350,10 @@ public class RecurringTransactionTests
     public void GetOccurrencesBetween_Returns_Empty_When_StartDate_After_Range()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
+            _validAmount,
+            _validPattern,
             new DateOnly(2027, 1, 15));
 
         var from = new DateOnly(2026, 1, 1);
@@ -368,11 +368,11 @@ public class RecurringTransactionTests
     public void GetOccurrencesBetween_Returns_Empty_When_Not_Active()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         recurring.Pause();
 
         var from = new DateOnly(2026, 1, 1);
@@ -389,11 +389,11 @@ public class RecurringTransactionTests
         var beforeCreate = DateTime.UtcNow;
 
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var afterCreate = DateTime.UtcNow;
 
@@ -405,11 +405,11 @@ public class RecurringTransactionTests
     public void Update_Updates_UpdatedAtUtc()
     {
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Monthly Rent",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         var originalUpdatedAt = recurring.UpdatedAtUtc;
 
@@ -418,8 +418,8 @@ public class RecurringTransactionTests
 
         recurring.Update(
             "Updated Rent",
-            this._validAmount,
-            this._validPattern,
+            _validAmount,
+            _validPattern,
             null,
             null);
 
@@ -431,11 +431,11 @@ public class RecurringTransactionTests
     {
         // Act
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         // Assert
         Assert.Empty(recurring.ImportPatterns);
@@ -446,11 +446,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         var pattern = ImportPatternValue.Create("*ACME CORP PAYROLL*");
 
         // Act
@@ -466,11 +466,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         var pattern1 = ImportPatternValue.Create("*ACME CORP PAYROLL*");
         var pattern2 = ImportPatternValue.Create("ACH DEPOSIT ACME*");
 
@@ -487,11 +487,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         var pattern = ImportPatternValue.Create("*ACME CORP*");
         recurring.AddImportPattern(pattern);
 
@@ -506,11 +506,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
@@ -523,11 +523,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         var pattern = ImportPatternValue.Create("*ACME CORP*");
         recurring.AddImportPattern(pattern);
 
@@ -543,11 +543,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         var pattern = ImportPatternValue.Create("*ACME CORP*");
 
         // Act & Assert
@@ -561,11 +561,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         recurring.AddImportPattern(ImportPatternValue.Create("*ACME CORP PAYROLL*"));
 
         // Act
@@ -580,11 +580,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
 
         // Act
         var result = recurring.MatchesImportDescription("DIRECT DEP ACME CORP PAYROLL");
@@ -598,11 +598,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         recurring.AddImportPattern(ImportPatternValue.Create("*OTHER COMPANY*"));
 
         // Act
@@ -617,11 +617,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         recurring.AddImportPattern(ImportPatternValue.Create("*OTHER COMPANY*"));
         recurring.AddImportPattern(ImportPatternValue.Create("*ACME CORP*"));
 
@@ -637,11 +637,11 @@ public class RecurringTransactionTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._validAccountId,
+            _validAccountId,
             "Paycheck",
-            this._validAmount,
-            this._validPattern,
-            this._validStartDate);
+            _validAmount,
+            _validPattern,
+            _validStartDate);
         var originalUpdatedAt = recurring.UpdatedAtUtc;
 
         // Small delay to ensure timestamp changes

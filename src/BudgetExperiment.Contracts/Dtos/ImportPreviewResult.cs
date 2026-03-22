@@ -17,35 +17,56 @@ public sealed record ImportPreviewResult
     /// <summary>
     /// Gets the count of valid rows ready for import.
     /// </summary>
-    public int ValidCount { get; init; }
+    public int ValidCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the count of rows with warnings.
     /// </summary>
-    public int WarningCount { get; init; }
+    public int WarningCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the count of rows with errors.
     /// </summary>
-    public int ErrorCount { get; init; }
+    public int ErrorCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the count of duplicate rows.
     /// </summary>
-    public int DuplicateCount { get; init; }
+    public int DuplicateCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the total amount of valid transactions.
     /// </summary>
-    public decimal TotalAmount { get; init; }
+    public decimal TotalAmount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the count of rows that would be auto-categorized by rules.
     /// </summary>
-    public int AutoCategorizedCount { get; init; }
+    public int AutoCategorizedCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the count of rows enriched with parsed location data.
     /// </summary>
-    public int LocationEnrichedCount { get; init; }
+    public int LocationEnrichedCount
+    {
+        get; init;
+    }
 }

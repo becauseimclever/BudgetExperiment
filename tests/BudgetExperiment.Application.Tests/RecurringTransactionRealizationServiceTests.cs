@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -24,15 +25,15 @@ public class RecurringTransactionRealizationServiceTests
     /// </summary>
     public RecurringTransactionRealizationServiceTests()
     {
-        this._repository = new Mock<IRecurringTransactionRepository>();
-        this._transactionRepo = new Mock<ITransactionRepository>();
-        this._uow = new Mock<IUnitOfWork>();
-        this._service = new RecurringTransactionRealizationService(
-            this._repository.Object,
-            this._transactionRepo.Object,
-            this._uow.Object);
+        _repository = new Mock<IRecurringTransactionRepository>();
+        _transactionRepo = new Mock<ITransactionRepository>();
+        _uow = new Mock<IUnitOfWork>();
+        _service = new RecurringTransactionRealizationService(
+            _repository.Object,
+            _transactionRepo.Object,
+            _uow.Object);
 
-        this._account = Account.Create("Checking", AccountType.Checking);
+        _account = Account.Create("Checking", AccountType.Checking);
     }
 
     [Fact]
@@ -40,7 +41,7 @@ public class RecurringTransactionRealizationServiceTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._account.Id,
+            _account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -52,38 +53,38 @@ public class RecurringTransactionRealizationServiceTests
             InstanceDate = instanceDate,
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
-        this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync((RecurringTransactionException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
+        _repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync((RecurringTransactionException?)null);
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
-        var result = await this._service.RealizeInstanceAsync(recurring.Id, request);
+        var result = await _service.RealizeInstanceAsync(recurring.Id, request);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(this._account.Id, result.AccountId);
+        Assert.Equal(_account.Id, result.AccountId);
         Assert.Equal(-15.99m, result.Amount.Amount);
         Assert.Equal(instanceDate, result.Date);
         Assert.Equal("Netflix", result.Description);
         Assert.Equal(recurring.Id, result.RecurringTransactionId);
         Assert.Equal(instanceDate, result.RecurringInstanceDate);
-        this._transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), default), Times.Once);
-        this._uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), default), Times.Once);
+        _uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 
     [Fact]
     public async Task RealizeInstanceAsync_Throws_When_Recurring_Not_Found()
     {
         // Arrange
-        this._repository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((RecurringTransaction?)null);
+        _repository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((RecurringTransaction?)null);
         var request = new RealizeRecurringTransactionRequest
         {
             InstanceDate = new DateOnly(2026, 1, 15),
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<DomainException>(() => this._service.RealizeInstanceAsync(Guid.NewGuid(), request));
+        var ex = await Assert.ThrowsAsync<DomainException>(() => _service.RealizeInstanceAsync(Guid.NewGuid(), request));
         Assert.Equal("Recurring transaction not found.", ex.Message);
     }
 
@@ -92,7 +93,7 @@ public class RecurringTransactionRealizationServiceTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._account.Id,
+            _account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -100,7 +101,7 @@ public class RecurringTransactionRealizationServiceTests
 
         var instanceDate = new DateOnly(2026, 1, 15);
         var existingTransaction = Transaction.CreateFromRecurring(
-            this._account.Id,
+            _account.Id,
             MoneyValue.Create("USD", -15.99m),
             instanceDate,
             "Netflix",
@@ -112,11 +113,11 @@ public class RecurringTransactionRealizationServiceTests
             InstanceDate = instanceDate,
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync(existingTransaction);
+        _repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync(existingTransaction);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<DomainException>(() => this._service.RealizeInstanceAsync(recurring.Id, request));
+        var ex = await Assert.ThrowsAsync<DomainException>(() => _service.RealizeInstanceAsync(recurring.Id, request));
         Assert.Equal("This instance has already been realized.", ex.Message);
     }
 
@@ -125,7 +126,7 @@ public class RecurringTransactionRealizationServiceTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._account.Id,
+            _account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -141,13 +142,13 @@ public class RecurringTransactionRealizationServiceTests
             Description = "Netflix Premium",
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
-        this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync((RecurringTransactionException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
+        _repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync((RecurringTransactionException?)null);
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
-        var result = await this._service.RealizeInstanceAsync(recurring.Id, request);
+        var result = await _service.RealizeInstanceAsync(recurring.Id, request);
 
         // Assert
         Assert.NotNull(result);
@@ -162,7 +163,7 @@ public class RecurringTransactionRealizationServiceTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._account.Id,
+            _account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -182,13 +183,13 @@ public class RecurringTransactionRealizationServiceTests
             InstanceDate = instanceDate,
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
-        this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync(exception);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
+        _repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync(exception);
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
-        var result = await this._service.RealizeInstanceAsync(recurring.Id, request);
+        var result = await _service.RealizeInstanceAsync(recurring.Id, request);
 
         // Assert
         Assert.NotNull(result);
@@ -202,7 +203,7 @@ public class RecurringTransactionRealizationServiceTests
     {
         // Arrange
         var recurring = RecurringTransaction.Create(
-            this._account.Id,
+            _account.Id,
             "Netflix",
             MoneyValue.Create("USD", -15.99m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -225,13 +226,13 @@ public class RecurringTransactionRealizationServiceTests
             Amount = new MoneyDto { Currency = "USD", Amount = -25.00m },
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
-        this._repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync(exception);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
-        this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _repository.Setup(r => r.GetByIdAsync(recurring.Id, default)).ReturnsAsync(recurring);
+        _repository.Setup(r => r.GetExceptionAsync(recurring.Id, instanceDate, default)).ReturnsAsync(exception);
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, instanceDate, default)).ReturnsAsync((Transaction?)null);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
-        var result = await this._service.RealizeInstanceAsync(recurring.Id, request);
+        var result = await _service.RealizeInstanceAsync(recurring.Id, request);
 
         // Assert
         Assert.NotNull(result);

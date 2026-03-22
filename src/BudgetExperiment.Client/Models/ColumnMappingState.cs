@@ -14,7 +14,10 @@ public sealed class ColumnMappingState
     /// <summary>
     /// Gets or sets the zero-based column index.
     /// </summary>
-    public int ColumnIndex { get; set; }
+    public int ColumnIndex
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the column header from CSV.
@@ -24,7 +27,10 @@ public sealed class ColumnMappingState
     /// <summary>
     /// Gets or sets the target field.
     /// </summary>
-    public ImportField? TargetField { get; set; }
+    public ImportField? TargetField
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets sample values from the first few rows.

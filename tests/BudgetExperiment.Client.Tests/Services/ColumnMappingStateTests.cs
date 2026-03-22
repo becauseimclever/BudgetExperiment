@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Contracts.Dtos;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Services;

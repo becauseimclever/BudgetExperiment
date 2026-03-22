@@ -14,17 +14,26 @@ public sealed class SuggestedRule
     /// <summary>
     /// Gets the pattern to match against transaction descriptions.
     /// </summary>
-    public required string Pattern { get; init; }
+    public required string Pattern
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the suggested match type.
     /// </summary>
-    public RuleMatchType MatchType { get; init; }
+    public RuleMatchType MatchType
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the count of uncategorized transactions that would match.
     /// </summary>
-    public int MatchingTransactionCount { get; init; }
+    public int MatchingTransactionCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets sample transaction descriptions.

@@ -29,17 +29,26 @@ public sealed record RuleSuggestionAnalysis
     /// <summary>
     /// Gets the number of uncategorized transactions analyzed.
     /// </summary>
-    public int UncategorizedTransactionsAnalyzed { get; init; }
+    public int UncategorizedTransactionsAnalyzed
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of rules analyzed.
     /// </summary>
-    public int RulesAnalyzed { get; init; }
+    public int RulesAnalyzed
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the total duration of the analysis.
     /// </summary>
-    public TimeSpan AnalysisDuration { get; init; }
+    public TimeSpan AnalysisDuration
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets diagnostic warnings from parsing AI responses (e.g., unknown categories, parse failures).

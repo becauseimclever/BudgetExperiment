@@ -5,7 +5,9 @@
 using BudgetExperiment.Client.Components.Display;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Display;
@@ -278,17 +280,17 @@ public class RuleCardTests : BunitContext, IAsyncLifetime
         int priority = 1,
         string? categoryName = "Test Category",
         bool isActive = true) => new()
-    {
-        Id = Guid.NewGuid(),
-        Name = name,
-        Pattern = pattern,
-        MatchType = matchType,
-        CaseSensitive = caseSensitive,
-        Priority = priority,
-        CategoryId = Guid.NewGuid(),
-        CategoryName = categoryName,
-        IsActive = isActive,
-    };
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            Pattern = pattern,
+            MatchType = matchType,
+            CaseSensitive = caseSensitive,
+            Priority = priority,
+            CategoryId = Guid.NewGuid(),
+            CategoryName = categoryName,
+            IsActive = isActive,
+        };
 
     private IRenderedComponent<RuleCard> RenderCard(
         string name = "Test Rule",

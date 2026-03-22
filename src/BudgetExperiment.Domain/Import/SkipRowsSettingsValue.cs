@@ -17,7 +17,10 @@ public sealed record SkipRowsSettingsValue
     /// <summary>
     /// Gets the number of rows to skip before the data/header begins.
     /// </summary>
-    public int RowsToSkip { get; init; }
+    public int RowsToSkip
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets default settings (no rows skipped).

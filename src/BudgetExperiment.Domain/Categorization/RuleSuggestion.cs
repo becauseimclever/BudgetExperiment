@@ -40,17 +40,26 @@ public sealed class RuleSuggestion
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the type of suggestion.
     /// </summary>
-    public SuggestionType Type { get; private set; }
+    public SuggestionType Type
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the review status of the suggestion.
     /// </summary>
-    public SuggestionStatus Status { get; private set; }
+    public SuggestionStatus Status
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggestion title for display.
@@ -70,32 +79,50 @@ public sealed class RuleSuggestion
     /// <summary>
     /// Gets the confidence score (0.0 to 1.0).
     /// </summary>
-    public decimal Confidence { get; private set; }
+    public decimal Confidence
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggested pattern for new rule suggestions.
     /// </summary>
-    public string? SuggestedPattern { get; private set; }
+    public string? SuggestedPattern
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggested match type for new rule suggestions.
     /// </summary>
-    public RuleMatchType? SuggestedMatchType { get; private set; }
+    public RuleMatchType? SuggestedMatchType
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggested category ID for new rule suggestions.
     /// </summary>
-    public Guid? SuggestedCategoryId { get; private set; }
+    public Guid? SuggestedCategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the target rule ID for optimization and unused rule suggestions.
     /// </summary>
-    public Guid? TargetRuleId { get; private set; }
+    public Guid? TargetRuleId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the optimized pattern for optimization suggestions.
     /// </summary>
-    public string? OptimizedPattern { get; private set; }
+    public string? OptimizedPattern
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the IDs of conflicting rules or rules to consolidate.
@@ -105,7 +132,10 @@ public sealed class RuleSuggestion
     /// <summary>
     /// Gets the count of transactions affected by this suggestion.
     /// </summary>
-    public int AffectedTransactionCount { get; private set; }
+    public int AffectedTransactionCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets sample transaction descriptions that would match.
@@ -115,22 +145,34 @@ public sealed class RuleSuggestion
     /// <summary>
     /// Gets the UTC timestamp when the suggestion was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the suggestion was reviewed.
     /// </summary>
-    public DateTime? ReviewedAtUtc { get; private set; }
+    public DateTime? ReviewedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the reason for dismissal, if dismissed.
     /// </summary>
-    public string? DismissalReason { get; private set; }
+    public string? DismissalReason
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user's feedback on the suggestion quality.
     /// </summary>
-    public bool? UserFeedbackPositive { get; private set; }
+    public bool? UserFeedbackPositive
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a suggestion to add a new categorization rule.

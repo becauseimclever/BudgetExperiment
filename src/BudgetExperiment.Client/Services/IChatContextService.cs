@@ -19,7 +19,10 @@ public interface IChatContextService
     /// <summary>
     /// Gets the current page context.
     /// </summary>
-    ChatPageContext CurrentContext { get; }
+    ChatPageContext CurrentContext
+    {
+        get;
+    }
 
     /// <summary>
     /// Sets the current account context.

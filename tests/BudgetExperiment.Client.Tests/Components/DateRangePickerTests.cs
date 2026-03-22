@@ -3,7 +3,9 @@
 // </copyright>
 
 using BudgetExperiment.Client.Components.Reports;
+
 using Bunit;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Tests.Components;

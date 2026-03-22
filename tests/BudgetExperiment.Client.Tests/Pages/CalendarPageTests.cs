@@ -7,9 +7,12 @@ using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -27,7 +30,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     public CalendarPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
         this.Services.AddSingleton<ThemeService>();
@@ -125,7 +128,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsAccountFilter_WhenAccountsExist()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Checking",
@@ -171,7 +174,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsBudgetSummary_WhenAvailable()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -188,8 +191,8 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleAccounts_InFilter()
     {
-        this._apiService.Accounts.Add(CreateAccount("Checking"));
-        this._apiService.Accounts.Add(CreateAccount("Savings"));
+        _apiService.Accounts.Add(CreateAccount("Checking"));
+        _apiService.Accounts.Add(CreateAccount("Savings"));
 
         var cut = Render<Calendar>();
 
@@ -204,7 +207,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     public void ClickDate_SelectsDateAndShowsDetail()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        this._apiService.CalendarGrid = new CalendarGridDto
+        _apiService.CalendarGrid = new CalendarGridDto
         {
             Year = today.Year,
             Month = today.Month,
@@ -218,7 +221,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
             },
         };
 
-        this._apiService.DayDetail = new DayDetailDto
+        _apiService.DayDetail = new DayDetailDto
         {
             Date = today,
             Items = new List<DayDetailItemDto>
@@ -251,7 +254,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CategoriesAreLoaded_ForTransactionCreation()
     {
-        this._apiService.Categories.Add(new BudgetCategoryDto
+        _apiService.Categories.Add(new BudgetCategoryDto
         {
             Id = Guid.NewGuid(),
             Name = "Food",
@@ -285,7 +288,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsPastDueBanner_WhenPastDueItemsExist()
     {
-        this._apiService.PastDueSummary = new PastDueSummaryDto
+        _apiService.PastDueSummary = new PastDueSummaryDto
         {
             TotalCount = 3,
             Items = new List<PastDueItemDto>
@@ -314,7 +317,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     public void DayDetail_ShowsTransactions_WhenDaySelected()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        this._apiService.DayDetail = new DayDetailDto
+        _apiService.DayDetail = new DayDetailDto
         {
             Date = today,
             Items = new List<DayDetailItemDto>
@@ -342,7 +345,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CreateTransactionResult_IsConfigurable()
     {
-        this._apiService.CreateTransactionResult = new TransactionDto
+        _apiService.CreateTransactionResult = new TransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "New Transaction",
@@ -362,7 +365,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SetBudgetGoalResult_IsConfigurable()
     {
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
         {
             Id = Guid.NewGuid(),
             CategoryId = Guid.NewGuid(),
@@ -382,7 +385,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteBudgetGoalResult_IsConfigurable()
     {
-        this._apiService.DeleteBudgetGoalResult = true;
+        _apiService.DeleteBudgetGoalResult = true;
 
         var cut = Render<Calendar>();
 
@@ -408,7 +411,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CopyBudgetGoalsResult_IsConfigurable()
     {
-        this._apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult { GoalsCreated = 5 };
+        _apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult { GoalsCreated = 5 };
 
         var cut = Render<Calendar>();
 
@@ -421,7 +424,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CalendarGrid_ShowsDayCells()
     {
-        this._apiService.CalendarGrid = new CalendarGridDto
+        _apiService.CalendarGrid = new CalendarGridDto
         {
             Year = 2025,
             Month = 6,
@@ -448,7 +451,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void RealizeBatchResult_IsConfigurable()
     {
-        this._apiService.RealizeBatchResult = new BatchRealizeResultDto { SuccessCount = 3 };
+        _apiService.RealizeBatchResult = new BatchRealizeResultDto { SuccessCount = 3 };
 
         var cut = Render<Calendar>();
 
@@ -484,7 +487,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SaveBudgetGoal_Success_RefreshesCalendar()
     {
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
         {
             Id = Guid.NewGuid(),
             CategoryId = Guid.NewGuid(),
@@ -493,7 +496,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
             Month = 6,
         });
 
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = 2025,
             Month = 6,
@@ -512,7 +515,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteBudgetGoal_Success_RefreshesCalendar()
     {
-        this._apiService.DeleteBudgetGoalResult = true;
+        _apiService.DeleteBudgetGoalResult = true;
 
         var cut = Render<Calendar>(parameters => parameters
             .Add(p => p.Year, 2025)
@@ -527,8 +530,8 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CopyBudgetGoals_Success_RefreshesCalendar()
     {
-        this._apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult { GoalsCreated = 3 };
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult { GoalsCreated = 3 };
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = 2025,
             Month = 6,
@@ -547,7 +550,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CreateTransaction_Success_RefreshesCalendar()
     {
-        this._apiService.CreateTransactionResult = new TransactionDto
+        _apiService.CreateTransactionResult = new TransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Test Transaction",
@@ -569,7 +572,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SkipRecurringInstance_Success_RefreshesCalendar()
     {
-        this._apiService.SkipRecurringInstanceResult = true;
+        _apiService.SkipRecurringInstanceResult = true;
 
         var cut = Render<Calendar>(parameters => parameters
             .Add(p => p.Year, 2025)
@@ -584,7 +587,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ModifyRecurringInstance_Success_RefreshesCalendar()
     {
-        this._apiService.ModifyRecurringInstanceResult = ApiResult<RecurringInstanceDto>.Success(new RecurringInstanceDto
+        _apiService.ModifyRecurringInstanceResult = ApiResult<RecurringInstanceDto>.Success(new RecurringInstanceDto
         {
             RecurringTransactionId = Guid.NewGuid(),
             ScheduledDate = new DateOnly(2025, 6, 15),
@@ -603,8 +606,8 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ConfirmPastDueItems_Success_RefreshesCalendar()
     {
-        this._apiService.RealizeBatchResult = new BatchRealizeResultDto { SuccessCount = 2 };
-        this._apiService.PastDueSummary = new PastDueSummaryDto
+        _apiService.RealizeBatchResult = new BatchRealizeResultDto { SuccessCount = 2 };
+        _apiService.PastDueSummary = new PastDueSummaryDto
         {
             TotalCount = 2,
             Items = new List<PastDueItemDto>
@@ -691,7 +694,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     public void SelectDate_LoadsDayDetail()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        this._apiService.CalendarGrid = new CalendarGridDto
+        _apiService.CalendarGrid = new CalendarGridDto
         {
             Year = today.Year,
             Month = today.Month,
@@ -706,7 +709,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
                 },
             },
         };
-        this._apiService.DayDetail = new DayDetailDto
+        _apiService.DayDetail = new DayDetailDto
         {
             Date = today,
             Items = new List<DayDetailItemDto>
@@ -739,7 +742,7 @@ public class CalendarPageTests : BunitContext, IAsyncLifetime
     public void AccountFilter_Change_ReloadsData()
     {
         var accountId = Guid.NewGuid();
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = accountId,
             Name = "Filtered Account",

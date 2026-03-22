@@ -37,12 +37,12 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
         IAppSettingsRepository settingsRepository,
         ICurrencyProvider currencyProvider)
     {
-        this._recurringRepository = recurringRepository;
-        this._instanceProjector = instanceProjector;
-        this._transactionMatcher = transactionMatcher;
-        this._locationParser = locationParser;
-        this._settingsRepository = settingsRepository;
-        this._currencyProvider = currencyProvider;
+        _recurringRepository = recurringRepository;
+        _instanceProjector = instanceProjector;
+        _transactionMatcher = transactionMatcher;
+        _locationParser = locationParser;
+        _settingsRepository = settingsRepository;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc />
@@ -63,13 +63,13 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
         var minDate = dates.Min().AddDays(-7);
         var maxDate = dates.Max().AddDays(7);
 
-        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
+        var recurringTransactions = await _recurringRepository.GetActiveAsync(cancellationToken);
         if (recurringTransactions.Count == 0)
         {
             return rows;
         }
 
-        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
+        var instancesByDate = await _instanceProjector.GetInstancesByDateRangeAsync(
             recurringTransactions, minDate, maxDate, cancellationToken);
 
         var allCandidates = instancesByDate.Values.SelectMany(list => list).ToList();
@@ -79,7 +79,7 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
         }
 
         var tolerances = MatchingTolerancesValue.Default;
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
 
         return this.MatchRowsToCandidates(rows, allCandidates, tolerances, currency);
     }
@@ -89,14 +89,14 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
         List<ImportPreviewRow> rows,
         CancellationToken cancellationToken = default)
     {
-        var settings = await this._settingsRepository.GetAsync(cancellationToken);
+        var settings = await _settingsRepository.GetAsync(cancellationToken);
         if (!settings.EnableLocationData)
         {
             return rows;
         }
 
         var descriptions = rows.Select(r => r.Description).ToList();
-        var parseResults = this._locationParser.ParseBatch(descriptions);
+        var parseResults = _locationParser.ParseBatch(descriptions);
 
         var enrichedRows = new List<ImportPreviewRow>();
         for (int i = 0; i < rows.Count; i++)
@@ -197,7 +197,7 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
 
         foreach (var candidate in candidates)
         {
-            var matchResult = this._transactionMatcher.CalculateMatch(
+            var matchResult = _transactionMatcher.CalculateMatch(
                 CreatePreviewTransaction(description, amount, date, currency),
                 candidate,
                 tolerances);

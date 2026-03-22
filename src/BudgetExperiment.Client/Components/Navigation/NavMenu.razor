@@ -36,6 +36,16 @@
         </li>
 
         <li>
+            <NavLink class="nav-item" href="recurring-charge-suggestions" title="Charge Detection" aria-label="Recurring Charge Detection">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="search" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Charge Detection</span>
+                }
+            </NavLink>
+        </li>
+
+        <li>
             <NavLink class="nav-item" href="recurring-transfers" title="Auto-Transfers" aria-label="Automatic Transfers">
                 <span class="nav-icon" aria-hidden="true"><Icon Name="repeat" Size="20" /></span>
                 @if (!IsCollapsed)

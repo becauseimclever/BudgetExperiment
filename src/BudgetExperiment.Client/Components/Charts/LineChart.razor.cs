@@ -4,7 +4,9 @@
 
 using System.Globalization;
 using System.Text;
+
 using BudgetExperiment.Client.Components.Charts.Shared;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -24,7 +26,10 @@ public partial class LineChart
     /// Gets or sets the series definitions for multi-line charts.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<LineSeriesDefinition>? Series { get; set; }
+    public IReadOnlyList<LineSeriesDefinition>? Series
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether to show points on the line.
@@ -84,19 +89,28 @@ public partial class LineChart
     /// Gets or sets the optional minimum Y value.
     /// </summary>
     [Parameter]
-    public decimal? MinY { get; set; }
+    public decimal? MinY
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the optional maximum Y value.
     /// </summary>
     [Parameter]
-    public decimal? MaxY { get; set; }
+    public decimal? MaxY
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the optional reference lines.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<ReferenceLine>? ReferenceLines { get; set; }
+    public IReadOnlyList<ReferenceLine>? ReferenceLines
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label.
@@ -108,7 +122,10 @@ public partial class LineChart
     /// Gets or sets the event callback when a point is clicked.
     /// </summary>
     [Parameter]
-    public EventCallback<LineData> OnPointClick { get; set; }
+    public EventCallback<LineData> OnPointClick
+    {
+        get; set;
+    }
 
     private static double MarginLeft => 46;
 
@@ -120,7 +137,10 @@ public partial class LineChart
 
     private static double ViewBoxHeight => 200;
 
-    private ChartPoint? HoveredPoint { get; set; }
+    private ChartPoint? HoveredPoint
+    {
+        get; set;
+    }
 
     private double ChartAreaBottom => ViewBoxHeight - MarginBottom;
 
@@ -547,24 +567,42 @@ public partial class LineChart
 
         public string Path { get; set; } = string.Empty;
 
-        public string? AreaPath { get; set; }
+        public string? AreaPath
+        {
+            get; set;
+        }
 
         public string AreaFill { get; set; } = string.Empty;
 
-        public string? GradientId { get; set; }
+        public string? GradientId
+        {
+            get; set;
+        }
     }
 
     private sealed class ChartPoint
     {
-        public int Index { get; set; }
+        public int Index
+        {
+            get; set;
+        }
 
         public string Label { get; set; } = string.Empty;
 
-        public decimal Value { get; set; }
+        public decimal Value
+        {
+            get; set;
+        }
 
-        public double X { get; set; }
+        public double X
+        {
+            get; set;
+        }
 
-        public double Y { get; set; }
+        public double Y
+        {
+            get; set;
+        }
 
         public string SeriesLabel { get; set; } = string.Empty;
 
@@ -577,7 +615,10 @@ public partial class LineChart
 
     private sealed class ReferenceLineInfo
     {
-        public double Y { get; set; }
+        public double Y
+        {
+            get; set;
+        }
 
         public string Label { get; set; } = string.Empty;
 

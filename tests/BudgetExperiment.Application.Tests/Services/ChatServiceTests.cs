@@ -3,7 +3,9 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Shouldly;
+
 using Xunit;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -25,38 +27,38 @@ public class ChatServiceTests
 
     public ChatServiceTests()
     {
-        this._sessionRepo = new MockChatSessionRepository();
-        this._messageRepo = new MockChatMessageRepository();
-        this._accountRepo = new MockAccountRepository();
-        this._categoryRepo = new MockBudgetCategoryRepository();
-        this._parser = new MockNaturalLanguageParser();
-        this._actionExecutor = new MockChatActionExecutor();
-        this._unitOfWork = new MockUnitOfWork();
+        _sessionRepo = new MockChatSessionRepository();
+        _messageRepo = new MockChatMessageRepository();
+        _accountRepo = new MockAccountRepository();
+        _categoryRepo = new MockBudgetCategoryRepository();
+        _parser = new MockNaturalLanguageParser();
+        _actionExecutor = new MockChatActionExecutor();
+        _unitOfWork = new MockUnitOfWork();
 
-        this._service = new ChatService(
-            this._sessionRepo,
-            this._messageRepo,
-            this._accountRepo,
-            this._categoryRepo,
-            this._parser,
-            this._actionExecutor,
-            this._unitOfWork);
+        _service = new ChatService(
+            _sessionRepo,
+            _messageRepo,
+            _accountRepo,
+            _categoryRepo,
+            _parser,
+            _actionExecutor,
+            _unitOfWork);
     }
 
     [Fact]
     public async Task GetOrCreateSessionAsync_Creates_New_Session_When_None_Active()
     {
         // Arrange
-        this._sessionRepo.SetActiveSession(null);
+        _sessionRepo.SetActiveSession(null);
 
         // Act
-        var result = await this._service.GetOrCreateSessionAsync("user123");
+        var result = await _service.GetOrCreateSessionAsync("user123");
 
         // Assert
         result.ShouldNotBeNull();
         result.IsActive.ShouldBeTrue();
-        this._sessionRepo.AddedSessions.Count.ShouldBe(1);
-        this._unitOfWork.SaveChangesCalled.ShouldBeTrue();
+        _sessionRepo.AddedSessions.Count.ShouldBe(1);
+        _unitOfWork.SaveChangesCalled.ShouldBeTrue();
     }
 
     [Fact]
@@ -64,14 +66,14 @@ public class ChatServiceTests
     {
         // Arrange
         var existingSession = ChatSession.Create();
-        this._sessionRepo.SetActiveSession(existingSession);
+        _sessionRepo.SetActiveSession(existingSession);
 
         // Act
-        var result = await this._service.GetOrCreateSessionAsync("user123");
+        var result = await _service.GetOrCreateSessionAsync("user123");
 
         // Assert
         result.ShouldBe(existingSession);
-        this._sessionRepo.AddedSessions.Count.ShouldBe(0);
+        _sessionRepo.AddedSessions.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -79,10 +81,10 @@ public class ChatServiceTests
     {
         // Arrange
         var session = ChatSession.Create();
-        this._sessionRepo.AddSession(session);
+        _sessionRepo.AddSession(session);
 
         // Act
-        var result = await this._service.GetSessionAsync(session.Id);
+        var result = await _service.GetSessionAsync(session.Id);
 
         // Assert
         result.ShouldBe(session);
@@ -92,7 +94,7 @@ public class ChatServiceTests
     public async Task GetSessionAsync_Returns_Null_When_Not_Found()
     {
         // Act
-        var result = await this._service.GetSessionAsync(Guid.NewGuid());
+        var result = await _service.GetSessionAsync(Guid.NewGuid());
 
         // Assert
         result.ShouldBeNull();
@@ -102,7 +104,7 @@ public class ChatServiceTests
     public async Task SendMessageAsync_Returns_Failure_When_Session_Not_Found()
     {
         // Act
-        var result = await this._service.SendMessageAsync(Guid.NewGuid(), "Hello");
+        var result = await _service.SendMessageAsync(Guid.NewGuid(), "Hello");
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -116,10 +118,10 @@ public class ChatServiceTests
         // Arrange
         var session = ChatSession.Create();
         session.Close();
-        this._sessionRepo.AddSession(session);
+        _sessionRepo.AddSession(session);
 
         // Act
-        var result = await this._service.SendMessageAsync(session.Id, "Hello");
+        var result = await _service.SendMessageAsync(session.Id, "Hello");
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -132,9 +134,9 @@ public class ChatServiceTests
     {
         // Arrange
         var session = ChatSession.Create();
-        this._sessionRepo.AddSession(session);
+        _sessionRepo.AddSession(session);
 
-        this._parser.SetupResult(new ParseResult(
+        _parser.SetupResult(new ParseResult(
             Success: true,
             Action: new CreateTransactionAction
             {
@@ -147,7 +149,7 @@ public class ChatServiceTests
             ResponseText: "I'll create that transaction for you."));
 
         // Act
-        var result = await this._service.SendMessageAsync(session.Id, "Add $50 groceries");
+        var result = await _service.SendMessageAsync(session.Id, "Add $50 groceries");
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -157,7 +159,7 @@ public class ChatServiceTests
         result.AssistantMessage.ShouldNotBeNull();
         result.AssistantMessage.Content.ShouldContain("create that transaction");
         result.AssistantMessage.Action.ShouldNotBeNull();
-        this._messageRepo.AddedMessages.Count.ShouldBe(2);
+        _messageRepo.AddedMessages.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -165,9 +167,9 @@ public class ChatServiceTests
     {
         // Arrange
         var session = ChatSession.Create();
-        this._sessionRepo.AddSession(session);
+        _sessionRepo.AddSession(session);
 
-        this._parser.SetupResult(new ParseResult(
+        _parser.SetupResult(new ParseResult(
             Success: true,
             Action: null,
             ResponseText: "Ok"));
@@ -178,14 +180,14 @@ public class ChatServiceTests
             CurrentPage: "calendar");
 
         // Act
-        var result = await this._service.SendMessageAsync(session.Id, "Add $50 groceries", context);
+        var result = await _service.SendMessageAsync(session.Id, "Add $50 groceries", context);
 
         // Assert
         result.Success.ShouldBeTrue();
-        this._parser.LastContext.ShouldNotBeNull();
-        this._parser.LastContext!.CurrentAccountName.ShouldBe("Checking");
-        this._parser.LastContext.CurrentDate.ShouldBe(new DateOnly(2026, 2, 10));
-        this._parser.LastContext.CurrentPage.ShouldBe("calendar");
+        _parser.LastContext.ShouldNotBeNull();
+        _parser.LastContext!.CurrentAccountName.ShouldBe("Checking");
+        _parser.LastContext.CurrentDate.ShouldBe(new DateOnly(2026, 2, 10));
+        _parser.LastContext.CurrentPage.ShouldBe("calendar");
     }
 
     [Fact]
@@ -193,16 +195,16 @@ public class ChatServiceTests
     {
         // Arrange
         var session = ChatSession.Create();
-        this._sessionRepo.AddSession(session);
+        _sessionRepo.AddSession(session);
 
-        this._parser.SetupResult(new ParseResult(
+        _parser.SetupResult(new ParseResult(
             Success: false,
             Action: null,
             ResponseText: "I couldn't understand that.",
             ErrorMessage: "Parse failed"));
 
         // Act
-        var result = await this._service.SendMessageAsync(session.Id, "What's the weather?");
+        var result = await _service.SendMessageAsync(session.Id, "What's the weather?");
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -215,7 +217,7 @@ public class ChatServiceTests
     public async Task ConfirmActionAsync_Returns_Failure_When_Message_Not_Found()
     {
         // Act
-        var result = await this._service.ConfirmActionAsync(Guid.NewGuid());
+        var result = await _service.ConfirmActionAsync(Guid.NewGuid());
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -229,10 +231,10 @@ public class ChatServiceTests
         // Arrange
         var session = ChatSession.Create();
         var message = session.AddUserMessage("Hello");
-        this._messageRepo.AddMessage(message);
+        _messageRepo.AddMessage(message);
 
         // Act
-        var result = await this._service.ConfirmActionAsync(message.Id);
+        var result = await _service.ConfirmActionAsync(message.Id);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -255,10 +257,10 @@ public class ChatServiceTests
         };
         var message = session.AddAssistantMessage("Creating...", action);
         message.MarkActionConfirmed(Guid.NewGuid()); // Already confirmed
-        this._messageRepo.AddMessage(message);
+        _messageRepo.AddMessage(message);
 
         // Act
-        var result = await this._service.ConfirmActionAsync(message.Id);
+        var result = await _service.ConfirmActionAsync(message.Id);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -270,7 +272,7 @@ public class ChatServiceTests
     public async Task CancelActionAsync_Returns_False_When_Message_Not_Found()
     {
         // Act
-        var result = await this._service.CancelActionAsync(Guid.NewGuid());
+        var result = await _service.CancelActionAsync(Guid.NewGuid());
 
         // Assert
         result.ShouldBeFalse();
@@ -290,22 +292,22 @@ public class ChatServiceTests
             Description = "Test",
         };
         var message = session.AddAssistantMessage("Creating...", action);
-        this._messageRepo.AddMessage(message);
+        _messageRepo.AddMessage(message);
 
         // Act
-        var result = await this._service.CancelActionAsync(message.Id);
+        var result = await _service.CancelActionAsync(message.Id);
 
         // Assert
         result.ShouldBeTrue();
         message.ActionStatus.ShouldBe(ChatActionStatus.Cancelled);
-        this._unitOfWork.SaveChangesCalled.ShouldBeTrue();
+        _unitOfWork.SaveChangesCalled.ShouldBeTrue();
     }
 
     [Fact]
     public async Task CloseSessionAsync_Returns_False_When_Not_Found()
     {
         // Act
-        var result = await this._service.CloseSessionAsync(Guid.NewGuid());
+        var result = await _service.CloseSessionAsync(Guid.NewGuid());
 
         // Assert
         result.ShouldBeFalse();
@@ -316,15 +318,15 @@ public class ChatServiceTests
     {
         // Arrange
         var session = ChatSession.Create();
-        this._sessionRepo.AddSession(session);
+        _sessionRepo.AddSession(session);
 
         // Act
-        var result = await this._service.CloseSessionAsync(session.Id);
+        var result = await _service.CloseSessionAsync(session.Id);
 
         // Assert
         result.ShouldBeTrue();
         session.IsActive.ShouldBeFalse();
-        this._unitOfWork.SaveChangesCalled.ShouldBeTrue();
+        _unitOfWork.SaveChangesCalled.ShouldBeTrue();
     }
 
     [Fact]
@@ -333,10 +335,10 @@ public class ChatServiceTests
         // Arrange
         var session = ChatSession.Create();
         session.Close();
-        this._sessionRepo.AddSession(session);
+        _sessionRepo.AddSession(session);
 
         // Act
-        var result = await this._service.CloseSessionAsync(session.Id);
+        var result = await _service.CloseSessionAsync(session.Id);
 
         // Assert
         result.ShouldBeFalse();
@@ -351,39 +353,39 @@ public class ChatServiceTests
 
         public void SetActiveSession(ChatSession? session)
         {
-            this._activeSession = session;
+            _activeSession = session;
         }
 
         public void AddSession(ChatSession session)
         {
-            this._sessions[session.Id] = session;
+            _sessions[session.Id] = session;
         }
 
         public Task<ChatSession?> GetActiveSessionAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._activeSession);
+            Task.FromResult(_activeSession);
 
         public Task<ChatSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._sessions.GetValueOrDefault(id));
+            Task.FromResult(_sessions.GetValueOrDefault(id));
 
         public Task<ChatSession?> GetWithMessagesAsync(Guid sessionId, int messageLimit = 50, CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._sessions.GetValueOrDefault(sessionId));
+            Task.FromResult(_sessions.GetValueOrDefault(sessionId));
 
         public Task<IReadOnlyList<ChatSession>> ListAsync(int skip, int take, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<ChatSession>>(this._sessions.Values.Skip(skip).Take(take).ToList());
+            Task.FromResult<IReadOnlyList<ChatSession>>(_sessions.Values.Skip(skip).Take(take).ToList());
 
         public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult((long)this._sessions.Count);
+            Task.FromResult((long)_sessions.Count);
 
         public Task AddAsync(ChatSession entity, CancellationToken cancellationToken = default)
         {
-            this._sessions[entity.Id] = entity;
+            _sessions[entity.Id] = entity;
             this.AddedSessions.Add(entity);
             return Task.CompletedTask;
         }
 
         public Task RemoveAsync(ChatSession entity, CancellationToken cancellationToken = default)
         {
-            this._sessions.Remove(entity.Id);
+            _sessions.Remove(entity.Id);
             return Task.CompletedTask;
         }
     }
@@ -396,38 +398,38 @@ public class ChatServiceTests
 
         public void AddMessage(ChatMessage message)
         {
-            this._messages[message.Id] = message;
+            _messages[message.Id] = message;
         }
 
         public Task<ChatMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._messages.GetValueOrDefault(id));
+            Task.FromResult(_messages.GetValueOrDefault(id));
 
         public Task<IReadOnlyList<ChatMessage>> GetBySessionAsync(Guid sessionId, int limit = 50, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<ChatMessage>>(
-                this._messages.Values.Where(m => m.SessionId == sessionId).Take(limit).ToList());
+                _messages.Values.Where(m => m.SessionId == sessionId).Take(limit).ToList());
 
         public Task<IReadOnlyList<ChatMessage>> GetPendingActionsAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<ChatMessage>>(
-                this._messages.Values
+                _messages.Values
                     .Where(m => m.SessionId == sessionId && m.ActionStatus == ChatActionStatus.Pending)
                     .ToList());
 
         public Task<IReadOnlyList<ChatMessage>> ListAsync(int skip, int take, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<ChatMessage>>(this._messages.Values.Skip(skip).Take(take).ToList());
+            Task.FromResult<IReadOnlyList<ChatMessage>>(_messages.Values.Skip(skip).Take(take).ToList());
 
         public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult((long)this._messages.Count);
+            Task.FromResult((long)_messages.Count);
 
         public Task AddAsync(ChatMessage entity, CancellationToken cancellationToken = default)
         {
-            this._messages[entity.Id] = entity;
+            _messages[entity.Id] = entity;
             this.AddedMessages.Add(entity);
             return Task.CompletedTask;
         }
 
         public Task RemoveAsync(ChatMessage entity, CancellationToken cancellationToken = default)
         {
-            this._messages.Remove(entity.Id);
+            _messages.Remove(entity.Id);
             return Task.CompletedTask;
         }
     }
@@ -437,29 +439,29 @@ public class ChatServiceTests
         private readonly List<Account> _accounts = new();
 
         public Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._accounts.FirstOrDefault(a => a.Id == id));
+            Task.FromResult(_accounts.FirstOrDefault(a => a.Id == id));
 
         public Task<Account?> GetByIdWithTransactionsAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._accounts.FirstOrDefault(a => a.Id == id));
+            Task.FromResult(_accounts.FirstOrDefault(a => a.Id == id));
 
         public Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Account>>(this._accounts);
+            Task.FromResult<IReadOnlyList<Account>>(_accounts);
 
         public Task<IReadOnlyList<Account>> ListAsync(int skip, int take, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Account>>(this._accounts.Skip(skip).Take(take).ToList());
+            Task.FromResult<IReadOnlyList<Account>>(_accounts.Skip(skip).Take(take).ToList());
 
         public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult((long)this._accounts.Count);
+            Task.FromResult((long)_accounts.Count);
 
         public Task AddAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            this._accounts.Add(entity);
+            _accounts.Add(entity);
             return Task.CompletedTask;
         }
 
         public Task RemoveAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            this._accounts.Remove(entity);
+            _accounts.Remove(entity);
             return Task.CompletedTask;
         }
     }
@@ -469,41 +471,41 @@ public class ChatServiceTests
         private readonly List<BudgetCategory> _categories = new();
 
         public Task<BudgetCategory?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._categories.FirstOrDefault(c => c.Id == id));
+            Task.FromResult(_categories.FirstOrDefault(c => c.Id == id));
 
         public Task<BudgetCategory?> GetByNameAsync(string name, CancellationToken cancellationToken = default) =>
-            Task.FromResult(this._categories.FirstOrDefault(c => c.Name == name));
+            Task.FromResult(_categories.FirstOrDefault(c => c.Name == name));
 
         public Task<IReadOnlyList<BudgetCategory>> GetActiveAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories.Where(c => c.IsActive).ToList());
+            Task.FromResult<IReadOnlyList<BudgetCategory>>(_categories.Where(c => c.IsActive).ToList());
 
         public Task<IReadOnlyList<BudgetCategory>> GetByTypeAsync(CategoryType type, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories.Where(c => c.Type == type).ToList());
+            Task.FromResult<IReadOnlyList<BudgetCategory>>(_categories.Where(c => c.Type == type).ToList());
 
         public Task<IReadOnlyList<BudgetCategory>> GetAllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories);
+            Task.FromResult<IReadOnlyList<BudgetCategory>>(_categories);
 
         public Task<IReadOnlyList<BudgetCategory>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
         {
             var idList = ids.ToList();
-            return Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories.Where(c => idList.Contains(c.Id)).ToList());
+            return Task.FromResult<IReadOnlyList<BudgetCategory>>(_categories.Where(c => idList.Contains(c.Id)).ToList());
         }
 
         public Task<IReadOnlyList<BudgetCategory>> ListAsync(int skip, int take, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<BudgetCategory>>(this._categories.Skip(skip).Take(take).ToList());
+            Task.FromResult<IReadOnlyList<BudgetCategory>>(_categories.Skip(skip).Take(take).ToList());
 
         public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult((long)this._categories.Count);
+            Task.FromResult((long)_categories.Count);
 
         public Task AddAsync(BudgetCategory entity, CancellationToken cancellationToken = default)
         {
-            this._categories.Add(entity);
+            _categories.Add(entity);
             return Task.CompletedTask;
         }
 
         public Task RemoveAsync(BudgetCategory entity, CancellationToken cancellationToken = default)
         {
-            this._categories.Remove(entity);
+            _categories.Remove(entity);
             return Task.CompletedTask;
         }
     }
@@ -512,11 +514,14 @@ public class ChatServiceTests
     {
         private ParseResult _result = new(false, null, "Not configured");
 
-        public ChatContext? LastContext { get; private set; }
+        public ChatContext? LastContext
+        {
+            get; private set;
+        }
 
         public void SetupResult(ParseResult result)
         {
-            this._result = result;
+            _result = result;
         }
 
         public Task<ParseResult> ParseCommandAsync(
@@ -527,7 +532,7 @@ public class ChatServiceTests
             CancellationToken cancellationToken = default)
         {
             this.LastContext = context;
-            return Task.FromResult(this._result);
+            return Task.FromResult(_result);
         }
     }
 
@@ -537,14 +542,14 @@ public class ChatServiceTests
 
         public void SetupResult(ActionExecutionResult result)
         {
-            this._result = result;
+            _result = result;
         }
 
         public Task<ActionExecutionResult> ExecuteActionAsync(ChatAction action, CancellationToken cancellationToken = default)
         {
-            if (this._result is not null)
+            if (_result is not null)
             {
-                return Task.FromResult(this._result);
+                return Task.FromResult(_result);
             }
 
             return Task.FromResult(new ActionExecutionResult(
@@ -557,7 +562,10 @@ public class ChatServiceTests
 
     private sealed class MockUnitOfWork : IUnitOfWork
     {
-        public bool SaveChangesCalled { get; private set; }
+        public bool SaveChangesCalled
+        {
+            get; private set;
+        }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -569,6 +577,11 @@ public class ChatServiceTests
             where T : class => null;
 
         public void SetExpectedConcurrencyToken<T>(T entity, string token)
+            where T : class
+        {
+        }
+
+        public void MarkAsModified<T>(T entity)
             where T : class
         {
         }

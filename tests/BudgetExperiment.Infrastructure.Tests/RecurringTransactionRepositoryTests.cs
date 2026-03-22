@@ -13,22 +13,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class RecurringTransactionRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RecurringTransactionRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public RecurringTransactionRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public RecurringTransactionRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_RecurringTransaction()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
@@ -46,7 +46,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(recurring.Id);
 
@@ -59,7 +59,7 @@ public class RecurringTransactionRepositoryTests
     public async Task GetByAccountIdAsync_Returns_Only_Transactions_For_Account()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account1 = Account.Create("Checking", AccountType.Checking);
         var account2 = Account.Create("Savings", AccountType.Savings);
         context.Accounts.AddRange(account1, account2);
@@ -77,7 +77,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await verifyRepo.GetByAccountIdAsync(account1.Id);
 
@@ -90,7 +90,7 @@ public class RecurringTransactionRepositoryTests
     public async Task GetActiveAsync_Returns_Only_Active_Ordered_By_NextOccurrence()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
@@ -108,7 +108,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await verifyRepo.GetActiveAsync();
 
@@ -122,7 +122,7 @@ public class RecurringTransactionRepositoryTests
     public async Task GetAllAsync_Returns_All_Ordered_By_Description()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
@@ -139,7 +139,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await verifyRepo.GetAllAsync();
 
@@ -154,7 +154,7 @@ public class RecurringTransactionRepositoryTests
     public async Task AddExceptionAsync_And_GetExceptionAsync_Persists_Exception()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
@@ -176,7 +176,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetExceptionAsync(recurring.Id, new DateOnly(2026, 2, 1));
 
@@ -190,7 +190,7 @@ public class RecurringTransactionRepositoryTests
     public async Task GetExceptionsByDateRangeAsync_Returns_Only_Exceptions_In_Range()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
@@ -212,7 +212,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act — query Feb to Mar only
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await verifyRepo.GetExceptionsByDateRangeAsync(
             recurring.Id,
@@ -229,7 +229,7 @@ public class RecurringTransactionRepositoryTests
     public async Task RemoveExceptionAsync_Deletes_Exception()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
@@ -248,7 +248,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetExceptionAsync(recurring.Id, new DateOnly(2026, 2, 1));
         Assert.Null(retrieved);
@@ -258,7 +258,7 @@ public class RecurringTransactionRepositoryTests
     public async Task RemoveExceptionsFromDateAsync_Removes_Only_Future_Exceptions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();
@@ -284,7 +284,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert — Jan and Feb remain, March and April deleted
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransactionRepository(verifyContext, FakeUserContext.CreateDefault());
 
         Assert.NotNull(await verifyRepo.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 1)));
@@ -297,7 +297,7 @@ public class RecurringTransactionRepositoryTests
     public async Task ScopeFilter_SharedScope_Returns_Only_Shared_Transactions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
 
         var account = Account.Create("Checking", AccountType.Checking);
@@ -315,7 +315,7 @@ public class RecurringTransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var sharedScopeContext = FakeUserContext.CreateForSharedScope();
         var repository = new RecurringTransactionRepository(verifyContext, sharedScopeContext);
         var results = await repository.GetAllAsync();
@@ -329,7 +329,7 @@ public class RecurringTransactionRepositoryTests
     public async Task GetExceptionAsync_Returns_Null_For_NonExistent_Date()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = Account.Create("Checking", AccountType.Checking);
         context.Accounts.Add(account);
         await context.SaveChangesAsync();

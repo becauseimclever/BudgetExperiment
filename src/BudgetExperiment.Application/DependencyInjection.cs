@@ -25,12 +25,9 @@ public static class DependencyInjection
         services.AddScoped<ICurrencyProvider, UserSettingsCurrencyProvider>();
         services.AddScoped<AccountService>();
         services.AddScoped<ITransactionService, TransactionService>();
-        services.AddScoped<TransactionService>(); // Also register concrete for backward compatibility
         services.AddScoped<CalendarService>();
         services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
-        services.AddScoped<RecurringTransactionService>(); // Also register concrete for backward compatibility
         services.AddScoped<IRecurringTransferService, RecurringTransferService>();
-        services.AddScoped<RecurringTransferService>(); // Also register concrete for backward compatibility
         services.AddScoped<ITransferService, TransferService>();
         services.AddScoped<ICalendarGridService, CalendarGridService>();
         services.AddScoped<IDayDetailService, DayDetailService>();
@@ -44,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IAutoRealizeService, AutoRealizeService>();
         services.AddScoped<IRecurringTransactionInstanceService, RecurringTransactionInstanceService>();
         services.AddScoped<IRecurringTransactionRealizationService, RecurringTransactionRealizationService>();
+        services.AddScoped<IRecurringChargeDetectionService, RecurringChargeDetectionService>();
         services.AddScoped<IRecurringTransferInstanceService, RecurringTransferInstanceService>();
         services.AddScoped<IRecurringTransferRealizationService, RecurringTransferRealizationService>();
         services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();

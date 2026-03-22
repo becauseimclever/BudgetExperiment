@@ -13,22 +13,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class CategorySuggestionRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorySuggestionRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public CategorySuggestionRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public CategorySuggestionRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task GetPendingByOwnerAsync_Returns_Only_Pending_For_Owner()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorySuggestionRepository(context);
 
         var pending = CategorySuggestion.Create("Dining", CategoryType.Expense, ["RESTAURANT"], 5, 0.85m, "owner1");
@@ -42,7 +42,7 @@ public class CategorySuggestionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorySuggestionRepository(verifyContext);
         var results = await verifyRepo.GetPendingByOwnerAsync("owner1");
 
@@ -55,7 +55,7 @@ public class CategorySuggestionRepositoryTests
     public async Task GetByStatusAsync_Filters_By_Owner_And_Status_With_Pagination()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorySuggestionRepository(context);
 
         for (int i = 0; i < 5; i++)
@@ -67,7 +67,7 @@ public class CategorySuggestionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act — page 1 of 2
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorySuggestionRepository(verifyContext);
         var page1 = await verifyRepo.GetByStatusAsync("owner1", SuggestionStatus.Pending, 0, 2);
         var page2 = await verifyRepo.GetByStatusAsync("owner1", SuggestionStatus.Pending, 2, 2);
@@ -81,7 +81,7 @@ public class CategorySuggestionRepositoryTests
     public async Task ExistsPendingWithNameAsync_Is_Case_Insensitive()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorySuggestionRepository(context);
 
         var suggestion = CategorySuggestion.Create("Groceries", CategoryType.Expense, ["WALMART"], 10, 0.95m, "owner1");
@@ -109,7 +109,7 @@ public class CategorySuggestionRepositoryTests
     public async Task ExistsPendingWithNameAsync_Returns_False_When_Accepted()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorySuggestionRepository(context);
 
         var suggestion = CategorySuggestion.Create("AcceptedCat", CategoryType.Expense, ["PAT"], 5, 0.9m, "owner1");
@@ -128,7 +128,7 @@ public class CategorySuggestionRepositoryTests
     public async Task AddRangeAsync_Persists_Multiple_Suggestions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorySuggestionRepository(context);
 
         var suggestions = new[]
@@ -143,7 +143,7 @@ public class CategorySuggestionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new CategorySuggestionRepository(verifyContext);
         var count = await verifyRepo.CountAsync();
         Assert.Equal(3, count);
@@ -153,7 +153,7 @@ public class CategorySuggestionRepositoryTests
     public async Task DeletePendingByOwnerAsync_Removes_Only_Pending_For_Owner()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new CategorySuggestionRepository(context);
 
         var pending1 = CategorySuggestion.Create("Pending1", CategoryType.Expense, ["X"], 1, 0.5m, "owner1");

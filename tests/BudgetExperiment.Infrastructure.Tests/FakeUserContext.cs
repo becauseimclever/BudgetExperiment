@@ -32,10 +32,16 @@ internal sealed class FakeUserContext : IUserContext
     public bool IsAuthenticated => true;
 
     /// <inheritdoc />
-    public string UserId { get; }
+    public string UserId
+    {
+        get;
+    }
 
     /// <inheritdoc />
-    public Guid? UserIdAsGuid { get; }
+    public Guid? UserIdAsGuid
+    {
+        get;
+    }
 
     /// <inheritdoc />
     public string Username => "TestUser";
@@ -50,7 +56,10 @@ internal sealed class FakeUserContext : IUserContext
     public string? AvatarUrl => null;
 
     /// <inheritdoc />
-    public BudgetScope? CurrentScope { get; private set; }
+    public BudgetScope? CurrentScope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a FakeUserContext with the default user ID and null scope (show all).

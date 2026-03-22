@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Accounts API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class AccountsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -23,7 +24,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <param name="factory">The test factory.</param>
     public AccountsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -34,7 +35,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     public async Task GetAll_Returns_200_WithAccountList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/accounts");
+        var response = await _client.GetAsync("/api/v1/accounts");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -55,7 +56,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         var createDto = new AccountCreateDto { Name = "Test Checking", Type = "Checking" };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -74,7 +75,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/accounts/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/accounts/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -88,7 +89,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     public async Task Delete_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/accounts/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/accounts/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -112,7 +113,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -133,7 +134,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     {
         // Arrange - create account first
         var createDto = new AccountCreateDto { Name = "Original Name", Type = "Savings" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var updateDto = new AccountUpdateDto
@@ -144,7 +145,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/accounts/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/accounts/{created!.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -166,7 +167,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         var updateDto = new AccountUpdateDto { Name = "New Name" };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/accounts/{Guid.NewGuid()}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/accounts/{Guid.NewGuid()}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -188,11 +189,11 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2026, 1, 5),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/accounts/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/accounts/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -212,11 +213,11 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         var createDto = new AccountCreateDto { Name = "ETag Test", Type = "Checking" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/accounts/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/accounts/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -233,10 +234,10 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     {
         // Arrange - create account and get ETag
         var createDto = new AccountCreateDto { Name = "IfMatch Valid Test", Type = "Checking" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
 
-        var getResponse = await this._client.GetAsync($"/api/v1/accounts/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/accounts/{created!.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new AccountUpdateDto { Name = "Updated With ETag" };
@@ -247,7 +248,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -265,7 +266,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     {
         // Arrange - create account
         var createDto = new AccountCreateDto { Name = "Stale IfMatch Test", Type = "Checking" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         // Use a deliberately wrong ETag to simulate stale version
@@ -278,7 +279,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -293,13 +294,13 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         var createDto = new AccountCreateDto { Name = "No IfMatch Test", Type = "Checking" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/accounts", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var updateDto = new AccountUpdateDto { Name = "Updated Without ETag" };
 
         // Act - PUT without If-Match header
-        var response = await this._client.PutAsJsonAsync($"/api/v1/accounts/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/accounts/{created!.Id}", updateDto);
 
         // Assert - should still succeed
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

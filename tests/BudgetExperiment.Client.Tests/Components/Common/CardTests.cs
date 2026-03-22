@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Client.Components.Common;
+
 using Bunit;
 
 namespace BudgetExperiment.Client.Tests.Components.Common;

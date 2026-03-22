@@ -17,12 +17,18 @@ public sealed class ApiResult<T>
     /// <summary>
     /// Gets the response data (null on conflict or failure).
     /// </summary>
-    public T? Data { get; private init; }
+    public T? Data
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the resource was modified by another user (409 Conflict).
     /// </summary>
-    public bool IsConflict { get; private init; }
+    public bool IsConflict
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the operation succeeded.

@@ -27,7 +27,10 @@ public sealed class DismissedSuggestionPattern
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the normalized pattern (uppercase).
@@ -42,7 +45,10 @@ public sealed class DismissedSuggestionPattern
     /// <summary>
     /// Gets the UTC timestamp when the pattern was dismissed.
     /// </summary>
-    public DateTime DismissedAtUtc { get; private set; }
+    public DateTime DismissedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new dismissed suggestion pattern.

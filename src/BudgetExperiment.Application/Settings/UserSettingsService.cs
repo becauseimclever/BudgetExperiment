@@ -27,9 +27,9 @@ public sealed class UserSettingsService : IUserSettingsService
         IUnitOfWork unitOfWork,
         IUserContext userContext)
     {
-        this._repository = repository;
-        this._unitOfWork = unitOfWork;
-        this._userContext = userContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
@@ -37,22 +37,22 @@ public sealed class UserSettingsService : IUserSettingsService
     {
         return new UserProfileDto
         {
-            UserId = this._userContext.UserIdAsGuid ?? Guid.Empty,
-            Username = this._userContext.Username,
-            Email = this._userContext.Email,
-            DisplayName = this._userContext.DisplayName,
-            AvatarUrl = this._userContext.AvatarUrl,
+            UserId = _userContext.UserIdAsGuid ?? Guid.Empty,
+            Username = _userContext.Username,
+            Email = _userContext.Email,
+            DisplayName = _userContext.DisplayName,
+            AvatarUrl = _userContext.AvatarUrl,
         };
     }
 
     /// <inheritdoc />
     public async Task<UserSettingsDto> GetCurrentUserSettingsAsync(CancellationToken cancellationToken = default)
     {
-        var userId = this._userContext.UserIdAsGuid
+        var userId = _userContext.UserIdAsGuid
             ?? throw new DomainException("User is not authenticated.");
 
-        var settings = await this._repository.GetByUserIdAsync(userId, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        var settings = await _repository.GetByUserIdAsync(userId, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return this.ToDto(settings);
     }
@@ -62,10 +62,10 @@ public sealed class UserSettingsService : IUserSettingsService
         UserSettingsUpdateDto dto,
         CancellationToken cancellationToken = default)
     {
-        var userId = this._userContext.UserIdAsGuid
+        var userId = _userContext.UserIdAsGuid
             ?? throw new DomainException("User is not authenticated.");
 
-        var settings = await this._repository.GetByUserIdAsync(userId, cancellationToken);
+        var settings = await _repository.GetByUserIdAsync(userId, cancellationToken);
 
         if (dto.DefaultScope != null)
         {
@@ -102,8 +102,8 @@ public sealed class UserSettingsService : IUserSettingsService
             settings.UpdateFirstDayOfWeek(dto.FirstDayOfWeek.Value);
         }
 
-        await this._repository.SaveAsync(settings, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.SaveAsync(settings, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return this.ToDto(settings);
     }
@@ -111,14 +111,14 @@ public sealed class UserSettingsService : IUserSettingsService
     /// <inheritdoc />
     public async Task<UserSettingsDto> CompleteOnboardingAsync(CancellationToken cancellationToken = default)
     {
-        var userId = this._userContext.UserIdAsGuid
+        var userId = _userContext.UserIdAsGuid
             ?? throw new DomainException("User is not authenticated.");
 
-        var settings = await this._repository.GetByUserIdAsync(userId, cancellationToken);
+        var settings = await _repository.GetByUserIdAsync(userId, cancellationToken);
         settings.CompleteOnboarding();
 
-        await this._repository.SaveAsync(settings, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.SaveAsync(settings, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return this.ToDto(settings);
     }
@@ -128,7 +128,7 @@ public sealed class UserSettingsService : IUserSettingsService
     {
         return new ScopeDto
         {
-            Scope = this._userContext.CurrentScope?.ToString(),
+            Scope = _userContext.CurrentScope?.ToString(),
         };
     }
 
@@ -147,7 +147,7 @@ public sealed class UserSettingsService : IUserSettingsService
             scope = parsedScope;
         }
 
-        this._userContext.SetScope(scope);
+        _userContext.SetScope(scope);
     }
 
     private UserSettingsDto ToDto(UserSettings settings)

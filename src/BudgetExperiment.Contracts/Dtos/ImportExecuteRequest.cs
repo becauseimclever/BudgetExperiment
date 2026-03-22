@@ -12,12 +12,18 @@ public sealed record ImportExecuteRequest
     /// <summary>
     /// Gets the target account ID.
     /// </summary>
-    public Guid AccountId { get; init; }
+    public Guid AccountId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional saved mapping ID used for this import.
     /// </summary>
-    public Guid? MappingId { get; init; }
+    public Guid? MappingId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the original file name.
@@ -33,5 +39,8 @@ public sealed record ImportExecuteRequest
     /// Gets a value indicating whether to run reconciliation matching after import.
     /// When enabled, imported transactions will be matched against expected recurring transaction instances.
     /// </summary>
-    public bool RunReconciliation { get; init; }
+    public bool RunReconciliation
+    {
+        get; init;
+    }
 }

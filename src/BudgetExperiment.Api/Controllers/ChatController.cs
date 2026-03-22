@@ -31,8 +31,8 @@ public sealed class ChatController : ControllerBase
     /// <param name="userContext">The user context.</param>
     public ChatController(IChatService chatService, IUserContext userContext)
     {
-        this._chatService = chatService;
-        this._userContext = userContext;
+        _chatService = chatService;
+        _userContext = userContext;
     }
 
     /// <summary>
@@ -44,8 +44,8 @@ public sealed class ChatController : ControllerBase
     [ProducesResponseType<ChatSessionDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOrCreateSessionAsync(CancellationToken cancellationToken)
     {
-        var userId = this._userContext.UserId;
-        var session = await this._chatService.GetOrCreateSessionAsync(userId, cancellationToken);
+        var userId = _userContext.UserId;
+        var session = await _chatService.GetOrCreateSessionAsync(userId, cancellationToken);
         return this.Ok(ChatMapper.ToDto(session));
     }
 
@@ -60,7 +60,7 @@ public sealed class ChatController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken)
     {
-        var session = await this._chatService.GetSessionAsync(sessionId, cancellationToken);
+        var session = await _chatService.GetSessionAsync(sessionId, cancellationToken);
         if (session is null)
         {
             return this.NotFound();
@@ -84,7 +84,7 @@ public sealed class ChatController : ControllerBase
         [FromQuery] int limit = 50,
         CancellationToken cancellationToken = default)
     {
-        var messages = await this._chatService.GetMessagesAsync(sessionId, limit, cancellationToken);
+        var messages = await _chatService.GetMessagesAsync(sessionId, limit, cancellationToken);
         if (messages is null)
         {
             return this.NotFound();
@@ -115,7 +115,7 @@ public sealed class ChatController : ControllerBase
         }
 
         var context = MapContext(request.Context);
-        var result = await this._chatService.SendMessageAsync(sessionId, request.Content, context, cancellationToken);
+        var result = await _chatService.SendMessageAsync(sessionId, request.Content, context, cancellationToken);
 
         var response = new SendMessageResponse
         {
@@ -145,7 +145,7 @@ public sealed class ChatController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ConfirmActionAsync(Guid messageId, CancellationToken cancellationToken)
     {
-        var result = await this._chatService.ConfirmActionAsync(messageId, cancellationToken);
+        var result = await _chatService.ConfirmActionAsync(messageId, cancellationToken);
 
         var response = new ConfirmActionResponse
         {
@@ -180,7 +180,7 @@ public sealed class ChatController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CancelActionAsync(Guid messageId, CancellationToken cancellationToken)
     {
-        var result = await this._chatService.CancelActionAsync(messageId, cancellationToken);
+        var result = await _chatService.CancelActionAsync(messageId, cancellationToken);
         if (!result)
         {
             return this.NotFound();
@@ -201,7 +201,7 @@ public sealed class ChatController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CloseSessionAsync(Guid sessionId, CancellationToken cancellationToken)
     {
-        var result = await this._chatService.CloseSessionAsync(sessionId, cancellationToken);
+        var result = await _chatService.CloseSessionAsync(sessionId, cancellationToken);
         if (!result)
         {
             return this.NotFound();

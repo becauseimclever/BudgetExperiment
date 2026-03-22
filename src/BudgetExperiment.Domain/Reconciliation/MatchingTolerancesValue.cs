@@ -32,27 +32,42 @@ public sealed class MatchingTolerancesValue : IEquatable<MatchingTolerancesValue
     /// <summary>
     /// Gets the maximum days before/after scheduled date to consider a match.
     /// </summary>
-    public int DateToleranceDays { get; private set; }
+    public int DateToleranceDays
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the maximum percentage variance in amount to consider a match (0.0 to 1.0).
     /// </summary>
-    public decimal AmountTolerancePercent { get; private set; }
+    public decimal AmountTolerancePercent
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the maximum absolute amount variance to consider a match.
     /// </summary>
-    public decimal AmountToleranceAbsolute { get; private set; }
+    public decimal AmountToleranceAbsolute
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the minimum description similarity score to consider a match (0.0 to 1.0).
     /// </summary>
-    public decimal DescriptionSimilarityThreshold { get; private set; }
+    public decimal DescriptionSimilarityThreshold
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the minimum confidence score for automatic matching without review.
     /// </summary>
-    public decimal AutoMatchThreshold { get; private set; }
+    public decimal AutoMatchThreshold
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new instance of matching tolerances with the specified values.

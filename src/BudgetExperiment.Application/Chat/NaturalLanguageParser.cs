@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Globalization;
+
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Chat;
@@ -22,7 +23,7 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
     /// <param name="aiService">The AI service for processing commands.</param>
     public NaturalLanguageParser(IAiService aiService)
     {
-        this._aiService = aiService;
+        _aiService = aiService;
     }
 
     /// <inheritdoc />
@@ -55,7 +56,7 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
             Temperature: 0.2m,
             MaxTokens: 1500);
 
-        var response = await this._aiService.CompleteAsync(prompt, cancellationToken);
+        var response = await _aiService.CompleteAsync(prompt, cancellationToken);
 
         if (!response.Success)
         {

@@ -3,11 +3,14 @@
 // </copyright>
 
 using System.Globalization;
+
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages.Reports;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Pages.Reports;
@@ -26,9 +29,9 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
 
-        this.stubApiService = new StubBudgetApiService();
+        stubApiService = new StubBudgetApiService();
 
-        this.Services.AddSingleton<IBudgetApiService>(this.stubApiService);
+        this.Services.AddSingleton<IBudgetApiService>(stubApiService);
         this.Services.AddSingleton(new ScopeService(this.JSInterop.JSRuntime));
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
@@ -54,13 +57,13 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     public void Render_LoadsDataFromApi()
     {
         // Arrange
-        this.stubApiService.LocationReportResult = CreateTestReport();
+        stubApiService.LocationReportResult = CreateTestReport();
 
         // Act
         var cut = Render<LocationReportPage>();
 
         // Assert
-        Assert.True(this.stubApiService.GetSpendingByLocationCalled);
+        Assert.True(stubApiService.GetSpendingByLocationCalled);
         Assert.Contains("Washington", cut.Markup);
     }
 
@@ -71,7 +74,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     public void Render_ShowsDataTableBelowMap()
     {
         // Arrange
-        this.stubApiService.LocationReportResult = CreateTestReport();
+        stubApiService.LocationReportResult = CreateTestReport();
 
         // Act
         var cut = Render<LocationReportPage>();
@@ -89,16 +92,16 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     public void DateRangeChange_RefreshesData()
     {
         // Arrange
-        this.stubApiService.LocationReportResult = CreateTestReport();
+        stubApiService.LocationReportResult = CreateTestReport();
         var cut = Render<LocationReportPage>();
-        var initialCallCount = this.stubApiService.GetSpendingByLocationCallCount;
+        var initialCallCount = stubApiService.GetSpendingByLocationCallCount;
 
         // Act — update the start date input
         var startInput = cut.Find("input#start-date");
         startInput.Change("2025-02-01");
 
         // Assert — should have called the API again
-        Assert.True(this.stubApiService.GetSpendingByLocationCallCount > initialCallCount);
+        Assert.True(stubApiService.GetSpendingByLocationCallCount > initialCallCount);
     }
 
     /// <summary>
@@ -108,7 +111,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     public void Export_ShowsCsvOption()
     {
         // Arrange
-        this.stubApiService.LocationReportResult = CreateTestReport();
+        stubApiService.LocationReportResult = CreateTestReport();
 
         // Act
         var cut = Render<LocationReportPage>();
@@ -124,7 +127,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     public void Render_ShowsRegionTableHeaders()
     {
         // Arrange
-        this.stubApiService.LocationReportResult = CreateTestReport();
+        stubApiService.LocationReportResult = CreateTestReport();
 
         // Act
         var cut = Render<LocationReportPage>();
@@ -143,7 +146,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     public void RegionClick_ShowsCityBreakdown()
     {
         // Arrange
-        this.stubApiService.LocationReportResult = CreateTestReport();
+        stubApiService.LocationReportResult = CreateTestReport();
 
         // Act
         var cut = Render<LocationReportPage>();
@@ -162,7 +165,7 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     public void Render_ShowsSummaryStats()
     {
         // Arrange
-        this.stubApiService.LocationReportResult = CreateTestReport();
+        stubApiService.LocationReportResult = CreateTestReport();
 
         // Act
         var cut = Render<LocationReportPage>();
@@ -225,13 +228,22 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
     private sealed class StubBudgetApiService : IBudgetApiService
     {
         /// <summary>Gets or sets the result to return from GetSpendingByLocationAsync.</summary>
-        public LocationSpendingReportDto? LocationReportResult { get; set; }
+        public LocationSpendingReportDto? LocationReportResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets a value indicating whether GetSpendingByLocationAsync was called.</summary>
-        public bool GetSpendingByLocationCalled { get; private set; }
+        public bool GetSpendingByLocationCalled
+        {
+            get; private set;
+        }
 
         /// <summary>Gets the number of times GetSpendingByLocationAsync was called.</summary>
-        public int GetSpendingByLocationCallCount { get; private set; }
+        public int GetSpendingByLocationCallCount
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public Task<LocationSpendingReportDto?> GetSpendingByLocationAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)

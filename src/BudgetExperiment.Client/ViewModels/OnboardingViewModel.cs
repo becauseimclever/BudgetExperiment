@@ -5,6 +5,7 @@
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.ViewModels;
@@ -27,15 +28,18 @@ public sealed class OnboardingViewModel
     /// <param name="apiErrorContext">The API error context for trace ID tracking.</param>
     public OnboardingViewModel(IBudgetApiService apiService, NavigationManager navigationManager, IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._navigationManager = navigationManager;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _navigationManager = navigationManager;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the current wizard step (1–4).
@@ -60,22 +64,34 @@ public sealed class OnboardingViewModel
     /// <summary>
     /// Gets or sets a value indicating whether the currency dropdown is visible.
     /// </summary>
-    public bool ShowCurrencyDropdown { get; set; }
+    public bool ShowCurrencyDropdown
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a save operation is in progress.
     /// </summary>
-    public bool IsSaving { get; private set; }
+    public bool IsSaving
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the trace ID associated with the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the filtered list of currencies based on the search term.
@@ -146,18 +162,18 @@ public sealed class OnboardingViewModel
 
         try
         {
-            await this._apiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
+            await _apiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
             {
                 PreferredCurrency = "USD",
                 FirstDayOfWeek = DayOfWeek.Sunday,
             });
-            await this._apiService.CompleteOnboardingAsync();
-            this._navigationManager.NavigateTo("/", forceLoad: true);
+            await _apiService.CompleteOnboardingAsync();
+            _navigationManager.NavigateTo("/", forceLoad: true);
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to save: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
             this.IsSaving = false;
             this.NotifyStateChanged();
         }
@@ -176,18 +192,18 @@ public sealed class OnboardingViewModel
 
         try
         {
-            await this._apiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
+            await _apiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
             {
                 PreferredCurrency = this.SelectedCurrency,
                 FirstDayOfWeek = this.SelectedFirstDay,
             });
-            await this._apiService.CompleteOnboardingAsync();
-            this._navigationManager.NavigateTo("/", forceLoad: true);
+            await _apiService.CompleteOnboardingAsync();
+            _navigationManager.NavigateTo("/", forceLoad: true);
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to save: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
             this.IsSaving = false;
             this.NotifyStateChanged();
         }

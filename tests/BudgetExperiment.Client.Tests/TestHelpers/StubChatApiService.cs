@@ -15,7 +15,10 @@ internal sealed class StubChatApiService : IChatApiService
     /// <summary>
     /// Gets or sets the session to return from GetOrCreateSession / GetSession.
     /// </summary>
-    public ChatSessionDto? SessionToReturn { get; set; }
+    public ChatSessionDto? SessionToReturn
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the messages to return from GetMessages.
@@ -25,12 +28,18 @@ internal sealed class StubChatApiService : IChatApiService
     /// <summary>
     /// Gets or sets the response to return from SendMessage.
     /// </summary>
-    public SendMessageResponse? SendMessageResponseToReturn { get; set; }
+    public SendMessageResponse? SendMessageResponseToReturn
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the response to return from ConfirmAction.
     /// </summary>
-    public ConfirmActionResponse? ConfirmActionResponseToReturn { get; set; }
+    public ConfirmActionResponse? ConfirmActionResponseToReturn
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether CancelAction returns success.
@@ -40,27 +49,42 @@ internal sealed class StubChatApiService : IChatApiService
     /// <summary>
     /// Gets or sets a delay (in ms) to simulate async loading.
     /// </summary>
-    public int DelayMs { get; set; }
+    public int DelayMs
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the last content sent via SendMessage.
     /// </summary>
-    public string? LastSentContent { get; private set; }
+    public string? LastSentContent
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the last message ID targeted by ConfirmAction.
     /// </summary>
-    public Guid? LastConfirmedMessageId { get; private set; }
+    public Guid? LastConfirmedMessageId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the last message ID targeted by CancelAction.
     /// </summary>
-    public Guid? LastCancelledMessageId { get; private set; }
+    public Guid? LastCancelledMessageId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether CloseSession was called.
     /// </summary>
-    public bool CloseSessionCalled { get; private set; }
+    public bool CloseSessionCalled
+    {
+        get; private set;
+    }
 
     /// <inheritdoc/>
     public async Task<ChatSessionDto?> GetOrCreateSessionAsync()

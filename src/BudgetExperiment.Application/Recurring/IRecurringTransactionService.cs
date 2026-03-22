@@ -85,6 +85,25 @@ public interface IRecurringTransactionService
     Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Skips the next occurrence of a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
+    Task<RecurringTransactionDto?> SkipNextAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates this instance and all future instances (modifies the series).
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="instanceDate">The date from which to apply changes.</param>
+    /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
+    Task<RecurringTransactionDto?> UpdateFromDateAsync(Guid id, DateOnly instanceDate, RecurringTransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates import patterns for a recurring transaction.
     /// </summary>
     /// <param name="id">The recurring transaction identifier.</param>

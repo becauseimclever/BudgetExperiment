@@ -12,22 +12,34 @@ public sealed class ApplyRulesResponse
     /// <summary>
     /// Gets or sets the total number of transactions processed.
     /// </summary>
-    public int TotalProcessed { get; set; }
+    public int TotalProcessed
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of transactions categorized.
     /// </summary>
-    public int Categorized { get; set; }
+    public int Categorized
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of transactions skipped.
     /// </summary>
-    public int Skipped { get; set; }
+    public int Skipped
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of errors encountered.
     /// </summary>
-    public int Errors { get; set; }
+    public int Errors
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the error messages, if any.

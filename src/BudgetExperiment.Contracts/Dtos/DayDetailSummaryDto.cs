@@ -19,5 +19,8 @@ public sealed class DayDetailSummaryDto
     public MoneyDto CombinedTotal { get; set; } = new();
 
     /// <summary>Gets or sets the total item count.</summary>
-    public int ItemCount { get; set; }
+    public int ItemCount
+    {
+        get; set;
+    }
 }

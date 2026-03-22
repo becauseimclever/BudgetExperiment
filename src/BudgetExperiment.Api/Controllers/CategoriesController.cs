@@ -27,7 +27,7 @@ public sealed class CategoriesController : ControllerBase
     /// <param name="service">The budget category service.</param>
     public CategoriesController(IBudgetCategoryService service)
     {
-        this._service = service;
+        _service = service;
     }
 
     /// <summary>
@@ -41,8 +41,8 @@ public sealed class CategoriesController : ControllerBase
     public async Task<IActionResult> GetAllAsync([FromQuery] bool activeOnly = false, CancellationToken cancellationToken = default)
     {
         var categories = activeOnly
-            ? await this._service.GetActiveAsync(cancellationToken)
-            : await this._service.GetAllAsync(cancellationToken);
+            ? await _service.GetActiveAsync(cancellationToken)
+            : await _service.GetAllAsync(cancellationToken);
         return this.Ok(categories);
     }
 
@@ -57,7 +57,7 @@ public sealed class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var category = await this._service.GetByIdAsync(id, cancellationToken);
+        var category = await _service.GetByIdAsync(id, cancellationToken);
         if (category is null)
         {
             return this.NotFound();
@@ -82,7 +82,7 @@ public sealed class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAsync([FromBody] BudgetCategoryCreateDto dto, CancellationToken cancellationToken)
     {
-        var category = await this._service.CreateAsync(dto, cancellationToken);
+        var category = await _service.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = category.Id }, category);
     }
 
@@ -106,7 +106,7 @@ public sealed class CategoriesController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var category = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
+        var category = await _service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (category is null)
         {
             return this.NotFound();
@@ -131,7 +131,7 @@ public sealed class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await this._service.DeleteAsync(id, cancellationToken);
+        var deleted = await _service.DeleteAsync(id, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();
@@ -151,7 +151,7 @@ public sealed class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ActivateAsync(Guid id, CancellationToken cancellationToken)
     {
-        var activated = await this._service.ActivateAsync(id, cancellationToken);
+        var activated = await _service.ActivateAsync(id, cancellationToken);
         if (!activated)
         {
             return this.NotFound();
@@ -171,7 +171,7 @@ public sealed class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeactivateAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deactivated = await this._service.DeactivateAsync(id, cancellationToken);
+        var deactivated = await _service.DeactivateAsync(id, cancellationToken);
         if (!deactivated)
         {
             return this.NotFound();

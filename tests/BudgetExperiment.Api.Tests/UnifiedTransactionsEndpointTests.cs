@@ -14,6 +14,7 @@ namespace BudgetExperiment.Api.Tests;
 /// Integration tests for the unified transaction list endpoints
 /// (GET /paged, POST /suggest-categories, PATCH /{id}/category).
 /// </summary>
+[Collection("ApiDb")]
 public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -24,7 +25,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     /// <param name="factory">The test factory.</param>
     public UnifiedTransactionsEndpointTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -35,7 +36,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     public async Task GetPaged_Returns_200_WithDefaultPagination()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/paged");
+        var response = await _client.GetAsync("/api/v1/transactions/paged");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -54,7 +55,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     public async Task GetPaged_Returns_PaginationHeader()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/paged");
+        var response = await _client.GetAsync("/api/v1/transactions/paged");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -77,7 +78,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         await this.CreateTransactionAsync(account.Id, -25m, "Gas Station");
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/paged");
+        var response = await _client.GetAsync("/api/v1/transactions/paged");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -96,7 +97,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     public async Task GetPaged_Respects_PageAndPageSize()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/paged?page=2&pageSize=25");
+        var response = await _client.GetAsync("/api/v1/transactions/paged?page=2&pageSize=25");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -120,7 +121,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         await this.CreateTransactionAsync(account2.Id, -20m, "Account2 Item");
 
         // Act — filter to account1 only
-        var response = await this._client.GetAsync($"/api/v1/transactions/paged?accountId={account1.Id}");
+        var response = await _client.GetAsync($"/api/v1/transactions/paged?accountId={account1.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -141,7 +142,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         await this.CreateTransactionAsync(account.Id, -15m, "Uncategorized Item");
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/paged?uncategorized=true");
+        var response = await _client.GetAsync("/api/v1/transactions/paged?uncategorized=true");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -163,7 +164,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         await this.CreateTransactionAsync(account.Id, -20m, "Mar Item", new DateOnly(2025, 3, 15));
 
         // Act — filter to January only
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/transactions/paged?startDate=2025-01-01&endDate=2025-01-31");
 
         // Assert
@@ -190,7 +191,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         await this.CreateTransactionAsync(account.Id, -20m, "Something Else");
 
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/transactions/paged?description=UNIQUE_DESC_ALPHA_123");
 
         // Assert
@@ -213,7 +214,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         await this.CreateTransactionAsync(account.Id, -30m, "Balance Test Item");
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/transactions/paged?accountId={account.Id}");
+        var response = await _client.GetAsync($"/api/v1/transactions/paged?accountId={account.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -232,7 +233,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     public async Task GetPaged_Returns_NoBalanceInfo_WhenNoAccountFilter()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/paged");
+        var response = await _client.GetAsync("/api/v1/transactions/paged");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -249,7 +250,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     public async Task GetPaged_Accepts_AllFilterParameters()
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/transactions/paged?" +
             "startDate=2026-01-01&endDate=2026-12-31&" +
             "minAmount=1&maxAmount=500&" +
@@ -279,7 +280,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         await this.CreateTransactionAsync(account.Id, 200m, "Income for summary");
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/paged");
+        var response = await _client.GetAsync("/api/v1/transactions/paged");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -300,7 +301,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         var request = new BatchSuggestCategoriesRequest { TransactionIds = [] };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -318,7 +319,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         var request = new BatchSuggestCategoriesRequest { TransactionIds = ids };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -338,7 +339,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -368,7 +369,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -397,7 +398,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
 
         // Categorize the transaction
         var categoryUpdate = new TransactionCategoryUpdateDto { CategoryId = category.Id };
-        await this._client.PatchAsJsonAsync($"/api/v1/transactions/{transaction.Id}/category", categoryUpdate);
+        await _client.PatchAsJsonAsync($"/api/v1/transactions/{transaction.Id}/category", categoryUpdate);
 
         var request = new BatchSuggestCategoriesRequest
         {
@@ -405,7 +406,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/suggest-categories", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -429,7 +430,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         var categoryUpdate = new TransactionCategoryUpdateDto { CategoryId = category.Id };
 
         // Act
-        var response = await this._client.PatchAsJsonAsync(
+        var response = await _client.PatchAsJsonAsync(
             $"/api/v1/transactions/{transaction.Id}/category",
             categoryUpdate);
 
@@ -451,7 +452,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         var categoryUpdate = new TransactionCategoryUpdateDto { CategoryId = Guid.NewGuid() };
 
         // Act
-        var response = await this._client.PatchAsJsonAsync(
+        var response = await _client.PatchAsJsonAsync(
             $"/api/v1/transactions/{Guid.NewGuid()}/category",
             categoryUpdate);
 
@@ -473,12 +474,12 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
 
         // Assign category first
         var assignDto = new TransactionCategoryUpdateDto { CategoryId = category.Id };
-        await this._client.PatchAsJsonAsync(
+        await _client.PatchAsJsonAsync(
             $"/api/v1/transactions/{transaction.Id}/category", assignDto);
 
         // Act — clear category
         var clearDto = new TransactionCategoryUpdateDto { CategoryId = null };
-        var response = await this._client.PatchAsJsonAsync(
+        var response = await _client.PatchAsJsonAsync(
             $"/api/v1/transactions/{transaction.Id}/category", clearDto);
 
         // Assert
@@ -503,7 +504,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         var categoryUpdate = new TransactionCategoryUpdateDto { CategoryId = category.Id };
 
         // Act
-        var response = await this._client.PatchAsJsonAsync(
+        var response = await _client.PatchAsJsonAsync(
             $"/api/v1/transactions/{transaction.Id}/category", categoryUpdate);
 
         // Assert
@@ -525,7 +526,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         var transaction = await this.CreateTransactionAsync(account.Id, -15m, "IfMatchCat Item");
 
         // Get ETag
-        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{transaction.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/transactions/{transaction.Id}");
         var etag = getResponse.Headers.ETag;
 
         var categoryUpdate = new TransactionCategoryUpdateDto { CategoryId = category.Id };
@@ -536,7 +537,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -563,7 +564,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -572,7 +573,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     private async Task<AccountDto> CreateAccountAsync(string name)
     {
         var dto = new AccountCreateDto { Name = name, Type = "Checking" };
-        var response = await this._client.PostAsJsonAsync("/api/v1/accounts", dto);
+        var response = await _client.PostAsJsonAsync("/api/v1/accounts", dto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(result);
@@ -592,7 +593,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
             Date = date ?? new DateOnly(2026, 3, 1),
             Description = description,
         };
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions", dto);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions", dto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(result);
@@ -602,7 +603,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
     private async Task<BudgetCategoryDto> CreateCategoryAsync(string name)
     {
         var dto = new BudgetCategoryCreateDto { Name = name, Type = "Expense" };
-        var response = await this._client.PostAsJsonAsync("/api/v1/categories", dto);
+        var response = await _client.PostAsJsonAsync("/api/v1/categories", dto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<BudgetCategoryDto>();
         Assert.NotNull(result);
@@ -623,7 +624,7 @@ public sealed class UnifiedTransactionsEndpointTests : IClassFixture<CustomWebAp
             CaseSensitive = false,
             CategoryId = categoryId,
         };
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", dto);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules", dto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<CategorizationRuleDto>();
         Assert.NotNull(result);

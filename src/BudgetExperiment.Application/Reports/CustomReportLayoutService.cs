@@ -28,35 +28,35 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
         IUnitOfWork unitOfWork,
         IUserContext userContext)
     {
-        this._repository = repository;
-        this._unitOfWork = unitOfWork;
-        this._userContext = userContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<CustomReportLayoutDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var layouts = await this._repository.GetAllAsync(cancellationToken);
+        var layouts = await _repository.GetAllAsync(cancellationToken);
         return layouts.Select(l => ToDto(l)).ToList();
     }
 
     /// <inheritdoc />
     public async Task<CustomReportLayoutDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var layout = await this._repository.GetByIdAsync(id, cancellationToken);
+        var layout = await _repository.GetByIdAsync(id, cancellationToken);
         if (layout is null)
         {
             return null;
         }
 
-        var version = this._unitOfWork.GetConcurrencyToken(layout);
+        var version = _unitOfWork.GetConcurrencyToken(layout);
         return ToDto(layout, version);
     }
 
     /// <inheritdoc />
     public async Task<CustomReportLayoutDto> CreateAsync(CustomReportLayoutCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var userId = this._userContext.UserIdAsGuid
+        var userId = _userContext.UserIdAsGuid
             ?? throw new DomainException("User is not authenticated.");
 
         var scope = ResolveScope(dto.Scope);
@@ -68,15 +68,15 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
             _ => throw new DomainException($"Invalid scope: {scope}"),
         };
 
-        await this._repository.AddAsync(layout, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(layout, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(layout);
     }
 
     /// <inheritdoc />
     public async Task<CustomReportLayoutDto?> UpdateAsync(Guid id, CustomReportLayoutUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var layout = await this._repository.GetByIdAsync(id, cancellationToken);
+        var layout = await _repository.GetByIdAsync(id, cancellationToken);
         if (layout is null)
         {
             return null;
@@ -84,7 +84,7 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(layout, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(layout, expectedVersion);
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Name))
@@ -97,22 +97,22 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
             layout.UpdateLayout(dto.LayoutJson);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(layout);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(layout);
         return ToDto(layout, version);
     }
 
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var layout = await this._repository.GetByIdAsync(id, cancellationToken);
+        var layout = await _repository.GetByIdAsync(id, cancellationToken);
         if (layout is null)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(layout, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(layout, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -142,6 +142,6 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
             return parsedScope;
         }
 
-        return this._userContext.CurrentScope ?? BudgetScope.Shared;
+        return _userContext.CurrentScope ?? BudgetScope.Shared;
     }
 }

@@ -5,7 +5,9 @@
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Reports;
+
 using Moq;
+
 using Shouldly;
 
 namespace BudgetExperiment.Application.Tests;

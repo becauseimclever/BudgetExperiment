@@ -10,17 +10,32 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class ReverseGeocodeResponseDto
 {
     /// <summary>Gets or sets the city name.</summary>
-    public string? City { get; set; }
+    public string? City
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the state or region name.</summary>
-    public string? StateOrRegion { get; set; }
+    public string? StateOrRegion
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the ISO 3166-1 alpha-2 country code.</summary>
-    public string? Country { get; set; }
+    public string? Country
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the postal code.</summary>
-    public string? PostalCode { get; set; }
+    public string? PostalCode
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the fully formatted address string.</summary>
-    public string? FormattedAddress { get; set; }
+    public string? FormattedAddress
+    {
+        get; set;
+    }
 }

@@ -20,17 +20,26 @@ public sealed class ChatMessage
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the session identifier this message belongs to.
     /// </summary>
-    public Guid SessionId { get; private set; }
+    public Guid SessionId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the role of the message sender.
     /// </summary>
-    public ChatRole Role { get; private set; }
+    public ChatRole Role
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the message content.
@@ -40,12 +49,18 @@ public sealed class ChatMessage
     /// <summary>
     /// Gets the UTC timestamp when the message was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the action associated with this message (for assistant messages with pending actions).
     /// </summary>
-    public ChatAction? Action { get; private set; }
+    public ChatAction? Action
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the status of the action.
@@ -55,12 +70,18 @@ public sealed class ChatMessage
     /// <summary>
     /// Gets the identifier of the entity created when action was confirmed.
     /// </summary>
-    public Guid? CreatedEntityId { get; private set; }
+    public Guid? CreatedEntityId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the error message if action failed.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new user message.

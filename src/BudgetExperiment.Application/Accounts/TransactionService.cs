@@ -30,10 +30,10 @@ public sealed class TransactionService : ITransactionService
         IUnitOfWork unitOfWork,
         ICategorizationEngine categorizationEngine)
     {
-        this._repository = repository;
-        this._accountRepository = accountRepository;
-        this._unitOfWork = unitOfWork;
-        this._categorizationEngine = categorizationEngine;
+        _repository = repository;
+        _accountRepository = accountRepository;
+        _unitOfWork = unitOfWork;
+        _categorizationEngine = categorizationEngine;
     }
 
     /// <summary>
@@ -44,13 +44,13 @@ public sealed class TransactionService : ITransactionService
     /// <returns>The transaction DTO, or null if not found.</returns>
     public async Task<TransactionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        var transaction = await _repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return null;
         }
 
-        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        var version = _unitOfWork.GetConcurrencyToken(transaction);
         return AccountMapper.ToTransactionDto(transaction, version);
     }
 
@@ -64,7 +64,7 @@ public sealed class TransactionService : ITransactionService
     /// <returns>A list of transaction DTOs.</returns>
     public async Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default)
     {
-        var transactions = await this._repository.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
+        var transactions = await _repository.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
         return transactions.Select(AccountMapper.ToDto).ToList();
     }
 
@@ -77,22 +77,22 @@ public sealed class TransactionService : ITransactionService
     /// <exception cref="DomainException">Thrown when the account is not found.</exception>
     public async Task<TransactionDto> CreateAsync(TransactionCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var account = await this._accountRepository.GetByIdAsync(dto.AccountId, cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(dto.AccountId, cancellationToken);
         if (account is null)
         {
-            throw new DomainException("Account not found.");
+            throw new DomainException("Account not found.", DomainExceptionType.NotFound);
         }
 
         // Determine category: use manual category if provided, otherwise auto-categorize
         Guid? categoryId = dto.CategoryId;
         if (!categoryId.HasValue)
         {
-            categoryId = await this._categorizationEngine.FindMatchingCategoryAsync(dto.Description, cancellationToken);
+            categoryId = await _categorizationEngine.FindMatchingCategoryAsync(dto.Description, cancellationToken);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
         var transaction = account.AddTransaction(amount, dto.Date, dto.Description, categoryId);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return AccountMapper.ToDto(transaction);
     }
 
@@ -106,7 +106,7 @@ public sealed class TransactionService : ITransactionService
     /// <returns>The updated transaction DTO, or null if not found.</returns>
     public async Task<TransactionDto?> UpdateAsync(Guid id, TransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        var transaction = await _repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return null;
@@ -114,7 +114,7 @@ public sealed class TransactionService : ITransactionService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
@@ -123,8 +123,8 @@ public sealed class TransactionService : ITransactionService
         transaction.UpdateDescription(dto.Description);
         transaction.UpdateCategory(dto.CategoryId);
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(transaction);
         return AccountMapper.ToTransactionDto(transaction, version);
     }
 
@@ -136,14 +136,14 @@ public sealed class TransactionService : ITransactionService
     /// <returns>True if the transaction was deleted; false if not found.</returns>
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        var transaction = await _repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(transaction, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(transaction, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -157,7 +157,7 @@ public sealed class TransactionService : ITransactionService
     /// <returns>The updated transaction DTO, or null if not found.</returns>
     public async Task<TransactionDto?> UpdateLocationAsync(Guid id, TransactionLocationUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        var transaction = await _repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return null;
@@ -165,7 +165,7 @@ public sealed class TransactionService : ITransactionService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
         }
 
         GeoCoordinateValue? coordinates = null;
@@ -183,8 +183,8 @@ public sealed class TransactionService : ITransactionService
             LocationSource.Manual);
 
         transaction.SetLocation(location);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(transaction);
         return AccountMapper.ToTransactionDto(transaction, version);
     }
 
@@ -198,7 +198,7 @@ public sealed class TransactionService : ITransactionService
     /// <returns>The updated transaction DTO, or null if not found.</returns>
     public async Task<TransactionDto?> UpdateCategoryAsync(Guid id, TransactionCategoryUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        var transaction = await _repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return null;
@@ -206,12 +206,12 @@ public sealed class TransactionService : ITransactionService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(transaction, expectedVersion);
         }
 
         transaction.UpdateCategory(dto.CategoryId);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(transaction);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(transaction);
         return AccountMapper.ToTransactionDto(transaction, version);
     }
 
@@ -223,14 +223,14 @@ public sealed class TransactionService : ITransactionService
     /// <returns>True if the transaction was found and location cleared; false if not found.</returns>
     public async Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var transaction = await this._repository.GetByIdAsync(id, cancellationToken);
+        var transaction = await _repository.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return false;
         }
 
         transaction.ClearLocation();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -241,7 +241,7 @@ public sealed class TransactionService : ITransactionService
     /// <returns>The number of transactions whose location was cleared.</returns>
     public async Task<int> ClearAllLocationDataAsync(CancellationToken cancellationToken = default)
     {
-        var transactions = await this._repository.GetAllWithLocationAsync(cancellationToken);
+        var transactions = await _repository.GetAllWithLocationAsync(cancellationToken);
         if (transactions.Count == 0)
         {
             return 0;
@@ -252,7 +252,7 @@ public sealed class TransactionService : ITransactionService
             transaction.ClearLocation();
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return transactions.Count;
     }
 }

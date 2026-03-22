@@ -12,7 +12,10 @@ public sealed record ColumnMappingValue
     /// <summary>
     /// Gets the zero-based index of the column in the CSV file.
     /// </summary>
-    public int ColumnIndex { get; init; }
+    public int ColumnIndex
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the header name of the column as it appears in the CSV file.
@@ -22,17 +25,26 @@ public sealed record ColumnMappingValue
     /// <summary>
     /// Gets the target transaction field for this column.
     /// </summary>
-    public ImportField TargetField { get; init; }
+    public ImportField TargetField
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets an optional expression for transforming the column value.
     /// Future use for combining or transforming column values.
     /// </summary>
-    public string? TransformExpression { get; init; }
+    public string? TransformExpression
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets an optional date format override for this specific column.
     /// If not specified, the mapping's default date format is used.
     /// </summary>
-    public string? DateFormat { get; init; }
+    public string? DateFormat
+    {
+        get; init;
+    }
 }

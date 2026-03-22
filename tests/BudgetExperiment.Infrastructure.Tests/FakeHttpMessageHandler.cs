@@ -18,7 +18,10 @@ internal sealed class FakeHttpMessageHandler : HttpMessageHandler
     public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.OK;
 
     /// <summary>Gets the URI of the last request sent.</summary>
-    public Uri? LastRequestUri { get; private set; }
+    public Uri? LastRequestUri
+    {
+        get; private set;
+    }
 
     /// <inheritdoc />
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

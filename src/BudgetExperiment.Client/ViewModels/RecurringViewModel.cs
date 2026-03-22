@@ -35,17 +35,20 @@ public sealed class RecurringViewModel : IDisposable
         IChatContextService chatContextService,
         IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._toastService = toastService;
-        this._scopeService = scopeService;
-        this._chatContextService = chatContextService;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _toastService = toastService;
+        _scopeService = scopeService;
+        _chatContextService = chatContextService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether data is loading.
@@ -55,27 +58,42 @@ public sealed class RecurringViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a form submission is in progress.
     /// </summary>
-    public bool IsSubmitting { get; private set; }
+    public bool IsSubmitting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a delete operation is in progress.
     /// </summary>
-    public bool IsDeleting { get; private set; }
+    public bool IsDeleting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the traceId from the API error response that caused the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the list of recurring transactions.
@@ -90,22 +108,34 @@ public sealed class RecurringViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the add form modal is visible.
     /// </summary>
-    public bool ShowAddForm { get; private set; }
+    public bool ShowAddForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the edit form modal is visible.
     /// </summary>
-    public bool ShowEditForm { get; private set; }
+    public bool ShowEditForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the delete confirmation dialog is visible.
     /// </summary>
-    public bool ShowDeleteConfirm { get; private set; }
+    public bool ShowDeleteConfirm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the import patterns dialog is visible.
     /// </summary>
-    public bool ShowImportPatterns { get; private set; }
+    public bool ShowImportPatterns
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the new recurring transaction form model.
@@ -120,22 +150,34 @@ public sealed class RecurringViewModel : IDisposable
     /// <summary>
     /// Gets the ID of the recurring transaction being edited.
     /// </summary>
-    public Guid EditingId { get; private set; }
+    public Guid EditingId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the concurrency version of the recurring transaction being edited.
     /// </summary>
-    public string? EditingVersion { get; private set; }
+    public string? EditingVersion
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the recurring transaction pending deletion.
     /// </summary>
-    public RecurringTransactionDto? DeletingRecurring { get; private set; }
+    public RecurringTransactionDto? DeletingRecurring
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the ID of the recurring transaction for import patterns.
     /// </summary>
-    public Guid ImportPatternsRecurringId { get; private set; }
+    public Guid ImportPatternsRecurringId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the description of the recurring transaction for import patterns.
@@ -178,8 +220,8 @@ public sealed class RecurringViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
-        this._chatContextService.SetPageType("recurring transactions");
+        _scopeService.ScopeChanged += this.OnScopeChanged;
+        _chatContextService.SetPageType("recurring transactions");
         await this.LoadRecurringTransactionsAsync();
         await this.LoadCategoriesAsync();
     }
@@ -196,12 +238,12 @@ public sealed class RecurringViewModel : IDisposable
 
         try
         {
-            this.RecurringTransactions = (await this._apiService.GetRecurringTransactionsAsync()).ToList();
+            this.RecurringTransactions = (await _apiService.GetRecurringTransactionsAsync()).ToList();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load recurring transactions: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -217,12 +259,12 @@ public sealed class RecurringViewModel : IDisposable
     {
         try
         {
-            this.Categories = (await this._apiService.GetCategoriesAsync()).ToList();
+            this.Categories = (await _apiService.GetCategoriesAsync()).ToList();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load categories: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
     }
 
@@ -309,7 +351,7 @@ public sealed class RecurringViewModel : IDisposable
 
         try
         {
-            var result = await this._apiService.CreateRecurringTransactionAsync(model);
+            var result = await _apiService.CreateRecurringTransactionAsync(model);
             if (result != null)
             {
                 this.ShowAddForm = false;
@@ -333,10 +375,10 @@ public sealed class RecurringViewModel : IDisposable
 
         try
         {
-            var result = await this._apiService.UpdateRecurringTransactionAsync(this.EditingId, model, this.EditingVersion);
+            var result = await _apiService.UpdateRecurringTransactionAsync(this.EditingId, model, this.EditingVersion);
             if (result.IsConflict)
             {
-                this._toastService.ShowWarning("This recurring transaction was modified by another user. Data has been refreshed.", "Conflict");
+                _toastService.ShowWarning("This recurring transaction was modified by another user. Data has been refreshed.", "Conflict");
                 this.HideForm();
                 await this.LoadRecurringTransactionsAsync();
                 return;
@@ -361,7 +403,7 @@ public sealed class RecurringViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task SkipNextAsync(RecurringTransactionDto recurring)
     {
-        var result = await this._apiService.SkipNextRecurringAsync(recurring.Id);
+        var result = await _apiService.SkipNextRecurringAsync(recurring.Id);
         if (result != null)
         {
             await this.LoadRecurringTransactionsAsync();
@@ -375,7 +417,7 @@ public sealed class RecurringViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task PauseAsync(RecurringTransactionDto recurring)
     {
-        var result = await this._apiService.PauseRecurringTransactionAsync(recurring.Id);
+        var result = await _apiService.PauseRecurringTransactionAsync(recurring.Id);
         if (result != null)
         {
             await this.LoadRecurringTransactionsAsync();
@@ -389,7 +431,7 @@ public sealed class RecurringViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task ResumeAsync(RecurringTransactionDto recurring)
     {
-        var result = await this._apiService.ResumeRecurringTransactionAsync(recurring.Id);
+        var result = await _apiService.ResumeRecurringTransactionAsync(recurring.Id);
         if (result != null)
         {
             await this.LoadRecurringTransactionsAsync();
@@ -423,7 +465,7 @@ public sealed class RecurringViewModel : IDisposable
 
         try
         {
-            var deleted = await this._apiService.DeleteRecurringTransactionAsync(this.DeletingRecurring.Id);
+            var deleted = await _apiService.DeleteRecurringTransactionAsync(this.DeletingRecurring.Id);
             if (deleted)
             {
                 this.ShowDeleteConfirm = false;
@@ -481,8 +523,8 @@ public sealed class RecurringViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
-        this._chatContextService.ClearContext();
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
+        _chatContextService.ClearContext();
     }
 
     private async void OnScopeChanged(BudgetScope? scope)

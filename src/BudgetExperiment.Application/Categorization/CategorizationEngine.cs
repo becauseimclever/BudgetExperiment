@@ -40,10 +40,10 @@ public class CategorizationEngine : ICategorizationEngine
         IUnitOfWork unitOfWork,
         IMemoryCache cache)
     {
-        this._ruleRepository = ruleRepository;
-        this._transactionRepository = transactionRepository;
-        this._unitOfWork = unitOfWork;
-        this._cache = cache;
+        _ruleRepository = ruleRepository;
+        _transactionRepository = transactionRepository;
+        _unitOfWork = unitOfWork;
+        _cache = cache;
     }
 
     /// <inheritdoc />
@@ -79,12 +79,12 @@ public class CategorizationEngine : ICategorizationEngine
 
         if (transactionIds == null)
         {
-            transactions = await this._transactionRepository.GetUncategorizedAsync(cancellationToken);
+            transactions = await _transactionRepository.GetUncategorizedAsync(cancellationToken);
         }
         else
         {
             var idList = transactionIds.ToList();
-            var allFetched = await this._transactionRepository.GetByIdsAsync(idList, cancellationToken);
+            var allFetched = await _transactionRepository.GetByIdsAsync(idList, cancellationToken);
 
             var transactionList = new List<Transaction>();
             foreach (var transaction in allFetched)
@@ -133,7 +133,7 @@ public class CategorizationEngine : ICategorizationEngine
 
         if (categorized > 0)
         {
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
         return new CategorizationResult
@@ -163,7 +163,7 @@ public class CategorizationEngine : ICategorizationEngine
             categoryId: Guid.NewGuid(),
             caseSensitive: caseSensitive);
 
-        var allDescriptions = await this._transactionRepository.GetAllDescriptionsAsync(cancellationToken);
+        var allDescriptions = await _transactionRepository.GetAllDescriptionsAsync(cancellationToken);
 
         var matchingDescriptions = new List<string>();
 
@@ -208,7 +208,7 @@ public class CategorizationEngine : ICategorizationEngine
             return result;
         }
 
-        var transactions = await this._transactionRepository.GetByIdsAsync(transactionIds, cancellationToken);
+        var transactions = await _transactionRepository.GetByIdsAsync(transactionIds, cancellationToken);
 
         foreach (var transaction in transactions)
         {
@@ -239,7 +239,7 @@ public class CategorizationEngine : ICategorizationEngine
     /// </summary>
     public void InvalidateRuleCache()
     {
-        this._cache.Remove(ActiveRulesCacheKey);
+        _cache.Remove(ActiveRulesCacheKey);
     }
 
     private static Guid? FindFirstMatch(IReadOnlyList<CategorizationRule> rules, string description)
@@ -278,13 +278,13 @@ public class CategorizationEngine : ICategorizationEngine
 
     private async Task<IReadOnlyList<CategorizationRule>> GetCachedActiveRulesAsync(CancellationToken cancellationToken)
     {
-        if (this._cache.TryGetValue(ActiveRulesCacheKey, out IReadOnlyList<CategorizationRule>? cached) && cached is not null)
+        if (_cache.TryGetValue(ActiveRulesCacheKey, out IReadOnlyList<CategorizationRule>? cached) && cached is not null)
         {
             return cached;
         }
 
-        var rules = await this._ruleRepository.GetActiveByPriorityAsync(cancellationToken);
-        this._cache.Set(ActiveRulesCacheKey, rules, CacheDuration);
+        var rules = await _ruleRepository.GetActiveByPriorityAsync(cancellationToken);
+        _cache.Set(ActiveRulesCacheKey, rules, CacheDuration);
         return rules;
     }
 }

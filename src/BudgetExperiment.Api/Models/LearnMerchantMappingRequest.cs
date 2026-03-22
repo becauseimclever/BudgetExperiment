@@ -12,10 +12,16 @@ public sealed record LearnMerchantMappingRequest
     /// <summary>
     /// Gets the transaction description to learn from.
     /// </summary>
-    public required string Description { get; init; }
+    public required string Description
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the category ID to map to.
     /// </summary>
-    public required Guid CategoryId { get; init; }
+    public required Guid CategoryId
+    {
+        get; init;
+    }
 }

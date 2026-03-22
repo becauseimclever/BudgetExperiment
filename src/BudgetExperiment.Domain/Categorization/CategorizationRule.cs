@@ -46,7 +46,10 @@ public sealed class CategorizationRule
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the rule name for display purposes.
@@ -56,7 +59,10 @@ public sealed class CategorizationRule
     /// <summary>
     /// Gets the match type that determines how the pattern is applied.
     /// </summary>
-    public RuleMatchType MatchType { get; private set; }
+    public RuleMatchType MatchType
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the pattern to match against transaction descriptions.
@@ -66,12 +72,18 @@ public sealed class CategorizationRule
     /// <summary>
     /// Gets the category ID to assign when the rule matches.
     /// </summary>
-    public Guid CategoryId { get; private set; }
+    public Guid CategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the priority for rule evaluation. Lower number = higher priority (evaluated first).
     /// </summary>
-    public int Priority { get; private set; }
+    public int Priority
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the rule is active.
@@ -81,22 +93,34 @@ public sealed class CategorizationRule
     /// <summary>
     /// Gets a value indicating whether matching is case-sensitive.
     /// </summary>
-    public bool CaseSensitive { get; private set; }
+    public bool CaseSensitive
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the rule was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the rule was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the associated budget category (navigation property for queries).
     /// </summary>
-    public BudgetCategory? Category { get; private set; }
+    public BudgetCategory? Category
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new categorization rule.
@@ -174,7 +198,7 @@ public sealed class CategorizationRule
         this.UpdatedAtUtc = DateTime.UtcNow;
 
         // Update compiled regex
-        this._compiledRegex = matchType == RuleMatchType.Regex
+        _compiledRegex = matchType == RuleMatchType.Regex
             ? BuildRegex(this.Pattern, caseSensitive)
             : null;
     }
@@ -347,7 +371,7 @@ public sealed class CategorizationRule
         try
         {
             // Use pre-compiled regex if available, otherwise build one
-            var regex = this._compiledRegex ?? BuildRegex(this.Pattern, this.CaseSensitive);
+            var regex = _compiledRegex ?? BuildRegex(this.Pattern, this.CaseSensitive);
             return regex.IsMatch(description);
         }
         catch (RegexMatchTimeoutException)

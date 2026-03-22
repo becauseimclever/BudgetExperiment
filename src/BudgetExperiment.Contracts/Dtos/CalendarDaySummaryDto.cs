@@ -10,13 +10,22 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class CalendarDaySummaryDto
 {
     /// <summary>Gets or sets the date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether this day is in the currently displayed month.</summary>
-    public bool IsCurrentMonth { get; set; }
+    public bool IsCurrentMonth
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether this day is today.</summary>
-    public bool IsToday { get; set; }
+    public bool IsToday
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total of actual transactions for this day.</summary>
     public MoneyDto ActualTotal { get; set; } = new();
@@ -28,17 +37,29 @@ public sealed class CalendarDaySummaryDto
     public MoneyDto CombinedTotal { get; set; } = new();
 
     /// <summary>Gets or sets the count of actual transactions.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the count of recurring transaction instances.</summary>
-    public int RecurringCount { get; set; }
+    public int RecurringCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether this day has recurring transactions.</summary>
-    public bool HasRecurring { get; set; }
+    public bool HasRecurring
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the running balance at the end of this day.</summary>
     public MoneyDto EndOfDayBalance { get; set; } = new();
 
     /// <summary>Gets or sets a value indicating whether the end-of-day balance is negative.</summary>
-    public bool IsBalanceNegative { get; set; }
+    public bool IsBalanceNegative
+    {
+        get; set;
+    }
 }

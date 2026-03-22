@@ -29,7 +29,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     /// <param name="httpClient">The HTTP client.</param>
     public ReconciliationApiService(HttpClient httpClient)
     {
-        this._httpClient = httpClient;
+        _httpClient = httpClient;
     }
 
     /// <inheritdoc />
@@ -43,7 +43,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
                 url += $"&accountId={accountId.Value}";
             }
 
-            return await this._httpClient.GetFromJsonAsync<ReconciliationStatusDto>(url, JsonOptions);
+            return await _httpClient.GetFromJsonAsync<ReconciliationStatusDto>(url, JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {
@@ -67,7 +67,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
                 url += $"?accountId={accountId.Value}";
             }
 
-            var result = await this._httpClient.GetFromJsonAsync<List<ReconciliationMatchDto>>(url, JsonOptions);
+            var result = await _httpClient.GetFromJsonAsync<List<ReconciliationMatchDto>>(url, JsonOptions);
             return result ?? [];
         }
         catch (AccessTokenNotAvailableException ex)
@@ -86,7 +86,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/reconciliation/find-matches", request, JsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/v1/reconciliation/find-matches", request, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<FindMatchesResult>(JsonOptions);
@@ -106,7 +106,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync($"api/v1/reconciliation/{matchId}/accept", null);
+            var response = await _httpClient.PostAsync($"api/v1/reconciliation/{matchId}/accept", null);
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)
@@ -121,7 +121,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync($"api/v1/reconciliation/{matchId}/reject", null);
+            var response = await _httpClient.PostAsync($"api/v1/reconciliation/{matchId}/reject", null);
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)
@@ -137,7 +137,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
         try
         {
             var request = new BulkMatchActionRequest { MatchIds = matchIds };
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/reconciliation/bulk-accept", request, JsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/v1/reconciliation/bulk-accept", request, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<BulkMatchActionResult>(JsonOptions);
@@ -158,7 +158,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/reconciliation/manual-match", request, JsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/v1/reconciliation/manual-match", request, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<ReconciliationMatchDto>(JsonOptions);
@@ -178,7 +178,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<MatchingTolerancesDto>("api/v1/reconciliation/tolerances", JsonOptions);
+            return await _httpClient.GetFromJsonAsync<MatchingTolerancesDto>("api/v1/reconciliation/tolerances", JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {
@@ -196,7 +196,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            var response = await this._httpClient.PutAsJsonAsync("api/v1/reconciliation/tolerances", tolerances, JsonOptions);
+            var response = await _httpClient.PutAsJsonAsync("api/v1/reconciliation/tolerances", tolerances, JsonOptions);
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)
@@ -211,7 +211,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            var response = await this._httpClient.DeleteAsync($"api/v1/reconciliation/matches/{matchId}");
+            var response = await _httpClient.DeleteAsync($"api/v1/reconciliation/matches/{matchId}");
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)
@@ -226,7 +226,7 @@ public sealed class ReconciliationApiService : IReconciliationApiService
     {
         try
         {
-            var result = await this._httpClient.GetFromJsonAsync<List<LinkableInstanceDto>>(
+            var result = await _httpClient.GetFromJsonAsync<List<LinkableInstanceDto>>(
                 $"api/v1/reconciliation/linkable-instances?transactionId={transactionId}",
                 JsonOptions);
             return result ?? [];

@@ -186,9 +186,15 @@ public sealed class CultureServiceTests
             TimeZone = timeZone;
         }
 
-        public string Language { get; set; }
+        public string Language
+        {
+            get; set;
+        }
 
-        public string TimeZone { get; set; }
+        public string TimeZone
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)

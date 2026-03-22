@@ -22,17 +22,26 @@ public sealed class ChatSession
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the session was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp of the last message in the session.
     /// </summary>
-    public DateTime LastMessageAtUtc { get; private set; }
+    public DateTime LastMessageAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the session is active.
@@ -42,7 +51,7 @@ public sealed class ChatSession
     /// <summary>
     /// Gets the messages in this session.
     /// </summary>
-    public IReadOnlyList<ChatMessage> Messages => this._messages.AsReadOnly();
+    public IReadOnlyList<ChatMessage> Messages => _messages.AsReadOnly();
 
     /// <summary>
     /// Creates a new chat session.
@@ -72,7 +81,7 @@ public sealed class ChatSession
         this.ValidateContent(content);
 
         var message = ChatMessage.CreateUserMessage(this.Id, content);
-        this._messages.Add(message);
+        _messages.Add(message);
         this.LastMessageAtUtc = message.CreatedAtUtc;
         return message;
     }
@@ -89,7 +98,7 @@ public sealed class ChatSession
         this.EnsureActive();
 
         var message = ChatMessage.CreateAssistantMessage(this.Id, content, action);
-        this._messages.Add(message);
+        _messages.Add(message);
         this.LastMessageAtUtc = message.CreatedAtUtc;
         return message;
     }

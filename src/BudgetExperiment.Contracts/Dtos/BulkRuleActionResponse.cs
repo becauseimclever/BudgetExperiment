@@ -10,5 +10,8 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class BulkRuleActionResponse
 {
     /// <summary>Gets or sets the number of rules affected.</summary>
-    public int AffectedCount { get; set; }
+    public int AffectedCount
+    {
+        get; set;
+    }
 }

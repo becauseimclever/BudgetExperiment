@@ -12,7 +12,10 @@ public sealed record ImportMappingDto
     /// <summary>
     /// Gets the mapping ID.
     /// </summary>
-    public Guid Id { get; init; }
+    public Guid Id
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the mapping name.
@@ -27,40 +30,64 @@ public sealed record ImportMappingDto
     /// <summary>
     /// Gets the default date format for this mapping.
     /// </summary>
-    public string? DateFormat { get; init; }
+    public string? DateFormat
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the default amount parse mode.
     /// </summary>
-    public AmountParseMode? AmountMode { get; init; }
+    public AmountParseMode? AmountMode
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the duplicate detection settings.
     /// </summary>
-    public DuplicateDetectionSettingsDto? DuplicateSettings { get; init; }
+    public DuplicateDetectionSettingsDto? DuplicateSettings
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of rows to skip at the beginning of the file.
     /// </summary>
-    public int RowsToSkip { get; init; }
+    public int RowsToSkip
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the debit/credit indicator settings.
     /// </summary>
-    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets when the mapping was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; init; }
+    public DateTime CreatedAtUtc
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets when the mapping was last updated.
     /// </summary>
-    public DateTime? UpdatedAtUtc { get; init; }
+    public DateTime? UpdatedAtUtc
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the concurrency version token for optimistic concurrency.
     /// </summary>
-    public string? Version { get; init; }
+    public string? Version
+    {
+        get; init;
+    }
 }

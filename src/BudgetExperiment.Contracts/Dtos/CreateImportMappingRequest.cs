@@ -22,25 +22,40 @@ public sealed record CreateImportMappingRequest
     /// <summary>
     /// Gets the optional default date format.
     /// </summary>
-    public string? DateFormat { get; init; }
+    public string? DateFormat
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional default amount parse mode.
     /// </summary>
-    public AmountParseMode? AmountMode { get; init; }
+    public AmountParseMode? AmountMode
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional duplicate detection settings.
     /// </summary>
-    public DuplicateDetectionSettingsDto? DuplicateSettings { get; init; }
+    public DuplicateDetectionSettingsDto? DuplicateSettings
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of rows to skip at the beginning of the file.
     /// </summary>
-    public int RowsToSkip { get; init; }
+    public int RowsToSkip
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional debit/credit indicator settings.
     /// </summary>
-    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings
+    {
+        get; init;
+    }
 }

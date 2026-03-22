@@ -155,7 +155,10 @@ public sealed class BudgetScopeMiddlewareTests
 
         public bool IsAuthenticated => true;
 
-        public BudgetScope? CurrentScope { get; private set; }
+        public BudgetScope? CurrentScope
+        {
+            get; private set;
+        }
 
         public void SetScope(BudgetScope? scope)
         {

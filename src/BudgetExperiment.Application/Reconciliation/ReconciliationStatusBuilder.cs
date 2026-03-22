@@ -32,10 +32,10 @@ public sealed class ReconciliationStatusBuilder : IReconciliationStatusBuilder
         ITransactionRepository transactionRepository,
         IRecurringInstanceProjector instanceProjector)
     {
-        this._matchRepository = matchRepository;
-        this._recurringRepository = recurringRepository;
-        this._transactionRepository = transactionRepository;
-        this._instanceProjector = instanceProjector;
+        _matchRepository = matchRepository;
+        _recurringRepository = recurringRepository;
+        _transactionRepository = transactionRepository;
+        _instanceProjector = instanceProjector;
     }
 
     /// <inheritdoc />
@@ -47,15 +47,15 @@ public sealed class ReconciliationStatusBuilder : IReconciliationStatusBuilder
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
-        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
-        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
+        var recurringTransactions = await _recurringRepository.GetActiveAsync(cancellationToken);
+        var instancesByDate = await _instanceProjector.GetInstancesByDateRangeAsync(
             recurringTransactions,
             startDate,
             endDate,
             cancellationToken);
 
         // Get all matches for this period
-        var periodMatches = await this._matchRepository.GetByPeriodAsync(year, month, cancellationToken);
+        var periodMatches = await _matchRepository.GetByPeriodAsync(year, month, cancellationToken);
 
         var matchLookup = periodMatches
             .GroupBy(m => (m.RecurringTransactionId, m.RecurringInstanceDate))
@@ -136,7 +136,7 @@ public sealed class ReconciliationStatusBuilder : IReconciliationStatusBuilder
             matchSource = acceptedMatch.Source.ToString();
 
             // Get actual amount from matched transaction
-            var transaction = await this._transactionRepository.GetByIdAsync(
+            var transaction = await _transactionRepository.GetByIdAsync(
                 acceptedMatch.ImportedTransactionId,
                 cancellationToken);
             if (transaction != null)

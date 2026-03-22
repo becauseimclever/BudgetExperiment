@@ -35,17 +35,20 @@ public sealed class CategoriesViewModel : IDisposable
         IChatContextService chatContextService,
         IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._toastService = toastService;
-        this._scopeService = scopeService;
-        this._chatContextService = chatContextService;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _toastService = toastService;
+        _scopeService = scopeService;
+        _chatContextService = chatContextService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether categories are loading.
@@ -55,27 +58,42 @@ public sealed class CategoriesViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a form submission is in progress.
     /// </summary>
-    public bool IsSubmitting { get; private set; }
+    public bool IsSubmitting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a delete operation is in progress.
     /// </summary>
-    public bool IsDeleting { get; private set; }
+    public bool IsDeleting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the traceId from the API error response that caused the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the list of all categories.
@@ -103,7 +121,10 @@ public sealed class CategoriesViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the add category modal is visible.
     /// </summary>
-    public bool ShowAddForm { get; private set; }
+    public bool ShowAddForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the new category form model.
@@ -113,7 +134,10 @@ public sealed class CategoriesViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the edit category modal is visible.
     /// </summary>
-    public bool ShowEditForm { get; private set; }
+    public bool ShowEditForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the edit category form model.
@@ -123,27 +147,42 @@ public sealed class CategoriesViewModel : IDisposable
     /// <summary>
     /// Gets the ID of the category currently being edited.
     /// </summary>
-    public Guid? EditingCategoryId { get; private set; }
+    public Guid? EditingCategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the concurrency version of the category being edited.
     /// </summary>
-    public string? EditingVersion { get; private set; }
+    public string? EditingVersion
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the sort order of the category being edited.
     /// </summary>
-    public int EditSortOrder { get; set; }
+    public int EditSortOrder
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the delete confirmation dialog is visible.
     /// </summary>
-    public bool ShowDeleteConfirm { get; private set; }
+    public bool ShowDeleteConfirm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the category pending deletion.
     /// </summary>
-    public BudgetCategoryDto? DeletingCategory { get; private set; }
+    public BudgetCategoryDto? DeletingCategory
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Initializes the ViewModel: subscribes to scope changes and loads categories.
@@ -151,8 +190,8 @@ public sealed class CategoriesViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
-        this._chatContextService.SetPageType("categories");
+        _scopeService.ScopeChanged += this.OnScopeChanged;
+        _chatContextService.SetPageType("categories");
         await this.LoadCategoriesAsync();
     }
 
@@ -168,12 +207,12 @@ public sealed class CategoriesViewModel : IDisposable
 
         try
         {
-            this.Categories = (await this._apiService.GetCategoriesAsync(false)).ToList();
+            this.Categories = (await _apiService.GetCategoriesAsync(false)).ToList();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load categories: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -240,7 +279,7 @@ public sealed class CategoriesViewModel : IDisposable
 
         try
         {
-            var created = await this._apiService.CreateCategoryAsync(model);
+            var created = await _apiService.CreateCategoryAsync(model);
             if (created != null)
             {
                 this.Categories.Add(created);
@@ -315,10 +354,10 @@ public sealed class CategoriesViewModel : IDisposable
                 SortOrder = this.EditSortOrder,
             };
 
-            var updated = await this._apiService.UpdateCategoryAsync(this.EditingCategoryId.Value, updateDto, this.EditingVersion);
+            var updated = await _apiService.UpdateCategoryAsync(this.EditingCategoryId.Value, updateDto, this.EditingVersion);
             if (updated.IsConflict)
             {
-                this._toastService.ShowWarning("This category was modified by another user. Data has been refreshed.", "Conflict");
+                _toastService.ShowWarning("This category was modified by another user. Data has been refreshed.", "Conflict");
                 this.CloseEditCategory();
                 await this.LoadCategoriesAsync();
                 return;
@@ -386,7 +425,7 @@ public sealed class CategoriesViewModel : IDisposable
 
         try
         {
-            var success = await this._apiService.DeleteCategoryAsync(this.DeletingCategory.Id);
+            var success = await _apiService.DeleteCategoryAsync(this.DeletingCategory.Id);
             if (success)
             {
                 this.Categories.RemoveAll(c => c.Id == this.DeletingCategory.Id);
@@ -417,13 +456,13 @@ public sealed class CategoriesViewModel : IDisposable
     {
         try
         {
-            var success = await this._apiService.ActivateCategoryAsync(category.Id);
+            var success = await _apiService.ActivateCategoryAsync(category.Id);
             if (success)
             {
                 var index = this.Categories.FindIndex(c => c.Id == category.Id);
                 if (index >= 0)
                 {
-                    var updated = await this._apiService.GetCategoryAsync(category.Id);
+                    var updated = await _apiService.GetCategoryAsync(category.Id);
                     if (updated != null)
                     {
                         this.Categories[index] = updated;
@@ -450,13 +489,13 @@ public sealed class CategoriesViewModel : IDisposable
     {
         try
         {
-            var success = await this._apiService.DeactivateCategoryAsync(category.Id);
+            var success = await _apiService.DeactivateCategoryAsync(category.Id);
             if (success)
             {
                 var index = this.Categories.FindIndex(c => c.Id == category.Id);
                 if (index >= 0)
                 {
-                    var updated = await this._apiService.GetCategoryAsync(category.Id);
+                    var updated = await _apiService.GetCategoryAsync(category.Id);
                     if (updated != null)
                     {
                         this.Categories[index] = updated;
@@ -477,8 +516,8 @@ public sealed class CategoriesViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
-        this._chatContextService.ClearContext();
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
+        _chatContextService.ClearContext();
     }
 
     private async void OnScopeChanged(BudgetScope? scope)

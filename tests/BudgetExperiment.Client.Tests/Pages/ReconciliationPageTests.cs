@@ -7,8 +7,11 @@ using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -27,8 +30,8 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     public ReconciliationPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
-        this.Services.AddSingleton<IReconciliationApiService>(this._reconciliationApiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
+        this.Services.AddSingleton<IReconciliationApiService>(_reconciliationApiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
@@ -130,7 +133,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsSummaryCards_WhenStatusExists()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -155,7 +158,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsCorrectSummaryValues()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -178,7 +181,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsPendingMatches_WhenMatchesExist()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -189,7 +192,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
             Instances = [],
         };
 
-        this._reconciliationApiService.PendingMatches.Add(new ReconciliationMatchDto
+        _reconciliationApiService.PendingMatches.Add(new ReconciliationMatchDto
         {
             Id = Guid.NewGuid(),
             ImportedTransactionId = Guid.NewGuid(),
@@ -217,7 +220,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsAcceptAndRejectButtons_ForPendingMatches()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -228,7 +231,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
             Instances = [],
         };
 
-        this._reconciliationApiService.PendingMatches.Add(new ReconciliationMatchDto
+        _reconciliationApiService.PendingMatches.Add(new ReconciliationMatchDto
         {
             Id = Guid.NewGuid(),
             ImportedTransactionId = Guid.NewGuid(),
@@ -257,7 +260,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsConfidenceBadge_ForPendingMatch()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -268,7 +271,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
             Instances = [],
         };
 
-        this._reconciliationApiService.PendingMatches.Add(new ReconciliationMatchDto
+        _reconciliationApiService.PendingMatches.Add(new ReconciliationMatchDto
         {
             Id = Guid.NewGuid(),
             ImportedTransactionId = Guid.NewGuid(),
@@ -297,7 +300,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsRecurringTransactionStatus_WhenInstancesExist()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -344,7 +347,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsLinkManuallyButton_ForMissingInstances()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -378,7 +381,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsUnlinkButton_ForMatchedInstances()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -414,7 +417,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsAcceptAllHighConfidence_WhenMultipleMatches()
     {
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -425,8 +428,8 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
             Instances = [],
         };
 
-        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Bill 1", "High", 0.95m));
-        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Bill 2", "High", 0.90m));
+        _reconciliationApiService.PendingMatches.Add(CreateMatch("Bill 1", "High", 0.95m));
+        _reconciliationApiService.PendingMatches.Add(CreateMatch("Bill 2", "High", 0.90m));
 
         var cut = Render<Reconciliation>();
 
@@ -439,7 +442,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsAccountsInDropdown()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Main Checking",
@@ -476,7 +479,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void AcceptMatchResult_IsConfigurable()
     {
-        this._reconciliationApiService.AcceptMatchResult = true;
+        _reconciliationApiService.AcceptMatchResult = true;
 
         var cut = Render<Reconciliation>();
 
@@ -489,7 +492,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void RejectMatchResult_IsConfigurable()
     {
-        this._reconciliationApiService.RejectMatchResult = true;
+        _reconciliationApiService.RejectMatchResult = true;
 
         var cut = Render<Reconciliation>();
 
@@ -502,7 +505,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void BulkAcceptResult_IsConfigurable()
     {
-        this._reconciliationApiService.BulkAcceptResult = 3;
+        _reconciliationApiService.BulkAcceptResult = 3;
 
         var cut = Render<Reconciliation>();
 
@@ -515,7 +518,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void UnlinkMatchResult_IsConfigurable()
     {
-        this._reconciliationApiService.UnlinkMatchResult = true;
+        _reconciliationApiService.UnlinkMatchResult = true;
 
         var cut = Render<Reconciliation>();
 
@@ -528,7 +531,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void HighConfidenceMatch_IsConfigurable()
     {
-        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Netflix", "High", 0.95m));
+        _reconciliationApiService.PendingMatches.Add(CreateMatch("Netflix", "High", 0.95m));
 
         var cut = Render<Reconciliation>();
 
@@ -541,8 +544,8 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void AcceptButton_IsClickable_ForPendingMatch()
     {
-        this._reconciliationApiService.AcceptMatchResult = true;
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.AcceptMatchResult = true;
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -552,7 +555,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
             MissingCount = 0,
             Instances = [],
         };
-        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Netflix", "High", 0.95m));
+        _reconciliationApiService.PendingMatches.Add(CreateMatch("Netflix", "High", 0.95m));
 
         var cut = Render<Reconciliation>();
         var acceptButton = cut.FindAll("button").First(b => b.TextContent.Contains("Accept") && !b.TextContent.Contains("All"));
@@ -567,8 +570,8 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void RejectButton_IsClickable_ForPendingMatch()
     {
-        this._reconciliationApiService.RejectMatchResult = true;
-        this._reconciliationApiService.Status = new ReconciliationStatusDto
+        _reconciliationApiService.RejectMatchResult = true;
+        _reconciliationApiService.Status = new ReconciliationStatusDto
         {
             Year = 2025,
             Month = 6,
@@ -578,7 +581,7 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
             MissingCount = 0,
             Instances = [],
         };
-        this._reconciliationApiService.PendingMatches.Add(CreateMatch("Spotify", "Medium", 0.75m));
+        _reconciliationApiService.PendingMatches.Add(CreateMatch("Spotify", "Medium", 0.75m));
 
         var cut = Render<Reconciliation>();
         var rejectButton = cut.FindAll("button").First(b => b.TextContent.Contains("Reject"));

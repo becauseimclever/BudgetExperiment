@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -20,20 +21,20 @@ internal sealed class ImportMappingRepository : IImportMappingRepository
     /// <param name="context">The database context.</param>
     public ImportMappingRepository(BudgetDbContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <inheritdoc />
     public async Task<ImportMapping?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportMappings
+        return await _context.ImportMappings
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportMapping>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportMappings
+        return await _context.ImportMappings
             .OrderByDescending(m => m.LastUsedAtUtc)
             .ThenBy(m => m.Name)
             .Skip(skip)
@@ -44,26 +45,26 @@ internal sealed class ImportMappingRepository : IImportMappingRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportMappings.LongCountAsync(cancellationToken);
+        return await _context.ImportMappings.LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(ImportMapping entity, CancellationToken cancellationToken = default)
     {
-        await this._context.ImportMappings.AddAsync(entity, cancellationToken);
+        await _context.ImportMappings.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(ImportMapping entity, CancellationToken cancellationToken = default)
     {
-        this._context.ImportMappings.Remove(entity);
+        _context.ImportMappings.Remove(entity);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportMapping>> GetByUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportMappings
+        return await _context.ImportMappings
             .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.LastUsedAtUtc)
             .ThenBy(m => m.Name)
@@ -73,7 +74,7 @@ internal sealed class ImportMappingRepository : IImportMappingRepository
     /// <inheritdoc />
     public async Task<ImportMapping?> GetByNameAsync(Guid userId, string name, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportMappings
+        return await _context.ImportMappings
             .FirstOrDefaultAsync(m => m.UserId == userId && m.Name == name, cancellationToken);
     }
 }

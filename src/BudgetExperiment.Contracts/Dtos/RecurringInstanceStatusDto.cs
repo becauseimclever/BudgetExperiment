@@ -14,7 +14,10 @@ public sealed record RecurringInstanceStatusDto
     /// <summary>
     /// Gets the recurring transaction identifier.
     /// </summary>
-    public Guid RecurringTransactionId { get; init; }
+    public Guid RecurringTransactionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the recurring transaction description.
@@ -24,7 +27,10 @@ public sealed record RecurringInstanceStatusDto
     /// <summary>
     /// Gets the account identifier.
     /// </summary>
-    public Guid AccountId { get; init; }
+    public Guid AccountId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the account name.
@@ -34,7 +40,10 @@ public sealed record RecurringInstanceStatusDto
     /// <summary>
     /// Gets the instance date.
     /// </summary>
-    public DateOnly InstanceDate { get; init; }
+    public DateOnly InstanceDate
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the expected amount.
@@ -49,25 +58,40 @@ public sealed record RecurringInstanceStatusDto
     /// <summary>
     /// Gets the matched transaction ID (if matched).
     /// </summary>
-    public Guid? MatchedTransactionId { get; init; }
+    public Guid? MatchedTransactionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the actual amount (if matched).
     /// </summary>
-    public MoneyDto? ActualAmount { get; init; }
+    public MoneyDto? ActualAmount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the amount variance (if matched).
     /// </summary>
-    public decimal? AmountVariance { get; init; }
+    public decimal? AmountVariance
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the match ID (if a match suggestion exists).
     /// </summary>
-    public Guid? MatchId { get; init; }
+    public Guid? MatchId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the match source (Auto or Manual) if matched.
     /// </summary>
-    public string? MatchSource { get; init; }
+    public string? MatchSource
+    {
+        get; init;
+    }
 }

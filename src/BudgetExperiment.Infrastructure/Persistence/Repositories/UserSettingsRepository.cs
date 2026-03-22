@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -20,20 +21,20 @@ internal sealed class UserSettingsRepository : IUserSettingsRepository
     /// <param name="context">The database context.</param>
     public UserSettingsRepository(BudgetDbContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <inheritdoc />
     public async Task<UserSettings> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var settings = await this._context.Set<UserSettings>()
+        var settings = await _context.Set<UserSettings>()
             .FirstOrDefaultAsync(s => s.UserId == userId, cancellationToken);
 
         if (settings is null)
         {
             // Create default settings for this user
             settings = UserSettings.CreateDefault(userId);
-            await this._context.Set<UserSettings>().AddAsync(settings, cancellationToken);
+            await _context.Set<UserSettings>().AddAsync(settings, cancellationToken);
         }
 
         return settings;
@@ -43,7 +44,7 @@ internal sealed class UserSettingsRepository : IUserSettingsRepository
     public Task SaveAsync(UserSettings settings, CancellationToken cancellationToken = default)
     {
         // EF Core tracks changes automatically, just ensure the entity is tracked
-        this._context.Set<UserSettings>().Update(settings);
+        _context.Set<UserSettings>().Update(settings);
         return Task.CompletedTask;
     }
 }

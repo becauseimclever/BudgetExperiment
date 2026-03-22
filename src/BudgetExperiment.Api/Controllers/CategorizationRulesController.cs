@@ -27,7 +27,7 @@ public sealed class CategorizationRulesController : ControllerBase
     /// <param name="service">The categorization rule service.</param>
     public CategorizationRulesController(ICategorizationRuleService service)
     {
-        this._service = service;
+        _service = service;
     }
 
     /// <summary>
@@ -71,12 +71,12 @@ public sealed class CategorizationRulesController : ControllerBase
                 SortDirection = sortDirection,
             };
 
-            var pagedResult = await this._service.ListPagedAsync(request, cancellationToken);
+            var pagedResult = await _service.ListPagedAsync(request, cancellationToken);
             this.Response.Headers["X-Pagination-TotalCount"] = pagedResult.TotalCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return this.Ok(pagedResult);
         }
 
-        var rules = await this._service.GetAllAsync(activeOnly, cancellationToken);
+        var rules = await _service.GetAllAsync(activeOnly, cancellationToken);
         return this.Ok(rules);
     }
 
@@ -91,7 +91,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var rule = await this._service.GetByIdAsync(id, cancellationToken);
+        var rule = await _service.GetByIdAsync(id, cancellationToken);
         if (rule is null)
         {
             return this.NotFound();
@@ -116,7 +116,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAsync([FromBody] CategorizationRuleCreateDto dto, CancellationToken cancellationToken)
     {
-        var rule = await this._service.CreateAsync(dto, cancellationToken);
+        var rule = await _service.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = rule.Id }, rule);
     }
 
@@ -140,7 +140,7 @@ public sealed class CategorizationRulesController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var rule = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
+        var rule = await _service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (rule is null)
         {
             return this.NotFound();
@@ -165,7 +165,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await this._service.DeleteAsync(id, cancellationToken);
+        var deleted = await _service.DeleteAsync(id, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();
@@ -185,7 +185,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ActivateAsync(Guid id, CancellationToken cancellationToken)
     {
-        var activated = await this._service.ActivateAsync(id, cancellationToken);
+        var activated = await _service.ActivateAsync(id, cancellationToken);
         if (!activated)
         {
             return this.NotFound();
@@ -205,7 +205,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeactivateAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deactivated = await this._service.DeactivateAsync(id, cancellationToken);
+        var deactivated = await _service.DeactivateAsync(id, cancellationToken);
         if (!deactivated)
         {
             return this.NotFound();
@@ -225,7 +225,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ReorderAsync([FromBody] ReorderRulesRequest request, CancellationToken cancellationToken)
     {
-        await this._service.ReorderAsync(request.RuleIds, cancellationToken);
+        await _service.ReorderAsync(request.RuleIds, cancellationToken);
         return this.NoContent();
     }
 
@@ -240,7 +240,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> TestPatternAsync([FromBody] TestPatternRequest request, CancellationToken cancellationToken)
     {
-        var result = await this._service.TestPatternAsync(request, cancellationToken);
+        var result = await _service.TestPatternAsync(request, cancellationToken);
         return this.Ok(result);
     }
 
@@ -255,7 +255,7 @@ public sealed class CategorizationRulesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ApplyRulesAsync([FromBody] ApplyRulesRequest request, CancellationToken cancellationToken)
     {
-        var result = await this._service.ApplyRulesAsync(request, cancellationToken);
+        var result = await _service.ApplyRulesAsync(request, cancellationToken);
         return this.Ok(result);
     }
 
@@ -275,7 +275,7 @@ public sealed class CategorizationRulesController : ControllerBase
             return this.BadRequest("No rule IDs provided.");
         }
 
-        var count = await this._service.BulkDeleteAsync(request.Ids, cancellationToken);
+        var count = await _service.BulkDeleteAsync(request.Ids, cancellationToken);
         return this.Ok(new BulkRuleActionResponse { AffectedCount = count });
     }
 
@@ -295,7 +295,7 @@ public sealed class CategorizationRulesController : ControllerBase
             return this.BadRequest("No rule IDs provided.");
         }
 
-        var count = await this._service.BulkActivateAsync(request.Ids, cancellationToken);
+        var count = await _service.BulkActivateAsync(request.Ids, cancellationToken);
         return this.Ok(new BulkRuleActionResponse { AffectedCount = count });
     }
 
@@ -315,7 +315,7 @@ public sealed class CategorizationRulesController : ControllerBase
             return this.BadRequest("No rule IDs provided.");
         }
 
-        var count = await this._service.BulkDeactivateAsync(request.Ids, cancellationToken);
+        var count = await _service.BulkDeactivateAsync(request.Ids, cancellationToken);
         return this.Ok(new BulkRuleActionResponse { AffectedCount = count });
     }
 }

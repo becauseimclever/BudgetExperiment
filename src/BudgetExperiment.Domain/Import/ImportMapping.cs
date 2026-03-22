@@ -27,12 +27,18 @@ public sealed class ImportMapping
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the user who owns this mapping.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public Guid UserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the name of this mapping configuration.
@@ -42,22 +48,31 @@ public sealed class ImportMapping
     /// <summary>
     /// Gets the UTC timestamp when this mapping was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when this mapping was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when this mapping was last used for an import.
     /// </summary>
-    public DateTime? LastUsedAtUtc { get; private set; }
+    public DateTime? LastUsedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the column mappings configuration.
     /// </summary>
-    public IReadOnlyList<ColumnMappingValue> ColumnMappings => this._columnMappings.AsReadOnly();
+    public IReadOnlyList<ColumnMappingValue> ColumnMappings => _columnMappings.AsReadOnly();
 
     /// <summary>
     /// Gets the date format string for parsing dates.
@@ -160,7 +175,7 @@ public sealed class ImportMapping
         }
 
         this.Name = trimmedName;
-        this._columnMappings = mappings.ToList();
+        _columnMappings = mappings.ToList();
         this.DateFormat = dateFormat.Trim();
         this.AmountMode = amountMode;
         this.UpdatedAtUtc = DateTime.UtcNow;
@@ -224,7 +239,7 @@ public sealed class ImportMapping
             throw new DomainException("At least one column mapping is required.");
         }
 
-        this._columnMappings = mappings.ToList();
+        _columnMappings = mappings.ToList();
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 

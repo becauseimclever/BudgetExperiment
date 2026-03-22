@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -20,20 +21,20 @@ internal sealed class ChatSessionRepository : IChatSessionRepository
     /// <param name="context">The database context.</param>
     public ChatSessionRepository(BudgetDbContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <inheritdoc />
     public async Task<ChatSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatSessions
+        return await _context.ChatSessions
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ChatSession>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatSessions
+        return await _context.ChatSessions
             .OrderByDescending(s => s.LastMessageAtUtc)
             .Skip(skip)
             .Take(take)
@@ -43,26 +44,26 @@ internal sealed class ChatSessionRepository : IChatSessionRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatSessions.LongCountAsync(cancellationToken);
+        return await _context.ChatSessions.LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(ChatSession entity, CancellationToken cancellationToken = default)
     {
-        await this._context.ChatSessions.AddAsync(entity, cancellationToken);
+        await _context.ChatSessions.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(ChatSession entity, CancellationToken cancellationToken = default)
     {
-        this._context.ChatSessions.Remove(entity);
+        _context.ChatSessions.Remove(entity);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public async Task<ChatSession?> GetActiveSessionAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatSessions
+        return await _context.ChatSessions
             .Where(s => s.IsActive)
             .OrderByDescending(s => s.LastMessageAtUtc)
             .FirstOrDefaultAsync(cancellationToken);
@@ -74,7 +75,7 @@ internal sealed class ChatSessionRepository : IChatSessionRepository
         int messageLimit = 50,
         CancellationToken cancellationToken = default)
     {
-        var session = await this._context.ChatSessions
+        var session = await _context.ChatSessions
             .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
 
         if (session == null)
@@ -83,7 +84,7 @@ internal sealed class ChatSessionRepository : IChatSessionRepository
         }
 
         // Load messages separately to support limiting
-        var messages = await this._context.ChatMessages
+        var messages = await _context.ChatMessages
             .Where(m => m.SessionId == sessionId)
             .OrderByDescending(m => m.CreatedAtUtc)
             .Take(messageLimit)

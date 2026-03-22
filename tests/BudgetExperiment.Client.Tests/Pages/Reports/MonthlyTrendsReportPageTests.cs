@@ -6,8 +6,11 @@ using BudgetExperiment.Client.Pages.Reports;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages.Reports;
@@ -25,7 +28,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     public MonthlyTrendsReportPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
         this.Services.AddSingleton<ScopeService>();
@@ -116,7 +119,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsSummary_WhenDataExists()
     {
-        this._apiService.SpendingTrends = new SpendingTrendsReportDto
+        _apiService.SpendingTrends = new SpendingTrendsReportDto
         {
             AverageMonthlySpending = new MoneyDto { Amount = 3000m, Currency = "USD" },
             AverageMonthlyIncome = new MoneyDto { Amount = 5000m, Currency = "USD" },
@@ -139,7 +142,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CategoryFilter_PopulatedWithCategories()
     {
-        this._apiService.Categories.Add(new BudgetCategoryDto
+        _apiService.Categories.Add(new BudgetCategoryDto
         {
             Id = Guid.NewGuid(),
             Name = "Groceries",
@@ -158,7 +161,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void MonthCountButton_ReloadsData()
     {
-        this._apiService.SpendingTrends = CreateTestTrendsReport();
+        _apiService.SpendingTrends = CreateTestTrendsReport();
 
         var cut = Render<MonthlyTrendsReport>();
 
@@ -176,14 +179,14 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     public void CategoryFilter_SelectTriggersReload()
     {
         var catId = Guid.NewGuid();
-        this._apiService.Categories.Add(new BudgetCategoryDto
+        _apiService.Categories.Add(new BudgetCategoryDto
         {
             Id = catId,
             Name = "Dining",
             Type = "Expense",
             IsActive = true,
         });
-        this._apiService.SpendingTrends = CreateTestTrendsReport();
+        _apiService.SpendingTrends = CreateTestTrendsReport();
 
         var cut = Render<MonthlyTrendsReport>();
 
@@ -199,7 +202,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMonthlyBreakdownTable_WhenDataExists()
     {
-        this._apiService.SpendingTrends = CreateTestTrendsReport();
+        _apiService.SpendingTrends = CreateTestTrendsReport();
 
         var cut = Render<MonthlyTrendsReport>();
 
@@ -215,7 +218,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsTrendDirection_Decreasing()
     {
-        this._apiService.SpendingTrends = new SpendingTrendsReportDto
+        _apiService.SpendingTrends = new SpendingTrendsReportDto
         {
             AverageMonthlySpending = new MoneyDto { Amount = 2500m, Currency = "USD" },
             AverageMonthlyIncome = new MoneyDto { Amount = 4000m, Currency = "USD" },
@@ -236,7 +239,7 @@ public class MonthlyTrendsReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsTrendDirection_Increasing()
     {
-        this._apiService.SpendingTrends = new SpendingTrendsReportDto
+        _apiService.SpendingTrends = new SpendingTrendsReportDto
         {
             AverageMonthlySpending = new MoneyDto { Amount = 3500m, Currency = "USD" },
             AverageMonthlyIncome = new MoneyDto { Amount = 4000m, Currency = "USD" },

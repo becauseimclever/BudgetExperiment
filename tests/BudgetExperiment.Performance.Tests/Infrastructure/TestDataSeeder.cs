@@ -32,7 +32,10 @@ public static class TestDataSeeder
     /// <summary>
     /// Gets the ID of the first seeded account (Checking). Available after <see cref="SeedAsync"/> completes.
     /// </summary>
-    public static Guid FirstAccountId { get; private set; }
+    public static Guid FirstAccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Seeds the database with realistic data for performance testing.

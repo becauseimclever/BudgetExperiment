@@ -10,10 +10,16 @@ namespace BaselineComparer;
 internal sealed class BaselineFile
 {
     [JsonPropertyName("generatedAt")]
-    public DateTime GeneratedAt { get; set; }
+    public DateTime GeneratedAt
+    {
+        get; set;
+    }
 
     [JsonPropertyName("commitSha")]
-    public string? CommitSha { get; set; }
+    public string? CommitSha
+    {
+        get; set;
+    }
 
     [JsonPropertyName("scenarios")]
     public List<ScenarioMetrics> Scenarios { get; set; } = [];

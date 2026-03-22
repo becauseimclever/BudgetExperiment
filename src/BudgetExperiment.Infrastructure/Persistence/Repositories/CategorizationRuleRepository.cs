@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -20,13 +21,13 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <param name="context">The database context.</param>
     public CategorizationRuleRepository(BudgetDbContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <inheritdoc />
     public async Task<CategorizationRule?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this._context.CategorizationRules
+        return await _context.CategorizationRules
             .Include(r => r.Category)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
@@ -34,7 +35,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <inheritdoc />
     public async Task<IReadOnlyList<CategorizationRule>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this._context.CategorizationRules
+        return await _context.CategorizationRules
             .Include(r => r.Category)
             .OrderBy(r => r.Priority)
             .ThenBy(r => r.Name)
@@ -46,26 +47,26 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.CategorizationRules.LongCountAsync(cancellationToken);
+        return await _context.CategorizationRules.LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(CategorizationRule entity, CancellationToken cancellationToken = default)
     {
-        await this._context.CategorizationRules.AddAsync(entity, cancellationToken);
+        await _context.CategorizationRules.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(CategorizationRule entity, CancellationToken cancellationToken = default)
     {
-        this._context.CategorizationRules.Remove(entity);
+        _context.CategorizationRules.Remove(entity);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<CategorizationRule>> GetActiveByPriorityAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.CategorizationRules
+        return await _context.CategorizationRules
             .Include(r => r.Category)
             .Where(r => r.IsActive)
             .OrderBy(r => r.Priority)
@@ -76,7 +77,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <inheritdoc />
     public async Task<IReadOnlyList<CategorizationRule>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
-        return await this._context.CategorizationRules
+        return await _context.CategorizationRules
             .Include(r => r.Category)
             .Where(r => r.CategoryId == categoryId)
             .OrderBy(r => r.Priority)
@@ -87,7 +88,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <inheritdoc />
     public async Task<int> GetNextPriorityAsync(CancellationToken cancellationToken = default)
     {
-        var maxPriority = await this._context.CategorizationRules
+        var maxPriority = await _context.CategorizationRules
             .MaxAsync(r => (int?)r.Priority, cancellationToken);
 
         return (maxPriority ?? 0) + 1;
@@ -99,7 +100,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
         var priorityList = priorities.ToList();
         var ruleIds = priorityList.Select(p => p.RuleId).ToList();
 
-        var rules = await this._context.CategorizationRules
+        var rules = await _context.CategorizationRules
             .Where(r => ruleIds.Contains(r.Id))
             .ToListAsync(cancellationToken);
 
@@ -121,7 +122,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
         string? sortDirection = null,
         CancellationToken cancellationToken = default)
     {
-        var query = this._context.CategorizationRules
+        var query = _context.CategorizationRules
             .Include(r => r.Category)
             .AsQueryable();
 
@@ -158,7 +159,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <inheritdoc />
     public async Task<IReadOnlyList<CategorizationRule>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
     {
-        return await this._context.CategorizationRules
+        return await _context.CategorizationRules
             .Include(r => r.Category)
             .Where(r => ids.Contains(r.Id))
             .ToListAsync(cancellationToken);
@@ -167,7 +168,7 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
     /// <inheritdoc />
     public Task RemoveBulkAsync(IReadOnlyList<CategorizationRule> rules)
     {
-        this._context.CategorizationRules.RemoveRange(rules);
+        _context.CategorizationRules.RemoveRange(rules);
         return Task.CompletedTask;
     }
 

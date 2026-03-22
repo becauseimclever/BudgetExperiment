@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Globalization;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -16,7 +17,10 @@ public partial class ProgressBar
     /// Gets or sets the current value.
     /// </summary>
     [Parameter]
-    public decimal Value { get; set; }
+    public decimal Value
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the maximum value.
@@ -46,7 +50,10 @@ public partial class ProgressBar
     /// Gets or sets the threshold colors.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<ThresholdColor>? Thresholds { get; set; }
+    public IReadOnlyList<ThresholdColor>? Thresholds
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label.

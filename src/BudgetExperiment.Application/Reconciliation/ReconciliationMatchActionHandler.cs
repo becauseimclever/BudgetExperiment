@@ -30,10 +30,10 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         ITransactionRepository transactionRepository,
         IUnitOfWork unitOfWork)
     {
-        this._matchRepository = matchRepository;
-        this._recurringRepository = recurringRepository;
-        this._transactionRepository = transactionRepository;
-        this._unitOfWork = unitOfWork;
+        _matchRepository = matchRepository;
+        _recurringRepository = recurringRepository;
+        _transactionRepository = transactionRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
@@ -41,7 +41,7 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         Guid matchId,
         CancellationToken cancellationToken = default)
     {
-        var match = await this._matchRepository.GetByIdAsync(matchId, cancellationToken);
+        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
         if (match is null)
         {
             return null;
@@ -50,14 +50,14 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         match.Accept();
 
         // Link the transaction to the recurring instance
-        var transaction = await this._transactionRepository.GetByIdAsync(
+        var transaction = await _transactionRepository.GetByIdAsync(
             match.ImportedTransactionId,
             cancellationToken);
         transaction?.LinkToRecurringInstance(match.RecurringTransactionId, match.RecurringInstanceDate);
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var recurring = await this._recurringRepository.GetByIdAsync(
+        var recurring = await _recurringRepository.GetByIdAsync(
             match.RecurringTransactionId,
             cancellationToken);
 
@@ -73,14 +73,14 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         Guid matchId,
         CancellationToken cancellationToken = default)
     {
-        var match = await this._matchRepository.GetByIdAsync(matchId, cancellationToken);
+        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
         if (match is null)
         {
             return null;
         }
 
         match.Reject();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ReconciliationMapper.ToDto(match);
     }
@@ -109,7 +109,7 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         Guid matchId,
         CancellationToken cancellationToken = default)
     {
-        var match = await this._matchRepository.GetByIdAsync(matchId, cancellationToken);
+        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
         if (match is null)
         {
             return null;
@@ -119,12 +119,12 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         match.Unlink();
 
         // Also unlink the transaction
-        var transaction = await this._transactionRepository.GetByIdAsync(
+        var transaction = await _transactionRepository.GetByIdAsync(
             match.ImportedTransactionId,
             cancellationToken);
         transaction?.UnlinkFromRecurring();
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ReconciliationMapper.ToDto(match);
     }
@@ -134,7 +134,7 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         ManualMatchRequest request,
         CancellationToken cancellationToken = default)
     {
-        var transaction = await this._transactionRepository.GetByIdAsync(
+        var transaction = await _transactionRepository.GetByIdAsync(
             request.TransactionId,
             cancellationToken);
         if (transaction is null)
@@ -142,7 +142,7 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
             return null;
         }
 
-        var recurring = await this._recurringRepository.GetByIdAsync(
+        var recurring = await _recurringRepository.GetByIdAsync(
             request.RecurringTransactionId,
             cancellationToken);
         if (recurring is null)
@@ -151,7 +151,7 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         }
 
         // Check if match already exists
-        var existingMatch = await this._matchRepository.ExistsAsync(
+        var existingMatch = await _matchRepository.ExistsAsync(
             request.TransactionId,
             request.RecurringTransactionId,
             request.InstanceDate,
@@ -180,8 +180,8 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         // Link the transaction
         transaction.LinkToRecurringInstance(request.RecurringTransactionId, request.InstanceDate);
 
-        await this._matchRepository.AddAsync(match, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _matchRepository.AddAsync(match, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return ReconciliationMapper.ToDto(match, transaction, recurring.Description, recurring.Amount);
     }
@@ -192,7 +192,7 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
         RecurringTransaction recurring,
         CancellationToken cancellationToken)
     {
-        var existing = (await this._matchRepository.GetByTransactionIdAsync(
+        var existing = (await _matchRepository.GetByTransactionIdAsync(
             request.TransactionId,
             cancellationToken)).FirstOrDefault(m =>
                 m.RecurringTransactionId == request.RecurringTransactionId &&

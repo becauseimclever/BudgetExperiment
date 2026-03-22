@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Reconciliation API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ReconciliationControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -23,8 +24,8 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     /// <param name="factory">The test factory.</param>
     public ReconciliationControllerTests(CustomWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -35,7 +36,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task GetStatus_Returns_200_WithEmptyStatus()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/reconciliation/status?year=2026&month=1");
+        var response = await _client.GetAsync("/api/v1/reconciliation/status?year=2026&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -58,7 +59,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task GetStatus_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reconciliation/status?year=2026&month={month}");
+        var response = await _client.GetAsync($"/api/v1/reconciliation/status?year=2026&month={month}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -75,7 +76,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task GetStatus_Returns_400_ForInvalidYear(int year)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reconciliation/status?year={year}&month=1");
+        var response = await _client.GetAsync($"/api/v1/reconciliation/status?year={year}&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -89,7 +90,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task GetPending_Returns_200_WithEmptyList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/reconciliation/pending");
+        var response = await _client.GetAsync("/api/v1/reconciliation/pending");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -113,7 +114,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/reconciliation/find-matches", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/reconciliation/find-matches", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -135,7 +136,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/reconciliation/find-matches", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/reconciliation/find-matches", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -157,7 +158,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/reconciliation/find-matches", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/reconciliation/find-matches", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -182,7 +183,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/reconciliation/match", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/reconciliation/match", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -196,7 +197,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task AcceptMatch_Returns_404_WhenMatchNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/reconciliation/accept/{Guid.NewGuid()}", null);
+        var response = await _client.PostAsync($"/api/v1/reconciliation/accept/{Guid.NewGuid()}", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -210,7 +211,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task RejectMatch_Returns_404_WhenMatchNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/reconciliation/reject/{Guid.NewGuid()}", null);
+        var response = await _client.PostAsync($"/api/v1/reconciliation/reject/{Guid.NewGuid()}", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -227,7 +228,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         var request = new BulkMatchActionRequest { MatchIds = [] };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/reconciliation/bulk-accept", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/reconciliation/bulk-accept", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -244,7 +245,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
         var request = new BulkMatchActionRequest { MatchIds = [Guid.NewGuid(), Guid.NewGuid()] };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/reconciliation/bulk-accept", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/reconciliation/bulk-accept", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -261,7 +262,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task GetMatchesForRecurringTransaction_Returns_200_WithEmptyList()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reconciliation/recurring/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/reconciliation/recurring/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -277,7 +278,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task UnlinkMatch_Returns_404_WhenMatchNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/reconciliation/matches/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/reconciliation/matches/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -291,7 +292,7 @@ public sealed class ReconciliationControllerTests : IClassFixture<CustomWebAppli
     public async Task GetLinkableInstances_Returns_200_WithEmptyList_ForNonExistentTransaction()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reconciliation/linkable-instances?transactionId={Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/reconciliation/linkable-instances?transactionId={Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

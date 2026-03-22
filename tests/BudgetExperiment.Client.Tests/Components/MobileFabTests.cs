@@ -4,8 +4,11 @@
 
 using BudgetExperiment.Client.Components;
 using BudgetExperiment.Client.Services;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace BudgetExperiment.Client.Tests.Components;

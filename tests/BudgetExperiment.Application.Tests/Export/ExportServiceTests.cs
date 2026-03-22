@@ -54,11 +54,20 @@ public class ExportServiceTests
             this.FileExtension = extension;
         }
 
-        public ExportFormat Format { get; }
+        public ExportFormat Format
+        {
+            get;
+        }
 
-        public string ContentType { get; }
+        public string ContentType
+        {
+            get;
+        }
 
-        public string FileExtension { get; }
+        public string FileExtension
+        {
+            get;
+        }
 
         public byte[] Payload { get; } = [1, 2, 3];
 

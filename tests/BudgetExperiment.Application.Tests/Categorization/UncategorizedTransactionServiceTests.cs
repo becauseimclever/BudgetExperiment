@@ -7,6 +7,7 @@ using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Budgeting;
 using BudgetExperiment.Domain.Repositories;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Categorization;

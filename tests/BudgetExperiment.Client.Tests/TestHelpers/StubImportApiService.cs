@@ -26,32 +26,50 @@ internal sealed class StubImportApiService : IImportApiService
     /// <summary>
     /// Gets or sets the suggested mapping returned by <see cref="SuggestMappingAsync"/>.
     /// </summary>
-    public ImportMappingDto? SuggestedMapping { get; set; }
+    public ImportMappingDto? SuggestedMapping
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the preview result returned by <see cref="PreviewAsync"/>.
     /// </summary>
-    public ImportPreviewResult? PreviewResult { get; set; }
+    public ImportPreviewResult? PreviewResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the import result returned by <see cref="ExecuteAsync"/>.
     /// </summary>
-    public ImportResult? ExecuteResult { get; set; }
+    public ImportResult? ExecuteResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the created mapping returned by <see cref="CreateMappingAsync"/>.
     /// </summary>
-    public ImportMappingDto? CreateMappingResult { get; set; }
+    public ImportMappingDto? CreateMappingResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="GetMappingsAsync"/> should throw.
     /// </summary>
-    public bool ShouldThrowOnGetMappings { get; set; }
+    public bool ShouldThrowOnGetMappings
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateMappingAsync"/>.
     /// </summary>
-    public ApiResult<ImportMappingDto>? UpdateMappingResult { get; set; }
+    public ApiResult<ImportMappingDto>? UpdateMappingResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteMappingAsync"/> returns true.
@@ -66,7 +84,10 @@ internal sealed class StubImportApiService : IImportApiService
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="GetHistoryAsync"/> should throw.
     /// </summary>
-    public bool ShouldThrowOnGetHistory { get; set; }
+    public bool ShouldThrowOnGetHistory
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<ImportMappingDto>> GetMappingsAsync()

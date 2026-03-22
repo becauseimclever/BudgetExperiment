@@ -12,27 +12,42 @@ public sealed record ReconciliationMatchDto
     /// <summary>
     /// Gets the match identifier.
     /// </summary>
-    public Guid Id { get; init; }
+    public Guid Id
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the imported transaction identifier.
     /// </summary>
-    public Guid ImportedTransactionId { get; init; }
+    public Guid ImportedTransactionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the recurring transaction identifier.
     /// </summary>
-    public Guid RecurringTransactionId { get; init; }
+    public Guid RecurringTransactionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the recurring instance date.
     /// </summary>
-    public DateOnly RecurringInstanceDate { get; init; }
+    public DateOnly RecurringInstanceDate
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the confidence score (0.0 to 1.0).
     /// </summary>
-    public decimal ConfidenceScore { get; init; }
+    public decimal ConfidenceScore
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the confidence level (High, Medium, Low).
@@ -52,35 +67,56 @@ public sealed record ReconciliationMatchDto
     /// <summary>
     /// Gets the variance between expected and actual amount.
     /// </summary>
-    public decimal AmountVariance { get; init; }
+    public decimal AmountVariance
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the offset in days from scheduled date.
     /// </summary>
-    public int DateOffsetDays { get; init; }
+    public int DateOffsetDays
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the match was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; init; }
+    public DateTime CreatedAtUtc
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the match was resolved.
     /// </summary>
-    public DateTime? ResolvedAtUtc { get; init; }
+    public DateTime? ResolvedAtUtc
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the imported transaction details (optional, populated when needed).
     /// </summary>
-    public TransactionDto? ImportedTransaction { get; init; }
+    public TransactionDto? ImportedTransaction
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the recurring transaction description (optional, for display).
     /// </summary>
-    public string? RecurringTransactionDescription { get; init; }
+    public string? RecurringTransactionDescription
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the expected amount from the recurring transaction.
     /// </summary>
-    public MoneyDto? ExpectedAmount { get; init; }
+    public MoneyDto? ExpectedAmount
+    {
+        get; init;
+    }
 }

@@ -4,7 +4,9 @@
 
 using BudgetExperiment.Application.Categorization;
 using BudgetExperiment.Domain;
+
 using Moq;
+
 using Shouldly;
 
 namespace BudgetExperiment.Application.Tests.Categorization;
@@ -23,14 +25,14 @@ public sealed class CategorySuggestionDismissalHandlerTests
 
     public CategorySuggestionDismissalHandlerTests()
     {
-        this._userContext.Setup(u => u.UserId).Returns(TestOwnerId);
+        _userContext.Setup(u => u.UserId).Returns(TestOwnerId);
     }
 
     [Fact]
     public async Task DismissSuggestionAsync_NotFound_ReturnsFalse()
     {
         // Arrange
-        this._suggestionRepo
+        _suggestionRepo
             .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((CategorySuggestion?)null);
 
@@ -55,7 +57,7 @@ public sealed class CategorySuggestionDismissalHandlerTests
             0.85m,
             "different-user");
 
-        this._suggestionRepo
+        _suggestionRepo
             .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(suggestion);
 
@@ -80,11 +82,11 @@ public sealed class CategorySuggestionDismissalHandlerTests
             0.85m,
             TestOwnerId);
 
-        this._suggestionRepo
+        _suggestionRepo
             .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(suggestion);
 
-        this._dismissedRepo
+        _dismissedRepo
             .Setup(r => r.IsDismissedAsync(TestOwnerId, "Entertainment", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
@@ -96,10 +98,10 @@ public sealed class CategorySuggestionDismissalHandlerTests
         // Assert
         result.ShouldBeTrue();
         suggestion.Status.ShouldBe(SuggestionStatus.Dismissed);
-        this._dismissedRepo.Verify(
+        _dismissedRepo.Verify(
             r => r.AddAsync(It.IsAny<DismissedSuggestionPattern>(), It.IsAny<CancellationToken>()),
             Times.Once);
-        this._unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -114,11 +116,11 @@ public sealed class CategorySuggestionDismissalHandlerTests
             0.85m,
             TestOwnerId);
 
-        this._suggestionRepo
+        _suggestionRepo
             .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(suggestion);
 
-        this._dismissedRepo
+        _dismissedRepo
             .Setup(r => r.IsDismissedAsync(TestOwnerId, "Entertainment", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -129,7 +131,7 @@ public sealed class CategorySuggestionDismissalHandlerTests
 
         // Assert
         result.ShouldBeTrue();
-        this._dismissedRepo.Verify(
+        _dismissedRepo.Verify(
             r => r.AddAsync(It.IsAny<DismissedSuggestionPattern>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -138,7 +140,7 @@ public sealed class CategorySuggestionDismissalHandlerTests
     public async Task RestoreSuggestionAsync_NotFound_ReturnsFalse()
     {
         // Arrange
-        this._suggestionRepo
+        _suggestionRepo
             .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((CategorySuggestion?)null);
 
@@ -164,7 +166,7 @@ public sealed class CategorySuggestionDismissalHandlerTests
             "different-user");
         suggestion.Dismiss();
 
-        this._suggestionRepo
+        _suggestionRepo
             .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(suggestion);
 
@@ -190,12 +192,12 @@ public sealed class CategorySuggestionDismissalHandlerTests
             TestOwnerId);
         suggestion.Dismiss();
 
-        this._suggestionRepo
+        _suggestionRepo
             .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(suggestion);
 
         var dismissedPattern = DismissedSuggestionPattern.Create("Entertainment", TestOwnerId);
-        this._dismissedRepo
+        _dismissedRepo
             .Setup(r => r.GetByPatternAsync(TestOwnerId, "ENTERTAINMENT", It.IsAny<CancellationToken>()))
             .ReturnsAsync(dismissedPattern);
 
@@ -207,17 +209,17 @@ public sealed class CategorySuggestionDismissalHandlerTests
         // Assert
         result.ShouldBeTrue();
         suggestion.Status.ShouldBe(SuggestionStatus.Pending);
-        this._dismissedRepo.Verify(
+        _dismissedRepo.Verify(
             r => r.RemoveAsync(dismissedPattern, It.IsAny<CancellationToken>()),
             Times.Once);
-        this._unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task ClearDismissedPatternsAsync_DelegatesToRepo_ReturnsCount()
     {
         // Arrange
-        this._dismissedRepo
+        _dismissedRepo
             .Setup(r => r.ClearByOwnerAsync(TestOwnerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(3);
 
@@ -228,18 +230,18 @@ public sealed class CategorySuggestionDismissalHandlerTests
 
         // Assert
         result.ShouldBe(3);
-        this._dismissedRepo.Verify(
+        _dismissedRepo.Verify(
             r => r.ClearByOwnerAsync(TestOwnerId, It.IsAny<CancellationToken>()),
             Times.Once);
-        this._unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private CategorySuggestionDismissalHandler CreateSut()
     {
         return new CategorySuggestionDismissalHandler(
-            this._suggestionRepo.Object,
-            this._dismissedRepo.Object,
-            this._unitOfWork.Object,
-            this._userContext.Object);
+            _suggestionRepo.Object,
+            _dismissedRepo.Object,
+            _unitOfWork.Object,
+            _userContext.Object);
     }
 }

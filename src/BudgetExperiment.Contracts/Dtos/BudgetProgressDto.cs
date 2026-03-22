@@ -12,7 +12,10 @@ public sealed class BudgetProgressDto
     /// <summary>
     /// Gets or sets the category identifier.
     /// </summary>
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category name.
@@ -22,12 +25,18 @@ public sealed class BudgetProgressDto
     /// <summary>
     /// Gets or sets the category icon.
     /// </summary>
-    public string? CategoryIcon { get; set; }
+    public string? CategoryIcon
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category color.
     /// </summary>
-    public string? CategoryColor { get; set; }
+    public string? CategoryColor
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the target amount.
@@ -47,7 +56,10 @@ public sealed class BudgetProgressDto
     /// <summary>
     /// Gets or sets the percentage of budget used.
     /// </summary>
-    public decimal PercentUsed { get; set; }
+    public decimal PercentUsed
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the budget status (OnTrack, Warning, OverBudget, NoBudgetSet).
@@ -57,5 +69,8 @@ public sealed class BudgetProgressDto
     /// <summary>
     /// Gets or sets the number of transactions.
     /// </summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 }

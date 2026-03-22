@@ -12,7 +12,10 @@ public sealed class GenerateSuggestionsRequest
     /// <summary>
     /// Gets or sets the suggestion type filter (NewRule, Optimization, Conflict, or null for all).
     /// </summary>
-    public string? SuggestionType { get; set; }
+    public string? SuggestionType
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the maximum number of suggestions to generate.

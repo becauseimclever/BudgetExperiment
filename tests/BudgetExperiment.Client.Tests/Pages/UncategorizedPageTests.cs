@@ -3,9 +3,12 @@
 // </copyright>
 
 using BudgetExperiment.Client.Pages;
+
 using Bunit;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;

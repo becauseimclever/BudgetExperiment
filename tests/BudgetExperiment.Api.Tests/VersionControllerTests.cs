@@ -12,8 +12,10 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Version API endpoint.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
+    private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
     /// <summary>
@@ -22,7 +24,8 @@ public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationF
     /// <param name="factory">The test factory.</param>
     public VersionControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -33,7 +36,7 @@ public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetVersion_Returns_200_WithVersionInfo()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/version");
+        var response = await _client.GetAsync("/api/v1/version");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -52,8 +55,7 @@ public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetVersion_IsAccessibleAnonymously()
     {
         // Arrange - use client without auth header
-        using var factory = new CustomWebApplicationFactory();
-        var client = factory.CreateClient(); // no auth header
+        using var client = _factory.CreateClient(); // no auth header
 
         // Act
         var response = await client.GetAsync("/api/v1/version");
@@ -70,7 +72,7 @@ public sealed class VersionControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetVersion_ReturnsEnvironmentName()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/version");
+        var response = await _client.GetAsync("/api/v1/version");
         var versionInfo = await response.Content.ReadFromJsonAsync<VersionInfoDto>();
 
         // Assert - WebApplicationFactory defaults to "Development"

@@ -13,17 +13,26 @@ public sealed class AppSettingsUpdateDto
     /// Gets or sets a value indicating whether to enable auto-realize.
     /// Null means no change.
     /// </summary>
-    public bool? AutoRealizePastDueItems { get; set; }
+    public bool? AutoRealizePastDueItems
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of days to look back for past-due items.
     /// Null means no change.
     /// </summary>
-    public int? PastDueLookbackDays { get; set; }
+    public int? PastDueLookbackDays
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether to enable location data features.
     /// Null means no change.
     /// </summary>
-    public bool? EnableLocationData { get; set; }
+    public bool? EnableLocationData
+    {
+        get; set;
+    }
 }

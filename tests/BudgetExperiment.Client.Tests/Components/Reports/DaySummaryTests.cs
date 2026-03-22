@@ -6,7 +6,9 @@ using BudgetExperiment.Client.Components.Reports;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Reports;
@@ -24,8 +26,8 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public DaySummaryTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this._stubApiService = new StubBudgetApiService();
-        this.Services.AddSingleton<IBudgetApiService>(this._stubApiService);
+        _stubApiService = new StubBudgetApiService();
+        this.Services.AddSingleton<IBudgetApiService>(_stubApiService);
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
     }
@@ -43,7 +45,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_ShowsIncomeSpendingAndNet_WhenDataExists()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
+        _stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
 
         // Act
         var cut = Render<DaySummary>(parameters => parameters
@@ -62,7 +64,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_ShowsTopCategories_WhenPresent()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = CreateSummaryWithCategories();
+        _stubApiService.DaySummaryResult = CreateSummaryWithCategories();
 
         // Act
         var cut = Render<DaySummary>(parameters => parameters
@@ -81,7 +83,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_ShowsEmptyMessage_WhenNoTransactions()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = new DaySummaryDto
+        _stubApiService.DaySummaryResult = new DaySummaryDto
         {
             Date = new DateOnly(2026, 2, 5),
             TransactionCount = 0,
@@ -103,7 +105,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_HandlesNullResponse_Gracefully()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = null;
+        _stubApiService.DaySummaryResult = null;
 
         // Act
         var cut = Render<DaySummary>(parameters => parameters
@@ -121,7 +123,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_ShowsPositiveNet_WhenIncomeExceedsSpending()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
+        _stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
 
         // Act
         var cut = Render<DaySummary>(parameters => parameters
@@ -141,7 +143,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_ShowsNegativeNet_WhenSpendingExceedsIncome()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = new DaySummaryDto
+        _stubApiService.DaySummaryResult = new DaySummaryDto
         {
             Date = new DateOnly(2026, 2, 5),
             TotalIncome = new MoneyDto { Amount = 100m, Currency = "USD" },
@@ -168,7 +170,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_HidesCategoriesSection_WhenNoCategories()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = new DaySummaryDto
+        _stubApiService.DaySummaryResult = new DaySummaryDto
         {
             Date = new DateOnly(2026, 2, 5),
             TotalIncome = new MoneyDto { Amount = 0m, Currency = "USD" },
@@ -194,7 +196,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_HasAccessibleRegionLabel()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
+        _stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
 
         // Act
         var cut = Render<DaySummary>(parameters => parameters
@@ -220,7 +222,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
             NetAmount = new MoneyDto { Amount = 50m, Currency = "USD" },
             TransactionCount = 2,
         };
-        this._stubApiService.DaySummaryResult = summary1;
+        _stubApiService.DaySummaryResult = summary1;
 
         var cut1 = Render<DaySummary>(parameters => parameters
             .Add(p => p.Date, new DateOnly(2026, 2, 5)));
@@ -236,7 +238,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
             NetAmount = new MoneyDto { Amount = 125m, Currency = "USD" },
             TransactionCount = 3,
         };
-        this._stubApiService.DaySummaryResult = summary2;
+        _stubApiService.DaySummaryResult = summary2;
 
         var cut2 = Render<DaySummary>(parameters => parameters
             .Add(p => p.Date, new DateOnly(2026, 2, 6)));
@@ -252,7 +254,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     public void DaySummary_CategoryList_HasAriaLabel()
     {
         // Arrange
-        this._stubApiService.DaySummaryResult = CreateSummaryWithCategories();
+        _stubApiService.DaySummaryResult = CreateSummaryWithCategories();
 
         // Act
         var cut = Render<DaySummary>(parameters => parameters
@@ -271,7 +273,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        this._stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
+        _stubApiService.DaySummaryResult = CreateSummaryWithTransactions();
 
         // Act
         var cut = Render<DaySummary>(parameters => parameters
@@ -279,7 +281,7 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
             .Add(p => p.AccountId, accountId));
 
         // Assert
-        Assert.Equal(accountId, this._stubApiService.LastRequestedAccountId);
+        Assert.Equal(accountId, _stubApiService.LastRequestedAccountId);
     }
 
     private static DaySummaryDto CreateSummaryWithTransactions()
@@ -319,13 +321,22 @@ public class DaySummaryTests : BunitContext, IAsyncLifetime
     private sealed class StubBudgetApiService : IBudgetApiService
     {
         /// <summary>Gets or sets the DaySummaryDto to return from GetDaySummaryAsync.</summary>
-        public DaySummaryDto? DaySummaryResult { get; set; }
+        public DaySummaryDto? DaySummaryResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the number of times GetDaySummaryAsync was called.</summary>
-        public int GetDaySummaryCallCount { get; set; }
+        public int GetDaySummaryCallCount
+        {
+            get; set;
+        }
 
         /// <summary>Gets the last account ID passed to GetDaySummaryAsync.</summary>
-        public Guid? LastRequestedAccountId { get; private set; }
+        public Guid? LastRequestedAccountId
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null)

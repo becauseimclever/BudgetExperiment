@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -22,28 +23,28 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     /// <param name="userContext">The user context for scope filtering.</param>
     public BudgetGoalRepository(BudgetDbContext context, IUserContext userContext)
     {
-        this._context = context;
-        this._userContext = userContext;
+        _context = context;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<BudgetGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.BudgetGoals)
+        return await this.ApplyScopeFilter(_context.BudgetGoals)
             .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<BudgetGoal?> GetByCategoryAndMonthAsync(Guid categoryId, int year, int month, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.BudgetGoals)
+        return await this.ApplyScopeFilter(_context.BudgetGoals)
             .FirstOrDefaultAsync(g => g.CategoryId == categoryId && g.Year == year && g.Month == month, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<BudgetGoal>> GetByMonthAsync(int year, int month, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.BudgetGoals)
+        return await this.ApplyScopeFilter(_context.BudgetGoals)
             .Where(g => g.Year == year && g.Month == month)
             .Include(g => g.Category)
             .ToListAsync(cancellationToken);
@@ -52,7 +53,7 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<BudgetGoal>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.BudgetGoals)
+        return await this.ApplyScopeFilter(_context.BudgetGoals)
             .Where(g => g.CategoryId == categoryId)
             .OrderByDescending(g => g.Year)
             .ThenByDescending(g => g.Month)
@@ -62,7 +63,7 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<BudgetGoal>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.BudgetGoals)
+        return await this.ApplyScopeFilter(_context.BudgetGoals)
             .OrderByDescending(g => g.Year)
             .ThenByDescending(g => g.Month)
             .Skip(skip)
@@ -73,19 +74,19 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.BudgetGoals).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.BudgetGoals).LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(BudgetGoal entity, CancellationToken cancellationToken = default)
     {
-        await this._context.BudgetGoals.AddAsync(entity, cancellationToken);
+        await _context.BudgetGoals.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(BudgetGoal entity, CancellationToken cancellationToken = default)
     {
-        this._context.BudgetGoals.Remove(entity);
+        _context.BudgetGoals.Remove(entity);
         return Task.CompletedTask;
     }
 
@@ -96,8 +97,8 @@ internal sealed class BudgetGoalRepository : IBudgetGoalRepository
     /// </summary>
     private IQueryable<BudgetGoal> ApplyScopeFilter(IQueryable<BudgetGoal> query)
     {
-        var userId = this._userContext.UserIdAsGuid;
-        return this._userContext.CurrentScope switch
+        var userId = _userContext.UserIdAsGuid;
+        return _userContext.CurrentScope switch
         {
             BudgetScope.Shared => query.Where(x => x.Scope == BudgetScope.Shared),
             BudgetScope.Personal => query.Where(x => x.Scope == BudgetScope.Personal && x.OwnerUserId == userId),

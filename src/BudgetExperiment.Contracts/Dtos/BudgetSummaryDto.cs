@@ -12,12 +12,18 @@ public sealed class BudgetSummaryDto
     /// <summary>
     /// Gets or sets the year.
     /// </summary>
-    public int Year { get; set; }
+    public int Year
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the month.
     /// </summary>
-    public int Month { get; set; }
+    public int Month
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the total budgeted amount.
@@ -37,27 +43,42 @@ public sealed class BudgetSummaryDto
     /// <summary>
     /// Gets or sets the overall percentage used.
     /// </summary>
-    public decimal OverallPercentUsed { get; set; }
+    public decimal OverallPercentUsed
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of categories on track.
     /// </summary>
-    public int CategoriesOnTrack { get; set; }
+    public int CategoriesOnTrack
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of categories with warning status.
     /// </summary>
-    public int CategoriesWarning { get; set; }
+    public int CategoriesWarning
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of categories over budget.
     /// </summary>
-    public int CategoriesOverBudget { get; set; }
+    public int CategoriesOverBudget
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of categories with no budget set.
     /// </summary>
-    public int CategoriesNoBudgetSet { get; set; }
+    public int CategoriesNoBudgetSet
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the progress for each category.

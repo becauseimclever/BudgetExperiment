@@ -6,8 +6,11 @@ using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -25,7 +28,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     public PaycheckPlannerPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
@@ -141,7 +144,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsAccountsInDropdown()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Bills Account",
@@ -162,7 +165,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsSummary_WhenAllocationExists()
     {
-        this._apiService.AllocationSummary = CreateAllocationSummary();
+        _apiService.AllocationSummary = CreateAllocationSummary();
 
         var cut = Render<PaycheckPlanner>();
 
@@ -178,7 +181,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsTransferAccountDropdowns_WhenAccountsExist()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Main Checking",
@@ -187,7 +190,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2025, 1, 1),
         });
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Bills Savings",
@@ -221,7 +224,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CalculateButton_ShowsSummary()
     {
-        this._apiService.AllocationSummary = CreateAllocationSummary();
+        _apiService.AllocationSummary = CreateAllocationSummary();
 
         var cut = Render<PaycheckPlanner>();
         var calculateButton = cut.Find("button.btn-primary");
@@ -237,7 +240,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CalculateButton_ShowsBillBreakdown()
     {
-        this._apiService.AllocationSummary = CreateAllocationSummary();
+        _apiService.AllocationSummary = CreateAllocationSummary();
 
         var cut = Render<PaycheckPlanner>();
         var calculateButton = cut.Find("button.btn-primary");
@@ -253,7 +256,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CalculateButton_ShowsAnnualTotal()
     {
-        this._apiService.AllocationSummary = CreateAllocationSummary();
+        _apiService.AllocationSummary = CreateAllocationSummary();
 
         var cut = Render<PaycheckPlanner>();
         cut.Find("button.btn-primary").Click();
@@ -277,7 +280,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
                 Message = "Your income may not cover all bills",
             },
         ];
-        this._apiService.AllocationSummary = summary;
+        _apiService.AllocationSummary = summary;
 
         var cut = Render<PaycheckPlanner>();
         cut.Find("button.btn-primary").Click();
@@ -302,7 +305,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
                 Message = "Cannot reconcile bills with income",
             },
         ];
-        this._apiService.AllocationSummary = summary;
+        _apiService.AllocationSummary = summary;
 
         var cut = Render<PaycheckPlanner>();
         cut.Find("button.btn-primary").Click();
@@ -316,7 +319,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CalculateButton_ShowsSetAsideSection()
     {
-        this._apiService.AllocationSummary = CreateAllocationSummary();
+        _apiService.AllocationSummary = CreateAllocationSummary();
 
         var cut = Render<PaycheckPlanner>();
         cut.Find("button.btn-primary").Click();
@@ -341,7 +344,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
                 Message = "No recurring bills configured",
             },
         ];
-        this._apiService.AllocationSummary = summary;
+        _apiService.AllocationSummary = summary;
 
         var cut = Render<PaycheckPlanner>();
         cut.Find("button.btn-primary").Click();
@@ -355,7 +358,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CalculateButton_ShowsError_WhenAllocationNull()
     {
-        this._apiService.AllocationSummary = null;
+        _apiService.AllocationSummary = null;
 
         var cut = Render<PaycheckPlanner>();
         cut.Find("button.btn-primary").Click();
@@ -377,7 +380,7 @@ public class PaycheckPlannerPageTests : BunitContext, IAsyncLifetime
             BillFrequency = "Monthly",
             AmountPerPaycheck = new MoneyDto { Amount = 100m, Currency = "USD" },
         });
-        this._apiService.AllocationSummary = summary;
+        _apiService.AllocationSummary = summary;
 
         var cut = Render<PaycheckPlanner>();
         cut.Find("button.btn-primary").Click();

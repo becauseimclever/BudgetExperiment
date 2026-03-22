@@ -3,9 +3,11 @@
 // </copyright>
 
 using BudgetExperiment.Application.Import;
+using BudgetExperiment.Application.Recurring;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -31,29 +33,29 @@ public class ImportServiceLocationTests
 
     public ImportServiceLocationTests()
     {
-        this._transactionRepoMock = new Mock<ITransactionRepository>();
-        this._ruleRepoMock = new Mock<ICategorizationRuleRepository>();
-        this._categoryRepoMock = new Mock<IBudgetCategoryRepository>();
-        this._batchRepoMock = new Mock<IImportBatchRepository>();
-        this._mappingRepoMock = new Mock<IImportMappingRepository>();
-        this._accountRepoMock = new Mock<IAccountRepository>();
-        this._userContextMock = new Mock<IUserContext>();
-        this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._reconciliationServiceMock = new Mock<IReconciliationService>();
-        this._locationParserMock = new Mock<ILocationParserService>();
-        this._settingsRepoMock = new Mock<IAppSettingsRepository>();
-        this._currencyProviderMock = new Mock<ICurrencyProvider>();
-        this._currencyProviderMock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
+        _transactionRepoMock = new Mock<ITransactionRepository>();
+        _ruleRepoMock = new Mock<ICategorizationRuleRepository>();
+        _categoryRepoMock = new Mock<IBudgetCategoryRepository>();
+        _batchRepoMock = new Mock<IImportBatchRepository>();
+        _mappingRepoMock = new Mock<IImportMappingRepository>();
+        _accountRepoMock = new Mock<IAccountRepository>();
+        _userContextMock = new Mock<IUserContext>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _reconciliationServiceMock = new Mock<IReconciliationService>();
+        _locationParserMock = new Mock<ILocationParserService>();
+        _settingsRepoMock = new Mock<IAppSettingsRepository>();
+        _currencyProviderMock = new Mock<ICurrencyProvider>();
+        _currencyProviderMock.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
-        this._ruleRepoMock
+        _ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<CategorizationRule>());
 
-        this._categoryRepoMock
+        _categoryRepoMock
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<BudgetCategory>());
 
-        this._transactionRepoMock
+        _transactionRepoMock
             .Setup(r => r.GetForDuplicateDetectionAsync(
                 It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Transaction>());
@@ -63,24 +65,25 @@ public class ImportServiceLocationTests
             new Mock<IRecurringTransactionRepository>().Object,
             new Mock<IRecurringInstanceProjector>().Object,
             new Mock<ITransactionMatcher>().Object,
-            this._locationParserMock.Object,
-            this._settingsRepoMock.Object,
-            this._currencyProviderMock.Object);
+            _locationParserMock.Object,
+            _settingsRepoMock.Object,
+            _currencyProviderMock.Object);
 
-        this._service = new ImportService(
+        _service = new ImportService(
             new ImportRowProcessor(new ImportDuplicateDetector()),
             previewEnricher,
             new Mock<IImportBatchManager>().Object,
             new Mock<IImportTransactionCreator>().Object,
-            this._transactionRepoMock.Object,
-            this._ruleRepoMock.Object,
-            this._categoryRepoMock.Object,
-            this._batchRepoMock.Object,
-            this._mappingRepoMock.Object,
-            this._accountRepoMock.Object,
-            this._reconciliationServiceMock.Object,
-            this._userContextMock.Object,
-            this._unitOfWorkMock.Object);
+            _transactionRepoMock.Object,
+            _ruleRepoMock.Object,
+            _categoryRepoMock.Object,
+            _batchRepoMock.Object,
+            _mappingRepoMock.Object,
+            _accountRepoMock.Object,
+            _reconciliationServiceMock.Object,
+            new Mock<IRecurringChargeDetectionService>().Object,
+            _userContextMock.Object,
+            _unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -90,7 +93,7 @@ public class ImportServiceLocationTests
         SetupLocationEnabled(true);
 
         var parsedLocation = TransactionLocationValue.CreateFromParsed("Seattle", "WA");
-        this._locationParserMock
+        _locationParserMock
             .Setup(p => p.ParseBatch(It.IsAny<IEnumerable<string>>()))
             .Returns(new List<LocationParseResult>
             {
@@ -106,7 +109,7 @@ public class ImportServiceLocationTests
         var request = CreatePreviewRequest("AMAZON.COM SEATTLE WA");
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -127,14 +130,14 @@ public class ImportServiceLocationTests
         var request = CreatePreviewRequest("AMAZON.COM SEATTLE WA");
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
         Assert.Null(result.Rows[0].ParsedLocation);
         Assert.Equal(0, result.LocationEnrichedCount);
 
-        this._locationParserMock.Verify(
+        _locationParserMock.Verify(
             p => p.ParseBatch(It.IsAny<IEnumerable<string>>()), Times.Never);
     }
 
@@ -144,7 +147,7 @@ public class ImportServiceLocationTests
         // Arrange
         SetupLocationEnabled(true);
 
-        this._locationParserMock
+        _locationParserMock
             .Setup(p => p.ParseBatch(It.IsAny<IEnumerable<string>>()))
             .Returns(new List<LocationParseResult>
             {
@@ -159,7 +162,7 @@ public class ImportServiceLocationTests
         var request = CreatePreviewRequest("ONLINE PURCHASE");
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -174,7 +177,7 @@ public class ImportServiceLocationTests
         SetupLocationEnabled(true);
 
         var parsedLocation = TransactionLocationValue.CreateFromParsed("Portland", "OR");
-        this._locationParserMock
+        _locationParserMock
             .Setup(p => p.ParseBatch(It.IsAny<IEnumerable<string>>()))
             .Returns(new List<LocationParseResult>
             {
@@ -196,7 +199,7 @@ public class ImportServiceLocationTests
         var request = CreatePreviewRequest("COFFEE SHOP PORTLAND OR", "ONLINE SUBSCRIPTION");
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Equal(2, result.Rows.Count);
@@ -231,7 +234,7 @@ public class ImportServiceLocationTests
     {
         var settings = AppSettings.CreateDefault();
         settings.UpdateEnableLocationData(enabled);
-        this._settingsRepoMock
+        _settingsRepoMock
             .Setup(r => r.GetAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(settings);
     }
