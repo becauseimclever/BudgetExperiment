@@ -20,6 +20,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
 {
     private readonly PerformanceWebApplicationFactory _factory;
     private readonly HttpClient _client;
+    private Guid _firstAccountId;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StressTests"/> class.
@@ -34,7 +35,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        await TestDataSeeder.SeedAsync(_factory);
+        _firstAccountId = await TestDataSeeder.SeedAsync(_factory);
     }
 
     /// <inheritdoc/>
@@ -48,7 +49,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     {
         var scenario = TransactionsWriteScenario.Create(
             _client,
-            TestDataSeeder.FirstAccountId,
+            _firstAccountId,
             LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 1000),

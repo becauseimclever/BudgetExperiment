@@ -173,3 +173,23 @@ Conducted comprehensive backend code review (Domain, Application, Infrastructure
 
 **Result:** Build green (-warnaserror enabled). Feature 111 documentation status updated to Done.
 
+### 2026-03-22 — CI Fix: performance.yml Action Versions (Lucius)
+
+**Task:** Fix non-existent GitHub Actions version references in `.github/workflows/performance.yml`.
+
+**Root Cause:** Four action references used versions that do not exist on GitHub Actions:
+- `actions/checkout@v6` (latest major: v4)
+- `actions/upload-artifact@v7` (2 occurrences; latest major: v4)
+- `actions/setup-dotnet@v5` (latest major: v4)
+- `actions/cache@v5` (latest major: v4)
+
+The task only flagged checkout and upload-artifact, but setup-dotnet@v5 and cache@v5 were caught during the audit and corrected in the same pass.
+
+**Fix Applied:** All five occurrences updated to v4. No workflow logic, job structure, or environment variables changed.
+
+**Validation:** Python script confirmed all `uses:` references are now `@v4` (except `marocchino/sticky-pull-request-comment@v3` which is correct). YAML structure verified by visual review — no indentation errors.
+
+**Commit:** `ci: fix GitHub Actions version references in performance.yml` on branch `feature/code-quality-review`.
+
+**Impact:** Performance workflow has never successfully executed on GitHub Actions due to this bug. With these corrections, scheduled, PR, and manual workflow_dispatch runs should now reach the test execution step.
+

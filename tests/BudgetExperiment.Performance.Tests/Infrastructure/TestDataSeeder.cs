@@ -30,33 +30,26 @@ public static class TestDataSeeder
     ];
 
     /// <summary>
-    /// Gets the ID of the first seeded account (Checking). Available after <see cref="SeedAsync"/> completes.
-    /// </summary>
-    public static Guid FirstAccountId
-    {
-        get; private set;
-    }
-
-    /// <summary>
     /// Seeds the database with realistic data for performance testing.
     /// When <see cref="PerformanceWebApplicationFactory.UseRealDb"/> is true,
-    /// skips seeding but resolves <see cref="FirstAccountId"/> from the existing data.
+    /// skips seeding but resolves and returns the first account ID from existing data.
     /// </summary>
     /// <param name="factory">The web application factory providing the service scope.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task SeedAsync(PerformanceWebApplicationFactory factory)
+    /// <returns>The ID of the first seeded (Checking) account.</returns>
+    public static async Task<Guid> SeedAsync(PerformanceWebApplicationFactory factory)
     {
         if (PerformanceWebApplicationFactory.UseRealDb)
         {
             using var realScope = factory.Services.CreateScope();
             var realDb = realScope.ServiceProvider.GetRequiredService<BudgetDbContext>();
             var account = await realDb.Accounts.FirstOrDefaultAsync();
-            FirstAccountId = account?.Id ?? Guid.Empty;
-            return;
+            return account?.Id ?? Guid.Empty;
         }
 
         using var seedScope = factory.Services.CreateScope();
         var db = seedScope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+
+        await db.Database.EnsureDeletedAsync();
 
         var categories = SeedCategories(db);
         var accounts = SeedAccounts(db);
@@ -66,7 +59,7 @@ public static class TestDataSeeder
 
         await db.SaveChangesAsync();
 
-        FirstAccountId = accounts[0].Id;
+        return accounts[0].Id;
     }
 
     private static List<BudgetCategory> SeedCategories(BudgetDbContext db)

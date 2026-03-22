@@ -138,6 +138,20 @@ Completed comprehensive audit of all performance test files across the solution.
 
 **Deliverable:** 8 actionable decisions merged to `decisions.md` with rationale and implementation guidance.
 
+### 2026-07-20 — Feature 111 Regression Check
+
+**Task:** Verify Feature 111 (AsNoTracking, CalendarGridService parallelism, bounded eager loading) doesn't break existing tests.
+
+**Result:** 5409/5410 passed (1 skipped), 0 failed — after fixing one DI bug introduced by Feature 111.
+
+**Bug Found & Fixed:** `DependencyInjection.cs` added `services.AddDbContextFactory<BudgetDbContext>(...)` (Singleton by default), but neither `CalendarGridService` nor `DayDetailService` actually uses `IDbContextFactory` — both use `IServiceScopeFactory` for parallel scope creation. The unused Singleton factory registration cannot consume the Scoped `DbContextOptions` registered by `AddDbContext`, causing DI validation to fail across all 458 API tests.
+
+**Fix:** Removed the dead `AddDbContextFactory` line from `DependencyInjection.cs` (commit `599483a`). No behavior change — pure dead code removal.
+
+**Root Cause Classification:** Feature 111 bug — incorrect DI registration added for an abstraction that was planned but never wired up in the services.
+
+**Pre-existing issues:** None. The 5409 passing tests confirm all other Feature 111 changes (AsNoTracking, bounded eager loading) are safe.
+
 ### 2026-03-22T18-23-42Z — Session Close: Batch 2+3 Complete
 
 **Cross-Team Summary:**
