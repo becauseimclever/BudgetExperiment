@@ -1,0 +1,6 @@
+squad: hire team (Batman/DC) and run full code quality review
+
+Hire Alfred (Lead), Lucius (Backend Dev), Barbara (Tester).
+Run architecture, backend, and test coverage review on feature/code-quality-review branch.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

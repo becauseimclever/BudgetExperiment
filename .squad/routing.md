@@ -6,14 +6,12 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
+| Architecture, layer boundaries, SOLID compliance | Alfred 🏗️ | Layer violations, design decisions, code quality review, scope/priorities |
+| Backend code (.NET, API, Domain, Application, Infrastructure) | Lucius 🔧 | EF Core, repositories, services, API endpoints, DI wiring, domain models |
+| Test coverage, test quality, missing tests | Barbara 🧪 | Writing tests, finding gaps, reviewing test usefulness, xUnit/Shouldly patterns |
+| Full code review | Alfred 🏗️ + Lucius 🔧 + Barbara 🧪 | PR reviews, branch reviews, quality audits |
 | Async issue work (bugs, tests, small features) | @copilot 🤖 | Well-defined tasks matching capability profile |
-| Session logging | Scribe | Automatic — never needs routing |
+| Session logging | Scribe 📋 | Automatic — never needs routing |
 
 ## Issue Routing
 
