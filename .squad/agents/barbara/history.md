@@ -111,3 +111,13 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 
 - Added InfraDb-scoped integration tests for AppSettings, CustomReportLayout, RecurringChargeSuggestion, and UserSettings repositories.
 - Added detached-entity SaveAsync coverage for UserSettings to ensure Update attaches and persists.
+
+### 2026-03-22T18-23-42Z — Session Close: Batch 2+3 Complete
+
+**Cross-Team Summary:**
+
+- **From Lucius:** Flattened 9 deeply nested methods (improved readability), removed 1,474 `this._` usages (reduced verbosity), expanded 2 service interfaces (+8 methods total), switched 3 controllers to interface injection. Service interfaces now complete for DIP assessment.
+- **From Alfred:** DIP verdict complete — all 3 controllers received VERDICT A (interfaces exist but are incomplete). Interfaces expanded by Lucius to match concrete class APIs.
+- **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed (JSONB spacing, HTTP status logic). PR ready for merge.
+
+**Session Outcome:** Infrastructure modernization + architectural alignment complete. All merge requirements met.
