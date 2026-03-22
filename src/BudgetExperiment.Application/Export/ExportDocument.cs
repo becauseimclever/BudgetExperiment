@@ -25,15 +25,24 @@ public sealed record ExportDocument
     /// <summary>
     /// Gets the file name including extension.
     /// </summary>
-    public string FileName { get; }
+    public string FileName
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets the content type.
     /// </summary>
-    public string ContentType { get; }
+    public string ContentType
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets the file content bytes.
     /// </summary>
-    public byte[] Content { get; }
+    public byte[] Content
+    {
+        get;
+    }
 }

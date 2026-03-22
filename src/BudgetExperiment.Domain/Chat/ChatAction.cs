@@ -12,7 +12,10 @@ public abstract record ChatAction
     /// <summary>
     /// Gets the type of this action.
     /// </summary>
-    public abstract ChatActionType Type { get; }
+    public abstract ChatActionType Type
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets a human-readable summary of the action for preview.

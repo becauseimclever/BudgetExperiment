@@ -15,7 +15,10 @@ internal sealed class StubCsvParserService : ICsvParserService
     /// <summary>
     /// Gets or sets the parse result to return.
     /// </summary>
-    public CsvParseResult? Result { get; set; }
+    public CsvParseResult? Result
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public Task<CsvParseResult> ParseAsync(Stream fileStream, string fileName, int rowsToSkip = 0, CancellationToken ct = default)

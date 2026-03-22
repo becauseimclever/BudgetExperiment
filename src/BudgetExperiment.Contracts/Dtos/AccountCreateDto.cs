@@ -16,13 +16,19 @@ public sealed class AccountCreateDto
     public string Type { get; set; } = "Checking";
 
     /// <summary>Gets or sets the initial balance amount (defaults to 0).</summary>
-    public decimal InitialBalance { get; set; }
+    public decimal InitialBalance
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the initial balance currency (defaults to USD).</summary>
     public string InitialBalanceCurrency { get; set; } = "USD";
 
     /// <summary>Gets or sets the date as of which the initial balance is recorded (defaults to today).</summary>
-    public DateOnly? InitialBalanceDate { get; set; }
+    public DateOnly? InitialBalanceDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the budget scope ("Shared" or "Personal"). Defaults to "Shared".</summary>
     public string Scope { get; set; } = "Shared";

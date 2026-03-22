@@ -8,8 +8,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -27,7 +30,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     public CategoriesPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
@@ -86,7 +89,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsExpenseSection_WhenExpenseCategoriesExist()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
 
         var cut = Render<Categories>();
 
@@ -99,7 +102,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsIncomeSection_WhenIncomeCategoriesExist()
     {
-        this._apiService.Categories.Add(CreateCategory("Salary", "Income"));
+        _apiService.Categories.Add(CreateCategory("Salary", "Income"));
 
         var cut = Render<Categories>();
 
@@ -112,7 +115,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsTransferSection_WhenTransferCategoriesExist()
     {
-        this._apiService.Categories.Add(CreateCategory("Account Transfer", "Transfer"));
+        _apiService.Categories.Add(CreateCategory("Account Transfer", "Transfer"));
 
         var cut = Render<Categories>();
 
@@ -125,9 +128,9 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void GroupsCategoriesByType()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
-        this._apiService.Categories.Add(CreateCategory("Salary", "Income"));
-        this._apiService.Categories.Add(CreateCategory("Transfer Out", "Transfer"));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Salary", "Income"));
+        _apiService.Categories.Add(CreateCategory("Transfer Out", "Transfer"));
 
         var cut = Render<Categories>();
 
@@ -142,8 +145,8 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsCategoryCountBadge()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
-        this._apiService.Categories.Add(CreateCategory("Dining", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Dining", "Expense"));
 
         var cut = Render<Categories>();
 
@@ -168,7 +171,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void HidesExpenseSection_WhenNoExpenseCategories()
     {
-        this._apiService.Categories.Add(CreateCategory("Salary", "Income"));
+        _apiService.Categories.Add(CreateCategory("Salary", "Income"));
 
         var cut = Render<Categories>();
 
@@ -181,7 +184,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void HidesIncomeSection_WhenNoIncomeCategories()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
 
         var cut = Render<Categories>();
 
@@ -221,7 +224,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     public void CreateCategory_AddsCategoryToList_WhenSuccessful()
     {
         var newCat = CreateCategory("Groceries", "Expense");
-        this._apiService.CreateCategoryResult = newCat;
+        _apiService.CreateCategoryResult = newCat;
 
         var cut = Render<Categories>();
 
@@ -240,9 +243,9 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteCategory_RemovesFromList_WhenSuccessful()
     {
-        this._apiService.DeleteCategoryResult = true;
+        _apiService.DeleteCategoryResult = true;
         var cat = CreateCategory("ToDelete", "Expense");
-        this._apiService.Categories.Add(cat);
+        _apiService.Categories.Add(cat);
 
         var cut = Render<Categories>();
         cut.Markup.ShouldContain("ToDelete");
@@ -254,9 +257,9 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ActivateCategory_WorksSuccessfully()
     {
-        this._apiService.ActivateCategoryResult = true;
+        _apiService.ActivateCategoryResult = true;
         var cat = CreateCategory("Inactive Cat", "Expense", isActive: false);
-        this._apiService.Categories.Add(cat);
+        _apiService.Categories.Add(cat);
 
         var cut = Render<Categories>();
         cut.Markup.ShouldContain("Inactive Cat");
@@ -268,9 +271,9 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeactivateCategory_WorksSuccessfully()
     {
-        this._apiService.DeactivateCategoryResult = true;
+        _apiService.DeactivateCategoryResult = true;
         var cat = CreateCategory("Active Cat", "Expense");
-        this._apiService.Categories.Add(cat);
+        _apiService.Categories.Add(cat);
 
         var cut = Render<Categories>();
         cut.Markup.ShouldContain("Active Cat");
@@ -282,7 +285,7 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CreateCategory_ShowsError_WhenApiFails()
     {
-        this._apiService.CreateCategoryResult = null;
+        _apiService.CreateCategoryResult = null;
 
         var cut = Render<Categories>();
 
@@ -296,9 +299,9 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void UpdateCategory_HandlesConflict()
     {
-        this._apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Conflict();
+        _apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Conflict();
         var cat = CreateCategory("Conflicting", "Expense");
-        this._apiService.Categories.Add(cat);
+        _apiService.Categories.Add(cat);
 
         var cut = Render<Categories>();
         cut.Markup.ShouldContain("Conflicting");
@@ -321,9 +324,9 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleExpenseCategories_Sorted()
     {
-        this._apiService.Categories.Add(CreateCategory("Utilities", "Expense"));
-        this._apiService.Categories.Add(CreateCategory("Food", "Expense"));
-        this._apiService.Categories.Add(CreateCategory("Rent", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Utilities", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Food", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Rent", "Expense"));
 
         var cut = Render<Categories>();
 
@@ -338,8 +341,8 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SeparatesIncome_AndExpenseCategories()
     {
-        this._apiService.Categories.Add(CreateCategory("Salary", "Income"));
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Salary", "Income"));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
 
         var cut = Render<Categories>();
 
@@ -356,8 +359,8 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     public void DeleteConfirmDialog_ShowsCategoryName_WhenActive()
     {
         var cat = CreateCategory("TargetCategory", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.DeleteCategoryResult = true;
+        _apiService.Categories.Add(cat);
+        _apiService.DeleteCategoryResult = true;
 
         var cut = Render<Categories>();
 
@@ -370,8 +373,8 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsCategoryCountBadge_WithCorrectCount()
     {
-        this._apiService.Categories.Add(CreateCategory("Cat1", "Expense"));
-        this._apiService.Categories.Add(CreateCategory("Cat2", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Cat1", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Cat2", "Expense"));
 
         var cut = Render<Categories>();
 

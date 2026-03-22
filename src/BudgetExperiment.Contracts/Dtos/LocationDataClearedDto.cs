@@ -12,5 +12,8 @@ public sealed class LocationDataClearedDto
     /// <summary>
     /// Gets or sets the number of transactions whose location data was cleared.
     /// </summary>
-    public int ClearedCount { get; set; }
+    public int ClearedCount
+    {
+        get; set;
+    }
 }

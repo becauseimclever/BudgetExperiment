@@ -19,32 +19,50 @@ public sealed record TransactionLocationValue
     /// <summary>
     /// Gets the geographic coordinates (latitude/longitude), if available.
     /// </summary>
-    public GeoCoordinateValue? Coordinates { get; init; }
+    public GeoCoordinateValue? Coordinates
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the city name.
     /// </summary>
-    public string? City { get; init; }
+    public string? City
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the state or region name.
     /// </summary>
-    public string? StateOrRegion { get; init; }
+    public string? StateOrRegion
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the ISO 3166-1 alpha-2 country code.
     /// </summary>
-    public string? Country { get; init; }
+    public string? Country
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the postal code.
     /// </summary>
-    public string? PostalCode { get; init; }
+    public string? PostalCode
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the source that determined this location.
     /// </summary>
-    public LocationSource Source { get; init; }
+    public LocationSource Source
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Creates a validated <see cref="TransactionLocationValue"/> with normalized fields.

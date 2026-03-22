@@ -28,5 +28,8 @@ public sealed class DomainException : Exception
     /// <summary>
     /// Gets the classification of this domain exception.
     /// </summary>
-    public DomainExceptionType ExceptionType { get; }
+    public DomainExceptionType ExceptionType
+    {
+        get;
+    }
 }

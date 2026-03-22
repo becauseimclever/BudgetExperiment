@@ -27,13 +27,19 @@ public sealed class AppSettings
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether past-due recurring items are automatically realized
     /// without requiring manual confirmation.
     /// </summary>
-    public bool AutoRealizePastDueItems { get; private set; }
+    public bool AutoRealizePastDueItems
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets how many days back to look for past-due items.
@@ -43,12 +49,18 @@ public sealed class AppSettings
     /// <summary>
     /// Gets the UTC timestamp when the settings were created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the settings were last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     // ============ AI Settings ============
 
@@ -89,7 +101,10 @@ public sealed class AppSettings
     /// Gets a value indicating whether location data features are enabled.
     /// When disabled, all location-related UI and processing is hidden.
     /// </summary>
-    public bool EnableLocationData { get; private set; }
+    public bool EnableLocationData
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new default AppSettings instance.

@@ -4,7 +4,9 @@
 
 using BudgetExperiment.Client.Components.Navigation;
 using BudgetExperiment.Client.Services;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 

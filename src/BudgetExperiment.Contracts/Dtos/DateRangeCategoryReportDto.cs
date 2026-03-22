@@ -10,10 +10,16 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class DateRangeCategoryReportDto
 {
     /// <summary>Gets or sets the start date of the report range.</summary>
-    public DateOnly StartDate { get; set; }
+    public DateOnly StartDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the end date of the report range.</summary>
-    public DateOnly EndDate { get; set; }
+    public DateOnly EndDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spending for the range.</summary>
     public MoneyDto TotalSpending { get; set; } = new();

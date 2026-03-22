@@ -21,14 +21,14 @@ public class ChatMessageRepositoryTests
     /// <param name="fixture">The shared PostgreSQL database fixture.</param>
     public ChatMessageRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_Message()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
         var messageRepo = new ChatMessageRepository(context);
 
@@ -39,7 +39,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert - use shared context to verify persistence
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(message.Id);
 
@@ -53,7 +53,7 @@ public class ChatMessageRepositoryTests
     public async Task GetBySessionAsync_Returns_Messages_In_Chronological_Order()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
 
         var session = ChatSession.Create();
@@ -67,7 +67,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var messages = await verifyRepo.GetBySessionAsync(session.Id);
 
@@ -82,7 +82,7 @@ public class ChatMessageRepositoryTests
     public async Task GetBySessionAsync_Respects_Limit()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
 
         var session = ChatSession.Create();
@@ -96,7 +96,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var messages = await verifyRepo.GetBySessionAsync(session.Id, limit: 5);
 
@@ -108,7 +108,7 @@ public class ChatMessageRepositoryTests
     public async Task GetPendingActionsAsync_Returns_Only_Pending_Messages()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
 
         var session = ChatSession.Create();
@@ -131,7 +131,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var pendingMessages = await verifyRepo.GetPendingActionsAsync(session.Id);
 
@@ -145,7 +145,7 @@ public class ChatMessageRepositoryTests
     public async Task Message_With_Action_Persists_Action_As_Json()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
 
         var session = ChatSession.Create();
@@ -165,7 +165,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Act - retrieve with fresh context
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var messages = await verifyRepo.GetBySessionAsync(session.Id);
 
@@ -189,7 +189,7 @@ public class ChatMessageRepositoryTests
     public async Task Transfer_Action_Persists_Correctly()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
 
         var session = ChatSession.Create();
@@ -209,7 +209,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var messages = await verifyRepo.GetBySessionAsync(session.Id);
 
@@ -227,7 +227,7 @@ public class ChatMessageRepositoryTests
     public async Task Recurring_Transaction_Action_Persists_Correctly()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
 
         var session = ChatSession.Create();
@@ -247,7 +247,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var messages = await verifyRepo.GetBySessionAsync(session.Id);
 
@@ -266,7 +266,7 @@ public class ChatMessageRepositoryTests
     public async Task Clarification_Action_Persists_Correctly()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
 
         var session = ChatSession.Create();
@@ -288,7 +288,7 @@ public class ChatMessageRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatMessageRepository(verifyContext);
         var messages = await verifyRepo.GetBySessionAsync(session.Id);
 
@@ -308,7 +308,7 @@ public class ChatMessageRepositoryTests
     public async Task CountAsync_Returns_Total_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var sessionRepo = new ChatSessionRepository(context);
         var messageRepo = new ChatMessageRepository(context);
 

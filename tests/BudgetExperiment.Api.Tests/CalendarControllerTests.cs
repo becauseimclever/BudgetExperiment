@@ -23,7 +23,7 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
     /// <param name="factory">The test factory.</param>
     public CalendarControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
     public async Task GetMonthlySummary_Returns_200_WithValidYearMonth()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/calendar/summary?year=2026&month=1");
+        var response = await _client.GetAsync("/api/v1/calendar/summary?year=2026&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -52,7 +52,7 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
     public async Task GetMonthlySummary_Returns_400_ForInvalidMonth()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/calendar/summary?year=2026&month=13");
+        var response = await _client.GetAsync("/api/v1/calendar/summary?year=2026&month=13");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -66,7 +66,7 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
     public async Task GetMonthlySummary_Returns_400_ForMonthZero()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/calendar/summary?year=2026&month=0");
+        var response = await _client.GetAsync("/api/v1/calendar/summary?year=2026&month=0");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

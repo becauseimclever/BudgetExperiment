@@ -30,74 +30,116 @@ public sealed class ReconciliationMatch
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the imported transaction.
     /// </summary>
-    public Guid ImportedTransactionId { get; private set; }
+    public Guid ImportedTransactionId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the recurring transaction.
     /// </summary>
-    public Guid RecurringTransactionId { get; private set; }
+    public Guid RecurringTransactionId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the scheduled date this match is for from the recurring transaction.
     /// </summary>
-    public DateOnly RecurringInstanceDate { get; private set; }
+    public DateOnly RecurringInstanceDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the confidence score (0.0 to 1.0) indicating how likely this is a correct match.
     /// </summary>
-    public decimal ConfidenceScore { get; private set; }
+    public decimal ConfidenceScore
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the confidence level derived from the confidence score.
     /// </summary>
-    public MatchConfidenceLevel ConfidenceLevel { get; private set; }
+    public MatchConfidenceLevel ConfidenceLevel
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current status of this match.
     /// </summary>
-    public ReconciliationMatchStatus Status { get; private set; }
+    public ReconciliationMatchStatus Status
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the variance between expected and actual amount (expected - actual).
     /// Positive means paid less than expected, negative means paid more.
     /// </summary>
-    public decimal AmountVariance { get; private set; }
+    public decimal AmountVariance
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the offset in days between actual transaction date and scheduled date.
     /// Positive means transaction occurred after scheduled date, negative means before.
     /// </summary>
-    public int DateOffsetDays { get; private set; }
+    public int DateOffsetDays
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when this match was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when this match was resolved (accepted/rejected/auto-matched).
     /// </summary>
-    public DateTime? ResolvedAtUtc { get; private set; }
+    public DateTime? ResolvedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the source of this match (Auto or Manual).
     /// </summary>
-    public MatchSource Source { get; private set; }
+    public MatchSource Source
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new reconciliation match.

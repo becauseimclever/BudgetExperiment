@@ -32,16 +32,19 @@ public sealed class TransfersViewModel : IDisposable
         IChatContextService chatContextService,
         IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._scopeService = scopeService;
-        this._chatContextService = chatContextService;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _scopeService = scopeService;
+        _chatContextService = chatContextService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether data is loading.
@@ -51,17 +54,26 @@ public sealed class TransfersViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the trace ID associated with the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the list of accounts for the filter dropdown.
@@ -86,17 +98,26 @@ public sealed class TransfersViewModel : IDisposable
     /// <summary>
     /// Gets or sets the from date filter.
     /// </summary>
-    public DateOnly? FromDate { get; set; }
+    public DateOnly? FromDate
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the to date filter.
     /// </summary>
-    public DateOnly? ToDate { get; set; }
+    public DateOnly? ToDate
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the transfer dialog is visible.
     /// </summary>
-    public bool ShowTransferDialog { get; private set; }
+    public bool ShowTransferDialog
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the create transfer request model.
@@ -111,7 +132,10 @@ public sealed class TransfersViewModel : IDisposable
     /// <summary>
     /// Gets the transfer currently being edited, or null if creating.
     /// </summary>
-    public TransferListItemResponse? EditingTransfer { get; private set; }
+    public TransferListItemResponse? EditingTransfer
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Initializes the ViewModel: subscribes to scope changes, sets chat context, and loads data.
@@ -119,8 +143,8 @@ public sealed class TransfersViewModel : IDisposable
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
-        this._chatContextService.SetPageType("transfers");
+        _scopeService.ScopeChanged += this.OnScopeChanged;
+        _chatContextService.SetPageType("transfers");
         await this.LoadDataAsync();
     }
 
@@ -136,8 +160,8 @@ public sealed class TransfersViewModel : IDisposable
             this.ErrorMessage = null;
             this.ErrorTraceId = null;
 
-            var accountsTask = this._apiService.GetAccountsAsync();
-            var transfersTask = this._apiService.GetTransfersAsync();
+            var accountsTask = _apiService.GetAccountsAsync();
+            var transfersTask = _apiService.GetTransfersAsync();
 
             await Task.WhenAll(accountsTask, transfersTask);
 
@@ -148,7 +172,7 @@ public sealed class TransfersViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load transfers: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -271,14 +295,14 @@ public sealed class TransfersViewModel : IDisposable
     {
         try
         {
-            await this._apiService.CreateTransferAsync(model);
+            await _apiService.CreateTransferAsync(model);
             this.HideTransferDialog();
             await this.LoadDataAsync();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to create transfer: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
     }
 
@@ -296,14 +320,14 @@ public sealed class TransfersViewModel : IDisposable
 
         try
         {
-            await this._apiService.UpdateTransferAsync(this.EditingTransfer.TransferId, model);
+            await _apiService.UpdateTransferAsync(this.EditingTransfer.TransferId, model);
             this.HideTransferDialog();
             await this.LoadDataAsync();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to update transfer: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
     }
 
@@ -316,21 +340,21 @@ public sealed class TransfersViewModel : IDisposable
     {
         try
         {
-            await this._apiService.DeleteTransferAsync(transferId);
+            await _apiService.DeleteTransferAsync(transferId);
             await this.LoadDataAsync();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to delete transfer: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
-        this._chatContextService.ClearContext();
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
+        _chatContextService.ClearContext();
     }
 
     private async void OnScopeChanged(BudgetScope? scope)

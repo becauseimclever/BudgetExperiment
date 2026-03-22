@@ -24,7 +24,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     /// <param name="factory">The test factory.</param>
     public TransactionsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task GetByDateRange_Returns_200_WithValidDateRange()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions?startDate=2026-01-01&endDate=2026-01-31");
+        var response = await _client.GetAsync("/api/v1/transactions?startDate=2026-01-01&endDate=2026-01-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -53,7 +53,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task GetByDateRange_Returns_400_WhenStartDateAfterEndDate()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions?startDate=2026-01-31&endDate=2026-01-01");
+        var response = await _client.GetAsync("/api/v1/transactions?startDate=2026-01-31&endDate=2026-01-01");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -67,7 +67,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/transactions/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/transactions/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -81,7 +81,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task Delete_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/transactions/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/transactions/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -96,7 +96,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange — create an account first, then a transaction
         var accountDto = new AccountCreateDto { Name = "DeleteTest", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -107,19 +107,19 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 2, 19),
             Description = "To Be Deleted",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
         // Act
-        var deleteResponse = await this._client.DeleteAsync($"/api/v1/transactions/{created.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/transactions/{created.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         // Verify transaction is gone
-        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/transactions/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -131,7 +131,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task GetUncategorized_Returns_200_WithPagedResponse()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/uncategorized");
+        var response = await _client.GetAsync("/api/v1/transactions/uncategorized");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -150,7 +150,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task GetUncategorized_Returns_PaginationHeader()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/transactions/uncategorized");
+        var response = await _client.GetAsync("/api/v1/transactions/uncategorized");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -168,7 +168,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task GetUncategorized_AcceptsFilterParameters()
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/transactions/uncategorized?" +
             "startDate=2026-01-01&endDate=2026-01-31&minAmount=10&maxAmount=100&" +
             "descriptionContains=test&sortBy=Amount&sortDescending=false&page=2&pageSize=25");
@@ -196,7 +196,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/bulk-categorize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/bulk-categorize", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -217,7 +217,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/bulk-categorize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/bulk-categorize", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -238,7 +238,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/transactions/bulk-categorize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/transactions/bulk-categorize", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -259,7 +259,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange — create account + transaction
         var accountDto = new AccountCreateDto { Name = "LocationTest", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -270,7 +270,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 2, 20),
             Description = "Coffee Shop",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
@@ -284,7 +284,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var patchResponse = await this._client.PatchAsJsonAsync(
+        var patchResponse = await _client.PatchAsJsonAsync(
             $"/api/v1/transactions/{created.Id}/location",
             locationUpdate);
 
@@ -311,7 +311,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         var locationUpdate = new TransactionLocationUpdateDto { City = "Seattle" };
 
         // Act
-        var response = await this._client.PatchAsJsonAsync(
+        var response = await _client.PatchAsJsonAsync(
             $"/api/v1/transactions/{Guid.NewGuid()}/location",
             locationUpdate);
 
@@ -328,7 +328,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange — create account + transaction + set location
         var accountDto = new AccountCreateDto { Name = "LocationDeleteTest", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -339,21 +339,21 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 2, 20),
             Description = "Lunch",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
         var locationUpdate = new TransactionLocationUpdateDto { City = "Portland", StateOrRegion = "OR", Country = "US" };
-        await this._client.PatchAsJsonAsync($"/api/v1/transactions/{created.Id}/location", locationUpdate);
+        await _client.PatchAsJsonAsync($"/api/v1/transactions/{created.Id}/location", locationUpdate);
 
         // Act
-        var deleteResponse = await this._client.DeleteAsync($"/api/v1/transactions/{created.Id}/location");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/transactions/{created.Id}/location");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         // Verify location is cleared
-        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/transactions/{created.Id}");
         var transaction = await getResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(transaction);
         Assert.Null(transaction.Location);
@@ -367,7 +367,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     public async Task DeleteLocation_NonExistentTransaction_Returns404()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/transactions/{Guid.NewGuid()}/location");
+        var response = await _client.DeleteAsync($"/api/v1/transactions/{Guid.NewGuid()}/location");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -382,7 +382,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange — create account + transaction + set location with coordinates
         var accountDto = new AccountCreateDto { Name = "LocationGetTest", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -393,7 +393,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 2, 20),
             Description = "Dinner",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
@@ -405,10 +405,10 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             StateOrRegion = "WA",
             Country = "US",
         };
-        await this._client.PatchAsJsonAsync($"/api/v1/transactions/{created.Id}/location", locationUpdate);
+        await _client.PatchAsJsonAsync($"/api/v1/transactions/{created.Id}/location", locationUpdate);
 
         // Act
-        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/transactions/{created.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
@@ -429,7 +429,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange — create account + transaction (no location)
         var accountDto = new AccountCreateDto { Name = "NoLocationTest", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -440,12 +440,12 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 2, 20),
             Description = "Snack",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
         // Act
-        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/transactions/{created.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
@@ -463,7 +463,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "TxnETagTest", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -474,12 +474,12 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 3, 1),
             Description = "ETag Test Txn",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var response = await _client.GetAsync($"/api/v1/transactions/{created.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -496,7 +496,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "TxnIfMatchValid", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -507,11 +507,11 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 3, 1),
             Description = "IfMatch Valid Txn",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
-        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/transactions/{created.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new TransactionUpdateDto
@@ -527,7 +527,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -545,7 +545,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "TxnIfMatchStale", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -556,7 +556,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 3, 1),
             Description = "Stale IfMatch Txn",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
@@ -574,7 +574,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -589,7 +589,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "TxnNoIfMatch", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -600,7 +600,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 3, 1),
             Description = "No IfMatch Txn",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
@@ -612,7 +612,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/transactions/{created.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/transactions/{created.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -629,7 +629,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "TxnLocIfMatch", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -640,11 +640,11 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 3, 1),
             Description = "Location IfMatch Txn",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
-        var getResponse = await this._client.GetAsync($"/api/v1/transactions/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/transactions/{created.Id}");
         var etag = getResponse.Headers.ETag;
 
         var locationUpdate = new TransactionLocationUpdateDto
@@ -660,7 +660,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -678,7 +678,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "TxnLocStale", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
 
@@ -689,7 +689,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
             Date = new DateOnly(2026, 3, 1),
             Description = "Location Stale Txn",
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         Assert.NotNull(created);
 
@@ -707,7 +707,7 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);

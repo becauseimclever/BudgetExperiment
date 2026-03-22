@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -20,20 +21,20 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
     /// <param name="context">The database context.</param>
     public RecurringChargeSuggestionRepository(BudgetDbContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <inheritdoc />
     public async Task<RecurringChargeSuggestion?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this._context.RecurringChargeSuggestions
+        return await _context.RecurringChargeSuggestions
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringChargeSuggestion>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this._context.RecurringChargeSuggestions
+        return await _context.RecurringChargeSuggestions
             .OrderByDescending(s => s.Confidence)
             .Skip(skip)
             .Take(take)
@@ -43,19 +44,19 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.RecurringChargeSuggestions.LongCountAsync(cancellationToken);
+        return await _context.RecurringChargeSuggestions.LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(RecurringChargeSuggestion entity, CancellationToken cancellationToken = default)
     {
-        await this._context.RecurringChargeSuggestions.AddAsync(entity, cancellationToken);
+        await _context.RecurringChargeSuggestions.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(RecurringChargeSuggestion entity, CancellationToken cancellationToken = default)
     {
-        this._context.RecurringChargeSuggestions.Remove(entity);
+        _context.RecurringChargeSuggestions.Remove(entity);
         return Task.CompletedTask;
     }
 
@@ -67,7 +68,7 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
         int take,
         CancellationToken cancellationToken = default)
     {
-        var query = this._context.RecurringChargeSuggestions.AsQueryable();
+        var query = _context.RecurringChargeSuggestions.AsQueryable();
 
         if (accountId.HasValue)
         {
@@ -92,7 +93,7 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
         SuggestionStatus? status,
         CancellationToken cancellationToken = default)
     {
-        var query = this._context.RecurringChargeSuggestions.AsQueryable();
+        var query = _context.RecurringChargeSuggestions.AsQueryable();
 
         if (accountId.HasValue)
         {
@@ -113,7 +114,7 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
         Guid accountId,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.RecurringChargeSuggestions
+        return await _context.RecurringChargeSuggestions
             .FirstOrDefaultAsync(
                 s => s.NormalizedDescription == normalizedDescription
                     && s.AccountId == accountId
@@ -126,6 +127,6 @@ internal sealed class RecurringChargeSuggestionRepository : IRecurringChargeSugg
         IEnumerable<RecurringChargeSuggestion> suggestions,
         CancellationToken cancellationToken = default)
     {
-        await this._context.RecurringChargeSuggestions.AddRangeAsync(suggestions, cancellationToken);
+        await _context.RecurringChargeSuggestions.AddRangeAsync(suggestions, cancellationToken);
     }
 }

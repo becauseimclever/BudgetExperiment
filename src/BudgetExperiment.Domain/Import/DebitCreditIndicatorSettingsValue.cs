@@ -27,7 +27,10 @@ public sealed record DebitCreditIndicatorSettingsValue
     /// <summary>
     /// Gets a value indicating whether indicator matching is case-sensitive.
     /// </summary>
-    public bool CaseSensitive { get; init; }
+    public bool CaseSensitive
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this indicator is enabled.

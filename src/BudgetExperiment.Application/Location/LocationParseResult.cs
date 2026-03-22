@@ -12,20 +12,32 @@ public sealed class LocationParseResult
     /// <summary>
     /// Gets the original transaction description text.
     /// </summary>
-    public required string OriginalText { get; init; }
+    public required string OriginalText
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the parsed location, or <see langword="null"/> if no location was found.
     /// </summary>
-    public TransactionLocationValue? Location { get; init; }
+    public TransactionLocationValue? Location
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the confidence score (0.0 – 1.0) of the parse result.
     /// </summary>
-    public decimal Confidence { get; init; }
+    public decimal Confidence
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the regex pattern name that matched, if any.
     /// </summary>
-    public string? MatchedPattern { get; init; }
+    public string? MatchedPattern
+    {
+        get; init;
+    }
 }

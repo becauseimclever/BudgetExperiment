@@ -13,46 +13,82 @@ namespace BudgetExperiment.Client.Models;
 public sealed class TransactionListItem
 {
     /// <summary>Gets or sets the unique identifier (transaction ID or recurring transaction ID).</summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the transaction date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the optional category identifier.</summary>
-    public Guid? CategoryId { get; set; }
+    public Guid? CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the category name (null if uncategorized).</summary>
-    public string? CategoryName { get; set; }
+    public string? CategoryName
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
     /// <summary>Gets or sets a value indicating whether this is a recurring transaction instance (not yet realized).</summary>
-    public bool IsRecurring { get; set; }
+    public bool IsRecurring
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether this recurring instance has been modified from the series default.</summary>
-    public bool IsModified { get; set; }
+    public bool IsModified
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the creation timestamp for actual transactions.</summary>
-    public DateTime? CreatedAtUtc { get; set; }
+    public DateTime? CreatedAtUtc
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether this transaction is part of a transfer.</summary>
-    public bool IsTransfer { get; set; }
+    public bool IsTransfer
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the transfer identifier (null if not a transfer).</summary>
-    public Guid? TransferId { get; set; }
+    public Guid? TransferId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the transfer direction (null if not a transfer).</summary>
-    public string? TransferDirection { get; set; }
+    public string? TransferDirection
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether this is a recurring transfer instance.</summary>
-    public bool IsRecurringTransfer { get; set; }
+    public bool IsRecurringTransfer
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the recurring transfer ID (if from recurring transfer).</summary>
-    public Guid? RecurringTransferId { get; set; }
+    public Guid? RecurringTransferId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the running balance after this transaction.</summary>
     public MoneyDto RunningBalance { get; set; } = new();

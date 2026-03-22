@@ -6,6 +6,7 @@ using BudgetExperiment.Application.Categorization;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Repositories;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -27,10 +28,10 @@ public class CategorizationRuleServiceTests
     /// </summary>
     public CategorizationRuleServiceTests()
     {
-        this._sut = new CategorizationRuleService(
-            this._repoMock.Object,
-            this._engineMock.Object,
-            this._unitOfWorkMock.Object);
+        _sut = new CategorizationRuleService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -38,14 +39,14 @@ public class CategorizationRuleServiceTests
     {
         // Arrange
         var rules = CreateRules(3);
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 25, null, null, null, null, null, default))
             .ReturnsAsync((rules, 3));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 25 };
 
         // Act
-        var result = await this._sut.ListPagedAsync(request);
+        var result = await _sut.ListPagedAsync(request);
 
         // Assert
         Assert.Equal(3, result.Items.Count);
@@ -60,14 +61,14 @@ public class CategorizationRuleServiceTests
     {
         // Arrange
         var rules = CreateRules(1);
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 25, "walmart", null, null, null, null, default))
             .ReturnsAsync((rules, 1));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 25, Search = "walmart" };
 
         // Act
-        var result = await this._sut.ListPagedAsync(request);
+        var result = await _sut.ListPagedAsync(request);
 
         // Assert
         Assert.Single(result.Items);
@@ -78,17 +79,17 @@ public class CategorizationRuleServiceTests
     public async Task ListPagedAsync_Converts_Active_Status_To_Bool()
     {
         // Arrange
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 25, null, null, true, null, null, default))
             .ReturnsAsync((Array.Empty<CategorizationRule>(), 0));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 25, Status = "active" };
 
         // Act
-        await this._sut.ListPagedAsync(request);
+        await _sut.ListPagedAsync(request);
 
         // Assert
-        this._repoMock.Verify(
+        _repoMock.Verify(
             r => r.ListPagedAsync(1, 25, null, null, true, null, null, default),
             Times.Once);
     }
@@ -97,17 +98,17 @@ public class CategorizationRuleServiceTests
     public async Task ListPagedAsync_Converts_Inactive_Status_To_Bool()
     {
         // Arrange
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 25, null, null, false, null, null, default))
             .ReturnsAsync((Array.Empty<CategorizationRule>(), 0));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 25, Status = "inactive" };
 
         // Act
-        await this._sut.ListPagedAsync(request);
+        await _sut.ListPagedAsync(request);
 
         // Assert
-        this._repoMock.Verify(
+        _repoMock.Verify(
             r => r.ListPagedAsync(1, 25, null, null, false, null, null, default),
             Times.Once);
     }
@@ -116,17 +117,17 @@ public class CategorizationRuleServiceTests
     public async Task ListPagedAsync_Null_Status_Passes_Null_IsActive()
     {
         // Arrange
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 25, null, null, null, null, null, default))
             .ReturnsAsync((Array.Empty<CategorizationRule>(), 0));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 25 };
 
         // Act
-        await this._sut.ListPagedAsync(request);
+        await _sut.ListPagedAsync(request);
 
         // Assert
-        this._repoMock.Verify(
+        _repoMock.Verify(
             r => r.ListPagedAsync(1, 25, null, null, null, null, null, default),
             Times.Once);
     }
@@ -136,17 +137,17 @@ public class CategorizationRuleServiceTests
     {
         // Arrange
         var categoryId = Guid.NewGuid();
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 10, null, categoryId, null, null, null, default))
             .ReturnsAsync((Array.Empty<CategorizationRule>(), 0));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 10, CategoryId = categoryId };
 
         // Act
-        await this._sut.ListPagedAsync(request);
+        await _sut.ListPagedAsync(request);
 
         // Assert
-        this._repoMock.Verify(
+        _repoMock.Verify(
             r => r.ListPagedAsync(1, 10, null, categoryId, null, null, null, default),
             Times.Once);
     }
@@ -156,14 +157,14 @@ public class CategorizationRuleServiceTests
     {
         // Arrange
         var rule = CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1);
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 25, null, null, null, null, null, default))
             .ReturnsAsync((new[] { rule }, 1));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 25 };
 
         // Act
-        var result = await this._sut.ListPagedAsync(request);
+        var result = await _sut.ListPagedAsync(request);
 
         // Assert
         var dto = Assert.Single(result.Items);
@@ -180,14 +181,14 @@ public class CategorizationRuleServiceTests
     {
         // Arrange
         var rules = CreateRules(10);
-        this._repoMock
+        _repoMock
             .Setup(r => r.ListPagedAsync(1, 10, null, null, null, null, null, default))
             .ReturnsAsync((rules, 25));
 
         var request = new CategorizationRuleListRequest { Page = 1, PageSize = 10 };
 
         // Act
-        var result = await this._sut.ListPagedAsync(request);
+        var result = await _sut.ListPagedAsync(request);
 
         // Assert
         Assert.Equal(25, result.TotalCount);

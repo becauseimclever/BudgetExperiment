@@ -3,7 +3,9 @@
 // </copyright>
 
 using BudgetExperiment.Client.Components.Display;
+
 using Bunit;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Components.Display;

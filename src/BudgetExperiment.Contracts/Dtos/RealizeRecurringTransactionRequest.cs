@@ -10,14 +10,26 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class RealizeRecurringTransactionRequest
 {
     /// <summary>Gets or sets the scheduled instance date to realize.</summary>
-    public DateOnly InstanceDate { get; set; }
+    public DateOnly InstanceDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional actual date (defaults to InstanceDate if not provided).</summary>
-    public DateOnly? Date { get; set; }
+    public DateOnly? Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional override amount.</summary>
-    public MoneyDto? Amount { get; set; }
+    public MoneyDto? Amount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional override description.</summary>
-    public string? Description { get; set; }
+    public string? Description
+    {
+        get; set;
+    }
 }

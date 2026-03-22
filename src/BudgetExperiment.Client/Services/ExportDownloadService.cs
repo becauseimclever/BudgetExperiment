@@ -34,7 +34,7 @@ public sealed class ExportDownloadService : IExportDownloadService, IAsyncDispos
     {
         try
         {
-            using var response = await this.httpClient.GetAsync(
+            using var response = await httpClient.GetAsync(
                 url,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken);
@@ -50,13 +50,13 @@ public sealed class ExportDownloadService : IExportDownloadService, IAsyncDispos
             var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
 
             await EnsureModuleAsync(cancellationToken);
-            if (this.module == null)
+            if (module == null)
             {
                 return ExportDownloadResult.Fail("Download helper unavailable.");
             }
 
             using var streamRef = new DotNetStreamReference(new MemoryStream(bytes));
-            await this.module.InvokeVoidAsync(
+            await module.InvokeVoidAsync(
                 "downloadFileFromStream",
                 cancellationToken,
                 fileName,
@@ -91,9 +91,9 @@ public sealed class ExportDownloadService : IExportDownloadService, IAsyncDispos
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        if (this.module != null)
+        if (module != null)
         {
-            await this.module.DisposeAsync();
+            await module.DisposeAsync();
         }
     }
 
@@ -120,12 +120,12 @@ public sealed class ExportDownloadService : IExportDownloadService, IAsyncDispos
 
     private async Task EnsureModuleAsync(CancellationToken cancellationToken)
     {
-        if (this.module != null)
+        if (module != null)
         {
             return;
         }
 
-        this.module = await this.jsRuntime.InvokeAsync<IJSObjectReference>(
+        module = await jsRuntime.InvokeAsync<IJSObjectReference>(
             "import",
             cancellationToken,
             "./js/file-download.js");

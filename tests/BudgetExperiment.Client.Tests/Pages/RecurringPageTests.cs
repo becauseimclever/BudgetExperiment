@@ -7,8 +7,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -26,7 +29,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     public RecurringPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
@@ -97,7 +100,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsRecurringCards_WhenDataExists()
     {
-        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        _apiService.RecurringTransactions.Add(new RecurringTransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Monthly Rent",
@@ -122,7 +125,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ActiveRecurring_ShowsSkipAndPauseButtons()
     {
-        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        _apiService.RecurringTransactions.Add(new RecurringTransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Salary",
@@ -147,7 +150,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void PausedRecurring_ShowsResumeButton()
     {
-        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        _apiService.RecurringTransactions.Add(new RecurringTransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Gym Membership",
@@ -171,7 +174,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void InactiveRecurring_HasInactiveCssClass()
     {
-        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        _apiService.RecurringTransactions.Add(new RecurringTransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Paused Item",
@@ -196,7 +199,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsEndDate_WhenPresent()
     {
-        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        _apiService.RecurringTransactions.Add(new RecurringTransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Lease",
@@ -221,7 +224,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsActiveStatusBadge()
     {
-        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        _apiService.RecurringTransactions.Add(new RecurringTransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Active Item",
@@ -246,7 +249,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Card_ShowsAccountName()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Gym Membership", "Checking"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Gym Membership", "Checking"));
 
         var cut = Render<Recurring>();
 
@@ -259,7 +262,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Card_ShowsFrequency()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Insurance", "Main"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Insurance", "Main"));
 
         var cut = Render<Recurring>();
 
@@ -272,7 +275,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Card_ShowsNextOccurrence()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
 
         var cut = Render<Recurring>();
 
@@ -285,8 +288,8 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleRecurringItems()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Electric", "Savings"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Electric", "Savings"));
 
         var cut = Render<Recurring>();
 
@@ -300,7 +303,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SkipButton_IsClickable()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
 
         var cut = Render<Recurring>();
         var skipButton = cut.FindAll("button").First(b => b.TextContent.Contains("Skip"));
@@ -315,7 +318,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void PauseButton_IsClickable()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
 
         var cut = Render<Recurring>();
         var pauseButton = cut.FindAll("button").First(b => b.TextContent.Contains("Pause"));
@@ -330,7 +333,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ResumeButton_IsClickable()
     {
-        this._apiService.RecurringTransactions.Add(new RecurringTransactionDto
+        _apiService.RecurringTransactions.Add(new RecurringTransactionDto
         {
             Id = Guid.NewGuid(),
             Description = "Paused Item",
@@ -356,7 +359,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteButton_ShowsConfirmDialog()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
 
         var cut = Render<Recurring>();
         var deleteButton = cut.FindAll("button").First(b => b.TextContent.Contains("Delete"));
@@ -371,7 +374,7 @@ public class RecurringPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void EditButton_OpensEditForm()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Rent", "Checking"));
 
         var cut = Render<Recurring>();
         var editButton = cut.FindAll("button").First(b => b.TextContent.Contains("Edit"));

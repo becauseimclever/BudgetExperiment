@@ -28,8 +28,8 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     /// <param name="factory">The test factory.</param>
     public ChatControllerTests(CustomWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetOrCreateSession_Returns_200_WithNewSession()
     {
         // Act
-        var response = await this._client.PostAsync("/api/v1/chat/sessions", null);
+        var response = await _client.PostAsync("/api/v1/chat/sessions", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -58,11 +58,11 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetSession_Returns_200_WhenSessionExists()
     {
         // Arrange
-        var createResponse = await this._client.PostAsync("/api/v1/chat/sessions", null);
+        var createResponse = await _client.PostAsync("/api/v1/chat/sessions", null);
         var created = await createResponse.Content.ReadFromJsonAsync<ChatSessionDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/chat/sessions/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/chat/sessions/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -79,7 +79,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetSession_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/chat/sessions/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/chat/sessions/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -93,11 +93,11 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetMessages_Returns_200_WithEmptyListForNewSession()
     {
         // Arrange
-        var createResponse = await this._client.PostAsync("/api/v1/chat/sessions", null);
+        var createResponse = await _client.PostAsync("/api/v1/chat/sessions", null);
         var created = await createResponse.Content.ReadFromJsonAsync<ChatSessionDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/chat/sessions/{created!.Id}/messages");
+        var response = await _client.GetAsync($"/api/v1/chat/sessions/{created!.Id}/messages");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -114,7 +114,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetMessages_Returns_404_WhenSessionNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/chat/sessions/{Guid.NewGuid()}/messages");
+        var response = await _client.GetAsync($"/api/v1/chat/sessions/{Guid.NewGuid()}/messages");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -128,11 +128,11 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task SendMessage_Returns_400_WhenContentEmpty()
     {
         // Arrange
-        var createResponse = await this._client.PostAsync("/api/v1/chat/sessions", null);
+        var createResponse = await _client.PostAsync("/api/v1/chat/sessions", null);
         var created = await createResponse.Content.ReadFromJsonAsync<ChatSessionDto>();
 
         // Act
-        var response = await this._client.PostAsJsonAsync(
+        var response = await _client.PostAsJsonAsync(
             $"/api/v1/chat/sessions/{created!.Id}/messages",
             new SendMessageRequest { Content = string.Empty });
 
@@ -148,11 +148,11 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task SendMessage_Returns_400_WhenContentWhitespace()
     {
         // Arrange
-        var createResponse = await this._client.PostAsync("/api/v1/chat/sessions", null);
+        var createResponse = await _client.PostAsync("/api/v1/chat/sessions", null);
         var created = await createResponse.Content.ReadFromJsonAsync<ChatSessionDto>();
 
         // Act
-        var response = await this._client.PostAsJsonAsync(
+        var response = await _client.PostAsJsonAsync(
             $"/api/v1/chat/sessions/{created!.Id}/messages",
             new SendMessageRequest { Content = "   " });
 
@@ -238,7 +238,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task ConfirmAction_Returns_404_WhenMessageNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/chat/messages/{Guid.NewGuid()}/confirm", null);
+        var response = await _client.PostAsync($"/api/v1/chat/messages/{Guid.NewGuid()}/confirm", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -252,7 +252,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task CancelAction_Returns_404_WhenMessageNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/chat/messages/{Guid.NewGuid()}/cancel", null);
+        var response = await _client.PostAsync($"/api/v1/chat/messages/{Guid.NewGuid()}/cancel", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -266,11 +266,11 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task CloseSession_Returns_204_WhenSessionExists()
     {
         // Arrange
-        var createResponse = await this._client.PostAsync("/api/v1/chat/sessions", null);
+        var createResponse = await _client.PostAsync("/api/v1/chat/sessions", null);
         var created = await createResponse.Content.ReadFromJsonAsync<ChatSessionDto>();
 
         // Act
-        var response = await this._client.PostAsync($"/api/v1/chat/sessions/{created!.Id}/close", null);
+        var response = await _client.PostAsync($"/api/v1/chat/sessions/{created!.Id}/close", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -284,7 +284,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task CloseSession_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/chat/sessions/{Guid.NewGuid()}/close", null);
+        var response = await _client.PostAsync($"/api/v1/chat/sessions/{Guid.NewGuid()}/close", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -298,12 +298,12 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task CloseSession_MarksSessionAsInactive()
     {
         // Arrange
-        var createResponse = await this._client.PostAsync("/api/v1/chat/sessions", null);
+        var createResponse = await _client.PostAsync("/api/v1/chat/sessions", null);
         var created = await createResponse.Content.ReadFromJsonAsync<ChatSessionDto>();
 
         // Act
-        await this._client.PostAsync($"/api/v1/chat/sessions/{created!.Id}/close", null);
-        var getResponse = await this._client.GetAsync($"/api/v1/chat/sessions/{created.Id}");
+        await _client.PostAsync($"/api/v1/chat/sessions/{created!.Id}/close", null);
+        var getResponse = await _client.GetAsync($"/api/v1/chat/sessions/{created.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
@@ -321,7 +321,7 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
 
     private WebApplicationFactory<Program> CreateFactoryWithChatService(CapturingChatService chatService)
     {
-        return this._factory.WithWebHostBuilder(builder =>
+        return _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -338,7 +338,10 @@ public sealed class ChatControllerTests : IClassFixture<CustomWebApplicationFact
 
     private sealed class CapturingChatService : IChatService
     {
-        public ChatContext? LastContext { get; private set; }
+        public ChatContext? LastContext
+        {
+            get; private set;
+        }
 
         public Task<ChatSession> GetOrCreateSessionAsync(string userId, CancellationToken cancellationToken = default) =>
             Task.FromResult(ChatSession.Create());

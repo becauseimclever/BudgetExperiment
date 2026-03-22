@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain.Common;
+
 using Shouldly;
 
 namespace BudgetExperiment.Application.Tests;

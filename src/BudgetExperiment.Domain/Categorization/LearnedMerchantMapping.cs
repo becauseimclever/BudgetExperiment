@@ -28,7 +28,10 @@ public sealed class LearnedMerchantMapping
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the normalized merchant pattern (uppercase).
@@ -38,7 +41,10 @@ public sealed class LearnedMerchantMapping
     /// <summary>
     /// Gets the category ID this pattern maps to.
     /// </summary>
-    public Guid CategoryId { get; private set; }
+    public Guid CategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID.
@@ -48,17 +54,26 @@ public sealed class LearnedMerchantMapping
     /// <summary>
     /// Gets the number of times this mapping has been learned (reinforced).
     /// </summary>
-    public int LearnCount { get; private set; }
+    public int LearnCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the mapping was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the mapping was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new learned merchant mapping.

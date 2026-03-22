@@ -15,7 +15,10 @@ internal class StubAiApiService : IAiApiService
     /// <summary>
     /// Gets or sets the AI status returned by <see cref="GetStatusAsync"/>.
     /// </summary>
-    public AiStatusDto? AiStatus { get; set; }
+    public AiStatusDto? AiStatus
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the list of models returned by <see cref="GetModelsAsync"/>.
@@ -25,7 +28,10 @@ internal class StubAiApiService : IAiApiService
     /// <summary>
     /// Gets or sets the settings returned by <see cref="GetSettingsAsync"/>.
     /// </summary>
-    public AiSettingsDto? Settings { get; set; }
+    public AiSettingsDto? Settings
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the list of pending suggestions returned by <see cref="GetPendingSuggestionsAsync"/>.
@@ -35,27 +41,42 @@ internal class StubAiApiService : IAiApiService
     /// <summary>
     /// Gets or sets the result returned by <see cref="AcceptSuggestionAsync"/>.
     /// </summary>
-    public CategorizationRuleDto? AcceptSuggestionResult { get; set; }
+    public CategorizationRuleDto? AcceptSuggestionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DismissSuggestionAsync"/> returns true.
     /// </summary>
-    public bool DismissSuggestionResult { get; set; }
+    public bool DismissSuggestionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="ProvideFeedbackAsync"/> returns true.
     /// </summary>
-    public bool ProvideFeedbackResult { get; set; }
+    public bool ProvideFeedbackResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="AnalyzeAsync"/>.
     /// </summary>
-    public AnalysisResponseDto? AnalyzeResult { get; set; }
+    public AnalysisResponseDto? AnalyzeResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception to throw from <see cref="GetPendingSuggestionsAsync"/>.
     /// </summary>
-    public Exception? GetPendingSuggestionsException { get; set; }
+    public Exception? GetPendingSuggestionsException
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public Task<AiStatusDto?> GetStatusAsync() =>

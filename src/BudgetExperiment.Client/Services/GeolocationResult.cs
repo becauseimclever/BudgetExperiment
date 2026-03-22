@@ -18,16 +18,28 @@ public sealed class GeolocationResult
     }
 
     /// <summary>Gets a value indicating whether the position was obtained successfully.</summary>
-    public bool IsSuccess { get; }
+    public bool IsSuccess
+    {
+        get;
+    }
 
     /// <summary>Gets the latitude coordinate.</summary>
-    public decimal Latitude { get; }
+    public decimal Latitude
+    {
+        get;
+    }
 
     /// <summary>Gets the longitude coordinate.</summary>
-    public decimal Longitude { get; }
+    public decimal Longitude
+    {
+        get;
+    }
 
     /// <summary>Gets the error message if the request failed.</summary>
-    public string? ErrorMessage { get; }
+    public string? ErrorMessage
+    {
+        get;
+    }
 
     /// <summary>
     /// Creates a successful result.

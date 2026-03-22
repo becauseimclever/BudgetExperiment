@@ -229,16 +229,28 @@ public sealed class OllamaAiService : IAiService
 
     private sealed class OllamaTagsResponse
     {
-        public List<OllamaModelInfo>? Models { get; set; }
+        public List<OllamaModelInfo>? Models
+        {
+            get; set;
+        }
     }
 
     private sealed class OllamaModelInfo
     {
-        public string? Name { get; set; }
+        public string? Name
+        {
+            get; set;
+        }
 
-        public DateTime ModifiedAt { get; set; }
+        public DateTime ModifiedAt
+        {
+            get; set;
+        }
 
-        public long Size { get; set; }
+        public long Size
+        {
+            get; set;
+        }
     }
 
     private sealed class OllamaChatRequest
@@ -247,9 +259,15 @@ public sealed class OllamaAiService : IAiService
 
         public List<OllamaChatMessage> Messages { get; set; } = new();
 
-        public bool Stream { get; set; }
+        public bool Stream
+        {
+            get; set;
+        }
 
-        public OllamaOptions? Options { get; set; }
+        public OllamaOptions? Options
+        {
+            get; set;
+        }
     }
 
     private sealed class OllamaChatMessage
@@ -261,31 +279,67 @@ public sealed class OllamaAiService : IAiService
 
     private sealed class OllamaOptions
     {
-        public float Temperature { get; set; }
+        public float Temperature
+        {
+            get; set;
+        }
 
-        public int NumPredict { get; set; }
+        public int NumPredict
+        {
+            get; set;
+        }
     }
 
     private sealed class OllamaChatResponse
     {
-        public string? Model { get; set; }
+        public string? Model
+        {
+            get; set;
+        }
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt
+        {
+            get; set;
+        }
 
-        public OllamaChatMessage? Message { get; set; }
+        public OllamaChatMessage? Message
+        {
+            get; set;
+        }
 
-        public bool Done { get; set; }
+        public bool Done
+        {
+            get; set;
+        }
 
-        public long? TotalDuration { get; set; }
+        public long? TotalDuration
+        {
+            get; set;
+        }
 
-        public long? LoadDuration { get; set; }
+        public long? LoadDuration
+        {
+            get; set;
+        }
 
-        public int? PromptEvalCount { get; set; }
+        public int? PromptEvalCount
+        {
+            get; set;
+        }
 
-        public long? PromptEvalDuration { get; set; }
+        public long? PromptEvalDuration
+        {
+            get; set;
+        }
 
-        public int? EvalCount { get; set; }
+        public int? EvalCount
+        {
+            get; set;
+        }
 
-        public long? EvalDuration { get; set; }
+        public long? EvalDuration
+        {
+            get; set;
+        }
     }
 }

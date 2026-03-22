@@ -3,7 +3,9 @@
 // </copyright>
 
 using BudgetExperiment.Client.Components.Charts.Shared;
+
 using Bunit;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Components.Charts.Shared;

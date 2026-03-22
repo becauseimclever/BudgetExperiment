@@ -8,8 +8,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -27,7 +30,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     public AccountsPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
@@ -85,7 +88,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsAccountCards_WhenAccountsExist()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Checking Account",
@@ -108,7 +111,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleAccountCards()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Checking",
@@ -117,7 +120,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2025, 1, 1),
         });
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Savings",
@@ -141,7 +144,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsAccountType()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "My Credit Card",
@@ -162,7 +165,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsInitialBalance()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Test",
@@ -205,7 +208,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void AccountCards_HaveTransactionsButton()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Test Account",
@@ -226,7 +229,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void AccountCards_HaveDeleteButton()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Test Account",
@@ -247,7 +250,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void NegativeBalance_HasExpenseClass()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Credit Card",
@@ -282,7 +285,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CreateAccount_AddsAccountToList_WhenSuccessful()
     {
-        this._apiService.CreateAccountResult = new AccountDto
+        _apiService.CreateAccountResult = new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "New Checking",
@@ -306,8 +309,8 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteAccount_ResultIsConfigurable()
     {
-        this._apiService.DeleteAccountResult = true;
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.DeleteAccountResult = true;
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "ToDelete",
@@ -328,8 +331,8 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void UpdateAccount_HandlesConflict()
     {
-        this._apiService.UpdateAccountResult = ApiResult<AccountDto>.Conflict();
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.UpdateAccountResult = ApiResult<AccountDto>.Conflict();
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Conflicting",
@@ -350,7 +353,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void TransferButton_IsClickable()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Source Account",
@@ -372,7 +375,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteButton_ShowsConfirmDialog()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Account To Delete",
@@ -395,7 +398,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void EditButton_OpensEditModal()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Editable Account",
@@ -418,7 +421,7 @@ public class AccountsPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void TransactionsButton_IsClickable()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Active Account",

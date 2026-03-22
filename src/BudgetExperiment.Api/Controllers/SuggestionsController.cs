@@ -35,9 +35,9 @@ public sealed class SuggestionsController : ControllerBase
         IAiService aiService,
         ISuggestionMetricsService metricsService)
     {
-        this._suggestionService = suggestionService;
-        this._aiService = aiService;
-        this._metricsService = metricsService;
+        _suggestionService = suggestionService;
+        _aiService = aiService;
+        _metricsService = metricsService;
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public sealed class SuggestionsController : ControllerBase
         [FromBody] GenerateSuggestionsRequest request,
         CancellationToken cancellationToken)
     {
-        var status = await this._aiService.GetStatusAsync(cancellationToken);
+        var status = await _aiService.GetStatusAsync(cancellationToken);
         if (!status.IsAvailable)
         {
             return this.StatusCode(
@@ -66,29 +66,29 @@ public sealed class SuggestionsController : ControllerBase
         if (string.IsNullOrEmpty(request.SuggestionType))
         {
             // Generate all types
-            var newRules = await this._suggestionService.SuggestNewRulesAsync(request.MaxSuggestions, cancellationToken);
-            var optimizations = await this._suggestionService.SuggestOptimizationsAsync(cancellationToken);
-            var conflicts = await this._suggestionService.DetectConflictsAsync(cancellationToken);
+            var newRules = await _suggestionService.SuggestNewRulesAsync(request.MaxSuggestions, cancellationToken);
+            var optimizations = await _suggestionService.SuggestOptimizationsAsync(cancellationToken);
+            var conflicts = await _suggestionService.DetectConflictsAsync(cancellationToken);
             suggestions = newRules.Concat(optimizations).Concat(conflicts).ToList();
         }
         else if (request.SuggestionType.Equals("NewRule", StringComparison.OrdinalIgnoreCase))
         {
-            suggestions = await this._suggestionService.SuggestNewRulesAsync(request.MaxSuggestions, cancellationToken);
+            suggestions = await _suggestionService.SuggestNewRulesAsync(request.MaxSuggestions, cancellationToken);
         }
         else if (request.SuggestionType.Equals("Optimization", StringComparison.OrdinalIgnoreCase))
         {
-            suggestions = await this._suggestionService.SuggestOptimizationsAsync(cancellationToken);
+            suggestions = await _suggestionService.SuggestOptimizationsAsync(cancellationToken);
         }
         else if (request.SuggestionType.Equals("Conflict", StringComparison.OrdinalIgnoreCase))
         {
-            suggestions = await this._suggestionService.DetectConflictsAsync(cancellationToken);
+            suggestions = await _suggestionService.DetectConflictsAsync(cancellationToken);
         }
         else
         {
             return this.BadRequest(new { message = $"Invalid suggestion type: {request.SuggestionType}. Valid values are: NewRule, Optimization, Conflict" });
         }
 
-        var dtos = await this._suggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
+        var dtos = await _suggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
         return this.Ok(dtos);
     }
 
@@ -111,8 +111,8 @@ public sealed class SuggestionsController : ControllerBase
             typeFilter = parsedType;
         }
 
-        var suggestions = await this._suggestionService.GetPendingSuggestionsAsync(typeFilter, cancellationToken);
-        var dtos = await this._suggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
+        var suggestions = await _suggestionService.GetPendingSuggestionsAsync(typeFilter, cancellationToken);
+        var dtos = await _suggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
 
         return this.Ok(dtos);
     }
@@ -128,7 +128,7 @@ public sealed class SuggestionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var suggestions = await this._suggestionService.GetPendingSuggestionsAsync(ct: cancellationToken);
+        var suggestions = await _suggestionService.GetPendingSuggestionsAsync(ct: cancellationToken);
         var suggestion = suggestions.FirstOrDefault(s => s.Id == id);
 
         if (suggestion is null)
@@ -136,7 +136,7 @@ public sealed class SuggestionsController : ControllerBase
             return this.NotFound();
         }
 
-        var dto = await this._suggestionService.MapSuggestionToDtoAsync(suggestion, cancellationToken);
+        var dto = await _suggestionService.MapSuggestionToDtoAsync(suggestion, cancellationToken);
         return this.Ok(dto);
     }
 
@@ -154,7 +154,7 @@ public sealed class SuggestionsController : ControllerBase
     {
         try
         {
-            var rule = await this._suggestionService.AcceptSuggestionAsync(id, cancellationToken);
+            var rule = await _suggestionService.AcceptSuggestionAsync(id, cancellationToken);
             return this.Ok(CategorizationMapper.ToDto(rule));
         }
         catch (DomainException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
@@ -184,7 +184,7 @@ public sealed class SuggestionsController : ControllerBase
     {
         try
         {
-            await this._suggestionService.DismissSuggestionAsync(id, request?.Reason, cancellationToken);
+            await _suggestionService.DismissSuggestionAsync(id, request?.Reason, cancellationToken);
             return this.NoContent();
         }
         catch (DomainException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
@@ -210,7 +210,7 @@ public sealed class SuggestionsController : ControllerBase
     {
         try
         {
-            await this._suggestionService.ProvideFeedbackAsync(id, request.IsPositive, cancellationToken);
+            await _suggestionService.ProvideFeedbackAsync(id, request.IsPositive, cancellationToken);
             return this.NoContent();
         }
         catch (DomainException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
@@ -228,7 +228,7 @@ public sealed class SuggestionsController : ControllerBase
     [ProducesResponseType<SuggestionMetricsDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMetricsAsync(CancellationToken cancellationToken)
     {
-        var metrics = await this._metricsService.GetMetricsAsync(cancellationToken);
+        var metrics = await _metricsService.GetMetricsAsync(cancellationToken);
         return this.Ok(metrics);
     }
 }

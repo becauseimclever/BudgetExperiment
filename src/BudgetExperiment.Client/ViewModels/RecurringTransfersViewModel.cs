@@ -35,17 +35,20 @@ public sealed class RecurringTransfersViewModel : IDisposable
         IChatContextService chatContextService,
         IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._toastService = toastService;
-        this._scopeService = scopeService;
-        this._chatContextService = chatContextService;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _toastService = toastService;
+        _scopeService = scopeService;
+        _chatContextService = chatContextService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether data is loading.
@@ -55,27 +58,42 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a form submission is in progress.
     /// </summary>
-    public bool IsSubmitting { get; private set; }
+    public bool IsSubmitting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a delete operation is in progress.
     /// </summary>
-    public bool IsDeleting { get; private set; }
+    public bool IsDeleting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the traceId from the API error response that caused the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the list of recurring transfers.
@@ -85,17 +103,26 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the add form modal is visible.
     /// </summary>
-    public bool ShowAddForm { get; private set; }
+    public bool ShowAddForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the edit form modal is visible.
     /// </summary>
-    public bool ShowEditForm { get; private set; }
+    public bool ShowEditForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the delete confirmation dialog is visible.
     /// </summary>
-    public bool ShowDeleteConfirm { get; private set; }
+    public bool ShowDeleteConfirm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the new recurring transfer form model.
@@ -110,17 +137,26 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <summary>
     /// Gets the ID of the recurring transfer being edited.
     /// </summary>
-    public Guid EditingId { get; private set; }
+    public Guid EditingId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the concurrency version of the recurring transfer being edited.
     /// </summary>
-    public string? EditingVersion { get; private set; }
+    public string? EditingVersion
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the recurring transfer pending deletion.
     /// </summary>
-    public RecurringTransferDto? DeletingTransfer { get; private set; }
+    public RecurringTransferDto? DeletingTransfer
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Formats the frequency display string for a recurring transfer.
@@ -157,8 +193,8 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
-        this._chatContextService.SetPageType("recurring transfers");
+        _scopeService.ScopeChanged += this.OnScopeChanged;
+        _chatContextService.SetPageType("recurring transfers");
         await this.LoadRecurringTransfersAsync();
     }
 
@@ -174,12 +210,12 @@ public sealed class RecurringTransfersViewModel : IDisposable
 
         try
         {
-            this.RecurringTransfers = (await this._apiService.GetRecurringTransfersAsync()).ToList();
+            this.RecurringTransfers = (await _apiService.GetRecurringTransfersAsync()).ToList();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load recurring transfers: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -275,7 +311,7 @@ public sealed class RecurringTransfersViewModel : IDisposable
 
         try
         {
-            var result = await this._apiService.CreateRecurringTransferAsync(model);
+            var result = await _apiService.CreateRecurringTransferAsync(model);
             if (result != null)
             {
                 this.ShowAddForm = false;
@@ -299,10 +335,10 @@ public sealed class RecurringTransfersViewModel : IDisposable
 
         try
         {
-            var result = await this._apiService.UpdateRecurringTransferAsync(this.EditingId, model, this.EditingVersion);
+            var result = await _apiService.UpdateRecurringTransferAsync(this.EditingId, model, this.EditingVersion);
             if (result.IsConflict)
             {
-                this._toastService.ShowWarning("This recurring transfer was modified by another user. Data has been refreshed.", "Conflict");
+                _toastService.ShowWarning("This recurring transfer was modified by another user. Data has been refreshed.", "Conflict");
                 this.HideForm();
                 await this.LoadRecurringTransfersAsync();
                 return;
@@ -327,7 +363,7 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task SkipNextAsync(RecurringTransferDto transfer)
     {
-        var result = await this._apiService.SkipNextRecurringTransferAsync(transfer.Id);
+        var result = await _apiService.SkipNextRecurringTransferAsync(transfer.Id);
         if (result != null)
         {
             await this.LoadRecurringTransfersAsync();
@@ -341,7 +377,7 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task PauseAsync(RecurringTransferDto transfer)
     {
-        var result = await this._apiService.PauseRecurringTransferAsync(transfer.Id);
+        var result = await _apiService.PauseRecurringTransferAsync(transfer.Id);
         if (result != null)
         {
             await this.LoadRecurringTransfersAsync();
@@ -355,7 +391,7 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task ResumeAsync(RecurringTransferDto transfer)
     {
-        var result = await this._apiService.ResumeRecurringTransferAsync(transfer.Id);
+        var result = await _apiService.ResumeRecurringTransferAsync(transfer.Id);
         if (result != null)
         {
             await this.LoadRecurringTransfersAsync();
@@ -389,7 +425,7 @@ public sealed class RecurringTransfersViewModel : IDisposable
 
         try
         {
-            var deleted = await this._apiService.DeleteRecurringTransferAsync(this.DeletingTransfer.Id);
+            var deleted = await _apiService.DeleteRecurringTransferAsync(this.DeletingTransfer.Id);
             if (deleted)
             {
                 this.ShowDeleteConfirm = false;
@@ -416,8 +452,8 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
-        this._chatContextService.ClearContext();
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
+        _chatContextService.ClearContext();
     }
 
     private async void OnScopeChanged(BudgetScope? scope)

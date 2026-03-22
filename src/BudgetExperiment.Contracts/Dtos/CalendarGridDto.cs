@@ -10,10 +10,16 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class CalendarGridDto
 {
     /// <summary>Gets or sets the year.</summary>
-    public int Year { get; set; }
+    public int Year
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the month (1-12).</summary>
-    public int Month { get; set; }
+    public int Month
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the days in the calendar grid (42 days for 6 weeks).</summary>
     public IReadOnlyList<CalendarDaySummaryDto> Days { get; set; } = [];

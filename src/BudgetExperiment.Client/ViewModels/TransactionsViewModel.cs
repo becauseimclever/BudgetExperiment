@@ -34,17 +34,20 @@ public sealed class TransactionsViewModel : IDisposable
         ScopeService scopeService,
         IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._toastService = toastService;
-        this._navigation = navigation;
-        this._scopeService = scopeService;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _toastService = toastService;
+        _navigation = navigation;
+        _scopeService = scopeService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether data is loading.
@@ -54,17 +57,26 @@ public sealed class TransactionsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the traceId from the API error response that caused the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current filter, sort, and pagination state.
@@ -99,7 +111,10 @@ public sealed class TransactionsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether suggestions are currently loading.
     /// </summary>
-    public bool IsLoadingSuggestions { get; private set; }
+    public bool IsLoadingSuggestions
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the number of selected transactions.
@@ -116,27 +131,42 @@ public sealed class TransactionsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a bulk operation is in progress.
     /// </summary>
-    public bool IsBulkOperationInProgress { get; private set; }
+    public bool IsBulkOperationInProgress
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the bulk categorize picker is visible.
     /// </summary>
-    public bool ShowBulkCategorize { get; private set; }
+    public bool ShowBulkCategorize
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the selected category ID for bulk categorization.
     /// </summary>
-    public Guid? BulkCategoryId { get; set; }
+    public Guid? BulkCategoryId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the create-rule modal is visible.
     /// </summary>
-    public bool ShowCreateRule { get; private set; }
+    public bool ShowCreateRule
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether rule creation is in progress.
     /// </summary>
-    public bool IsCreatingRule { get; private set; }
+    public bool IsCreatingRule
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the new rule model pre-filled from a transaction description.
@@ -146,12 +176,18 @@ public sealed class TransactionsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the apply-rules prompt is visible after creating a rule.
     /// </summary>
-    public bool ShowApplyRulesPrompt { get; private set; }
+    public bool ShowApplyRulesPrompt
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether rules are being applied to matching transactions.
     /// </summary>
-    public bool IsApplyingRules { get; private set; }
+    public bool IsApplyingRules
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the number of active filter criteria.
@@ -381,7 +417,7 @@ public sealed class TransactionsViewModel : IDisposable
     public void UpdateUrl()
     {
         var url = this.BuildUrlWithFilters();
-        this._navigation.NavigateTo(url, replace: true);
+        _navigation.NavigateTo(url, replace: true);
     }
 
     /// <summary>
@@ -390,7 +426,7 @@ public sealed class TransactionsViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
+        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadAllDataAsync();
     }
 
@@ -407,12 +443,12 @@ public sealed class TransactionsViewModel : IDisposable
 
         try
         {
-            this.PageData = await this._apiService.GetUnifiedTransactionsAsync(this.Filter);
+            this.PageData = await _apiService.GetUnifiedTransactionsAsync(this.Filter);
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load transactions: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -511,18 +547,18 @@ public sealed class TransactionsViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task UpdateTransactionCategoryAsync(Guid transactionId, Guid? categoryId)
     {
-        var result = await this._apiService.UpdateTransactionCategoryAsync(transactionId, categoryId);
+        var result = await _apiService.UpdateTransactionCategoryAsync(transactionId, categoryId);
         if (result != null)
         {
             var categoryName = categoryId.HasValue
                 ? this.Categories.FirstOrDefault(c => c.Id == categoryId)?.Name
                 : null;
-            this._toastService.ShowSuccess($"Category updated to {categoryName ?? "Uncategorized"}.");
+            _toastService.ShowSuccess($"Category updated to {categoryName ?? "Uncategorized"}.");
             await this.LoadTransactionsAsync();
         }
         else
         {
-            this._toastService.ShowError("Failed to update category.");
+            _toastService.ShowError("Failed to update category.");
         }
     }
 
@@ -533,16 +569,16 @@ public sealed class TransactionsViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task DeleteTransactionAsync(Guid transactionId)
     {
-        var deleted = await this._apiService.DeleteTransactionAsync(transactionId);
+        var deleted = await _apiService.DeleteTransactionAsync(transactionId);
         if (deleted)
         {
             this.SelectedTransactionIds.Remove(transactionId);
-            this._toastService.ShowSuccess("Transaction deleted.");
+            _toastService.ShowSuccess("Transaction deleted.");
             await this.LoadTransactionsAsync();
         }
         else
         {
-            this._toastService.ShowError("Failed to delete transaction.");
+            _toastService.ShowError("Failed to delete transaction.");
         }
     }
 
@@ -627,16 +663,16 @@ public sealed class TransactionsViewModel : IDisposable
                 TransactionIds = this.SelectedTransactionIds.ToList(),
                 CategoryId = this.BulkCategoryId.Value,
             };
-            var result = await this._apiService.BulkCategorizeTransactionsAsync(request);
+            var result = await _apiService.BulkCategorizeTransactionsAsync(request);
             var categoryName = this.Categories.FirstOrDefault(c => c.Id == this.BulkCategoryId)?.Name ?? "Unknown";
-            this._toastService.ShowSuccess($"Categorized {result.SuccessCount} transaction(s) as {categoryName}.");
+            _toastService.ShowSuccess($"Categorized {result.SuccessCount} transaction(s) as {categoryName}.");
             this.ShowBulkCategorize = false;
             this.ClearSelection();
             await this.LoadTransactionsAsync();
         }
         catch (Exception ex)
         {
-            this._toastService.ShowError($"Bulk categorize failed: {ex.Message}");
+            _toastService.ShowError($"Bulk categorize failed: {ex.Message}");
         }
         finally
         {
@@ -665,20 +701,20 @@ public sealed class TransactionsViewModel : IDisposable
             int successCount = 0;
             foreach (var id in ids)
             {
-                var deleted = await this._apiService.DeleteTransactionAsync(id);
+                var deleted = await _apiService.DeleteTransactionAsync(id);
                 if (deleted)
                 {
                     successCount++;
                 }
             }
 
-            this._toastService.ShowSuccess($"Deleted {successCount} transaction(s).");
+            _toastService.ShowSuccess($"Deleted {successCount} transaction(s).");
             this.ClearSelection();
             await this.LoadTransactionsAsync();
         }
         catch (Exception ex)
         {
-            this._toastService.ShowError($"Bulk delete failed: {ex.Message}");
+            _toastService.ShowError($"Bulk delete failed: {ex.Message}");
         }
         finally
         {
@@ -723,22 +759,22 @@ public sealed class TransactionsViewModel : IDisposable
 
         try
         {
-            var created = await this._apiService.CreateCategorizationRuleAsync(this.NewRule);
+            var created = await _apiService.CreateCategorizationRuleAsync(this.NewRule);
             if (created != null)
             {
-                this._toastService.ShowSuccess($"Rule '{created.Name}' created.");
+                _toastService.ShowSuccess($"Rule '{created.Name}' created.");
                 this.ShowCreateRule = false;
                 this.ShowApplyRulesPrompt = true;
                 await this.LoadTransactionsAsync();
             }
             else
             {
-                this._toastService.ShowError("Failed to create rule.");
+                _toastService.ShowError("Failed to create rule.");
             }
         }
         catch (Exception ex)
         {
-            this._toastService.ShowError($"Failed to create rule: {ex.Message}");
+            _toastService.ShowError($"Failed to create rule: {ex.Message}");
         }
         finally
         {
@@ -758,20 +794,20 @@ public sealed class TransactionsViewModel : IDisposable
 
         try
         {
-            var result = await this._apiService.ApplyCategorizationRulesAsync(new ApplyRulesRequest());
+            var result = await _apiService.ApplyCategorizationRulesAsync(new ApplyRulesRequest());
             if (result != null)
             {
-                this._toastService.ShowSuccess($"Applied rules: {result.Categorized} transaction(s) categorized.");
+                _toastService.ShowSuccess($"Applied rules: {result.Categorized} transaction(s) categorized.");
                 await this.LoadTransactionsAsync();
             }
             else
             {
-                this._toastService.ShowError("Failed to apply rules.");
+                _toastService.ShowError("Failed to apply rules.");
             }
         }
         catch (Exception ex)
         {
-            this._toastService.ShowError($"Failed to apply rules: {ex.Message}");
+            _toastService.ShowError($"Failed to apply rules: {ex.Message}");
         }
         finally
         {
@@ -844,7 +880,7 @@ public sealed class TransactionsViewModel : IDisposable
 
         try
         {
-            var response = await this._apiService.GetBatchCategorySuggestionsAsync(uncategorizedIds);
+            var response = await _apiService.GetBatchCategorySuggestionsAsync(uncategorizedIds);
             this.Suggestions = response.Suggestions;
         }
         catch
@@ -877,7 +913,7 @@ public sealed class TransactionsViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
     }
 
     private async Task LoadAllDataAsync()
@@ -889,9 +925,9 @@ public sealed class TransactionsViewModel : IDisposable
 
         try
         {
-            var accountsTask = this._apiService.GetAccountsAsync();
-            var categoriesTask = this._apiService.GetCategoriesAsync(activeOnly: true);
-            var transactionsTask = this._apiService.GetUnifiedTransactionsAsync(this.Filter);
+            var accountsTask = _apiService.GetAccountsAsync();
+            var categoriesTask = _apiService.GetCategoriesAsync(activeOnly: true);
+            var transactionsTask = _apiService.GetUnifiedTransactionsAsync(this.Filter);
 
             await Task.WhenAll(accountsTask, categoriesTask, transactionsTask);
 
@@ -902,7 +938,7 @@ public sealed class TransactionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load transactions: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {

@@ -23,7 +23,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     /// <param name="factory">The test factory.</param>
     public CategorizationRulesControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     public async Task GetAll_Returns_200_WithRuleList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/categorizationrules");
+        var response = await _client.GetAsync("/api/v1/categorizationrules");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -51,7 +51,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange - create a category first
         var categoryDto = new BudgetCategoryCreateDto { Name = "Test Groceries Rule", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -64,7 +64,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -88,7 +88,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "GetById Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -98,11 +98,11 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Exact",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -120,7 +120,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/categorizationrules/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/categorizationrules/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -135,7 +135,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "Update Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -145,7 +145,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         var updateDto = new CategorizationRuleUpdateDto
@@ -158,7 +158,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/categorizationrules/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/categorizationrules/{created!.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -179,7 +179,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "Delete Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -189,17 +189,17 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/categorizationrules/{created!.Id}");
+        var response = await _client.DeleteAsync($"/api/v1/categorizationrules/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify it's gone
-        var getResponse = await this._client.GetAsync($"/api/v1/categorizationrules/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/categorizationrules/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -212,7 +212,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "Activate Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -222,20 +222,20 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         // Deactivate first
-        await this._client.PostAsync($"/api/v1/categorizationrules/{created!.Id}/deactivate", null);
+        await _client.PostAsync($"/api/v1/categorizationrules/{created!.Id}/deactivate", null);
 
         // Act
-        var response = await this._client.PostAsync($"/api/v1/categorizationrules/{created.Id}/activate", null);
+        var response = await _client.PostAsync($"/api/v1/categorizationrules/{created.Id}/activate", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify it's active
-        var getResponse = await this._client.GetAsync($"/api/v1/categorizationrules/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/categorizationrules/{created.Id}");
         var rule = await getResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
         Assert.True(rule!.IsActive);
     }
@@ -249,7 +249,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "Deactivate Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -259,17 +259,17 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         // Act
-        var response = await this._client.PostAsync($"/api/v1/categorizationrules/{created!.Id}/deactivate", null);
+        var response = await _client.PostAsync($"/api/v1/categorizationrules/{created!.Id}/deactivate", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify it's inactive
-        var getResponse = await this._client.GetAsync($"/api/v1/categorizationrules/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/categorizationrules/{created.Id}");
         var rule = await getResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
         Assert.False(rule!.IsActive);
     }
@@ -291,7 +291,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/test", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules/test", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -315,7 +315,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/apply", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules/apply", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -332,7 +332,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange - create two rules
         var categoryDto = new BudgetCategoryCreateDto { Name = "Reorder Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto1 = new CategorizationRuleCreateDto
@@ -342,7 +342,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var response1 = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto1);
+        var response1 = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto1);
         var rule1 = await response1.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         var createDto2 = new CategorizationRuleCreateDto
@@ -352,7 +352,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category.Id,
         };
-        var response2 = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto2);
+        var response2 = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto2);
         var rule2 = await response2.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         var request = new ReorderRulesRequest
@@ -361,15 +361,15 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync("/api/v1/categorizationrules/reorder", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/categorizationrules/reorder", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify priorities changed
-        var getRule1 = await this._client.GetAsync($"/api/v1/categorizationrules/{rule1.Id}");
+        var getRule1 = await _client.GetAsync($"/api/v1/categorizationrules/{rule1.Id}");
         var updatedRule1 = await getRule1.Content.ReadFromJsonAsync<CategorizationRuleDto>();
-        var getRule2 = await this._client.GetAsync($"/api/v1/categorizationrules/{rule2.Id}");
+        var getRule2 = await _client.GetAsync($"/api/v1/categorizationrules/{rule2.Id}");
         var updatedRule2 = await getRule2.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         Assert.True(updatedRule2!.Priority < updatedRule1!.Priority, "Rule 2 should now have higher priority (lower number)");
@@ -384,7 +384,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "ActiveOnly Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var activeRuleDto = new CategorizationRuleCreateDto
@@ -394,7 +394,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var activeResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", activeRuleDto);
+        var activeResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", activeRuleDto);
         var activeRule = await activeResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         var inactiveRuleDto = new CategorizationRuleCreateDto
@@ -404,14 +404,14 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category.Id,
         };
-        var inactiveResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", inactiveRuleDto);
+        var inactiveResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", inactiveRuleDto);
         var inactiveRule = await inactiveResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         // Deactivate the second rule
-        await this._client.PostAsync($"/api/v1/categorizationrules/{inactiveRule!.Id}/deactivate", null);
+        await _client.PostAsync($"/api/v1/categorizationrules/{inactiveRule!.Id}/deactivate", null);
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/categorizationrules?activeOnly=true");
+        var response = await _client.GetAsync("/api/v1/categorizationrules?activeOnly=true");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -430,7 +430,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "ETag Rule Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -440,11 +440,11 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -461,7 +461,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "IfMatch Valid Rule Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -471,10 +471,10 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
-        var getResponse = await this._client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/categorizationrules/{created!.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new CategorizationRuleUpdateDto
@@ -491,7 +491,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -509,7 +509,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "Stale IfMatch Rule Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -519,7 +519,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         var staleETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"99999999\"");
@@ -537,7 +537,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -552,7 +552,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "No IfMatch Rule Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var createDto = new CategorizationRuleCreateDto
@@ -562,7 +562,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
             MatchType = "Contains",
             CategoryId = category!.Id,
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categorizationrules", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<CategorizationRuleDto>();
 
         var updateDto = new CategorizationRuleUpdateDto
@@ -574,7 +574,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/categorizationrules/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/categorizationrules/{created!.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -591,7 +591,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange - create a category and a few rules
         var categoryDto = new BudgetCategoryCreateDto { Name = "Pagination Test", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         for (var i = 0; i < 3; i++)
@@ -603,11 +603,11 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
                 MatchType = "Contains",
                 CategoryId = category!.Id,
             };
-            await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+            await _client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
         }
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/categorizationrules?page=1&pageSize=2");
+        var response = await _client.GetAsync("/api/v1/categorizationrules?page=1&pageSize=2");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -632,7 +632,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     public async Task GetAll_Without_Page_Params_Returns_Legacy_Array()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/categorizationrules");
+        var response = await _client.GetAsync("/api/v1/categorizationrules");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -652,7 +652,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "BulkDelete Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var ids = new List<Guid>();
@@ -665,7 +665,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
                 MatchType = "Contains",
                 CategoryId = category!.Id,
             };
-            var resp = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+            var resp = await _client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
             var created = await resp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
             ids.Add(created!.Id);
         }
@@ -677,7 +677,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         {
             Content = JsonContent.Create(request),
         };
-        var response = await this._client.SendAsync(deleteRequest);
+        var response = await _client.SendAsync(deleteRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -688,7 +688,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         // Verify rules are gone
         foreach (var id in ids)
         {
-            var getResp = await this._client.GetAsync($"/api/v1/categorizationrules/{id}");
+            var getResp = await _client.GetAsync($"/api/v1/categorizationrules/{id}");
             Assert.Equal(HttpStatusCode.NotFound, getResp.StatusCode);
         }
     }
@@ -708,7 +708,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         {
             Content = JsonContent.Create(request),
         };
-        var response = await this._client.SendAsync(deleteRequest);
+        var response = await _client.SendAsync(deleteRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -723,7 +723,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "BulkActivate Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var ids = new List<Guid>();
@@ -736,18 +736,18 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
                 MatchType = "Contains",
                 CategoryId = category!.Id,
             };
-            var resp = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+            var resp = await _client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
             var created = await resp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
             ids.Add(created!.Id);
 
             // Deactivate so we can test bulk activate
-            await this._client.PostAsync($"/api/v1/categorizationrules/{created.Id}/deactivate", null);
+            await _client.PostAsync($"/api/v1/categorizationrules/{created.Id}/deactivate", null);
         }
 
         var request = new BulkRuleActionRequest { Ids = ids };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/activate", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/activate", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -758,7 +758,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         // Verify rules are active
         foreach (var id in ids)
         {
-            var getResp = await this._client.GetAsync($"/api/v1/categorizationrules/{id}");
+            var getResp = await _client.GetAsync($"/api/v1/categorizationrules/{id}");
             var rule = await getResp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
             Assert.True(rule!.IsActive);
         }
@@ -775,7 +775,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         var request = new BulkRuleActionRequest { Ids = [] };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/activate", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/activate", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -790,7 +790,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "BulkDeactivate Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var ids = new List<Guid>();
@@ -803,7 +803,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
                 MatchType = "Contains",
                 CategoryId = category!.Id,
             };
-            var resp = await this._client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
+            var resp = await _client.PostAsJsonAsync("/api/v1/categorizationrules", ruleDto);
             var created = await resp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
             ids.Add(created!.Id);
         }
@@ -811,7 +811,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         var request = new BulkRuleActionRequest { Ids = ids };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/deactivate", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/deactivate", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -822,7 +822,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         // Verify rules are inactive
         foreach (var id in ids)
         {
-            var getResp = await this._client.GetAsync($"/api/v1/categorizationrules/{id}");
+            var getResp = await _client.GetAsync($"/api/v1/categorizationrules/{id}");
             var rule = await getResp.Content.ReadFromJsonAsync<CategorizationRuleDto>();
             Assert.False(rule!.IsActive);
         }
@@ -839,7 +839,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         var request = new BulkRuleActionRequest { Ids = [] };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/deactivate", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/categorizationrules/bulk/deactivate", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -860,7 +860,7 @@ public sealed class CategorizationRulesControllerTests : IClassFixture<CustomWeb
         {
             Content = JsonContent.Create(request),
         };
-        var response = await this._client.SendAsync(deleteRequest);
+        var response = await _client.SendAsync(deleteRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

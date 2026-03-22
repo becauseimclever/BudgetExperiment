@@ -13,11 +13,20 @@ public sealed class PastDueSummaryDto
     public IReadOnlyList<PastDueItemDto> Items { get; set; } = [];
 
     /// <summary>Gets or sets the total count of past-due items.</summary>
-    public int TotalCount { get; set; }
+    public int TotalCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the oldest past-due date.</summary>
-    public DateOnly? OldestDate { get; set; }
+    public DateOnly? OldestDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total amount of all past-due items.</summary>
-    public MoneyDto? TotalAmount { get; set; }
+    public MoneyDto? TotalAmount
+    {
+        get; set;
+    }
 }

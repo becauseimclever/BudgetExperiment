@@ -16,5 +16,8 @@ public sealed class PaycheckAllocationWarningDto
     public string Message { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the optional amount (e.g., shortfall).</summary>
-    public MoneyDto? Amount { get; set; }
+    public MoneyDto? Amount
+    {
+        get; set;
+    }
 }

@@ -34,11 +34,11 @@ public sealed class ChatActionExecutor : IChatActionExecutor
         IRecurringTransferService recurringTransferService,
         ICurrencyProvider currencyProvider)
     {
-        this._transactionService = transactionService;
-        this._transferService = transferService;
-        this._recurringTransactionService = recurringTransactionService;
-        this._recurringTransferService = recurringTransferService;
-        this._currencyProvider = currencyProvider;
+        _transactionService = transactionService;
+        _transferService = transferService;
+        _recurringTransactionService = recurringTransactionService;
+        _recurringTransferService = recurringTransferService;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -69,7 +69,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
         CreateTransactionAction action,
         CancellationToken cancellationToken)
     {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var dto = new TransactionCreateDto
         {
             AccountId = action.AccountId,
@@ -79,7 +79,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
             CategoryId = action.CategoryId,
         };
 
-        var created = await this._transactionService.CreateAsync(dto, cancellationToken);
+        var created = await _transactionService.CreateAsync(dto, cancellationToken);
         return new ActionExecutionResult(
             Success: true,
             ActionType: ChatActionType.CreateTransaction,
@@ -91,7 +91,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
         CreateTransferAction action,
         CancellationToken cancellationToken)
     {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var request = new CreateTransferRequest
         {
             SourceAccountId = action.FromAccountId,
@@ -102,7 +102,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
             Description = action.Description,
         };
 
-        var created = await this._transferService.CreateAsync(request, cancellationToken);
+        var created = await _transferService.CreateAsync(request, cancellationToken);
         return new ActionExecutionResult(
             Success: true,
             ActionType: ChatActionType.CreateTransfer,
@@ -114,7 +114,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
         CreateRecurringTransactionAction action,
         CancellationToken cancellationToken)
     {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var dto = new RecurringTransactionCreateDto
         {
             AccountId = action.AccountId,
@@ -128,7 +128,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
             EndDate = action.EndDate,
         };
 
-        var created = await this._recurringTransactionService.CreateAsync(dto, cancellationToken);
+        var created = await _recurringTransactionService.CreateAsync(dto, cancellationToken);
         return new ActionExecutionResult(
             Success: true,
             ActionType: ChatActionType.CreateRecurringTransaction,
@@ -140,7 +140,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
         CreateRecurringTransferAction action,
         CancellationToken cancellationToken)
     {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var dto = new RecurringTransferCreateDto
         {
             SourceAccountId = action.FromAccountId,
@@ -155,7 +155,7 @@ public sealed class ChatActionExecutor : IChatActionExecutor
             EndDate = action.EndDate,
         };
 
-        var created = await this._recurringTransferService.CreateAsync(dto, cancellationToken);
+        var created = await _recurringTransferService.CreateAsync(dto, cancellationToken);
         return new ActionExecutionResult(
             Success: true,
             ActionType: ChatActionType.CreateRecurringTransfer,

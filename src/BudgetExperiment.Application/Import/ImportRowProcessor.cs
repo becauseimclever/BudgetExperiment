@@ -39,7 +39,7 @@ public sealed class ImportRowProcessor : IImportRowProcessor
     /// <param name="duplicateDetector">The duplicate detector.</param>
     public ImportRowProcessor(IImportDuplicateDetector duplicateDetector)
     {
-        this._duplicateDetector = duplicateDetector;
+        _duplicateDetector = duplicateDetector;
     }
 
     /// <inheritdoc />
@@ -85,7 +85,7 @@ public sealed class ImportRowProcessor : IImportRowProcessor
         Guid? duplicateOfId = null;
         if (duplicateSettings.Enabled && date.HasValue && amount.HasValue && errors.Count == 0)
         {
-            duplicateOfId = this._duplicateDetector.FindDuplicate(
+            duplicateOfId = _duplicateDetector.FindDuplicate(
                 date.Value, amount.Value, description, existingTransactions, duplicateSettings);
         }
 

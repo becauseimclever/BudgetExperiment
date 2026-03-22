@@ -12,12 +12,18 @@ public sealed record ImportPreviewRow
     /// <summary>
     /// Gets the row index from the original CSV (1-based for display).
     /// </summary>
-    public int RowIndex { get; init; }
+    public int RowIndex
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the parsed transaction date.
     /// </summary>
-    public DateOnly? Date { get; init; }
+    public DateOnly? Date
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the transaction description.
@@ -27,52 +33,82 @@ public sealed record ImportPreviewRow
     /// <summary>
     /// Gets the parsed amount.
     /// </summary>
-    public decimal? Amount { get; init; }
+    public decimal? Amount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the category name (from CSV or auto-categorization).
     /// </summary>
-    public string? Category { get; init; }
+    public string? Category
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the category ID if matched.
     /// </summary>
-    public Guid? CategoryId { get; init; }
+    public Guid? CategoryId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the source of the category assignment.
     /// </summary>
-    public CategorySource CategorySource { get; init; }
+    public CategorySource CategorySource
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the name of the matched auto-categorization rule (if any).
     /// </summary>
-    public string? MatchedRuleName { get; init; }
+    public string? MatchedRuleName
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the matched rule ID for tracking.
     /// </summary>
-    public Guid? MatchedRuleId { get; init; }
+    public Guid? MatchedRuleId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the external reference/ID from the CSV.
     /// </summary>
-    public string? Reference { get; init; }
+    public string? Reference
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the validation status of this row.
     /// </summary>
-    public ImportRowStatus Status { get; init; }
+    public ImportRowStatus Status
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a message describing the status (error message, warning, etc.).
     /// </summary>
-    public string? StatusMessage { get; init; }
+    public string? StatusMessage
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the ID of the existing transaction this row duplicates.
     /// </summary>
-    public Guid? DuplicateOfTransactionId { get; init; }
+    public Guid? DuplicateOfTransactionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this row is selected for import.
@@ -82,10 +118,16 @@ public sealed record ImportPreviewRow
     /// <summary>
     /// Gets the potential recurring transaction match for this row (if any).
     /// </summary>
-    public ImportRecurringMatchPreview? RecurringMatch { get; init; }
+    public ImportRecurringMatchPreview? RecurringMatch
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the parsed location preview for this row (if location parsing found a match).
     /// </summary>
-    public ImportLocationPreview? ParsedLocation { get; init; }
+    public ImportLocationPreview? ParsedLocation
+    {
+        get; init;
+    }
 }

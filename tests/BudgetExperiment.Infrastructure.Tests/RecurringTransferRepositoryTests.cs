@@ -21,14 +21,14 @@ public class RecurringTransferRepositoryTests
     /// <param name="fixture">The shared PostgreSQL database fixture.</param>
     public RecurringTransferRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_RecurringTransfer()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -51,7 +51,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(recurringTransfer.Id);
 
@@ -71,7 +71,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetByAccountIdAsync_Returns_Transfers_As_Source_Or_Destination()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -113,7 +113,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var account1Transfers = await verifyRepo.GetByAccountIdAsync(account1.Id);
 
@@ -128,7 +128,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetBySourceAccountIdAsync_Returns_Only_Source_Transfers()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -170,7 +170,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var sourceTransfers = await verifyRepo.GetBySourceAccountIdAsync(source.Id);
 
@@ -185,7 +185,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetByDestinationAccountIdAsync_Returns_Only_Destination_Transfers()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -227,7 +227,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var destTransfers = await verifyRepo.GetByDestinationAccountIdAsync(dest.Id);
 
@@ -242,7 +242,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetActiveAsync_Returns_Only_Active_Transfers()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -274,7 +274,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var activeTransfers = await verifyRepo.GetActiveAsync();
 
@@ -287,7 +287,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetAllAsync_Returns_All_Transfers_Ordered_By_Description()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -327,7 +327,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var allTransfers = await verifyRepo.GetAllAsync();
 
@@ -342,7 +342,7 @@ public class RecurringTransferRepositoryTests
     public async Task ListAsync_Returns_Paginated_Results()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -367,7 +367,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var page1 = await verifyRepo.ListAsync(0, 2);
         var page2 = await verifyRepo.ListAsync(2, 2);
@@ -383,7 +383,7 @@ public class RecurringTransferRepositoryTests
     public async Task CountAsync_Returns_Correct_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -427,7 +427,7 @@ public class RecurringTransferRepositoryTests
     public async Task RemoveAsync_Deletes_RecurringTransfer()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -453,7 +453,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(transfer.Id);
         Assert.Null(retrieved);
@@ -463,7 +463,7 @@ public class RecurringTransferRepositoryTests
     public async Task AddExceptionAsync_And_GetExceptionAsync_Persists_Exception()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -495,7 +495,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetExceptionAsync(transfer.Id, new DateOnly(2026, 2, 15));
 
@@ -510,7 +510,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetExceptionsByDateRangeAsync_Returns_Exceptions_In_Range()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -542,7 +542,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var exceptions = await verifyRepo.GetExceptionsByDateRangeAsync(
             transfer.Id,
@@ -559,7 +559,7 @@ public class RecurringTransferRepositoryTests
     public async Task RemoveExceptionAsync_Deletes_Exception()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -588,7 +588,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetExceptionAsync(transfer.Id, new DateOnly(2026, 2, 15));
         Assert.Null(retrieved);
@@ -598,7 +598,7 @@ public class RecurringTransferRepositoryTests
     public async Task RemoveExceptionsFromDateAsync_Removes_Future_Exceptions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -634,7 +634,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
 
         var janEx = await verifyRepo.GetExceptionAsync(transfer.Id, new DateOnly(2026, 1, 15));
@@ -652,7 +652,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetByIdAsync_Returns_Null_For_NonExistent_Id()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
         // Act
@@ -666,7 +666,7 @@ public class RecurringTransferRepositoryTests
     public async Task GetExceptionAsync_Returns_Null_For_NonExistent_Exception()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -697,7 +697,7 @@ public class RecurringTransferRepositoryTests
     public async Task Deleting_Account_Cascades_To_RecurringTransfer()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var repository = new RecurringTransferRepository(context, FakeUserContext.CreateDefault());
 
@@ -722,7 +722,7 @@ public class RecurringTransferRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert - Transfer should be cascade deleted
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RecurringTransferRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(transfer.Id);
         Assert.Null(retrieved);

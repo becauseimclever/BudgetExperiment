@@ -24,7 +24,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     /// <param name="factory">The test factory.</param>
     public BudgetsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetGoalsByMonth_Returns_200_WithGoalList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/budgets?year=2026&month=1");
+        var response = await _client.GetAsync("/api/v1/budgets?year=2026&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -55,7 +55,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetGoalsByMonth_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets?year=2026&month={month}");
+        var response = await _client.GetAsync($"/api/v1/budgets?year=2026&month={month}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -70,7 +70,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create a category first
         var categoryDto = new BudgetCategoryCreateDto { Name = "Budget Test Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goalDto = new BudgetGoalSetDto
@@ -81,7 +81,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -102,7 +102,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create a category and initial goal
         var categoryDto = new BudgetCategoryCreateDto { Name = "Update Goal Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var initialGoalDto = new BudgetGoalSetDto
@@ -111,7 +111,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 2,
             TargetAmount = new MoneyDto { Amount = 300.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
 
         var updatedGoalDto = new BudgetGoalSetDto
         {
@@ -121,7 +121,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", updatedGoalDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", updatedGoalDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -146,7 +146,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{Guid.NewGuid()}", goalDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/budgets/{Guid.NewGuid()}", goalDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -171,7 +171,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{Guid.NewGuid()}", goalDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/budgets/{Guid.NewGuid()}", goalDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -186,7 +186,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create category and goal
         var categoryDto = new BudgetCategoryCreateDto { Name = "Delete Goal Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goalDto = new BudgetGoalSetDto
@@ -195,10 +195,10 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 3,
             TargetAmount = new MoneyDto { Amount = 200.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
 
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/budgets/{category.Id}?year=2026&month=3");
+        var response = await _client.DeleteAsync($"/api/v1/budgets/{category.Id}?year=2026&month=3");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -212,7 +212,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task DeleteGoal_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/budgets/{Guid.NewGuid()}?year=2026&month=1");
+        var response = await _client.DeleteAsync($"/api/v1/budgets/{Guid.NewGuid()}?year=2026&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -229,7 +229,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task DeleteGoal_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/budgets/{Guid.NewGuid()}?year=2026&month={month}");
+        var response = await _client.DeleteAsync($"/api/v1/budgets/{Guid.NewGuid()}?year=2026&month={month}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -244,17 +244,17 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create category and multiple goals
         var categoryDto = new BudgetCategoryCreateDto { Name = "Goals List Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goal1 = new BudgetGoalSetDto { Year = 2026, Month = 4, TargetAmount = new MoneyDto { Amount = 100.00m, Currency = "USD" } };
         var goal2 = new BudgetGoalSetDto { Year = 2026, Month = 5, TargetAmount = new MoneyDto { Amount = 150.00m, Currency = "USD" } };
 
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goal1);
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", goal2);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goal1);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", goal2);
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets/category/{category.Id}");
+        var response = await _client.GetAsync($"/api/v1/budgets/category/{category.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -271,7 +271,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetProgress_Returns_200_WithSummary()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/budgets/progress?year=2026&month=1");
+        var response = await _client.GetAsync("/api/v1/budgets/progress?year=2026&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -292,7 +292,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetProgress_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets/progress?year=2026&month={month}");
+        var response = await _client.GetAsync($"/api/v1/budgets/progress?year=2026&month={month}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -307,7 +307,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create category with goal
         var categoryDto = new BudgetCategoryCreateDto { Name = "Progress Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goalDto = new BudgetGoalSetDto
@@ -316,10 +316,10 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 6,
             TargetAmount = new MoneyDto { Amount = 500.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=6");
+        var response = await _client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=6");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -337,7 +337,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetCategoryProgress_Returns_404_WhenNoGoalExists()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets/progress/{Guid.NewGuid()}?year=2026&month=1");
+        var response = await _client.GetAsync($"/api/v1/budgets/progress/{Guid.NewGuid()}?year=2026&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -354,7 +354,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetCategoryProgress_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets/progress/{Guid.NewGuid()}?year=2026&month={month}");
+        var response = await _client.GetAsync($"/api/v1/budgets/progress/{Guid.NewGuid()}?year=2026&month={month}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -368,7 +368,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetSummary_Returns_200_WithSummary()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/budgets/summary?year=2026&month=1");
+        var response = await _client.GetAsync("/api/v1/budgets/summary?year=2026&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -389,7 +389,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetSummary_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets/summary?year=2026&month={month}");
+        var response = await _client.GetAsync($"/api/v1/budgets/summary?year=2026&month={month}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -404,7 +404,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create category with goal (no spending)
         var categoryDto = new BudgetCategoryCreateDto { Name = "Status Test Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goalDto = new BudgetGoalSetDto
@@ -413,10 +413,10 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 7,
             TargetAmount = new MoneyDto { Amount = 100.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=7");
+        var response = await _client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=7");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -439,7 +439,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create a category with a goal in source month
         var categoryDto = new BudgetCategoryCreateDto { Name = "Copy Test Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goalDto = new BudgetGoalSetDto
@@ -448,7 +448,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 3,
             TargetAmount = new MoneyDto { Amount = 750.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
 
         var copyRequest = new CopyBudgetGoalsRequest
         {
@@ -460,7 +460,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -470,7 +470,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         Assert.True(result.GoalsCreated >= 1);
 
         // Verify the goal was actually copied
-        var targetGoals = await this._client.GetAsync("/api/v1/budgets?year=2026&month=4");
+        var targetGoals = await _client.GetAsync("/api/v1/budgets?year=2026&month=4");
         var goals = await targetGoals.Content.ReadFromJsonAsync<List<BudgetGoalDto>>();
         Assert.Contains(goals!, g => g.CategoryId == category.Id && g.TargetAmount.Amount == 750.00m);
     }
@@ -496,7 +496,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -523,7 +523,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -547,7 +547,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -562,7 +562,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create a category with goals in both source and target months
         var categoryDto = new BudgetCategoryCreateDto { Name = "Skip Test Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Create source goal
@@ -572,7 +572,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 5,
             TargetAmount = new MoneyDto { Amount = 500.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", sourceGoalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", sourceGoalDto);
 
         // Create existing target goal with different amount
         var targetGoalDto = new BudgetGoalSetDto
@@ -581,7 +581,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 6,
             TargetAmount = new MoneyDto { Amount = 300.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", targetGoalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", targetGoalDto);
 
         var copyRequest = new CopyBudgetGoalsRequest
         {
@@ -593,7 +593,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/budgets/copy", copyRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -602,7 +602,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         Assert.True(result.GoalsSkipped >= 1);
 
         // Verify the original target goal amount was NOT overwritten
-        var progressResponse = await this._client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=6");
+        var progressResponse = await _client.GetAsync($"/api/v1/budgets/progress/{category.Id}?year=2026&month=6");
         var progress = await progressResponse.Content.ReadFromJsonAsync<BudgetProgressDto>();
         Assert.Equal(300.00m, progress!.TargetAmount.Amount);
     }
@@ -616,7 +616,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "ETag Goal Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goalDto = new BudgetGoalSetDto
@@ -627,7 +627,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -644,7 +644,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create category and initial goal
         var categoryDto = new BudgetCategoryCreateDto { Name = "IfMatch Goal Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var initialGoalDto = new BudgetGoalSetDto
@@ -653,7 +653,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 9,
             TargetAmount = new MoneyDto { Amount = 200.00m, Currency = "USD" },
         };
-        var createGoalResponse = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
+        var createGoalResponse = await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
         var etag = createGoalResponse.Headers.ETag;
 
         // Act - update with valid ETag
@@ -669,7 +669,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
         request.Headers.IfMatch.Add(etag!);
 
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -687,7 +687,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange - create category and initial goal
         var categoryDto = new BudgetCategoryCreateDto { Name = "Stale IfMatch Goal Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var initialGoalDto = new BudgetGoalSetDto
@@ -696,7 +696,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 10,
             TargetAmount = new MoneyDto { Amount = 400.00m, Currency = "USD" },
         };
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", initialGoalDto);
 
         // Act - try to update with stale ETag
         var staleETag = new EntityTagHeaderValue("\"99999999\"");
@@ -712,7 +712,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
         request.Headers.IfMatch.Add(staleETag);
 
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -727,7 +727,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
     {
         // Arrange
         var categoryDto = new BudgetCategoryCreateDto { Name = "No IfMatch Goal Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var goalDto = new BudgetGoalSetDto
@@ -738,7 +738,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
         };
 
         // Create the goal first
-        await this._client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
+        await _client.PutAsJsonAsync($"/api/v1/budgets/{category!.Id}", goalDto);
 
         // Act - update without If-Match
         var updateGoalDto = new BudgetGoalSetDto
@@ -747,7 +747,7 @@ public sealed class BudgetsControllerTests : IClassFixture<CustomWebApplicationF
             Month = 11,
             TargetAmount = new MoneyDto { Amount = 250.00m, Currency = "USD" },
         };
-        var response = await this._client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", updateGoalDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/budgets/{category.Id}", updateGoalDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

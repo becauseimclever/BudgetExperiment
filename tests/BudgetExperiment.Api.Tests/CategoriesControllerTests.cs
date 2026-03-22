@@ -24,7 +24,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     /// <param name="factory">The test factory.</param>
     public CategoriesControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     public async Task GetAll_Returns_200_WithCategoryList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/categories");
+        var response = await _client.GetAsync("/api/v1/categories");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -52,18 +52,18 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange - create active and inactive categories
         var activeDto = new BudgetCategoryCreateDto { Name = "Active Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", activeDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", activeDto);
         var activeCategory = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var inactiveDto = new BudgetCategoryCreateDto { Name = "Inactive Category", Type = "Expense" };
-        var inactiveResponse = await this._client.PostAsJsonAsync("/api/v1/categories", inactiveDto);
+        var inactiveResponse = await _client.PostAsJsonAsync("/api/v1/categories", inactiveDto);
         var inactiveCategory = await inactiveResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Deactivate the second category
-        await this._client.PostAsync($"/api/v1/categories/{inactiveCategory!.Id}/deactivate", null);
+        await _client.PostAsync($"/api/v1/categories/{inactiveCategory!.Id}/deactivate", null);
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/categories?activeOnly=true");
+        var response = await _client.GetAsync("/api/v1/categories?activeOnly=true");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +90,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -113,11 +113,11 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange - create a category first
         var createDto = new BudgetCategoryCreateDto { Name = "Get Test Category", Type = "Income" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/categories/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/categories/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -135,7 +135,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/categories/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/categories/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -150,7 +150,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange - create category first
         var createDto = new BudgetCategoryCreateDto { Name = "Original Name", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var updateDto = new BudgetCategoryUpdateDto
@@ -162,7 +162,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/categories/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/categories/{created!.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -185,7 +185,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
         var updateDto = new BudgetCategoryUpdateDto { Name = "New Name" };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/categories/{Guid.NewGuid()}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/categories/{Guid.NewGuid()}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -200,17 +200,17 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange - create category first
         var createDto = new BudgetCategoryCreateDto { Name = "Delete Test Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/categories/{created!.Id}");
+        var response = await _client.DeleteAsync($"/api/v1/categories/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify it's gone
-        var getResponse = await this._client.GetAsync($"/api/v1/categories/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/categories/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -222,7 +222,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     public async Task Delete_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/categories/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/categories/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -237,24 +237,24 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange - create and deactivate a category
         var createDto = new BudgetCategoryCreateDto { Name = "Activate Test Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
-        await this._client.PostAsync($"/api/v1/categories/{created!.Id}/deactivate", null);
+        await _client.PostAsync($"/api/v1/categories/{created!.Id}/deactivate", null);
 
         // Verify it's inactive
-        var inactiveResponse = await this._client.GetAsync($"/api/v1/categories/{created.Id}");
+        var inactiveResponse = await _client.GetAsync($"/api/v1/categories/{created.Id}");
         var inactiveCategory = await inactiveResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
         Assert.False(inactiveCategory!.IsActive);
 
         // Act
-        var response = await this._client.PostAsync($"/api/v1/categories/{created.Id}/activate", null);
+        var response = await _client.PostAsync($"/api/v1/categories/{created.Id}/activate", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify it's active again
-        var activeResponse = await this._client.GetAsync($"/api/v1/categories/{created.Id}");
+        var activeResponse = await _client.GetAsync($"/api/v1/categories/{created.Id}");
         var activeCategory = await activeResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
         Assert.True(activeCategory!.IsActive);
     }
@@ -267,7 +267,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     public async Task Activate_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/categories/{Guid.NewGuid()}/activate", null);
+        var response = await _client.PostAsync($"/api/v1/categories/{Guid.NewGuid()}/activate", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -282,17 +282,17 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange - create a category
         var createDto = new BudgetCategoryCreateDto { Name = "Deactivate Test Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Act
-        var response = await this._client.PostAsync($"/api/v1/categories/{created!.Id}/deactivate", null);
+        var response = await _client.PostAsync($"/api/v1/categories/{created!.Id}/deactivate", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         // Verify it's inactive
-        var getResponse = await this._client.GetAsync($"/api/v1/categories/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/categories/{created.Id}");
         var category = await getResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
         Assert.False(category!.IsActive);
     }
@@ -305,7 +305,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     public async Task Deactivate_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/categories/{Guid.NewGuid()}/deactivate", null);
+        var response = await _client.PostAsync($"/api/v1/categories/{Guid.NewGuid()}/deactivate", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -330,7 +330,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -348,11 +348,11 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange
         var createDto = new BudgetCategoryCreateDto { Name = "ETag Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/categories/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/categories/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -369,10 +369,10 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange
         var createDto = new BudgetCategoryCreateDto { Name = "IfMatch Valid Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
-        var getResponse = await this._client.GetAsync($"/api/v1/categories/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/categories/{created!.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new BudgetCategoryUpdateDto { Name = "Updated With ETag" };
@@ -383,7 +383,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -401,7 +401,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange
         var createDto = new BudgetCategoryCreateDto { Name = "Stale IfMatch Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var staleETag = new EntityTagHeaderValue("\"99999999\"");
@@ -413,7 +413,7 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -428,13 +428,13 @@ public sealed class CategoriesControllerTests : IClassFixture<CustomWebApplicati
     {
         // Arrange
         var createDto = new BudgetCategoryCreateDto { Name = "No IfMatch Category", Type = "Expense" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/categories", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/categories", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var updateDto = new BudgetCategoryUpdateDto { Name = "Updated Without ETag" };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/categories/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/categories/{created!.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

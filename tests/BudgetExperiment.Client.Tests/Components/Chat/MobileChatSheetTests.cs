@@ -5,7 +5,9 @@
 using BudgetExperiment.Client.Components.Chat;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Chat;
@@ -26,8 +28,8 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
-        this.Services.AddSingleton<IChatApiService>(this.chatApi);
-        this.Services.AddSingleton<IChatContextService>(this.chatContext);
+        this.Services.AddSingleton<IChatApiService>(chatApi);
+        this.Services.AddSingleton<IChatContextService>(chatContext);
     }
 
     /// <inheritdoc/>
@@ -57,8 +59,8 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_WhenVisible_ShowsLoadingIfNoSession()
     {
         // Arrange
-        this.chatApi.SessionToReturn = null;
-        this.chatApi.DelayMs = 5000; // simulate long load
+        chatApi.SessionToReturn = null;
+        chatApi.DelayMs = 5000; // simulate long load
 
         // Act
         var cut = Render<MobileChatSheet>(p => p
@@ -75,13 +77,13 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_WithSession_ShowsWelcomeWhenNoMessages()
     {
         // Arrange
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = Guid.NewGuid(),
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn = [];
+        chatApi.MessagesToReturn = [];
 
         // Act
         var cut = Render<MobileChatSheet>(p => p
@@ -99,13 +101,13 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_WelcomeExamples_AreClickable()
     {
         // Arrange
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = Guid.NewGuid(),
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn = [];
+        chatApi.MessagesToReturn = [];
 
         var cut = Render<MobileChatSheet>(p => p
             .Add(x => x.IsVisible, true));
@@ -122,13 +124,13 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_WithSession_ShowsChatInput()
     {
         // Arrange
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = Guid.NewGuid(),
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn = [];
+        chatApi.MessagesToReturn = [];
 
         // Act
         var cut = Render<MobileChatSheet>(p => p
@@ -146,13 +148,13 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     {
         // Arrange
         var sessionId = Guid.NewGuid();
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = sessionId,
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn =
+        chatApi.MessagesToReturn =
         [
             new ChatMessageDto
             {
@@ -190,13 +192,13 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     {
         // Arrange
         bool closed = false;
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = Guid.NewGuid(),
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn = [];
+        chatApi.MessagesToReturn = [];
 
         var cut = Render<MobileChatSheet>(p => p
             .Add(x => x.IsVisible, true)
@@ -221,13 +223,13 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_Footer_ContainsExpandButton()
     {
         // Arrange
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = Guid.NewGuid(),
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn = [];
+        chatApi.MessagesToReturn = [];
 
         // Act
         var cut = Render<MobileChatSheet>(p => p
@@ -244,13 +246,13 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_Footer_ContainsNewChatButton()
     {
         // Arrange
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = Guid.NewGuid(),
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn = [];
+        chatApi.MessagesToReturn = [];
 
         // Act
         var cut = Render<MobileChatSheet>(p => p
@@ -267,7 +269,7 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_SessionFails_ShowsError()
     {
         // Arrange - session returns null
-        this.chatApi.SessionToReturn = null;
+        chatApi.SessionToReturn = null;
 
         // Act
         var cut = Render<MobileChatSheet>(p => p
@@ -285,14 +287,14 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     public void Sheet_WithContext_ShowsContextHint()
     {
         // Arrange
-        this.chatContext.SetPageType("Calendar");
-        this.chatApi.SessionToReturn = new ChatSessionDto
+        chatContext.SetPageType("Calendar");
+        chatApi.SessionToReturn = new ChatSessionDto
         {
             Id = Guid.NewGuid(),
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow,
         };
-        this.chatApi.MessagesToReturn = [];
+        chatApi.MessagesToReturn = [];
 
         // Act
         var cut = Render<MobileChatSheet>(p => p
@@ -307,11 +309,17 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
     /// </summary>
     private sealed class StubChatApiService : IChatApiService
     {
-        public ChatSessionDto? SessionToReturn { get; set; }
+        public ChatSessionDto? SessionToReturn
+        {
+            get; set;
+        }
 
         public IReadOnlyList<ChatMessageDto> MessagesToReturn { get; set; } = [];
 
-        public int DelayMs { get; set; }
+        public int DelayMs
+        {
+            get; set;
+        }
 
         public async Task<ChatSessionDto?> GetOrCreateSessionAsync()
         {
@@ -351,38 +359,38 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
 
         public event EventHandler? ContextChanged;
 
-        public ChatPageContext CurrentContext => this.context;
+        public ChatPageContext CurrentContext => context;
 
         public void SetAccountContext(Guid? accountId, string? accountName)
         {
-            this.context.CurrentAccountId = accountId;
-            this.context.CurrentAccountName = accountName;
+            context.CurrentAccountId = accountId;
+            context.CurrentAccountName = accountName;
             this.ContextChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void SetCategoryContext(Guid? categoryId, string? categoryName)
         {
-            this.context.CurrentCategoryId = categoryId;
-            this.context.CurrentCategoryName = categoryName;
+            context.CurrentCategoryId = categoryId;
+            context.CurrentCategoryName = categoryName;
             this.ContextChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void SetPageType(string? pageType)
         {
-            this.context.PageType = pageType;
+            context.PageType = pageType;
             this.ContextChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void SetCalendarContext(int year, int month, DateOnly? selectedDate, Guid? accountId = null, string? accountName = null)
         {
-            this.context.CalendarViewedYear = year;
-            this.context.CalendarViewedMonth = month;
-            this.context.SelectedDate = selectedDate;
+            context.CalendarViewedYear = year;
+            context.CalendarViewedMonth = month;
+            context.SelectedDate = selectedDate;
 
             if (accountId.HasValue || !string.IsNullOrWhiteSpace(accountName))
             {
-                this.context.CurrentAccountId = accountId;
-                this.context.CurrentAccountName = accountName;
+                context.CurrentAccountId = accountId;
+                context.CurrentAccountName = accountName;
             }
 
             this.ContextChanged?.Invoke(this, EventArgs.Empty);
@@ -392,27 +400,27 @@ public class MobileChatSheetTests : BunitContext, IAsyncLifetime
         {
             return new ChatContextDto
             {
-                CurrentAccountId = this.context.CurrentAccountId,
-                CurrentAccountName = this.context.CurrentAccountName,
-                CurrentCategoryId = this.context.CurrentCategoryId,
-                CurrentCategoryName = this.context.CurrentCategoryName,
-                CalendarViewedYear = this.context.CalendarViewedYear,
-                CalendarViewedMonth = this.context.CalendarViewedMonth,
-                SelectedDate = this.context.SelectedDate,
-                PageType = this.context.PageType,
+                CurrentAccountId = context.CurrentAccountId,
+                CurrentAccountName = context.CurrentAccountName,
+                CurrentCategoryId = context.CurrentCategoryId,
+                CurrentCategoryName = context.CurrentCategoryName,
+                CalendarViewedYear = context.CalendarViewedYear,
+                CalendarViewedMonth = context.CalendarViewedMonth,
+                SelectedDate = context.SelectedDate,
+                PageType = context.PageType,
             };
         }
 
         public void ClearContext()
         {
-            this.context.CurrentAccountId = null;
-            this.context.CurrentAccountName = null;
-            this.context.CurrentCategoryId = null;
-            this.context.CurrentCategoryName = null;
-            this.context.PageType = null;
-            this.context.CalendarViewedYear = null;
-            this.context.CalendarViewedMonth = null;
-            this.context.SelectedDate = null;
+            context.CurrentAccountId = null;
+            context.CurrentAccountName = null;
+            context.CurrentCategoryId = null;
+            context.CurrentCategoryName = null;
+            context.PageType = null;
+            context.CalendarViewedYear = null;
+            context.CalendarViewedMonth = null;
+            context.SelectedDate = null;
             this.ContextChanged?.Invoke(this, EventArgs.Empty);
         }
     }

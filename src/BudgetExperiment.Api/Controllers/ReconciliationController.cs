@@ -28,7 +28,7 @@ public sealed class ReconciliationController : ControllerBase
     /// <param name="reconciliationService">The reconciliation service.</param>
     public ReconciliationController(IReconciliationService reconciliationService)
     {
-        this._reconciliationService = reconciliationService;
+        _reconciliationService = reconciliationService;
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public sealed class ReconciliationController : ControllerBase
             return this.BadRequest("Year must be between 2000 and 2100.");
         }
 
-        var status = await this._reconciliationService.GetReconciliationStatusAsync(year, month, cancellationToken);
+        var status = await _reconciliationService.GetReconciliationStatusAsync(year, month, cancellationToken);
         return this.Ok(status);
     }
 
@@ -69,7 +69,7 @@ public sealed class ReconciliationController : ControllerBase
     [ProducesResponseType<IReadOnlyList<ReconciliationMatchDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPendingMatchesAsync(CancellationToken cancellationToken)
     {
-        var matches = await this._reconciliationService.GetPendingMatchesAsync(cancellationToken);
+        var matches = await _reconciliationService.GetPendingMatchesAsync(cancellationToken);
         return this.Ok(matches);
     }
 
@@ -96,7 +96,7 @@ public sealed class ReconciliationController : ControllerBase
             return this.BadRequest("Start date must be before or equal to end date.");
         }
 
-        var result = await this._reconciliationService.FindMatchesAsync(request, cancellationToken);
+        var result = await _reconciliationService.FindMatchesAsync(request, cancellationToken);
         return this.Ok(result);
     }
 
@@ -114,7 +114,7 @@ public sealed class ReconciliationController : ControllerBase
         [FromBody] ManualMatchRequest request,
         CancellationToken cancellationToken)
     {
-        var match = await this._reconciliationService.CreateManualMatchAsync(request, cancellationToken);
+        var match = await _reconciliationService.CreateManualMatchAsync(request, cancellationToken);
         if (match is null)
         {
             return this.NotFound("Transaction or recurring transaction not found.");
@@ -134,7 +134,7 @@ public sealed class ReconciliationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AcceptMatchAsync(Guid matchId, CancellationToken cancellationToken)
     {
-        var match = await this._reconciliationService.AcceptMatchAsync(matchId, cancellationToken);
+        var match = await _reconciliationService.AcceptMatchAsync(matchId, cancellationToken);
         if (match is null)
         {
             return this.NotFound();
@@ -154,7 +154,7 @@ public sealed class ReconciliationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RejectMatchAsync(Guid matchId, CancellationToken cancellationToken)
     {
-        var match = await this._reconciliationService.RejectMatchAsync(matchId, cancellationToken);
+        var match = await _reconciliationService.RejectMatchAsync(matchId, cancellationToken);
         if (match is null)
         {
             return this.NotFound();
@@ -177,7 +177,7 @@ public sealed class ReconciliationController : ControllerBase
     {
         try
         {
-            var match = await this._reconciliationService.UnlinkMatchAsync(matchId, cancellationToken);
+            var match = await _reconciliationService.UnlinkMatchAsync(matchId, cancellationToken);
             if (match is null)
             {
                 return this.NotFound();
@@ -209,7 +209,7 @@ public sealed class ReconciliationController : ControllerBase
             return this.BadRequest("At least one match ID is required.");
         }
 
-        var accepted = await this._reconciliationService.BulkAcceptMatchesAsync(request, cancellationToken);
+        var accepted = await _reconciliationService.BulkAcceptMatchesAsync(request, cancellationToken);
         return this.Ok(accepted);
     }
 
@@ -225,7 +225,7 @@ public sealed class ReconciliationController : ControllerBase
         Guid recurringTransactionId,
         CancellationToken cancellationToken)
     {
-        var matches = await this._reconciliationService.GetMatchesForRecurringTransactionAsync(
+        var matches = await _reconciliationService.GetMatchesForRecurringTransactionAsync(
             recurringTransactionId,
             cancellationToken);
         return this.Ok(matches);
@@ -245,7 +245,7 @@ public sealed class ReconciliationController : ControllerBase
         [FromQuery] Guid transactionId,
         CancellationToken cancellationToken)
     {
-        var instances = await this._reconciliationService.GetLinkableInstancesAsync(transactionId, cancellationToken);
+        var instances = await _reconciliationService.GetLinkableInstancesAsync(transactionId, cancellationToken);
         return this.Ok(instances);
     }
 }

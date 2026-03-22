@@ -21,7 +21,10 @@ public partial class AreaChart
     /// Gets or sets the series definitions for multi-line charts.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<LineSeriesDefinition>? Series { get; set; }
+    public IReadOnlyList<LineSeriesDefinition>? Series
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether to show points on the line.
@@ -75,19 +78,28 @@ public partial class AreaChart
     /// Gets or sets the optional minimum Y value.
     /// </summary>
     [Parameter]
-    public decimal? MinY { get; set; }
+    public decimal? MinY
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the optional maximum Y value.
     /// </summary>
     [Parameter]
-    public decimal? MaxY { get; set; }
+    public decimal? MaxY
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the optional reference lines.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<ReferenceLine>? ReferenceLines { get; set; }
+    public IReadOnlyList<ReferenceLine>? ReferenceLines
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label.
@@ -99,5 +111,8 @@ public partial class AreaChart
     /// Gets or sets the event callback when a point is clicked.
     /// </summary>
     [Parameter]
-    public EventCallback<LineData> OnPointClick { get; set; }
+    public EventCallback<LineData> OnPointClick
+    {
+        get; set;
+    }
 }

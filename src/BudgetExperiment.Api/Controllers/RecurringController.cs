@@ -27,7 +27,7 @@ public sealed class RecurringController : ControllerBase
     /// <param name="pastDueService">The past-due service.</param>
     public RecurringController(IPastDueService pastDueService)
     {
-        this._pastDueService = pastDueService;
+        _pastDueService = pastDueService;
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public sealed class RecurringController : ControllerBase
         [FromQuery] Guid? accountId,
         CancellationToken cancellationToken)
     {
-        var summary = await this._pastDueService.GetPastDueItemsAsync(accountId, cancellationToken);
+        var summary = await _pastDueService.GetPastDueItemsAsync(accountId, cancellationToken);
         return this.Ok(summary);
     }
 
@@ -64,7 +64,7 @@ public sealed class RecurringController : ControllerBase
             return this.BadRequest("At least one item is required.");
         }
 
-        var result = await this._pastDueService.RealizeBatchAsync(request, cancellationToken);
+        var result = await _pastDueService.RealizeBatchAsync(request, cancellationToken);
         return this.Ok(result);
     }
 }

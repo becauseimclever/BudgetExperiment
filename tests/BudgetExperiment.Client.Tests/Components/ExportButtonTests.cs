@@ -3,9 +3,12 @@
 // </copyright>
 
 using System.Threading;
+
 using BudgetExperiment.Client.Components.Export;
 using BudgetExperiment.Client.Services;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components;
@@ -86,7 +89,10 @@ public class ExportButtonTests : BunitContext
 
     private sealed class TestExportDownloadService : IExportDownloadService
     {
-        public string? LastUrl { get; private set; }
+        public string? LastUrl
+        {
+            get; private set;
+        }
 
         public Task<ExportDownloadResult> DownloadAsync(string url, CancellationToken cancellationToken = default)
         {

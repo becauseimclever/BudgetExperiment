@@ -27,22 +27,34 @@ public sealed class BudgetGoal
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the category identifier.
     /// </summary>
-    public Guid CategoryId { get; private set; }
+    public Guid CategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the year for this budget goal.
     /// </summary>
-    public int Year { get; private set; }
+    public int Year
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the month for this budget goal (1-12).
     /// </summary>
-    public int Month { get; private set; }
+    public int Month
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the target amount for the budget.
@@ -52,27 +64,42 @@ public sealed class BudgetGoal
     /// <summary>
     /// Gets the UTC timestamp when the goal was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the goal was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID of who created this goal.
     /// </summary>
-    public Guid CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the associated budget category.

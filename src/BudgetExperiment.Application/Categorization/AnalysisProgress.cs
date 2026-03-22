@@ -17,5 +17,8 @@ public sealed record AnalysisProgress
     /// <summary>
     /// Gets the percentage complete (0-100).
     /// </summary>
-    public int PercentComplete { get; init; }
+    public int PercentComplete
+    {
+        get; init;
+    }
 }

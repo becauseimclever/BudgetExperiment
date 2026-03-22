@@ -12,32 +12,50 @@ public sealed record ReconciliationStatusDto
     /// <summary>
     /// Gets the year for this status report.
     /// </summary>
-    public int Year { get; init; }
+    public int Year
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the month for this status report.
     /// </summary>
-    public int Month { get; init; }
+    public int Month
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the total number of recurring instances expected in the period.
     /// </summary>
-    public int TotalExpectedInstances { get; init; }
+    public int TotalExpectedInstances
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of matched instances (Accepted or AutoMatched).
     /// </summary>
-    public int MatchedCount { get; init; }
+    public int MatchedCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of pending matches awaiting review.
     /// </summary>
-    public int PendingCount { get; init; }
+    public int PendingCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of missing instances (no match found).
     /// </summary>
-    public int MissingCount { get; init; }
+    public int MissingCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the list of recurring instance statuses.

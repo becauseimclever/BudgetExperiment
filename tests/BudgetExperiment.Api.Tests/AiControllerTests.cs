@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Net.Http.Json;
+
 using BudgetExperiment.Contracts.Dtos;
 
 namespace BudgetExperiment.Api.Tests;
@@ -22,7 +23,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     /// <param name="factory">The test factory.</param>
     public AiControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -33,7 +34,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     public async Task GetStatus_Returns_200_WithStatusInfo()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/ai/status");
+        var response = await _client.GetAsync("/api/v1/ai/status");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -50,7 +51,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     public async Task GetModels_Returns_200_WithModelList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/ai/models");
+        var response = await _client.GetAsync("/api/v1/ai/models");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -68,7 +69,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     public async Task GetSettings_Returns_200_WithSettings()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/ai/settings");
+        var response = await _client.GetAsync("/api/v1/ai/settings");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -97,7 +98,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync("/api/v1/ai/settings", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/ai/settings", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -118,7 +119,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     public async Task Analyze_Returns_200_WithAnalysisResponse()
     {
         // Act
-        var response = await this._client.PostAsync("/api/v1/ai/analyze", null);
+        var response = await _client.PostAsync("/api/v1/ai/analyze", null);
 
         // Assert - either 200 (AI available or unavailable with fallback)
         // or 503 (AI explicitly unavailable via status check)
@@ -148,7 +149,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     public async Task Analyze_Returns_ExpectedStatusCodes()
     {
         // Act
-        var response = await this._client.PostAsync("/api/v1/ai/analyze", null);
+        var response = await _client.PostAsync("/api/v1/ai/analyze", null);
 
         // Assert - verify the endpoint is accessible and returns one of the expected codes
         var validStatusCodes = new[]

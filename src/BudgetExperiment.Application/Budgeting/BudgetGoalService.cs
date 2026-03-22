@@ -24,81 +24,81 @@ public sealed class BudgetGoalService : IBudgetGoalService
     /// <param name="unitOfWork">The unit of work.</param>
     public BudgetGoalService(IBudgetGoalRepository repository, IBudgetCategoryRepository categoryRepository, IUnitOfWork unitOfWork)
     {
-        this._repository = repository;
-        this._categoryRepository = categoryRepository;
-        this._unitOfWork = unitOfWork;
+        _repository = repository;
+        _categoryRepository = categoryRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc/>
     public async Task<BudgetGoalDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var goal = await this._repository.GetByIdAsync(id, cancellationToken);
+        var goal = await _repository.GetByIdAsync(id, cancellationToken);
         if (goal is null)
         {
             return null;
         }
 
-        var version = this._unitOfWork.GetConcurrencyToken(goal);
+        var version = _unitOfWork.GetConcurrencyToken(goal);
         return BudgetMapper.ToDto(goal, version);
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetGoalDto>> GetByMonthAsync(int year, int month, CancellationToken cancellationToken = default)
     {
-        var goals = await this._repository.GetByMonthAsync(year, month, cancellationToken);
+        var goals = await _repository.GetByMonthAsync(year, month, cancellationToken);
         return goals.Select(BudgetMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyList<BudgetGoalDto>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
-        var goals = await this._repository.GetByCategoryAsync(categoryId, cancellationToken);
+        var goals = await _repository.GetByCategoryAsync(categoryId, cancellationToken);
         return goals.Select(BudgetMapper.ToDto).ToList();
     }
 
     /// <inheritdoc/>
     public async Task<BudgetGoalDto?> SetGoalAsync(Guid categoryId, BudgetGoalSetDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var category = await this._categoryRepository.GetByIdAsync(categoryId, cancellationToken);
+        var category = await _categoryRepository.GetByIdAsync(categoryId, cancellationToken);
         if (category is null)
         {
             return null;
         }
 
-        var existingGoal = await this._repository.GetByCategoryAndMonthAsync(categoryId, dto.Year, dto.Month, cancellationToken);
+        var existingGoal = await _repository.GetByCategoryAndMonthAsync(categoryId, dto.Year, dto.Month, cancellationToken);
         var targetAmount = MoneyValue.Create(dto.TargetAmount.Currency, dto.TargetAmount.Amount);
 
         if (existingGoal is not null)
         {
             if (expectedVersion is not null)
             {
-                this._unitOfWork.SetExpectedConcurrencyToken(existingGoal, expectedVersion);
+                _unitOfWork.SetExpectedConcurrencyToken(existingGoal, expectedVersion);
             }
 
             existingGoal.UpdateTarget(targetAmount);
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
-            var version = this._unitOfWork.GetConcurrencyToken(existingGoal);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var version = _unitOfWork.GetConcurrencyToken(existingGoal);
             return BudgetMapper.ToDto(existingGoal, version);
         }
 
         var goal = BudgetGoal.Create(categoryId, dto.Year, dto.Month, targetAmount);
-        await this._repository.AddAsync(goal, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        var newVersion = this._unitOfWork.GetConcurrencyToken(goal);
+        await _repository.AddAsync(goal, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var newVersion = _unitOfWork.GetConcurrencyToken(goal);
         return BudgetMapper.ToDto(goal, newVersion);
     }
 
     /// <inheritdoc/>
     public async Task<bool> DeleteGoalAsync(Guid categoryId, int year, int month, CancellationToken cancellationToken = default)
     {
-        var goal = await this._repository.GetByCategoryAndMonthAsync(categoryId, year, month, cancellationToken);
+        var goal = await _repository.GetByCategoryAndMonthAsync(categoryId, year, month, cancellationToken);
         if (goal is null)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(goal, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(goal, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -108,7 +108,7 @@ public sealed class BudgetGoalService : IBudgetGoalService
         var result = new CopyBudgetGoalsResult();
 
         // Get all goals from the source month
-        var sourceGoals = await this._repository.GetByMonthAsync(request.SourceYear, request.SourceMonth, cancellationToken);
+        var sourceGoals = await _repository.GetByMonthAsync(request.SourceYear, request.SourceMonth, cancellationToken);
         result.SourceGoalsCount = sourceGoals.Count;
 
         if (sourceGoals.Count == 0)
@@ -117,7 +117,7 @@ public sealed class BudgetGoalService : IBudgetGoalService
         }
 
         // Get existing goals in the target month
-        var targetGoals = await this._repository.GetByMonthAsync(request.TargetYear, request.TargetMonth, cancellationToken);
+        var targetGoals = await _repository.GetByMonthAsync(request.TargetYear, request.TargetMonth, cancellationToken);
         var targetGoalsByCategoryId = targetGoals.ToDictionary(g => g.CategoryId);
 
         foreach (var sourceGoal in sourceGoals)
@@ -145,12 +145,12 @@ public sealed class BudgetGoalService : IBudgetGoalService
                     request.TargetYear,
                     request.TargetMonth,
                     targetAmount);
-                await this._repository.AddAsync(newGoal, cancellationToken);
+                await _repository.AddAsync(newGoal, cancellationToken);
                 result.GoalsCreated++;
             }
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return result;
     }
 }

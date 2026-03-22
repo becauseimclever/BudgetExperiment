@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Globalization;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;

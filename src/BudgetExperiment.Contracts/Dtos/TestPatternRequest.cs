@@ -22,7 +22,10 @@ public sealed class TestPatternRequest
     /// <summary>
     /// Gets or sets a value indicating whether matching is case-sensitive.
     /// </summary>
-    public bool CaseSensitive { get; set; }
+    public bool CaseSensitive
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the maximum number of matching descriptions to return.

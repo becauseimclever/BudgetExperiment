@@ -10,5 +10,8 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class ScopeDto
 {
     /// <summary>Gets or sets the current scope ("Shared", "Personal", or null for All).</summary>
-    public string? Scope { get; set; }
+    public string? Scope
+    {
+        get; set;
+    }
 }

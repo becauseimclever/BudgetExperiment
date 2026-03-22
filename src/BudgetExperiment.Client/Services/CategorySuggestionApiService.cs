@@ -4,7 +4,9 @@
 
 using System.Net.Http.Json;
 using System.Text.Json;
+
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BudgetExperiment.Client.Services;
@@ -29,7 +31,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     /// <param name="httpClient">The HTTP client.</param>
     public CategorySuggestionApiService(HttpClient httpClient)
     {
-        this._httpClient = httpClient;
+        _httpClient = httpClient;
     }
 
     /// <inheritdoc />
@@ -37,7 +39,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync($"{BaseUrl}/analyze", null, cancellationToken);
+            var response = await _httpClient.PostAsync($"{BaseUrl}/analyze", null, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<List<CategorySuggestionDto>>(JsonOptions, cancellationToken);
@@ -62,7 +64,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var result = await this._httpClient.GetFromJsonAsync<List<CategorySuggestionDto>>(BaseUrl, JsonOptions, cancellationToken);
+            var result = await _httpClient.GetFromJsonAsync<List<CategorySuggestionDto>>(BaseUrl, JsonOptions, cancellationToken);
             return result ?? new List<CategorySuggestionDto>();
         }
         catch (AccessTokenNotAvailableException ex)
@@ -81,7 +83,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var result = await this._httpClient.GetFromJsonAsync<List<CategorySuggestionDto>>($"{BaseUrl}/dismissed?skip={skip}&take={take}", JsonOptions, cancellationToken);
+            var result = await _httpClient.GetFromJsonAsync<List<CategorySuggestionDto>>($"{BaseUrl}/dismissed?skip={skip}&take={take}", JsonOptions, cancellationToken);
             return result ?? new List<CategorySuggestionDto>();
         }
         catch (AccessTokenNotAvailableException ex)
@@ -100,7 +102,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<CategorySuggestionDto>($"{BaseUrl}/{id}", JsonOptions, cancellationToken);
+            return await _httpClient.GetFromJsonAsync<CategorySuggestionDto>($"{BaseUrl}/{id}", JsonOptions, cancellationToken);
         }
         catch (AccessTokenNotAvailableException ex)
         {
@@ -121,7 +123,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync(
+            var response = await _httpClient.PostAsJsonAsync(
                 $"{BaseUrl}/{id}/accept",
                 request ?? new AcceptCategorySuggestionRequest(),
                 JsonOptions,
@@ -151,7 +153,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync($"{BaseUrl}/{id}/dismiss", null, cancellationToken);
+            var response = await _httpClient.PostAsync($"{BaseUrl}/{id}/dismiss", null, cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)
@@ -170,7 +172,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsync($"{BaseUrl}/{id}/restore", null, cancellationToken);
+            var response = await _httpClient.PostAsync($"{BaseUrl}/{id}/restore", null, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<CategorySuggestionDto>(JsonOptions, cancellationToken);
@@ -194,7 +196,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var response = await this._httpClient.DeleteAsync($"{BaseUrl}/dismissed-patterns", cancellationToken);
+            var response = await _httpClient.DeleteAsync($"{BaseUrl}/dismissed-patterns", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<ClearDismissedPatternsResponse>(JsonOptions, cancellationToken);
@@ -222,7 +224,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
         try
         {
             var request = new BulkAcceptCategorySuggestionsRequest { SuggestionIds = suggestionIds.ToList() };
-            var response = await this._httpClient.PostAsJsonAsync($"{BaseUrl}/bulk-accept", request, JsonOptions, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/bulk-accept", request, JsonOptions, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
@@ -250,7 +252,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var result = await this._httpClient.GetFromJsonAsync<List<SuggestedCategoryRuleDto>>(
+            var result = await _httpClient.GetFromJsonAsync<List<SuggestedCategoryRuleDto>>(
                 $"{BaseUrl}/{id}/preview-rules",
                 JsonOptions,
                 cancellationToken);
@@ -275,7 +277,7 @@ public sealed class CategorySuggestionApiService : ICategorySuggestionApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync(
+            var response = await _httpClient.PostAsJsonAsync(
                 $"{BaseUrl}/{id}/create-rules",
                 request,
                 JsonOptions,

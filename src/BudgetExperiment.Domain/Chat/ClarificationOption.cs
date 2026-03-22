@@ -22,5 +22,8 @@ public sealed record ClarificationOption
     /// <summary>
     /// Gets the optional entity identifier (for account/category selection).
     /// </summary>
-    public Guid? EntityId { get; init; }
+    public Guid? EntityId
+    {
+        get; init;
+    }
 }

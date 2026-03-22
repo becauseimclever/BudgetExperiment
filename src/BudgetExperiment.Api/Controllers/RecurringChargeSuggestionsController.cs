@@ -7,6 +7,7 @@ using BudgetExperiment.Application.Recurring;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Recurring;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,7 +32,7 @@ public sealed class RecurringChargeSuggestionsController : ControllerBase
     public RecurringChargeSuggestionsController(
         IRecurringChargeDetectionService detectionService)
     {
-        this._detectionService = detectionService;
+        _detectionService = detectionService;
     }
 
     /// <summary>
@@ -46,7 +47,7 @@ public sealed class RecurringChargeSuggestionsController : ControllerBase
         [FromBody] DetectRecurringChargesRequest? request,
         CancellationToken cancellationToken)
     {
-        var count = await this._detectionService.DetectAsync(
+        var count = await _detectionService.DetectAsync(
             request?.AccountId,
             cancellationToken);
         return this.Ok(count);
@@ -77,7 +78,7 @@ public sealed class RecurringChargeSuggestionsController : ControllerBase
             statusFilter = parsed;
         }
 
-        var (items, totalCount) = await this._detectionService.GetSuggestionsAsync(
+        var (items, totalCount) = await _detectionService.GetSuggestionsAsync(
             accountId,
             statusFilter,
             skip,
@@ -102,7 +103,7 @@ public sealed class RecurringChargeSuggestionsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var suggestion = await this._detectionService.GetSuggestionByIdAsync(
+        var suggestion = await _detectionService.GetSuggestionByIdAsync(
             id,
             cancellationToken);
 
@@ -130,7 +131,7 @@ public sealed class RecurringChargeSuggestionsController : ControllerBase
     {
         try
         {
-            var result = await this._detectionService.AcceptAsync(id, cancellationToken);
+            var result = await _detectionService.AcceptAsync(id, cancellationToken);
             return this.Ok(new AcceptRecurringChargeSuggestionResultDto
             {
                 RecurringTransactionId = result.RecurringTransactionId,
@@ -167,7 +168,7 @@ public sealed class RecurringChargeSuggestionsController : ControllerBase
     {
         try
         {
-            await this._detectionService.DismissAsync(id, cancellationToken);
+            await _detectionService.DismissAsync(id, cancellationToken);
             return this.NoContent();
         }
         catch (DomainException ex) when (ex.Message.Contains("not found"))

@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -22,21 +23,21 @@ internal sealed class AccountRepository : IAccountRepository
     /// <param name="userContext">The user context for scope filtering.</param>
     public AccountRepository(BudgetDbContext context, IUserContext userContext)
     {
-        this._context = context;
-        this._userContext = userContext;
+        _context = context;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
+        return await this.ApplyScopeFilter(_context.Accounts)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<Account?> GetByIdWithTransactionsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
+        return await this.ApplyScopeFilter(_context.Accounts)
             .Include(a => a.Transactions)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
@@ -44,7 +45,7 @@ internal sealed class AccountRepository : IAccountRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
+        return await this.ApplyScopeFilter(_context.Accounts)
             .OrderBy(a => a.Name)
             .ToListAsync(cancellationToken);
     }
@@ -52,7 +53,7 @@ internal sealed class AccountRepository : IAccountRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Account>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
+        return await this.ApplyScopeFilter(_context.Accounts)
             .OrderBy(a => a.Name)
             .Skip(skip)
             .Take(take)
@@ -62,19 +63,19 @@ internal sealed class AccountRepository : IAccountRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.Accounts).LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(Account entity, CancellationToken cancellationToken = default)
     {
-        await this._context.Accounts.AddAsync(entity, cancellationToken);
+        await _context.Accounts.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(Account entity, CancellationToken cancellationToken = default)
     {
-        this._context.Accounts.Remove(entity);
+        _context.Accounts.Remove(entity);
         return Task.CompletedTask;
     }
 
@@ -85,9 +86,9 @@ internal sealed class AccountRepository : IAccountRepository
     /// </summary>
     private IQueryable<Account> ApplyScopeFilter(IQueryable<Account> query)
     {
-        var userId = this._userContext.UserIdAsGuid;
+        var userId = _userContext.UserIdAsGuid;
 
-        return this._userContext.CurrentScope switch
+        return _userContext.CurrentScope switch
         {
             BudgetScope.Shared => query.Where(a => a.Scope == BudgetScope.Shared),
             BudgetScope.Personal => query.Where(a => a.Scope == BudgetScope.Personal && a.OwnerUserId == userId),

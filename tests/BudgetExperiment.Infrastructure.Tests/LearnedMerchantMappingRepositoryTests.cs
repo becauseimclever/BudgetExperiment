@@ -21,14 +21,14 @@ public class LearnedMerchantMappingRepositoryTests
     /// <param name="fixture">The shared PostgreSQL database fixture.</param>
     public LearnedMerchantMappingRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task GetByPatternAsync_Finds_By_Normalized_Pattern()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -40,7 +40,7 @@ public class LearnedMerchantMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Act — search with different casing and whitespace
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new LearnedMerchantMappingRepository(verifyContext);
         var exact = await verifyRepo.GetByPatternAsync("owner1", "WALMART");
         var lower = await verifyRepo.GetByPatternAsync("owner1", "walmart");
@@ -58,7 +58,7 @@ public class LearnedMerchantMappingRepositoryTests
     public async Task ExistsAsync_Is_Case_Insensitive_And_Trims()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Electronics", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -88,7 +88,7 @@ public class LearnedMerchantMappingRepositoryTests
     public async Task GetByOwnerAsync_Returns_Ordered_By_LearnCount_Desc_Then_Pattern()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -108,7 +108,7 @@ public class LearnedMerchantMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new LearnedMerchantMappingRepository(verifyContext);
         var results = await verifyRepo.GetByOwnerAsync("owner1");
 
@@ -123,7 +123,7 @@ public class LearnedMerchantMappingRepositoryTests
     public async Task GetByCategoryAsync_Returns_Mappings_For_Category_Ordered_By_Pattern()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var groceryCat = BudgetCategory.Create("Groceries", CategoryType.Expense);
         var gasCat = BudgetCategory.Create("Gas", CategoryType.Expense);
         context.BudgetCategories.AddRange(groceryCat, gasCat);
@@ -141,7 +141,7 @@ public class LearnedMerchantMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new LearnedMerchantMappingRepository(verifyContext);
         var results = await verifyRepo.GetByCategoryAsync(groceryCat.Id);
 
@@ -155,7 +155,7 @@ public class LearnedMerchantMappingRepositoryTests
     public async Task GetByOwnerAsync_Does_Not_Return_Other_Owners_Mappings()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -170,7 +170,7 @@ public class LearnedMerchantMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new LearnedMerchantMappingRepository(verifyContext);
         var results = await verifyRepo.GetByOwnerAsync("owner1");
 

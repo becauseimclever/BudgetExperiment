@@ -32,7 +32,7 @@ public sealed class ImportApiService : IImportApiService
     /// <param name="httpClient">The HTTP client.</param>
     public ImportApiService(HttpClient httpClient)
     {
-        this._httpClient = httpClient;
+        _httpClient = httpClient;
     }
 
     /// <inheritdoc />
@@ -40,7 +40,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var result = await this._httpClient.GetFromJsonAsync<List<ImportMappingDto>>("api/v1/import/mappings", JsonOptions);
+            var result = await _httpClient.GetFromJsonAsync<List<ImportMappingDto>>("api/v1/import/mappings", JsonOptions);
             return result ?? [];
         }
         catch (AccessTokenNotAvailableException ex)
@@ -55,7 +55,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<ImportMappingDto>($"api/v1/import/mappings/{id}", JsonOptions);
+            return await _httpClient.GetFromJsonAsync<ImportMappingDto>($"api/v1/import/mappings/{id}", JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {
@@ -73,7 +73,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/import/mappings", request, JsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/v1/import/mappings", request, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<ImportMappingDto>(JsonOptions);
@@ -99,7 +99,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var response = await this._httpClient.DeleteAsync($"api/v1/import/mappings/{id}");
+            var response = await _httpClient.DeleteAsync($"api/v1/import/mappings/{id}");
             return response.IsSuccessStatusCode;
         }
         catch (AccessTokenNotAvailableException ex)
@@ -115,7 +115,7 @@ public sealed class ImportApiService : IImportApiService
         try
         {
             var request = new { Headers = headers };
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/import/mappings/suggest", request, JsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/v1/import/mappings/suggest", request, JsonOptions);
             if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 return null;
@@ -140,7 +140,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/import/preview", request, JsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/v1/import/preview", request, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<ImportPreviewResult>(JsonOptions);
@@ -160,7 +160,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var response = await this._httpClient.PostAsJsonAsync("api/v1/import/execute", request, JsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("api/v1/import/execute", request, JsonOptions);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<ImportResult>(JsonOptions);
@@ -180,7 +180,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var result = await this._httpClient.GetFromJsonAsync<List<ImportBatchDto>>("api/v1/import/history", JsonOptions);
+            var result = await _httpClient.GetFromJsonAsync<List<ImportBatchDto>>("api/v1/import/history", JsonOptions);
             return result ?? [];
         }
         catch (AccessTokenNotAvailableException ex)
@@ -195,7 +195,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<ImportBatchDto>($"api/v1/import/batches/{id}", JsonOptions);
+            return await _httpClient.GetFromJsonAsync<ImportBatchDto>($"api/v1/import/batches/{id}", JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {
@@ -213,7 +213,7 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var response = await this._httpClient.DeleteAsync($"api/v1/import/batches/{id}");
+            var response = await _httpClient.DeleteAsync($"api/v1/import/batches/{id}");
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<DeleteBatchResultModel>(JsonOptions);
@@ -243,7 +243,7 @@ public sealed class ImportApiService : IImportApiService
                 request.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{version}\""));
             }
 
-            var response = await this._httpClient.SendAsync(request);
+            var response = await _httpClient.SendAsync(request);
 
             if (response.StatusCode == HttpStatusCode.Conflict)
             {

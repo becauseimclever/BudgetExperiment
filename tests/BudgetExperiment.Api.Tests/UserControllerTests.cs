@@ -1,4 +1,4 @@
-﻿// <copyright file="UserControllerTests.cs" company="BecauseImClever">
+// <copyright file="UserControllerTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -28,7 +28,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
         // Each test gets a clean database — required because user settings are keyed
         // by TestUserId and several tests depend on the provisioned default values.
         factory.ResetDatabase();
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetProfile_Returns_200_WithProfile()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/user/me");
+        var response = await _client.GetAsync("/api/v1/user/me");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -57,7 +57,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetSettings_Returns_200_AndProvisionsDefaults()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/user/settings");
+        var response = await _client.GetAsync("/api/v1/user/settings");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -76,7 +76,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task UpdateSettings_Returns_200_WithUpdatedSettings()
     {
         // Arrange - provision settings first
-        await this._client.GetAsync("/api/v1/user/settings");
+        await _client.GetAsync("/api/v1/user/settings");
 
         var updateDto = new UserSettingsUpdateDto
         {
@@ -86,7 +86,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -105,7 +105,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetScope_Returns_200_WithScope()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/user/scope");
+        var response = await _client.GetAsync("/api/v1/user/scope");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -126,7 +126,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
         var scopeDto = new ScopeDto { Scope = "Personal" };
 
         // Act
-        var response = await this._client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -143,7 +143,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task GetSettings_Returns_OnboardingFieldDefaults()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/user/settings");
+        var response = await _client.GetAsync("/api/v1/user/settings");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -161,7 +161,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task UpdateSettings_Updates_FirstDayOfWeek()
     {
         // Arrange - provision settings first
-        await this._client.GetAsync("/api/v1/user/settings");
+        await _client.GetAsync("/api/v1/user/settings");
 
         var updateDto = new UserSettingsUpdateDto
         {
@@ -169,7 +169,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/user/settings", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -186,10 +186,10 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     public async Task CompleteOnboarding_Returns_200_WithOnboardedTrue()
     {
         // Arrange - provision settings first
-        await this._client.GetAsync("/api/v1/user/settings");
+        await _client.GetAsync("/api/v1/user/settings");
 
         // Act
-        var response = await this._client.PostAsync("/api/v1/user/settings/complete-onboarding", null);
+        var response = await _client.PostAsync("/api/v1/user/settings/complete-onboarding", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -209,7 +209,7 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
         var scopeDto = new ScopeDto { Scope = "InvalidScope" };
 
         // Act
-        var response = await this._client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

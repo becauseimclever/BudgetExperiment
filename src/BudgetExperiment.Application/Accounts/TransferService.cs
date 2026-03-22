@@ -27,9 +27,9 @@ public sealed class TransferService : ITransferService
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork)
     {
-        this._transactionRepository = transactionRepository;
-        this._accountRepository = accountRepository;
-        this._unitOfWork = unitOfWork;
+        _transactionRepository = transactionRepository;
+        _accountRepository = accountRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
@@ -48,10 +48,10 @@ public sealed class TransferService : ITransferService
         }
 
         // Load accounts
-        var sourceAccount = await this._accountRepository.GetByIdAsync(request.SourceAccountId, cancellationToken)
+        var sourceAccount = await _accountRepository.GetByIdAsync(request.SourceAccountId, cancellationToken)
             ?? throw new DomainException("Source account not found.", DomainExceptionType.NotFound);
 
-        var destinationAccount = await this._accountRepository.GetByIdAsync(request.DestinationAccountId, cancellationToken)
+        var destinationAccount = await _accountRepository.GetByIdAsync(request.DestinationAccountId, cancellationToken)
             ?? throw new DomainException("Destination account not found.", DomainExceptionType.NotFound);
 
         // Generate the transfer ID
@@ -79,9 +79,9 @@ public sealed class TransferService : ITransferService
             TransferDirection.Destination);
 
         // Add both transactions atomically
-        await this._transactionRepository.AddAsync(sourceTransaction, cancellationToken);
-        await this._transactionRepository.AddAsync(destinationTransaction, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _transactionRepository.AddAsync(sourceTransaction, cancellationToken);
+        await _transactionRepository.AddAsync(destinationTransaction, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(
             transferId,
@@ -94,7 +94,7 @@ public sealed class TransferService : ITransferService
     /// <inheritdoc />
     public async Task<TransferResponse?> GetByIdAsync(Guid transferId, CancellationToken cancellationToken = default)
     {
-        var transactions = await this._transactionRepository.GetByTransferIdAsync(transferId, cancellationToken);
+        var transactions = await _transactionRepository.GetByTransferIdAsync(transferId, cancellationToken);
 
         if (transactions.Count != 2)
         {
@@ -110,8 +110,8 @@ public sealed class TransferService : ITransferService
         }
 
         // Load account names
-        var sourceAccount = await this._accountRepository.GetByIdAsync(sourceTransaction.AccountId, cancellationToken);
-        var destinationAccount = await this._accountRepository.GetByIdAsync(destinationTransaction.AccountId, cancellationToken);
+        var sourceAccount = await _accountRepository.GetByIdAsync(sourceTransaction.AccountId, cancellationToken);
+        var destinationAccount = await _accountRepository.GetByIdAsync(destinationTransaction.AccountId, cancellationToken);
 
         return MapToResponse(
             transferId,
@@ -135,7 +135,7 @@ public sealed class TransferService : ITransferService
         var startDate = fromDate ?? DateOnly.MinValue;
         var endDate = toDate ?? DateOnly.MaxValue;
 
-        var transactions = await this._transactionRepository.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
+        var transactions = await _transactionRepository.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
 
         // Filter to only source transactions (to avoid duplicates) with TransferId
         var allSourceTransfers = transactions
@@ -157,7 +157,7 @@ public sealed class TransferService : ITransferService
 
         foreach (var source in transferTransactions)
         {
-            var pair = await this._transactionRepository.GetByTransferIdAsync(source.TransferId!.Value, cancellationToken);
+            var pair = await _transactionRepository.GetByTransferIdAsync(source.TransferId!.Value, cancellationToken);
             var destination = pair.FirstOrDefault(t => t.TransferDirection == TransferDirection.Destination);
 
             if (destination is null)
@@ -168,14 +168,14 @@ public sealed class TransferService : ITransferService
             // Get account names (with caching)
             if (!accountCache.TryGetValue(source.AccountId, out var sourceAccountName))
             {
-                var sourceAccount = await this._accountRepository.GetByIdAsync(source.AccountId, cancellationToken);
+                var sourceAccount = await _accountRepository.GetByIdAsync(source.AccountId, cancellationToken);
                 sourceAccountName = sourceAccount?.Name ?? "Unknown";
                 accountCache[source.AccountId] = sourceAccountName;
             }
 
             if (!accountCache.TryGetValue(destination.AccountId, out var destAccountName))
             {
-                var destAccount = await this._accountRepository.GetByIdAsync(destination.AccountId, cancellationToken);
+                var destAccount = await _accountRepository.GetByIdAsync(destination.AccountId, cancellationToken);
                 destAccountName = destAccount?.Name ?? "Unknown";
                 accountCache[destination.AccountId] = destAccountName;
             }
@@ -212,7 +212,7 @@ public sealed class TransferService : ITransferService
             throw new DomainException("Transfer amount must be positive.");
         }
 
-        var transactions = await this._transactionRepository.GetByTransferIdAsync(transferId, cancellationToken);
+        var transactions = await _transactionRepository.GetByTransferIdAsync(transferId, cancellationToken);
 
         if (transactions.Count != 2)
         {
@@ -228,8 +228,8 @@ public sealed class TransferService : ITransferService
         }
 
         // Load account names for description
-        var sourceAccount = await this._accountRepository.GetByIdAsync(sourceTransaction.AccountId, cancellationToken);
-        var destinationAccount = await this._accountRepository.GetByIdAsync(destinationTransaction.AccountId, cancellationToken);
+        var sourceAccount = await _accountRepository.GetByIdAsync(sourceTransaction.AccountId, cancellationToken);
+        var destinationAccount = await _accountRepository.GetByIdAsync(destinationTransaction.AccountId, cancellationToken);
 
         var description = string.IsNullOrWhiteSpace(request.Description)
             ? "Transfer"
@@ -245,7 +245,7 @@ public sealed class TransferService : ITransferService
         destinationTransaction.UpdateDate(request.Date);
         destinationTransaction.UpdateDescription($"Transfer from {sourceAccount?.Name ?? "Unknown"}: {description}");
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return MapToResponse(
             transferId,
@@ -258,7 +258,7 @@ public sealed class TransferService : ITransferService
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid transferId, CancellationToken cancellationToken = default)
     {
-        var transactions = await this._transactionRepository.GetByTransferIdAsync(transferId, cancellationToken);
+        var transactions = await _transactionRepository.GetByTransferIdAsync(transferId, cancellationToken);
 
         if (transactions.Count == 0)
         {
@@ -268,10 +268,10 @@ public sealed class TransferService : ITransferService
         // Delete all transactions with this transfer ID
         foreach (var transaction in transactions)
         {
-            await this._transactionRepository.RemoveAsync(transaction, cancellationToken);
+            await _transactionRepository.RemoveAsync(transaction, cancellationToken);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 

@@ -6,8 +6,11 @@ using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -25,7 +28,7 @@ public class OnboardingPageTests : BunitContext, IAsyncLifetime
     public OnboardingPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());

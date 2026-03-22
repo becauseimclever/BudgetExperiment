@@ -13,11 +13,20 @@ public sealed class CitySpendingDto
     public string City { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the total spending in this city.</summary>
-    public decimal TotalSpending { get; set; }
+    public decimal TotalSpending
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the number of transactions in this city.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the percentage of region spending this city represents.</summary>
-    public decimal Percentage { get; set; }
+    public decimal Percentage
+    {
+        get; set;
+    }
 }

@@ -34,8 +34,8 @@ public sealed class ImportController : ControllerBase
         IImportMappingService mappingService,
         IImportService importService)
     {
-        this._mappingService = mappingService;
-        this._importService = importService;
+        _mappingService = mappingService;
+        _importService = importService;
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType<IReadOnlyList<ImportMappingDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMappingsAsync(CancellationToken cancellationToken)
     {
-        var mappings = await this._mappingService.GetUserMappingsAsync(cancellationToken);
+        var mappings = await _mappingService.GetUserMappingsAsync(cancellationToken);
         return this.Ok(mappings);
     }
 
@@ -62,7 +62,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetMappingByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var mapping = await this._mappingService.GetMappingAsync(id, cancellationToken);
+        var mapping = await _mappingService.GetMappingAsync(id, cancellationToken);
         if (mapping is null)
         {
             return this.NotFound();
@@ -87,7 +87,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateMappingAsync([FromBody] CreateImportMappingRequest request, CancellationToken cancellationToken)
     {
-        var mapping = await this._mappingService.CreateMappingAsync(request, cancellationToken);
+        var mapping = await _mappingService.CreateMappingAsync(request, cancellationToken);
         return this.CreatedAtAction("GetMappingById", new { id = mapping.Id }, mapping);
     }
 
@@ -111,7 +111,7 @@ public sealed class ImportController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var mapping = await this._mappingService.UpdateMappingAsync(id, request, expectedVersion, cancellationToken);
+        var mapping = await _mappingService.UpdateMappingAsync(id, request, expectedVersion, cancellationToken);
         if (mapping is null)
         {
             return this.NotFound();
@@ -136,7 +136,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteMappingAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await this._mappingService.DeleteMappingAsync(id, cancellationToken);
+        var deleted = await _mappingService.DeleteMappingAsync(id, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();
@@ -156,7 +156,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> SuggestMappingAsync([FromBody] SuggestMappingRequest request, CancellationToken cancellationToken)
     {
-        var mapping = await this._mappingService.SuggestMappingAsync(request.Headers, cancellationToken);
+        var mapping = await _mappingService.SuggestMappingAsync(request.Headers, cancellationToken);
         if (mapping is null)
         {
             return this.NoContent();
@@ -192,7 +192,7 @@ public sealed class ImportController : ControllerBase
                 });
         }
 
-        var result = await this._importService.PreviewAsync(request, cancellationToken);
+        var result = await _importService.PreviewAsync(request, cancellationToken);
         return this.Ok(result);
     }
 
@@ -229,7 +229,7 @@ public sealed class ImportController : ControllerBase
                 });
         }
 
-        var result = await this._importService.ExecuteAsync(request, cancellationToken);
+        var result = await _importService.ExecuteAsync(request, cancellationToken);
         return this.CreatedAtAction("GetBatchById", new { id = result.BatchId }, result);
     }
 
@@ -242,7 +242,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType<IReadOnlyList<ImportBatchDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetHistoryAsync(CancellationToken cancellationToken)
     {
-        var batches = await this._importService.GetImportHistoryAsync(cancellationToken);
+        var batches = await _importService.GetImportHistoryAsync(cancellationToken);
         return this.Ok(batches);
     }
 
@@ -257,7 +257,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBatchByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var batches = await this._importService.GetImportHistoryAsync(cancellationToken);
+        var batches = await _importService.GetImportHistoryAsync(cancellationToken);
         var batch = batches.FirstOrDefault(b => b.Id == id);
         if (batch is null)
         {
@@ -278,7 +278,7 @@ public sealed class ImportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteBatchAsync(Guid id, CancellationToken cancellationToken)
     {
-        var count = await this._importService.DeleteImportBatchAsync(id, cancellationToken);
+        var count = await _importService.DeleteImportBatchAsync(id, cancellationToken);
         if (count == 0)
         {
             return this.NotFound();

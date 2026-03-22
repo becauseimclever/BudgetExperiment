@@ -6,6 +6,7 @@ using BudgetExperiment.Application.Import;
 using BudgetExperiment.Application.Recurring;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -30,20 +31,20 @@ public class ImportServiceTests
 
     public ImportServiceTests()
     {
-        this._transactionRepoMock = new Mock<ITransactionRepository>();
-        this._ruleRepoMock = new Mock<ICategorizationRuleRepository>();
-        this._categoryRepoMock = new Mock<IBudgetCategoryRepository>();
-        this._batchRepoMock = new Mock<IImportBatchRepository>();
-        this._mappingRepoMock = new Mock<IImportMappingRepository>();
-        this._accountRepoMock = new Mock<IAccountRepository>();
-        this._userContextMock = new Mock<IUserContext>();
-        this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._reconciliationServiceMock = new Mock<IReconciliationService>();
-        this._previewEnricherMock = new Mock<IImportPreviewEnricher>();
-        this._transactionCreatorMock = new Mock<IImportTransactionCreator>();
+        _transactionRepoMock = new Mock<ITransactionRepository>();
+        _ruleRepoMock = new Mock<ICategorizationRuleRepository>();
+        _categoryRepoMock = new Mock<IBudgetCategoryRepository>();
+        _batchRepoMock = new Mock<IImportBatchRepository>();
+        _mappingRepoMock = new Mock<IImportMappingRepository>();
+        _accountRepoMock = new Mock<IAccountRepository>();
+        _userContextMock = new Mock<IUserContext>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _reconciliationServiceMock = new Mock<IReconciliationService>();
+        _previewEnricherMock = new Mock<IImportPreviewEnricher>();
+        _transactionCreatorMock = new Mock<IImportTransactionCreator>();
 
         // Default: transaction creator returns a result matching the input count
-        this._transactionCreatorMock
+        _transactionCreatorMock
             .Setup(c => c.CreateTransactionsAsync(It.IsAny<Account>(), It.IsAny<Guid>(), It.IsAny<IReadOnlyList<ImportTransactionData>>(), It.IsAny<CancellationToken>()))
             .Returns<Account, Guid, IReadOnlyList<ImportTransactionData>, CancellationToken>((_, _, txs, _) =>
                 Task.FromResult(new ImportTransactionResult(
@@ -55,45 +56,45 @@ public class ImportServiceTests
                     txs.Count(t => !string.IsNullOrEmpty(t.LocationCity) || !string.IsNullOrEmpty(t.LocationStateOrRegion)))));
 
         // Default: enricher passes rows through unchanged
-        this._previewEnricherMock
+        _previewEnricherMock
             .Setup(e => e.EnrichWithRecurringMatchesAsync(
                 It.IsAny<List<ImportPreviewRow>>(),
                 It.IsAny<CancellationToken>()))
             .Returns<List<ImportPreviewRow>, CancellationToken>((rows, _) => Task.FromResult(rows));
 
-        this._previewEnricherMock
+        _previewEnricherMock
             .Setup(e => e.EnrichWithLocationDataAsync(
                 It.IsAny<List<ImportPreviewRow>>(),
                 It.IsAny<CancellationToken>()))
             .Returns<List<ImportPreviewRow>, CancellationToken>((rows, _) => Task.FromResult(rows));
 
-        this._ruleRepoMock
+        _ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<CategorizationRule>());
 
-        this._categoryRepoMock
+        _categoryRepoMock
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<BudgetCategory>());
 
-        this._transactionRepoMock
+        _transactionRepoMock
             .Setup(r => r.GetForDuplicateDetectionAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Transaction>());
 
-        this._service = new ImportService(
+        _service = new ImportService(
             new ImportRowProcessor(new ImportDuplicateDetector()),
-            this._previewEnricherMock.Object,
+            _previewEnricherMock.Object,
             new Mock<IImportBatchManager>().Object,
-            this._transactionCreatorMock.Object,
-            this._transactionRepoMock.Object,
-            this._ruleRepoMock.Object,
-            this._categoryRepoMock.Object,
-            this._batchRepoMock.Object,
-            this._mappingRepoMock.Object,
-            this._accountRepoMock.Object,
-            this._reconciliationServiceMock.Object,
+            _transactionCreatorMock.Object,
+            _transactionRepoMock.Object,
+            _ruleRepoMock.Object,
+            _categoryRepoMock.Object,
+            _batchRepoMock.Object,
+            _mappingRepoMock.Object,
+            _accountRepoMock.Object,
+            _reconciliationServiceMock.Object,
             new Mock<IRecurringChargeDetectionService>().Object,
-            this._userContextMock.Object,
-            this._unitOfWorkMock.Object);
+            _userContextMock.Object,
+            _unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -108,7 +109,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Empty(result.Rows);
@@ -134,7 +135,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -161,7 +162,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -187,7 +188,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -217,7 +218,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Equal(2, result.Rows.Count);
@@ -243,7 +244,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -268,7 +269,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -293,7 +294,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -319,7 +320,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -344,7 +345,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -371,7 +372,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -384,7 +385,7 @@ public class ImportServiceTests
         // Arrange
         var categoryId = Guid.NewGuid();
         var category = CreateCategory(categoryId, "Groceries");
-        this._categoryRepoMock
+        _categoryRepoMock
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<BudgetCategory> { category });
 
@@ -403,7 +404,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -430,7 +431,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -445,7 +446,7 @@ public class ImportServiceTests
         // Arrange
         var categoryId = Guid.NewGuid();
         var rule = CreateCategorizationRule("Grocery Rule", RuleMatchType.Contains, "GROCERY", categoryId);
-        this._ruleRepoMock
+        _ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<CategorizationRule> { rule });
 
@@ -463,7 +464,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -480,12 +481,12 @@ public class ImportServiceTests
         var ruleCategoryId = Guid.NewGuid();
 
         var category = CreateCategory(csvCategoryId, "Food");
-        this._categoryRepoMock
+        _categoryRepoMock
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<BudgetCategory> { category });
 
         var rule = CreateCategorizationRule("Rule", RuleMatchType.Contains, "WALMART", ruleCategoryId);
-        this._ruleRepoMock
+        _ruleRepoMock
             .Setup(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<CategorizationRule> { rule });
 
@@ -504,7 +505,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -535,7 +536,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Equal(3, result.Rows.Count);
@@ -563,7 +564,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -593,7 +594,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -605,7 +606,7 @@ public class ImportServiceTests
     public async Task ExecuteAsync_WithNoUser_ThrowsDomainException()
     {
         // Arrange
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns((Guid?)null);
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns((Guid?)null);
 
         var request = new ImportExecuteRequest
         {
@@ -615,7 +616,7 @@ public class ImportServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => this._service.ExecuteAsync(request));
+        await Assert.ThrowsAsync<DomainException>(() => _service.ExecuteAsync(request));
     }
 
     [Fact]
@@ -626,8 +627,8 @@ public class ImportServiceTests
         var accountId = Guid.NewGuid();
         var account = CreateAccount(accountId, "Test Account", userId);
 
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(account);
 
         var request = new ImportExecuteRequest
@@ -638,7 +639,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.ExecuteAsync(request);
+        var result = await _service.ExecuteAsync(request);
 
         // Assert
         Assert.Equal(Guid.Empty, result.BatchId);
@@ -651,8 +652,8 @@ public class ImportServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Account?)null);
 
         var request = new ImportExecuteRequest
@@ -666,7 +667,7 @@ public class ImportServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => this._service.ExecuteAsync(request));
+        await Assert.ThrowsAsync<DomainException>(() => _service.ExecuteAsync(request));
     }
 
     [Fact]
@@ -677,12 +678,12 @@ public class ImportServiceTests
         var accountId = Guid.NewGuid();
         var account = CreateAccount(accountId, "Test Account", userId);
 
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(account);
 
         ImportBatch? savedBatch = null;
-        this._batchRepoMock.Setup(r => r.AddAsync(It.IsAny<ImportBatch>(), It.IsAny<CancellationToken>()))
+        _batchRepoMock.Setup(r => r.AddAsync(It.IsAny<ImportBatch>(), It.IsAny<CancellationToken>()))
             .Callback<ImportBatch, CancellationToken>((b, _) => savedBatch = b)
             .Returns(Task.CompletedTask);
 
@@ -698,7 +699,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.ExecuteAsync(request);
+        var result = await _service.ExecuteAsync(request);
 
         // Assert
         Assert.Equal(2, result.ImportedCount);
@@ -707,7 +708,7 @@ public class ImportServiceTests
         Assert.Equal(1, result.UncategorizedCount);
         Assert.NotNull(savedBatch);
         Assert.Equal(ImportBatchStatus.Completed, savedBatch.Status);
-        this._transactionCreatorMock.Verify(
+        _transactionCreatorMock.Verify(
             c => c.CreateTransactionsAsync(account, It.IsAny<Guid>(), request.Transactions, It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -720,8 +721,8 @@ public class ImportServiceTests
         var accountId = Guid.NewGuid();
         var account = CreateAccount(accountId, "Test Account", userId);
 
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(account);
 
         var request = new ImportExecuteRequest
@@ -738,7 +739,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.ExecuteAsync(request);
+        var result = await _service.ExecuteAsync(request);
 
         // Assert
         Assert.Equal(4, result.ImportedCount);
@@ -754,12 +755,12 @@ public class ImportServiceTests
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
 
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(CreateAccount(accountId, "Test Account", userId));
 
         var txIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
-        this._transactionCreatorMock
+        _transactionCreatorMock
             .Setup(c => c.CreateTransactionsAsync(It.IsAny<Account>(), It.IsAny<Guid>(), It.IsAny<IReadOnlyList<ImportTransactionData>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ImportTransactionResult(txIds, 0, 0, 2, 0, 0));
 
@@ -769,7 +770,7 @@ public class ImportServiceTests
             HighConfidenceCount = 1,
             MatchesByTransaction = new Dictionary<Guid, IReadOnlyList<ReconciliationMatchDto>>(),
         };
-        this._reconciliationServiceMock
+        _reconciliationServiceMock
             .Setup(r => r.FindMatchesAsync(It.IsAny<FindMatchesRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(reconciliationResult);
 
@@ -786,13 +787,13 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.ExecuteAsync(request);
+        var result = await _service.ExecuteAsync(request);
 
         // Assert
         Assert.Equal(2, result.ReconciliationMatchCount);
         Assert.Equal(1, result.AutoMatchedCount);
         Assert.Equal(1, result.PendingMatchCount);
-        this._reconciliationServiceMock.Verify(
+        _reconciliationServiceMock.Verify(
             r => r.FindMatchesAsync(
             It.Is<FindMatchesRequest>(req => req.TransactionIds.Count == 2),
             It.IsAny<CancellationToken>()),
@@ -806,8 +807,8 @@ public class ImportServiceTests
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
 
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
-        this._accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns(userId);
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(CreateAccount(accountId, "Test Account", userId));
 
         var request = new ImportExecuteRequest
@@ -822,11 +823,11 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.ExecuteAsync(request);
+        var result = await _service.ExecuteAsync(request);
 
         // Assert
         Assert.Equal(0, result.ReconciliationMatchCount);
-        this._reconciliationServiceMock.Verify(
+        _reconciliationServiceMock.Verify(
             r => r.FindMatchesAsync(It.IsAny<FindMatchesRequest>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -855,7 +856,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert - data row is processed, row index offset by skipped rows + header
         Assert.Single(result.Rows);
@@ -888,7 +889,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert - data row is still processed, row index offset by skipped rows
         Assert.Single(result.Rows);
@@ -919,7 +920,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Equal(2, result.Rows.Count);
@@ -953,7 +954,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -988,7 +989,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -1023,7 +1024,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -1058,7 +1059,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert
         Assert.Single(result.Rows);
@@ -1095,7 +1096,7 @@ public class ImportServiceTests
         };
 
         // Act
-        var result = await this._service.PreviewAsync(request);
+        var result = await _service.PreviewAsync(request);
 
         // Assert - All 7 rows should be processed, none double-skipped
         Assert.Equal(7, result.Rows.Count);

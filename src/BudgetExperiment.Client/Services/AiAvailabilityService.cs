@@ -22,57 +22,57 @@ public sealed class AiAvailabilityService : IAiAvailabilityService
     /// <param name="aiApiService">The AI API service.</param>
     public AiAvailabilityService(IAiApiService aiApiService)
     {
-        this._aiApiService = aiApiService;
+        _aiApiService = aiApiService;
     }
 
     /// <inheritdoc/>
     public event Action? StatusChanged;
 
     /// <inheritdoc/>
-    public AiAvailabilityState State => this._state;
+    public AiAvailabilityState State => _state;
 
     /// <inheritdoc/>
-    public bool IsEnabled => this._cachedStatus?.IsEnabled ?? false;
+    public bool IsEnabled => _cachedStatus?.IsEnabled ?? false;
 
     /// <inheritdoc/>
-    public bool IsAvailable => this._cachedStatus?.IsAvailable ?? false;
+    public bool IsAvailable => _cachedStatus?.IsAvailable ?? false;
 
     /// <inheritdoc/>
     public bool IsFullyOperational => this.IsEnabled && this.IsAvailable;
 
     /// <inheritdoc/>
-    public string? ErrorMessage => this._errorMessage;
+    public string? ErrorMessage => _errorMessage;
 
     /// <inheritdoc/>
     public async Task RefreshAsync()
     {
         try
         {
-            this._cachedStatus = await this._aiApiService.GetStatusAsync();
+            _cachedStatus = await _aiApiService.GetStatusAsync();
 
-            if (this._cachedStatus == null || !this._cachedStatus.IsEnabled)
+            if (_cachedStatus == null || !_cachedStatus.IsEnabled)
             {
-                this._state = AiAvailabilityState.Disabled;
-                this._errorMessage = null;
+                _state = AiAvailabilityState.Disabled;
+                _errorMessage = null;
             }
-            else if (!this._cachedStatus.IsAvailable)
+            else if (!_cachedStatus.IsAvailable)
             {
-                this._state = AiAvailabilityState.Unavailable;
-                this._errorMessage = this._cachedStatus.ErrorMessage ?? "AI service is unavailable";
+                _state = AiAvailabilityState.Unavailable;
+                _errorMessage = _cachedStatus.ErrorMessage ?? "AI service is unavailable";
             }
             else
             {
-                this._state = AiAvailabilityState.Available;
-                this._errorMessage = null;
+                _state = AiAvailabilityState.Available;
+                _errorMessage = null;
             }
         }
         catch (Exception ex)
         {
             // When API fails, assume AI might be enabled but unreachable
             // This shows warning state rather than hiding completely
-            this._state = AiAvailabilityState.Unavailable;
-            this._errorMessage = ex.Message;
-            this._cachedStatus = null;
+            _state = AiAvailabilityState.Unavailable;
+            _errorMessage = ex.Message;
+            _cachedStatus = null;
         }
 
         this.StatusChanged?.Invoke();

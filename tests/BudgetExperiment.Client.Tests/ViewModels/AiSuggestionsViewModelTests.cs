@@ -5,6 +5,7 @@
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -26,18 +27,18 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     /// </summary>
     public AiSuggestionsViewModelTests()
     {
-        this._sut = new AiSuggestionsViewModel(
-            this._aiService,
-            this._categoryService,
-            this._availabilityService,
-            this._apiErrorContext);
-        this._sut.OnStateChanged = () => this._stateChangedCount++;
+        _sut = new AiSuggestionsViewModel(
+            _aiService,
+            _categoryService,
+            _availabilityService,
+            _apiErrorContext);
+        _sut.OnStateChanged = () => _stateChangedCount++;
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -49,15 +50,15 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsBothSuggestionTypes()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Test Rule"));
-        this._categoryService.PendingSuggestions.Add(CreateCategorySuggestion("Test Category"));
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Test Rule"));
+        _categoryService.PendingSuggestions.Add(CreateCategorySuggestion("Test Category"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.RuleSuggestions.Count.ShouldBe(1);
-        this._sut.CategorySuggestions.Count.ShouldBe(1);
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.RuleSuggestions.Count.ShouldBe(1);
+        _sut.CategorySuggestions.Count.ShouldBe(1);
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -67,13 +68,13 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsAiStatus()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "llama3" };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true, CurrentModel = "llama3" };
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Status.ShouldNotBeNull();
-        this._sut.Status!.CurrentModel.ShouldBe("llama3");
-        this._sut.IsAiAvailable.ShouldBeTrue();
+        _sut.Status.ShouldNotBeNull();
+        _sut.Status!.CurrentModel.ShouldBe("llama3");
+        _sut.IsAiAvailable.ShouldBeTrue();
     }
 
     /// <summary>
@@ -83,14 +84,14 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenLoadFails()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.GetPendingSuggestionsException = new HttpRequestException("API down");
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.GetPendingSuggestionsException = new HttpRequestException("API down");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage.ShouldContain("Failed to load suggestions");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage.ShouldContain("Failed to load suggestions");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- AI Availability ---
@@ -101,7 +102,7 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public void IsAiAvailable_ReturnsFalse_WhenStatusIsNull()
     {
-        this._sut.IsAiAvailable.ShouldBeFalse();
+        _sut.IsAiAvailable.ShouldBeFalse();
     }
 
     /// <summary>
@@ -111,11 +112,11 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task IsAiAvailable_ReturnsFalse_WhenDisabled()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = false };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = false };
 
-        await this._sut.LoadStatusAsync();
+        await _sut.LoadStatusAsync();
 
-        this._sut.IsAiAvailable.ShouldBeFalse();
+        _sut.IsAiAvailable.ShouldBeFalse();
     }
 
     // --- Composite Score ---
@@ -147,15 +148,15 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task GroupedSuggestions_ReturnsGroupsInPriorityOrder()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule1", type: "NewRule"));
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule2", type: "PatternOptimization"));
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule3", type: "RuleConflict"));
-        this._categoryService.PendingSuggestions.Add(CreateCategorySuggestion("Cat1"));
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule1", type: "NewRule"));
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule2", type: "PatternOptimization"));
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule3", type: "RuleConflict"));
+        _categoryService.PendingSuggestions.Add(CreateCategorySuggestion("Cat1"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        var groups = this._sut.GroupedSuggestions;
+        var groups = _sut.GroupedSuggestions;
         groups.Count.ShouldBe(4);
         groups[0].Key.ShouldBe("NewCategories");
         groups[1].Key.ShouldBe("NewRules");
@@ -170,12 +171,12 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task GroupedSuggestions_ExcludesEmptyGroups()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._categoryService.PendingSuggestions.Add(CreateCategorySuggestion("Cat1"));
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _categoryService.PendingSuggestions.Add(CreateCategorySuggestion("Cat1"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        var groups = this._sut.GroupedSuggestions;
+        var groups = _sut.GroupedSuggestions;
         groups.Count.ShouldBe(1);
         groups[0].Key.ShouldBe("NewCategories");
     }
@@ -187,13 +188,13 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task GroupedSuggestions_SortsItemsByCompositeScoreDescending()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Low", type: "NewRule", confidence: 0.3m, affectedCount: 5));
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("High", type: "NewRule", confidence: 0.9m, affectedCount: 50));
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Low", type: "NewRule", confidence: 0.3m, affectedCount: 5));
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("High", type: "NewRule", confidence: 0.9m, affectedCount: 50));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        var group = this._sut.GroupedSuggestions.First(g => g.Key == "NewRules");
+        var group = _sut.GroupedSuggestions.First(g => g.Key == "NewRules");
         var firstItem = (RuleSuggestionDto)group.Items[0];
         firstItem.Title.ShouldBe("High");
     }
@@ -205,14 +206,14 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task GroupedSuggestions_SetsHighConfidenceCount()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("High1", type: "NewRule", confidence: 0.9m));
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("High2", type: "NewRule", confidence: 0.85m));
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Low", type: "NewRule", confidence: 0.5m));
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("High1", type: "NewRule", confidence: 0.9m));
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("High2", type: "NewRule", confidence: 0.85m));
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Low", type: "NewRule", confidence: 0.5m));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        var group = this._sut.GroupedSuggestions.First(g => g.Key == "NewRules");
+        var group = _sut.GroupedSuggestions.First(g => g.Key == "NewRules");
         group.HighConfidenceCount.ShouldBe(2);
     }
 
@@ -225,16 +226,16 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task AcceptRuleSuggestionAsync_RemovesSuggestionFromList()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
         var suggestion = CreateRuleSuggestion("Test");
-        this._aiService.PendingSuggestions.Add(suggestion);
-        this._aiService.AcceptSuggestionResult = new CategorizationRuleDto { Id = Guid.NewGuid(), Name = "TestRule" };
-        await this._sut.InitializeAsync();
+        _aiService.PendingSuggestions.Add(suggestion);
+        _aiService.AcceptSuggestionResult = new CategorizationRuleDto { Id = Guid.NewGuid(), Name = "TestRule" };
+        await _sut.InitializeAsync();
 
-        await this._sut.AcceptRuleSuggestionAsync(suggestion.Id);
+        await _sut.AcceptRuleSuggestionAsync(suggestion.Id);
 
-        this._sut.RuleSuggestions.Count.ShouldBe(0);
-        this._sut.SuccessMessage.ShouldNotBeNull();
+        _sut.RuleSuggestions.Count.ShouldBe(0);
+        _sut.SuccessMessage.ShouldNotBeNull();
     }
 
     /// <summary>
@@ -244,14 +245,14 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task AcceptRuleSuggestionAsync_SetsError_WhenApiFails()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Test"));
-        this._aiService.AcceptSuggestionResult = null; // failure
-        await this._sut.InitializeAsync();
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Test"));
+        _aiService.AcceptSuggestionResult = null; // failure
+        await _sut.InitializeAsync();
 
-        await this._sut.AcceptRuleSuggestionAsync(Guid.NewGuid());
+        await _sut.AcceptRuleSuggestionAsync(Guid.NewGuid());
 
-        this._sut.ErrorMessage.ShouldBe("Failed to accept suggestion.");
+        _sut.ErrorMessage.ShouldBe("Failed to accept suggestion.");
     }
 
     // --- Dismiss Rule Suggestion ---
@@ -263,15 +264,15 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task DismissRuleSuggestionAsync_RemovesSuggestionFromList()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
         var suggestion = CreateRuleSuggestion("Test");
-        this._aiService.PendingSuggestions.Add(suggestion);
-        this._aiService.DismissSuggestionResult = true;
-        await this._sut.InitializeAsync();
+        _aiService.PendingSuggestions.Add(suggestion);
+        _aiService.DismissSuggestionResult = true;
+        await _sut.InitializeAsync();
 
-        await this._sut.DismissRuleSuggestionAsync(suggestion.Id);
+        await _sut.DismissRuleSuggestionAsync(suggestion.Id);
 
-        this._sut.RuleSuggestions.Count.ShouldBe(0);
+        _sut.RuleSuggestions.Count.ShouldBe(0);
     }
 
     // --- Accept Category Suggestion ---
@@ -283,22 +284,22 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task AcceptCategorySuggestionAsync_RemovesSuggestionFromList()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
         var suggestion = CreateCategorySuggestion("Cat");
-        this._categoryService.PendingSuggestions.Add(suggestion);
-        this._categoryService.AcceptResult = new AcceptCategorySuggestionResultDto
+        _categoryService.PendingSuggestions.Add(suggestion);
+        _categoryService.AcceptResult = new AcceptCategorySuggestionResultDto
         {
             SuggestionId = suggestion.Id,
             Success = true,
             CategoryId = Guid.NewGuid(),
             CategoryName = "Cat",
         };
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        await this._sut.AcceptCategorySuggestionAsync(suggestion.Id);
+        await _sut.AcceptCategorySuggestionAsync(suggestion.Id);
 
-        this._sut.CategorySuggestions.Count.ShouldBe(0);
-        this._sut.SuccessMessage!.ShouldContain("Cat");
+        _sut.CategorySuggestions.Count.ShouldBe(0);
+        _sut.SuccessMessage!.ShouldContain("Cat");
     }
 
     // --- Dismiss Category Suggestion ---
@@ -310,15 +311,15 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task DismissCategorySuggestionAsync_RemovesSuggestionFromList()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
         var suggestion = CreateCategorySuggestion("Cat");
-        this._categoryService.PendingSuggestions.Add(suggestion);
-        this._categoryService.DismissResult = true;
-        await this._sut.InitializeAsync();
+        _categoryService.PendingSuggestions.Add(suggestion);
+        _categoryService.DismissResult = true;
+        await _sut.InitializeAsync();
 
-        await this._sut.DismissCategorySuggestionAsync(suggestion.Id);
+        await _sut.DismissCategorySuggestionAsync(suggestion.Id);
 
-        this._sut.CategorySuggestions.Count.ShouldBe(0);
+        _sut.CategorySuggestions.Count.ShouldBe(0);
     }
 
     // --- Feedback ---
@@ -330,15 +331,15 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task ProvideFeedbackAsync_UpdatesSuggestionFeedback()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
         var suggestion = CreateRuleSuggestion("Test");
-        this._aiService.PendingSuggestions.Add(suggestion);
-        this._aiService.ProvideFeedbackResult = true;
-        await this._sut.InitializeAsync();
+        _aiService.PendingSuggestions.Add(suggestion);
+        _aiService.ProvideFeedbackResult = true;
+        await _sut.InitializeAsync();
 
-        await this._sut.ProvideFeedbackAsync(suggestion.Id, true);
+        await _sut.ProvideFeedbackAsync(suggestion.Id, true);
 
-        this._sut.RuleSuggestions.First(s => s.Id == suggestion.Id).UserFeedbackPositive.ShouldBe(true);
+        _sut.RuleSuggestions.First(s => s.Id == suggestion.Id).UserFeedbackPositive.ShouldBe(true);
     }
 
     // --- All Caught Up ---
@@ -350,11 +351,11 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task IsAllCaughtUp_ReturnsTrue_WhenNoSuggestionsAndAiAvailable()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsAllCaughtUp.ShouldBeTrue();
+        _sut.IsAllCaughtUp.ShouldBeTrue();
     }
 
     /// <summary>
@@ -364,12 +365,12 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task IsAllCaughtUp_ReturnsFalse_WhenSuggestionsExist()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Test"));
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Test"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsAllCaughtUp.ShouldBeFalse();
+        _sut.IsAllCaughtUp.ShouldBeFalse();
     }
 
     // --- Review Mode ---
@@ -380,14 +381,14 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public void ToggleReviewMode_TogglesState()
     {
-        this._sut.IsReviewMode.ShouldBeFalse();
+        _sut.IsReviewMode.ShouldBeFalse();
 
-        this._sut.ToggleReviewMode();
-        this._sut.IsReviewMode.ShouldBeTrue();
-        this._sut.ReviewIndex.ShouldBe(0);
+        _sut.ToggleReviewMode();
+        _sut.IsReviewMode.ShouldBeTrue();
+        _sut.ReviewIndex.ShouldBe(0);
 
-        this._sut.ToggleReviewMode();
-        this._sut.IsReviewMode.ShouldBeFalse();
+        _sut.ToggleReviewMode();
+        _sut.IsReviewMode.ShouldBeFalse();
     }
 
     /// <summary>
@@ -397,15 +398,15 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task NextReviewItem_AdvancesIndex()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule1"));
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule2"));
-        await this._sut.InitializeAsync();
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule1"));
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule2"));
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleReviewMode();
-        this._sut.NextReviewItem();
+        _sut.ToggleReviewMode();
+        _sut.NextReviewItem();
 
-        this._sut.ReviewIndex.ShouldBe(1);
+        _sut.ReviewIndex.ShouldBe(1);
     }
 
     /// <summary>
@@ -415,15 +416,15 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task NextReviewItem_DoesNotExceedTotal()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule1"));
-        await this._sut.InitializeAsync();
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("Rule1"));
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleReviewMode();
-        this._sut.NextReviewItem();
-        this._sut.NextReviewItem(); // should not advance
+        _sut.ToggleReviewMode();
+        _sut.NextReviewItem();
+        _sut.NextReviewItem(); // should not advance
 
-        this._sut.ReviewIndex.ShouldBe(0);
+        _sut.ReviewIndex.ShouldBe(0);
     }
 
     // --- Dismiss Messages ---
@@ -434,11 +435,11 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public void DismissError_ClearsErrorMessage()
     {
-        this._aiService.GetPendingSuggestionsException = new HttpRequestException("fail");
+        _aiService.GetPendingSuggestionsException = new HttpRequestException("fail");
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -447,9 +448,9 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public void DismissSuccess_ClearsSuccessMessage()
     {
-        this._sut.DismissSuccess();
+        _sut.DismissSuccess();
 
-        this._sut.SuccessMessage.ShouldBeNull();
+        _sut.SuccessMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -458,11 +459,11 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public void DismissAnalysisResult_ClearsAnalysisState()
     {
-        this._sut.DismissAnalysisResult();
+        _sut.DismissAnalysisResult();
 
-        this._sut.RuleAnalysisResult.ShouldBeNull();
-        this._sut.CategoryAnalysisCount.ShouldBeNull();
-        this._sut.AnalysisError.ShouldBeNull();
+        _sut.RuleAnalysisResult.ShouldBeNull();
+        _sut.CategoryAnalysisCount.ShouldBeNull();
+        _sut.AnalysisError.ShouldBeNull();
     }
 
     // --- Analysis ---
@@ -475,10 +476,10 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     public async Task StartAnalysisAsync_DoesNothing_WhenAiUnavailable()
     {
         // Status is null => not available
-        await this._sut.StartAnalysisAsync();
+        await _sut.StartAnalysisAsync();
 
-        this._sut.RuleAnalysisResult.ShouldBeNull();
-        this._sut.CategoryAnalysisCount.ShouldBeNull();
+        _sut.RuleAnalysisResult.ShouldBeNull();
+        _sut.CategoryAnalysisCount.ShouldBeNull();
     }
 
     /// <summary>
@@ -488,17 +489,17 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task StartAnalysisAsync_RunsBothAnalyses()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.AnalyzeResult = new AnalysisResponseDto { NewRuleSuggestions = 3 };
-        this._categoryService.AnalyzeResult.Add(CreateCategorySuggestion("New"));
-        await this._sut.LoadStatusAsync();
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AnalyzeResult = new AnalysisResponseDto { NewRuleSuggestions = 3 };
+        _categoryService.AnalyzeResult.Add(CreateCategorySuggestion("New"));
+        await _sut.LoadStatusAsync();
 
-        await this._sut.StartAnalysisAsync();
+        await _sut.StartAnalysisAsync();
 
-        this._sut.RuleAnalysisResult.ShouldNotBeNull();
-        this._sut.RuleAnalysisResult!.NewRuleSuggestions.ShouldBe(3);
-        this._sut.CategoryAnalysisCount.ShouldBe(1);
-        this._sut.IsAnalyzing.ShouldBeFalse();
+        _sut.RuleAnalysisResult.ShouldNotBeNull();
+        _sut.RuleAnalysisResult!.NewRuleSuggestions.ShouldBe(3);
+        _sut.CategoryAnalysisCount.ShouldBe(1);
+        _sut.IsAnalyzing.ShouldBeFalse();
     }
 
     /// <summary>
@@ -508,13 +509,13 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task StartAnalysisAsync_SetsError_WhenBothReturnNothing()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.AnalyzeResult = null;
-        await this._sut.LoadStatusAsync();
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.AnalyzeResult = null;
+        await _sut.LoadStatusAsync();
 
-        await this._sut.StartAnalysisAsync();
+        await _sut.StartAnalysisAsync();
 
-        this._sut.AnalysisError.ShouldNotBeNull();
+        _sut.AnalysisError.ShouldNotBeNull();
     }
 
     // --- TotalSuggestionCount ---
@@ -526,14 +527,14 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task TotalSuggestionCount_ReturnsCorrectTotal()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("R1"));
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("R2"));
-        this._categoryService.PendingSuggestions.Add(CreateCategorySuggestion("C1"));
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("R1"));
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("R2"));
+        _categoryService.PendingSuggestions.Add(CreateCategorySuggestion("C1"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.TotalSuggestionCount.ShouldBe(3);
+        _sut.TotalSuggestionCount.ShouldBe(3);
     }
 
     // --- Dismiss All ---
@@ -545,18 +546,18 @@ public sealed class AiSuggestionsViewModelTests : IDisposable
     [Fact]
     public async Task DismissAllAsync_ClearsAllSuggestions()
     {
-        this._aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
-        this._aiService.PendingSuggestions.Add(CreateRuleSuggestion("R1"));
-        this._categoryService.PendingSuggestions.Add(CreateCategorySuggestion("C1"));
-        this._aiService.DismissSuggestionResult = true;
-        this._categoryService.DismissResult = true;
-        await this._sut.InitializeAsync();
+        _aiService.AiStatus = new AiStatusDto { IsAvailable = true, IsEnabled = true };
+        _aiService.PendingSuggestions.Add(CreateRuleSuggestion("R1"));
+        _categoryService.PendingSuggestions.Add(CreateCategorySuggestion("C1"));
+        _aiService.DismissSuggestionResult = true;
+        _categoryService.DismissResult = true;
+        await _sut.InitializeAsync();
 
-        await this._sut.DismissAllAsync();
+        await _sut.DismissAllAsync();
 
-        this._sut.RuleSuggestions.Count.ShouldBe(0);
-        this._sut.CategorySuggestions.Count.ShouldBe(0);
-        this._sut.SuccessMessage.ShouldBe("All suggestions dismissed.");
+        _sut.RuleSuggestions.Count.ShouldBe(0);
+        _sut.CategorySuggestions.Count.ShouldBe(0);
+        _sut.SuccessMessage.ShouldBe("All suggestions dismissed.");
     }
 
     // --- Helpers ---

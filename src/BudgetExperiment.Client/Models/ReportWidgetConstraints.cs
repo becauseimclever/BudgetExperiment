@@ -12,20 +12,32 @@ public sealed class ReportWidgetConstraints
     /// <summary>
     /// Gets or sets the minimum width in grid columns.
     /// </summary>
-    public int MinWidth { get; set; }
+    public int MinWidth
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the minimum height in grid rows.
     /// </summary>
-    public int MinHeight { get; set; }
+    public int MinHeight
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the maximum width in grid columns.
     /// </summary>
-    public int MaxWidth { get; set; }
+    public int MaxWidth
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the maximum height in grid rows.
     /// </summary>
-    public int MaxHeight { get; set; }
+    public int MaxHeight
+    {
+        get; set;
+    }
 }

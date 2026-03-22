@@ -27,5 +27,8 @@ public sealed record DebitCreditIndicatorSettingsDto
     /// <summary>
     /// Gets a value indicating whether matching is case-sensitive.
     /// </summary>
-    public bool CaseSensitive { get; init; }
+    public bool CaseSensitive
+    {
+        get; init;
+    }
 }

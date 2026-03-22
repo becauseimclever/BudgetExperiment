@@ -17,7 +17,10 @@ public sealed record CreateRecurringTransferAction : ChatAction
     /// <summary>
     /// Gets the source account identifier.
     /// </summary>
-    public Guid FromAccountId { get; init; }
+    public Guid FromAccountId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the source account name for display.
@@ -27,7 +30,10 @@ public sealed record CreateRecurringTransferAction : ChatAction
     /// <summary>
     /// Gets the destination account identifier.
     /// </summary>
-    public Guid ToAccountId { get; init; }
+    public Guid ToAccountId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the destination account name for display.
@@ -37,12 +43,18 @@ public sealed record CreateRecurringTransferAction : ChatAction
     /// <summary>
     /// Gets the transfer amount.
     /// </summary>
-    public decimal Amount { get; init; }
+    public decimal Amount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional transfer description.
     /// </summary>
-    public string? Description { get; init; }
+    public string? Description
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the recurrence pattern.
@@ -52,12 +64,18 @@ public sealed record CreateRecurringTransferAction : ChatAction
     /// <summary>
     /// Gets the start date for the recurrence.
     /// </summary>
-    public DateOnly StartDate { get; init; }
+    public DateOnly StartDate
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional end date for the recurrence.
     /// </summary>
-    public DateOnly? EndDate { get; init; }
+    public DateOnly? EndDate
+    {
+        get; init;
+    }
 
     /// <inheritdoc/>
     public override string GetPreviewSummary() =>

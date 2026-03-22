@@ -5,7 +5,9 @@
 using BudgetExperiment.Client.Components.Calendar;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Calendar;

@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -26,18 +27,18 @@ public class RecurringTransferRealizationServiceTests
     /// </summary>
     public RecurringTransferRealizationServiceTests()
     {
-        this._repository = new Mock<IRecurringTransferRepository>();
-        this._accountRepo = new Mock<IAccountRepository>();
-        this._transactionRepo = new Mock<ITransactionRepository>();
-        this._uow = new Mock<IUnitOfWork>();
-        this._service = new RecurringTransferRealizationService(
-            this._repository.Object,
-            this._accountRepo.Object,
-            this._transactionRepo.Object,
-            this._uow.Object);
+        _repository = new Mock<IRecurringTransferRepository>();
+        _accountRepo = new Mock<IAccountRepository>();
+        _transactionRepo = new Mock<ITransactionRepository>();
+        _uow = new Mock<IUnitOfWork>();
+        _service = new RecurringTransferRealizationService(
+            _repository.Object,
+            _accountRepo.Object,
+            _transactionRepo.Object,
+            _uow.Object);
 
-        this._sourceAccount = Account.Create("Checking", AccountType.Checking);
-        this._destAccount = Account.Create("Savings", AccountType.Savings);
+        _sourceAccount = Account.Create("Checking", AccountType.Checking);
+        _destAccount = Account.Create("Savings", AccountType.Savings);
     }
 
     [Fact]
@@ -45,8 +46,8 @@ public class RecurringTransferRealizationServiceTests
     {
         // Arrange
         var transfer = RecurringTransfer.Create(
-            this._sourceAccount.Id,
-            this._destAccount.Id,
+            _sourceAccount.Id,
+            _destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -58,38 +59,38 @@ public class RecurringTransferRealizationServiceTests
             InstanceDate = instanceDate,
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
-        this._repository.Setup(r => r.GetExceptionAsync(transfer.Id, instanceDate, default)).ReturnsAsync((RecurringTransferException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync([]);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._sourceAccount.Id, default)).ReturnsAsync(this._sourceAccount);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._destAccount.Id, default)).ReturnsAsync(this._destAccount);
-        this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
+        _repository.Setup(r => r.GetExceptionAsync(transfer.Id, instanceDate, default)).ReturnsAsync((RecurringTransferException?)null);
+        _transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync([]);
+        _accountRepo.Setup(r => r.GetByIdAsync(_sourceAccount.Id, default)).ReturnsAsync(_sourceAccount);
+        _accountRepo.Setup(r => r.GetByIdAsync(_destAccount.Id, default)).ReturnsAsync(_destAccount);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
-        var result = await this._service.RealizeInstanceAsync(transfer.Id, request);
+        var result = await _service.RealizeInstanceAsync(transfer.Id, request);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(this._sourceAccount.Id, result.SourceAccountId);
-        Assert.Equal(this._destAccount.Id, result.DestinationAccountId);
+        Assert.Equal(_sourceAccount.Id, result.SourceAccountId);
+        Assert.Equal(_destAccount.Id, result.DestinationAccountId);
         Assert.Equal(500m, result.Amount);
         Assert.Equal(instanceDate, result.Date);
-        this._transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), default), Times.Exactly(2));
-        this._uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+        _transactionRepo.Verify(r => r.AddAsync(It.IsAny<Transaction>(), default), Times.Exactly(2));
+        _uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 
     [Fact]
     public async Task RealizeInstanceAsync_Throws_When_Transfer_Not_Found()
     {
         // Arrange
-        this._repository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((RecurringTransfer?)null);
+        _repository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((RecurringTransfer?)null);
         var request = new RealizeRecurringTransferRequest
         {
             InstanceDate = new DateOnly(2026, 1, 15),
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<DomainException>(() => this._service.RealizeInstanceAsync(Guid.NewGuid(), request));
+        var ex = await Assert.ThrowsAsync<DomainException>(() => _service.RealizeInstanceAsync(Guid.NewGuid(), request));
         Assert.Equal("Recurring transfer not found.", ex.Message);
     }
 
@@ -98,8 +99,8 @@ public class RecurringTransferRealizationServiceTests
     {
         // Arrange
         var transfer = RecurringTransfer.Create(
-            this._sourceAccount.Id,
-            this._destAccount.Id,
+            _sourceAccount.Id,
+            _destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -109,7 +110,7 @@ public class RecurringTransferRealizationServiceTests
         var existingTransactions = new List<Transaction>
         {
             Transaction.CreateFromRecurringTransfer(
-                this._sourceAccount.Id,
+                _sourceAccount.Id,
                 MoneyValue.Create("USD", -500m),
                 instanceDate,
                 "Monthly Savings",
@@ -124,11 +125,11 @@ public class RecurringTransferRealizationServiceTests
             InstanceDate = instanceDate,
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
-        this._transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync(existingTransactions);
+        _repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
+        _transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync(existingTransactions);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<DomainException>(() => this._service.RealizeInstanceAsync(transfer.Id, request));
+        var ex = await Assert.ThrowsAsync<DomainException>(() => _service.RealizeInstanceAsync(transfer.Id, request));
         Assert.Equal("This instance has already been realized.", ex.Message);
     }
 
@@ -137,8 +138,8 @@ public class RecurringTransferRealizationServiceTests
     {
         // Arrange
         var transfer = RecurringTransfer.Create(
-            this._sourceAccount.Id,
-            this._destAccount.Id,
+            _sourceAccount.Id,
+            _destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -153,15 +154,15 @@ public class RecurringTransferRealizationServiceTests
             Amount = new MoneyDto { Currency = "USD", Amount = 600m },
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
-        this._repository.Setup(r => r.GetExceptionAsync(transfer.Id, instanceDate, default)).ReturnsAsync((RecurringTransferException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync([]);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._sourceAccount.Id, default)).ReturnsAsync(this._sourceAccount);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._destAccount.Id, default)).ReturnsAsync(this._destAccount);
-        this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
+        _repository.Setup(r => r.GetExceptionAsync(transfer.Id, instanceDate, default)).ReturnsAsync((RecurringTransferException?)null);
+        _transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync([]);
+        _accountRepo.Setup(r => r.GetByIdAsync(_sourceAccount.Id, default)).ReturnsAsync(_sourceAccount);
+        _accountRepo.Setup(r => r.GetByIdAsync(_destAccount.Id, default)).ReturnsAsync(_destAccount);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
-        var result = await this._service.RealizeInstanceAsync(transfer.Id, request);
+        var result = await _service.RealizeInstanceAsync(transfer.Id, request);
 
         // Assert
         Assert.NotNull(result);
@@ -174,8 +175,8 @@ public class RecurringTransferRealizationServiceTests
     {
         // Arrange
         var transfer = RecurringTransfer.Create(
-            this._sourceAccount.Id,
-            this._destAccount.Id,
+            _sourceAccount.Id,
+            _destAccount.Id,
             "Monthly Savings",
             MoneyValue.Create("USD", 500m),
             RecurrencePatternValue.CreateMonthly(1, 15),
@@ -195,15 +196,15 @@ public class RecurringTransferRealizationServiceTests
             InstanceDate = instanceDate,
         };
 
-        this._repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
-        this._repository.Setup(r => r.GetExceptionAsync(transfer.Id, instanceDate, default)).ReturnsAsync(exception);
-        this._transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync([]);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._sourceAccount.Id, default)).ReturnsAsync(this._sourceAccount);
-        this._accountRepo.Setup(r => r.GetByIdAsync(this._destAccount.Id, default)).ReturnsAsync(this._destAccount);
-        this._uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        _repository.Setup(r => r.GetByIdAsync(transfer.Id, default)).ReturnsAsync(transfer);
+        _repository.Setup(r => r.GetExceptionAsync(transfer.Id, instanceDate, default)).ReturnsAsync(exception);
+        _transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(transfer.Id, instanceDate, default)).ReturnsAsync([]);
+        _accountRepo.Setup(r => r.GetByIdAsync(_sourceAccount.Id, default)).ReturnsAsync(_sourceAccount);
+        _accountRepo.Setup(r => r.GetByIdAsync(_destAccount.Id, default)).ReturnsAsync(_destAccount);
+        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
-        var result = await this._service.RealizeInstanceAsync(transfer.Id, request);
+        var result = await _service.RealizeInstanceAsync(transfer.Id, request);
 
         // Assert
         Assert.NotNull(result);

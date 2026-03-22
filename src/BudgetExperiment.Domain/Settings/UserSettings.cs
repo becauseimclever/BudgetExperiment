@@ -22,12 +22,18 @@ public sealed class UserSettings
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID (from Authentik 'sub' claim).
     /// </summary>
-    public Guid UserId { get; private set; }
+    public Guid UserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user's default budget scope preference.
@@ -38,7 +44,10 @@ public sealed class UserSettings
     /// Gets a value indicating whether past-due recurring items are automatically realized
     /// without requiring manual confirmation.
     /// </summary>
-    public bool AutoRealizePastDueItems { get; private set; }
+    public bool AutoRealizePastDueItems
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets how many days back to look for past-due items.
@@ -48,12 +57,18 @@ public sealed class UserSettings
     /// <summary>
     /// Gets the user's preferred currency code (e.g., "USD", "EUR").
     /// </summary>
-    public string? PreferredCurrency { get; private set; }
+    public string? PreferredCurrency
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user's time zone ID (IANA format, e.g., "America/New_York").
     /// </summary>
-    public string? TimeZoneId { get; private set; }
+    public string? TimeZoneId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user's preferred first day of the week (Sunday or Monday).
@@ -63,17 +78,26 @@ public sealed class UserSettings
     /// <summary>
     /// Gets a value indicating whether the user has completed the initial onboarding wizard.
     /// </summary>
-    public bool IsOnboarded { get; private set; }
+    public bool IsOnboarded
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the settings were created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the settings were last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new default UserSettings instance for a user.

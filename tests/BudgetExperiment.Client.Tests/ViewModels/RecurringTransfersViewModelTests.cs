@@ -8,7 +8,9 @@ using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Shared.Budgeting;
+
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -30,19 +32,19 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     /// </summary>
     public RecurringTransfersViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new RecurringTransfersViewModel(
-            this._apiService,
-            this._toastService,
-            this._scopeService,
-            this._chatContext,
-            this._apiErrorContext);
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new RecurringTransfersViewModel(
+            _apiService,
+            _toastService,
+            _scopeService,
+            _chatContext,
+            _apiErrorContext);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -54,12 +56,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsRecurringTransfers()
     {
-        this._apiService.RecurringTransfers.Add(CreateTransfer("Monthly Savings"));
+        _apiService.RecurringTransfers.Add(CreateTransfer("Monthly Savings"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.RecurringTransfers.Count.ShouldBe(1);
-        this._sut.RecurringTransfers[0].Description.ShouldBe("Monthly Savings");
+        _sut.RecurringTransfers.Count.ShouldBe(1);
+        _sut.RecurringTransfers[0].Description.ShouldBe("Monthly Savings");
     }
 
     /// <summary>
@@ -69,9 +71,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -81,9 +83,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsPageTypeOnChatContext()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._chatContext.CurrentContext.PageType.ShouldBe("recurring transfers");
+        _chatContext.CurrentContext.PageType.ShouldBe("recurring transfers");
     }
 
     /// <summary>
@@ -93,13 +95,13 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetRecurringTransfersException = new HttpRequestException("Server error");
+        _apiService.GetRecurringTransfersException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load recurring transfers");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load recurring transfers");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- LoadRecurringTransfersAsync ---
@@ -111,14 +113,14 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task LoadRecurringTransfersAsync_ClearsErrorMessage()
     {
-        this._apiService.GetRecurringTransfersException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetRecurringTransfersException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.GetRecurringTransfersException = null;
-        await this._sut.LoadRecurringTransfersAsync();
+        _apiService.GetRecurringTransfersException = null;
+        await _sut.LoadRecurringTransfersAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- RetryLoadAsync ---
@@ -130,13 +132,13 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_ReloadsRecurringTransfers()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.RecurringTransfers.Add(CreateTransfer("New Item"));
+        await _sut.InitializeAsync();
+        _apiService.RecurringTransfers.Add(CreateTransfer("New Item"));
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
-        this._sut.RecurringTransfers.Count.ShouldBe(1);
-        this._sut.IsRetrying.ShouldBeFalse();
+        _sut.RecurringTransfers.Count.ShouldBe(1);
+        _sut.IsRetrying.ShouldBeFalse();
     }
 
     /// <summary>
@@ -147,9 +149,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task RetryLoadAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -163,12 +165,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task DismissError_ClearsErrorMessage()
     {
-        this._apiService.GetRecurringTransfersException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
+        _apiService.GetRecurringTransfersException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -178,9 +180,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public void DismissError_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         notified.ShouldBeTrue();
     }
@@ -193,12 +195,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public void OpenAddForm_ShowsFormAndResetsModel()
     {
-        this._sut.OpenAddForm();
+        _sut.OpenAddForm();
 
-        this._sut.ShowAddForm.ShouldBeTrue();
-        this._sut.NewRecurring.Frequency.ShouldBe("Monthly");
-        this._sut.NewRecurring.Amount.ShouldNotBeNull();
-        this._sut.NewRecurring.Amount!.Currency.ShouldBe("USD");
+        _sut.ShowAddForm.ShouldBeTrue();
+        _sut.NewRecurring.Frequency.ShouldBe("Monthly");
+        _sut.NewRecurring.Amount.ShouldNotBeNull();
+        _sut.NewRecurring.Amount!.Currency.ShouldBe("USD");
     }
 
     /// <summary>
@@ -208,9 +210,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public void OpenAddForm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenAddForm();
+        _sut.OpenAddForm();
 
         notified.ShouldBeTrue();
     }
@@ -226,12 +228,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
         var transfer = CreateTransfer("Savings Transfer");
         transfer.Version = "v1";
 
-        this._sut.OpenEditForm(transfer);
+        _sut.OpenEditForm(transfer);
 
-        this._sut.ShowEditForm.ShouldBeTrue();
-        this._sut.EditingId.ShouldBe(transfer.Id);
-        this._sut.EditingVersion.ShouldBe("v1");
-        this._sut.EditModel.Description.ShouldBe("Savings Transfer");
+        _sut.ShowEditForm.ShouldBeTrue();
+        _sut.EditingId.ShouldBe(transfer.Id);
+        _sut.EditingVersion.ShouldBe("v1");
+        _sut.EditModel.Description.ShouldBe("Savings Transfer");
     }
 
     /// <summary>
@@ -247,14 +249,14 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
         transfer.MonthOfYear = 6;
         transfer.EndDate = new DateOnly(2027, 12, 31);
 
-        this._sut.OpenEditForm(transfer);
+        _sut.OpenEditForm(transfer);
 
-        this._sut.EditModel.Frequency.ShouldBe("Monthly");
-        this._sut.EditModel.Interval.ShouldBe(2);
-        this._sut.EditModel.DayOfMonth.ShouldBe(15);
-        this._sut.EditModel.DayOfWeek.ShouldBe("Monday");
-        this._sut.EditModel.MonthOfYear.ShouldBe(6);
-        this._sut.EditModel.EndDate.ShouldBe(new DateOnly(2027, 12, 31));
+        _sut.EditModel.Frequency.ShouldBe("Monthly");
+        _sut.EditModel.Interval.ShouldBe(2);
+        _sut.EditModel.DayOfMonth.ShouldBe(15);
+        _sut.EditModel.DayOfWeek.ShouldBe("Monday");
+        _sut.EditModel.MonthOfYear.ShouldBe(6);
+        _sut.EditModel.EndDate.ShouldBe(new DateOnly(2027, 12, 31));
     }
 
     /// <summary>
@@ -264,9 +266,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public void OpenEditForm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenEditForm(CreateTransfer("Transfer"));
+        _sut.OpenEditForm(CreateTransfer("Transfer"));
 
         notified.ShouldBeTrue();
     }
@@ -279,11 +281,11 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public void HideForm_HidesBothForms()
     {
-        this._sut.OpenAddForm();
-        this._sut.HideForm();
+        _sut.OpenAddForm();
+        _sut.HideForm();
 
-        this._sut.ShowAddForm.ShouldBeFalse();
-        this._sut.ShowEditForm.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeFalse();
+        _sut.ShowEditForm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -293,9 +295,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public void HideForm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.HideForm();
+        _sut.HideForm();
 
         notified.ShouldBeTrue();
     }
@@ -310,16 +312,16 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task CreateRecurringAsync_ClosesFormAndReloads_WhenSuccessful()
     {
         var created = CreateTransfer("New Transfer");
-        this._apiService.CreateRecurringTransferResult = created;
-        this._apiService.RecurringTransfers.Add(created);
-        await this._sut.InitializeAsync();
-        this._sut.OpenAddForm();
+        _apiService.CreateRecurringTransferResult = created;
+        _apiService.RecurringTransfers.Add(created);
+        await _sut.InitializeAsync();
+        _sut.OpenAddForm();
 
-        await this._sut.CreateRecurringAsync(new RecurringTransferCreateDto { Description = "New Transfer" });
+        await _sut.CreateRecurringAsync(new RecurringTransferCreateDto { Description = "New Transfer" });
 
-        this._sut.ShowAddForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
-        this._sut.RecurringTransfers.ShouldContain(r => r.Description == "New Transfer");
+        _sut.ShowAddForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
+        _sut.RecurringTransfers.ShouldContain(r => r.Description == "New Transfer");
     }
 
     /// <summary>
@@ -329,14 +331,14 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task CreateRecurringAsync_KeepsFormOpen_WhenApiReturnsNull()
     {
-        this._apiService.CreateRecurringTransferResult = null;
-        await this._sut.InitializeAsync();
-        this._sut.OpenAddForm();
+        _apiService.CreateRecurringTransferResult = null;
+        await _sut.InitializeAsync();
+        _sut.OpenAddForm();
 
-        await this._sut.CreateRecurringAsync(new RecurringTransferCreateDto { Description = "Fail" });
+        await _sut.CreateRecurringAsync(new RecurringTransferCreateDto { Description = "Fail" });
 
-        this._sut.ShowAddForm.ShouldBeTrue();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeTrue();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -346,11 +348,11 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task CreateRecurringAsync_ResetsIsSubmitting_AfterCompletion()
     {
-        this._apiService.CreateRecurringTransferResult = CreateTransfer("Test");
+        _apiService.CreateRecurringTransferResult = CreateTransfer("Test");
 
-        await this._sut.CreateRecurringAsync(new RecurringTransferCreateDto());
+        await _sut.CreateRecurringAsync(new RecurringTransferCreateDto());
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- UpdateRecurringAsync ---
@@ -363,17 +365,17 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task UpdateRecurringAsync_ClosesFormAndReloads_WhenSuccessful()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.RecurringTransfers.Add(transfer);
-        await this._sut.InitializeAsync();
-        this._sut.OpenEditForm(transfer);
+        _apiService.RecurringTransfers.Add(transfer);
+        await _sut.InitializeAsync();
+        _sut.OpenEditForm(transfer);
 
         var updated = CreateTransfer("Savings Updated");
-        this._apiService.UpdateRecurringTransferResult = ApiResult<RecurringTransferDto>.Success(updated);
+        _apiService.UpdateRecurringTransferResult = ApiResult<RecurringTransferDto>.Success(updated);
 
-        await this._sut.UpdateRecurringAsync(new RecurringTransferUpdateDto { Description = "Savings Updated" });
+        await _sut.UpdateRecurringAsync(new RecurringTransferUpdateDto { Description = "Savings Updated" });
 
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -384,17 +386,17 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task UpdateRecurringAsync_HandlesConflict()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.RecurringTransfers.Add(transfer);
-        await this._sut.InitializeAsync();
-        this._sut.OpenEditForm(transfer);
+        _apiService.RecurringTransfers.Add(transfer);
+        await _sut.InitializeAsync();
+        _sut.OpenEditForm(transfer);
 
-        this._apiService.UpdateRecurringTransferResult = ApiResult<RecurringTransferDto>.Conflict();
+        _apiService.UpdateRecurringTransferResult = ApiResult<RecurringTransferDto>.Conflict();
 
-        await this._sut.UpdateRecurringAsync(new RecurringTransferUpdateDto { Description = "Conflict" });
+        await _sut.UpdateRecurringAsync(new RecurringTransferUpdateDto { Description = "Conflict" });
 
-        this._toastService.WarningShown.ShouldBeTrue();
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _toastService.WarningShown.ShouldBeTrue();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -405,16 +407,16 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task UpdateRecurringAsync_KeepsFormOpen_WhenApiReturnsFailure()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.RecurringTransfers.Add(transfer);
-        await this._sut.InitializeAsync();
-        this._sut.OpenEditForm(transfer);
+        _apiService.RecurringTransfers.Add(transfer);
+        await _sut.InitializeAsync();
+        _sut.OpenEditForm(transfer);
 
-        this._apiService.UpdateRecurringTransferResult = ApiResult<RecurringTransferDto>.Failure();
+        _apiService.UpdateRecurringTransferResult = ApiResult<RecurringTransferDto>.Failure();
 
-        await this._sut.UpdateRecurringAsync(new RecurringTransferUpdateDto { Description = "Fail" });
+        await _sut.UpdateRecurringAsync(new RecurringTransferUpdateDto { Description = "Fail" });
 
-        this._sut.ShowEditForm.ShouldBeTrue();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditForm.ShouldBeTrue();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- SkipNextAsync ---
@@ -427,13 +429,13 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task SkipNextAsync_ReloadsRecurringTransfers_WhenSuccessful()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.RecurringTransfers.Add(transfer);
-        this._apiService.SkipNextRecurringTransferResult = transfer;
-        await this._sut.InitializeAsync();
+        _apiService.RecurringTransfers.Add(transfer);
+        _apiService.SkipNextRecurringTransferResult = transfer;
+        await _sut.InitializeAsync();
 
-        await this._sut.SkipNextAsync(transfer);
+        await _sut.SkipNextAsync(transfer);
 
-        this._sut.RecurringTransfers.Count.ShouldBe(1);
+        _sut.RecurringTransfers.Count.ShouldBe(1);
     }
 
     /// <summary>
@@ -444,12 +446,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task SkipNextAsync_DoesNotReload_WhenApiReturnsNull()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.SkipNextRecurringTransferResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.SkipNextRecurringTransferResult = null;
+        await _sut.InitializeAsync();
 
-        await this._sut.SkipNextAsync(transfer);
+        await _sut.SkipNextAsync(transfer);
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- PauseAsync ---
@@ -462,13 +464,13 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task PauseAsync_ReloadsRecurringTransfers_WhenSuccessful()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.RecurringTransfers.Add(transfer);
-        this._apiService.PauseRecurringTransferTransferResult = transfer;
-        await this._sut.InitializeAsync();
+        _apiService.RecurringTransfers.Add(transfer);
+        _apiService.PauseRecurringTransferTransferResult = transfer;
+        await _sut.InitializeAsync();
 
-        await this._sut.PauseAsync(transfer);
+        await _sut.PauseAsync(transfer);
 
-        this._sut.RecurringTransfers.Count.ShouldBe(1);
+        _sut.RecurringTransfers.Count.ShouldBe(1);
     }
 
     /// <summary>
@@ -479,12 +481,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task PauseAsync_DoesNotReload_WhenApiReturnsNull()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.PauseRecurringTransferTransferResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.PauseRecurringTransferTransferResult = null;
+        await _sut.InitializeAsync();
 
-        await this._sut.PauseAsync(transfer);
+        await _sut.PauseAsync(transfer);
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- ResumeAsync ---
@@ -497,13 +499,13 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task ResumeAsync_ReloadsRecurringTransfers_WhenSuccessful()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.RecurringTransfers.Add(transfer);
-        this._apiService.ResumeRecurringTransferTransferResult = transfer;
-        await this._sut.InitializeAsync();
+        _apiService.RecurringTransfers.Add(transfer);
+        _apiService.ResumeRecurringTransferTransferResult = transfer;
+        await _sut.InitializeAsync();
 
-        await this._sut.ResumeAsync(transfer);
+        await _sut.ResumeAsync(transfer);
 
-        this._sut.RecurringTransfers.Count.ShouldBe(1);
+        _sut.RecurringTransfers.Count.ShouldBe(1);
     }
 
     /// <summary>
@@ -514,12 +516,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task ResumeAsync_DoesNotReload_WhenApiReturnsNull()
     {
         var transfer = CreateTransfer("Savings");
-        this._apiService.ResumeRecurringTransferTransferResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.ResumeRecurringTransferTransferResult = null;
+        await _sut.InitializeAsync();
 
-        await this._sut.ResumeAsync(transfer);
+        await _sut.ResumeAsync(transfer);
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- Delete ---
@@ -532,10 +534,10 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     {
         var transfer = CreateTransfer("To Delete");
 
-        this._sut.OpenDeleteConfirm(transfer);
+        _sut.OpenDeleteConfirm(transfer);
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.DeletingTransfer.ShouldBe(transfer);
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.DeletingTransfer.ShouldBe(transfer);
     }
 
     /// <summary>
@@ -545,9 +547,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public void OpenDeleteConfirm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenDeleteConfirm(CreateTransfer("To Delete"));
+        _sut.OpenDeleteConfirm(CreateTransfer("To Delete"));
 
         notified.ShouldBeTrue();
     }
@@ -560,16 +562,16 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task ConfirmDeleteAsync_DeletesAndReloads_WhenSuccessful()
     {
         var transfer = CreateTransfer("To Delete");
-        this._apiService.RecurringTransfers.Add(transfer);
-        this._apiService.DeleteRecurringTransferResult = true;
-        await this._sut.InitializeAsync();
-        this._sut.OpenDeleteConfirm(transfer);
+        _apiService.RecurringTransfers.Add(transfer);
+        _apiService.DeleteRecurringTransferResult = true;
+        await _sut.InitializeAsync();
+        _sut.OpenDeleteConfirm(transfer);
 
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingTransfer.ShouldBeNull();
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingTransfer.ShouldBeNull();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -579,9 +581,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task ConfirmDeleteAsync_ReturnsEarly_WhenDeletingTransferIsNull()
     {
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -592,14 +594,14 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public async Task ConfirmDeleteAsync_KeepsDialogOpen_WhenDeleteFails()
     {
         var transfer = CreateTransfer("To Delete");
-        this._apiService.DeleteRecurringTransferResult = false;
-        await this._sut.InitializeAsync();
-        this._sut.OpenDeleteConfirm(transfer);
+        _apiService.DeleteRecurringTransferResult = false;
+        await _sut.InitializeAsync();
+        _sut.OpenDeleteConfirm(transfer);
 
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -608,12 +610,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public void CancelDelete_HidesDialog()
     {
-        this._sut.OpenDeleteConfirm(CreateTransfer("To Cancel"));
+        _sut.OpenDeleteConfirm(CreateTransfer("To Cancel"));
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingTransfer.ShouldBeNull();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingTransfer.ShouldBeNull();
     }
 
     /// <summary>
@@ -623,9 +625,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public void CancelDelete_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
         notified.ShouldBeTrue();
     }
@@ -754,15 +756,15 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task ScopeChange_ReloadsRecurringTransfers()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.RecurringTransfers.Add(CreateTransfer("New After Scope"));
+        await _sut.InitializeAsync();
+        _apiService.RecurringTransfers.Add(CreateTransfer("New After Scope"));
 
-        await this._scopeService.SetScopeAsync(BudgetScope.Personal);
+        await _scopeService.SetScopeAsync(BudgetScope.Personal);
 
         // Allow the async void handler to complete
         await Task.Delay(50);
 
-        this._sut.RecurringTransfers.Count.ShouldBe(1);
+        _sut.RecurringTransfers.Count.ShouldBe(1);
     }
 
     // --- Dispose ---
@@ -774,15 +776,15 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_UnsubscribesFromScopeChanges()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Dispose();
+        await _sut.InitializeAsync();
+        _sut.Dispose();
 
         // Should not reload after dispose
-        this._apiService.RecurringTransfers.Add(CreateTransfer("After Dispose"));
-        await this._scopeService.SetScopeAsync(BudgetScope.Shared);
+        _apiService.RecurringTransfers.Add(CreateTransfer("After Dispose"));
+        await _scopeService.SetScopeAsync(BudgetScope.Shared);
         await Task.Delay(50);
 
-        this._sut.RecurringTransfers.Count.ShouldBe(0);
+        _sut.RecurringTransfers.Count.ShouldBe(0);
     }
 
     /// <summary>
@@ -792,12 +794,12 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_ClearsChatContext()
     {
-        await this._sut.InitializeAsync();
-        this._chatContext.CurrentContext.PageType.ShouldBe("recurring transfers");
+        await _sut.InitializeAsync();
+        _chatContext.CurrentContext.PageType.ShouldBe("recurring transfers");
 
-        this._sut.Dispose();
+        _sut.Dispose();
 
-        this._chatContext.CurrentContext.PageType.ShouldBeNull();
+        _chatContext.CurrentContext.PageType.ShouldBeNull();
     }
 
     // --- OnStateChanged ---
@@ -809,11 +811,11 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     public void OnStateChanged_IsInvokedAfterStateMutations()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.OpenAddForm();
-        this._sut.HideForm();
-        this._sut.DismissError();
+        _sut.OpenAddForm();
+        _sut.HideForm();
+        _sut.DismissError();
 
         callCount.ShouldBe(3);
     }
@@ -848,7 +850,10 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
         /// <summary>
         /// Gets a value indicating whether a warning was shown.
         /// </summary>
-        public bool WarningShown { get; private set; }
+        public bool WarningShown
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];

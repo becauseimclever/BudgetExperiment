@@ -28,7 +28,7 @@ public sealed class BudgetScopeMiddleware
     /// <param name="next">The next request delegate.</param>
     public BudgetScopeMiddleware(RequestDelegate next)
     {
-        this._next = next;
+        _next = next;
     }
 
     /// <summary>
@@ -57,6 +57,6 @@ public sealed class BudgetScopeMiddleware
         }
 
         // If no header is provided, CurrentScope remains null (All scopes)
-        await this._next(context);
+        await _next(context);
     }
 }

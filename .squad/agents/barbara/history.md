@@ -106,3 +106,8 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 **Isolation strategy:** One container per collection (`ApiDb`). Each `CustomWebApplicationFactory.InitializeAsync` truncates all tables — giving each test CLASS a clean slate. `UserControllerTests` additionally truncates in the test class constructor (once per test method) because its tests depend on exact default values.
 
 **Result:** 626/626 API tests pass. Docker must be running for the API test suite.
+
+### 2026-07-20 — Repository Coverage Added
+
+- Added InfraDb-scoped integration tests for AppSettings, CustomReportLayout, RecurringChargeSuggestion, and UserSettings repositories.
+- Added detached-entity SaveAsync coverage for UserSettings to ensure Update attaches and persists.

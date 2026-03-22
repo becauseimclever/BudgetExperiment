@@ -26,14 +26,14 @@ public sealed class SmokeTests : IClassFixture<PerformanceWebApplicationFactory>
     /// <param name="factory">The web application factory.</param>
     public SmokeTests(PerformanceWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        await TestDataSeeder.SeedAsync(this._factory);
+        await TestDataSeeder.SeedAsync(_factory);
     }
 
     /// <inheritdoc/>
@@ -45,7 +45,7 @@ public sealed class SmokeTests : IClassFixture<PerformanceWebApplicationFactory>
     [Fact]
     public void HealthCheck_SmokeTest()
     {
-        var scenario = HealthCheckScenario.Create(this._client, SmokeProfile.Simulations())
+        var scenario = HealthCheckScenario.Create(_client, SmokeProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 100),
                 Threshold.Create(stats => stats.Fail.Request.Count == 0));
@@ -66,7 +66,7 @@ public sealed class SmokeTests : IClassFixture<PerformanceWebApplicationFactory>
     [Fact]
     public void Accounts_SmokeTest()
     {
-        var scenario = AccountsScenario.Create(this._client, SmokeProfile.Simulations())
+        var scenario = AccountsScenario.Create(_client, SmokeProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),
                 Threshold.Create(stats => stats.Fail.Request.Percent < 1));
@@ -87,7 +87,7 @@ public sealed class SmokeTests : IClassFixture<PerformanceWebApplicationFactory>
     [Fact]
     public void Transactions_SmokeTest()
     {
-        var scenario = TransactionsScenario.Create(this._client, SmokeProfile.Simulations())
+        var scenario = TransactionsScenario.Create(_client, SmokeProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),
                 Threshold.Create(stats => stats.Fail.Request.Percent < 1));
@@ -110,7 +110,7 @@ public sealed class SmokeTests : IClassFixture<PerformanceWebApplicationFactory>
     [Fact]
     public void Calendar_SmokeTest()
     {
-        var scenario = CalendarScenario.Create(this._client, SmokeProfile.Simulations())
+        var scenario = CalendarScenario.Create(_client, SmokeProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 2000),
                 Threshold.Create(stats => stats.Fail.Request.Percent < 1));
@@ -131,7 +131,7 @@ public sealed class SmokeTests : IClassFixture<PerformanceWebApplicationFactory>
     [Fact]
     public void Budgets_SmokeTest()
     {
-        var scenario = BudgetsScenario.Create(this._client, SmokeProfile.Simulations())
+        var scenario = BudgetsScenario.Create(_client, SmokeProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),
                 Threshold.Create(stats => stats.Fail.Request.Percent < 1));

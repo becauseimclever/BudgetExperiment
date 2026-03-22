@@ -20,15 +20,15 @@ public class RecurringTransactionExceptionTests
         var modifiedDate = new DateOnly(2026, 1, 16);
 
         var result = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             modifiedAmount,
             modifiedDescription,
             modifiedDate);
 
         Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(this._validRecurringTransactionId, result.RecurringTransactionId);
-        Assert.Equal(this._validOriginalDate, result.OriginalDate);
+        Assert.Equal(_validRecurringTransactionId, result.RecurringTransactionId);
+        Assert.Equal(_validOriginalDate, result.OriginalDate);
         Assert.Equal(ExceptionType.Modified, result.ExceptionType);
         Assert.Equal(modifiedAmount, result.ModifiedAmount);
         Assert.Equal("Updated description", result.ModifiedDescription);
@@ -41,8 +41,8 @@ public class RecurringTransactionExceptionTests
         var modifiedAmount = MoneyValue.Create("USD", -150m);
 
         var result = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             modifiedAmount,
             null,
             null);
@@ -57,8 +57,8 @@ public class RecurringTransactionExceptionTests
     public void CreateModified_With_Only_Description_Creates_Exception()
     {
         var result = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             null,
             "New description",
             null);
@@ -75,8 +75,8 @@ public class RecurringTransactionExceptionTests
         var modifiedDate = new DateOnly(2026, 1, 20);
 
         var result = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             null,
             null,
             modifiedDate);
@@ -93,7 +93,7 @@ public class RecurringTransactionExceptionTests
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransactionException.CreateModified(
                 Guid.Empty,
-                this._validOriginalDate,
+                _validOriginalDate,
                 MoneyValue.Create("USD", -100m),
                 null,
                 null));
@@ -106,8 +106,8 @@ public class RecurringTransactionExceptionTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransactionException.CreateModified(
-                this._validRecurringTransactionId,
-                this._validOriginalDate,
+                _validRecurringTransactionId,
+                _validOriginalDate,
                 null,
                 null,
                 null));
@@ -119,8 +119,8 @@ public class RecurringTransactionExceptionTests
     public void CreateModified_Trims_Description()
     {
         var result = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             null,
             "  Trimmed  ",
             null);
@@ -132,12 +132,12 @@ public class RecurringTransactionExceptionTests
     public void CreateSkipped_Creates_Skipped_Exception()
     {
         var result = RecurringTransactionException.CreateSkipped(
-            this._validRecurringTransactionId,
-            this._validOriginalDate);
+            _validRecurringTransactionId,
+            _validOriginalDate);
 
         Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(this._validRecurringTransactionId, result.RecurringTransactionId);
-        Assert.Equal(this._validOriginalDate, result.OriginalDate);
+        Assert.Equal(_validRecurringTransactionId, result.RecurringTransactionId);
+        Assert.Equal(_validOriginalDate, result.OriginalDate);
         Assert.Equal(ExceptionType.Skipped, result.ExceptionType);
         Assert.Null(result.ModifiedAmount);
         Assert.Null(result.ModifiedDescription);
@@ -150,7 +150,7 @@ public class RecurringTransactionExceptionTests
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransactionException.CreateSkipped(
                 Guid.Empty,
-                this._validOriginalDate));
+                _validOriginalDate));
 
         Assert.Contains("Recurring transaction ID is required", ex.Message);
     }
@@ -159,8 +159,8 @@ public class RecurringTransactionExceptionTests
     public void Update_Modifies_Exception_Values()
     {
         var exception = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             MoneyValue.Create("USD", -100m),
             null,
             null);
@@ -180,8 +180,8 @@ public class RecurringTransactionExceptionTests
     public void Update_With_No_Modifications_Throws()
     {
         var exception = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             MoneyValue.Create("USD", -100m),
             null,
             null);
@@ -198,8 +198,8 @@ public class RecurringTransactionExceptionTests
         var beforeCreate = DateTime.UtcNow;
 
         var exception = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             MoneyValue.Create("USD", -100m),
             null,
             null);
@@ -214,8 +214,8 @@ public class RecurringTransactionExceptionTests
     public void Update_Updates_UpdatedAtUtc()
     {
         var exception = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             MoneyValue.Create("USD", -100m),
             null,
             null);
@@ -235,8 +235,8 @@ public class RecurringTransactionExceptionTests
     {
         var modifiedDate = new DateOnly(2026, 1, 20);
         var exception = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             null,
             null,
             modifiedDate);
@@ -248,12 +248,12 @@ public class RecurringTransactionExceptionTests
     public void GetEffectiveDate_Returns_OriginalDate_When_ModifiedDate_Is_Null()
     {
         var exception = RecurringTransactionException.CreateModified(
-            this._validRecurringTransactionId,
-            this._validOriginalDate,
+            _validRecurringTransactionId,
+            _validOriginalDate,
             MoneyValue.Create("USD", -100m),
             null,
             null);
 
-        Assert.Equal(this._validOriginalDate, exception.GetEffectiveDate());
+        Assert.Equal(_validOriginalDate, exception.GetEffectiveDate());
     }
 }

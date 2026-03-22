@@ -7,8 +7,10 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -30,19 +32,19 @@ public sealed class AccountsViewModelTests : IDisposable
     /// </summary>
     public AccountsViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new AccountsViewModel(
-            this._apiService,
-            this._toastService,
-            this._navigationManager,
-            this._scopeService,
-            this._apiErrorContext);
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new AccountsViewModel(
+            _apiService,
+            _toastService,
+            _navigationManager,
+            _scopeService,
+            _apiErrorContext);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -54,12 +56,12 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsAccounts()
     {
-        this._apiService.Accounts.Add(CreateAccount("Checking Account"));
+        _apiService.Accounts.Add(CreateAccount("Checking Account"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Accounts.Count.ShouldBe(1);
-        this._sut.Accounts[0].Name.ShouldBe("Checking Account");
+        _sut.Accounts.Count.ShouldBe(1);
+        _sut.Accounts[0].Name.ShouldBe("Checking Account");
     }
 
     /// <summary>
@@ -69,9 +71,9 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -81,13 +83,13 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetAccountsException = new HttpRequestException("Server error");
+        _apiService.GetAccountsException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load accounts");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load accounts");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- LoadAccountsAsync ---
@@ -99,14 +101,14 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task LoadAccountsAsync_ClearsErrorMessage()
     {
-        this._apiService.GetAccountsException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetAccountsException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.GetAccountsException = null;
-        await this._sut.LoadAccountsAsync();
+        _apiService.GetAccountsException = null;
+        await _sut.LoadAccountsAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -116,13 +118,13 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task LoadAccountsAsync_RefreshesAccountsList()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Accounts.Count.ShouldBe(0);
+        await _sut.InitializeAsync();
+        _sut.Accounts.Count.ShouldBe(0);
 
-        this._apiService.Accounts.Add(CreateAccount("New Account"));
-        await this._sut.LoadAccountsAsync();
+        _apiService.Accounts.Add(CreateAccount("New Account"));
+        await _sut.LoadAccountsAsync();
 
-        this._sut.Accounts.Count.ShouldBe(1);
+        _sut.Accounts.Count.ShouldBe(1);
     }
 
     // --- RetryLoadAsync ---
@@ -134,13 +136,13 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_ReloadsAccounts()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.Accounts.Add(CreateAccount("Retried"));
+        await _sut.InitializeAsync();
+        _apiService.Accounts.Add(CreateAccount("Retried"));
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
-        this._sut.Accounts.Count.ShouldBe(1);
-        this._sut.IsRetrying.ShouldBeFalse();
+        _sut.Accounts.Count.ShouldBe(1);
+        _sut.IsRetrying.ShouldBeFalse();
     }
 
     /// <summary>
@@ -151,9 +153,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task RetryLoadAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -167,12 +169,12 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task DismissError_ClearsErrorMessage()
     {
-        this._apiService.GetAccountsException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
+        _apiService.GetAccountsException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -182,9 +184,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void DismissError_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         notified.ShouldBeTrue();
     }
@@ -197,10 +199,10 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public void ShowAddAccount_ShowsFormAndResetsModel()
     {
-        this._sut.ShowAddAccount();
+        _sut.ShowAddAccount();
 
-        this._sut.ShowAddForm.ShouldBeTrue();
-        this._sut.NewAccount.Type.ShouldBe("Checking");
+        _sut.ShowAddForm.ShouldBeTrue();
+        _sut.NewAccount.Type.ShouldBe("Checking");
     }
 
     /// <summary>
@@ -210,9 +212,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void ShowAddAccount_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.ShowAddAccount();
+        _sut.ShowAddAccount();
 
         notified.ShouldBeTrue();
     }
@@ -225,11 +227,11 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public void HideAddAccount_HidesForm()
     {
-        this._sut.ShowAddAccount();
+        _sut.ShowAddAccount();
 
-        this._sut.HideAddAccount();
+        _sut.HideAddAccount();
 
-        this._sut.ShowAddForm.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -239,9 +241,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void HideAddAccount_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.HideAddAccount();
+        _sut.HideAddAccount();
 
         notified.ShouldBeTrue();
     }
@@ -256,14 +258,14 @@ public sealed class AccountsViewModelTests : IDisposable
     {
         var account = CreateAccount("Test Account", type: "Savings", balance: 2000m);
 
-        this._sut.ShowEditAccount(account);
+        _sut.ShowEditAccount(account);
 
-        this._sut.ShowEditForm.ShouldBeTrue();
-        this._sut.EditingAccountId.ShouldBe(account.Id);
-        this._sut.EditingVersion.ShouldBe(account.Version);
-        this._sut.EditAccount.Name.ShouldBe("Test Account");
-        this._sut.EditAccount.Type.ShouldBe("Savings");
-        this._sut.EditAccount.InitialBalance.ShouldBe(2000m);
+        _sut.ShowEditForm.ShouldBeTrue();
+        _sut.EditingAccountId.ShouldBe(account.Id);
+        _sut.EditingVersion.ShouldBe(account.Version);
+        _sut.EditAccount.Name.ShouldBe("Test Account");
+        _sut.EditAccount.Type.ShouldBe("Savings");
+        _sut.EditAccount.InitialBalance.ShouldBe(2000m);
     }
 
     /// <summary>
@@ -273,9 +275,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void ShowEditAccount_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.ShowEditAccount(CreateAccount("Test"));
+        _sut.ShowEditAccount(CreateAccount("Test"));
 
         notified.ShouldBeTrue();
     }
@@ -288,12 +290,12 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public void HideEditAccount_HidesFormAndClearsState()
     {
-        this._sut.ShowEditAccount(CreateAccount("Test"));
+        _sut.ShowEditAccount(CreateAccount("Test"));
 
-        this._sut.HideEditAccount();
+        _sut.HideEditAccount();
 
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.EditingAccountId.ShouldBeNull();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.EditingAccountId.ShouldBeNull();
     }
 
     /// <summary>
@@ -303,9 +305,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void HideEditAccount_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.HideEditAccount();
+        _sut.HideEditAccount();
 
         notified.ShouldBeTrue();
     }
@@ -320,17 +322,17 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task UpdateAccountAsync_ClosesFormAndReloads_WhenSuccessful()
     {
         var account = CreateAccount("Original");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
-        this._sut.ShowEditAccount(account);
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
+        _sut.ShowEditAccount(account);
 
-        this._apiService.UpdateAccountResult = ApiResult<AccountDto>.Success(account);
+        _apiService.UpdateAccountResult = ApiResult<AccountDto>.Success(account);
 
-        await this._sut.UpdateAccountAsync(new AccountCreateDto { Name = "Updated" });
+        await _sut.UpdateAccountAsync(new AccountCreateDto { Name = "Updated" });
 
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.EditingAccountId.ShouldBeNull();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.EditingAccountId.ShouldBeNull();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -340,9 +342,9 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task UpdateAccountAsync_DoesNothing_WhenNoEditingAccount()
     {
-        await this._sut.UpdateAccountAsync(new AccountCreateDto { Name = "Test" });
+        await _sut.UpdateAccountAsync(new AccountCreateDto { Name = "Test" });
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -353,17 +355,17 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task UpdateAccountAsync_ShowsWarning_WhenConflict()
     {
         var account = CreateAccount("Conflicting");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
-        this._sut.ShowEditAccount(account);
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
+        _sut.ShowEditAccount(account);
 
-        this._apiService.UpdateAccountResult = ApiResult<AccountDto>.Conflict();
+        _apiService.UpdateAccountResult = ApiResult<AccountDto>.Conflict();
 
-        await this._sut.UpdateAccountAsync(new AccountCreateDto { Name = "Updated" });
+        await _sut.UpdateAccountAsync(new AccountCreateDto { Name = "Updated" });
 
-        this._toastService.WarningShown.ShouldBeTrue();
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _toastService.WarningShown.ShouldBeTrue();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -374,15 +376,15 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task UpdateAccountAsync_ClearsIsSubmitting_WhenApiReturnsFailure()
     {
         var account = CreateAccount("Test");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
-        this._sut.ShowEditAccount(account);
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
+        _sut.ShowEditAccount(account);
 
-        this._apiService.UpdateAccountResult = ApiResult<AccountDto>.Failure();
+        _apiService.UpdateAccountResult = ApiResult<AccountDto>.Failure();
 
-        await this._sut.UpdateAccountAsync(new AccountCreateDto { Name = "Updated" });
+        await _sut.UpdateAccountAsync(new AccountCreateDto { Name = "Updated" });
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- ShowTransfer ---
@@ -393,11 +395,11 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public void ShowTransfer_OpensDialogWithoutPreselection()
     {
-        this._sut.ShowTransfer();
+        _sut.ShowTransfer();
 
-        this._sut.ShowTransferDialog.ShouldBeTrue();
-        this._sut.PreSelectedSourceAccountId.ShouldBeNull();
-        this._sut.NewTransfer.ShouldNotBeNull();
+        _sut.ShowTransferDialog.ShouldBeTrue();
+        _sut.PreSelectedSourceAccountId.ShouldBeNull();
+        _sut.NewTransfer.ShouldNotBeNull();
     }
 
     /// <summary>
@@ -407,9 +409,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void ShowTransfer_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.ShowTransfer();
+        _sut.ShowTransfer();
 
         notified.ShouldBeTrue();
     }
@@ -424,11 +426,11 @@ public sealed class AccountsViewModelTests : IDisposable
     {
         var accountId = Guid.NewGuid();
 
-        this._sut.ShowTransferFrom(accountId);
+        _sut.ShowTransferFrom(accountId);
 
-        this._sut.ShowTransferDialog.ShouldBeTrue();
-        this._sut.PreSelectedSourceAccountId.ShouldBe(accountId);
-        this._sut.NewTransfer.SourceAccountId.ShouldBe(accountId);
+        _sut.ShowTransferDialog.ShouldBeTrue();
+        _sut.PreSelectedSourceAccountId.ShouldBe(accountId);
+        _sut.NewTransfer.SourceAccountId.ShouldBe(accountId);
     }
 
     /// <summary>
@@ -438,9 +440,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void ShowTransferFrom_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.ShowTransferFrom(Guid.NewGuid());
+        _sut.ShowTransferFrom(Guid.NewGuid());
 
         notified.ShouldBeTrue();
     }
@@ -453,12 +455,12 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public void HideTransfer_ClosesDialogAndClearsState()
     {
-        this._sut.ShowTransferFrom(Guid.NewGuid());
+        _sut.ShowTransferFrom(Guid.NewGuid());
 
-        this._sut.HideTransfer();
+        _sut.HideTransfer();
 
-        this._sut.ShowTransferDialog.ShouldBeFalse();
-        this._sut.PreSelectedSourceAccountId.ShouldBeNull();
+        _sut.ShowTransferDialog.ShouldBeFalse();
+        _sut.PreSelectedSourceAccountId.ShouldBeNull();
     }
 
     /// <summary>
@@ -468,9 +470,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void HideTransfer_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.HideTransfer();
+        _sut.HideTransfer();
 
         notified.ShouldBeTrue();
     }
@@ -484,12 +486,12 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task CreateTransferAsync_ClosesDialog_WhenSuccessful()
     {
-        this._sut.ShowTransfer();
-        this._apiService.CreateTransferResult = new TransferResponse();
+        _sut.ShowTransfer();
+        _apiService.CreateTransferResult = new TransferResponse();
 
-        await this._sut.CreateTransferAsync(new CreateTransferRequest());
+        await _sut.CreateTransferAsync(new CreateTransferRequest());
 
-        this._sut.ShowTransferDialog.ShouldBeFalse();
+        _sut.ShowTransferDialog.ShouldBeFalse();
     }
 
     /// <summary>
@@ -499,12 +501,12 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task CreateTransferAsync_KeepsDialogOpen_WhenApiFails()
     {
-        this._sut.ShowTransfer();
-        this._apiService.CreateTransferResult = null;
+        _sut.ShowTransfer();
+        _apiService.CreateTransferResult = null;
 
-        await this._sut.CreateTransferAsync(new CreateTransferRequest());
+        await _sut.CreateTransferAsync(new CreateTransferRequest());
 
-        this._sut.ShowTransferDialog.ShouldBeTrue();
+        _sut.ShowTransferDialog.ShouldBeTrue();
     }
 
     // --- CreateAccountAsync ---
@@ -516,13 +518,13 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task CreateAccountAsync_ClosesFormAndReloads_WhenSuccessful()
     {
-        this._sut.ShowAddAccount();
-        this._apiService.CreateAccountResult = CreateAccount("New");
+        _sut.ShowAddAccount();
+        _apiService.CreateAccountResult = CreateAccount("New");
 
-        await this._sut.CreateAccountAsync(new AccountCreateDto { Name = "New" });
+        await _sut.CreateAccountAsync(new AccountCreateDto { Name = "New" });
 
-        this._sut.ShowAddForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -532,13 +534,13 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task CreateAccountAsync_KeepsFormOpen_WhenApiFails()
     {
-        this._sut.ShowAddAccount();
-        this._apiService.CreateAccountResult = null;
+        _sut.ShowAddAccount();
+        _apiService.CreateAccountResult = null;
 
-        await this._sut.CreateAccountAsync(new AccountCreateDto { Name = "Fail" });
+        await _sut.CreateAccountAsync(new AccountCreateDto { Name = "Fail" });
 
-        this._sut.ShowAddForm.ShouldBeTrue();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeTrue();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- ViewAccount ---
@@ -551,9 +553,9 @@ public sealed class AccountsViewModelTests : IDisposable
     {
         var id = Guid.NewGuid();
 
-        this._sut.ViewAccount(id);
+        _sut.ViewAccount(id);
 
-        this._navigationManager.LastNavigatedUri.ShouldBe($"/transactions?account={id}");
+        _navigationManager.LastNavigatedUri.ShouldBe($"/transactions?account={id}");
     }
 
     // --- DeleteAccount ---
@@ -566,13 +568,13 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task DeleteAccount_ShowsConfirmDialog_WhenAccountExists()
     {
         var account = CreateAccount("ToDelete");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
 
-        this._sut.DeleteAccount(account.Id);
+        _sut.DeleteAccount(account.Id);
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.DeletingAccount.ShouldBe(account);
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.DeletingAccount.ShouldBe(account);
     }
 
     /// <summary>
@@ -582,12 +584,12 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task DeleteAccount_DoesNotShowDialog_WhenAccountNotFound()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.DeleteAccount(Guid.NewGuid());
+        _sut.DeleteAccount(Guid.NewGuid());
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingAccount.ShouldBeNull();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingAccount.ShouldBeNull();
     }
 
     /// <summary>
@@ -598,13 +600,13 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task DeleteAccount_NotifiesStateChanged()
     {
         var account = CreateAccount("Test");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
 
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.DeleteAccount(account.Id);
+        _sut.DeleteAccount(account.Id);
 
         notified.ShouldBeTrue();
     }
@@ -619,16 +621,16 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task ConfirmDeleteAsync_DeletesAndReloads_WhenSuccessful()
     {
         var account = CreateAccount("ToDelete");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
-        this._sut.DeleteAccount(account.Id);
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
+        _sut.DeleteAccount(account.Id);
 
-        this._apiService.DeleteAccountResult = true;
-        await this._sut.ConfirmDeleteAsync();
+        _apiService.DeleteAccountResult = true;
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingAccount.ShouldBeNull();
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingAccount.ShouldBeNull();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -638,9 +640,9 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task ConfirmDeleteAsync_DoesNothing_WhenNoDeletingAccount()
     {
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -651,15 +653,15 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task ConfirmDeleteAsync_KeepsDialogOpen_WhenDeleteFails()
     {
         var account = CreateAccount("KeepMe");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
-        this._sut.DeleteAccount(account.Id);
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
+        _sut.DeleteAccount(account.Id);
 
-        this._apiService.DeleteAccountResult = false;
-        await this._sut.ConfirmDeleteAsync();
+        _apiService.DeleteAccountResult = false;
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -670,15 +672,15 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task ConfirmDeleteAsync_NotifiesStateChanged()
     {
         var account = CreateAccount("Test");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
-        this._sut.DeleteAccount(account.Id);
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
+        _sut.DeleteAccount(account.Id);
 
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
-        this._apiService.DeleteAccountResult = true;
+        _sut.OnStateChanged = () => callCount++;
+        _apiService.DeleteAccountResult = true;
 
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -693,14 +695,14 @@ public sealed class AccountsViewModelTests : IDisposable
     public async Task CancelDelete_HidesDialogAndClearsState()
     {
         var account = CreateAccount("Test");
-        this._apiService.Accounts.Add(account);
-        await this._sut.InitializeAsync();
-        this._sut.DeleteAccount(account.Id);
+        _apiService.Accounts.Add(account);
+        await _sut.InitializeAsync();
+        _sut.DeleteAccount(account.Id);
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingAccount.ShouldBeNull();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingAccount.ShouldBeNull();
     }
 
     /// <summary>
@@ -710,9 +712,9 @@ public sealed class AccountsViewModelTests : IDisposable
     public void CancelDelete_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
         notified.ShouldBeTrue();
     }
@@ -726,18 +728,18 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task ScopeChanged_ReloadsAccounts()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Accounts.Count.ShouldBe(0);
+        await _sut.InitializeAsync();
+        _sut.Accounts.Count.ShouldBe(0);
 
-        this._apiService.Accounts.Add(CreateAccount("Added After Scope Change"));
+        _apiService.Accounts.Add(CreateAccount("Added After Scope Change"));
 
         // Trigger scope change
-        await this._scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
+        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
 
         // Allow the async void handler to complete
         await Task.Delay(50);
 
-        this._sut.Accounts.Count.ShouldBe(1);
+        _sut.Accounts.Count.ShouldBe(1);
     }
 
     // --- Dispose ---
@@ -749,14 +751,14 @@ public sealed class AccountsViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_UnsubscribesFromScopeChange()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Dispose();
+        await _sut.InitializeAsync();
+        _sut.Dispose();
 
-        this._apiService.Accounts.Add(CreateAccount("Should Not Load"));
-        await this._scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
+        _apiService.Accounts.Add(CreateAccount("Should Not Load"));
+        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
         await Task.Delay(50);
 
-        this._sut.Accounts.Count.ShouldBe(0);
+        _sut.Accounts.Count.ShouldBe(0);
     }
 
     // --- OnStateChanged ---
@@ -768,14 +770,14 @@ public sealed class AccountsViewModelTests : IDisposable
     public void OnStateChanged_InvokedAfterStateMutations()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.ShowAddAccount();
-        this._sut.HideAddAccount();
-        this._sut.ShowTransfer();
-        this._sut.HideTransfer();
-        this._sut.DismissError();
-        this._sut.CancelDelete();
+        _sut.ShowAddAccount();
+        _sut.HideAddAccount();
+        _sut.ShowTransfer();
+        _sut.HideTransfer();
+        _sut.DismissError();
+        _sut.CancelDelete();
 
         callCount.ShouldBe(6);
     }
@@ -809,7 +811,10 @@ public sealed class AccountsViewModelTests : IDisposable
         /// <summary>
         /// Gets a value indicating whether a warning was shown.
         /// </summary>
-        public bool WarningShown { get; private set; }
+        public bool WarningShown
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];
@@ -858,7 +863,10 @@ public sealed class AccountsViewModelTests : IDisposable
         /// <summary>
         /// Gets the last URI that was navigated to.
         /// </summary>
-        public string? LastNavigatedUri { get; private set; }
+        public string? LastNavigatedUri
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         protected override void NavigateToCore(string uri, bool forceLoad)

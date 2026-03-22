@@ -17,28 +17,43 @@ public interface IAiAvailabilityService
     /// <summary>
     /// Gets the current AI availability state.
     /// </summary>
-    AiAvailabilityState State { get; }
+    AiAvailabilityState State
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the AI feature flag is enabled.
     /// When true, AI UI should be shown (possibly in warning state).
     /// </summary>
-    bool IsEnabled { get; }
+    bool IsEnabled
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the Ollama connection is available.
     /// </summary>
-    bool IsAvailable { get; }
+    bool IsAvailable
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets a value indicating whether AI is fully operational (enabled AND available).
     /// </summary>
-    bool IsFullyOperational { get; }
+    bool IsFullyOperational
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets the error message when AI is unavailable (for tooltip display).
     /// </summary>
-    string? ErrorMessage { get; }
+    string? ErrorMessage
+    {
+        get;
+    }
 
     /// <summary>
     /// Refreshes the AI availability status from the API.

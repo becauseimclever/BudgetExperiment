@@ -12,7 +12,10 @@ public interface IApiErrorContext
     /// <summary>
     /// Gets the traceId from the most recent API error response, or null if none.
     /// </summary>
-    string? LastTraceId { get; }
+    string? LastTraceId
+    {
+        get;
+    }
 
     /// <summary>
     /// Clears the stored traceId.

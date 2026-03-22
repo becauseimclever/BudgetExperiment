@@ -695,12 +695,12 @@ public class CategorySuggestionApiServiceTests
 
         public MockHttpMessageHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
         {
-            this._handler = handler;
+            _handler = handler;
         }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return this._handler(request, cancellationToken);
+            return _handler(request, cancellationToken);
         }
     }
 }

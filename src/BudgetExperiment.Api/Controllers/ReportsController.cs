@@ -29,8 +29,8 @@ public sealed class ReportsController : ControllerBase
     /// <param name="budgetProgressService">The budget progress service.</param>
     public ReportsController(IReportService reportService, IBudgetProgressService budgetProgressService)
     {
-        this._reportService = reportService;
-        this._budgetProgressService = budgetProgressService;
+        _reportService = reportService;
+        _budgetProgressService = budgetProgressService;
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("Year must be between 2000 and 2100.");
         }
 
-        var report = await this._reportService.GetMonthlyCategoryReportAsync(year, month, cancellationToken);
+        var report = await _reportService.GetMonthlyCategoryReportAsync(year, month, cancellationToken);
         return this.Ok(report);
     }
 
@@ -98,7 +98,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("Date range cannot exceed one year.");
         }
 
-        var report = await this._reportService.GetCategoryReportByRangeAsync(startDate, endDate, accountId, cancellationToken);
+        var report = await _reportService.GetCategoryReportByRangeAsync(startDate, endDate, accountId, cancellationToken);
         return this.Ok(report);
     }
 
@@ -141,7 +141,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("End year must be between 2000 and 2100.");
         }
 
-        var report = await this._reportService.GetSpendingTrendsAsync(months, endYear, endMonth, categoryId, cancellationToken);
+        var report = await _reportService.GetSpendingTrendsAsync(months, endYear, endMonth, categoryId, cancellationToken);
         return this.Ok(report);
     }
 
@@ -163,7 +163,7 @@ public sealed class ReportsController : ControllerBase
         [FromQuery] Guid? accountId,
         CancellationToken cancellationToken)
     {
-        var summary = await this._reportService.GetDaySummaryAsync(date, accountId, cancellationToken);
+        var summary = await _reportService.GetDaySummaryAsync(date, accountId, cancellationToken);
         return this.Ok(summary);
     }
 
@@ -198,7 +198,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("Year must be between 2000 and 2100.");
         }
 
-        var summary = await this._budgetProgressService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await _budgetProgressService.GetMonthlySummaryAsync(year, month, cancellationToken);
         return this.Ok(summary);
     }
 
@@ -233,7 +233,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("Date range cannot exceed one year.");
         }
 
-        var report = await this._reportService.GetSpendingByLocationAsync(startDate, endDate, accountId, cancellationToken);
+        var report = await _reportService.GetSpendingByLocationAsync(startDate, endDate, accountId, cancellationToken);
         return this.Ok(report);
     }
 }

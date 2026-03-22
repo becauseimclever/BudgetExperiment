@@ -5,6 +5,7 @@
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.ViewModels;
@@ -36,17 +37,20 @@ public sealed class AccountsViewModel : IDisposable
         ScopeService scopeService,
         IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._toastService = toastService;
-        this._navigation = navigation;
-        this._scopeService = scopeService;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _toastService = toastService;
+        _navigation = navigation;
+        _scopeService = scopeService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether accounts are loading.
@@ -56,27 +60,42 @@ public sealed class AccountsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a form submission is in progress.
     /// </summary>
-    public bool IsSubmitting { get; private set; }
+    public bool IsSubmitting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a delete operation is in progress.
     /// </summary>
-    public bool IsDeleting { get; private set; }
+    public bool IsDeleting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the traceId from the API error response that caused the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the list of all accounts.
@@ -86,7 +105,10 @@ public sealed class AccountsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the add account form is visible.
     /// </summary>
-    public bool ShowAddForm { get; private set; }
+    public bool ShowAddForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the new account form model.
@@ -96,7 +118,10 @@ public sealed class AccountsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the edit account form is visible.
     /// </summary>
-    public bool ShowEditForm { get; private set; }
+    public bool ShowEditForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the edit account form model.
@@ -106,17 +131,26 @@ public sealed class AccountsViewModel : IDisposable
     /// <summary>
     /// Gets the ID of the account currently being edited.
     /// </summary>
-    public Guid? EditingAccountId { get; private set; }
+    public Guid? EditingAccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the concurrency version of the account being edited.
     /// </summary>
-    public string? EditingVersion { get; private set; }
+    public string? EditingVersion
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the transfer dialog is visible.
     /// </summary>
-    public bool ShowTransferDialog { get; private set; }
+    public bool ShowTransferDialog
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the new transfer form model.
@@ -126,17 +160,26 @@ public sealed class AccountsViewModel : IDisposable
     /// <summary>
     /// Gets the pre-selected source account ID for transfers, if any.
     /// </summary>
-    public Guid? PreSelectedSourceAccountId { get; private set; }
+    public Guid? PreSelectedSourceAccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the delete confirmation dialog is visible.
     /// </summary>
-    public bool ShowDeleteConfirm { get; private set; }
+    public bool ShowDeleteConfirm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the account pending deletion.
     /// </summary>
-    public AccountDto? DeletingAccount { get; private set; }
+    public AccountDto? DeletingAccount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Initializes the ViewModel: subscribes to scope changes and loads accounts.
@@ -144,7 +187,7 @@ public sealed class AccountsViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
+        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadAccountsAsync();
     }
 
@@ -160,12 +203,12 @@ public sealed class AccountsViewModel : IDisposable
 
         try
         {
-            this.Accounts = (await this._apiService.GetAccountsAsync()).ToList();
+            this.Accounts = (await _apiService.GetAccountsAsync()).ToList();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load accounts: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -275,10 +318,10 @@ public sealed class AccountsViewModel : IDisposable
                 InitialBalanceDate = model.InitialBalanceDate,
             };
 
-            var result = await this._apiService.UpdateAccountAsync(this.EditingAccountId.Value, updateDto, this.EditingVersion);
+            var result = await _apiService.UpdateAccountAsync(this.EditingAccountId.Value, updateDto, this.EditingVersion);
             if (result.IsConflict)
             {
-                this._toastService.ShowWarning("This account was modified by another user. Data has been refreshed.", "Conflict");
+                _toastService.ShowWarning("This account was modified by another user. Data has been refreshed.", "Conflict");
                 this.HideEditAccount();
                 await this.LoadAccountsAsync();
                 return;
@@ -337,7 +380,7 @@ public sealed class AccountsViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task CreateTransferAsync(CreateTransferRequest model)
     {
-        var result = await this._apiService.CreateTransferAsync(model);
+        var result = await _apiService.CreateTransferAsync(model);
         if (result != null)
         {
             this.ShowTransferDialog = false;
@@ -354,7 +397,7 @@ public sealed class AccountsViewModel : IDisposable
         this.IsSubmitting = true;
         try
         {
-            var result = await this._apiService.CreateAccountAsync(model);
+            var result = await _apiService.CreateAccountAsync(model);
             if (result != null)
             {
                 this.ShowAddForm = false;
@@ -373,7 +416,7 @@ public sealed class AccountsViewModel : IDisposable
     /// <param name="id">The account ID.</param>
     public void ViewAccount(Guid id)
     {
-        this._navigation.NavigateTo($"/transactions?account={id}");
+        _navigation.NavigateTo($"/transactions?account={id}");
     }
 
     /// <summary>
@@ -406,7 +449,7 @@ public sealed class AccountsViewModel : IDisposable
 
         try
         {
-            var deleted = await this._apiService.DeleteAccountAsync(this.DeletingAccount.Id);
+            var deleted = await _apiService.DeleteAccountAsync(this.DeletingAccount.Id);
             if (deleted)
             {
                 this.ShowDeleteConfirm = false;
@@ -433,7 +476,7 @@ public sealed class AccountsViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
     }
 
     private async void OnScopeChanged(BudgetScope? scope)

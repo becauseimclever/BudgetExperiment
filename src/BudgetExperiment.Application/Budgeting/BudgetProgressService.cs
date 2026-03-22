@@ -31,28 +31,28 @@ public sealed class BudgetProgressService : IBudgetProgressService
         ITransactionRepository transactionRepository,
         ICurrencyProvider currencyProvider)
     {
-        this._goalRepository = goalRepository;
-        this._categoryRepository = categoryRepository;
-        this._transactionRepository = transactionRepository;
-        this._currencyProvider = currencyProvider;
+        _goalRepository = goalRepository;
+        _categoryRepository = categoryRepository;
+        _transactionRepository = transactionRepository;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
     public async Task<BudgetProgressDto?> GetProgressAsync(Guid categoryId, int year, int month, CancellationToken cancellationToken = default)
     {
-        var goal = await this._goalRepository.GetByCategoryAndMonthAsync(categoryId, year, month, cancellationToken);
+        var goal = await _goalRepository.GetByCategoryAndMonthAsync(categoryId, year, month, cancellationToken);
         if (goal is null)
         {
             return null;
         }
 
-        var category = await this._categoryRepository.GetByIdAsync(categoryId, cancellationToken);
+        var category = await _categoryRepository.GetByIdAsync(categoryId, cancellationToken);
         if (category is null)
         {
             return null;
         }
 
-        var spent = await this._transactionRepository.GetSpendingByCategoryAsync(categoryId, year, month, cancellationToken);
+        var spent = await _transactionRepository.GetSpendingByCategoryAsync(categoryId, year, month, cancellationToken);
         var progress = BudgetProgress.Create(
             category.Id,
             category.Name,
@@ -67,10 +67,10 @@ public sealed class BudgetProgressService : IBudgetProgressService
     /// <inheritdoc/>
     public async Task<BudgetSummaryDto> GetMonthlySummaryAsync(int year, int month, CancellationToken cancellationToken = default)
     {
-        var goals = await this._goalRepository.GetByMonthAsync(year, month, cancellationToken);
-        var allExpenseCategories = await this._categoryRepository.GetByTypeAsync(CategoryType.Expense, cancellationToken);
+        var goals = await _goalRepository.GetByMonthAsync(year, month, cancellationToken);
+        var allExpenseCategories = await _categoryRepository.GetByTypeAsync(CategoryType.Expense, cancellationToken);
         var categoryProgress = new List<BudgetProgressDto>();
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var totalBudgeted = MoneyValue.Create(currency, 0m);
         var totalSpent = MoneyValue.Create(currency, 0m);
 
@@ -80,7 +80,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
         // Process all active expense categories
         foreach (var category in allExpenseCategories.Where(c => c.IsActive))
         {
-            var spent = await this._transactionRepository.GetSpendingByCategoryAsync(category.Id, year, month, cancellationToken);
+            var spent = await _transactionRepository.GetSpendingByCategoryAsync(category.Id, year, month, cancellationToken);
             BudgetProgress progress;
 
             if (goalByCategoryId.TryGetValue(category.Id, out var goal))

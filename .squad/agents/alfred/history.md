@@ -79,3 +79,26 @@ Feature Doc 124 (Controller Abstractions Assessment) should note this finding wh
 6. **No forbidden libraries detected.** No FluentAssertions, AutoFixture, AutoMapper, or FluentUI-Blazor.
 
 **Overall Assessment:** The codebase demonstrates mature Clean Architecture adherence. Issues found are minor and easily fixable. No critical violations.
+
+### 2026-03-22 — DIP Assessment for Three Concrete-Injecting Controllers
+
+**Task:** Pragmatic DIP assessment per Feature Doc 124 for `TransactionsController`, `RecurringTransactionsController`, and `RecurringTransfersController`.
+
+**Finding:** All three controllers received **VERDICT A: Add interface**. However, the "cost" is effectively zero because:
+
+1. **The interfaces already exist** (`ITransactionService`, `IRecurringTransactionService`, `IRecurringTransferService`)
+2. **They're already registered in DI** with interface→concrete mappings
+3. **The controllers just use the wrong type** (concrete instead of interface)
+
+**Root Cause:** The interfaces were not kept in sync with the concrete classes. As new methods were added to the services (e.g., `SkipNextAsync`, `UpdateFromDateAsync`, `PauseAsync`, `ResumeAsync`), they weren't added to the interfaces. The controllers then had to inject concrete types to access those methods, and duplicate concrete DI registrations were added as a workaround.
+
+**Required Fixes:**
+1. Expand `IRecurringTransactionService` with `SkipNextAsync`, `UpdateFromDateAsync`
+2. Expand `IRecurringTransferService` with `UpdateAsync`, `DeleteAsync`, `PauseAsync`, `ResumeAsync`, `SkipNextAsync`, `UpdateFromDateAsync`
+3. Update controller constructors to use interface types
+4. Remove duplicate concrete DI registrations
+5. Update test mocks to implement new interface methods
+
+**Pragmatic SOLID Application:** The directive says interfaces should "earn their cost." Here, the interfaces already exist — using them costs nothing. Leaving concrete injection in place when interfaces exist and are registered is technical debt, not pragmatism.
+
+**Pre-existing Issues Noted:** Repository has multiple unrelated build errors (IUnitOfWork.MarkAsModified not implemented, SA1117/SA1127/SA1210 StyleCop violations) that block `-warnaserror` builds.

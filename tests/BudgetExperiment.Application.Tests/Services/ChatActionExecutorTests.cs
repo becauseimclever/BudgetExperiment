@@ -5,7 +5,9 @@
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
+
 using Shouldly;
+
 using Xunit;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -238,9 +240,15 @@ public class ChatActionExecutorTests
 
     private sealed class MockTransactionService : ITransactionService
     {
-        public bool CreateCalled { get; private set; }
+        public bool CreateCalled
+        {
+            get; private set;
+        }
 
-        public TransactionCreateDto? LastCreateDto { get; private set; }
+        public TransactionCreateDto? LastCreateDto
+        {
+            get; private set;
+        }
 
         public Task<TransactionDto> CreateAsync(TransactionCreateDto dto, CancellationToken cancellationToken = default)
         {
@@ -283,7 +291,10 @@ public class ChatActionExecutorTests
 
     private sealed class MockTransferService : ITransferService
     {
-        public bool CreateCalled { get; private set; }
+        public bool CreateCalled
+        {
+            get; private set;
+        }
 
         public Task<TransferResponse> CreateAsync(CreateTransferRequest request, CancellationToken cancellationToken = default)
         {
@@ -314,7 +325,10 @@ public class ChatActionExecutorTests
 
     private sealed class MockRecurringTransactionService : IRecurringTransactionService
     {
-        public bool CreateCalled { get; private set; }
+        public bool CreateCalled
+        {
+            get; private set;
+        }
 
         public Task<RecurringTransactionDto> CreateAsync(RecurringTransactionCreateDto dto, CancellationToken cancellationToken = default)
         {
@@ -352,6 +366,12 @@ public class ChatActionExecutorTests
         public Task<RecurringTransactionDto?> ResumeAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult<RecurringTransactionDto?>(null);
 
+        public Task<RecurringTransactionDto?> SkipNextAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<RecurringTransactionDto?>(null);
+
+        public Task<RecurringTransactionDto?> UpdateFromDateAsync(Guid id, DateOnly instanceDate, RecurringTransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult<RecurringTransactionDto?>(null);
+
         public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult<ImportPatternsDto?>(null);
 
@@ -361,9 +381,15 @@ public class ChatActionExecutorTests
 
     private sealed class MockRecurringTransferService : IRecurringTransferService
     {
-        public bool CreateCalled { get; private set; }
+        public bool CreateCalled
+        {
+            get; private set;
+        }
 
-        public RecurringTransferCreateDto? LastCreateDto { get; private set; }
+        public RecurringTransferCreateDto? LastCreateDto
+        {
+            get; private set;
+        }
 
         public Task<RecurringTransferDto> CreateAsync(RecurringTransferCreateDto dto, CancellationToken cancellationToken = default)
         {
@@ -394,6 +420,24 @@ public class ChatActionExecutorTests
 
         public Task<IReadOnlyList<RecurringTransferDto>> GetActiveAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<RecurringTransferDto>>(new List<RecurringTransferDto>());
+
+        public Task<RecurringTransferDto?> UpdateAsync(Guid id, RecurringTransferUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult<RecurringTransferDto?>(null);
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
+
+        public Task<RecurringTransferDto?> PauseAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<RecurringTransferDto?>(null);
+
+        public Task<RecurringTransferDto?> ResumeAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<RecurringTransferDto?>(null);
+
+        public Task<RecurringTransferDto?> SkipNextAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<RecurringTransferDto?>(null);
+
+        public Task<RecurringTransferDto?> UpdateFromDateAsync(Guid id, DateOnly instanceDate, RecurringTransferUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult<RecurringTransferDto?>(null);
     }
 
     private sealed class MockCurrencyProvider : ICurrencyProvider

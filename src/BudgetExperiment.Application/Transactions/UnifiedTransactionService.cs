@@ -27,8 +27,8 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
         ITransactionRepository transactionRepository,
         IAccountRepository accountRepository)
     {
-        this._transactionRepository = transactionRepository;
-        this._accountRepository = accountRepository;
+        _transactionRepository = transactionRepository;
+        _accountRepository = accountRepository;
     }
 
     /// <inheritdoc />
@@ -40,7 +40,7 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
         var pageSize = Math.Clamp(filter.PageSize, 1, MaxPageSize);
         var skip = (page - 1) * pageSize;
 
-        var (items, totalCount) = await this._transactionRepository.GetUnifiedPagedAsync(
+        var (items, totalCount) = await _transactionRepository.GetUnifiedPagedAsync(
             filter.AccountId,
             filter.CategoryId,
             filter.Uncategorized,
@@ -56,7 +56,7 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
             cancellationToken);
 
         // Build account name lookup
-        var accounts = await this._accountRepository.GetAllAsync(cancellationToken);
+        var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         var accountLookup = accounts.ToDictionary(a => a.Id, a => a.Name);
 
         // Map items
@@ -137,14 +137,14 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
         Guid accountId,
         CancellationToken cancellationToken)
     {
-        var account = await this._accountRepository.GetByIdAsync(accountId, cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken);
         if (account is null)
         {
             return (null, null);
         }
 
         // Get all transactions for the account to compute current balance and running balances
-        var allTransactions = await this._transactionRepository.GetByDateRangeAsync(
+        var allTransactions = await _transactionRepository.GetByDateRangeAsync(
             DateOnly.MinValue,
             DateOnly.MaxValue,
             accountId,

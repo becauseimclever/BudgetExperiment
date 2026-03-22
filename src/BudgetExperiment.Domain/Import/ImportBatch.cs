@@ -25,22 +25,34 @@ public sealed class ImportBatch
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the user who performed this import.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public Guid UserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the account transactions were imported into.
     /// </summary>
-    public Guid AccountId { get; private set; }
+    public Guid AccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the import mapping used (null if ad-hoc mapping).
     /// </summary>
-    public Guid? MappingId { get; private set; }
+    public Guid? MappingId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the name of the imported file.
@@ -50,32 +62,50 @@ public sealed class ImportBatch
     /// <summary>
     /// Gets the total number of data rows in the CSV file.
     /// </summary>
-    public int TotalRows { get; private set; }
+    public int TotalRows
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the number of transactions successfully imported.
     /// </summary>
-    public int ImportedCount { get; private set; }
+    public int ImportedCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the number of rows skipped (e.g., duplicates).
     /// </summary>
-    public int SkippedCount { get; private set; }
+    public int SkippedCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the number of rows with errors.
     /// </summary>
-    public int ErrorCount { get; private set; }
+    public int ErrorCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when this import was performed.
     /// </summary>
-    public DateTime ImportedAtUtc { get; private set; }
+    public DateTime ImportedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current status of this import batch.
     /// </summary>
-    public ImportBatchStatus Status { get; private set; }
+    public ImportBatchStatus Status
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new import batch.

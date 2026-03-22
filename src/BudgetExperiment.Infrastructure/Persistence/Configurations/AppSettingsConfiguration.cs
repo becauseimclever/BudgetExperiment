@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -22,47 +22,74 @@ public sealed class RecurringTransferException
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the recurring transfer this exception belongs to.
     /// </summary>
-    public Guid RecurringTransferId { get; private set; }
+    public Guid RecurringTransferId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the original scheduled date being modified or skipped.
     /// </summary>
-    public DateOnly OriginalDate { get; private set; }
+    public DateOnly OriginalDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the type of exception (Modified or Skipped).
     /// </summary>
-    public ExceptionType ExceptionType { get; private set; }
+    public ExceptionType ExceptionType
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the modified amount (null = use series amount).
     /// </summary>
-    public MoneyValue? ModifiedAmount { get; private set; }
+    public MoneyValue? ModifiedAmount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the modified description (null = use series description).
     /// </summary>
-    public string? ModifiedDescription { get; private set; }
+    public string? ModifiedDescription
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the modified date (null = use original date; allows rescheduling).
     /// </summary>
-    public DateOnly? ModifiedDate { get; private set; }
+    public DateOnly? ModifiedDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the exception was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the exception was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a modified exception for a recurring transfer instance.

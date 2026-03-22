@@ -32,7 +32,11 @@ public static class TransactionsWriteScenario
             var body = JsonSerializer.Serialize(new
             {
                 accountId,
-                amount = new { currency = "USD", amount = -(context.ScenarioInfo.InstanceNumber + 1) * 5.99m },
+                amount = new
+                {
+                    currency = "USD",
+                    amount = -(context.ScenarioInfo.InstanceNumber + 1) * 5.99m,
+                },
                 date = "2026-02-15",
                 description = $"Perf Test Item {context.InvocationNumber}",
             });

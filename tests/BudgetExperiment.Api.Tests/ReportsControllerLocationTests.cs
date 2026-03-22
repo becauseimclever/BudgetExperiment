@@ -23,7 +23,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
     /// <param name="factory">The test factory.</param>
     public ReportsControllerLocationTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
     public async Task GetSpendingByLocation_ValidDateRange_Returns200()
     {
         // Act - far-future date range with no data
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/spending-by-location?startDate=2035-07-01&endDate=2035-07-31");
 
         // Assert
@@ -56,7 +56,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
     public async Task GetSpendingByLocation_InvalidDateRange_Returns400()
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/spending-by-location?startDate=2026-02-15&endDate=2026-01-15");
 
         // Assert
@@ -79,7 +79,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2033, 1, 1),
         };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var transactionDto = new TransactionCreateDto
@@ -89,7 +89,7 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
             Date = new DateOnly(2033, 1, 10),
             Description = "Location test purchase",
         };
-        var txResponse = await this._client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
+        var txResponse = await _client.PostAsJsonAsync("/api/v1/transactions", transactionDto);
         var transaction = await txResponse.Content.ReadFromJsonAsync<TransactionDto>();
 
         // Set location on the transaction
@@ -99,10 +99,10 @@ public sealed class ReportsControllerLocationTests : IClassFixture<CustomWebAppl
             StateOrRegion = "WA",
             Country = "US",
         };
-        await this._client.PatchAsJsonAsync($"/api/v1/transactions/{transaction!.Id}/location", locationDto);
+        await _client.PatchAsJsonAsync($"/api/v1/transactions/{transaction!.Id}/location", locationDto);
 
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/spending-by-location?startDate=2033-01-01&endDate=2033-01-31");
 
         // Assert

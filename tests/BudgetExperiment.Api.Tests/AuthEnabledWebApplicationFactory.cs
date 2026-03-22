@@ -45,7 +45,7 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
     /// <param name="dbFixture">The shared PostgreSQL container fixture.</param>
     public AuthEnabledWebApplicationFactory(ApiPostgreSqlFixture dbFixture)
     {
-        this._dbFixture = dbFixture;
+        _dbFixture = dbFixture;
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:AppDb"] = this._dbFixture.ConnectionString,
+                ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
                 ["Authentication:Authentik:Enabled"] = "true",
                 ["Authentication:Authentik:Authority"] = "https://test.auth.local",
             });
@@ -122,7 +122,7 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
 
             // Point the app at the Testcontainer database
             services.AddDbContext<BudgetDbContext>(options =>
-                options.UseNpgsql(this._dbFixture.ConnectionString));
+                options.UseNpgsql(_dbFixture.ConnectionString));
 
             services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
 

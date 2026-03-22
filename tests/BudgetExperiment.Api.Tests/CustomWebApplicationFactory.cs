@@ -39,7 +39,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
     /// <param name="dbFixture">The shared PostgreSQL container fixture.</param>
     public CustomWebApplicationFactory(ApiPostgreSqlFixture dbFixture)
     {
-        this._dbFixture = dbFixture;
+        _dbFixture = dbFixture;
     }
 
     /// <summary>Creates an <see cref="HttpClient"/> for the API.</summary>
@@ -81,7 +81,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:AppDb"] = this._dbFixture.ConnectionString,
+                ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
                 ["Authentication:Authentik:Enabled"] = "true",
             });
         });
@@ -105,7 +105,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
             // Point the app at the Testcontainer database
             services.AddDbContext<BudgetDbContext>(options =>
-                options.UseNpgsql(this._dbFixture.ConnectionString));
+                options.UseNpgsql(_dbFixture.ConnectionString));
 
             services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
 

@@ -35,7 +35,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new InvalidOperationException("Something broke"),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -67,7 +67,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new InvalidOperationException("fail"),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -92,7 +92,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new OperationCanceledException(),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -115,7 +115,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new TaskCanceledException(),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -139,7 +139,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new DomainException("Amount must be positive."),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -169,7 +169,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new DomainException("Account not found.", DomainExceptionType.NotFound),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -201,7 +201,7 @@ public sealed class ExceptionHandlingMiddlewareTests
                 nextCalled = true;
                 return Task.CompletedTask;
             },
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);

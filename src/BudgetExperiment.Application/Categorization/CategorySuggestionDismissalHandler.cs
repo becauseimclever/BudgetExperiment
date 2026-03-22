@@ -30,22 +30,22 @@ public sealed class CategorySuggestionDismissalHandler : ICategorySuggestionDism
         IUnitOfWork unitOfWork,
         IUserContext userContext)
     {
-        this._suggestionRepository = suggestionRepository;
-        this._dismissedRepository = dismissedRepository;
-        this._unitOfWork = unitOfWork;
-        this._userContext = userContext;
+        _suggestionRepository = suggestionRepository;
+        _dismissedRepository = dismissedRepository;
+        _unitOfWork = unitOfWork;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<bool> DismissSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var suggestion = await this._suggestionRepository.GetByIdAsync(id, cancellationToken);
+        var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken);
         if (suggestion == null)
         {
             return false;
         }
 
-        if (suggestion.OwnerId != this._userContext.UserId)
+        if (suggestion.OwnerId != _userContext.UserId)
         {
             return false;
         }
@@ -57,18 +57,18 @@ public sealed class CategorySuggestionDismissalHandler : ICategorySuggestionDism
 
         suggestion.Dismiss();
 
-        var isDismissed = await this._dismissedRepository.IsDismissedAsync(
-            this._userContext.UserId,
+        var isDismissed = await _dismissedRepository.IsDismissedAsync(
+            _userContext.UserId,
             suggestion.SuggestedName,
             cancellationToken);
 
         if (!isDismissed)
         {
-            var dismissedPattern = DismissedSuggestionPattern.Create(suggestion.SuggestedName, this._userContext.UserId);
-            await this._dismissedRepository.AddAsync(dismissedPattern, cancellationToken);
+            var dismissedPattern = DismissedSuggestionPattern.Create(suggestion.SuggestedName, _userContext.UserId);
+            await _dismissedRepository.AddAsync(dismissedPattern, cancellationToken);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }
@@ -76,13 +76,13 @@ public sealed class CategorySuggestionDismissalHandler : ICategorySuggestionDism
     /// <inheritdoc />
     public async Task<bool> RestoreSuggestionAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var suggestion = await this._suggestionRepository.GetByIdAsync(id, cancellationToken);
+        var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken);
         if (suggestion == null)
         {
             return false;
         }
 
-        if (suggestion.OwnerId != this._userContext.UserId)
+        if (suggestion.OwnerId != _userContext.UserId)
         {
             return false;
         }
@@ -94,17 +94,17 @@ public sealed class CategorySuggestionDismissalHandler : ICategorySuggestionDism
 
         suggestion.Restore();
 
-        var dismissedPattern = await this._dismissedRepository.GetByPatternAsync(
-            this._userContext.UserId,
+        var dismissedPattern = await _dismissedRepository.GetByPatternAsync(
+            _userContext.UserId,
             suggestion.SuggestedName.ToUpperInvariant(),
             cancellationToken);
 
         if (dismissedPattern != null)
         {
-            await this._dismissedRepository.RemoveAsync(dismissedPattern, cancellationToken);
+            await _dismissedRepository.RemoveAsync(dismissedPattern, cancellationToken);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }
@@ -112,8 +112,8 @@ public sealed class CategorySuggestionDismissalHandler : ICategorySuggestionDism
     /// <inheritdoc />
     public async Task<int> ClearDismissedPatternsAsync(CancellationToken cancellationToken = default)
     {
-        var clearedCount = await this._dismissedRepository.ClearByOwnerAsync(this._userContext.UserId, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        var clearedCount = await _dismissedRepository.ClearByOwnerAsync(_userContext.UserId, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return clearedCount;
     }
 }

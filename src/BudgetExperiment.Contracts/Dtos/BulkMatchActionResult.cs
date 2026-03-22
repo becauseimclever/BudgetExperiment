@@ -12,10 +12,16 @@ public sealed record BulkMatchActionResult
     /// <summary>
     /// Gets the number of matches successfully accepted.
     /// </summary>
-    public int AcceptedCount { get; init; }
+    public int AcceptedCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of matches that failed.
     /// </summary>
-    public int FailedCount { get; init; }
+    public int FailedCount
+    {
+        get; init;
+    }
 }

@@ -4,7 +4,9 @@
 
 using BudgetExperiment.Application.Reconciliation;
 using BudgetExperiment.Domain;
+
 using Moq;
+
 using Shouldly;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -25,7 +27,7 @@ public sealed class LinkableInstanceFinderTests
     {
         // Arrange
         var transactionId = Guid.NewGuid();
-        this._transactionRepository
+        _transactionRepository
             .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Transaction?)null);
 
@@ -74,12 +76,12 @@ public sealed class LinkableInstanceFinderTests
 
         this.SetupCommonMocks(transactionId, transaction, date, activeInstance, skippedInstance);
 
-        this._matchRepository
+        _matchRepository
             .Setup(r => r.IsInstanceMatchedAsync(
                 It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        this._transactionMatcher
+        _transactionMatcher
             .Setup(m => m.FindMatches(
                 It.IsAny<Transaction>(),
                 It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
@@ -121,7 +123,7 @@ public sealed class LinkableInstanceFinderTests
 
         this.SetupCommonMocks(transactionId, transaction, date, instance);
 
-        this._matchRepository
+        _matchRepository
             .Setup(r => r.IsInstanceMatchedAsync(recurringId, date, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -161,7 +163,7 @@ public sealed class LinkableInstanceFinderTests
 
         this.SetupCommonMocks(transactionId, transaction, date, instance);
 
-        this._matchRepository
+        _matchRepository
             .Setup(r => r.IsInstanceMatchedAsync(recurringId, date, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
@@ -174,7 +176,7 @@ public sealed class LinkableInstanceFinderTests
             0,
             1.0m);
 
-        this._transactionMatcher
+        _transactionMatcher
             .Setup(m => m.FindMatches(
                 It.IsAny<Transaction>(),
                 It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
@@ -229,15 +231,15 @@ public sealed class LinkableInstanceFinderTests
             false,
             false);
 
-        this._transactionRepository
+        _transactionRepository
             .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(transaction);
 
-        this._recurringRepository
+        _recurringRepository
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction>());
 
-        this._instanceProjector
+        _instanceProjector
             .Setup(p => p.GetInstancesByDateRangeAsync(
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
@@ -249,12 +251,12 @@ public sealed class LinkableInstanceFinderTests
                 { earlierDate, new List<RecurringInstanceInfoValue> { instanceB } },
             });
 
-        this._matchRepository
+        _matchRepository
             .Setup(r => r.IsInstanceMatchedAsync(
                 It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        this._transactionMatcher
+        _transactionMatcher
             .Setup(m => m.FindMatches(
                 It.IsAny<Transaction>(),
                 It.IsAny<IEnumerable<RecurringInstanceInfoValue>>(),
@@ -282,18 +284,18 @@ public sealed class LinkableInstanceFinderTests
 
         var transaction = CreateTestTransaction(transactionId, accountId, "Test", -10m, date);
 
-        this._transactionRepository
+        _transactionRepository
             .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(transaction);
 
-        this._recurringRepository
+        _recurringRepository
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction>());
 
         DateOnly capturedStart = default;
         DateOnly capturedEnd = default;
 
-        this._instanceProjector
+        _instanceProjector
             .Setup(p => p.GetInstancesByDateRangeAsync(
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
@@ -339,15 +341,15 @@ public sealed class LinkableInstanceFinderTests
         DateOnly date,
         params RecurringInstanceInfoValue[] instances)
     {
-        this._transactionRepository
+        _transactionRepository
             .Setup(r => r.GetByIdAsync(transactionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(transaction);
 
-        this._recurringRepository
+        _recurringRepository
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction>());
 
-        this._instanceProjector
+        _instanceProjector
             .Setup(p => p.GetInstancesByDateRangeAsync(
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
@@ -362,10 +364,10 @@ public sealed class LinkableInstanceFinderTests
     private LinkableInstanceFinder CreateSut()
     {
         return new LinkableInstanceFinder(
-            this._transactionRepository.Object,
-            this._recurringRepository.Object,
-            this._instanceProjector.Object,
-            this._transactionMatcher.Object,
-            this._matchRepository.Object);
+            _transactionRepository.Object,
+            _recurringRepository.Object,
+            _instanceProjector.Object,
+            _transactionMatcher.Object,
+            _matchRepository.Object);
     }
 }

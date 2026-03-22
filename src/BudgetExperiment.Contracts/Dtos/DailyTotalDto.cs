@@ -10,11 +10,17 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class DailyTotalDto
 {
     /// <summary>Gets or sets the date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total amount for the day.</summary>
     public MoneyDto Total { get; set; } = new();
 
     /// <summary>Gets or sets the number of transactions on this day.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 }

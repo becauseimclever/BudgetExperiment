@@ -6,8 +6,11 @@ using BudgetExperiment.Client.Pages.Reports;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages.Reports;
@@ -25,7 +28,7 @@ public class MonthlyCategoriesReportPageTests : BunitContext, IAsyncLifetime
     public MonthlyCategoriesReportPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
         this.Services.AddSingleton<ScopeService>();
@@ -92,7 +95,7 @@ public class MonthlyCategoriesReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsSummary_WhenDataExists()
     {
-        this._apiService.DateRangeCategoryReport = new DateRangeCategoryReportDto
+        _apiService.DateRangeCategoryReport = new DateRangeCategoryReportDto
         {
             TotalSpending = new MoneyDto { Amount = 2500m, Currency = "USD" },
             TotalIncome = new MoneyDto { Amount = 5000m, Currency = "USD" },
@@ -123,7 +126,7 @@ public class MonthlyCategoriesReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsCategoriesList_WhenDataExists()
     {
-        this._apiService.DateRangeCategoryReport = new DateRangeCategoryReportDto
+        _apiService.DateRangeCategoryReport = new DateRangeCategoryReportDto
         {
             TotalSpending = new MoneyDto { Amount = 1000m, Currency = "USD" },
             TotalIncome = new MoneyDto { Amount = 3000m, Currency = "USD" },
@@ -164,7 +167,7 @@ public class MonthlyCategoriesReportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsCategoryCountStat()
     {
-        this._apiService.DateRangeCategoryReport = new DateRangeCategoryReportDto
+        _apiService.DateRangeCategoryReport = new DateRangeCategoryReportDto
         {
             TotalSpending = new MoneyDto { Amount = 500m, Currency = "USD" },
             TotalIncome = new MoneyDto { Amount = 2000m, Currency = "USD" },

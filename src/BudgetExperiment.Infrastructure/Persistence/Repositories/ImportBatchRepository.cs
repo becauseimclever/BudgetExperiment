@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -20,20 +21,20 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     /// <param name="context">The database context.</param>
     public ImportBatchRepository(BudgetDbContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <inheritdoc />
     public async Task<ImportBatch?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportBatches
+        return await _context.ImportBatches
             .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportBatch>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportBatches
+        return await _context.ImportBatches
             .OrderByDescending(b => b.ImportedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -43,26 +44,26 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportBatches.LongCountAsync(cancellationToken);
+        return await _context.ImportBatches.LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(ImportBatch entity, CancellationToken cancellationToken = default)
     {
-        await this._context.ImportBatches.AddAsync(entity, cancellationToken);
+        await _context.ImportBatches.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(ImportBatch entity, CancellationToken cancellationToken = default)
     {
-        this._context.ImportBatches.Remove(entity);
+        _context.ImportBatches.Remove(entity);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportBatch>> GetByUserAsync(Guid userId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportBatches
+        return await _context.ImportBatches
             .Where(b => b.UserId == userId)
             .OrderByDescending(b => b.ImportedAtUtc)
             .Skip(skip)
@@ -73,7 +74,7 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportBatch>> GetByAccountAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportBatches
+        return await _context.ImportBatches
             .Where(b => b.AccountId == accountId)
             .OrderByDescending(b => b.ImportedAtUtc)
             .ToListAsync(cancellationToken);
@@ -82,7 +83,7 @@ internal sealed class ImportBatchRepository : IImportBatchRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<ImportBatch>> GetByMappingAsync(Guid mappingId, CancellationToken cancellationToken = default)
     {
-        return await this._context.ImportBatches
+        return await _context.ImportBatches
             .Where(b => b.MappingId == mappingId)
             .OrderByDescending(b => b.ImportedAtUtc)
             .ToListAsync(cancellationToken);

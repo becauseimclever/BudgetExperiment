@@ -4,6 +4,7 @@
 
 using System.Globalization;
 using System.Text.Json;
+
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Chat;

@@ -15,7 +15,10 @@ internal sealed class FakeAiApiService : IAiApiService
     /// <summary>
     /// Gets or sets the status to return from <see cref="GetStatusAsync"/>.
     /// </summary>
-    public AiStatusDto? StatusResult { get; set; }
+    public AiStatusDto? StatusResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the models to return from <see cref="GetModelsAsync"/>.
@@ -25,7 +28,10 @@ internal sealed class FakeAiApiService : IAiApiService
     /// <summary>
     /// Gets or sets the settings to return from <see cref="GetSettingsAsync"/>.
     /// </summary>
-    public AiSettingsDto? SettingsResult { get; set; }
+    public AiSettingsDto? SettingsResult
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public Task<AiStatusDto?> GetStatusAsync() => Task.FromResult(StatusResult);

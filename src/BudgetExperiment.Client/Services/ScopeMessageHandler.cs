@@ -22,7 +22,7 @@ public sealed class ScopeMessageHandler : DelegatingHandler
     /// <param name="scopeService">The scope service.</param>
     public ScopeMessageHandler(ScopeService scopeService)
     {
-        this._scopeService = scopeService;
+        _scopeService = scopeService;
     }
 
     /// <inheritdoc/>
@@ -30,7 +30,7 @@ public sealed class ScopeMessageHandler : DelegatingHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var scope = this._scopeService.CurrentScope;
+        var scope = _scopeService.CurrentScope;
         var headerValue = scope switch
         {
             BudgetScope.Shared => "Shared",

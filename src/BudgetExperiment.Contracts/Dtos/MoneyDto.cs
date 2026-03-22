@@ -13,5 +13,8 @@ public sealed class MoneyDto
     public string Currency { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the amount.</summary>
-    public decimal Amount { get; set; }
+    public decimal Amount
+    {
+        get; set;
+    }
 }

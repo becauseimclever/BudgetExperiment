@@ -7,8 +7,10 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -30,20 +32,20 @@ public sealed class RulesViewModelTests : IDisposable
     /// </summary>
     public RulesViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new RulesViewModel(
-            this._apiService,
-            this._toastService,
-            this._navigationManager,
-            this._scopeService,
-            this._apiErrorContext,
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new RulesViewModel(
+            _apiService,
+            _toastService,
+            _navigationManager,
+            _scopeService,
+            _apiErrorContext,
             new StubJSRuntime());
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -55,12 +57,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsRules()
     {
-        this._apiService.Rules.Add(CreateRule("Grocery Rule", "GROCERY", "Contains"));
+        _apiService.Rules.Add(CreateRule("Grocery Rule", "GROCERY", "Contains"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Rules.Count.ShouldBe(1);
-        this._sut.Rules[0].Name.ShouldBe("Grocery Rule");
+        _sut.Rules.Count.ShouldBe(1);
+        _sut.Rules[0].Name.ShouldBe("Grocery Rule");
     }
 
     /// <summary>
@@ -70,12 +72,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsCategories()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries"));
+        _apiService.Categories.Add(CreateCategory("Groceries"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Categories.Count.ShouldBe(1);
-        this._sut.Categories[0].Name.ShouldBe("Groceries");
+        _sut.Categories.Count.ShouldBe(1);
+        _sut.Categories[0].Name.ShouldBe("Groceries");
     }
 
     /// <summary>
@@ -85,9 +87,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -97,13 +99,13 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetRulesException = new HttpRequestException("Server error");
+        _apiService.GetRulesException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load data");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load data");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- LoadDataAsync ---
@@ -115,14 +117,14 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task LoadDataAsync_ClearsErrorMessage()
     {
-        this._apiService.GetRulesException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetRulesException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.GetRulesException = null;
-        await this._sut.LoadDataAsync();
+        _apiService.GetRulesException = null;
+        await _sut.LoadDataAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -132,9 +134,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task LoadDataAsync_SetsIsLoadingFalseAfterLoad()
     {
-        await this._sut.LoadDataAsync();
+        await _sut.LoadDataAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -144,11 +146,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task LoadDataAsync_SetsIsLoadingFalse_WhenApiFails()
     {
-        this._apiService.GetRulesException = new HttpRequestException("fail");
+        _apiService.GetRulesException = new HttpRequestException("fail");
 
-        await this._sut.LoadDataAsync();
+        await _sut.LoadDataAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- RetryLoadAsync ---
@@ -160,15 +162,15 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_ReloadsData()
     {
-        this._apiService.GetRulesException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.Rules.Count.ShouldBe(0);
+        _apiService.GetRulesException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.Rules.Count.ShouldBe(0);
 
-        this._apiService.GetRulesException = null;
-        this._apiService.Rules.Add(CreateRule("Rule1", "PATTERN", "Contains"));
-        await this._sut.RetryLoadAsync();
+        _apiService.GetRulesException = null;
+        _apiService.Rules.Add(CreateRule("Rule1", "PATTERN", "Contains"));
+        await _sut.RetryLoadAsync();
 
-        this._sut.Rules.Count.ShouldBe(1);
+        _sut.Rules.Count.ShouldBe(1);
     }
 
     /// <summary>
@@ -178,9 +180,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_SetsIsRetryingFalseAfterCompletion()
     {
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
-        this._sut.IsRetrying.ShouldBeFalse();
+        _sut.IsRetrying.ShouldBeFalse();
     }
 
     /// <summary>
@@ -191,9 +193,9 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task RetryLoadAsync_NotifiesStateChanged()
     {
         var stateChangedCount = 0;
-        this._sut.OnStateChanged = () => stateChangedCount++;
+        _sut.OnStateChanged = () => stateChangedCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         stateChangedCount.ShouldBeGreaterThan(0);
     }
@@ -207,13 +209,13 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task DismissError_ClearsErrorMessage()
     {
-        this._apiService.GetRulesException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetRulesException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -223,9 +225,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void DismissError_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         called.ShouldBeTrue();
     }
@@ -238,9 +240,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void NavigateToAiSuggestions_NavigatesToCorrectUrl()
     {
-        this._sut.NavigateToAiSuggestions();
+        _sut.NavigateToAiSuggestions();
 
-        this._navigationManager.LastNavigatedUri.ShouldBe("/ai/suggestions");
+        _navigationManager.LastNavigatedUri.ShouldBe("/ai/suggestions");
     }
 
     // --- ShowAddRule / HideAddRule ---
@@ -251,9 +253,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ShowAddRule_SetsShowAddFormTrue()
     {
-        this._sut.ShowAddRule();
+        _sut.ShowAddRule();
 
-        this._sut.ShowAddForm.ShouldBeTrue();
+        _sut.ShowAddForm.ShouldBeTrue();
     }
 
     /// <summary>
@@ -262,10 +264,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ShowAddRule_ResetsNewRule()
     {
-        this._sut.ShowAddRule();
+        _sut.ShowAddRule();
 
-        this._sut.NewRule.ShouldNotBeNull();
-        this._sut.NewRule.MatchType.ShouldBe("Contains");
+        _sut.NewRule.ShouldNotBeNull();
+        _sut.NewRule.MatchType.ShouldBe("Contains");
     }
 
     /// <summary>
@@ -274,9 +276,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ShowAddRule_ClearsTestResult()
     {
-        this._sut.ShowAddRule();
+        _sut.ShowAddRule();
 
-        this._sut.TestResult.ShouldBeNull();
+        _sut.TestResult.ShouldBeNull();
     }
 
     /// <summary>
@@ -286,9 +288,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void ShowAddRule_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.ShowAddRule();
+        _sut.ShowAddRule();
 
         called.ShouldBeTrue();
     }
@@ -299,10 +301,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void HideAddRule_SetsShowAddFormFalse()
     {
-        this._sut.ShowAddRule();
-        this._sut.HideAddRule();
+        _sut.ShowAddRule();
+        _sut.HideAddRule();
 
-        this._sut.ShowAddForm.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -311,9 +313,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void HideAddRule_ClearsTestResult()
     {
-        this._sut.HideAddRule();
+        _sut.HideAddRule();
 
-        this._sut.TestResult.ShouldBeNull();
+        _sut.TestResult.ShouldBeNull();
     }
 
     /// <summary>
@@ -323,9 +325,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void HideAddRule_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.HideAddRule();
+        _sut.HideAddRule();
 
         called.ShouldBeTrue();
     }
@@ -340,13 +342,13 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task CreateRuleAsync_AddsRuleToList_WhenSuccessful()
     {
         var newRule = CreateRule("Grocery Rule", "GROCERY", "Contains");
-        this._apiService.CreateRuleResult = newRule;
-        this._sut.ShowAddRule();
+        _apiService.CreateRuleResult = newRule;
+        _sut.ShowAddRule();
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.Rules.Count.ShouldBe(1);
-        this._sut.Rules[0].Name.ShouldBe("Grocery Rule");
+        _sut.Rules.Count.ShouldBe(1);
+        _sut.Rules[0].Name.ShouldBe("Grocery Rule");
     }
 
     /// <summary>
@@ -356,12 +358,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_HidesAddForm_WhenSuccessful()
     {
-        this._apiService.CreateRuleResult = CreateRule("Rule", "PATTERN", "Contains");
-        this._sut.ShowAddRule();
+        _apiService.CreateRuleResult = CreateRule("Rule", "PATTERN", "Contains");
+        _sut.ShowAddRule();
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.ShowAddForm.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -371,11 +373,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_SetsErrorMessage_WhenApiReturnsNull()
     {
-        this._apiService.CreateRuleResult = null;
+        _apiService.CreateRuleResult = null;
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to create rule.");
+        _sut.ErrorMessage.ShouldBe("Failed to create rule.");
     }
 
     /// <summary>
@@ -385,12 +387,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_SetsErrorMessage_WhenApiThrows()
     {
-        this._apiService.CreateRuleException = new HttpRequestException("Network error");
+        _apiService.CreateRuleException = new HttpRequestException("Network error");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to create rule");
-        this._sut.ErrorMessage!.ShouldContain("Network error");
+        _sut.ErrorMessage!.ShouldContain("Failed to create rule");
+        _sut.ErrorMessage!.ShouldContain("Network error");
     }
 
     /// <summary>
@@ -400,11 +402,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_SetsIsSubmittingFalse_AfterCompletion()
     {
-        this._apiService.CreateRuleResult = CreateRule("Rule", "PATTERN", "Contains");
+        _apiService.CreateRuleResult = CreateRule("Rule", "PATTERN", "Contains");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -414,11 +416,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_SetsIsSubmittingFalse_WhenApiThrows()
     {
-        this._apiService.CreateRuleException = new HttpRequestException("fail");
+        _apiService.CreateRuleException = new HttpRequestException("fail");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- ShowEditRule / HideEditRule ---
@@ -431,13 +433,13 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Test Rule", "PATTERN", "Exact");
 
-        this._sut.ShowEditRule(rule);
+        _sut.ShowEditRule(rule);
 
-        this._sut.ShowEditForm.ShouldBeTrue();
-        this._sut.EditingRuleId.ShouldBe(rule.Id);
-        this._sut.EditRule.Name.ShouldBe("Test Rule");
-        this._sut.EditRule.Pattern.ShouldBe("PATTERN");
-        this._sut.EditRule.MatchType.ShouldBe("Exact");
+        _sut.ShowEditForm.ShouldBeTrue();
+        _sut.EditingRuleId.ShouldBe(rule.Id);
+        _sut.EditRule.Name.ShouldBe("Test Rule");
+        _sut.EditRule.Pattern.ShouldBe("PATTERN");
+        _sut.EditRule.MatchType.ShouldBe("Exact");
     }
 
     /// <summary>
@@ -449,9 +451,9 @@ public sealed class RulesViewModelTests : IDisposable
         var rule = CreateRule("Test", "PATTERN", "Contains");
         rule.Version = "v123";
 
-        this._sut.ShowEditRule(rule);
+        _sut.ShowEditRule(rule);
 
-        this._sut.EditingVersion.ShouldBe("v123");
+        _sut.EditingVersion.ShouldBe("v123");
     }
 
     /// <summary>
@@ -462,9 +464,9 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Test", "PATTERN", "Contains");
 
-        this._sut.ShowEditRule(rule);
+        _sut.ShowEditRule(rule);
 
-        this._sut.TestResult.ShouldBeNull();
+        _sut.TestResult.ShouldBeNull();
     }
 
     /// <summary>
@@ -474,10 +476,10 @@ public sealed class RulesViewModelTests : IDisposable
     public void ShowEditRule_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
         var rule = CreateRule("Test", "PATTERN", "Contains");
 
-        this._sut.ShowEditRule(rule);
+        _sut.ShowEditRule(rule);
 
         called.ShouldBeTrue();
     }
@@ -489,12 +491,12 @@ public sealed class RulesViewModelTests : IDisposable
     public void HideEditRule_ClosesEditForm()
     {
         var rule = CreateRule("Test", "PATTERN", "Contains");
-        this._sut.ShowEditRule(rule);
+        _sut.ShowEditRule(rule);
 
-        this._sut.HideEditRule();
+        _sut.HideEditRule();
 
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.EditingRuleId.ShouldBeNull();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.EditingRuleId.ShouldBeNull();
     }
 
     /// <summary>
@@ -503,9 +505,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void HideEditRule_ClearsTestResult()
     {
-        this._sut.HideEditRule();
+        _sut.HideEditRule();
 
-        this._sut.TestResult.ShouldBeNull();
+        _sut.TestResult.ShouldBeNull();
     }
 
     /// <summary>
@@ -515,9 +517,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void HideEditRule_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.HideEditRule();
+        _sut.HideEditRule();
 
         called.ShouldBeTrue();
     }
@@ -536,12 +538,12 @@ public sealed class RulesViewModelTests : IDisposable
 
         var updatedRule = CreateRule("Updated", "UPDATED", "Exact");
         updatedRule.Id = originalRule.Id;
-        this._apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Success(updatedRule);
+        _apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Success(updatedRule);
 
-        this._sut.ShowEditRule(originalRule);
-        await this._sut.UpdateRuleAsync();
+        _sut.ShowEditRule(originalRule);
+        await _sut.UpdateRuleAsync();
 
-        this._sut.Rules[0].Name.ShouldBe("Updated");
+        _sut.Rules[0].Name.ShouldBe("Updated");
     }
 
     /// <summary>
@@ -556,13 +558,13 @@ public sealed class RulesViewModelTests : IDisposable
 
         var updated = CreateRule("Updated", "PATTERN", "Contains");
         updated.Id = rule.Id;
-        this._apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Success(updated);
+        _apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Success(updated);
 
-        this._sut.ShowEditRule(rule);
-        await this._sut.UpdateRuleAsync();
+        _sut.ShowEditRule(rule);
+        await _sut.UpdateRuleAsync();
 
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.EditingRuleId.ShouldBeNull();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.EditingRuleId.ShouldBeNull();
     }
 
     /// <summary>
@@ -574,13 +576,13 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
         await this.SetupWithRuleAsync(rule);
-        this._apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Conflict();
+        _apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Conflict();
 
-        this._sut.ShowEditRule(rule);
-        await this._sut.UpdateRuleAsync();
+        _sut.ShowEditRule(rule);
+        await _sut.UpdateRuleAsync();
 
-        this._toastService.WarningShown.ShouldBeTrue();
-        this._sut.ShowEditForm.ShouldBeFalse();
+        _toastService.WarningShown.ShouldBeTrue();
+        _sut.ShowEditForm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -592,12 +594,12 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
         await this.SetupWithRuleAsync(rule);
-        this._apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Failure();
+        _apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Failure();
 
-        this._sut.ShowEditRule(rule);
-        await this._sut.UpdateRuleAsync();
+        _sut.ShowEditRule(rule);
+        await _sut.UpdateRuleAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to update rule.");
+        _sut.ErrorMessage.ShouldBe("Failed to update rule.");
     }
 
     /// <summary>
@@ -609,13 +611,13 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
         await this.SetupWithRuleAsync(rule);
-        this._apiService.UpdateRuleException = new HttpRequestException("Network error");
+        _apiService.UpdateRuleException = new HttpRequestException("Network error");
 
-        this._sut.ShowEditRule(rule);
-        await this._sut.UpdateRuleAsync();
+        _sut.ShowEditRule(rule);
+        await _sut.UpdateRuleAsync();
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to update rule");
-        this._sut.ErrorMessage!.ShouldContain("Network error");
+        _sut.ErrorMessage!.ShouldContain("Failed to update rule");
+        _sut.ErrorMessage!.ShouldContain("Network error");
     }
 
     /// <summary>
@@ -629,12 +631,12 @@ public sealed class RulesViewModelTests : IDisposable
         await this.SetupWithRuleAsync(rule);
         var updated = CreateRule("Updated", "PATTERN", "Contains");
         updated.Id = rule.Id;
-        this._apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Success(updated);
+        _apiService.UpdateRuleResult = ApiResult<CategorizationRuleDto>.Success(updated);
 
-        this._sut.ShowEditRule(rule);
-        await this._sut.UpdateRuleAsync();
+        _sut.ShowEditRule(rule);
+        await _sut.UpdateRuleAsync();
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -644,10 +646,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task UpdateRuleAsync_ReturnsEarly_WhenNoEditingRuleId()
     {
-        await this._sut.UpdateRuleAsync();
+        await _sut.UpdateRuleAsync();
 
-        this._sut.IsSubmitting.ShouldBeFalse();
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- ConfirmDeleteRule / CancelDelete ---
@@ -660,10 +662,10 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("ToDelete", "PATTERN", "Contains");
 
-        this._sut.ConfirmDeleteRule(rule);
+        _sut.ConfirmDeleteRule(rule);
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.DeletingRule.ShouldBe(rule);
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.DeletingRule.ShouldBe(rule);
     }
 
     /// <summary>
@@ -673,10 +675,10 @@ public sealed class RulesViewModelTests : IDisposable
     public void ConfirmDeleteRule_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
         var rule = CreateRule("Test", "PATTERN", "Contains");
 
-        this._sut.ConfirmDeleteRule(rule);
+        _sut.ConfirmDeleteRule(rule);
 
         called.ShouldBeTrue();
     }
@@ -688,12 +690,12 @@ public sealed class RulesViewModelTests : IDisposable
     public void CancelDelete_HidesConfirmDialog()
     {
         var rule = CreateRule("ToDelete", "PATTERN", "Contains");
-        this._sut.ConfirmDeleteRule(rule);
+        _sut.ConfirmDeleteRule(rule);
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingRule.ShouldBeNull();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingRule.ShouldBeNull();
     }
 
     /// <summary>
@@ -703,9 +705,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void CancelDelete_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
         called.ShouldBeTrue();
     }
@@ -721,14 +723,14 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("ToDelete", "PATTERN", "Contains");
         await this.SetupWithRuleAsync(rule);
-        this._apiService.DeleteRuleResult = true;
-        this._sut.ConfirmDeleteRule(rule);
+        _apiService.DeleteRuleResult = true;
+        _sut.ConfirmDeleteRule(rule);
 
-        await this._sut.DeleteRuleAsync();
+        await _sut.DeleteRuleAsync();
 
-        this._sut.Rules.Count.ShouldBe(0);
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingRule.ShouldBeNull();
+        _sut.Rules.Count.ShouldBe(0);
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingRule.ShouldBeNull();
     }
 
     /// <summary>
@@ -740,12 +742,12 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
         await this.SetupWithRuleAsync(rule);
-        this._apiService.DeleteRuleResult = false;
-        this._sut.ConfirmDeleteRule(rule);
+        _apiService.DeleteRuleResult = false;
+        _sut.ConfirmDeleteRule(rule);
 
-        await this._sut.DeleteRuleAsync();
+        await _sut.DeleteRuleAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to delete rule.");
+        _sut.ErrorMessage.ShouldBe("Failed to delete rule.");
     }
 
     /// <summary>
@@ -757,13 +759,13 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
         await this.SetupWithRuleAsync(rule);
-        this._apiService.DeleteRuleException = new HttpRequestException("Server error");
-        this._sut.ConfirmDeleteRule(rule);
+        _apiService.DeleteRuleException = new HttpRequestException("Server error");
+        _sut.ConfirmDeleteRule(rule);
 
-        await this._sut.DeleteRuleAsync();
+        await _sut.DeleteRuleAsync();
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to delete rule");
-        this._sut.ErrorMessage!.ShouldContain("Server error");
+        _sut.ErrorMessage!.ShouldContain("Failed to delete rule");
+        _sut.ErrorMessage!.ShouldContain("Server error");
     }
 
     /// <summary>
@@ -774,12 +776,12 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task DeleteRuleAsync_SetsIsDeletingFalse_AfterCompletion()
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
-        this._sut.ConfirmDeleteRule(rule);
-        this._apiService.DeleteRuleResult = true;
+        _sut.ConfirmDeleteRule(rule);
+        _apiService.DeleteRuleResult = true;
 
-        await this._sut.DeleteRuleAsync();
+        await _sut.DeleteRuleAsync();
 
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -789,10 +791,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task DeleteRuleAsync_ReturnsEarly_WhenNoDeletingRule()
     {
-        await this._sut.DeleteRuleAsync();
+        await _sut.DeleteRuleAsync();
 
-        this._sut.IsDeleting.ShouldBeFalse();
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.IsDeleting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- ActivateRuleAsync ---
@@ -806,11 +808,11 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Inactive Rule", "PATTERN", "Contains", isActive: false);
         await this.SetupWithRuleAsync(rule);
-        this._apiService.ActivateRuleResult = true;
+        _apiService.ActivateRuleResult = true;
 
-        await this._sut.ActivateRuleAsync(rule);
+        await _sut.ActivateRuleAsync(rule);
 
-        this._sut.Rules[0].IsActive.ShouldBeTrue();
+        _sut.Rules[0].IsActive.ShouldBeTrue();
     }
 
     /// <summary>
@@ -822,11 +824,11 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Inactive Rule", "PATTERN", "Contains", isActive: false);
         await this.SetupWithRuleAsync(rule);
-        this._apiService.ActivateRuleResult = false;
+        _apiService.ActivateRuleResult = false;
 
-        await this._sut.ActivateRuleAsync(rule);
+        await _sut.ActivateRuleAsync(rule);
 
-        this._sut.Rules[0].IsActive.ShouldBeFalse();
+        _sut.Rules[0].IsActive.ShouldBeFalse();
     }
 
     /// <summary>
@@ -837,11 +839,11 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task ActivateRuleAsync_SetsErrorMessage_WhenApiThrows()
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
-        this._apiService.ActivateRuleException = new HttpRequestException("Server error");
+        _apiService.ActivateRuleException = new HttpRequestException("Server error");
 
-        await this._sut.ActivateRuleAsync(rule);
+        await _sut.ActivateRuleAsync(rule);
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to activate rule");
+        _sut.ErrorMessage!.ShouldContain("Failed to activate rule");
     }
 
     // --- DeactivateRuleAsync ---
@@ -855,11 +857,11 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Active Rule", "PATTERN", "Contains", isActive: true);
         await this.SetupWithRuleAsync(rule);
-        this._apiService.DeactivateRuleResult = true;
+        _apiService.DeactivateRuleResult = true;
 
-        await this._sut.DeactivateRuleAsync(rule);
+        await _sut.DeactivateRuleAsync(rule);
 
-        this._sut.Rules[0].IsActive.ShouldBeFalse();
+        _sut.Rules[0].IsActive.ShouldBeFalse();
     }
 
     /// <summary>
@@ -871,11 +873,11 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule = CreateRule("Active Rule", "PATTERN", "Contains", isActive: true);
         await this.SetupWithRuleAsync(rule);
-        this._apiService.DeactivateRuleResult = false;
+        _apiService.DeactivateRuleResult = false;
 
-        await this._sut.DeactivateRuleAsync(rule);
+        await _sut.DeactivateRuleAsync(rule);
 
-        this._sut.Rules[0].IsActive.ShouldBeTrue();
+        _sut.Rules[0].IsActive.ShouldBeTrue();
     }
 
     /// <summary>
@@ -886,11 +888,11 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task DeactivateRuleAsync_SetsErrorMessage_WhenApiThrows()
     {
         var rule = CreateRule("Rule", "PATTERN", "Contains");
-        this._apiService.DeactivateRuleException = new HttpRequestException("Server error");
+        _apiService.DeactivateRuleException = new HttpRequestException("Server error");
 
-        await this._sut.DeactivateRuleAsync(rule);
+        await _sut.DeactivateRuleAsync(rule);
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to deactivate rule");
+        _sut.ErrorMessage!.ShouldContain("Failed to deactivate rule");
     }
 
     // --- TestPatternAsync ---
@@ -907,12 +909,12 @@ public sealed class RulesViewModelTests : IDisposable
             MatchingDescriptions = new[] { "GROCERY STORE" },
             MatchCount = 1,
         };
-        this._apiService.TestPatternResult = response;
+        _apiService.TestPatternResult = response;
 
-        await this._sut.TestPatternAsync(new TestPatternRequest { Pattern = "GROCERY" });
+        await _sut.TestPatternAsync(new TestPatternRequest { Pattern = "GROCERY" });
 
-        this._sut.TestResult.ShouldNotBeNull();
-        this._sut.TestResult!.MatchCount.ShouldBe(1);
+        _sut.TestResult.ShouldNotBeNull();
+        _sut.TestResult!.MatchCount.ShouldBe(1);
     }
 
     /// <summary>
@@ -922,11 +924,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task TestPatternAsync_SetsIsTestingFalse_AfterCompletion()
     {
-        this._apiService.TestPatternResult = new TestPatternResponse();
+        _apiService.TestPatternResult = new TestPatternResponse();
 
-        await this._sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
+        await _sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
 
-        this._sut.IsTesting.ShouldBeFalse();
+        _sut.IsTesting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -936,14 +938,14 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task TestPatternAsync_ClearsPreviousResult()
     {
-        this._apiService.TestPatternResult = new TestPatternResponse { MatchCount = 5 };
-        await this._sut.TestPatternAsync(new TestPatternRequest { Pattern = "FIRST" });
-        this._sut.TestResult.ShouldNotBeNull();
+        _apiService.TestPatternResult = new TestPatternResponse { MatchCount = 5 };
+        await _sut.TestPatternAsync(new TestPatternRequest { Pattern = "FIRST" });
+        _sut.TestResult.ShouldNotBeNull();
 
-        this._apiService.TestPatternResult = new TestPatternResponse { MatchCount = 3 };
-        await this._sut.TestPatternAsync(new TestPatternRequest { Pattern = "SECOND" });
+        _apiService.TestPatternResult = new TestPatternResponse { MatchCount = 3 };
+        await _sut.TestPatternAsync(new TestPatternRequest { Pattern = "SECOND" });
 
-        this._sut.TestResult!.MatchCount.ShouldBe(3);
+        _sut.TestResult!.MatchCount.ShouldBe(3);
     }
 
     /// <summary>
@@ -953,11 +955,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task TestPatternAsync_SetsErrorMessage_WhenApiThrows()
     {
-        this._apiService.TestPatternException = new HttpRequestException("Server error");
+        _apiService.TestPatternException = new HttpRequestException("Server error");
 
-        await this._sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
+        await _sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to test pattern");
+        _sut.ErrorMessage!.ShouldContain("Failed to test pattern");
     }
 
     /// <summary>
@@ -967,11 +969,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task TestPatternAsync_SetsIsTestingFalse_WhenApiThrows()
     {
-        this._apiService.TestPatternException = new HttpRequestException("fail");
+        _apiService.TestPatternException = new HttpRequestException("fail");
 
-        await this._sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
+        await _sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
 
-        this._sut.IsTesting.ShouldBeFalse();
+        _sut.IsTesting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -982,10 +984,10 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task TestPatternAsync_NotifiesStateChanged()
     {
         var stateChangedCount = 0;
-        this._sut.OnStateChanged = () => stateChangedCount++;
-        this._apiService.TestPatternResult = new TestPatternResponse();
+        _sut.OnStateChanged = () => stateChangedCount++;
+        _apiService.TestPatternResult = new TestPatternResponse();
 
-        await this._sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
+        await _sut.TestPatternAsync(new TestPatternRequest { Pattern = "TEST" });
 
         stateChangedCount.ShouldBeGreaterThan(0);
     }
@@ -998,9 +1000,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ShowApplyRules_SetsDialogVisible()
     {
-        this._sut.ShowApplyRules();
+        _sut.ShowApplyRules();
 
-        this._sut.ShowApplyRulesDialog.ShouldBeTrue();
+        _sut.ShowApplyRulesDialog.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1010,9 +1012,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void ShowApplyRules_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.ShowApplyRules();
+        _sut.ShowApplyRules();
 
         called.ShouldBeTrue();
     }
@@ -1023,10 +1025,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void HideApplyRules_HidesDialog()
     {
-        this._sut.ShowApplyRules();
-        this._sut.HideApplyRules();
+        _sut.ShowApplyRules();
+        _sut.HideApplyRules();
 
-        this._sut.ShowApplyRulesDialog.ShouldBeFalse();
+        _sut.ShowApplyRulesDialog.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1036,9 +1038,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void HideApplyRules_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.HideApplyRules();
+        _sut.HideApplyRules();
 
         called.ShouldBeTrue();
     }
@@ -1053,7 +1055,7 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var response = new ApplyRulesResponse { TotalProcessed = 10, Categorized = 5 };
 
-        Should.NotThrow(() => this._sut.OnRulesApplied(response));
+        Should.NotThrow(() => _sut.OnRulesApplied(response));
     }
 
     // --- CreateRuleFromTest ---
@@ -1064,11 +1066,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void CreateRuleFromTest_PopulatesNewRuleForm()
     {
-        this._sut.CreateRuleFromTest(("GROCERY", "Contains", false));
+        _sut.CreateRuleFromTest(("GROCERY", "Contains", false));
 
-        this._sut.NewRule.Pattern.ShouldBe("GROCERY");
-        this._sut.NewRule.MatchType.ShouldBe("Contains");
-        this._sut.NewRule.CaseSensitive.ShouldBeFalse();
+        _sut.NewRule.Pattern.ShouldBe("GROCERY");
+        _sut.NewRule.MatchType.ShouldBe("Contains");
+        _sut.NewRule.CaseSensitive.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1077,9 +1079,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void CreateRuleFromTest_OpensAddForm()
     {
-        this._sut.CreateRuleFromTest(("PATTERN", "Exact", true));
+        _sut.CreateRuleFromTest(("PATTERN", "Exact", true));
 
-        this._sut.ShowAddForm.ShouldBeTrue();
+        _sut.ShowAddForm.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1088,9 +1090,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void CreateRuleFromTest_ClearsTestResult()
     {
-        this._sut.CreateRuleFromTest(("PATTERN", "Contains", false));
+        _sut.CreateRuleFromTest(("PATTERN", "Contains", false));
 
-        this._sut.TestResult.ShouldBeNull();
+        _sut.TestResult.ShouldBeNull();
     }
 
     /// <summary>
@@ -1100,9 +1102,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void CreateRuleFromTest_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.CreateRuleFromTest(("PATTERN", "Contains", false));
+        _sut.CreateRuleFromTest(("PATTERN", "Contains", false));
 
         called.ShouldBeTrue();
     }
@@ -1113,10 +1115,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void CreateRuleFromTest_HandlesCaseSensitiveFlag()
     {
-        this._sut.CreateRuleFromTest(("PATTERN", "Regex", true));
+        _sut.CreateRuleFromTest(("PATTERN", "Regex", true));
 
-        this._sut.NewRule.CaseSensitive.ShouldBeTrue();
-        this._sut.NewRule.MatchType.ShouldBe("Regex");
+        _sut.NewRule.CaseSensitive.ShouldBeTrue();
+        _sut.NewRule.MatchType.ShouldBe("Regex");
     }
 
     // --- Scope Change ---
@@ -1128,16 +1130,16 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ScopeChanged_ReloadsData()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Rules.Count.ShouldBe(0);
+        await _sut.InitializeAsync();
+        _sut.Rules.Count.ShouldBe(0);
 
-        this._apiService.Rules.Add(CreateRule("New Rule", "PATTERN", "Contains"));
-        await this._scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
+        _apiService.Rules.Add(CreateRule("New Rule", "PATTERN", "Contains"));
+        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
 
         // Allow async event handler to complete
         await Task.Delay(50);
 
-        this._sut.Rules.Count.ShouldBe(1);
+        _sut.Rules.Count.ShouldBe(1);
     }
 
     // --- Dispose ---
@@ -1149,16 +1151,16 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_UnsubscribesFromScopeChanged()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Dispose();
+        await _sut.InitializeAsync();
+        _sut.Dispose();
 
         // After dispose, changing scope should not trigger a reload
-        this._apiService.Rules.Add(CreateRule("New Rule", "PATTERN", "Contains"));
-        await this._scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
+        _apiService.Rules.Add(CreateRule("New Rule", "PATTERN", "Contains"));
+        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
         await Task.Delay(50);
 
         // Rules list should still be empty (from initial load) since dispose unsubscribed
-        this._sut.Rules.Count.ShouldBe(0);
+        _sut.Rules.Count.ShouldBe(0);
     }
 
     // --- OnStateChanged callback ---
@@ -1170,9 +1172,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void OnStateChanged_InvokedOnDismissError()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         called.ShouldBeTrue();
     }
@@ -1184,9 +1186,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void OnStateChanged_InvokedOnShowAddRule()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.ShowAddRule();
+        _sut.ShowAddRule();
 
         called.ShouldBeTrue();
     }
@@ -1200,14 +1202,14 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsPaginationProperties()
     {
-        this._apiService.Rules.Add(CreateRule("Rule1", "P1", "Contains"));
-        this._apiService.Rules.Add(CreateRule("Rule2", "P2", "Contains"));
+        _apiService.Rules.Add(CreateRule("Rule1", "P1", "Contains"));
+        _apiService.Rules.Add(CreateRule("Rule2", "P2", "Contains"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.CurrentPage.ShouldBe(1);
-        this._sut.PageSize.ShouldBe(25);
-        this._sut.TotalCount.ShouldBe(2);
+        _sut.CurrentPage.ShouldBe(1);
+        _sut.PageSize.ShouldBe(25);
+        _sut.TotalCount.ShouldBe(2);
     }
 
     /// <summary>
@@ -1217,11 +1219,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ChangePageAsync_UpdatesCurrentPage()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        await this._sut.ChangePageAsync(3);
+        await _sut.ChangePageAsync(3);
 
-        this._sut.CurrentPage.ShouldBe(3);
+        _sut.CurrentPage.ShouldBe(3);
     }
 
     /// <summary>
@@ -1231,11 +1233,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ChangePageAsync_NotifiesStateChanged()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        await this._sut.ChangePageAsync(2);
+        await _sut.ChangePageAsync(2);
 
         called.ShouldBeTrue();
     }
@@ -1247,14 +1249,14 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ChangePageSizeAsync_UpdatesPageSizeAndResetsPage()
     {
-        await this._sut.InitializeAsync();
-        await this._sut.ChangePageAsync(3);
-        this._sut.CurrentPage.ShouldBe(3);
+        await _sut.InitializeAsync();
+        await _sut.ChangePageAsync(3);
+        _sut.CurrentPage.ShouldBe(3);
 
-        await this._sut.ChangePageSizeAsync(50);
+        await _sut.ChangePageSizeAsync(50);
 
-        this._sut.PageSize.ShouldBe(50);
-        this._sut.CurrentPage.ShouldBe(1);
+        _sut.PageSize.ShouldBe(50);
+        _sut.CurrentPage.ShouldBe(1);
     }
 
     /// <summary>
@@ -1264,11 +1266,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ChangePageSizeAsync_NotifiesStateChanged()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        await this._sut.ChangePageSizeAsync(10);
+        await _sut.ChangePageSizeAsync(10);
 
         called.ShouldBeTrue();
     }
@@ -1282,9 +1284,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task SetSearchAsync_UpdatesSearchText()
     {
-        await this._sut.SetSearchAsync("grocery");
+        await _sut.SetSearchAsync("grocery");
 
-        this._sut.SearchText.ShouldBe("grocery");
+        _sut.SearchText.ShouldBe("grocery");
     }
 
     /// <summary>
@@ -1294,13 +1296,13 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task SetSearchAsync_ResetsPageToOne()
     {
-        await this._sut.InitializeAsync();
-        await this._sut.ChangePageAsync(3);
-        this._sut.CurrentPage.ShouldBe(3);
+        await _sut.InitializeAsync();
+        await _sut.ChangePageAsync(3);
+        _sut.CurrentPage.ShouldBe(3);
 
-        await this._sut.SetSearchAsync("test");
+        await _sut.SetSearchAsync("test");
 
-        this._sut.CurrentPage.ShouldBe(1);
+        _sut.CurrentPage.ShouldBe(1);
     }
 
     /// <summary>
@@ -1311,9 +1313,9 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task SetSearchAsync_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        await this._sut.SetSearchAsync("test");
+        await _sut.SetSearchAsync("test");
 
         called.ShouldBeTrue();
     }
@@ -1327,9 +1329,9 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var categoryId = Guid.NewGuid();
 
-        await this._sut.SetCategoryFilterAsync(categoryId);
+        await _sut.SetCategoryFilterAsync(categoryId);
 
-        this._sut.SelectedCategoryId.ShouldBe(categoryId);
+        _sut.SelectedCategoryId.ShouldBe(categoryId);
     }
 
     /// <summary>
@@ -1339,12 +1341,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task SetCategoryFilterAsync_ResetsPageToOne()
     {
-        await this._sut.InitializeAsync();
-        await this._sut.ChangePageAsync(3);
+        await _sut.InitializeAsync();
+        await _sut.ChangePageAsync(3);
 
-        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+        await _sut.SetCategoryFilterAsync(Guid.NewGuid());
 
-        this._sut.CurrentPage.ShouldBe(1);
+        _sut.CurrentPage.ShouldBe(1);
     }
 
     /// <summary>
@@ -1355,9 +1357,9 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task SetCategoryFilterAsync_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+        await _sut.SetCategoryFilterAsync(Guid.NewGuid());
 
         called.ShouldBeTrue();
     }
@@ -1369,9 +1371,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task SetStatusFilterAsync_UpdatesSelectedStatus()
     {
-        await this._sut.SetStatusFilterAsync("Active");
+        await _sut.SetStatusFilterAsync("Active");
 
-        this._sut.SelectedStatus.ShouldBe("Active");
+        _sut.SelectedStatus.ShouldBe("Active");
     }
 
     /// <summary>
@@ -1381,12 +1383,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task SetStatusFilterAsync_ResetsPageToOne()
     {
-        await this._sut.InitializeAsync();
-        await this._sut.ChangePageAsync(3);
+        await _sut.InitializeAsync();
+        await _sut.ChangePageAsync(3);
 
-        await this._sut.SetStatusFilterAsync("Active");
+        await _sut.SetStatusFilterAsync("Active");
 
-        this._sut.CurrentPage.ShouldBe(1);
+        _sut.CurrentPage.ShouldBe(1);
     }
 
     /// <summary>
@@ -1397,9 +1399,9 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task SetStatusFilterAsync_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        await this._sut.SetStatusFilterAsync("Inactive");
+        await _sut.SetStatusFilterAsync("Inactive");
 
         called.ShouldBeTrue();
     }
@@ -1411,18 +1413,18 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ClearFiltersAsync_ResetsAllFilters()
     {
-        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
-        await this._sut.SetStatusFilterAsync("Active");
+        await _sut.SetCategoryFilterAsync(Guid.NewGuid());
+        await _sut.SetStatusFilterAsync("Active");
 
         // Directly set search to avoid debounce issues in test
-        await this._sut.SetSearchAsync("test");
+        await _sut.SetSearchAsync("test");
 
-        await this._sut.ClearFiltersAsync();
+        await _sut.ClearFiltersAsync();
 
-        this._sut.SearchText.ShouldBeNull();
-        this._sut.SelectedCategoryId.ShouldBeNull();
-        this._sut.SelectedStatus.ShouldBeNull();
-        this._sut.CurrentPage.ShouldBe(1);
+        _sut.SearchText.ShouldBeNull();
+        _sut.SelectedCategoryId.ShouldBeNull();
+        _sut.SelectedStatus.ShouldBeNull();
+        _sut.CurrentPage.ShouldBe(1);
     }
 
     /// <summary>
@@ -1433,9 +1435,9 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task ClearFiltersAsync_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        await this._sut.ClearFiltersAsync();
+        await _sut.ClearFiltersAsync();
 
         called.ShouldBeTrue();
     }
@@ -1446,7 +1448,7 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void HasActiveFilters_FalseWhenNoFilters()
     {
-        this._sut.HasActiveFilters.ShouldBeFalse();
+        _sut.HasActiveFilters.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1456,9 +1458,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task HasActiveFilters_TrueWhenSearchSet()
     {
-        await this._sut.SetSearchAsync("test");
+        await _sut.SetSearchAsync("test");
 
-        this._sut.HasActiveFilters.ShouldBeTrue();
+        _sut.HasActiveFilters.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1468,9 +1470,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task HasActiveFilters_TrueWhenCategorySet()
     {
-        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
+        await _sut.SetCategoryFilterAsync(Guid.NewGuid());
 
-        this._sut.HasActiveFilters.ShouldBeTrue();
+        _sut.HasActiveFilters.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1480,9 +1482,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task HasActiveFilters_TrueWhenStatusSet()
     {
-        await this._sut.SetStatusFilterAsync("Active");
+        await _sut.SetStatusFilterAsync("Active");
 
-        this._sut.HasActiveFilters.ShouldBeTrue();
+        _sut.HasActiveFilters.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1492,16 +1494,16 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ActiveFilterCount_ReturnsCorrectCount()
     {
-        this._sut.ActiveFilterCount.ShouldBe(0);
+        _sut.ActiveFilterCount.ShouldBe(0);
 
-        await this._sut.SetCategoryFilterAsync(Guid.NewGuid());
-        this._sut.ActiveFilterCount.ShouldBe(1);
+        await _sut.SetCategoryFilterAsync(Guid.NewGuid());
+        _sut.ActiveFilterCount.ShouldBe(1);
 
-        await this._sut.SetStatusFilterAsync("Active");
-        this._sut.ActiveFilterCount.ShouldBe(2);
+        await _sut.SetStatusFilterAsync("Active");
+        _sut.ActiveFilterCount.ShouldBe(2);
 
-        await this._sut.SetSearchAsync("test");
-        this._sut.ActiveFilterCount.ShouldBe(3);
+        await _sut.SetSearchAsync("test");
+        _sut.ActiveFilterCount.ShouldBe(3);
     }
 
     // --- Group by Category ---
@@ -1514,8 +1516,8 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void Sort_DefaultsToNull()
     {
-        this._sut.SortBy.ShouldBeNull();
-        this._sut.SortDirection.ShouldBeNull();
+        _sut.SortBy.ShouldBeNull();
+        _sut.SortDirection.ShouldBeNull();
     }
 
     /// <summary>
@@ -1525,10 +1527,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSortAsync_SetsSortField_WhenNewField()
     {
-        await this._sut.ToggleSortAsync("name");
+        await _sut.ToggleSortAsync("name");
 
-        this._sut.SortBy.ShouldBe("name");
-        this._sut.SortDirection.ShouldBe("asc");
+        _sut.SortBy.ShouldBe("name");
+        _sut.SortDirection.ShouldBe("asc");
     }
 
     /// <summary>
@@ -1538,14 +1540,14 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSortAsync_TogglesDirection_WhenSameField()
     {
-        await this._sut.ToggleSortAsync("name");
-        this._sut.SortDirection.ShouldBe("asc");
+        await _sut.ToggleSortAsync("name");
+        _sut.SortDirection.ShouldBe("asc");
 
-        await this._sut.ToggleSortAsync("name");
-        this._sut.SortDirection.ShouldBe("desc");
+        await _sut.ToggleSortAsync("name");
+        _sut.SortDirection.ShouldBe("desc");
 
-        await this._sut.ToggleSortAsync("name");
-        this._sut.SortDirection.ShouldBe("asc");
+        await _sut.ToggleSortAsync("name");
+        _sut.SortDirection.ShouldBe("asc");
     }
 
     /// <summary>
@@ -1555,13 +1557,13 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSortAsync_ResetsDirection_WhenDifferentField()
     {
-        await this._sut.ToggleSortAsync("name");
-        await this._sut.ToggleSortAsync("name");
-        this._sut.SortDirection.ShouldBe("desc");
+        await _sut.ToggleSortAsync("name");
+        await _sut.ToggleSortAsync("name");
+        _sut.SortDirection.ShouldBe("desc");
 
-        await this._sut.ToggleSortAsync("priority");
-        this._sut.SortBy.ShouldBe("priority");
-        this._sut.SortDirection.ShouldBe("asc");
+        await _sut.ToggleSortAsync("priority");
+        _sut.SortBy.ShouldBe("priority");
+        _sut.SortDirection.ShouldBe("asc");
     }
 
     /// <summary>
@@ -1571,13 +1573,13 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSortAsync_ResetsPageToOne()
     {
-        await this._sut.InitializeAsync();
-        await this._sut.ChangePageAsync(3);
-        this._sut.CurrentPage.ShouldBe(3);
+        await _sut.InitializeAsync();
+        await _sut.ChangePageAsync(3);
+        _sut.CurrentPage.ShouldBe(3);
 
-        await this._sut.ToggleSortAsync("name");
+        await _sut.ToggleSortAsync("name");
 
-        this._sut.CurrentPage.ShouldBe(1);
+        _sut.CurrentPage.ShouldBe(1);
     }
 
     /// <summary>
@@ -1588,9 +1590,9 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task ToggleSortAsync_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        await this._sut.ToggleSortAsync("name");
+        await _sut.ToggleSortAsync("name");
 
         called.ShouldBeTrue();
     }
@@ -1602,13 +1604,13 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ClearFiltersAsync_ResetsSort()
     {
-        await this._sut.ToggleSortAsync("name");
-        this._sut.SortBy.ShouldNotBeNull();
+        await _sut.ToggleSortAsync("name");
+        _sut.SortBy.ShouldNotBeNull();
 
-        await this._sut.ClearFiltersAsync();
+        await _sut.ClearFiltersAsync();
 
-        this._sut.SortBy.ShouldBeNull();
-        this._sut.SortDirection.ShouldBeNull();
+        _sut.SortBy.ShouldBeNull();
+        _sut.SortDirection.ShouldBeNull();
     }
 
     // --- Group by Category (continued) ---
@@ -1619,7 +1621,7 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void IsGroupedByCategory_DefaultsFalse()
     {
-        this._sut.IsGroupedByCategory.ShouldBeFalse();
+        _sut.IsGroupedByCategory.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1628,11 +1630,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ToggleGroupByCategory_TogglesState()
     {
-        this._sut.ToggleGroupByCategory();
-        this._sut.IsGroupedByCategory.ShouldBeTrue();
+        _sut.ToggleGroupByCategory();
+        _sut.IsGroupedByCategory.ShouldBeTrue();
 
-        this._sut.ToggleGroupByCategory();
-        this._sut.IsGroupedByCategory.ShouldBeFalse();
+        _sut.ToggleGroupByCategory();
+        _sut.IsGroupedByCategory.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1642,9 +1644,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void ToggleGroupByCategory_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.ToggleGroupByCategory();
+        _sut.ToggleGroupByCategory();
 
         called.ShouldBeTrue();
     }
@@ -1658,14 +1660,14 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var groceryId = Guid.NewGuid();
         var utilityId = Guid.NewGuid();
-        this._apiService.Rules.Add(CreateRuleWithCategory("Grocery Rule", "GROCERY", "Contains", groceryId, "Groceries"));
-        this._apiService.Rules.Add(CreateRuleWithCategory("Utility Rule", "ELECTRIC", "Contains", utilityId, "Utilities"));
-        this._apiService.Rules.Add(CreateRuleWithCategory("Grocery Rule 2", "FOOD", "Contains", groceryId, "Groceries"));
+        _apiService.Rules.Add(CreateRuleWithCategory("Grocery Rule", "GROCERY", "Contains", groceryId, "Groceries"));
+        _apiService.Rules.Add(CreateRuleWithCategory("Utility Rule", "ELECTRIC", "Contains", utilityId, "Utilities"));
+        _apiService.Rules.Add(CreateRuleWithCategory("Grocery Rule 2", "FOOD", "Contains", groceryId, "Groceries"));
 
-        await this._sut.InitializeAsync();
-        this._sut.ToggleGroupByCategory();
+        await _sut.InitializeAsync();
+        _sut.ToggleGroupByCategory();
 
-        var groups = this._sut.GroupedRules;
+        var groups = _sut.GroupedRules;
         groups.Count.ShouldBe(2);
         groups.ShouldContainKey("Groceries");
         groups.ShouldContainKey("Utilities");
@@ -1681,13 +1683,13 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task GroupedRules_SortsWithinGroupByPriority()
     {
         var catId = Guid.NewGuid();
-        this._apiService.Rules.Add(CreateRuleWithCategory("Low Priority", "LOW", "Contains", catId, "Groceries", priority: 10));
-        this._apiService.Rules.Add(CreateRuleWithCategory("High Priority", "HIGH", "Contains", catId, "Groceries", priority: 1));
+        _apiService.Rules.Add(CreateRuleWithCategory("Low Priority", "LOW", "Contains", catId, "Groceries", priority: 10));
+        _apiService.Rules.Add(CreateRuleWithCategory("High Priority", "HIGH", "Contains", catId, "Groceries", priority: 1));
 
-        await this._sut.InitializeAsync();
-        this._sut.ToggleGroupByCategory();
+        await _sut.InitializeAsync();
+        _sut.ToggleGroupByCategory();
 
-        var group = this._sut.GroupedRules["Groceries"];
+        var group = _sut.GroupedRules["Groceries"];
         group[0].Name.ShouldBe("High Priority");
         group[1].Name.ShouldBe("Low Priority");
     }
@@ -1699,10 +1701,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task GroupedRules_ReturnsEmpty_WhenNotGrouped()
     {
-        this._apiService.Rules.Add(CreateRule("Rule1", "PATTERN", "Contains"));
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(CreateRule("Rule1", "PATTERN", "Contains"));
+        await _sut.InitializeAsync();
 
-        this._sut.GroupedRules.Count.ShouldBe(0);
+        _sut.GroupedRules.Count.ShouldBe(0);
     }
 
     /// <summary>
@@ -1712,11 +1714,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task GroupedRules_HandlesNullCategoryName()
     {
-        this._apiService.Rules.Add(CreateRuleWithCategory("Rule1", "PATTERN", "Contains", Guid.NewGuid(), null));
-        await this._sut.InitializeAsync();
-        this._sut.ToggleGroupByCategory();
+        _apiService.Rules.Add(CreateRuleWithCategory("Rule1", "PATTERN", "Contains", Guid.NewGuid(), null));
+        await _sut.InitializeAsync();
+        _sut.ToggleGroupByCategory();
 
-        var groups = this._sut.GroupedRules;
+        var groups = _sut.GroupedRules;
         groups.Count.ShouldBe(1);
         groups.ShouldContainKey("Unknown");
     }
@@ -1727,11 +1729,11 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ToggleCategoryCollapse_TracksCollapsedState()
     {
-        this._sut.ToggleCategoryCollapse("Groceries");
-        this._sut.IsCategoryCollapsed("Groceries").ShouldBeTrue();
+        _sut.ToggleCategoryCollapse("Groceries");
+        _sut.IsCategoryCollapsed("Groceries").ShouldBeTrue();
 
-        this._sut.ToggleCategoryCollapse("Groceries");
-        this._sut.IsCategoryCollapsed("Groceries").ShouldBeFalse();
+        _sut.ToggleCategoryCollapse("Groceries");
+        _sut.IsCategoryCollapsed("Groceries").ShouldBeFalse();
     }
 
     /// <summary>
@@ -1740,7 +1742,7 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void IsCategoryCollapsed_DefaultsFalse()
     {
-        this._sut.IsCategoryCollapsed("AnyCategory").ShouldBeFalse();
+        _sut.IsCategoryCollapsed("AnyCategory").ShouldBeFalse();
     }
 
     /// <summary>
@@ -1750,9 +1752,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void ToggleCategoryCollapse_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.ToggleCategoryCollapse("Groceries");
+        _sut.ToggleCategoryCollapse("Groceries");
 
         called.ShouldBeTrue();
     }
@@ -1765,8 +1767,8 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void Selection_DefaultsToEmpty()
     {
-        this._sut.SelectedCount.ShouldBe(0);
-        this._sut.HasSelection.ShouldBeFalse();
+        _sut.SelectedCount.ShouldBe(0);
+        _sut.HasSelection.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1776,11 +1778,11 @@ public sealed class RulesViewModelTests : IDisposable
     public void ToggleRuleSelection_AddsRule()
     {
         var id = Guid.NewGuid();
-        this._sut.ToggleRuleSelection(id);
+        _sut.ToggleRuleSelection(id);
 
-        this._sut.SelectedCount.ShouldBe(1);
-        this._sut.IsRuleSelected(id).ShouldBeTrue();
-        this._sut.HasSelection.ShouldBeTrue();
+        _sut.SelectedCount.ShouldBe(1);
+        _sut.IsRuleSelected(id).ShouldBeTrue();
+        _sut.HasSelection.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1790,11 +1792,11 @@ public sealed class RulesViewModelTests : IDisposable
     public void ToggleRuleSelection_RemovesWhenAlreadySelected()
     {
         var id = Guid.NewGuid();
-        this._sut.ToggleRuleSelection(id);
-        this._sut.ToggleRuleSelection(id);
+        _sut.ToggleRuleSelection(id);
+        _sut.ToggleRuleSelection(id);
 
-        this._sut.SelectedCount.ShouldBe(0);
-        this._sut.IsRuleSelected(id).ShouldBeFalse();
+        _sut.SelectedCount.ShouldBe(0);
+        _sut.IsRuleSelected(id).ShouldBeFalse();
     }
 
     /// <summary>
@@ -1804,9 +1806,9 @@ public sealed class RulesViewModelTests : IDisposable
     public void ToggleRuleSelection_NotifiesStateChanged()
     {
         var called = false;
-        this._sut.OnStateChanged = () => called = true;
+        _sut.OnStateChanged = () => called = true;
 
-        this._sut.ToggleRuleSelection(Guid.NewGuid());
+        _sut.ToggleRuleSelection(Guid.NewGuid());
 
         called.ShouldBeTrue();
     }
@@ -1820,16 +1822,16 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule1 = CreateRule("R1", "p1", "Contains");
         var rule2 = CreateRule("R2", "p2", "Contains");
-        this._apiService.Rules.Add(rule1);
-        this._apiService.Rules.Add(rule2);
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule1);
+        _apiService.Rules.Add(rule2);
+        await _sut.InitializeAsync();
 
-        this._sut.SelectAllOnPage();
+        _sut.SelectAllOnPage();
 
-        this._sut.SelectedCount.ShouldBe(2);
-        this._sut.IsRuleSelected(rule1.Id).ShouldBeTrue();
-        this._sut.IsRuleSelected(rule2.Id).ShouldBeTrue();
-        this._sut.AreAllOnPageSelected.ShouldBeTrue();
+        _sut.SelectedCount.ShouldBe(2);
+        _sut.IsRuleSelected(rule1.Id).ShouldBeTrue();
+        _sut.IsRuleSelected(rule2.Id).ShouldBeTrue();
+        _sut.AreAllOnPageSelected.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1840,14 +1842,14 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task DeselectAllOnPage_RemovesCurrentPageFromSelection()
     {
         var rule1 = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule1);
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule1);
+        await _sut.InitializeAsync();
 
-        this._sut.SelectAllOnPage();
-        this._sut.DeselectAllOnPage();
+        _sut.SelectAllOnPage();
+        _sut.DeselectAllOnPage();
 
-        this._sut.SelectedCount.ShouldBe(0);
-        this._sut.AreAllOnPageSelected.ShouldBeFalse();
+        _sut.SelectedCount.ShouldBe(0);
+        _sut.AreAllOnPageSelected.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1859,14 +1861,14 @@ public sealed class RulesViewModelTests : IDisposable
     {
         var rule1 = CreateRule("R1", "p1", "Contains");
         var rule2 = CreateRule("R2", "p2", "Contains");
-        this._apiService.Rules.Add(rule1);
-        this._apiService.Rules.Add(rule2);
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule1);
+        _apiService.Rules.Add(rule2);
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule1.Id);
-        this._sut.ToggleSelectAllOnPage();
+        _sut.ToggleRuleSelection(rule1.Id);
+        _sut.ToggleSelectAllOnPage();
 
-        this._sut.AreAllOnPageSelected.ShouldBeTrue();
+        _sut.AreAllOnPageSelected.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1877,14 +1879,14 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task ToggleSelectAllOnPage_DeselectsAll_WhenAllSelected()
     {
         var rule1 = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule1);
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule1);
+        await _sut.InitializeAsync();
 
-        this._sut.SelectAllOnPage();
-        this._sut.ToggleSelectAllOnPage();
+        _sut.SelectAllOnPage();
+        _sut.ToggleSelectAllOnPage();
 
-        this._sut.AreAllOnPageSelected.ShouldBeFalse();
-        this._sut.SelectedCount.ShouldBe(0);
+        _sut.AreAllOnPageSelected.ShouldBeFalse();
+        _sut.SelectedCount.ShouldBe(0);
     }
 
     /// <summary>
@@ -1893,12 +1895,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ClearSelection_RemovesAll()
     {
-        this._sut.ToggleRuleSelection(Guid.NewGuid());
-        this._sut.ToggleRuleSelection(Guid.NewGuid());
-        this._sut.ClearSelection();
+        _sut.ToggleRuleSelection(Guid.NewGuid());
+        _sut.ToggleRuleSelection(Guid.NewGuid());
+        _sut.ClearSelection();
 
-        this._sut.SelectedCount.ShouldBe(0);
-        this._sut.HasSelection.ShouldBeFalse();
+        _sut.SelectedCount.ShouldBe(0);
+        _sut.HasSelection.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1907,7 +1909,7 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void AreAllOnPageSelected_ReturnsFalse_WhenNoRules()
     {
-        this._sut.AreAllOnPageSelected.ShouldBeFalse();
+        _sut.AreAllOnPageSelected.ShouldBeFalse();
     }
 
     // --- Bulk Delete ---
@@ -1918,9 +1920,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ConfirmBulkDelete_ShowsDialog()
     {
-        this._sut.ConfirmBulkDelete();
+        _sut.ConfirmBulkDelete();
 
-        this._sut.ShowBulkDeleteConfirm.ShouldBeTrue();
+        _sut.ShowBulkDeleteConfirm.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1929,10 +1931,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void CancelBulkDelete_HidesDialog()
     {
-        this._sut.ConfirmBulkDelete();
-        this._sut.CancelBulkDelete();
+        _sut.ConfirmBulkDelete();
+        _sut.CancelBulkDelete();
 
-        this._sut.ShowBulkDeleteConfirm.ShouldBeFalse();
+        _sut.ShowBulkDeleteConfirm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1942,10 +1944,10 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task BulkDeleteAsync_DoesNothing_WhenNoSelection()
     {
-        await this._sut.BulkDeleteAsync();
+        await _sut.BulkDeleteAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
-        this._sut.IsBulkOperating.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBeNull();
+        _sut.IsBulkOperating.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1956,16 +1958,16 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkDeleteAsync_ClearsSelection_OnSuccess()
     {
         var rule = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkDeleteResult = new BulkRuleActionResponse { AffectedCount = 1 };
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkDeleteResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkDeleteAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkDeleteAsync();
 
-        this._sut.SelectedCount.ShouldBe(0);
-        this._sut.IsBulkOperating.ShouldBeFalse();
-        this._sut.ShowBulkDeleteConfirm.ShouldBeFalse();
+        _sut.SelectedCount.ShouldBe(0);
+        _sut.IsBulkOperating.ShouldBeFalse();
+        _sut.ShowBulkDeleteConfirm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1976,14 +1978,14 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkDeleteAsync_ShowsToast_OnSuccess()
     {
         var rule = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkDeleteResult = new BulkRuleActionResponse { AffectedCount = 1 };
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkDeleteResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkDeleteAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkDeleteAsync();
 
-        this._toastService.LastSuccessMessage.ShouldBe("Deleted 1 rule(s).");
+        _toastService.LastSuccessMessage.ShouldBe("Deleted 1 rule(s).");
     }
 
     /// <summary>
@@ -1994,14 +1996,14 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkDeleteAsync_SetsError_WhenApiFails()
     {
         var rule = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkDeleteResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkDeleteResult = null;
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkDeleteAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkDeleteAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to bulk delete rules.");
+        _sut.ErrorMessage.ShouldBe("Failed to bulk delete rules.");
     }
 
     /// <summary>
@@ -2012,15 +2014,15 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkDeleteAsync_SetsError_OnException()
     {
         var rule = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkDeleteException = new InvalidOperationException("Network error");
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkDeleteException = new InvalidOperationException("Network error");
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkDeleteAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkDeleteAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage.ShouldContain("Network error");
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage.ShouldContain("Network error");
     }
 
     // --- Bulk Activate ---
@@ -2033,16 +2035,16 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkActivateAsync_ClearsSelection_OnSuccess()
     {
         var rule = CreateRule("R1", "p1", "Contains", isActive: false);
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkActivateResult = new BulkRuleActionResponse { AffectedCount = 1 };
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkActivateResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkActivateAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkActivateAsync();
 
-        this._sut.SelectedCount.ShouldBe(0);
-        this._sut.IsBulkOperating.ShouldBeFalse();
-        this._toastService.LastSuccessMessage.ShouldBe("Activated 1 rule(s).");
+        _sut.SelectedCount.ShouldBe(0);
+        _sut.IsBulkOperating.ShouldBeFalse();
+        _toastService.LastSuccessMessage.ShouldBe("Activated 1 rule(s).");
     }
 
     /// <summary>
@@ -2053,14 +2055,14 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkActivateAsync_SetsError_WhenApiFails()
     {
         var rule = CreateRule("R1", "p1", "Contains", isActive: false);
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkActivateResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkActivateResult = null;
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkActivateAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkActivateAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to bulk activate rules.");
+        _sut.ErrorMessage.ShouldBe("Failed to bulk activate rules.");
     }
 
     /// <summary>
@@ -2070,9 +2072,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task BulkActivateAsync_DoesNothing_WhenNoSelection()
     {
-        await this._sut.BulkActivateAsync();
+        await _sut.BulkActivateAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- Bulk Deactivate ---
@@ -2085,16 +2087,16 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkDeactivateAsync_ClearsSelection_OnSuccess()
     {
         var rule = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkDeactivateResult = new BulkRuleActionResponse { AffectedCount = 1 };
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkDeactivateResult = new BulkRuleActionResponse { AffectedCount = 1 };
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkDeactivateAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkDeactivateAsync();
 
-        this._sut.SelectedCount.ShouldBe(0);
-        this._sut.IsBulkOperating.ShouldBeFalse();
-        this._toastService.LastSuccessMessage.ShouldBe("Deactivated 1 rule(s).");
+        _sut.SelectedCount.ShouldBe(0);
+        _sut.IsBulkOperating.ShouldBeFalse();
+        _toastService.LastSuccessMessage.ShouldBe("Deactivated 1 rule(s).");
     }
 
     /// <summary>
@@ -2105,14 +2107,14 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task BulkDeactivateAsync_SetsError_WhenApiFails()
     {
         var rule = CreateRule("R1", "p1", "Contains");
-        this._apiService.Rules.Add(rule);
-        this._apiService.BulkDeactivateResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        _apiService.BulkDeactivateResult = null;
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleRuleSelection(rule.Id);
-        await this._sut.BulkDeactivateAsync();
+        _sut.ToggleRuleSelection(rule.Id);
+        await _sut.BulkDeactivateAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to bulk deactivate rules.");
+        _sut.ErrorMessage.ShouldBe("Failed to bulk deactivate rules.");
     }
 
     /// <summary>
@@ -2122,9 +2124,9 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task BulkDeactivateAsync_DoesNothing_WhenNoSelection()
     {
-        await this._sut.BulkDeactivateAsync();
+        await _sut.BulkDeactivateAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- View Mode ---
@@ -2135,7 +2137,7 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public void ViewMode_DefaultsToTable()
     {
-        this._sut.ViewMode.ShouldBe(RulesViewMode.Table);
+        _sut.ViewMode.ShouldBe(RulesViewMode.Table);
     }
 
     /// <summary>
@@ -2146,11 +2148,11 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task SetViewModeAsync_ChangesViewMode()
     {
         var stateChangedCount = 0;
-        this._sut.OnStateChanged = () => stateChangedCount++;
+        _sut.OnStateChanged = () => stateChangedCount++;
 
-        await this._sut.SetViewModeAsync(RulesViewMode.Card);
+        await _sut.SetViewModeAsync(RulesViewMode.Card);
 
-        this._sut.ViewMode.ShouldBe(RulesViewMode.Card);
+        _sut.ViewMode.ShouldBe(RulesViewMode.Card);
         stateChangedCount.ShouldBe(1);
     }
 
@@ -2162,9 +2164,9 @@ public sealed class RulesViewModelTests : IDisposable
     public async Task SetViewModeAsync_SameMode_DoesNotNotify()
     {
         var stateChangedCount = 0;
-        this._sut.OnStateChanged = () => stateChangedCount++;
+        _sut.OnStateChanged = () => stateChangedCount++;
 
-        await this._sut.SetViewModeAsync(RulesViewMode.Table);
+        await _sut.SetViewModeAsync(RulesViewMode.Table);
 
         stateChangedCount.ShouldBe(0);
     }
@@ -2178,13 +2180,13 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task ActiveRuleCount_ReturnsCountOfActiveRules()
     {
-        this._apiService.Rules.Add(CreateRule("R1", "pat1", "Contains", isActive: true));
-        this._apiService.Rules.Add(CreateRule("R2", "pat2", "Contains", isActive: false));
-        this._apiService.Rules.Add(CreateRule("R3", "pat3", "Contains", isActive: true));
+        _apiService.Rules.Add(CreateRule("R1", "pat1", "Contains", isActive: true));
+        _apiService.Rules.Add(CreateRule("R2", "pat2", "Contains", isActive: false));
+        _apiService.Rules.Add(CreateRule("R3", "pat3", "Contains", isActive: true));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ActiveRuleCount.ShouldBe(2);
+        _sut.ActiveRuleCount.ShouldBe(2);
     }
 
     /// <summary>
@@ -2194,12 +2196,12 @@ public sealed class RulesViewModelTests : IDisposable
     [Fact]
     public async Task FilteredCount_ReturnsPageRuleCount()
     {
-        this._apiService.Rules.Add(CreateRule("R1", "pat1", "Contains"));
-        this._apiService.Rules.Add(CreateRule("R2", "pat2", "Contains"));
+        _apiService.Rules.Add(CreateRule("R1", "pat1", "Contains"));
+        _apiService.Rules.Add(CreateRule("R2", "pat2", "Contains"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.FilteredCount.ShouldBe(2);
+        _sut.FilteredCount.ShouldBe(2);
     }
 
     // --- Preference Persistence ---
@@ -2214,11 +2216,11 @@ public sealed class RulesViewModelTests : IDisposable
         var jsRuntime = new ConfigurableJSRuntime();
         jsRuntime.SetStorageItem("budget-experiment-rules-view-mode", "Card");
         var sut = new RulesViewModel(
-            this._apiService,
-            this._toastService,
-            this._navigationManager,
-            this._scopeService,
-            this._apiErrorContext,
+            _apiService,
+            _toastService,
+            _navigationManager,
+            _scopeService,
+            _apiErrorContext,
             jsRuntime);
 
         await sut.InitializeAsync();
@@ -2237,11 +2239,11 @@ public sealed class RulesViewModelTests : IDisposable
         var jsRuntime = new ConfigurableJSRuntime();
         jsRuntime.SetStorageItem("budget-experiment-rules-page-size", "50");
         var sut = new RulesViewModel(
-            this._apiService,
-            this._toastService,
-            this._navigationManager,
-            this._scopeService,
-            this._apiErrorContext,
+            _apiService,
+            _toastService,
+            _navigationManager,
+            _scopeService,
+            _apiErrorContext,
             jsRuntime);
 
         await sut.InitializeAsync();
@@ -2260,11 +2262,11 @@ public sealed class RulesViewModelTests : IDisposable
         var jsRuntime = new ConfigurableJSRuntime();
         jsRuntime.SetStorageItem("budget-experiment-rules-page-size", "999");
         var sut = new RulesViewModel(
-            this._apiService,
-            this._toastService,
-            this._navigationManager,
-            this._scopeService,
-            this._apiErrorContext,
+            _apiService,
+            _toastService,
+            _navigationManager,
+            _scopeService,
+            _apiErrorContext,
             jsRuntime);
 
         await sut.InitializeAsync();
@@ -2332,8 +2334,8 @@ public sealed class RulesViewModelTests : IDisposable
 
     private async Task SetupWithRuleAsync(CategorizationRuleDto rule)
     {
-        this._apiService.Rules.Add(rule);
-        await this._sut.InitializeAsync();
+        _apiService.Rules.Add(rule);
+        await _sut.InitializeAsync();
     }
 
     /// <summary>
@@ -2347,12 +2349,18 @@ public sealed class RulesViewModelTests : IDisposable
         /// <summary>
         /// Gets a value indicating whether a warning was shown.
         /// </summary>
-        public bool WarningShown { get; private set; }
+        public bool WarningShown
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Gets the last success message shown.
         /// </summary>
-        public string? LastSuccessMessage { get; private set; }
+        public string? LastSuccessMessage
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];
@@ -2407,12 +2415,12 @@ public sealed class RulesViewModelTests : IDisposable
     {
         private readonly Dictionary<string, string> _storage = new(StringComparer.Ordinal);
 
-        public void SetStorageItem(string key, string value) => this._storage[key] = value;
+        public void SetStorageItem(string key, string value) => _storage[key] = value;
 
         /// <inheritdoc/>
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
-            if (identifier == "localStorage.getItem" && args?.Length > 0 && args[0] is string key && this._storage.TryGetValue(key, out var val))
+            if (identifier == "localStorage.getItem" && args?.Length > 0 && args[0] is string key && _storage.TryGetValue(key, out var val))
             {
                 return new ValueTask<TValue>((TValue)(object)val);
             }
@@ -2443,7 +2451,10 @@ public sealed class RulesViewModelTests : IDisposable
         /// <summary>
         /// Gets the last URI that was navigated to.
         /// </summary>
-        public string? LastNavigatedUri { get; private set; }
+        public string? LastNavigatedUri
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         protected override void NavigateToCore(string uri, bool forceLoad)

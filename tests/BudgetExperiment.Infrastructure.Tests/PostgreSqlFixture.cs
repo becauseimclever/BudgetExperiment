@@ -3,7 +3,9 @@
 // </copyright>
 
 using BudgetExperiment.Infrastructure.Persistence;
+
 using Microsoft.EntityFrameworkCore;
+
 using Testcontainers.PostgreSql;
 
 namespace BudgetExperiment.Infrastructure.Tests;
@@ -47,7 +49,7 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
     /// <inheritdoc />
     public async Task InitializeAsync()
     {
-        await this._container.StartAsync();
+        await _container.StartAsync();
 
         // Create schema once; subsequent CreateContext() calls just truncate data.
         await using var context = this.BuildContext();
@@ -55,12 +57,12 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
     }
 
     /// <inheritdoc />
-    public async Task DisposeAsync() => await this._container.DisposeAsync();
+    public async Task DisposeAsync() => await _container.DisposeAsync();
 
     private BudgetDbContext BuildContext()
     {
         var options = new DbContextOptionsBuilder<BudgetDbContext>()
-            .UseNpgsql(this._container.GetConnectionString())
+            .UseNpgsql(_container.GetConnectionString())
             .Options;
         return new BudgetDbContext(options);
     }

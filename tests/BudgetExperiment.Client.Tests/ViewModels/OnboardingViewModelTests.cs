@@ -6,7 +6,9 @@ using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
+
 using Microsoft.AspNetCore.Components;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -26,7 +28,7 @@ public sealed class OnboardingViewModelTests
     /// </summary>
     public OnboardingViewModelTests()
     {
-        this._sut = new OnboardingViewModel(this._apiService, this._navigationManager, this._apiErrorContext);
+        _sut = new OnboardingViewModel(_apiService, _navigationManager, _apiErrorContext);
     }
 
     // --- Initial State ---
@@ -37,7 +39,7 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void InitialState_CurrentStepIsOne()
     {
-        this._sut.CurrentStep.ShouldBe(1);
+        _sut.CurrentStep.ShouldBe(1);
     }
 
     /// <summary>
@@ -46,7 +48,7 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void InitialState_SelectedCurrencyIsUSD()
     {
-        this._sut.SelectedCurrency.ShouldBe("USD");
+        _sut.SelectedCurrency.ShouldBe("USD");
     }
 
     /// <summary>
@@ -55,7 +57,7 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void InitialState_SelectedFirstDayIsSunday()
     {
-        this._sut.SelectedFirstDay.ShouldBe(DayOfWeek.Sunday);
+        _sut.SelectedFirstDay.ShouldBe(DayOfWeek.Sunday);
     }
 
     /// <summary>
@@ -64,7 +66,7 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void InitialState_IsNotSaving()
     {
-        this._sut.IsSaving.ShouldBeFalse();
+        _sut.IsSaving.ShouldBeFalse();
     }
 
     /// <summary>
@@ -73,7 +75,7 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void InitialState_ErrorMessageIsNull()
     {
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- NextStep ---
@@ -84,9 +86,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void NextStep_IncrementsStep()
     {
-        this._sut.NextStep();
+        _sut.NextStep();
 
-        this._sut.CurrentStep.ShouldBe(2);
+        _sut.CurrentStep.ShouldBe(2);
     }
 
     /// <summary>
@@ -95,12 +97,12 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void NextStep_DoesNotExceedMaxStep()
     {
-        this._sut.NextStep(); // 2
-        this._sut.NextStep(); // 3
-        this._sut.NextStep(); // 4
-        this._sut.NextStep(); // still 4
+        _sut.NextStep(); // 2
+        _sut.NextStep(); // 3
+        _sut.NextStep(); // 4
+        _sut.NextStep(); // still 4
 
-        this._sut.CurrentStep.ShouldBe(4);
+        _sut.CurrentStep.ShouldBe(4);
     }
 
     /// <summary>
@@ -110,9 +112,9 @@ public sealed class OnboardingViewModelTests
     public void NextStep_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.NextStep();
+        _sut.NextStep();
 
         callCount.ShouldBe(1);
     }
@@ -123,13 +125,13 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void NextStep_DoesNotNotify_WhenAtMaxStep()
     {
-        this._sut.NextStep(); // 2
-        this._sut.NextStep(); // 3
-        this._sut.NextStep(); // 4
+        _sut.NextStep(); // 2
+        _sut.NextStep(); // 3
+        _sut.NextStep(); // 4
 
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
-        this._sut.NextStep(); // still 4
+        _sut.OnStateChanged = () => callCount++;
+        _sut.NextStep(); // still 4
 
         callCount.ShouldBe(0);
     }
@@ -142,10 +144,10 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void PreviousStep_DecrementsStep()
     {
-        this._sut.NextStep(); // 2
-        this._sut.PreviousStep();
+        _sut.NextStep(); // 2
+        _sut.PreviousStep();
 
-        this._sut.CurrentStep.ShouldBe(1);
+        _sut.CurrentStep.ShouldBe(1);
     }
 
     /// <summary>
@@ -154,9 +156,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void PreviousStep_DoesNotGoBelowMinStep()
     {
-        this._sut.PreviousStep();
+        _sut.PreviousStep();
 
-        this._sut.CurrentStep.ShouldBe(1);
+        _sut.CurrentStep.ShouldBe(1);
     }
 
     /// <summary>
@@ -165,11 +167,11 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void PreviousStep_NotifiesStateChanged()
     {
-        this._sut.NextStep(); // 2
+        _sut.NextStep(); // 2
 
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
-        this._sut.PreviousStep();
+        _sut.OnStateChanged = () => callCount++;
+        _sut.PreviousStep();
 
         callCount.ShouldBe(1);
     }
@@ -181,8 +183,8 @@ public sealed class OnboardingViewModelTests
     public void PreviousStep_DoesNotNotify_WhenAtMinStep()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
-        this._sut.PreviousStep();
+        _sut.OnStateChanged = () => callCount++;
+        _sut.PreviousStep();
 
         callCount.ShouldBe(0);
     }
@@ -197,9 +199,9 @@ public sealed class OnboardingViewModelTests
     {
         var currency = new CurrencyOption("EUR", "Euro", "\u20ac");
 
-        this._sut.SelectCurrency(currency);
+        _sut.SelectCurrency(currency);
 
-        this._sut.SelectedCurrency.ShouldBe("EUR");
+        _sut.SelectedCurrency.ShouldBe("EUR");
     }
 
     /// <summary>
@@ -208,12 +210,12 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void SelectCurrency_ClearsSearch()
     {
-        this._sut.CurrencySearch = "eu";
+        _sut.CurrencySearch = "eu";
         var currency = new CurrencyOption("EUR", "Euro", "\u20ac");
 
-        this._sut.SelectCurrency(currency);
+        _sut.SelectCurrency(currency);
 
-        this._sut.CurrencySearch.ShouldBeEmpty();
+        _sut.CurrencySearch.ShouldBeEmpty();
     }
 
     /// <summary>
@@ -222,12 +224,12 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void SelectCurrency_ClosesDropdown()
     {
-        this._sut.ShowCurrencyDropdown = true;
+        _sut.ShowCurrencyDropdown = true;
         var currency = new CurrencyOption("EUR", "Euro", "\u20ac");
 
-        this._sut.SelectCurrency(currency);
+        _sut.SelectCurrency(currency);
 
-        this._sut.ShowCurrencyDropdown.ShouldBeFalse();
+        _sut.ShowCurrencyDropdown.ShouldBeFalse();
     }
 
     /// <summary>
@@ -237,10 +239,10 @@ public sealed class OnboardingViewModelTests
     public void SelectCurrency_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
         var currency = new CurrencyOption("EUR", "Euro", "\u20ac");
 
-        this._sut.SelectCurrency(currency);
+        _sut.SelectCurrency(currency);
 
         callCount.ShouldBe(1);
     }
@@ -253,9 +255,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void GetCurrencyDisplay_ReturnsFormattedString_ForKnownCurrency()
     {
-        this._sut.SelectedCurrency = "USD";
+        _sut.SelectedCurrency = "USD";
 
-        var result = this._sut.GetCurrencyDisplay();
+        var result = _sut.GetCurrencyDisplay();
 
         result.ShouldBe("USD \u2014 $ US Dollar");
     }
@@ -266,9 +268,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void GetCurrencyDisplay_ReturnsCode_ForUnknownCurrency()
     {
-        this._sut.SelectedCurrency = "XYZ";
+        _sut.SelectedCurrency = "XYZ";
 
-        var result = this._sut.GetCurrencyDisplay();
+        var result = _sut.GetCurrencyDisplay();
 
         result.ShouldBe("XYZ");
     }
@@ -281,9 +283,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void FilteredCurrencies_ReturnsAll_WhenSearchEmpty()
     {
-        this._sut.CurrencySearch = string.Empty;
+        _sut.CurrencySearch = string.Empty;
 
-        this._sut.FilteredCurrencies.ShouldBe(CurrencyList.Currencies);
+        _sut.FilteredCurrencies.ShouldBe(CurrencyList.Currencies);
     }
 
     /// <summary>
@@ -292,9 +294,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void FilteredCurrencies_FiltersByCode()
     {
-        this._sut.CurrencySearch = "eur";
+        _sut.CurrencySearch = "eur";
 
-        var results = this._sut.FilteredCurrencies.ToList();
+        var results = _sut.FilteredCurrencies.ToList();
 
         results.Count.ShouldBe(1);
         results[0].Code.ShouldBe("EUR");
@@ -306,9 +308,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void FilteredCurrencies_FiltersByName()
     {
-        this._sut.CurrencySearch = "dollar";
+        _sut.CurrencySearch = "dollar";
 
-        var results = this._sut.FilteredCurrencies.ToList();
+        var results = _sut.FilteredCurrencies.ToList();
 
         results.ShouldAllBe(c => c.Name.Contains("Dollar", StringComparison.OrdinalIgnoreCase));
         results.Count.ShouldBeGreaterThan(1);
@@ -320,11 +322,11 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void FilteredCurrencies_IsCaseInsensitive()
     {
-        this._sut.CurrencySearch = "EUR";
-        var upperResults = this._sut.FilteredCurrencies.ToList();
+        _sut.CurrencySearch = "EUR";
+        var upperResults = _sut.FilteredCurrencies.ToList();
 
-        this._sut.CurrencySearch = "eur";
-        var lowerResults = this._sut.FilteredCurrencies.ToList();
+        _sut.CurrencySearch = "eur";
+        var lowerResults = _sut.FilteredCurrencies.ToList();
 
         upperResults.Count.ShouldBe(lowerResults.Count);
     }
@@ -335,9 +337,9 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public void FilteredCurrencies_ReturnsAll_WhenSearchIsWhitespace()
     {
-        this._sut.CurrencySearch = "   ";
+        _sut.CurrencySearch = "   ";
 
-        this._sut.FilteredCurrencies.ShouldBe(CurrencyList.Currencies);
+        _sut.FilteredCurrencies.ShouldBe(CurrencyList.Currencies);
     }
 
     // --- SkipOnboardingAsync ---
@@ -349,10 +351,10 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public async Task SkipOnboardingAsync_SavesDefaultsAndNavigates()
     {
-        await this._sut.SkipOnboardingAsync();
+        await _sut.SkipOnboardingAsync();
 
-        this._navigationManager.LastNavigatedUri.ShouldBe("/");
-        this._sut.ErrorMessage.ShouldBeNull();
+        _navigationManager.LastNavigatedUri.ShouldBe("/");
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -363,9 +365,9 @@ public sealed class OnboardingViewModelTests
     public async Task SkipOnboardingAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.SkipOnboardingAsync();
+        await _sut.SkipOnboardingAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -377,13 +379,13 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public async Task SkipOnboardingAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.UpdateUserSettingsException = new HttpRequestException("Server error");
+        _apiService.UpdateUserSettingsException = new HttpRequestException("Server error");
 
-        await this._sut.SkipOnboardingAsync();
+        await _sut.SkipOnboardingAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to save");
-        this._sut.IsSaving.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to save");
+        _sut.IsSaving.ShouldBeFalse();
     }
 
     /// <summary>
@@ -393,14 +395,14 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public async Task SkipOnboardingAsync_ClearsErrorBeforeSaving()
     {
-        this._apiService.UpdateUserSettingsException = new HttpRequestException("fail");
-        await this._sut.SkipOnboardingAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.UpdateUserSettingsException = new HttpRequestException("fail");
+        await _sut.SkipOnboardingAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.UpdateUserSettingsException = null;
-        await this._sut.SkipOnboardingAsync();
+        _apiService.UpdateUserSettingsException = null;
+        await _sut.SkipOnboardingAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- CompleteOnboardingAsync ---
@@ -412,13 +414,13 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public async Task CompleteOnboardingAsync_SavesPreferencesAndNavigates()
     {
-        this._sut.SelectedCurrency = "EUR";
-        this._sut.SelectedFirstDay = DayOfWeek.Monday;
+        _sut.SelectedCurrency = "EUR";
+        _sut.SelectedFirstDay = DayOfWeek.Monday;
 
-        await this._sut.CompleteOnboardingAsync();
+        await _sut.CompleteOnboardingAsync();
 
-        this._navigationManager.LastNavigatedUri.ShouldBe("/");
-        this._sut.ErrorMessage.ShouldBeNull();
+        _navigationManager.LastNavigatedUri.ShouldBe("/");
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -429,9 +431,9 @@ public sealed class OnboardingViewModelTests
     public async Task CompleteOnboardingAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.CompleteOnboardingAsync();
+        await _sut.CompleteOnboardingAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -443,13 +445,13 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public async Task CompleteOnboardingAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.UpdateUserSettingsException = new HttpRequestException("Server error");
+        _apiService.UpdateUserSettingsException = new HttpRequestException("Server error");
 
-        await this._sut.CompleteOnboardingAsync();
+        await _sut.CompleteOnboardingAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to save");
-        this._sut.IsSaving.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to save");
+        _sut.IsSaving.ShouldBeFalse();
     }
 
     /// <summary>
@@ -459,13 +461,13 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public async Task CompleteOnboardingAsync_SetsErrorMessage_WhenCompleteOnboardingFails()
     {
-        this._apiService.CompleteOnboardingException = new HttpRequestException("Onboarding error");
+        _apiService.CompleteOnboardingException = new HttpRequestException("Onboarding error");
 
-        await this._sut.CompleteOnboardingAsync();
+        await _sut.CompleteOnboardingAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to save");
-        this._sut.IsSaving.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to save");
+        _sut.IsSaving.ShouldBeFalse();
     }
 
     /// <summary>
@@ -475,14 +477,14 @@ public sealed class OnboardingViewModelTests
     [Fact]
     public async Task CompleteOnboardingAsync_ClearsErrorBeforeSaving()
     {
-        this._apiService.UpdateUserSettingsException = new HttpRequestException("fail");
-        await this._sut.CompleteOnboardingAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.UpdateUserSettingsException = new HttpRequestException("fail");
+        await _sut.CompleteOnboardingAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.UpdateUserSettingsException = null;
-        await this._sut.CompleteOnboardingAsync();
+        _apiService.UpdateUserSettingsException = null;
+        await _sut.CompleteOnboardingAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     private sealed class StubNavigationManager : NavigationManager
@@ -498,7 +500,10 @@ public sealed class OnboardingViewModelTests
         /// <summary>
         /// Gets the last URI that was navigated to.
         /// </summary>
-        public string? LastNavigatedUri { get; private set; }
+        public string? LastNavigatedUri
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         protected override void NavigateToCore(string uri, bool forceLoad)

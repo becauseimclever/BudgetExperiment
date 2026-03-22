@@ -21,8 +21,8 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     /// <param name="factory">The test factory with authentication enabled.</param>
     public AuthorizationTests(AuthEnabledWebApplicationFactory factory)
     {
-        this._unauthenticatedClient = factory.CreateUnauthenticatedClient();
-        this._authenticatedClient = factory.CreateAuthenticatedClient();
+        _unauthenticatedClient = factory.CreateUnauthenticatedClient();
+        _authenticatedClient = factory.CreateAuthenticatedClient();
     }
 
     /// <summary>
@@ -33,7 +33,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetAccounts_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/accounts");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/accounts");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -47,7 +47,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetAccounts_Authenticated_Returns_200()
     {
         // Act
-        var response = await this._authenticatedClient.GetAsync("/api/v1/accounts");
+        var response = await _authenticatedClient.GetAsync("/api/v1/accounts");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -61,7 +61,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetTransactions_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/transactions?startDate=2025-01-01&endDate=2025-12-31");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/transactions?startDate=2025-01-01&endDate=2025-12-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -75,7 +75,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetCategories_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/categories");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/categories");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -89,7 +89,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetRecurringTransactions_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/recurring-transactions");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/recurring-transactions");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -103,7 +103,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetRecurringTransfers_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/recurring-transfers");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/recurring-transfers");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -117,7 +117,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetTransfers_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/transfers?startDate=2025-01-01&endDate=2025-12-31");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/transfers?startDate=2025-01-01&endDate=2025-12-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -131,7 +131,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetSettings_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/settings");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/settings");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -145,7 +145,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetBudgets_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/budgets?year=2025&month=1");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/budgets?year=2025&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -159,7 +159,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetCalendar_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/calendar/grid?year=2025&month=1");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/calendar/grid?year=2025&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -173,7 +173,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetAllocations_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -187,7 +187,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task HealthEndpoint_Unauthenticated_Returns_200()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/health");
+        var response = await _unauthenticatedClient.GetAsync("/health");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -201,7 +201,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetUserProfile_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/user/me");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/user/me");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -215,7 +215,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetUserSettings_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/user/settings");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/user/settings");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -229,7 +229,7 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
     public async Task GetUserScope_Unauthenticated_Returns_401()
     {
         // Act
-        var response = await this._unauthenticatedClient.GetAsync("/api/v1/user/scope");
+        var response = await _unauthenticatedClient.GetAsync("/api/v1/user/scope");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

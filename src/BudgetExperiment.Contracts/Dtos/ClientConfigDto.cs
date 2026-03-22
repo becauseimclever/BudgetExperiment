@@ -13,5 +13,8 @@ public sealed class ClientConfigDto
     /// <summary>
     /// Gets the authentication configuration.
     /// </summary>
-    public required AuthenticationConfigDto Authentication { get; init; }
+    public required AuthenticationConfigDto Authentication
+    {
+        get; init;
+    }
 }

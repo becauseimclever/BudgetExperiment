@@ -3,10 +3,13 @@
 // </copyright>
 
 using System.Globalization;
+
 using BudgetExperiment.Client.Components.Chat;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Chat;

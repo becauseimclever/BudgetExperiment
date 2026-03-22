@@ -3,8 +3,10 @@
 // </copyright>
 
 using System.Text.Json;
+
 using BudgetExperiment.Application.Categorization;
 using BudgetExperiment.Domain;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Services;

@@ -26,9 +26,9 @@ public sealed class PaycheckAllocationService : IPaycheckAllocationService
         IRecurringTransactionRepository recurringTransactionRepository,
         ICurrencyProvider currencyProvider)
     {
-        this._recurringTransactionRepository = recurringTransactionRepository;
-        this._calculator = new PaycheckAllocationCalculator();
-        this._currencyProvider = currencyProvider;
+        _recurringTransactionRepository = recurringTransactionRepository;
+        _calculator = new PaycheckAllocationCalculator();
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc/>
@@ -40,8 +40,8 @@ public sealed class PaycheckAllocationService : IPaycheckAllocationService
     {
         // Fetch recurring transactions (optionally filtered by account)
         var recurringTransactions = accountId.HasValue
-            ? await this._recurringTransactionRepository.GetByAccountIdAsync(accountId.Value, cancellationToken)
-            : await this._recurringTransactionRepository.GetAllAsync(cancellationToken);
+            ? await _recurringTransactionRepository.GetByAccountIdAsync(accountId.Value, cancellationToken)
+            : await _recurringTransactionRepository.GetAllAsync(cancellationToken);
 
         // Filter to only active bills (negative amounts, not income)
         var bills = recurringTransactions
@@ -50,13 +50,13 @@ public sealed class PaycheckAllocationService : IPaycheckAllocationService
             .ToList();
 
         // Convert paycheck amount to MoneyValue if provided
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         MoneyValue? paycheckMoney = paycheckAmount.HasValue
             ? MoneyValue.Create(currency, paycheckAmount.Value)
             : null;
 
         // Calculate allocations using domain service
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             bills,
             paycheckFrequency,
             paycheckMoney);

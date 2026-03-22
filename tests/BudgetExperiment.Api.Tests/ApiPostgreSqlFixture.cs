@@ -18,11 +18,11 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
         .Build();
 
     /// <summary>Gets the connection string for the running PostgreSQL container.</summary>
-    public string ConnectionString => this._container.GetConnectionString();
+    public string ConnectionString => _container.GetConnectionString();
 
     /// <inheritdoc />
-    public async Task InitializeAsync() => await this._container.StartAsync();
+    public async Task InitializeAsync() => await _container.StartAsync();
 
     /// <inheritdoc />
-    public async Task DisposeAsync() => await this._container.DisposeAsync();
+    public async Task DisposeAsync() => await _container.DisposeAsync();
 }

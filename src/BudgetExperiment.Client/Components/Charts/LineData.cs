@@ -12,15 +12,24 @@ public sealed record LineData
     /// <summary>
     /// Gets the label for the X axis.
     /// </summary>
-    public required string Label { get; init; }
+    public required string Label
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the value for single-series charts.
     /// </summary>
-    public required decimal Value { get; init; }
+    public required decimal Value
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the values for multi-series charts.
     /// </summary>
-    public IReadOnlyDictionary<string, decimal>? SeriesValues { get; init; }
+    public IReadOnlyDictionary<string, decimal>? SeriesValues
+    {
+        get; init;
+    }
 }

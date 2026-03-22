@@ -17,5 +17,8 @@ public sealed class TestPatternResponse
     /// <summary>
     /// Gets or sets the total count of matches.
     /// </summary>
-    public int MatchCount { get; set; }
+    public int MatchCount
+    {
+        get; set;
+    }
 }

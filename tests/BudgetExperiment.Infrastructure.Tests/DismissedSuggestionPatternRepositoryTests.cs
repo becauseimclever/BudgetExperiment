@@ -21,14 +21,14 @@ public class DismissedSuggestionPatternRepositoryTests
     /// <param name="fixture">The shared PostgreSQL database fixture.</param>
     public DismissedSuggestionPatternRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task ClearByOwnerAsync_DeletesAllPatternsForOwner()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new DismissedSuggestionPatternRepository(context);
 
         var pattern1 = DismissedSuggestionPattern.Create("NETFLIX", "user-1");
@@ -43,7 +43,7 @@ public class DismissedSuggestionPatternRepositoryTests
 
         // Assert
         Assert.Equal(2, count);
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new DismissedSuggestionPatternRepository(verifyContext);
         var remaining = await verifyRepo.GetByOwnerAsync("user-1");
         Assert.Empty(remaining);
@@ -53,7 +53,7 @@ public class DismissedSuggestionPatternRepositoryTests
     public async Task ClearByOwnerAsync_DoesNotDeleteOtherOwnerPatterns()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new DismissedSuggestionPatternRepository(context);
 
         var userPattern = DismissedSuggestionPattern.Create("NETFLIX", "user-1");
@@ -68,7 +68,7 @@ public class DismissedSuggestionPatternRepositoryTests
 
         // Assert
         Assert.Equal(1, count);
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new DismissedSuggestionPatternRepository(verifyContext);
         var otherRemaining = await verifyRepo.GetByOwnerAsync("user-2");
         Assert.Single(otherRemaining);
@@ -78,7 +78,7 @@ public class DismissedSuggestionPatternRepositoryTests
     public async Task ClearByOwnerAsync_ReturnsZero_WhenNoneExist()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new DismissedSuggestionPatternRepository(context);
 
         // Act

@@ -12,15 +12,24 @@ public sealed record ThresholdColor
     /// <summary>
     /// Gets the minimum percent (0-100) for this threshold.
     /// </summary>
-    public required decimal MinPercent { get; init; }
+    public required decimal MinPercent
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the color for this threshold.
     /// </summary>
-    public required string Color { get; init; }
+    public required string Color
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional label for this threshold.
     /// </summary>
-    public string? Label { get; init; }
+    public string? Label
+    {
+        get; init;
+    }
 }

@@ -27,7 +27,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     /// <param name="factory">The test factory.</param>
     public ImportExecuteValidationTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/execute", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/execute", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -81,7 +81,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/execute", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/execute", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -114,7 +114,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/execute", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/execute", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -149,7 +149,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/execute", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/execute", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -182,7 +182,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/execute", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/execute", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -215,7 +215,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/execute", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/execute", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -238,7 +238,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/execute", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/execute", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -250,7 +250,7 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     private async Task<Guid> CreateTestAccountAsync()
     {
         var accountRequest = new AccountCreateDto { Name = $"Validation Test {Guid.NewGuid():N}", Type = "Checking" };
-        var response = await this._client.PostAsJsonAsync("/api/v1/accounts", accountRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/accounts", accountRequest);
         response.EnsureSuccessStatusCode();
         var account = await response.Content.ReadFromJsonAsync<AccountDto>();
         return account!.Id;
@@ -271,18 +271,33 @@ public sealed class ImportExecuteValidationTests : IClassFixture<CustomWebApplic
     private sealed record ProblemDetailsResponse
     {
         /// <summary>Gets or sets the problem type URI.</summary>
-        public string? Type { get; set; }
+        public string? Type
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the short title.</summary>
-        public string? Title { get; set; }
+        public string? Title
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the HTTP status code.</summary>
-        public int? Status { get; set; }
+        public int? Status
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the detailed error description.</summary>
-        public string? Detail { get; set; }
+        public string? Detail
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the trace ID for correlation.</summary>
-        public string? TraceId { get; set; }
+        public string? TraceId
+        {
+            get; set;
+        }
     }
 }

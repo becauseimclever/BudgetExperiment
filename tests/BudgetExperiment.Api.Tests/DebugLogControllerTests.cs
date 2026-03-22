@@ -112,7 +112,7 @@ public sealed class DebugLogControllerTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         var traceId = "anon-trace";
-        var anonFactory = this._factory.WithWebHostBuilder(builder =>
+        var anonFactory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {

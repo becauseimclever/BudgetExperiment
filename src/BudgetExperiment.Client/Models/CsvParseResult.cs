@@ -12,12 +12,18 @@ public sealed record CsvParseResult
     /// <summary>
     /// Gets a value indicating whether the parse was successful.
     /// </summary>
-    public bool Success { get; init; }
+    public bool Success
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the error message if parsing failed.
     /// </summary>
-    public string? ErrorMessage { get; init; }
+    public string? ErrorMessage
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the column headers from the CSV file.
@@ -32,22 +38,34 @@ public sealed record CsvParseResult
     /// <summary>
     /// Gets the detected delimiter character.
     /// </summary>
-    public char DetectedDelimiter { get; init; }
+    public char DetectedDelimiter
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the file has a header row.
     /// </summary>
-    public bool HasHeaderRow { get; init; }
+    public bool HasHeaderRow
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the total number of data rows (excluding header).
     /// </summary>
-    public int RowCount { get; init; }
+    public int RowCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of rows that were skipped before the header row.
     /// </summary>
-    public int RowsSkipped { get; init; }
+    public int RowsSkipped
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Creates a successful parse result.

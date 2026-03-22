@@ -36,11 +36,11 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         IUnitOfWork unitOfWork,
         IUserContext userContext)
     {
-        this._transactionRepository = transactionRepository;
-        this._suggestionRepository = suggestionRepository;
-        this._recurringTransactionRepository = recurringTransactionRepository;
-        this._unitOfWork = unitOfWork;
-        this._userContext = userContext;
+        _transactionRepository = transactionRepository;
+        _suggestionRepository = suggestionRepository;
+        _recurringTransactionRepository = recurringTransactionRepository;
+        _unitOfWork = unitOfWork;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
@@ -52,7 +52,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
         var startDate = endDate.AddMonths(-options.AnalysisWindowMonths);
 
-        var transactions = await this._transactionRepository.GetByDateRangeAsync(
+        var transactions = await _transactionRepository.GetByDateRangeAsync(
             startDate,
             endDate,
             accountId,
@@ -67,7 +67,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
 
         foreach (var pattern in patterns)
         {
-            var existing = await this._suggestionRepository.GetByNormalizedDescriptionAndAccountAsync(
+            var existing = await _suggestionRepository.GetByNormalizedDescriptionAndAccountAsync(
                 pattern.NormalizedDescription,
                 GetPatternAccountId(transactions, pattern, accountId),
                 cancellationToken);
@@ -80,7 +80,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
             {
                 var patternAccountId = GetPatternAccountId(transactions, pattern, accountId);
 
-                var scope = this._userContext.CurrentScope ?? BudgetScope.Shared;
+                var scope = _userContext.CurrentScope ?? BudgetScope.Shared;
                 var ownerUserId = scope == BudgetScope.Personal ? userId : (Guid?)null;
 
                 var suggestion = RecurringChargeSuggestion.Create(
@@ -90,7 +90,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
                     userId,
                     ownerUserId);
 
-                await this._suggestionRepository.AddAsync(suggestion, cancellationToken);
+                await _suggestionRepository.AddAsync(suggestion, cancellationToken);
             }
 
             newOrUpdatedCount++;
@@ -98,7 +98,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
 
         if (newOrUpdatedCount > 0)
         {
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
         return newOrUpdatedCount;
@@ -112,14 +112,14 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         int take = 20,
         CancellationToken cancellationToken = default)
     {
-        var items = await this._suggestionRepository.GetByStatusAsync(
+        var items = await _suggestionRepository.GetByStatusAsync(
             accountId,
             status,
             skip,
             take,
             cancellationToken);
 
-        var totalCount = await this._suggestionRepository.CountByStatusAsync(
+        var totalCount = await _suggestionRepository.CountByStatusAsync(
             accountId,
             status,
             cancellationToken);
@@ -132,7 +132,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await this._suggestionRepository.GetByIdAsync(id, cancellationToken);
+        return await _suggestionRepository.GetByIdAsync(id, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -140,7 +140,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var suggestion = await this._suggestionRepository.GetByIdAsync(id, cancellationToken)
+        var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new DomainException($"Suggestion with ID '{id}' not found.", DomainExceptionType.NotFound);
 
         if (suggestion.Status != SuggestionStatus.Pending)
@@ -161,7 +161,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         var importPattern = ImportPatternValue.Create($"*{suggestion.NormalizedDescription}*");
         recurringTransaction.AddImportPattern(importPattern);
 
-        await this._recurringTransactionRepository.AddAsync(recurringTransaction, cancellationToken);
+        await _recurringTransactionRepository.AddAsync(recurringTransaction, cancellationToken);
 
         var linkedCount = await this.LinkMatchingTransactionsAsync(
             suggestion,
@@ -169,7 +169,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
             cancellationToken);
 
         suggestion.Accept(recurringTransaction.Id);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AcceptRecurringChargeSuggestionResult(recurringTransaction.Id, linkedCount);
     }
@@ -177,11 +177,11 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
     /// <inheritdoc />
     public async Task DismissAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var suggestion = await this._suggestionRepository.GetByIdAsync(id, cancellationToken)
+        var suggestion = await _suggestionRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new DomainException($"Suggestion with ID '{id}' not found.", DomainExceptionType.NotFound);
 
         suggestion.Dismiss();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     private static RecurrencePatternValue BuildRecurrencePattern(RecurringChargeSuggestion suggestion)
@@ -239,7 +239,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
         var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
         var startDate = endDate.AddMonths(-12);
 
-        var transactions = await this._transactionRepository.GetByDateRangeAsync(
+        var transactions = await _transactionRepository.GetByDateRangeAsync(
             startDate,
             endDate,
             suggestion.AccountId,
@@ -266,7 +266,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
 
     private Guid GetRequiredUserId()
     {
-        return this._userContext.UserIdAsGuid
+        return _userContext.UserIdAsGuid
             ?? throw new DomainException("User context is not available.");
     }
 }

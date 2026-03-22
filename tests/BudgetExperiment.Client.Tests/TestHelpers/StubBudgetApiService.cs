@@ -38,112 +38,178 @@ internal class StubBudgetApiService : IBudgetApiService
     /// <summary>
     /// Gets or sets the budget summary that will be returned by <see cref="GetBudgetSummaryAsync"/>.
     /// </summary>
-    public BudgetSummaryDto? BudgetSummary { get; set; }
+    public BudgetSummaryDto? BudgetSummary
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the past due summary that will be returned by <see cref="GetPastDueItemsAsync"/>.
     /// </summary>
-    public PastDueSummaryDto? PastDueSummary { get; set; }
+    public PastDueSummaryDto? PastDueSummary
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteAccountAsync"/> returns true.
     /// </summary>
-    public bool DeleteAccountResult { get; set; }
+    public bool DeleteAccountResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteCategoryAsync"/> returns true.
     /// </summary>
-    public bool DeleteCategoryResult { get; set; }
+    public bool DeleteCategoryResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="ActivateCategoryAsync"/> returns true.
     /// </summary>
-    public bool ActivateCategoryResult { get; set; }
+    public bool ActivateCategoryResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeactivateCategoryAsync"/> returns true.
     /// </summary>
-    public bool DeactivateCategoryResult { get; set; }
+    public bool DeactivateCategoryResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the account returned by <see cref="CreateAccountAsync"/>.
     /// </summary>
-    public AccountDto? CreateAccountResult { get; set; }
+    public AccountDto? CreateAccountResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateAccountAsync"/>.
     /// </summary>
-    public ApiResult<AccountDto>? UpdateAccountResult { get; set; }
+    public ApiResult<AccountDto>? UpdateAccountResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category returned by <see cref="CreateCategoryAsync"/>.
     /// </summary>
-    public BudgetCategoryDto? CreateCategoryResult { get; set; }
+    public BudgetCategoryDto? CreateCategoryResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateCategoryAsync"/>.
     /// </summary>
-    public ApiResult<BudgetCategoryDto>? UpdateCategoryResult { get; set; }
+    public ApiResult<BudgetCategoryDto>? UpdateCategoryResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category returned by <see cref="GetCategoryAsync"/>.
     /// </summary>
-    public BudgetCategoryDto? GetCategoryResult { get; set; }
+    public BudgetCategoryDto? GetCategoryResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="GetAccountsAsync"/>.
     /// </summary>
-    public Exception? GetAccountsException { get; set; }
+    public Exception? GetAccountsException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="GetCategoriesAsync"/>.
     /// </summary>
-    public Exception? GetCategoriesException { get; set; }
+    public Exception? GetCategoriesException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="CreateCategoryAsync"/>.
     /// </summary>
-    public Exception? CreateCategoryException { get; set; }
+    public Exception? CreateCategoryException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="UpdateCategoryAsync"/>.
     /// </summary>
-    public Exception? UpdateCategoryException { get; set; }
+    public Exception? UpdateCategoryException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="DeleteCategoryAsync"/>.
     /// </summary>
-    public Exception? DeleteCategoryException { get; set; }
+    public Exception? DeleteCategoryException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="ActivateCategoryAsync"/>.
     /// </summary>
-    public Exception? ActivateCategoryException { get; set; }
+    public Exception? ActivateCategoryException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="DeactivateCategoryAsync"/>.
     /// </summary>
-    public Exception? DeactivateCategoryException { get; set; }
+    public Exception? DeactivateCategoryException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the app settings returned by <see cref="GetSettingsAsync"/>.
     /// </summary>
-    public AppSettingsDto? AppSettings { get; set; }
+    public AppSettingsDto? AppSettings
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the user settings returned by <see cref="GetUserSettingsAsync"/>.
     /// </summary>
-    public UserSettingsDto? UserSettings { get; set; }
+    public UserSettingsDto? UserSettings
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the transaction list returned by <see cref="GetAccountTransactionListAsync"/>.
     /// </summary>
-    public TransactionListDto? TransactionList { get; set; }
+    public TransactionListDto? TransactionList
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="GetAccountTransactionListAsync"/> should throw.
     /// </summary>
-    public bool ShouldThrowOnGetTransactionList { get; set; }
+    public bool ShouldThrowOnGetTransactionList
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the list of categorization rules returned by <see cref="GetCategorizationRulesAsync"/>.
@@ -153,107 +219,170 @@ internal class StubBudgetApiService : IBudgetApiService
     /// <summary>
     /// Gets or sets the rule returned by <see cref="CreateCategorizationRuleAsync"/>.
     /// </summary>
-    public CategorizationRuleDto? CreateRuleResult { get; set; }
+    public CategorizationRuleDto? CreateRuleResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateCategorizationRuleAsync"/>.
     /// </summary>
-    public ApiResult<CategorizationRuleDto>? UpdateRuleResult { get; set; }
+    public ApiResult<CategorizationRuleDto>? UpdateRuleResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteCategorizationRuleAsync"/> returns true.
     /// </summary>
-    public bool DeleteRuleResult { get; set; }
+    public bool DeleteRuleResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="ActivateCategorizationRuleAsync"/> returns true.
     /// </summary>
-    public bool ActivateRuleResult { get; set; }
+    public bool ActivateRuleResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeactivateCategorizationRuleAsync"/> returns true.
     /// </summary>
-    public bool DeactivateRuleResult { get; set; }
+    public bool DeactivateRuleResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="GetCategorizationRulesAsync"/>.
     /// </summary>
-    public Exception? GetRulesException { get; set; }
+    public Exception? GetRulesException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="CreateCategorizationRuleAsync"/>.
     /// </summary>
-    public Exception? CreateRuleException { get; set; }
+    public Exception? CreateRuleException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="UpdateCategorizationRuleAsync"/>.
     /// </summary>
-    public Exception? UpdateRuleException { get; set; }
+    public Exception? UpdateRuleException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="DeleteCategorizationRuleAsync"/>.
     /// </summary>
-    public Exception? DeleteRuleException { get; set; }
+    public Exception? DeleteRuleException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="ActivateCategorizationRuleAsync"/>.
     /// </summary>
-    public Exception? ActivateRuleException { get; set; }
+    public Exception? ActivateRuleException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="DeactivateCategorizationRuleAsync"/>.
     /// </summary>
-    public Exception? DeactivateRuleException { get; set; }
+    public Exception? DeactivateRuleException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="TestPatternAsync"/>.
     /// </summary>
-    public Exception? TestPatternException { get; set; }
+    public Exception? TestPatternException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="GetBudgetSummaryAsync"/>.
     /// </summary>
-    public Exception? GetBudgetSummaryException { get; set; }
+    public Exception? GetBudgetSummaryException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="SetBudgetGoalAsync"/>.
     /// </summary>
-    public Exception? SetBudgetGoalException { get; set; }
+    public Exception? SetBudgetGoalException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="DeleteBudgetGoalAsync"/>.
     /// </summary>
-    public Exception? DeleteBudgetGoalException { get; set; }
+    public Exception? DeleteBudgetGoalException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="SetBudgetGoalAsync"/>.
     /// </summary>
-    public ApiResult<BudgetGoalDto>? SetBudgetGoalResult { get; set; }
+    public ApiResult<BudgetGoalDto>? SetBudgetGoalResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteBudgetGoalAsync"/> returns true.
     /// </summary>
-    public bool DeleteBudgetGoalResult { get; set; }
+    public bool DeleteBudgetGoalResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the transaction returned by <see cref="CreateTransactionAsync"/>.
     /// </summary>
-    public TransactionDto? CreateTransactionResult { get; set; }
+    public TransactionDto? CreateTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateTransactionAsync"/>.
     /// </summary>
-    public ApiResult<TransactionDto>? UpdateTransactionResult { get; set; }
+    public ApiResult<TransactionDto>? UpdateTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteTransactionAsync"/> returns true.
     /// </summary>
-    public bool DeleteTransactionResult { get; set; }
+    public bool DeleteTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="DeleteTransactionAsync"/>.
     /// </summary>
-    public Exception? DeleteTransactionException { get; set; }
+    public Exception? DeleteTransactionException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="BulkCategorizeTransactionsAsync"/>.
@@ -263,82 +392,130 @@ internal class StubBudgetApiService : IBudgetApiService
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="BulkCategorizeTransactionsAsync"/>.
     /// </summary>
-    public Exception? BulkCategorizeException { get; set; }
+    public Exception? BulkCategorizeException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the last bulk categorize request sent.
     /// </summary>
-    public BulkCategorizeRequest? LastBulkCategorizeRequest { get; private set; }
+    public BulkCategorizeRequest? LastBulkCategorizeRequest
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the transfer returned by <see cref="CreateTransferAsync"/>.
     /// </summary>
-    public TransferResponse? CreateTransferResult { get; set; }
+    public TransferResponse? CreateTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="DeleteAllLocationDataAsync"/>.
     /// </summary>
-    public LocationDataClearedDto? DeleteLocationDataResult { get; set; }
+    public LocationDataClearedDto? DeleteLocationDataResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="CompleteOnboardingAsync"/>.
     /// </summary>
-    public UserSettingsDto? CompleteOnboardingResult { get; set; }
+    public UserSettingsDto? CompleteOnboardingResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="TestPatternAsync"/>.
     /// </summary>
-    public TestPatternResponse? TestPatternResult { get; set; }
+    public TestPatternResponse? TestPatternResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="ApplyCategorizationRulesAsync"/>.
     /// </summary>
-    public ApplyRulesResponse? ApplyRulesResult { get; set; }
+    public ApplyRulesResponse? ApplyRulesResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="BulkDeleteCategorizationRulesAsync"/>.
     /// </summary>
-    public BulkRuleActionResponse? BulkDeleteResult { get; set; }
+    public BulkRuleActionResponse? BulkDeleteResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception thrown by <see cref="BulkDeleteCategorizationRulesAsync"/>.
     /// </summary>
-    public Exception? BulkDeleteException { get; set; }
+    public Exception? BulkDeleteException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="BulkActivateCategorizationRulesAsync"/>.
     /// </summary>
-    public BulkRuleActionResponse? BulkActivateResult { get; set; }
+    public BulkRuleActionResponse? BulkActivateResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception thrown by <see cref="BulkActivateCategorizationRulesAsync"/>.
     /// </summary>
-    public Exception? BulkActivateException { get; set; }
+    public Exception? BulkActivateException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="BulkDeactivateCategorizationRulesAsync"/>.
     /// </summary>
-    public BulkRuleActionResponse? BulkDeactivateResult { get; set; }
+    public BulkRuleActionResponse? BulkDeactivateResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception thrown by <see cref="BulkDeactivateCategorizationRulesAsync"/>.
     /// </summary>
-    public Exception? BulkDeactivateException { get; set; }
+    public Exception? BulkDeactivateException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="GetTransactionAsync"/>.
     /// </summary>
-    public TransactionDto? GetTransactionResult { get; set; }
+    public TransactionDto? GetTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="CopyBudgetGoalsAsync"/>.
     /// </summary>
-    public CopyBudgetGoalsResult? CopyBudgetGoalsResult { get; set; }
+    public CopyBudgetGoalsResult? CopyBudgetGoalsResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="RealizeBatchAsync"/>.
     /// </summary>
-    public BatchRealizeResultDto? RealizeBatchResult { get; set; }
+    public BatchRealizeResultDto? RealizeBatchResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the uncategorized transaction page returned by <see cref="GetUncategorizedTransactionsAsync"/>.
@@ -353,12 +530,18 @@ internal class StubBudgetApiService : IBudgetApiService
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateTransactionCategoryAsync"/>.
     /// </summary>
-    public TransactionDto? UpdateTransactionCategoryResult { get; set; }
+    public TransactionDto? UpdateTransactionCategoryResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the last filter passed to <see cref="GetUnifiedTransactionsAsync"/>.
     /// </summary>
-    public UnifiedTransactionFilterDto? LastUnifiedFilter { get; set; }
+    public UnifiedTransactionFilterDto? LastUnifiedFilter
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the batch category suggestions returned by <see cref="GetBatchCategorySuggestionsAsync"/>.
@@ -368,12 +551,18 @@ internal class StubBudgetApiService : IBudgetApiService
     /// <summary>
     /// Gets or sets the paycheck allocation summary returned by <see cref="GetPaycheckAllocationAsync"/>.
     /// </summary>
-    public PaycheckAllocationSummaryDto? AllocationSummary { get; set; }
+    public PaycheckAllocationSummaryDto? AllocationSummary
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="CreateRecurringTransferAsync"/>.
     /// </summary>
-    public RecurringTransferDto? CreateRecurringTransferResult { get; set; }
+    public RecurringTransferDto? CreateRecurringTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the list of recurring transactions returned by <see cref="GetRecurringTransactionsAsync"/>.
@@ -393,152 +582,242 @@ internal class StubBudgetApiService : IBudgetApiService
     /// <summary>
     /// Gets or sets the exception to throw from <see cref="GetTransfersAsync"/>.
     /// </summary>
-    public Exception? GetTransfersException { get; set; }
+    public Exception? GetTransfersException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the spending trends report returned by <see cref="GetSpendingTrendsAsync"/>.
     /// </summary>
-    public SpendingTrendsReportDto? SpendingTrends { get; set; }
+    public SpendingTrendsReportDto? SpendingTrends
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category report returned by <see cref="GetCategoryReportByRangeAsync"/>.
     /// </summary>
-    public DateRangeCategoryReportDto? DateRangeCategoryReport { get; set; }
+    public DateRangeCategoryReportDto? DateRangeCategoryReport
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="SkipRecurringInstanceAsync"/> returns true.
     /// </summary>
-    public bool SkipRecurringInstanceResult { get; set; }
+    public bool SkipRecurringInstanceResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="ModifyRecurringInstanceAsync"/>.
     /// </summary>
-    public ApiResult<RecurringInstanceDto>? ModifyRecurringInstanceResult { get; set; }
+    public ApiResult<RecurringInstanceDto>? ModifyRecurringInstanceResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateTransactionLocationAsync"/>.
     /// </summary>
-    public ApiResult<TransactionDto>? UpdateTransactionLocationResult { get; set; }
+    public ApiResult<TransactionDto>? UpdateTransactionLocationResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="ClearTransactionLocationAsync"/> returns true.
     /// </summary>
-    public bool ClearTransactionLocationResult { get; set; }
+    public bool ClearTransactionLocationResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="RealizeRecurringTransactionAsync"/>.
     /// </summary>
-    public TransactionDto? RealizeRecurringTransactionResult { get; set; }
+    public TransactionDto? RealizeRecurringTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception thrown by <see cref="GetRecurringTransactionsAsync"/>.
     /// </summary>
-    public Exception? GetRecurringTransactionsException { get; set; }
+    public Exception? GetRecurringTransactionsException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="CreateRecurringTransactionAsync"/>.
     /// </summary>
-    public RecurringTransactionDto? CreateRecurringTransactionResult { get; set; }
+    public RecurringTransactionDto? CreateRecurringTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateRecurringTransactionAsync"/>.
     /// </summary>
-    public ApiResult<RecurringTransactionDto>? UpdateRecurringTransactionResult { get; set; }
+    public ApiResult<RecurringTransactionDto>? UpdateRecurringTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteRecurringTransactionAsync"/> returns true.
     /// </summary>
-    public bool DeleteRecurringTransactionResult { get; set; }
+    public bool DeleteRecurringTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="SkipNextRecurringAsync"/>.
     /// </summary>
-    public RecurringTransactionDto? SkipNextRecurringResult { get; set; }
+    public RecurringTransactionDto? SkipNextRecurringResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="PauseRecurringTransactionAsync"/>.
     /// </summary>
-    public RecurringTransactionDto? PauseRecurringTransactionResult { get; set; }
+    public RecurringTransactionDto? PauseRecurringTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="ResumeRecurringTransactionAsync"/>.
     /// </summary>
-    public RecurringTransactionDto? ResumeRecurringTransactionResult { get; set; }
+    public RecurringTransactionDto? ResumeRecurringTransactionResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateRecurringTransferAsync"/>.
     /// </summary>
-    public ApiResult<RecurringTransferDto>? UpdateRecurringTransferResult { get; set; }
+    public ApiResult<RecurringTransferDto>? UpdateRecurringTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteRecurringTransferAsync"/> returns true.
     /// </summary>
-    public bool DeleteRecurringTransferResult { get; set; }
+    public bool DeleteRecurringTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="PauseRecurringTransferAsync"/>.
     /// </summary>
-    public RecurringTransferDto? PauseRecurringTransferTransferResult { get; set; }
+    public RecurringTransferDto? PauseRecurringTransferTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="ResumeRecurringTransferAsync"/>.
     /// </summary>
-    public RecurringTransferDto? ResumeRecurringTransferTransferResult { get; set; }
+    public RecurringTransferDto? ResumeRecurringTransferTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="SkipNextRecurringTransferAsync"/>.
     /// </summary>
-    public RecurringTransferDto? SkipNextRecurringTransferResult { get; set; }
+    public RecurringTransferDto? SkipNextRecurringTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception thrown by <see cref="GetRecurringTransfersAsync"/>.
     /// </summary>
-    public Exception? GetRecurringTransfersException { get; set; }
+    public Exception? GetRecurringTransfersException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateTransferAsync"/>.
     /// </summary>
-    public TransferResponse? UpdateTransferResult { get; set; }
+    public TransferResponse? UpdateTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteTransferAsync"/> returns true.
     /// </summary>
-    public bool DeleteTransferResult { get; set; }
+    public bool DeleteTransferResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception to throw from <see cref="CreateTransferAsync"/>.
     /// </summary>
-    public Exception? CreateTransferException { get; set; }
+    public Exception? CreateTransferException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception to throw from <see cref="UpdateTransferAsync"/>.
     /// </summary>
-    public Exception? UpdateTransferException { get; set; }
+    public Exception? UpdateTransferException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the exception to throw from <see cref="DeleteTransferException"/>.
     /// </summary>
-    public Exception? DeleteTransferException { get; set; }
+    public Exception? DeleteTransferException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateSettingsAsync"/>.
     /// </summary>
-    public AppSettingsDto? UpdateSettingsResult { get; set; }
+    public AppSettingsDto? UpdateSettingsResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateUserSettingsAsync"/>.
     /// </summary>
-    public UserSettingsDto? UpdateUserSettingsResult { get; set; }
+    public UserSettingsDto? UpdateUserSettingsResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="UpdateUserSettingsAsync"/>.
     /// </summary>
-    public Exception? UpdateUserSettingsException { get; set; }
+    public Exception? UpdateUserSettingsException
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets an exception to throw from <see cref="CompleteOnboardingAsync"/>.
     /// </summary>
-    public Exception? CompleteOnboardingException { get; set; }
+    public Exception? CompleteOnboardingException
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<AccountDto>> GetAccountsAsync()

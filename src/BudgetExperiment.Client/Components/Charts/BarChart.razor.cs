@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Globalization;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -40,7 +41,10 @@ public partial class BarChart
     /// Gets or sets the callback for bar clicks.
     /// </summary>
     [Parameter]
-    public EventCallback<BarChartClickInfo> OnBarClick { get; set; }
+    public EventCallback<BarChartClickInfo> OnBarClick
+    {
+        get; set;
+    }
 
     private static double MarginLeft => 45;
 
@@ -52,11 +56,20 @@ public partial class BarChart
 
     private static double ViewBoxHeight => 180;
 
-    private string? HoveredSeriesName { get; set; }
+    private string? HoveredSeriesName
+    {
+        get; set;
+    }
 
-    private string? HoveredGroupLabel { get; set; }
+    private string? HoveredGroupLabel
+    {
+        get; set;
+    }
 
-    private decimal HoveredValue { get; set; }
+    private decimal HoveredValue
+    {
+        get; set;
+    }
 
     private double ChartAreaBottom => ViewBoxHeight - MarginBottom;
 
@@ -221,7 +234,10 @@ public partial class BarChart
 
     private sealed class TickInfo
     {
-        public double Y { get; set; }
+        public double Y
+        {
+            get; set;
+        }
 
         public string Label { get; set; } = string.Empty;
     }
@@ -230,20 +246,35 @@ public partial class BarChart
     {
         public string GroupLabel { get; set; } = string.Empty;
 
-        public double LabelX { get; set; }
+        public double LabelX
+        {
+            get; set;
+        }
 
         public List<BarRectInfo> Rects { get; set; } = [];
     }
 
     private sealed class BarRectInfo
     {
-        public double X { get; set; }
+        public double X
+        {
+            get; set;
+        }
 
-        public double Y { get; set; }
+        public double Y
+        {
+            get; set;
+        }
 
-        public double Width { get; set; }
+        public double Width
+        {
+            get; set;
+        }
 
-        public double Height { get; set; }
+        public double Height
+        {
+            get; set;
+        }
 
         public string Color { get; set; } = string.Empty;
 
@@ -251,7 +282,10 @@ public partial class BarChart
 
         public string SeriesName { get; set; } = string.Empty;
 
-        public decimal Value { get; set; }
+        public decimal Value
+        {
+            get; set;
+        }
 
         public string AriaLabel { get; set; } = string.Empty;
     }

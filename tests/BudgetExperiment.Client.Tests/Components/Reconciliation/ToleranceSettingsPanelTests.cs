@@ -5,7 +5,9 @@
 using BudgetExperiment.Client.Components.Reconciliation;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
@@ -373,13 +375,19 @@ public sealed class ToleranceSettingsPanelTests : BunitContext, IAsyncLifetime
     private sealed class StubReconciliationApiService : IReconciliationApiService
     {
         /// <summary>Gets or sets the tolerances result.</summary>
-        public MatchingTolerancesDto? TolerancesResult { get; set; }
+        public MatchingTolerancesDto? TolerancesResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets a value indicating whether update succeeds.</summary>
         public bool UpdateTolerancesSuccess { get; set; } = true;
 
         /// <summary>Gets or sets a value indicating whether GetTolerancesAsync should throw.</summary>
-        public bool ShouldThrowOnGetTolerances { get; set; }
+        public bool ShouldThrowOnGetTolerances
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task<MatchingTolerancesDto?> GetTolerancesAsync() =>

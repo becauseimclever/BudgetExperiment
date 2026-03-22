@@ -19,7 +19,7 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class RecurringTransactionsController : ControllerBase
 {
-    private readonly RecurringTransactionService _service;
+    private readonly IRecurringTransactionService _service;
     private readonly IRecurringTransactionInstanceService _instanceService;
     private readonly IRecurringTransactionRealizationService _realizationService;
 
@@ -30,13 +30,13 @@ public sealed class RecurringTransactionsController : ControllerBase
     /// <param name="instanceService">The recurring transaction instance service.</param>
     /// <param name="realizationService">The recurring transaction realization service.</param>
     public RecurringTransactionsController(
-        RecurringTransactionService service,
+        IRecurringTransactionService service,
         IRecurringTransactionInstanceService instanceService,
         IRecurringTransactionRealizationService realizationService)
     {
-        this._service = service;
-        this._instanceService = instanceService;
-        this._realizationService = realizationService;
+        _service = service;
+        _instanceService = instanceService;
+        _realizationService = realizationService;
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType<IReadOnlyList<RecurringTransactionDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        var recurring = await this._service.GetAllAsync(cancellationToken);
+        var recurring = await _service.GetAllAsync(cancellationToken);
         return this.Ok(recurring);
     }
 
@@ -63,7 +63,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var recurring = await this._service.GetByIdAsync(id, cancellationToken);
+        var recurring = await _service.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
@@ -89,7 +89,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateAsync([FromBody] RecurringTransactionCreateDto dto, CancellationToken cancellationToken)
     {
-        var recurring = await this._service.CreateAsync(dto, cancellationToken);
+        var recurring = await _service.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = recurring.Id }, recurring);
     }
 
@@ -113,7 +113,7 @@ public sealed class RecurringTransactionsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var recurring = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
+        var recurring = await _service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
@@ -138,7 +138,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await this._service.DeleteAsync(id, cancellationToken);
+        var deleted = await _service.DeleteAsync(id, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();
@@ -158,7 +158,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SkipNextAsync(Guid id, CancellationToken cancellationToken)
     {
-        var recurring = await this._service.SkipNextAsync(id, cancellationToken);
+        var recurring = await _service.SkipNextAsync(id, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
@@ -178,7 +178,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> PauseAsync(Guid id, CancellationToken cancellationToken)
     {
-        var recurring = await this._service.PauseAsync(id, cancellationToken);
+        var recurring = await _service.PauseAsync(id, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
@@ -198,7 +198,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ResumeAsync(Guid id, CancellationToken cancellationToken)
     {
-        var recurring = await this._service.ResumeAsync(id, cancellationToken);
+        var recurring = await _service.ResumeAsync(id, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
@@ -229,7 +229,7 @@ public sealed class RecurringTransactionsController : ControllerBase
             return this.BadRequest("from must be less than or equal to to.");
         }
 
-        var instances = await this._instanceService.GetProjectedInstancesAsync(from, to, accountId, cancellationToken);
+        var instances = await _instanceService.GetProjectedInstancesAsync(from, to, accountId, cancellationToken);
         return this.Ok(instances);
     }
 
@@ -256,7 +256,7 @@ public sealed class RecurringTransactionsController : ControllerBase
             return this.BadRequest("from must be less than or equal to to.");
         }
 
-        var instances = await this._instanceService.GetInstancesAsync(id, from, to, cancellationToken);
+        var instances = await _instanceService.GetInstancesAsync(id, from, to, cancellationToken);
         if (instances is null)
         {
             return this.NotFound();
@@ -290,7 +290,7 @@ public sealed class RecurringTransactionsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var instance = await this._instanceService.ModifyInstanceAsync(id, date, dto, expectedVersion, cancellationToken);
+        var instance = await _instanceService.ModifyInstanceAsync(id, date, dto, expectedVersion, cancellationToken);
         if (instance is null)
         {
             return this.NotFound();
@@ -311,7 +311,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SkipInstanceAsync(Guid id, DateOnly date, CancellationToken cancellationToken)
     {
-        var skipped = await this._instanceService.SkipInstanceAsync(id, date, cancellationToken);
+        var skipped = await _instanceService.SkipInstanceAsync(id, date, cancellationToken);
         if (!skipped)
         {
             return this.NotFound();
@@ -345,7 +345,7 @@ public sealed class RecurringTransactionsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var recurring = await this._service.UpdateFromDateAsync(id, date, dto, expectedVersion, cancellationToken);
+        var recurring = await _service.UpdateFromDateAsync(id, date, dto, expectedVersion, cancellationToken);
         if (recurring is null)
         {
             return this.NotFound();
@@ -376,7 +376,7 @@ public sealed class RecurringTransactionsController : ControllerBase
         [FromBody] RealizeRecurringTransactionRequest request,
         CancellationToken cancellationToken)
     {
-        var transaction = await this._realizationService.RealizeInstanceAsync(id, request, cancellationToken);
+        var transaction = await _realizationService.RealizeInstanceAsync(id, request, cancellationToken);
         return this.CreatedAtAction(
             "GetById",
             "Transactions",
@@ -395,7 +395,7 @@ public sealed class RecurringTransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken)
     {
-        var patterns = await this._service.GetImportPatternsAsync(id, cancellationToken);
+        var patterns = await _service.GetImportPatternsAsync(id, cancellationToken);
         if (patterns is null)
         {
             return this.NotFound();
@@ -420,7 +420,7 @@ public sealed class RecurringTransactionsController : ControllerBase
         [FromBody] ImportPatternsDto dto,
         CancellationToken cancellationToken)
     {
-        var patterns = await this._service.UpdateImportPatternsAsync(id, dto, cancellationToken);
+        var patterns = await _service.UpdateImportPatternsAsync(id, dto, cancellationToken);
         if (patterns is null)
         {
             return this.NotFound();

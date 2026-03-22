@@ -3,11 +3,14 @@
 // </copyright>
 
 using System.Security.Claims;
+
 using BudgetExperiment.Client.Components.Navigation;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -365,7 +368,10 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
         public bool IsFullyOperational { get; set; } = true;
 
         /// <inheritdoc/>
-        public string? ErrorMessage { get; set; }
+        public string? ErrorMessage
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task RefreshAsync() => Task.CompletedTask;

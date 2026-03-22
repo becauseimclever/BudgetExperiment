@@ -31,9 +31,9 @@ public sealed class UncategorizedTransactionService : IUncategorizedTransactionS
         IBudgetCategoryRepository categoryRepository,
         IUnitOfWork unitOfWork)
     {
-        this._transactionRepository = transactionRepository;
-        this._categoryRepository = categoryRepository;
-        this._unitOfWork = unitOfWork;
+        _transactionRepository = transactionRepository;
+        _categoryRepository = categoryRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
@@ -46,7 +46,7 @@ public sealed class UncategorizedTransactionService : IUncategorizedTransactionS
         var pageSize = Math.Clamp(filter.PageSize, 1, MaxPageSize);
         var skip = (page - 1) * pageSize;
 
-        var (items, totalCount) = await this._transactionRepository.GetUncategorizedPagedAsync(
+        var (items, totalCount) = await _transactionRepository.GetUncategorizedPagedAsync(
             filter.StartDate,
             filter.EndDate,
             filter.MinAmount,
@@ -89,7 +89,7 @@ public sealed class UncategorizedTransactionService : IUncategorizedTransactionS
         }
 
         // Validate category exists
-        var category = await this._categoryRepository.GetByIdAsync(request.CategoryId, cancellationToken);
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId, cancellationToken);
         if (category is null)
         {
             return new BulkCategorizeResponse
@@ -104,7 +104,7 @@ public sealed class UncategorizedTransactionService : IUncategorizedTransactionS
         // Process each transaction
         foreach (var transactionId in request.TransactionIds)
         {
-            var transaction = await this._transactionRepository.GetByIdAsync(transactionId, cancellationToken);
+            var transaction = await _transactionRepository.GetByIdAsync(transactionId, cancellationToken);
             if (transaction is null)
             {
                 errors.Add($"Transaction not found: {transactionId}");
@@ -118,7 +118,7 @@ public sealed class UncategorizedTransactionService : IUncategorizedTransactionS
         // Save all changes in a single transaction
         if (successCount > 0)
         {
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
         return new BulkCategorizeResponse

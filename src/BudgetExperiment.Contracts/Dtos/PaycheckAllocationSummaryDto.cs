@@ -16,7 +16,10 @@ public sealed class PaycheckAllocationSummaryDto
     public MoneyDto TotalPerPaycheck { get; set; } = new();
 
     /// <summary>Gets or sets the optional paycheck amount.</summary>
-    public MoneyDto? PaycheckAmount { get; set; }
+    public MoneyDto? PaycheckAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the remaining per paycheck after allocations.</summary>
     public MoneyDto RemainingPerPaycheck { get; set; } = new();
@@ -28,16 +31,25 @@ public sealed class PaycheckAllocationSummaryDto
     public MoneyDto TotalAnnualBills { get; set; } = new();
 
     /// <summary>Gets or sets the optional total annual income.</summary>
-    public MoneyDto? TotalAnnualIncome { get; set; }
+    public MoneyDto? TotalAnnualIncome
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the warnings.</summary>
     public List<PaycheckAllocationWarningDto> Warnings { get; set; } = new();
 
     /// <summary>Gets or sets a value indicating whether there are any warnings.</summary>
-    public bool HasWarnings { get; set; }
+    public bool HasWarnings
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether annual bills exceed income.</summary>
-    public bool CannotReconcile { get; set; }
+    public bool CannotReconcile
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the paycheck frequency.</summary>
     public string PaycheckFrequency { get; set; } = string.Empty;

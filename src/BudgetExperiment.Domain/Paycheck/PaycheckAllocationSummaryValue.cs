@@ -29,7 +29,10 @@ public sealed record PaycheckAllocationSummaryValue
     /// <summary>
     /// Gets the optional paycheck amount.
     /// </summary>
-    public MoneyValue? PaycheckAmount { get; private init; }
+    public MoneyValue? PaycheckAmount
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Gets the remaining amount per paycheck after allocations.
@@ -49,7 +52,10 @@ public sealed record PaycheckAllocationSummaryValue
     /// <summary>
     /// Gets the optional total annual income.
     /// </summary>
-    public MoneyValue? TotalAnnualIncome { get; private init; }
+    public MoneyValue? TotalAnnualIncome
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Gets the warnings.
@@ -69,7 +75,10 @@ public sealed record PaycheckAllocationSummaryValue
     /// <summary>
     /// Gets the paycheck frequency.
     /// </summary>
-    public RecurrenceFrequency PaycheckFrequency { get; private init; }
+    public RecurrenceFrequency PaycheckFrequency
+    {
+        get; private init;
+    }
 
     /// <summary>
     /// Creates a new <see cref="PaycheckAllocationSummaryValue"/> instance.

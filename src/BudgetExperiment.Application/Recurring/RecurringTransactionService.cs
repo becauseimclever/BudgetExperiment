@@ -30,10 +30,10 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         ITransactionRepository transactionRepository,
         IUnitOfWork unitOfWork)
     {
-        this._repository = repository;
-        this._accountRepository = accountRepository;
-        this._transactionRepository = transactionRepository;
-        this._unitOfWork = unitOfWork;
+        _repository = repository;
+        _accountRepository = accountRepository;
+        _transactionRepository = transactionRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <summary>
@@ -44,14 +44,14 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>The recurring transaction DTO, or null if not found.</returns>
     public async Task<RecurringTransactionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
         }
 
-        var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        var account = await _accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(recurring);
         return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty, version);
     }
 
@@ -62,8 +62,8 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>A list of recurring transaction DTOs.</returns>
     public async Task<IReadOnlyList<RecurringTransactionDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetAllAsync(cancellationToken);
-        var accounts = await this._accountRepository.GetAllAsync(cancellationToken);
+        var recurring = await _repository.GetAllAsync(cancellationToken);
+        var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
 
         return recurring
@@ -79,8 +79,8 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>A list of recurring transaction DTOs.</returns>
     public async Task<IReadOnlyList<RecurringTransactionDto>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByAccountIdAsync(accountId, cancellationToken);
-        var account = await this._accountRepository.GetByIdAsync(accountId, cancellationToken);
+        var recurring = await _repository.GetByAccountIdAsync(accountId, cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken);
         var accountName = account?.Name ?? string.Empty;
 
         return recurring
@@ -97,7 +97,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <exception cref="DomainException">Thrown when the account is not found.</exception>
     public async Task<RecurringTransactionDto> CreateAsync(RecurringTransactionCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var account = await this._accountRepository.GetByIdAsync(dto.AccountId, cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(dto.AccountId, cancellationToken);
         if (account is null)
         {
             throw new DomainException("Account not found.", DomainExceptionType.NotFound);
@@ -114,8 +114,8 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
             dto.StartDate,
             dto.EndDate);
 
-        await this._repository.AddAsync(recurring, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(recurring, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return RecurringMapper.ToDto(recurring, account.Name);
     }
@@ -130,7 +130,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
     public async Task<RecurringTransactionDto?> UpdateAsync(Guid id, RecurringTransactionUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
@@ -138,17 +138,17 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
         }
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
         var pattern = RecurrencePatternFactory.Create(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
 
         recurring.Update(dto.Description, amount, pattern, dto.EndDate, dto.CategoryId);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        var account = await _accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(recurring);
         return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty, version);
     }
 
@@ -160,14 +160,14 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>True if deleted, false if not found.</returns>
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(recurring, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(recurring, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -179,16 +179,16 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
     public async Task<RecurringTransactionDto?> PauseAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
         }
 
         recurring.Pause();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
         return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
@@ -200,16 +200,16 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
     public async Task<RecurringTransactionDto?> ResumeAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
         }
 
         recurring.Resume();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
         return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
@@ -221,7 +221,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
     /// <returns>The updated recurring transaction DTO, or null if not found.</returns>
     public async Task<RecurringTransactionDto?> SkipNextAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
@@ -229,13 +229,13 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
 
         // Create a skipped exception for the current next occurrence
         var exception = RecurringTransactionException.CreateSkipped(recurring.Id, recurring.NextOccurrence);
-        await this._repository.AddExceptionAsync(exception, cancellationToken);
+        await _repository.AddExceptionAsync(exception, cancellationToken);
 
         // Advance to the next occurrence
         recurring.AdvanceNextOccurrence();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
         return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty);
     }
 
@@ -255,7 +255,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         string? expectedVersion = null,
         CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
@@ -263,28 +263,28 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(recurring, expectedVersion);
         }
 
         // Remove all exceptions from this date forward
-        await this._repository.RemoveExceptionsFromDateAsync(id, instanceDate, cancellationToken);
+        await _repository.RemoveExceptionsFromDateAsync(id, instanceDate, cancellationToken);
 
         // Update the series
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
         var pattern = RecurrencePatternFactory.Create(dto.Frequency, dto.Interval, dto.DayOfMonth, dto.DayOfWeek, dto.MonthOfYear);
         recurring.Update(dto.Description, amount, pattern, dto.EndDate, dto.CategoryId);
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var account = await this._accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(recurring);
+        var account = await _accountRepository.GetByIdAsync(recurring.AccountId, cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(recurring);
         return RecurringMapper.ToDto(recurring, account?.Name ?? string.Empty, version);
     }
 
     /// <inheritdoc />
     public async Task<ImportPatternsDto?> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
@@ -302,7 +302,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
         ImportPatternsDto dto,
         CancellationToken cancellationToken = default)
     {
-        var recurring = await this._repository.GetByIdAsync(id, cancellationToken);
+        var recurring = await _repository.GetByIdAsync(id, cancellationToken);
         if (recurring is null)
         {
             return null;
@@ -322,7 +322,7 @@ public sealed class RecurringTransactionService : IRecurringTransactionService
             recurring.AddImportPattern(pattern);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ImportPatternsDto
         {

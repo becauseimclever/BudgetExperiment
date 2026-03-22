@@ -6,6 +6,7 @@ using BudgetExperiment.Application.Import;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Categorization;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -20,8 +21,8 @@ public class ImportRowProcessorTests
 
     public ImportRowProcessorTests()
     {
-        this._duplicateDetectorMock = new Mock<IImportDuplicateDetector>();
-        this._processor = new ImportRowProcessor(this._duplicateDetectorMock.Object);
+        _duplicateDetectorMock = new Mock<IImportDuplicateDetector>();
+        _processor = new ImportRowProcessor(_duplicateDetectorMock.Object);
     }
 
     [Fact]
@@ -32,7 +33,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -59,7 +60,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -84,7 +85,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -109,7 +110,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -140,7 +141,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -164,7 +165,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -188,7 +189,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -218,7 +219,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -242,7 +243,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -266,7 +267,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -303,7 +304,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -334,7 +335,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -361,7 +362,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -393,7 +394,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -430,7 +431,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -457,7 +458,7 @@ public class ImportRowProcessorTests
             new DateOnly(2026, 1, 15),
             "AMAZON PURCHASE");
 
-        this._duplicateDetectorMock
+        _duplicateDetectorMock
             .Setup(d => d.FindDuplicate(
                 It.IsAny<DateOnly>(),
                 It.IsAny<decimal>(),
@@ -471,7 +472,7 @@ public class ImportRowProcessorTests
         var duplicateSettings = new DuplicateDetectionSettingsDto { Enabled = true, LookbackDays = 3 };
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -501,7 +502,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -533,7 +534,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var dates = this._processor.ExtractDatesFromRows(rows, mappings, "MM/dd/yyyy");
+        var dates = _processor.ExtractDatesFromRows(rows, mappings, "MM/dd/yyyy");
 
         // Assert
         Assert.Equal(2, dates.Count);
@@ -552,7 +553,7 @@ public class ImportRowProcessorTests
         };
 
         // Act
-        var dates = this._processor.ExtractDatesFromRows(rows, mappings, "MM/dd/yyyy");
+        var dates = _processor.ExtractDatesFromRows(rows, mappings, "MM/dd/yyyy");
 
         // Assert
         Assert.Empty(dates);
@@ -566,7 +567,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             42,
             row,
             mappings,
@@ -590,7 +591,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -615,7 +616,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,
@@ -640,7 +641,7 @@ public class ImportRowProcessorTests
         var mappings = CreateMappings(0, 1, 2);
 
         // Act
-        var result = this._processor.ProcessRow(
+        var result = _processor.ProcessRow(
             1,
             row,
             mappings,

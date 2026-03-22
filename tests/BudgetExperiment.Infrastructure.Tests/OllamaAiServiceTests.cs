@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Infrastructure.ExternalServices.AI;
+
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BudgetExperiment.Infrastructure.Tests;

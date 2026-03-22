@@ -19,14 +19,26 @@ public sealed class RegionSpendingDto
     public string Country { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the total spending in this region.</summary>
-    public decimal TotalSpending { get; set; }
+    public decimal TotalSpending
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the number of transactions in this region.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the percentage of total spending this region represents.</summary>
-    public decimal Percentage { get; set; }
+    public decimal Percentage
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional city-level breakdown within this region.</summary>
-    public List<CitySpendingDto>? Cities { get; set; }
+    public List<CitySpendingDto>? Cities
+    {
+        get; set;
+    }
 }

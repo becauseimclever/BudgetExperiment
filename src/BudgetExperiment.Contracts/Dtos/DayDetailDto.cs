@@ -10,7 +10,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class DayDetailDto
 {
     /// <summary>Gets or sets the date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the list of items (transactions and recurring instances).</summary>
     public IReadOnlyList<DayDetailItemDto> Items { get; set; } = [];

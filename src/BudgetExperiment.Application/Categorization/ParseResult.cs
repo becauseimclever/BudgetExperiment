@@ -14,13 +14,19 @@ public sealed record ParseResult<T>
     /// <summary>
     /// Gets the parsed result value.
     /// </summary>
-    public required T Result { get; init; }
+    public required T Result
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the parse was successful.
     /// When false, <see cref="Result"/> will be a default/empty value.
     /// </summary>
-    public bool Success { get; init; }
+    public bool Success
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets diagnostic messages produced during parsing.

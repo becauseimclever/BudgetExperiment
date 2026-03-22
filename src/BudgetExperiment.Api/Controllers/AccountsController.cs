@@ -27,7 +27,7 @@ public sealed class AccountsController : ControllerBase
     /// <param name="service">The account service.</param>
     public AccountsController(AccountService service)
     {
-        this._service = service;
+        _service = service;
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public sealed class AccountsController : ControllerBase
     [ProducesResponseType<IReadOnlyList<AccountDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        var accounts = await this._service.GetAllAsync(cancellationToken);
+        var accounts = await _service.GetAllAsync(cancellationToken);
         return this.Ok(accounts);
     }
 
@@ -54,7 +54,7 @@ public sealed class AccountsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var account = await this._service.GetByIdAsync(id, cancellationToken);
+        var account = await _service.GetByIdAsync(id, cancellationToken);
         if (account is null)
         {
             return this.NotFound();
@@ -79,7 +79,7 @@ public sealed class AccountsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAsync([FromBody] AccountCreateDto dto, CancellationToken cancellationToken)
     {
-        var account = await this._service.CreateAsync(dto, cancellationToken);
+        var account = await _service.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = account.Id }, account);
     }
 
@@ -103,7 +103,7 @@ public sealed class AccountsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var account = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
+        var account = await _service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (account is null)
         {
             return this.NotFound();
@@ -128,7 +128,7 @@ public sealed class AccountsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var removed = await this._service.RemoveAsync(id, cancellationToken);
+        var removed = await _service.RemoveAsync(id, cancellationToken);
         if (!removed)
         {
             return this.NotFound();

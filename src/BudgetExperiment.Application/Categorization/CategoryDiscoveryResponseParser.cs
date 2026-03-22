@@ -109,16 +109,34 @@ public static partial class CategoryDiscoveryResponseParser
     /// </summary>
     private sealed class CategoryDiscoveryItem
     {
-        public string? CategoryName { get; set; }
+        public string? CategoryName
+        {
+            get; set;
+        }
 
-        public string? Icon { get; set; }
+        public string? Icon
+        {
+            get; set;
+        }
 
-        public string? Color { get; set; }
+        public string? Color
+        {
+            get; set;
+        }
 
-        public decimal Confidence { get; set; }
+        public decimal Confidence
+        {
+            get; set;
+        }
 
-        public string? Reasoning { get; set; }
+        public string? Reasoning
+        {
+            get; set;
+        }
 
-        public List<string>? MatchedDescriptions { get; set; }
+        public List<string>? MatchedDescriptions
+        {
+            get; set;
+        }
     }
 }

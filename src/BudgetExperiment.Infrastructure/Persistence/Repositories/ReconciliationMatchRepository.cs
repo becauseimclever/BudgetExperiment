@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -22,21 +23,21 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     /// <param name="userContext">The user context for scope filtering.</param>
     public ReconciliationMatchRepository(BudgetDbContext context, IUserContext userContext)
     {
-        this._context = context;
-        this._userContext = userContext;
+        _context = context;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<ReconciliationMatch?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ReconciliationMatch>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .OrderByDescending(m => m.CreatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -46,27 +47,27 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(ReconciliationMatch entity, CancellationToken cancellationToken = default)
     {
-        await this._context.ReconciliationMatches.AddAsync(entity, cancellationToken);
+        await _context.ReconciliationMatches.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(ReconciliationMatch entity, CancellationToken cancellationToken = default)
     {
-        this._context.ReconciliationMatches.Remove(entity);
+        _context.ReconciliationMatches.Remove(entity);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ReconciliationMatch>> GetPendingMatchesAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .Where(m => m.Status == ReconciliationMatchStatus.Suggested)
             .OrderByDescending(m => m.ConfidenceScore)
             .ThenByDescending(m => m.CreatedAtUtc)
@@ -80,7 +81,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         DateOnly endDate,
         CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .Where(m => m.RecurringTransactionId == recurringTransactionId)
             .Where(m => m.RecurringInstanceDate >= startDate && m.RecurringInstanceDate <= endDate)
             .OrderBy(m => m.RecurringInstanceDate)
@@ -92,7 +93,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         Guid transactionId,
         CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .Where(m => m.ImportedTransactionId == transactionId)
             .OrderByDescending(m => m.ConfidenceScore)
             .ToListAsync(cancellationToken);
@@ -107,7 +108,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .Where(m => m.RecurringInstanceDate >= startDate && m.RecurringInstanceDate <= endDate)
             .OrderBy(m => m.RecurringInstanceDate)
             .ThenByDescending(m => m.ConfidenceScore)
@@ -121,7 +122,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         DateOnly instanceDate,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.ReconciliationMatches
+        return await _context.ReconciliationMatches
             .AnyAsync(
                 m => m.ImportedTransactionId == transactionId
                     && m.RecurringTransactionId == recurringTransactionId
@@ -135,7 +136,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
         DateOnly instanceDate,
         CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.ReconciliationMatches)
+        return await this.ApplyScopeFilter(_context.ReconciliationMatches)
             .AnyAsync(
                 m => m.RecurringTransactionId == recurringTransactionId
                     && m.RecurringInstanceDate == instanceDate
@@ -151,7 +152,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     /// </summary>
     private IQueryable<ReconciliationMatch> ApplyScopeFilter(IQueryable<ReconciliationMatch> query)
     {
-        var userId = this._userContext.UserIdAsGuid;
+        var userId = _userContext.UserIdAsGuid;
 
         // Show shared matches and user's personal matches
         return query.Where(m =>

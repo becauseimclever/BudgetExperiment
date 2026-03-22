@@ -7,8 +7,10 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -30,19 +32,19 @@ public sealed class TransactionsViewModelTests : IDisposable
     /// </summary>
     public TransactionsViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new TransactionsViewModel(
-            this._apiService,
-            this._toastService,
-            this._navigationManager,
-            this._scopeService,
-            this._apiErrorContext);
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new TransactionsViewModel(
+            _apiService,
+            _toastService,
+            _navigationManager,
+            _scopeService,
+            _apiErrorContext);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -54,11 +56,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsTransactions()
     {
-        this._apiService.UnifiedPage = CreatePageWithItems(3);
+        _apiService.UnifiedPage = CreatePageWithItems(3);
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.PageData.Items.Count.ShouldBe(3);
+        _sut.PageData.Items.Count.ShouldBe(3);
     }
 
     /// <summary>
@@ -68,9 +70,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -80,12 +82,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsAccounts()
     {
-        this._apiService.Accounts.Add(new AccountDto { Id = Guid.NewGuid(), Name = "Checking" });
+        _apiService.Accounts.Add(new AccountDto { Id = Guid.NewGuid(), Name = "Checking" });
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Accounts.Count.ShouldBe(1);
-        this._sut.Accounts[0].Name.ShouldBe("Checking");
+        _sut.Accounts.Count.ShouldBe(1);
+        _sut.Accounts[0].Name.ShouldBe("Checking");
     }
 
     /// <summary>
@@ -95,12 +97,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsCategories()
     {
-        this._apiService.Categories.Add(new BudgetCategoryDto { Id = Guid.NewGuid(), Name = "Groceries" });
+        _apiService.Categories.Add(new BudgetCategoryDto { Id = Guid.NewGuid(), Name = "Groceries" });
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Categories.Count.ShouldBe(1);
-        this._sut.Categories[0].Name.ShouldBe("Groceries");
+        _sut.Categories.Count.ShouldBe(1);
+        _sut.Categories[0].Name.ShouldBe("Groceries");
     }
 
     /// <summary>
@@ -110,12 +112,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetAccountsException = new HttpRequestException("Server error");
+        _apiService.GetAccountsException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- Filter State ---
@@ -126,13 +128,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void Filter_HasCorrectDefaults()
     {
-        this._sut.Filter.SortBy.ShouldBe("date");
-        this._sut.Filter.SortDescending.ShouldBeTrue();
-        this._sut.Filter.Page.ShouldBe(1);
-        this._sut.Filter.PageSize.ShouldBe(50);
-        this._sut.Filter.AccountId.ShouldBeNull();
-        this._sut.Filter.CategoryId.ShouldBeNull();
-        this._sut.Filter.Uncategorized.ShouldBeNull();
+        _sut.Filter.SortBy.ShouldBe("date");
+        _sut.Filter.SortDescending.ShouldBeTrue();
+        _sut.Filter.Page.ShouldBe(1);
+        _sut.Filter.PageSize.ShouldBe(50);
+        _sut.Filter.AccountId.ShouldBeNull();
+        _sut.Filter.CategoryId.ShouldBeNull();
+        _sut.Filter.Uncategorized.ShouldBeNull();
     }
 
     // --- ApplyFiltersAsync ---
@@ -144,11 +146,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ApplyFiltersAsync_ResetsPageToOne()
     {
-        this._sut.Filter.Page = 3;
+        _sut.Filter.Page = 3;
 
-        await this._sut.ApplyFiltersAsync();
+        await _sut.ApplyFiltersAsync();
 
-        this._sut.Filter.Page.ShouldBe(1);
+        _sut.Filter.Page.ShouldBe(1);
     }
 
     /// <summary>
@@ -159,14 +161,14 @@ public sealed class TransactionsViewModelTests : IDisposable
     public async Task ApplyFiltersAsync_PassesFilterToApi()
     {
         var accountId = Guid.NewGuid();
-        this._sut.Filter.AccountId = accountId;
-        this._sut.Filter.Description = "coffee";
+        _sut.Filter.AccountId = accountId;
+        _sut.Filter.Description = "coffee";
 
-        await this._sut.ApplyFiltersAsync();
+        await _sut.ApplyFiltersAsync();
 
-        this._apiService.LastUnifiedFilter.ShouldNotBeNull();
-        this._apiService.LastUnifiedFilter!.AccountId.ShouldBe(accountId);
-        this._apiService.LastUnifiedFilter!.Description.ShouldBe("coffee");
+        _apiService.LastUnifiedFilter.ShouldNotBeNull();
+        _apiService.LastUnifiedFilter!.AccountId.ShouldBe(accountId);
+        _apiService.LastUnifiedFilter!.Description.ShouldBe("coffee");
     }
 
     /// <summary>
@@ -176,11 +178,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ApplyFiltersAsync_ClearsSelection()
     {
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
 
-        await this._sut.ApplyFiltersAsync();
+        await _sut.ApplyFiltersAsync();
 
-        this._sut.SelectedTransactionIds.ShouldBeEmpty();
+        _sut.SelectedTransactionIds.ShouldBeEmpty();
     }
 
     // --- Sorting ---
@@ -192,11 +194,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSortAsync_SetsSortField_WhenNewField()
     {
-        await this._sut.ToggleSortAsync("amount");
+        await _sut.ToggleSortAsync("amount");
 
-        this._apiService.LastUnifiedFilter.ShouldNotBeNull();
-        this._apiService.LastUnifiedFilter!.SortBy.ShouldBe("amount");
-        this._apiService.LastUnifiedFilter!.SortDescending.ShouldBeTrue();
+        _apiService.LastUnifiedFilter.ShouldNotBeNull();
+        _apiService.LastUnifiedFilter!.SortBy.ShouldBe("amount");
+        _apiService.LastUnifiedFilter!.SortDescending.ShouldBeTrue();
     }
 
     /// <summary>
@@ -206,12 +208,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSortAsync_TogglesDirection_WhenSameField()
     {
-        this._sut.Filter.SortBy = "date";
-        this._sut.Filter.SortDescending = true;
+        _sut.Filter.SortBy = "date";
+        _sut.Filter.SortDescending = true;
 
-        await this._sut.ToggleSortAsync("date");
+        await _sut.ToggleSortAsync("date");
 
-        this._sut.Filter.SortDescending.ShouldBeFalse();
+        _sut.Filter.SortDescending.ShouldBeFalse();
     }
 
     // --- Pagination ---
@@ -223,12 +225,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task GoToPageAsync_NavigatesToSpecifiedPage()
     {
-        this._apiService.UnifiedPage = new UnifiedTransactionPageDto { TotalCount = 100, PageSize = 50, Page = 1 };
+        _apiService.UnifiedPage = new UnifiedTransactionPageDto { TotalCount = 100, PageSize = 50, Page = 1 };
 
-        await this._sut.GoToPageAsync(2);
+        await _sut.GoToPageAsync(2);
 
-        this._apiService.LastUnifiedFilter.ShouldNotBeNull();
-        this._apiService.LastUnifiedFilter!.Page.ShouldBe(2);
+        _apiService.LastUnifiedFilter.ShouldNotBeNull();
+        _apiService.LastUnifiedFilter!.Page.ShouldBe(2);
     }
 
     /// <summary>
@@ -238,11 +240,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task GoToPageAsync_ClearsSelection()
     {
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
 
-        await this._sut.GoToPageAsync(2);
+        await _sut.GoToPageAsync(2);
 
-        this._sut.SelectedTransactionIds.ShouldBeEmpty();
+        _sut.SelectedTransactionIds.ShouldBeEmpty();
     }
 
     /// <summary>
@@ -252,13 +254,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ChangePageSizeAsync_ResetsToPageOne()
     {
-        this._sut.Filter.Page = 3;
+        _sut.Filter.Page = 3;
 
-        await this._sut.ChangePageSizeAsync(25);
+        await _sut.ChangePageSizeAsync(25);
 
-        this._sut.Filter.PageSize.ShouldBe(25);
-        this._apiService.LastUnifiedFilter.ShouldNotBeNull();
-        this._apiService.LastUnifiedFilter!.Page.ShouldBe(1);
+        _sut.Filter.PageSize.ShouldBe(25);
+        _apiService.LastUnifiedFilter.ShouldNotBeNull();
+        _apiService.LastUnifiedFilter!.Page.ShouldBe(1);
     }
 
     // --- Selection ---
@@ -271,9 +273,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     {
         var id = Guid.NewGuid();
 
-        this._sut.ToggleSelection(id);
+        _sut.ToggleSelection(id);
 
-        this._sut.SelectedTransactionIds.ShouldContain(id);
+        _sut.SelectedTransactionIds.ShouldContain(id);
     }
 
     /// <summary>
@@ -283,11 +285,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     public void ToggleSelection_RemovesItem_WhenAlreadySelected()
     {
         var id = Guid.NewGuid();
-        this._sut.SelectedTransactionIds.Add(id);
+        _sut.SelectedTransactionIds.Add(id);
 
-        this._sut.ToggleSelection(id);
+        _sut.ToggleSelection(id);
 
-        this._sut.SelectedTransactionIds.ShouldNotContain(id);
+        _sut.SelectedTransactionIds.ShouldNotContain(id);
     }
 
     /// <summary>
@@ -297,12 +299,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSelectAll_SelectsAllItems_WhenNoneSelected()
     {
-        this._apiService.UnifiedPage = CreatePageWithItems(3);
-        await this._sut.InitializeAsync();
+        _apiService.UnifiedPage = CreatePageWithItems(3);
+        await _sut.InitializeAsync();
 
-        this._sut.ToggleSelectAll();
+        _sut.ToggleSelectAll();
 
-        this._sut.SelectedTransactionIds.Count.ShouldBe(3);
+        _sut.SelectedTransactionIds.Count.ShouldBe(3);
     }
 
     /// <summary>
@@ -312,18 +314,18 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ToggleSelectAll_DeselectsAll_WhenAllSelected()
     {
-        this._apiService.UnifiedPage = CreatePageWithItems(2);
-        await this._sut.InitializeAsync();
+        _apiService.UnifiedPage = CreatePageWithItems(2);
+        await _sut.InitializeAsync();
 
         // Select all
-        foreach (var item in this._sut.PageData.Items)
+        foreach (var item in _sut.PageData.Items)
         {
-            this._sut.SelectedTransactionIds.Add(item.Id);
+            _sut.SelectedTransactionIds.Add(item.Id);
         }
 
-        this._sut.ToggleSelectAll();
+        _sut.ToggleSelectAll();
 
-        this._sut.SelectedTransactionIds.ShouldBeEmpty();
+        _sut.SelectedTransactionIds.ShouldBeEmpty();
     }
 
     /// <summary>
@@ -333,9 +335,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     public void IsSelected_ReturnsTrueForSelectedItem()
     {
         var id = Guid.NewGuid();
-        this._sut.SelectedTransactionIds.Add(id);
+        _sut.SelectedTransactionIds.Add(id);
 
-        this._sut.IsSelected(id).ShouldBeTrue();
+        _sut.IsSelected(id).ShouldBeTrue();
     }
 
     /// <summary>
@@ -344,10 +346,10 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void SelectedCount_ReturnsCorrectCount()
     {
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
 
-        this._sut.SelectedCount.ShouldBe(2);
+        _sut.SelectedCount.ShouldBe(2);
     }
 
     /// <summary>
@@ -357,15 +359,15 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task AllSelected_ReturnsTrue_WhenAllPageItemsSelected()
     {
-        this._apiService.UnifiedPage = CreatePageWithItems(2);
-        await this._sut.InitializeAsync();
+        _apiService.UnifiedPage = CreatePageWithItems(2);
+        await _sut.InitializeAsync();
 
-        foreach (var item in this._sut.PageData.Items)
+        foreach (var item in _sut.PageData.Items)
         {
-            this._sut.SelectedTransactionIds.Add(item.Id);
+            _sut.SelectedTransactionIds.Add(item.Id);
         }
 
-        this._sut.AllSelected.ShouldBeTrue();
+        _sut.AllSelected.ShouldBeTrue();
     }
 
     // --- ClearFilters ---
@@ -377,26 +379,26 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ClearFiltersAsync_ResetsAllFilters()
     {
-        this._sut.Filter.AccountId = Guid.NewGuid();
-        this._sut.Filter.CategoryId = Guid.NewGuid();
-        this._sut.Filter.Description = "search";
-        this._sut.Filter.MinAmount = 10m;
-        this._sut.Filter.MaxAmount = 100m;
-        this._sut.Filter.Uncategorized = true;
-        this._sut.Filter.StartDate = new DateOnly(2025, 1, 1);
-        this._sut.Filter.EndDate = new DateOnly(2025, 12, 31);
+        _sut.Filter.AccountId = Guid.NewGuid();
+        _sut.Filter.CategoryId = Guid.NewGuid();
+        _sut.Filter.Description = "search";
+        _sut.Filter.MinAmount = 10m;
+        _sut.Filter.MaxAmount = 100m;
+        _sut.Filter.Uncategorized = true;
+        _sut.Filter.StartDate = new DateOnly(2025, 1, 1);
+        _sut.Filter.EndDate = new DateOnly(2025, 12, 31);
 
-        await this._sut.ClearFiltersAsync();
+        await _sut.ClearFiltersAsync();
 
-        this._sut.Filter.AccountId.ShouldBeNull();
-        this._sut.Filter.CategoryId.ShouldBeNull();
-        this._sut.Filter.Description.ShouldBeNull();
-        this._sut.Filter.MinAmount.ShouldBeNull();
-        this._sut.Filter.MaxAmount.ShouldBeNull();
-        this._sut.Filter.Uncategorized.ShouldBeNull();
-        this._sut.Filter.StartDate.ShouldBeNull();
-        this._sut.Filter.EndDate.ShouldBeNull();
-        this._sut.Filter.Page.ShouldBe(1);
+        _sut.Filter.AccountId.ShouldBeNull();
+        _sut.Filter.CategoryId.ShouldBeNull();
+        _sut.Filter.Description.ShouldBeNull();
+        _sut.Filter.MinAmount.ShouldBeNull();
+        _sut.Filter.MaxAmount.ShouldBeNull();
+        _sut.Filter.Uncategorized.ShouldBeNull();
+        _sut.Filter.StartDate.ShouldBeNull();
+        _sut.Filter.EndDate.ShouldBeNull();
+        _sut.Filter.Page.ShouldBe(1);
     }
 
     // --- ActiveFilterCount ---
@@ -407,7 +409,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ActiveFilterCount_ReturnsZero_WhenNoFilters()
     {
-        this._sut.ActiveFilterCount.ShouldBe(0);
+        _sut.ActiveFilterCount.ShouldBe(0);
     }
 
     /// <summary>
@@ -416,11 +418,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ActiveFilterCount_CountsActiveFilters()
     {
-        this._sut.Filter.AccountId = Guid.NewGuid();
-        this._sut.Filter.Description = "test";
-        this._sut.Filter.MinAmount = 5m;
+        _sut.Filter.AccountId = Guid.NewGuid();
+        _sut.Filter.Description = "test";
+        _sut.Filter.MinAmount = 5m;
 
-        this._sut.ActiveFilterCount.ShouldBe(3);
+        _sut.ActiveFilterCount.ShouldBe(3);
     }
 
     // --- ShowBalanceColumn ---
@@ -432,8 +434,8 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ShowBalanceColumn_ReturnsTrue_WhenSingleAccountFiltered()
     {
-        this._sut.Filter.AccountId = Guid.NewGuid();
-        this._apiService.UnifiedPage = new UnifiedTransactionPageDto
+        _sut.Filter.AccountId = Guid.NewGuid();
+        _apiService.UnifiedPage = new UnifiedTransactionPageDto
         {
             BalanceInfo = new AccountBalanceInfoDto
             {
@@ -442,9 +444,9 @@ public sealed class TransactionsViewModelTests : IDisposable
             },
         };
 
-        await this._sut.LoadTransactionsAsync();
+        await _sut.LoadTransactionsAsync();
 
-        this._sut.ShowBalanceColumn.ShouldBeTrue();
+        _sut.ShowBalanceColumn.ShouldBeTrue();
     }
 
     /// <summary>
@@ -453,7 +455,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ShowBalanceColumn_ReturnsFalse_WhenNoAccountFilter()
     {
-        this._sut.ShowBalanceColumn.ShouldBeFalse();
+        _sut.ShowBalanceColumn.ShouldBeFalse();
     }
 
     // --- Error Handling ---
@@ -466,17 +468,17 @@ public sealed class TransactionsViewModelTests : IDisposable
     public async Task RetryLoadAsync_ReloadsData()
     {
         // Cause initial failure
-        this._apiService.GetAccountsException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetAccountsException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
         // Fix the API and retry
-        this._apiService.GetAccountsException = null;
-        this._apiService.UnifiedPage = CreatePageWithItems(2);
-        await this._sut.RetryLoadAsync();
+        _apiService.GetAccountsException = null;
+        _apiService.UnifiedPage = CreatePageWithItems(2);
+        await _sut.RetryLoadAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
-        this._sut.PageData.Items.Count.ShouldBe(2);
+        _sut.ErrorMessage.ShouldBeNull();
+        _sut.PageData.Items.Count.ShouldBe(2);
     }
 
     /// <summary>
@@ -486,9 +488,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     public void DismissError_ClearsErrorMessage()
     {
         // Simulate error state via reflection or public setter
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- State Change Notification ---
@@ -501,9 +503,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     public async Task InitializeAsync_InvokesOnStateChanged()
     {
         var stateChangedCount = 0;
-        this._sut.OnStateChanged = () => stateChangedCount++;
+        _sut.OnStateChanged = () => stateChangedCount++;
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
         stateChangedCount.ShouldBeGreaterThan(0);
     }
@@ -517,9 +519,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     public void ApplyQueryParameters_SetsAccountId()
     {
         var id = Guid.NewGuid();
-        this._sut.ApplyQueryParameters(id.ToString(), null, null, null, null, null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(id.ToString(), null, null, null, null, null, null, null, null, null, null, null);
 
-        this._sut.Filter.AccountId.ShouldBe(id);
+        _sut.Filter.AccountId.ShouldBe(id);
     }
 
     /// <summary>
@@ -528,9 +530,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsUncategorizedFilter()
     {
-        this._sut.ApplyQueryParameters(null, null, true, null, null, null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, true, null, null, null, null, null, null, null, null, null);
 
-        this._sut.Filter.Uncategorized.ShouldBe(true);
+        _sut.Filter.Uncategorized.ShouldBe(true);
     }
 
     /// <summary>
@@ -539,10 +541,10 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsDateRange()
     {
-        this._sut.ApplyQueryParameters(null, null, null, "2026-01-01", "2026-01-31", null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, null, "2026-01-01", "2026-01-31", null, null, null, null, null, null, null);
 
-        this._sut.Filter.StartDate.ShouldBe(new DateOnly(2026, 1, 1));
-        this._sut.Filter.EndDate.ShouldBe(new DateOnly(2026, 1, 31));
+        _sut.Filter.StartDate.ShouldBe(new DateOnly(2026, 1, 1));
+        _sut.Filter.EndDate.ShouldBe(new DateOnly(2026, 1, 31));
     }
 
     /// <summary>
@@ -551,9 +553,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsDescription()
     {
-        this._sut.ApplyQueryParameters(null, null, null, null, null, "coffee", null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, null, null, null, "coffee", null, null, null, null, null, null);
 
-        this._sut.Filter.Description.ShouldBe("coffee");
+        _sut.Filter.Description.ShouldBe("coffee");
     }
 
     /// <summary>
@@ -562,10 +564,10 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsAmountRange()
     {
-        this._sut.ApplyQueryParameters(null, null, null, null, null, null, 10m, 100m, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, null, null, null, null, 10m, 100m, null, null, null, null);
 
-        this._sut.Filter.MinAmount.ShouldBe(10m);
-        this._sut.Filter.MaxAmount.ShouldBe(100m);
+        _sut.Filter.MinAmount.ShouldBe(10m);
+        _sut.Filter.MaxAmount.ShouldBe(100m);
     }
 
     /// <summary>
@@ -574,10 +576,10 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsSortParameters()
     {
-        this._sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, "amount", false, null, null);
+        _sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, "amount", false, null, null);
 
-        this._sut.Filter.SortBy.ShouldBe("amount");
-        this._sut.Filter.SortDescending.ShouldBeFalse();
+        _sut.Filter.SortBy.ShouldBe("amount");
+        _sut.Filter.SortDescending.ShouldBeFalse();
     }
 
     /// <summary>
@@ -586,10 +588,10 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsPagination()
     {
-        this._sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, null, null, 3, 25);
+        _sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, null, null, 3, 25);
 
-        this._sut.Filter.Page.ShouldBe(3);
-        this._sut.Filter.PageSize.ShouldBe(25);
+        _sut.Filter.Page.ShouldBe(3);
+        _sut.Filter.PageSize.ShouldBe(25);
     }
 
     /// <summary>
@@ -598,9 +600,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_IgnoresInvalidAccountId()
     {
-        this._sut.ApplyQueryParameters("not-a-guid", null, null, null, null, null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters("not-a-guid", null, null, null, null, null, null, null, null, null, null, null);
 
-        this._sut.Filter.AccountId.ShouldBeNull();
+        _sut.Filter.AccountId.ShouldBeNull();
     }
 
     /// <summary>
@@ -609,7 +611,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void BuildUrlWithFilters_ReturnsBasePath_WhenNoFilters()
     {
-        this._sut.BuildUrlWithFilters().ShouldBe("/transactions");
+        _sut.BuildUrlWithFilters().ShouldBe("/transactions");
     }
 
     /// <summary>
@@ -619,9 +621,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     public void BuildUrlWithFilters_IncludesAccountFilter()
     {
         var id = Guid.NewGuid();
-        this._sut.Filter.AccountId = id;
+        _sut.Filter.AccountId = id;
 
-        this._sut.BuildUrlWithFilters().ShouldContain($"account={id}");
+        _sut.BuildUrlWithFilters().ShouldContain($"account={id}");
     }
 
     /// <summary>
@@ -630,9 +632,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void BuildUrlWithFilters_IncludesUncategorizedFlag()
     {
-        this._sut.Filter.Uncategorized = true;
+        _sut.Filter.Uncategorized = true;
 
-        this._sut.BuildUrlWithFilters().ShouldContain("uncategorized=true");
+        _sut.BuildUrlWithFilters().ShouldContain("uncategorized=true");
     }
 
     /// <summary>
@@ -641,10 +643,10 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void BuildUrlWithFilters_IncludesDateRange()
     {
-        this._sut.Filter.StartDate = new DateOnly(2026, 3, 1);
-        this._sut.Filter.EndDate = new DateOnly(2026, 3, 31);
+        _sut.Filter.StartDate = new DateOnly(2026, 3, 1);
+        _sut.Filter.EndDate = new DateOnly(2026, 3, 31);
 
-        var url = this._sut.BuildUrlWithFilters();
+        var url = _sut.BuildUrlWithFilters();
         url.ShouldContain("startDate=2026-03-01");
         url.ShouldContain("endDate=2026-03-31");
     }
@@ -656,12 +658,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ApplyFiltersAsync_UpdatesUrl()
     {
-        this._sut.Filter.AccountId = Guid.NewGuid();
+        _sut.Filter.AccountId = Guid.NewGuid();
 
-        await this._sut.ApplyFiltersAsync();
+        await _sut.ApplyFiltersAsync();
 
-        this._navigationManager.LastNavigatedUri.ShouldNotBeNull();
-        this._navigationManager.LastNavigatedUri.ShouldContain("account=");
+        _navigationManager.LastNavigatedUri.ShouldNotBeNull();
+        _navigationManager.LastNavigatedUri.ShouldContain("account=");
     }
 
     /// <summary>
@@ -671,12 +673,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ClearFiltersAsync_ResetsUrl()
     {
-        this._sut.Filter.AccountId = Guid.NewGuid();
-        await this._sut.ApplyFiltersAsync();
+        _sut.Filter.AccountId = Guid.NewGuid();
+        await _sut.ApplyFiltersAsync();
 
-        await this._sut.ClearFiltersAsync();
+        await _sut.ClearFiltersAsync();
 
-        this._navigationManager.LastNavigatedUri.ShouldBe("/transactions");
+        _navigationManager.LastNavigatedUri.ShouldBe("/transactions");
     }
 
     // --- Inline Actions ---
@@ -689,13 +691,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     public async Task UpdateTransactionCategoryAsync_ShowsSuccessToast_WhenApiReturnsResult()
     {
         var categoryId = Guid.NewGuid();
-        this._apiService.UpdateTransactionCategoryResult = new TransactionDto { Id = Guid.NewGuid() };
-        this._sut.Categories.Add(new BudgetCategoryDto { Id = categoryId, Name = "Groceries" });
+        _apiService.UpdateTransactionCategoryResult = new TransactionDto { Id = Guid.NewGuid() };
+        _sut.Categories.Add(new BudgetCategoryDto { Id = categoryId, Name = "Groceries" });
 
-        await this._sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), categoryId);
+        await _sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), categoryId);
 
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
-        this._toastService.LastSuccessMessage.ShouldContain("Groceries");
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
+        _toastService.LastSuccessMessage.ShouldContain("Groceries");
     }
 
     /// <summary>
@@ -705,12 +707,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task UpdateTransactionCategoryAsync_ShowsUncategorizedToast_WhenClearingCategory()
     {
-        this._apiService.UpdateTransactionCategoryResult = new TransactionDto { Id = Guid.NewGuid() };
+        _apiService.UpdateTransactionCategoryResult = new TransactionDto { Id = Guid.NewGuid() };
 
-        await this._sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), null);
+        await _sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), null);
 
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
-        this._toastService.LastSuccessMessage.ShouldContain("Uncategorized");
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
+        _toastService.LastSuccessMessage.ShouldContain("Uncategorized");
     }
 
     /// <summary>
@@ -720,11 +722,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task UpdateTransactionCategoryAsync_ShowsErrorToast_WhenApiFails()
     {
-        this._apiService.UpdateTransactionCategoryResult = null;
+        _apiService.UpdateTransactionCategoryResult = null;
 
-        await this._sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), Guid.NewGuid());
+        await _sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), Guid.NewGuid());
 
-        this._toastService.LastErrorMessage.ShouldNotBeNull();
+        _toastService.LastErrorMessage.ShouldNotBeNull();
     }
 
     /// <summary>
@@ -734,12 +736,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task UpdateTransactionCategoryAsync_ReloadsTransactions_OnSuccess()
     {
-        this._apiService.UpdateTransactionCategoryResult = new TransactionDto { Id = Guid.NewGuid() };
-        this._apiService.UnifiedPage = CreatePageWithItems(3);
+        _apiService.UpdateTransactionCategoryResult = new TransactionDto { Id = Guid.NewGuid() };
+        _apiService.UnifiedPage = CreatePageWithItems(3);
 
-        await this._sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), Guid.NewGuid());
+        await _sut.UpdateTransactionCategoryAsync(Guid.NewGuid(), Guid.NewGuid());
 
-        this._sut.PageData.Items.Count.ShouldBe(3);
+        _sut.PageData.Items.Count.ShouldBe(3);
     }
 
     /// <summary>
@@ -749,13 +751,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task DeleteTransactionAsync_ShowsSuccessToast_WhenApiReturnsTrue()
     {
-        this._apiService.DeleteTransactionResult = true;
-        this._apiService.UnifiedPage = CreatePageWithItems(2);
+        _apiService.DeleteTransactionResult = true;
+        _apiService.UnifiedPage = CreatePageWithItems(2);
 
-        await this._sut.DeleteTransactionAsync(Guid.NewGuid());
+        await _sut.DeleteTransactionAsync(Guid.NewGuid());
 
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
-        this._toastService.LastSuccessMessage.ShouldContain("deleted");
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
+        _toastService.LastSuccessMessage.ShouldContain("deleted");
     }
 
     /// <summary>
@@ -765,11 +767,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task DeleteTransactionAsync_ShowsErrorToast_WhenApiFails()
     {
-        this._apiService.DeleteTransactionResult = false;
+        _apiService.DeleteTransactionResult = false;
 
-        await this._sut.DeleteTransactionAsync(Guid.NewGuid());
+        await _sut.DeleteTransactionAsync(Guid.NewGuid());
 
-        this._toastService.LastErrorMessage.ShouldNotBeNull();
+        _toastService.LastErrorMessage.ShouldNotBeNull();
     }
 
     /// <summary>
@@ -780,12 +782,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     public async Task DeleteTransactionAsync_RemovesFromSelection()
     {
         var txnId = Guid.NewGuid();
-        this._apiService.DeleteTransactionResult = true;
-        this._sut.SelectedTransactionIds.Add(txnId);
+        _apiService.DeleteTransactionResult = true;
+        _sut.SelectedTransactionIds.Add(txnId);
 
-        await this._sut.DeleteTransactionAsync(txnId);
+        await _sut.DeleteTransactionAsync(txnId);
 
-        this._sut.SelectedTransactionIds.ShouldNotContain(txnId);
+        _sut.SelectedTransactionIds.ShouldNotContain(txnId);
     }
 
     // --- Bulk Categorize ---
@@ -796,12 +798,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void OpenBulkCategorize_ShowsPickerAndClearsCategoryId()
     {
-        this._sut.BulkCategoryId = Guid.NewGuid();
+        _sut.BulkCategoryId = Guid.NewGuid();
 
-        this._sut.OpenBulkCategorize();
+        _sut.OpenBulkCategorize();
 
-        this._sut.ShowBulkCategorize.ShouldBeTrue();
-        this._sut.BulkCategoryId.ShouldBeNull();
+        _sut.ShowBulkCategorize.ShouldBeTrue();
+        _sut.BulkCategoryId.ShouldBeNull();
     }
 
     /// <summary>
@@ -810,11 +812,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void CloseBulkCategorize_HidesPicker()
     {
-        this._sut.OpenBulkCategorize();
+        _sut.OpenBulkCategorize();
 
-        this._sut.CloseBulkCategorize();
+        _sut.CloseBulkCategorize();
 
-        this._sut.ShowBulkCategorize.ShouldBeFalse();
+        _sut.ShowBulkCategorize.ShouldBeFalse();
     }
 
     /// <summary>
@@ -824,12 +826,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ExecuteBulkCategorizeAsync_DoesNothing_WhenNoCategorySelected()
     {
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
-        this._sut.BulkCategoryId = null;
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _sut.BulkCategoryId = null;
 
-        await this._sut.ExecuteBulkCategorizeAsync();
+        await _sut.ExecuteBulkCategorizeAsync();
 
-        this._apiService.LastBulkCategorizeRequest.ShouldBeNull();
+        _apiService.LastBulkCategorizeRequest.ShouldBeNull();
     }
 
     /// <summary>
@@ -839,11 +841,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ExecuteBulkCategorizeAsync_DoesNothing_WhenNoSelection()
     {
-        this._sut.BulkCategoryId = Guid.NewGuid();
+        _sut.BulkCategoryId = Guid.NewGuid();
 
-        await this._sut.ExecuteBulkCategorizeAsync();
+        await _sut.ExecuteBulkCategorizeAsync();
 
-        this._apiService.LastBulkCategorizeRequest.ShouldBeNull();
+        _apiService.LastBulkCategorizeRequest.ShouldBeNull();
     }
 
     /// <summary>
@@ -856,24 +858,24 @@ public sealed class TransactionsViewModelTests : IDisposable
         var categoryId = Guid.NewGuid();
         var txnId1 = Guid.NewGuid();
         var txnId2 = Guid.NewGuid();
-        this._sut.SelectedTransactionIds.Add(txnId1);
-        this._sut.SelectedTransactionIds.Add(txnId2);
-        this._sut.BulkCategoryId = categoryId;
-        this._sut.Categories.Add(new BudgetCategoryDto { Id = categoryId, Name = "Food" });
-        this._apiService.BulkCategorizeResult = new BulkCategorizeResponse { SuccessCount = 2 };
-        this._apiService.UnifiedPage = CreatePageWithItems(1);
+        _sut.SelectedTransactionIds.Add(txnId1);
+        _sut.SelectedTransactionIds.Add(txnId2);
+        _sut.BulkCategoryId = categoryId;
+        _sut.Categories.Add(new BudgetCategoryDto { Id = categoryId, Name = "Food" });
+        _apiService.BulkCategorizeResult = new BulkCategorizeResponse { SuccessCount = 2 };
+        _apiService.UnifiedPage = CreatePageWithItems(1);
 
-        await this._sut.ExecuteBulkCategorizeAsync();
+        await _sut.ExecuteBulkCategorizeAsync();
 
-        this._apiService.LastBulkCategorizeRequest.ShouldNotBeNull();
-        this._apiService.LastBulkCategorizeRequest!.CategoryId.ShouldBe(categoryId);
-        this._apiService.LastBulkCategorizeRequest.TransactionIds.ShouldContain(txnId1);
-        this._apiService.LastBulkCategorizeRequest.TransactionIds.ShouldContain(txnId2);
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
-        this._toastService.LastSuccessMessage.ShouldContain("Food");
-        this._sut.SelectedTransactionIds.ShouldBeEmpty();
-        this._sut.ShowBulkCategorize.ShouldBeFalse();
-        this._sut.IsBulkOperationInProgress.ShouldBeFalse();
+        _apiService.LastBulkCategorizeRequest.ShouldNotBeNull();
+        _apiService.LastBulkCategorizeRequest!.CategoryId.ShouldBe(categoryId);
+        _apiService.LastBulkCategorizeRequest.TransactionIds.ShouldContain(txnId1);
+        _apiService.LastBulkCategorizeRequest.TransactionIds.ShouldContain(txnId2);
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
+        _toastService.LastSuccessMessage.ShouldContain("Food");
+        _sut.SelectedTransactionIds.ShouldBeEmpty();
+        _sut.ShowBulkCategorize.ShouldBeFalse();
+        _sut.IsBulkOperationInProgress.ShouldBeFalse();
     }
 
     /// <summary>
@@ -883,14 +885,14 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ExecuteBulkCategorizeAsync_ShowsErrorToast_OnException()
     {
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
-        this._sut.BulkCategoryId = Guid.NewGuid();
-        this._apiService.BulkCategorizeException = new InvalidOperationException("API error");
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _sut.BulkCategoryId = Guid.NewGuid();
+        _apiService.BulkCategorizeException = new InvalidOperationException("API error");
 
-        await this._sut.ExecuteBulkCategorizeAsync();
+        await _sut.ExecuteBulkCategorizeAsync();
 
-        this._toastService.LastErrorMessage.ShouldNotBeNull();
-        this._sut.IsBulkOperationInProgress.ShouldBeFalse();
+        _toastService.LastErrorMessage.ShouldNotBeNull();
+        _sut.IsBulkOperationInProgress.ShouldBeFalse();
     }
 
     // --- Bulk Delete ---
@@ -902,11 +904,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ExecuteBulkDeleteAsync_DoesNothing_WhenNoSelection()
     {
-        this._apiService.DeleteTransactionResult = true;
+        _apiService.DeleteTransactionResult = true;
 
-        await this._sut.ExecuteBulkDeleteAsync();
+        await _sut.ExecuteBulkDeleteAsync();
 
-        this._toastService.LastSuccessMessage.ShouldBeNull();
+        _toastService.LastSuccessMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -916,17 +918,17 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ExecuteBulkDeleteAsync_DeletesAndShowsToast()
     {
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
-        this._apiService.DeleteTransactionResult = true;
-        this._apiService.UnifiedPage = CreatePageWithItems(0);
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _apiService.DeleteTransactionResult = true;
+        _apiService.UnifiedPage = CreatePageWithItems(0);
 
-        await this._sut.ExecuteBulkDeleteAsync();
+        await _sut.ExecuteBulkDeleteAsync();
 
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
-        this._toastService.LastSuccessMessage.ShouldContain("2");
-        this._sut.SelectedTransactionIds.ShouldBeEmpty();
-        this._sut.IsBulkOperationInProgress.ShouldBeFalse();
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
+        _toastService.LastSuccessMessage.ShouldContain("2");
+        _sut.SelectedTransactionIds.ShouldBeEmpty();
+        _sut.IsBulkOperationInProgress.ShouldBeFalse();
     }
 
     /// <summary>
@@ -936,13 +938,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ExecuteBulkDeleteAsync_ShowsErrorToast_OnException()
     {
-        this._sut.SelectedTransactionIds.Add(Guid.NewGuid());
-        this._apiService.DeleteTransactionException = new InvalidOperationException("fail");
+        _sut.SelectedTransactionIds.Add(Guid.NewGuid());
+        _apiService.DeleteTransactionException = new InvalidOperationException("fail");
 
-        await this._sut.ExecuteBulkDeleteAsync();
+        await _sut.ExecuteBulkDeleteAsync();
 
-        this._toastService.LastErrorMessage.ShouldNotBeNull();
-        this._sut.IsBulkOperationInProgress.ShouldBeFalse();
+        _toastService.LastErrorMessage.ShouldNotBeNull();
+        _sut.IsBulkOperationInProgress.ShouldBeFalse();
     }
 
     // --- Create Rule ---
@@ -953,12 +955,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void OpenCreateRule_PrefillsRuleAndShowsModal()
     {
-        this._sut.OpenCreateRule("GROCERY STORE");
+        _sut.OpenCreateRule("GROCERY STORE");
 
-        this._sut.ShowCreateRule.ShouldBeTrue();
-        this._sut.NewRule.Pattern.ShouldBe("GROCERY STORE");
-        this._sut.NewRule.Name.ShouldBe("GROCERY STORE");
-        this._sut.NewRule.MatchType.ShouldBe("Contains");
+        _sut.ShowCreateRule.ShouldBeTrue();
+        _sut.NewRule.Pattern.ShouldBe("GROCERY STORE");
+        _sut.NewRule.Name.ShouldBe("GROCERY STORE");
+        _sut.NewRule.MatchType.ShouldBe("Contains");
     }
 
     /// <summary>
@@ -967,11 +969,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void CloseCreateRule_HidesModal()
     {
-        this._sut.OpenCreateRule("Test");
+        _sut.OpenCreateRule("Test");
 
-        this._sut.CloseCreateRule();
+        _sut.CloseCreateRule();
 
-        this._sut.ShowCreateRule.ShouldBeFalse();
+        _sut.ShowCreateRule.ShouldBeFalse();
     }
 
     /// <summary>
@@ -981,19 +983,19 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_ShowsSuccessToast_OnSuccess()
     {
-        this._apiService.CreateRuleResult = new CategorizationRuleDto
+        _apiService.CreateRuleResult = new CategorizationRuleDto
         {
             Id = Guid.NewGuid(),
             Name = "Grocery Rule",
         };
-        this._sut.OpenCreateRule("GROCERY STORE");
+        _sut.OpenCreateRule("GROCERY STORE");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
-        this._toastService.LastSuccessMessage.ShouldContain("Grocery Rule");
-        this._sut.ShowCreateRule.ShouldBeFalse();
-        this._sut.IsCreatingRule.ShouldBeFalse();
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
+        _toastService.LastSuccessMessage.ShouldContain("Grocery Rule");
+        _sut.ShowCreateRule.ShouldBeFalse();
+        _sut.IsCreatingRule.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1003,13 +1005,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_ShowsErrorToast_WhenApiReturnsNull()
     {
-        this._apiService.CreateRuleResult = null;
-        this._sut.OpenCreateRule("Test");
+        _apiService.CreateRuleResult = null;
+        _sut.OpenCreateRule("Test");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._toastService.LastErrorMessage.ShouldNotBeNull();
-        this._sut.IsCreatingRule.ShouldBeFalse();
+        _toastService.LastErrorMessage.ShouldNotBeNull();
+        _sut.IsCreatingRule.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1019,14 +1021,14 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_ShowsErrorToast_OnException()
     {
-        this._apiService.CreateRuleException = new InvalidOperationException("API down");
-        this._sut.OpenCreateRule("Test");
+        _apiService.CreateRuleException = new InvalidOperationException("API down");
+        _sut.OpenCreateRule("Test");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._toastService.LastErrorMessage.ShouldNotBeNull();
-        this._toastService.LastErrorMessage.ShouldContain("API down");
-        this._sut.IsCreatingRule.ShouldBeFalse();
+        _toastService.LastErrorMessage.ShouldNotBeNull();
+        _toastService.LastErrorMessage.ShouldContain("API down");
+        _sut.IsCreatingRule.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1036,13 +1038,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_ReloadsTransactions_OnSuccess()
     {
-        this._apiService.CreateRuleResult = new CategorizationRuleDto { Id = Guid.NewGuid(), Name = "R" };
-        this._apiService.UnifiedPage = CreatePageWithItems(5);
-        this._sut.OpenCreateRule("Test");
+        _apiService.CreateRuleResult = new CategorizationRuleDto { Id = Guid.NewGuid(), Name = "R" };
+        _apiService.UnifiedPage = CreatePageWithItems(5);
+        _sut.OpenCreateRule("Test");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.PageData.Items.Count.ShouldBe(5);
+        _sut.PageData.Items.Count.ShouldBe(5);
     }
 
     /// <summary>
@@ -1052,12 +1054,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_ShowsApplyRulesPrompt_OnSuccess()
     {
-        this._apiService.CreateRuleResult = new CategorizationRuleDto { Id = Guid.NewGuid(), Name = "Grocery Rule" };
-        this._sut.OpenCreateRule("GROCERY STORE");
+        _apiService.CreateRuleResult = new CategorizationRuleDto { Id = Guid.NewGuid(), Name = "Grocery Rule" };
+        _sut.OpenCreateRule("GROCERY STORE");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.ShowApplyRulesPrompt.ShouldBeTrue();
+        _sut.ShowApplyRulesPrompt.ShouldBeTrue();
     }
 
     /// <summary>
@@ -1067,12 +1069,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task CreateRuleAsync_DoesNotShowApplyRulesPrompt_OnFailure()
     {
-        this._apiService.CreateRuleResult = null;
-        this._sut.OpenCreateRule("Test");
+        _apiService.CreateRuleResult = null;
+        _sut.OpenCreateRule("Test");
 
-        await this._sut.CreateRuleAsync();
+        await _sut.CreateRuleAsync();
 
-        this._sut.ShowApplyRulesPrompt.ShouldBeFalse();
+        _sut.ShowApplyRulesPrompt.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1082,14 +1084,14 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ApplyRulesAfterCreationAsync_CallsApi_ShowsSuccessToast()
     {
-        this._apiService.ApplyRulesResult = new ApplyRulesResponse { Categorized = 3 };
+        _apiService.ApplyRulesResult = new ApplyRulesResponse { Categorized = 3 };
 
-        await this._sut.ApplyRulesAfterCreationAsync();
+        await _sut.ApplyRulesAfterCreationAsync();
 
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
-        this._toastService.LastSuccessMessage.ShouldContain("3");
-        this._sut.ShowApplyRulesPrompt.ShouldBeFalse();
-        this._sut.IsApplyingRules.ShouldBeFalse();
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
+        _toastService.LastSuccessMessage.ShouldContain("3");
+        _sut.ShowApplyRulesPrompt.ShouldBeFalse();
+        _sut.IsApplyingRules.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1099,13 +1101,13 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task ApplyRulesAfterCreationAsync_ShowsErrorToast_OnFailure()
     {
-        this._apiService.ApplyRulesResult = null;
+        _apiService.ApplyRulesResult = null;
 
-        await this._sut.ApplyRulesAfterCreationAsync();
+        await _sut.ApplyRulesAfterCreationAsync();
 
-        this._toastService.LastErrorMessage.ShouldNotBeNull();
-        this._sut.ShowApplyRulesPrompt.ShouldBeFalse();
-        this._sut.IsApplyingRules.ShouldBeFalse();
+        _toastService.LastErrorMessage.ShouldNotBeNull();
+        _sut.ShowApplyRulesPrompt.ShouldBeFalse();
+        _sut.IsApplyingRules.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1114,9 +1116,9 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void DismissApplyRulesPrompt_HidesPrompt()
     {
-        this._sut.DismissApplyRulesPrompt();
+        _sut.DismissApplyRulesPrompt();
 
-        this._sut.ShowApplyRulesPrompt.ShouldBeFalse();
+        _sut.ShowApplyRulesPrompt.ShouldBeFalse();
     }
 
     // --- Suggestions ---
@@ -1130,7 +1132,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     {
         var txnId = Guid.NewGuid();
         var categoryId = Guid.NewGuid();
-        this._apiService.UnifiedPage = new UnifiedTransactionPageDto
+        _apiService.UnifiedPage = new UnifiedTransactionPageDto
         {
             Items = new List<UnifiedTransactionItemDto>
             {
@@ -1140,7 +1142,7 @@ public sealed class TransactionsViewModelTests : IDisposable
             Page = 1,
             PageSize = 50,
         };
-        this._apiService.BatchSuggestionsResult = new BatchSuggestCategoriesResponse
+        _apiService.BatchSuggestionsResult = new BatchSuggestCategoriesResponse
         {
             Suggestions = new Dictionary<Guid, InlineCategorySuggestionDto>
             {
@@ -1148,10 +1150,10 @@ public sealed class TransactionsViewModelTests : IDisposable
             },
         };
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Suggestions.ShouldContainKey(txnId);
-        this._sut.Suggestions[txnId].CategoryName.ShouldBe("Groceries");
+        _sut.Suggestions.ShouldContainKey(txnId);
+        _sut.Suggestions[txnId].CategoryName.ShouldBe("Groceries");
     }
 
     /// <summary>
@@ -1161,7 +1163,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task LoadSuggestionsAsync_ClearsSuggestions_WhenNoUncategorized()
     {
-        this._apiService.UnifiedPage = new UnifiedTransactionPageDto
+        _apiService.UnifiedPage = new UnifiedTransactionPageDto
         {
             Items = new List<UnifiedTransactionItemDto>
             {
@@ -1172,9 +1174,9 @@ public sealed class TransactionsViewModelTests : IDisposable
             PageSize = 50,
         };
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Suggestions.ShouldBeEmpty();
+        _sut.Suggestions.ShouldBeEmpty();
     }
 
     /// <summary>
@@ -1184,11 +1186,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task LoadSuggestionsAsync_SetsIsLoadingSuggestionsToFalse()
     {
-        this._apiService.UnifiedPage = CreatePageWithItems(1);
+        _apiService.UnifiedPage = CreatePageWithItems(1);
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoadingSuggestions.ShouldBeFalse();
+        _sut.IsLoadingSuggestions.ShouldBeFalse();
     }
 
     /// <summary>
@@ -1200,7 +1202,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     {
         var txnId = Guid.NewGuid();
         var categoryId = Guid.NewGuid();
-        this._apiService.UnifiedPage = new UnifiedTransactionPageDto
+        _apiService.UnifiedPage = new UnifiedTransactionPageDto
         {
             Items = new List<UnifiedTransactionItemDto>
             {
@@ -1210,14 +1212,14 @@ public sealed class TransactionsViewModelTests : IDisposable
             Page = 1,
             PageSize = 50,
         };
-        this._apiService.BatchSuggestionsResult = new BatchSuggestCategoriesResponse
+        _apiService.BatchSuggestionsResult = new BatchSuggestCategoriesResponse
         {
             Suggestions = new Dictionary<Guid, InlineCategorySuggestionDto>
             {
                 [txnId] = new() { TransactionId = txnId, CategoryId = categoryId, CategoryName = "Groceries" },
             },
         };
-        this._apiService.UpdateTransactionCategoryResult = new TransactionDto
+        _apiService.UpdateTransactionCategoryResult = new TransactionDto
         {
             Id = txnId,
             Date = new DateOnly(2026, 1, 15),
@@ -1226,11 +1228,11 @@ public sealed class TransactionsViewModelTests : IDisposable
             AccountId = Guid.NewGuid(),
         };
 
-        await this._sut.InitializeAsync();
-        await this._sut.AcceptSuggestionAsync(txnId);
+        await _sut.InitializeAsync();
+        await _sut.AcceptSuggestionAsync(txnId);
 
-        this._sut.Suggestions.ShouldNotContainKey(txnId);
-        this._toastService.LastSuccessMessage.ShouldNotBeNull();
+        _sut.Suggestions.ShouldNotContainKey(txnId);
+        _toastService.LastSuccessMessage.ShouldNotBeNull();
     }
 
     /// <summary>
@@ -1240,12 +1242,12 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public async Task AcceptSuggestionAsync_DoesNothing_WhenNoSuggestion()
     {
-        this._apiService.UnifiedPage = CreatePageWithItems(1);
+        _apiService.UnifiedPage = CreatePageWithItems(1);
 
-        await this._sut.InitializeAsync();
-        await this._sut.AcceptSuggestionAsync(Guid.NewGuid());
+        await _sut.InitializeAsync();
+        await _sut.AcceptSuggestionAsync(Guid.NewGuid());
 
-        this._sut.Suggestions.ShouldBeEmpty();
+        _sut.Suggestions.ShouldBeEmpty();
     }
 
     private static UnifiedTransactionPageDto CreatePageWithItems(int count)
@@ -1284,9 +1286,15 @@ public sealed class TransactionsViewModelTests : IDisposable
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];
 
-        public string? LastSuccessMessage { get; private set; }
+        public string? LastSuccessMessage
+        {
+            get; private set;
+        }
 
-        public string? LastErrorMessage { get; private set; }
+        public string? LastErrorMessage
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public void ShowSuccess(string message, string? title = null)
@@ -1333,7 +1341,10 @@ public sealed class TransactionsViewModelTests : IDisposable
         /// <summary>
         /// Gets the last URI navigated to.
         /// </summary>
-        public string? LastNavigatedUri { get; private set; }
+        public string? LastNavigatedUri
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         protected override void NavigateToCore(string uri, bool forceLoad)

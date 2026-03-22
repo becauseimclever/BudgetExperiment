@@ -3,11 +3,14 @@
 // </copyright>
 
 using System.Globalization;
+
 using BudgetExperiment.Client.Components.Reports;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Reports;
@@ -25,8 +28,8 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
     public CalendarInsightsPanelTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this._stubApiService = new StubBudgetApiService();
-        this.Services.AddSingleton<IBudgetApiService>(this._stubApiService);
+        _stubApiService = new StubBudgetApiService();
+        this.Services.AddSingleton<IBudgetApiService>(_stubApiService);
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
     }
@@ -81,7 +84,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
     public void Panel_ExpandsOnHeaderClick_AndLoadsData()
     {
         // Arrange
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
+        _stubApiService.MonthlyCategoryReportResult = CreateTestReport();
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2));
@@ -92,7 +95,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         // Assert
         var panel = cut.Find(".calendar-insights-panel");
         Assert.Contains("expanded", panel.ClassList);
-        Assert.True(this._stubApiService.GetMonthlyCategoryReportCalled);
+        Assert.True(_stubApiService.GetMonthlyCategoryReportCalled);
     }
 
     /// <summary>
@@ -102,7 +105,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
     public void Panel_CollapsesOnSecondHeaderClick()
     {
         // Arrange
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
+        _stubApiService.MonthlyCategoryReportResult = CreateTestReport();
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2));
@@ -126,7 +129,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         var report = CreateTestReport();
         report.TotalIncome = new MoneyDto { Amount = 4000m, Currency = "USD" };
         report.TotalSpending = new MoneyDto { Amount = 2500m, Currency = "USD" };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -156,7 +159,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Gas", CategoryColor = "#2196F3", Amount = new MoneyDto { Amount = 200m, Currency = "USD" }, Percentage = 13.3m, TransactionCount = 5 },
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Entertainment", CategoryColor = "#9C27B0", Amount = new MoneyDto { Amount = 100m, Currency = "USD" }, Percentage = 6.7m, TransactionCount = 3 },
         };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -180,7 +183,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
     public void Panel_ShowsViewFullReportLink()
     {
         // Arrange
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
+        _stubApiService.MonthlyCategoryReportResult = CreateTestReport();
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2));
@@ -220,7 +223,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
     {
         // Arrange
         var expandedValue = false;
-        this._stubApiService.MonthlyCategoryReportResult = CreateTestReport();
+        _stubApiService.MonthlyCategoryReportResult = CreateTestReport();
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
             .Add(p => p.Month, 2)
@@ -246,8 +249,8 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         var previousReport = CreateTestReport();
         previousReport.TotalSpending = new MoneyDto { Amount = 2000m, Currency = "USD" };
 
-        this._stubApiService.MonthlyCategoryReportResult = currentReport;
-        this._stubApiService.PreviousMonthReportResult = previousReport;
+        _stubApiService.MonthlyCategoryReportResult = currentReport;
+        _stubApiService.PreviousMonthReportResult = previousReport;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -273,7 +276,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
             .Add(p => p.Month, 2));
 
         // Assert
-        Assert.False(this._stubApiService.GetMonthlyCategoryReportCalled);
+        Assert.False(_stubApiService.GetMonthlyCategoryReportCalled);
     }
 
     /// <summary>
@@ -286,7 +289,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         var report = CreateTestReport();
         report.TotalIncome = new MoneyDto { Amount = 5000m, Currency = "USD" };
         report.TotalSpending = new MoneyDto { Amount = 3000m, Currency = "USD" };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -309,7 +312,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         var report = CreateTestReport();
         report.TotalIncome = new MoneyDto { Amount = 2000m, Currency = "USD" };
         report.TotalSpending = new MoneyDto { Amount = 3000m, Currency = "USD" };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -334,7 +337,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
         {
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Groceries", Amount = new MoneyDto { Amount = 450m, Currency = "USD" }, Percentage = 100m, TransactionCount = 5 },
         };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -360,7 +363,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Groceries", Amount = new MoneyDto { Amount = 450m, Currency = "USD" }, Percentage = 60m, TransactionCount = 12 },
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Dining", Amount = new MoneyDto { Amount = 300m, Currency = "USD" }, Percentage = 40m, TransactionCount = 8 },
         };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -387,7 +390,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Groceries", CategoryColor = "#4CAF50", Amount = new MoneyDto { Amount = 500m, Currency = "USD" }, Percentage = 100m, TransactionCount = 5 },
             new() { CategoryId = Guid.NewGuid(), CategoryName = "EmptyCategory", CategoryColor = "#FF0000", Amount = new MoneyDto { Amount = 0m, Currency = "USD" }, Percentage = 0m, TransactionCount = 0 },
         };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -419,7 +422,7 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Large", CategoryColor = "#00FF00", Amount = new MoneyDto { Amount = 500m, Currency = "USD" }, Percentage = 55.6m, TransactionCount = 5 },
             new() { CategoryId = Guid.NewGuid(), CategoryName = "Medium", CategoryColor = "#0000FF", Amount = new MoneyDto { Amount = 300m, Currency = "USD" }, Percentage = 33.3m, TransactionCount = 3 },
         };
-        this._stubApiService.MonthlyCategoryReportResult = report;
+        _stubApiService.MonthlyCategoryReportResult = report;
 
         var cut = Render<CalendarInsightsPanel>(parameters => parameters
             .Add(p => p.Year, 2026)
@@ -457,13 +460,22 @@ public class CalendarInsightsPanelTests : BunitContext, IAsyncLifetime
     private sealed class StubBudgetApiService : IBudgetApiService
     {
         /// <summary>Gets or sets the result for the current month report.</summary>
-        public MonthlyCategoryReportDto? MonthlyCategoryReportResult { get; set; }
+        public MonthlyCategoryReportDto? MonthlyCategoryReportResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the result for the previous month report (for trend calculation).</summary>
-        public MonthlyCategoryReportDto? PreviousMonthReportResult { get; set; }
+        public MonthlyCategoryReportDto? PreviousMonthReportResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets a value indicating whether GetMonthlyCategoryReportAsync was called.</summary>
-        public bool GetMonthlyCategoryReportCalled { get; private set; }
+        public bool GetMonthlyCategoryReportCalled
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month)

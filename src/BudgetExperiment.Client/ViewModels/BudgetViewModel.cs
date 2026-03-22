@@ -5,6 +5,7 @@
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Shared.Budgeting;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.ViewModels;
@@ -33,16 +34,19 @@ public sealed class BudgetViewModel : IDisposable
         ScopeService scopeService,
         IApiErrorContext apiErrorContext)
     {
-        this._apiService = apiService;
-        this._navigationManager = navigationManager;
-        this._scopeService = scopeService;
-        this._apiErrorContext = apiErrorContext;
+        _apiService = apiService;
+        _navigationManager = navigationManager;
+        _scopeService = scopeService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether budget data is loading.
@@ -52,27 +56,42 @@ public sealed class BudgetViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a form submission is in progress.
     /// </summary>
-    public bool IsSubmitting { get; private set; }
+    public bool IsSubmitting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the traceId from the API error response that caused the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget summary data.
     /// </summary>
-    public BudgetSummaryDto? Summary { get; private set; }
+    public BudgetSummaryDto? Summary
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current date used for month navigation.
@@ -82,17 +101,26 @@ public sealed class BudgetViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the edit goal modal is visible.
     /// </summary>
-    public bool ShowEditGoalModal { get; private set; }
+    public bool ShowEditGoalModal
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget progress item being edited.
     /// </summary>
-    public BudgetProgressDto? EditingProgress { get; private set; }
+    public BudgetProgressDto? EditingProgress
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the target amount for the goal being edited.
     /// </summary>
-    public decimal EditTargetAmount { get; set; }
+    public decimal EditTargetAmount
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the overall budget status based on percent used.
@@ -136,7 +164,7 @@ public sealed class BudgetViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
+        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadBudgetAsync();
     }
 
@@ -152,12 +180,12 @@ public sealed class BudgetViewModel : IDisposable
 
         try
         {
-            this.Summary = await this._apiService.GetBudgetSummaryAsync(this.CurrentDate.Year, this.CurrentDate.Month);
+            this.Summary = await _apiService.GetBudgetSummaryAsync(this.CurrentDate.Year, this.CurrentDate.Month);
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load budget: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -262,7 +290,7 @@ public sealed class BudgetViewModel : IDisposable
                 },
             };
 
-            var result = await this._apiService.SetBudgetGoalAsync(this.EditingProgress.CategoryId, goalDto);
+            var result = await _apiService.SetBudgetGoalAsync(this.EditingProgress.CategoryId, goalDto);
             if (result.IsSuccess)
             {
                 this.ShowEditGoalModal = false;
@@ -277,7 +305,7 @@ public sealed class BudgetViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to save budget goal: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -300,7 +328,7 @@ public sealed class BudgetViewModel : IDisposable
 
         try
         {
-            var success = await this._apiService.DeleteBudgetGoalAsync(
+            var success = await _apiService.DeleteBudgetGoalAsync(
                 this.EditingProgress.CategoryId,
                 this.CurrentDate.Year,
                 this.CurrentDate.Month);
@@ -319,7 +347,7 @@ public sealed class BudgetViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to delete budget goal: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -332,13 +360,13 @@ public sealed class BudgetViewModel : IDisposable
     /// </summary>
     public void NavigateToCategories()
     {
-        this._navigationManager.NavigateTo("/categories");
+        _navigationManager.NavigateTo("/categories");
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
     }
 
     private async void OnScopeChanged(BudgetScope? scope)

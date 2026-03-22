@@ -22,14 +22,14 @@ public class ReconciliationMatchRepositoryTests
     /// <param name="fixture">The shared PostgreSQL database fixture.</param>
     public ReconciliationMatchRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Returns_Match()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
 
         var match = ReconciliationMatch.Create(
@@ -47,7 +47,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(match.Id);
 
@@ -64,7 +64,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task GetPendingMatchesAsync_Returns_Only_Suggested_Matches()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
 
         var suggestedMatch = ReconciliationMatch.Create(
@@ -94,7 +94,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var pendingMatches = await verifyRepo.GetPendingMatchesAsync();
 
@@ -107,7 +107,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task GetByRecurringTransactionAsync_Filters_By_RecurringId_And_DateRange()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
 
         var janMatch = ReconciliationMatch.Create(
@@ -136,7 +136,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var janMatches = await verifyRepo.GetByRecurringTransactionAsync(
             recurringId,
@@ -152,7 +152,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task GetByTransactionIdAsync_Returns_Matches_For_Transaction()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
 
         var match = ReconciliationMatch.Create(
@@ -170,7 +170,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var matches = await verifyRepo.GetByTransactionIdAsync(transactionId);
 
@@ -183,7 +183,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task GetByPeriodAsync_Returns_Matches_For_Month()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
 
         var janMatch = ReconciliationMatch.Create(
@@ -212,7 +212,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var janMatches = await verifyRepo.GetByPeriodAsync(2026, 1);
 
@@ -225,7 +225,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task ExistsAsync_Returns_True_When_Match_Exists()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
         var instanceDate = new DateOnly(2026, 1, 15);
 
@@ -244,7 +244,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var exists = await verifyRepo.ExistsAsync(transactionId, recurringId, instanceDate);
 
@@ -256,7 +256,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task ExistsAsync_Returns_False_When_Match_Does_Not_Exist()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
 
         // Act
         var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
@@ -270,7 +270,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task RemoveAsync_Deletes_Match()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
 
         var match = ReconciliationMatch.Create(
@@ -292,7 +292,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(match.Id);
         Assert.Null(retrieved);
@@ -302,7 +302,7 @@ public class ReconciliationMatchRepositoryTests
     public async Task ScopeFilter_Returns_Shared_And_Personal_Matches_For_User()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
         var userId = FakeUserContext.DefaultUserId;
         var otherUserId = Guid.NewGuid();
@@ -344,7 +344,7 @@ public class ReconciliationMatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var matches = await verifyRepo.ListAsync(0, 10);
 

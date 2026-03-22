@@ -12,27 +12,42 @@ public sealed class AcceptSuggestionResult
     /// <summary>
     /// Gets a value indicating whether the operation was successful.
     /// </summary>
-    public bool Success { get; init; }
+    public bool Success
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the ID of the suggestion that was accepted.
     /// </summary>
-    public Guid SuggestionId { get; init; }
+    public Guid SuggestionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the ID of the created category (if successful).
     /// </summary>
-    public Guid? CreatedCategoryId { get; init; }
+    public Guid? CreatedCategoryId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the name of the created category.
     /// </summary>
-    public string? CategoryName { get; init; }
+    public string? CategoryName
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the error message (if failed).
     /// </summary>
-    public string? ErrorMessage { get; init; }
+    public string? ErrorMessage
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Creates a successful result.

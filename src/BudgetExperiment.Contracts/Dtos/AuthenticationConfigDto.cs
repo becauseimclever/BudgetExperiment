@@ -13,10 +13,16 @@ public sealed class AuthenticationConfigDto
     /// Gets the authentication mode: "none" or "oidc".
     /// When "none", authentication is disabled and all users get default scope.
     /// </summary>
-    public required string Mode { get; init; }
+    public required string Mode
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the OIDC provider settings (populated when Mode = "oidc").
     /// </summary>
-    public OidcConfigDto? Oidc { get; init; }
+    public OidcConfigDto? Oidc
+    {
+        get; init;
+    }
 }

@@ -12,15 +12,24 @@ public sealed record ReportWidgetPaletteItem
     /// <summary>
     /// Gets the widget type.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the display title.
     /// </summary>
-    public required string Title { get; init; }
+    public required string Title
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the description.
     /// </summary>
-    public string? Description { get; init; }
+    public string? Description
+    {
+        get; init;
+    }
 }

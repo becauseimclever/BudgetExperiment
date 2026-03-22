@@ -37,10 +37,10 @@ public sealed class CalendarController : ControllerBase
         IDayDetailService dayDetailService,
         ITransactionListService transactionListService)
     {
-        this._calendarService = calendarService;
-        this._gridService = gridService;
-        this._dayDetailService = dayDetailService;
-        this._transactionListService = transactionListService;
+        _calendarService = calendarService;
+        _gridService = gridService;
+        _dayDetailService = dayDetailService;
+        _transactionListService = transactionListService;
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public sealed class CalendarController : ControllerBase
             return this.BadRequest("Year must be between 1 and 9999.");
         }
 
-        var grid = await this._gridService.GetCalendarGridAsync(year, month, accountId, cancellationToken);
+        var grid = await _gridService.GetCalendarGridAsync(year, month, accountId, cancellationToken);
         return this.Ok(grid);
     }
 
@@ -89,7 +89,7 @@ public sealed class CalendarController : ControllerBase
         [FromQuery] Guid? accountId,
         CancellationToken cancellationToken)
     {
-        var detail = await this._dayDetailService.GetDayDetailAsync(date, accountId, cancellationToken);
+        var detail = await _dayDetailService.GetDayDetailAsync(date, accountId, cancellationToken);
         return this.Ok(detail);
     }
 
@@ -120,7 +120,7 @@ public sealed class CalendarController : ControllerBase
 
         try
         {
-            var result = await this._transactionListService.GetAccountTransactionListAsync(
+            var result = await _transactionListService.GetAccountTransactionListAsync(
                 accountId,
                 startDate,
                 endDate,
@@ -165,7 +165,7 @@ public sealed class CalendarController : ControllerBase
             return this.BadRequest("Year must be between 1 and 9999.");
         }
 
-        var summary = await this._calendarService.GetMonthlySummaryAsync(year, month, accountId, cancellationToken);
+        var summary = await _calendarService.GetMonthlySummaryAsync(year, month, accountId, cancellationToken);
         return this.Ok(summary);
     }
 }

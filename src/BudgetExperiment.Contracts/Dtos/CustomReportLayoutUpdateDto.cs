@@ -10,8 +10,14 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class CustomReportLayoutUpdateDto
 {
     /// <summary>Gets or sets the layout name.</summary>
-    public string? Name { get; set; }
+    public string? Name
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the layout JSON definition.</summary>
-    public string? LayoutJson { get; set; }
+    public string? LayoutJson
+    {
+        get; set;
+    }
 }

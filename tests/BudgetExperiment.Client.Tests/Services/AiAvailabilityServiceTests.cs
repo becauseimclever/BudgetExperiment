@@ -247,11 +247,20 @@ public class AiAvailabilityServiceTests
     /// </summary>
     private sealed class FakeAiApiService : IAiApiService
     {
-        public AiStatusDto? StatusToReturn { get; set; }
+        public AiStatusDto? StatusToReturn
+        {
+            get; set;
+        }
 
-        public Exception? ExceptionToThrow { get; set; }
+        public Exception? ExceptionToThrow
+        {
+            get; set;
+        }
 
-        public int GetStatusCallCount { get; private set; }
+        public int GetStatusCallCount
+        {
+            get; private set;
+        }
 
         public Task<AiStatusDto?> GetStatusAsync()
         {

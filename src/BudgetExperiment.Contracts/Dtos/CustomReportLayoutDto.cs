@@ -10,7 +10,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class CustomReportLayoutDto
 {
     /// <summary>Gets or sets the layout ID.</summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the layout name.</summary>
     public string Name { get; set; } = string.Empty;
@@ -22,11 +25,20 @@ public sealed class CustomReportLayoutDto
     public string Scope { get; set; } = "Shared";
 
     /// <summary>Gets or sets when the layout was created (UTC).</summary>
-    public DateTime CreatedAtUtc { get; set; }
+    public DateTime CreatedAtUtc
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets when the layout was last updated (UTC).</summary>
-    public DateTime UpdatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the concurrency version token for optimistic concurrency.</summary>
-    public string? Version { get; set; }
+    public string? Version
+    {
+        get; set;
+    }
 }

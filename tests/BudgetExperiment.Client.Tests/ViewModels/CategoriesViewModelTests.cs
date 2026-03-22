@@ -7,7 +7,9 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -29,19 +31,19 @@ public sealed class CategoriesViewModelTests : IDisposable
     /// </summary>
     public CategoriesViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new CategoriesViewModel(
-            this._apiService,
-            this._toastService,
-            this._scopeService,
-            this._chatContext,
-            this._apiErrorContext);
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new CategoriesViewModel(
+            _apiService,
+            _toastService,
+            _scopeService,
+            _chatContext,
+            _apiErrorContext);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -53,12 +55,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsCategories()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Categories.Count.ShouldBe(1);
-        this._sut.Categories[0].Name.ShouldBe("Groceries");
+        _sut.Categories.Count.ShouldBe(1);
+        _sut.Categories[0].Name.ShouldBe("Groceries");
     }
 
     /// <summary>
@@ -68,9 +70,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -80,9 +82,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsPageTypeOnChatContext()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._chatContext.CurrentContext.PageType.ShouldBe("categories");
+        _chatContext.CurrentContext.PageType.ShouldBe("categories");
     }
 
     /// <summary>
@@ -92,13 +94,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetCategoriesException = new HttpRequestException("Server error");
+        _apiService.GetCategoriesException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load categories");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load categories");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- LoadCategoriesAsync ---
@@ -110,14 +112,14 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task LoadCategoriesAsync_ClearsErrorMessage()
     {
-        this._apiService.GetCategoriesException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetCategoriesException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.GetCategoriesException = null;
-        await this._sut.LoadCategoriesAsync();
+        _apiService.GetCategoriesException = null;
+        await _sut.LoadCategoriesAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- RetryLoadAsync ---
@@ -129,13 +131,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_ReloadsCategories()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.Categories.Add(CreateCategory("NewCat", "Expense"));
+        await _sut.InitializeAsync();
+        _apiService.Categories.Add(CreateCategory("NewCat", "Expense"));
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
-        this._sut.Categories.Count.ShouldBe(1);
-        this._sut.IsRetrying.ShouldBeFalse();
+        _sut.Categories.Count.ShouldBe(1);
+        _sut.IsRetrying.ShouldBeFalse();
     }
 
     /// <summary>
@@ -146,9 +148,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task RetryLoadAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -162,12 +164,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task DismissError_ClearsErrorMessage()
     {
-        this._apiService.GetCategoriesException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
+        _apiService.GetCategoriesException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -177,9 +179,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     public void DismissError_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         notified.ShouldBeTrue();
     }
@@ -193,12 +195,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task ExpenseCategories_FiltersExpenseType()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
-        this._apiService.Categories.Add(CreateCategory("Salary", "Income"));
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Salary", "Income"));
+        await _sut.InitializeAsync();
 
-        this._sut.ExpenseCategories.Count.ShouldBe(1);
-        this._sut.ExpenseCategories[0].Name.ShouldBe("Groceries");
+        _sut.ExpenseCategories.Count.ShouldBe(1);
+        _sut.ExpenseCategories[0].Name.ShouldBe("Groceries");
     }
 
     /// <summary>
@@ -208,12 +210,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task IncomeCategories_FiltersIncomeType()
     {
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
-        this._apiService.Categories.Add(CreateCategory("Salary", "Income"));
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        _apiService.Categories.Add(CreateCategory("Salary", "Income"));
+        await _sut.InitializeAsync();
 
-        this._sut.IncomeCategories.Count.ShouldBe(1);
-        this._sut.IncomeCategories[0].Name.ShouldBe("Salary");
+        _sut.IncomeCategories.Count.ShouldBe(1);
+        _sut.IncomeCategories[0].Name.ShouldBe("Salary");
     }
 
     /// <summary>
@@ -223,12 +225,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task TransferCategories_FiltersTransferType()
     {
-        this._apiService.Categories.Add(CreateCategory("Transfer Out", "Transfer"));
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(CreateCategory("Transfer Out", "Transfer"));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense"));
+        await _sut.InitializeAsync();
 
-        this._sut.TransferCategories.Count.ShouldBe(1);
-        this._sut.TransferCategories[0].Name.ShouldBe("Transfer Out");
+        _sut.TransferCategories.Count.ShouldBe(1);
+        _sut.TransferCategories[0].Name.ShouldBe("Transfer Out");
     }
 
     /// <summary>
@@ -238,12 +240,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task ComputedCategories_SortBySortOrderThenName()
     {
-        this._apiService.Categories.Add(CreateCategory("Utilities", "Expense", sortOrder: 2));
-        this._apiService.Categories.Add(CreateCategory("Groceries", "Expense", sortOrder: 1));
-        this._apiService.Categories.Add(CreateCategory("Dining", "Expense", sortOrder: 1));
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(CreateCategory("Utilities", "Expense", sortOrder: 2));
+        _apiService.Categories.Add(CreateCategory("Groceries", "Expense", sortOrder: 1));
+        _apiService.Categories.Add(CreateCategory("Dining", "Expense", sortOrder: 1));
+        await _sut.InitializeAsync();
 
-        var expenses = this._sut.ExpenseCategories;
+        var expenses = _sut.ExpenseCategories;
         expenses[0].Name.ShouldBe("Dining");
         expenses[1].Name.ShouldBe("Groceries");
         expenses[2].Name.ShouldBe("Utilities");
@@ -257,11 +259,11 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public void OpenAddCategory_ShowsFormAndResetsModel()
     {
-        this._sut.OpenAddCategory();
+        _sut.OpenAddCategory();
 
-        this._sut.ShowAddForm.ShouldBeTrue();
-        this._sut.NewCategory.Type.ShouldBe("Expense");
-        this._sut.NewCategory.Color.ShouldBe("#4CAF50");
+        _sut.ShowAddForm.ShouldBeTrue();
+        _sut.NewCategory.Type.ShouldBe("Expense");
+        _sut.NewCategory.Color.ShouldBe("#4CAF50");
     }
 
     /// <summary>
@@ -270,11 +272,11 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public void CloseAddCategory_HidesForm()
     {
-        this._sut.OpenAddCategory();
+        _sut.OpenAddCategory();
 
-        this._sut.CloseAddCategory();
+        _sut.CloseAddCategory();
 
-        this._sut.ShowAddForm.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -284,9 +286,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     public void OpenAddCategory_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenAddCategory();
+        _sut.OpenAddCategory();
 
         notified.ShouldBeTrue();
     }
@@ -301,15 +303,15 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task CreateCategoryAsync_AddsCategoryToList_WhenSuccessful()
     {
         var created = CreateCategory("Groceries", "Expense");
-        this._apiService.CreateCategoryResult = created;
-        await this._sut.InitializeAsync();
-        this._sut.OpenAddCategory();
+        _apiService.CreateCategoryResult = created;
+        await _sut.InitializeAsync();
+        _sut.OpenAddCategory();
 
-        await this._sut.CreateCategoryAsync(new BudgetCategoryCreateDto { Name = "Groceries", Type = "Expense" });
+        await _sut.CreateCategoryAsync(new BudgetCategoryCreateDto { Name = "Groceries", Type = "Expense" });
 
-        this._sut.Categories.ShouldContain(c => c.Name == "Groceries");
-        this._sut.ShowAddForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.Categories.ShouldContain(c => c.Name == "Groceries");
+        _sut.ShowAddForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -319,13 +321,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task CreateCategoryAsync_SetsError_WhenApiReturnsNull()
     {
-        this._apiService.CreateCategoryResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.CreateCategoryResult = null;
+        await _sut.InitializeAsync();
 
-        await this._sut.CreateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
+        await _sut.CreateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
 
-        this._sut.ErrorMessage.ShouldBe("Failed to create category.");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBe("Failed to create category.");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -335,14 +337,14 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task CreateCategoryAsync_SetsError_WhenApiThrows()
     {
-        this._apiService.CreateCategoryException = new HttpRequestException("Network error");
-        await this._sut.InitializeAsync();
+        _apiService.CreateCategoryException = new HttpRequestException("Network error");
+        await _sut.InitializeAsync();
 
-        await this._sut.CreateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
+        await _sut.CreateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to create category");
-        this._sut.ErrorMessage!.ShouldContain("Network error");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage!.ShouldContain("Failed to create category");
+        _sut.ErrorMessage!.ShouldContain("Network error");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- Edit Category ---
@@ -357,14 +359,14 @@ public sealed class CategoriesViewModelTests : IDisposable
         cat.Version = "v1";
         cat.SortOrder = 5;
 
-        this._sut.OpenEditCategory(cat);
+        _sut.OpenEditCategory(cat);
 
-        this._sut.ShowEditForm.ShouldBeTrue();
-        this._sut.EditingCategoryId.ShouldBe(cat.Id);
-        this._sut.EditingVersion.ShouldBe("v1");
-        this._sut.EditCategory.Name.ShouldBe("Groceries");
-        this._sut.EditCategory.Type.ShouldBe("Expense");
-        this._sut.EditSortOrder.ShouldBe(5);
+        _sut.ShowEditForm.ShouldBeTrue();
+        _sut.EditingCategoryId.ShouldBe(cat.Id);
+        _sut.EditingVersion.ShouldBe("v1");
+        _sut.EditCategory.Name.ShouldBe("Groceries");
+        _sut.EditCategory.Type.ShouldBe("Expense");
+        _sut.EditSortOrder.ShouldBe(5);
     }
 
     /// <summary>
@@ -376,9 +378,9 @@ public sealed class CategoriesViewModelTests : IDisposable
         var cat = CreateCategory("NullColor", "Expense");
         cat.Color = null;
 
-        this._sut.OpenEditCategory(cat);
+        _sut.OpenEditCategory(cat);
 
-        this._sut.EditCategory.Color.ShouldBe("#4CAF50");
+        _sut.EditCategory.Color.ShouldBe("#4CAF50");
     }
 
     /// <summary>
@@ -388,12 +390,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     public void CloseEditCategory_ResetsEditState()
     {
         var cat = CreateCategory("Groceries", "Expense");
-        this._sut.OpenEditCategory(cat);
+        _sut.OpenEditCategory(cat);
 
-        this._sut.CloseEditCategory();
+        _sut.CloseEditCategory();
 
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.EditingCategoryId.ShouldBeNull();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.EditingCategoryId.ShouldBeNull();
     }
 
     // --- UpdateCategoryAsync ---
@@ -406,19 +408,19 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task UpdateCategoryAsync_UpdatesCategoryInList_WhenSuccessful()
     {
         var cat = CreateCategory("Groceries", "Expense");
-        this._apiService.Categories.Add(cat);
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        await _sut.InitializeAsync();
 
         var updatedCat = CreateCategory("Groceries Updated", "Expense");
         updatedCat.Id = cat.Id;
-        this._apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Success(updatedCat);
-        this._sut.OpenEditCategory(cat);
+        _apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Success(updatedCat);
+        _sut.OpenEditCategory(cat);
 
-        await this._sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Groceries Updated" });
+        await _sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Groceries Updated" });
 
-        this._sut.Categories.ShouldContain(c => c.Name == "Groceries Updated");
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.Categories.ShouldContain(c => c.Name == "Groceries Updated");
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -428,9 +430,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task UpdateCategoryAsync_ReturnsEarly_WhenNoEditingCategory()
     {
-        await this._sut.UpdateCategoryAsync(new BudgetCategoryCreateDto());
+        await _sut.UpdateCategoryAsync(new BudgetCategoryCreateDto());
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -441,17 +443,17 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task UpdateCategoryAsync_HandlesConflict()
     {
         var cat = CreateCategory("Groceries", "Expense");
-        this._apiService.Categories.Add(cat);
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        await _sut.InitializeAsync();
 
-        this._apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Conflict();
-        this._sut.OpenEditCategory(cat);
+        _apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Conflict();
+        _sut.OpenEditCategory(cat);
 
-        await this._sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Conflict" });
+        await _sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Conflict" });
 
-        this._toastService.WarningShown.ShouldBeTrue();
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _toastService.WarningShown.ShouldBeTrue();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -462,16 +464,16 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task UpdateCategoryAsync_SetsError_WhenApiReturnsFailure()
     {
         var cat = CreateCategory("Groceries", "Expense");
-        this._apiService.Categories.Add(cat);
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        await _sut.InitializeAsync();
 
-        this._apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Failure();
-        this._sut.OpenEditCategory(cat);
+        _apiService.UpdateCategoryResult = ApiResult<BudgetCategoryDto>.Failure();
+        _sut.OpenEditCategory(cat);
 
-        await this._sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
+        await _sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
 
-        this._sut.ErrorMessage.ShouldBe("Failed to update category.");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBe("Failed to update category.");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -482,16 +484,16 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task UpdateCategoryAsync_SetsError_WhenApiThrows()
     {
         var cat = CreateCategory("Groceries", "Expense");
-        this._apiService.Categories.Add(cat);
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        await _sut.InitializeAsync();
 
-        this._apiService.UpdateCategoryException = new HttpRequestException("Network error");
-        this._sut.OpenEditCategory(cat);
+        _apiService.UpdateCategoryException = new HttpRequestException("Network error");
+        _sut.OpenEditCategory(cat);
 
-        await this._sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
+        await _sut.UpdateCategoryAsync(new BudgetCategoryCreateDto { Name = "Fail" });
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to update category");
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ErrorMessage!.ShouldContain("Failed to update category");
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- Delete Category ---
@@ -504,10 +506,10 @@ public sealed class CategoriesViewModelTests : IDisposable
     {
         var cat = CreateCategory("ToDelete", "Expense");
 
-        this._sut.ConfirmDeleteCategory(cat);
+        _sut.ConfirmDeleteCategory(cat);
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.DeletingCategory.ShouldBe(cat);
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.DeletingCategory.ShouldBe(cat);
     }
 
     /// <summary>
@@ -517,12 +519,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     public void CancelDelete_HidesDeleteDialog()
     {
         var cat = CreateCategory("ToDelete", "Expense");
-        this._sut.ConfirmDeleteCategory(cat);
+        _sut.ConfirmDeleteCategory(cat);
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingCategory.ShouldBeNull();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingCategory.ShouldBeNull();
     }
 
     /// <summary>
@@ -533,17 +535,17 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task DeleteCategoryAsync_RemovesCategoryFromList_WhenSuccessful()
     {
         var cat = CreateCategory("ToDelete", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.DeleteCategoryResult = true;
-        await this._sut.InitializeAsync();
-        this._sut.ConfirmDeleteCategory(cat);
+        _apiService.Categories.Add(cat);
+        _apiService.DeleteCategoryResult = true;
+        await _sut.InitializeAsync();
+        _sut.ConfirmDeleteCategory(cat);
 
-        await this._sut.DeleteCategoryAsync();
+        await _sut.DeleteCategoryAsync();
 
-        this._sut.Categories.ShouldNotContain(c => c.Id == cat.Id);
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingCategory.ShouldBeNull();
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.Categories.ShouldNotContain(c => c.Id == cat.Id);
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingCategory.ShouldBeNull();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -553,9 +555,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task DeleteCategoryAsync_ReturnsEarly_WhenNoDeletingCategory()
     {
-        await this._sut.DeleteCategoryAsync();
+        await _sut.DeleteCategoryAsync();
 
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -566,15 +568,15 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task DeleteCategoryAsync_SetsError_WhenApiFails()
     {
         var cat = CreateCategory("ToDelete", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.DeleteCategoryResult = false;
-        await this._sut.InitializeAsync();
-        this._sut.ConfirmDeleteCategory(cat);
+        _apiService.Categories.Add(cat);
+        _apiService.DeleteCategoryResult = false;
+        await _sut.InitializeAsync();
+        _sut.ConfirmDeleteCategory(cat);
 
-        await this._sut.DeleteCategoryAsync();
+        await _sut.DeleteCategoryAsync();
 
-        this._sut.ErrorMessage.ShouldBe("Failed to delete category.");
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldBe("Failed to delete category.");
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -585,15 +587,15 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task DeleteCategoryAsync_SetsError_WhenApiThrows()
     {
         var cat = CreateCategory("ToDelete", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.DeleteCategoryException = new HttpRequestException("Network error");
-        await this._sut.InitializeAsync();
-        this._sut.ConfirmDeleteCategory(cat);
+        _apiService.Categories.Add(cat);
+        _apiService.DeleteCategoryException = new HttpRequestException("Network error");
+        await _sut.InitializeAsync();
+        _sut.ConfirmDeleteCategory(cat);
 
-        await this._sut.DeleteCategoryAsync();
+        await _sut.DeleteCategoryAsync();
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to delete category");
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ErrorMessage!.ShouldContain("Failed to delete category");
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     // --- Activate / Deactivate ---
@@ -608,14 +610,14 @@ public sealed class CategoriesViewModelTests : IDisposable
         var cat = CreateCategory("Inactive", "Expense", isActive: false);
         var refreshed = CreateCategory("Inactive", "Expense", isActive: true);
         refreshed.Id = cat.Id;
-        this._apiService.Categories.Add(cat);
-        this._apiService.ActivateCategoryResult = true;
-        this._apiService.GetCategoryResult = refreshed;
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        _apiService.ActivateCategoryResult = true;
+        _apiService.GetCategoryResult = refreshed;
+        await _sut.InitializeAsync();
 
-        await this._sut.ActivateCategoryAsync(cat);
+        await _sut.ActivateCategoryAsync(cat);
 
-        this._sut.Categories[0].IsActive.ShouldBeTrue();
+        _sut.Categories[0].IsActive.ShouldBeTrue();
     }
 
     /// <summary>
@@ -626,13 +628,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task ActivateCategoryAsync_SetsError_WhenApiFails()
     {
         var cat = CreateCategory("Cat", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.ActivateCategoryResult = false;
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        _apiService.ActivateCategoryResult = false;
+        await _sut.InitializeAsync();
 
-        await this._sut.ActivateCategoryAsync(cat);
+        await _sut.ActivateCategoryAsync(cat);
 
-        this._sut.ErrorMessage.ShouldBe("Failed to activate category.");
+        _sut.ErrorMessage.ShouldBe("Failed to activate category.");
     }
 
     /// <summary>
@@ -643,13 +645,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task ActivateCategoryAsync_SetsError_WhenApiThrows()
     {
         var cat = CreateCategory("Cat", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.ActivateCategoryException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        _apiService.ActivateCategoryException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
 
-        await this._sut.ActivateCategoryAsync(cat);
+        await _sut.ActivateCategoryAsync(cat);
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to activate category");
+        _sut.ErrorMessage!.ShouldContain("Failed to activate category");
     }
 
     /// <summary>
@@ -662,14 +664,14 @@ public sealed class CategoriesViewModelTests : IDisposable
         var cat = CreateCategory("Active", "Expense");
         var refreshed = CreateCategory("Active", "Expense", isActive: false);
         refreshed.Id = cat.Id;
-        this._apiService.Categories.Add(cat);
-        this._apiService.DeactivateCategoryResult = true;
-        this._apiService.GetCategoryResult = refreshed;
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        _apiService.DeactivateCategoryResult = true;
+        _apiService.GetCategoryResult = refreshed;
+        await _sut.InitializeAsync();
 
-        await this._sut.DeactivateCategoryAsync(cat);
+        await _sut.DeactivateCategoryAsync(cat);
 
-        this._sut.Categories[0].IsActive.ShouldBeFalse();
+        _sut.Categories[0].IsActive.ShouldBeFalse();
     }
 
     /// <summary>
@@ -680,13 +682,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task DeactivateCategoryAsync_SetsError_WhenApiFails()
     {
         var cat = CreateCategory("Cat", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.DeactivateCategoryResult = false;
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        _apiService.DeactivateCategoryResult = false;
+        await _sut.InitializeAsync();
 
-        await this._sut.DeactivateCategoryAsync(cat);
+        await _sut.DeactivateCategoryAsync(cat);
 
-        this._sut.ErrorMessage.ShouldBe("Failed to deactivate category.");
+        _sut.ErrorMessage.ShouldBe("Failed to deactivate category.");
     }
 
     /// <summary>
@@ -697,13 +699,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     public async Task DeactivateCategoryAsync_SetsError_WhenApiThrows()
     {
         var cat = CreateCategory("Cat", "Expense");
-        this._apiService.Categories.Add(cat);
-        this._apiService.DeactivateCategoryException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
+        _apiService.Categories.Add(cat);
+        _apiService.DeactivateCategoryException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
 
-        await this._sut.DeactivateCategoryAsync(cat);
+        await _sut.DeactivateCategoryAsync(cat);
 
-        this._sut.ErrorMessage!.ShouldContain("Failed to deactivate category");
+        _sut.ErrorMessage!.ShouldContain("Failed to deactivate category");
     }
 
     // --- Scope Change ---
@@ -715,16 +717,16 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task ScopeChange_ReloadsCategories()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.Categories.Add(CreateCategory("New After Scope", "Expense"));
+        await _sut.InitializeAsync();
+        _apiService.Categories.Add(CreateCategory("New After Scope", "Expense"));
 
-        await this._scopeService.SetScopeAsync(BudgetScope.Personal);
+        await _scopeService.SetScopeAsync(BudgetScope.Personal);
 
         // Allow the async void handler to complete
         await Task.Delay(50);
 
-        this._sut.Categories.Count.ShouldBe(1);
-        this._sut.Categories[0].Name.ShouldBe("New After Scope");
+        _sut.Categories.Count.ShouldBe(1);
+        _sut.Categories[0].Name.ShouldBe("New After Scope");
     }
 
     // --- Dispose ---
@@ -736,15 +738,15 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_UnsubscribesFromScopeChanged()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Dispose();
+        await _sut.InitializeAsync();
+        _sut.Dispose();
 
         // After dispose, scope change should not reload
-        this._apiService.Categories.Add(CreateCategory("Should Not Load", "Expense"));
-        await this._scopeService.SetScopeAsync(BudgetScope.Shared);
+        _apiService.Categories.Add(CreateCategory("Should Not Load", "Expense"));
+        await _scopeService.SetScopeAsync(BudgetScope.Shared);
         await Task.Delay(50);
 
-        this._sut.Categories.Count.ShouldBe(0);
+        _sut.Categories.Count.ShouldBe(0);
     }
 
     /// <summary>
@@ -754,12 +756,12 @@ public sealed class CategoriesViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_ClearsChatContext()
     {
-        await this._sut.InitializeAsync();
-        this._chatContext.CurrentContext.PageType.ShouldBe("categories");
+        await _sut.InitializeAsync();
+        _chatContext.CurrentContext.PageType.ShouldBe("categories");
 
-        this._sut.Dispose();
+        _sut.Dispose();
 
-        this._chatContext.CurrentContext.PageType.ShouldBeNull();
+        _chatContext.CurrentContext.PageType.ShouldBeNull();
     }
 
     // --- OnStateChanged Callback ---
@@ -771,13 +773,13 @@ public sealed class CategoriesViewModelTests : IDisposable
     public void OnStateChanged_IsInvoked_OnStateMutations()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.OpenAddCategory();
-        this._sut.CloseAddCategory();
-        this._sut.DismissError();
-        this._sut.ConfirmDeleteCategory(CreateCategory("Cat", "Expense"));
-        this._sut.CancelDelete();
+        _sut.OpenAddCategory();
+        _sut.CloseAddCategory();
+        _sut.DismissError();
+        _sut.ConfirmDeleteCategory(CreateCategory("Cat", "Expense"));
+        _sut.CancelDelete();
 
         callCount.ShouldBe(5);
     }
@@ -807,7 +809,10 @@ public sealed class CategoriesViewModelTests : IDisposable
         /// <summary>
         /// Gets a value indicating whether a warning was shown.
         /// </summary>
-        public bool WarningShown { get; private set; }
+        public bool WarningShown
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];

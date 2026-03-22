@@ -5,8 +5,11 @@
 using BudgetExperiment.Client.Components.Transactions;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Components.Transactions;
@@ -26,7 +29,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
-        this._categories = new List<BudgetCategoryDto>
+        _categories = new List<BudgetCategoryDto>
         {
             new() { Id = Guid.NewGuid(), Name = "Groceries", IsActive = true },
             new() { Id = Guid.NewGuid(), Name = "Utilities", IsActive = true },
@@ -40,7 +43,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
     [Fact]
     public void Render_ShowsCategoryName_WhenCategoryIsSet()
     {
-        var cut = RenderPicker(categoryId: this._categories[0].Id, categoryName: "Groceries");
+        var cut = RenderPicker(categoryId: _categories[0].Id, categoryName: "Groceries");
 
         cut.Find("span").TextContent.Trim().ShouldBe("Groceries");
     }
@@ -111,9 +114,9 @@ public sealed class InlineCategoryPickerTests : BunitContext
             onCategoryChanged: id => receivedCategoryId = id);
 
         cut.Find("span").Click();
-        cut.Find("select").Change(this._categories[0].Id.ToString());
+        cut.Find("select").Change(_categories[0].Id.ToString());
 
-        receivedCategoryId.ShouldBe(this._categories[0].Id);
+        receivedCategoryId.ShouldBe(_categories[0].Id);
     }
 
     /// <summary>
@@ -124,7 +127,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
     {
         Guid? receivedCategoryId = Guid.NewGuid(); // Start with non-null to verify it changes
         var cut = RenderPicker(
-            categoryId: this._categories[0].Id,
+            categoryId: _categories[0].Id,
             categoryName: "Groceries",
             onCategoryChanged: id => receivedCategoryId = id);
 
@@ -141,7 +144,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
     public void SelectSameCategory_DoesNotInvokeCallback()
     {
         var callbackInvoked = false;
-        var existingCategoryId = this._categories[0].Id;
+        var existingCategoryId = _categories[0].Id;
         var cut = RenderPicker(
             categoryId: existingCategoryId,
             categoryName: "Groceries",
@@ -162,7 +165,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
         var cut = RenderPicker(onCategoryChanged: _ => { });
 
         cut.Find("span").Click();
-        cut.Find("select").Change(this._categories[0].Id.ToString());
+        cut.Find("select").Change(_categories[0].Id.ToString());
 
         cut.FindAll("select").Count.ShouldBe(0);
         cut.FindAll("span").Count.ShouldBeGreaterThan(0);
@@ -176,7 +179,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
         return Render<InlineCategoryPicker>(parameters => parameters
             .Add(p => p.CategoryId, categoryId)
             .Add(p => p.CategoryName, categoryName)
-            .Add(p => p.Categories, this._categories)
+            .Add(p => p.Categories, _categories)
             .Add(p => p.OnCategoryChanged, onCategoryChanged ?? (_ => { })));
     }
 }

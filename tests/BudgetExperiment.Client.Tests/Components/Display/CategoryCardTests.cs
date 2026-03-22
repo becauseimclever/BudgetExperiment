@@ -5,7 +5,9 @@
 using BudgetExperiment.Client.Components.Display;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Display;
@@ -227,14 +229,14 @@ public class CategoryCardTests : BunitContext, IAsyncLifetime
         bool isActive = true,
         string? icon = null,
         string? color = null) => new()
-    {
-        Id = Guid.NewGuid(),
-        Name = name,
-        Type = type,
-        IsActive = isActive,
-        Icon = icon,
-        Color = color,
-    };
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            Type = type,
+            IsActive = isActive,
+            Icon = icon,
+            Color = color,
+        };
 
     private IRenderedComponent<CategoryCard> RenderCard(
         string name = "Test Category",

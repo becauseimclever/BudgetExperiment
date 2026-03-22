@@ -26,12 +26,18 @@ public sealed class RecurringChargeSuggestion
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the account identifier this suggestion belongs to.
     /// </summary>
-    public Guid AccountId { get; private set; }
+    public Guid AccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the normalized description used for grouping and duplicate detection.
@@ -51,72 +57,114 @@ public sealed class RecurringChargeSuggestion
     /// <summary>
     /// Gets the detected recurrence frequency.
     /// </summary>
-    public RecurrenceFrequency DetectedFrequency { get; private set; }
+    public RecurrenceFrequency DetectedFrequency
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the detected interval (e.g. 1 for monthly, 2 for every-other-month).
     /// </summary>
-    public int DetectedInterval { get; private set; }
+    public int DetectedInterval
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the confidence score (0.0–1.0).
     /// </summary>
-    public decimal Confidence { get; private set; }
+    public decimal Confidence
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the number of matching transactions.
     /// </summary>
-    public int MatchingTransactionCount { get; private set; }
+    public int MatchingTransactionCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the date of the earliest matching transaction.
     /// </summary>
-    public DateOnly FirstOccurrence { get; private set; }
+    public DateOnly FirstOccurrence
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the date of the most recent matching transaction.
     /// </summary>
-    public DateOnly LastOccurrence { get; private set; }
+    public DateOnly LastOccurrence
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the most-used category ID from matched transactions, if any.
     /// </summary>
-    public Guid? CategoryId { get; private set; }
+    public Guid? CategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggestion status (Pending, Accepted, or Dismissed).
     /// </summary>
-    public SuggestionStatus Status { get; private set; }
+    public SuggestionStatus Status
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the ID of the RecurringTransaction created when the suggestion is accepted.
     /// </summary>
-    public Guid? AcceptedRecurringTransactionId { get; private set; }
+    public Guid? AcceptedRecurringTransactionId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. Null for shared scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID of who triggered the detection.
     /// </summary>
-    public Guid CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the suggestion was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the suggestion was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new recurring charge suggestion from a detected pattern.

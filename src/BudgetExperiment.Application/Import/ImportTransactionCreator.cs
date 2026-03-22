@@ -25,8 +25,8 @@ public sealed class ImportTransactionCreator : IImportTransactionCreator
         ITransactionRepository transactionRepository,
         ICurrencyProvider currencyProvider)
     {
-        this._transactionRepository = transactionRepository;
-        this._currencyProvider = currencyProvider;
+        _transactionRepository = transactionRepository;
+        _currencyProvider = currencyProvider;
     }
 
     /// <inheritdoc />
@@ -42,7 +42,7 @@ public sealed class ImportTransactionCreator : IImportTransactionCreator
         int uncategorized = 0;
         int skipped = 0;
         int locationEnriched = 0;
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
 
         foreach (var txData in transactions)
         {
@@ -55,7 +55,7 @@ public sealed class ImportTransactionCreator : IImportTransactionCreator
                     locationEnriched++;
                 }
 
-                await this._transactionRepository.AddAsync(transaction, cancellationToken);
+                await _transactionRepository.AddAsync(transaction, cancellationToken);
                 createdIds.Add(transaction.Id);
                 TrackCategorizationSource(txData.CategorySource, ref autoCategorized, ref csvCategorized, ref uncategorized);
             }

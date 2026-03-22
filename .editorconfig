@@ -73,6 +73,9 @@ dotnet_diagnostic.SA1412.severity = none   # Ignore BOM requirement
 dotnet_diagnostic.SA1600.severity = none   # Temporarily disable element documentation requirement
 dotnet_diagnostic.SA1609.severity = none   # Temporarily disable <value> doc requirement for properties
 
+# Do not qualify field access with 'this.'
+dotnet_style_qualification_for_field = false:warning
+
 # Test sources: further relax documentation
 [tests/**/*.cs]
 dotnet_diagnostic.SA1600.severity = none

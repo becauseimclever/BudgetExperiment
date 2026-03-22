@@ -5,8 +5,11 @@
 using BudgetExperiment.Client.Components.Reports;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Components.Reports;

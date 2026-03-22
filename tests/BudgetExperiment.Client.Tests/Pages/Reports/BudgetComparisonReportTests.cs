@@ -3,11 +3,14 @@
 // </copyright>
 
 using System.Globalization;
+
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages.Reports;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Pages.Reports;
@@ -26,9 +29,9 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
 
-        this.stubApiService = new StubBudgetApiService();
+        stubApiService = new StubBudgetApiService();
 
-        this.Services.AddSingleton<IBudgetApiService>(this.stubApiService);
+        this.Services.AddSingleton<IBudgetApiService>(stubApiService);
         this.Services.AddSingleton(new ScopeService(this.JSInterop.JSRuntime));
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
@@ -54,13 +57,13 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_CallsExistingGetBudgetSummaryAsync()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummary();
+        stubApiService.BudgetSummaryResult = CreateTestSummary();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
 
         // Assert
-        Assert.True(this.stubApiService.GetBudgetSummaryCalled);
+        Assert.True(stubApiService.GetBudgetSummaryCalled);
     }
 
     /// <summary>
@@ -70,7 +73,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_ShowsLoadingSpinner_WhileLoading()
     {
         // Arrange - set up a task that won't complete immediately
-        this.stubApiService.BudgetSummaryTaskSource = new TaskCompletionSource<BudgetSummaryDto?>();
+        stubApiService.BudgetSummaryTaskSource = new TaskCompletionSource<BudgetSummaryDto?>();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -89,7 +92,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         var summary = CreateTestSummary();
         summary.CategoryProgress = [];
         summary.TotalBudgeted = new MoneyDto { Amount = 0, Currency = "USD" };
-        this.stubApiService.BudgetSummaryResult = summary;
+        stubApiService.BudgetSummaryResult = summary;
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -105,7 +108,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_ShowsEmptyState_WhenResponseIsNull()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = null;
+        stubApiService.BudgetSummaryResult = null;
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -126,7 +129,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         summary.TotalSpent = new MoneyDto { Amount = 2500m, Currency = "USD" };
         summary.TotalRemaining = new MoneyDto { Amount = 500m, Currency = "USD" };
         summary.OverallPercentUsed = 83.3m;
-        this.stubApiService.BudgetSummaryResult = summary;
+        stubApiService.BudgetSummaryResult = summary;
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -144,7 +147,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_RendersBarChart_WithCategoryData()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
+        stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -161,7 +164,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_ShowsDataTable_WithPerCategoryDetails()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
+        stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -179,7 +182,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_AppliesStatusColors_ToRows()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
+        stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -197,7 +200,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_DisplaysStatusCounts()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
+        stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -215,16 +218,16 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_PreviousMonthButton_LoadsPreviousMonth()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummary();
+        stubApiService.BudgetSummaryResult = CreateTestSummary();
         var cut = Render<BudgetComparisonReport>();
-        this.stubApiService.GetBudgetSummaryCallCount = 0; // reset counter
+        stubApiService.GetBudgetSummaryCallCount = 0; // reset counter
 
         // Act
         var prevButton = cut.Find("[aria-label='Previous month']");
         prevButton.Click();
 
         // Assert - Should have called the API again
-        Assert.True(this.stubApiService.GetBudgetSummaryCallCount > 0);
+        Assert.True(stubApiService.GetBudgetSummaryCallCount > 0);
     }
 
     /// <summary>
@@ -234,16 +237,16 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_NextMonthButton_LoadsNextMonth()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummary();
+        stubApiService.BudgetSummaryResult = CreateTestSummary();
         var cut = Render<BudgetComparisonReport>();
-        this.stubApiService.GetBudgetSummaryCallCount = 0; // reset counter
+        stubApiService.GetBudgetSummaryCallCount = 0; // reset counter
 
         // Act
         var nextButton = cut.Find("[aria-label='Next month']");
         nextButton.Click();
 
         // Assert - Should have called the API again
-        Assert.True(this.stubApiService.GetBudgetSummaryCallCount > 0);
+        Assert.True(stubApiService.GetBudgetSummaryCallCount > 0);
     }
 
     /// <summary>
@@ -253,7 +256,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_HasBackToCalendarLink()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummary();
+        stubApiService.BudgetSummaryResult = CreateTestSummary();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -287,7 +290,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
                 TransactionCount = 5,
             },
         ];
-        this.stubApiService.BudgetSummaryResult = summary;
+        stubApiService.BudgetSummaryResult = summary;
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -304,7 +307,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_ShowsError_OnApiFailure()
     {
         // Arrange
-        this.stubApiService.ShouldThrow = true;
+        stubApiService.ShouldThrow = true;
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -321,7 +324,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     {
         // Arrange
         var now = DateTime.UtcNow;
-        this.stubApiService.BudgetSummaryResult = CreateTestSummary();
+        stubApiService.BudgetSummaryResult = CreateTestSummary();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -338,7 +341,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public void Page_SortsCategoriesByStatusPriority()
     {
         // Arrange
-        this.stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
+        stubApiService.BudgetSummaryResult = CreateTestSummaryWithCategories();
 
         // Act
         var cut = Render<BudgetComparisonReport>();
@@ -449,19 +452,34 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     private sealed class StubBudgetApiService : IBudgetApiService
     {
         /// <summary>Gets or sets the result to return from GetBudgetSummaryAsync.</summary>
-        public BudgetSummaryDto? BudgetSummaryResult { get; set; }
+        public BudgetSummaryDto? BudgetSummaryResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets a value indicating whether GetBudgetSummaryAsync should throw.</summary>
-        public bool ShouldThrow { get; set; }
+        public bool ShouldThrow
+        {
+            get; set;
+        }
 
         /// <summary>Gets a value indicating whether GetBudgetSummaryAsync was called.</summary>
-        public bool GetBudgetSummaryCalled { get; private set; }
+        public bool GetBudgetSummaryCalled
+        {
+            get; private set;
+        }
 
         /// <summary>Gets or sets the number of times GetBudgetSummaryAsync was called.</summary>
-        public int GetBudgetSummaryCallCount { get; set; }
+        public int GetBudgetSummaryCallCount
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets a TaskCompletionSource for controlling async completion.</summary>
-        public TaskCompletionSource<BudgetSummaryDto?>? BudgetSummaryTaskSource { get; set; }
+        public TaskCompletionSource<BudgetSummaryDto?>? BudgetSummaryTaskSource
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task<BudgetSummaryDto?> GetBudgetSummaryAsync(int year, int month)

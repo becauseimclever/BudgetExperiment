@@ -6,6 +6,7 @@ using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Shared.Budgeting;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -47,18 +48,21 @@ public sealed class RulesViewModel : IDisposable
         IApiErrorContext apiErrorContext,
         IJSRuntime jsRuntime)
     {
-        this._apiService = apiService;
-        this._toastService = toastService;
-        this._navigationManager = navigationManager;
-        this._scopeService = scopeService;
-        this._apiErrorContext = apiErrorContext;
-        this._jsRuntime = jsRuntime;
+        _apiService = apiService;
+        _toastService = toastService;
+        _navigationManager = navigationManager;
+        _scopeService = scopeService;
+        _apiErrorContext = apiErrorContext;
+        _jsRuntime = jsRuntime;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether data is loading.
@@ -68,63 +72,87 @@ public sealed class RulesViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether a retry load is in progress.
     /// </summary>
-    public bool IsRetrying { get; private set; }
+    public bool IsRetrying
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a form submission is in progress.
     /// </summary>
-    public bool IsSubmitting { get; private set; }
+    public bool IsSubmitting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a delete operation is in progress.
     /// </summary>
-    public bool IsDeleting { get; private set; }
+    public bool IsDeleting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a pattern test is in progress.
     /// </summary>
-    public bool IsTesting { get; private set; }
+    public bool IsTesting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a bulk operation is in progress.
     /// </summary>
-    public bool IsBulkOperating { get; private set; }
+    public bool IsBulkOperating
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the set of currently selected rule IDs.
     /// </summary>
-    public IReadOnlySet<Guid> SelectedRuleIds => this._selectedRuleIds;
+    public IReadOnlySet<Guid> SelectedRuleIds => _selectedRuleIds;
 
     /// <summary>
     /// Gets the number of currently selected rules.
     /// </summary>
-    public int SelectedCount => this._selectedRuleIds.Count;
+    public int SelectedCount => _selectedRuleIds.Count;
 
     /// <summary>
     /// Gets a value indicating whether any rules are currently selected.
     /// </summary>
-    public bool HasSelection => this._selectedRuleIds.Count > 0;
+    public bool HasSelection => _selectedRuleIds.Count > 0;
 
     /// <summary>
     /// Gets a value indicating whether all rules on the current page are selected.
     /// </summary>
     public bool AreAllOnPageSelected =>
-        this.Rules.Count > 0 && this.Rules.All(r => this._selectedRuleIds.Contains(r.Id));
+        this.Rules.Count > 0 && this.Rules.All(r => _selectedRuleIds.Contains(r.Id));
 
     /// <summary>
     /// Gets a value indicating whether the bulk delete confirmation dialog is visible.
     /// </summary>
-    public bool ShowBulkDeleteConfirm { get; private set; }
+    public bool ShowBulkDeleteConfirm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the traceId from the API error response that caused the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the list of categorization rules.
@@ -149,37 +177,58 @@ public sealed class RulesViewModel : IDisposable
     /// <summary>
     /// Gets the total count of matching rules.
     /// </summary>
-    public int TotalCount { get; private set; }
+    public int TotalCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the total number of pages.
     /// </summary>
-    public int TotalPages { get; private set; }
+    public int TotalPages
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current search text filter.
     /// </summary>
-    public string? SearchText { get; private set; }
+    public string? SearchText
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the selected category ID filter.
     /// </summary>
-    public Guid? SelectedCategoryId { get; private set; }
+    public Guid? SelectedCategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the selected status filter (null = all, "Active", "Inactive").
     /// </summary>
-    public string? SelectedStatus { get; private set; }
+    public string? SelectedStatus
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current sort field (e.g., "priority", "name", "category", "createdAt").
     /// </summary>
-    public string? SortBy { get; private set; }
+    public string? SortBy
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current sort direction ("asc" or "desc").
     /// </summary>
-    public string? SortDirection { get; private set; }
+    public string? SortDirection
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current view mode (Table or Card).
@@ -199,7 +248,10 @@ public sealed class RulesViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether rules are grouped by category.
     /// </summary>
-    public bool IsGroupedByCategory { get; private set; }
+    public bool IsGroupedByCategory
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the rules grouped by category name, sorted by priority within each group.
@@ -261,7 +313,10 @@ public sealed class RulesViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether the add rule form is visible.
     /// </summary>
-    public bool ShowAddForm { get; private set; }
+    public bool ShowAddForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the new rule form model.
@@ -271,12 +326,18 @@ public sealed class RulesViewModel : IDisposable
     /// <summary>
     /// Gets the test pattern result.
     /// </summary>
-    public TestPatternResponse? TestResult { get; private set; }
+    public TestPatternResponse? TestResult
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the edit rule form is visible.
     /// </summary>
-    public bool ShowEditForm { get; private set; }
+    public bool ShowEditForm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets or sets the edit rule form model.
@@ -286,27 +347,42 @@ public sealed class RulesViewModel : IDisposable
     /// <summary>
     /// Gets the ID of the rule currently being edited.
     /// </summary>
-    public Guid? EditingRuleId { get; private set; }
+    public Guid? EditingRuleId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the concurrency version of the rule being edited.
     /// </summary>
-    public string? EditingVersion { get; private set; }
+    public string? EditingVersion
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the delete confirmation dialog is visible.
     /// </summary>
-    public bool ShowDeleteConfirm { get; private set; }
+    public bool ShowDeleteConfirm
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the rule pending deletion.
     /// </summary>
-    public CategorizationRuleDto? DeletingRule { get; private set; }
+    public CategorizationRuleDto? DeletingRule
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the apply rules dialog is visible.
     /// </summary>
-    public bool ShowApplyRulesDialog { get; private set; }
+    public bool ShowApplyRulesDialog
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Initializes the ViewModel: subscribes to scope changes and loads data.
@@ -314,7 +390,7 @@ public sealed class RulesViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        this._scopeService.ScopeChanged += this.OnScopeChanged;
+        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadPreferencesAsync();
         await this.LoadDataAsync();
     }
@@ -342,8 +418,8 @@ public sealed class RulesViewModel : IDisposable
                 SortDirection = this.SortDirection,
             };
 
-            var rulesTask = this._apiService.GetCategorizationRulesPagedAsync(request);
-            var categoriesTask = this._apiService.GetCategoriesAsync(activeOnly: true);
+            var rulesTask = _apiService.GetCategorizationRulesPagedAsync(request);
+            var categoriesTask = _apiService.GetCategoriesAsync(activeOnly: true);
 
             await Task.WhenAll(rulesTask, categoriesTask);
 
@@ -356,7 +432,7 @@ public sealed class RulesViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load data: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -398,7 +474,7 @@ public sealed class RulesViewModel : IDisposable
     /// </summary>
     public void NavigateToAiSuggestions()
     {
-        this._navigationManager.NavigateTo("/ai/suggestions");
+        _navigationManager.NavigateTo("/ai/suggestions");
     }
 
     /// <summary>
@@ -432,7 +508,7 @@ public sealed class RulesViewModel : IDisposable
 
         try
         {
-            var created = await this._apiService.CreateCategorizationRuleAsync(this.NewRule);
+            var created = await _apiService.CreateCategorizationRuleAsync(this.NewRule);
             if (created != null)
             {
                 this.Rules.Add(created);
@@ -510,10 +586,10 @@ public sealed class RulesViewModel : IDisposable
                 CategoryId = this.EditRule.CategoryId,
             };
 
-            var updated = await this._apiService.UpdateCategorizationRuleAsync(this.EditingRuleId.Value, updateDto, this.EditingVersion);
+            var updated = await _apiService.UpdateCategorizationRuleAsync(this.EditingRuleId.Value, updateDto, this.EditingVersion);
             if (updated.IsConflict)
             {
-                this._toastService.ShowWarning("This rule was modified by another user. Data has been refreshed.", "Conflict");
+                _toastService.ShowWarning("This rule was modified by another user. Data has been refreshed.", "Conflict");
                 this.HideEditRule();
                 await this.LoadDataAsync();
                 return;
@@ -582,7 +658,7 @@ public sealed class RulesViewModel : IDisposable
 
         try
         {
-            var success = await this._apiService.DeleteCategorizationRuleAsync(this.DeletingRule.Id);
+            var success = await _apiService.DeleteCategorizationRuleAsync(this.DeletingRule.Id);
             if (success)
             {
                 this.Rules.RemoveAll(r => r.Id == this.DeletingRule.Id);
@@ -613,7 +689,7 @@ public sealed class RulesViewModel : IDisposable
     {
         try
         {
-            var success = await this._apiService.ActivateCategorizationRuleAsync(rule.Id);
+            var success = await _apiService.ActivateCategorizationRuleAsync(rule.Id);
             if (success)
             {
                 var index = this.Rules.FindIndex(r => r.Id == rule.Id);
@@ -638,7 +714,7 @@ public sealed class RulesViewModel : IDisposable
     {
         try
         {
-            var success = await this._apiService.DeactivateCategorizationRuleAsync(rule.Id);
+            var success = await _apiService.DeactivateCategorizationRuleAsync(rule.Id);
             if (success)
             {
                 var index = this.Rules.FindIndex(r => r.Id == rule.Id);
@@ -667,7 +743,7 @@ public sealed class RulesViewModel : IDisposable
 
         try
         {
-            this.TestResult = await this._apiService.TestPatternAsync(request);
+            this.TestResult = await _apiService.TestPatternAsync(request);
         }
         catch (Exception ex)
         {
@@ -731,12 +807,12 @@ public sealed class RulesViewModel : IDisposable
     public async Task SetSearchAsync(string? search)
     {
         this.SearchText = search;
-        this._searchDebounce?.Cancel();
-        this._searchDebounce = new CancellationTokenSource();
+        _searchDebounce?.Cancel();
+        _searchDebounce = new CancellationTokenSource();
 
         try
         {
-            await Task.Delay(300, this._searchDebounce.Token);
+            await Task.Delay(300, _searchDebounce.Token);
             this.CurrentPage = 1;
             await this.LoadDataAsync();
             this.NotifyStateChanged();
@@ -835,9 +911,9 @@ public sealed class RulesViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._scopeService.ScopeChanged -= this.OnScopeChanged;
-        this._searchDebounce?.Cancel();
-        this._searchDebounce?.Dispose();
+        _scopeService.ScopeChanged -= this.OnScopeChanged;
+        _searchDebounce?.Cancel();
+        _searchDebounce?.Dispose();
     }
 
     /// <summary>
@@ -846,9 +922,9 @@ public sealed class RulesViewModel : IDisposable
     /// <param name="ruleId">The rule ID to toggle.</param>
     public void ToggleRuleSelection(Guid ruleId)
     {
-        if (!this._selectedRuleIds.Remove(ruleId))
+        if (!_selectedRuleIds.Remove(ruleId))
         {
-            this._selectedRuleIds.Add(ruleId);
+            _selectedRuleIds.Add(ruleId);
         }
 
         this.NotifyStateChanged();
@@ -859,7 +935,7 @@ public sealed class RulesViewModel : IDisposable
     /// </summary>
     /// <param name="ruleId">The rule ID.</param>
     /// <returns>True if the rule is selected.</returns>
-    public bool IsRuleSelected(Guid ruleId) => this._selectedRuleIds.Contains(ruleId);
+    public bool IsRuleSelected(Guid ruleId) => _selectedRuleIds.Contains(ruleId);
 
     /// <summary>
     /// Selects all rules on the current page.
@@ -868,7 +944,7 @@ public sealed class RulesViewModel : IDisposable
     {
         foreach (var rule in this.Rules)
         {
-            this._selectedRuleIds.Add(rule.Id);
+            _selectedRuleIds.Add(rule.Id);
         }
 
         this.NotifyStateChanged();
@@ -881,7 +957,7 @@ public sealed class RulesViewModel : IDisposable
     {
         foreach (var rule in this.Rules)
         {
-            this._selectedRuleIds.Remove(rule.Id);
+            _selectedRuleIds.Remove(rule.Id);
         }
 
         this.NotifyStateChanged();
@@ -907,7 +983,7 @@ public sealed class RulesViewModel : IDisposable
     /// </summary>
     public void ClearSelection()
     {
-        this._selectedRuleIds.Clear();
+        _selectedRuleIds.Clear();
         this.NotifyStateChanged();
     }
 
@@ -935,7 +1011,7 @@ public sealed class RulesViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task BulkDeleteAsync()
     {
-        if (this._selectedRuleIds.Count == 0)
+        if (_selectedRuleIds.Count == 0)
         {
             return;
         }
@@ -946,12 +1022,12 @@ public sealed class RulesViewModel : IDisposable
 
         try
         {
-            var ids = this._selectedRuleIds.ToList();
-            var result = await this._apiService.BulkDeleteCategorizationRulesAsync(ids);
+            var ids = _selectedRuleIds.ToList();
+            var result = await _apiService.BulkDeleteCategorizationRulesAsync(ids);
             if (result is not null)
             {
-                this._toastService.ShowSuccess($"Deleted {result.AffectedCount} rule(s).");
-                this._selectedRuleIds.Clear();
+                _toastService.ShowSuccess($"Deleted {result.AffectedCount} rule(s).");
+                _selectedRuleIds.Clear();
                 await this.LoadDataAsync();
             }
             else
@@ -975,7 +1051,7 @@ public sealed class RulesViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task BulkActivateAsync()
     {
-        if (this._selectedRuleIds.Count == 0)
+        if (_selectedRuleIds.Count == 0)
         {
             return;
         }
@@ -985,12 +1061,12 @@ public sealed class RulesViewModel : IDisposable
 
         try
         {
-            var ids = this._selectedRuleIds.ToList();
-            var result = await this._apiService.BulkActivateCategorizationRulesAsync(ids);
+            var ids = _selectedRuleIds.ToList();
+            var result = await _apiService.BulkActivateCategorizationRulesAsync(ids);
             if (result is not null)
             {
-                this._toastService.ShowSuccess($"Activated {result.AffectedCount} rule(s).");
-                this._selectedRuleIds.Clear();
+                _toastService.ShowSuccess($"Activated {result.AffectedCount} rule(s).");
+                _selectedRuleIds.Clear();
                 await this.LoadDataAsync();
             }
             else
@@ -1014,7 +1090,7 @@ public sealed class RulesViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task BulkDeactivateAsync()
     {
-        if (this._selectedRuleIds.Count == 0)
+        if (_selectedRuleIds.Count == 0)
         {
             return;
         }
@@ -1024,12 +1100,12 @@ public sealed class RulesViewModel : IDisposable
 
         try
         {
-            var ids = this._selectedRuleIds.ToList();
-            var result = await this._apiService.BulkDeactivateCategorizationRulesAsync(ids);
+            var ids = _selectedRuleIds.ToList();
+            var result = await _apiService.BulkDeactivateCategorizationRulesAsync(ids);
             if (result is not null)
             {
-                this._toastService.ShowSuccess($"Deactivated {result.AffectedCount} rule(s).");
-                this._selectedRuleIds.Clear();
+                _toastService.ShowSuccess($"Deactivated {result.AffectedCount} rule(s).");
+                _selectedRuleIds.Clear();
                 await this.LoadDataAsync();
             }
             else
@@ -1085,9 +1161,9 @@ public sealed class RulesViewModel : IDisposable
     /// <param name="categoryName">The category name whose collapse state to toggle.</param>
     public void ToggleCategoryCollapse(string categoryName)
     {
-        if (!this._collapsedCategories.Add(categoryName))
+        if (!_collapsedCategories.Add(categoryName))
         {
-            this._collapsedCategories.Remove(categoryName);
+            _collapsedCategories.Remove(categoryName);
         }
 
         this.NotifyStateChanged();
@@ -1099,20 +1175,20 @@ public sealed class RulesViewModel : IDisposable
     /// <param name="categoryName">The category name.</param>
     /// <returns>True if the category group is collapsed.</returns>
     public bool IsCategoryCollapsed(string categoryName) =>
-        this._collapsedCategories.Contains(categoryName);
+        _collapsedCategories.Contains(categoryName);
 
     private async Task LoadPreferencesAsync()
     {
         try
         {
-            var savedViewMode = await this._jsRuntime.InvokeAsync<string?>(
+            var savedViewMode = await _jsRuntime.InvokeAsync<string?>(
                 "localStorage.getItem", ViewModeStorageKey);
             if (!string.IsNullOrEmpty(savedViewMode) && Enum.TryParse<RulesViewMode>(savedViewMode, out var mode))
             {
                 this.ViewMode = mode;
             }
 
-            var savedPageSize = await this._jsRuntime.InvokeAsync<string?>(
+            var savedPageSize = await _jsRuntime.InvokeAsync<string?>(
                 "localStorage.getItem", PageSizeStorageKey);
             if (!string.IsNullOrEmpty(savedPageSize) && int.TryParse(savedPageSize, out var size) && size is 10 or 25 or 50 or 100)
             {
@@ -1129,7 +1205,7 @@ public sealed class RulesViewModel : IDisposable
     {
         try
         {
-            await this._jsRuntime.InvokeVoidAsync("localStorage.setItem", key, value);
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", key, value);
         }
         catch (JSException)
         {

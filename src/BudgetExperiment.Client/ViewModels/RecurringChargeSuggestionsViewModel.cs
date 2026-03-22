@@ -24,14 +24,17 @@ public sealed class RecurringChargeSuggestionsViewModel
         IRecurringChargeSuggestionApiService apiService,
         IToastService toastService)
     {
-        this._apiService = apiService;
-        this._toastService = toastService;
+        _apiService = apiService;
+        _toastService = toastService;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether initial data is loading.
@@ -41,17 +44,26 @@ public sealed class RecurringChargeSuggestionsViewModel
     /// <summary>
     /// Gets a value indicating whether detection is in progress.
     /// </summary>
-    public bool IsDetecting { get; private set; }
+    public bool IsDetecting
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether an accept/dismiss operation is in progress.
     /// </summary>
-    public bool IsProcessing { get; private set; }
+    public bool IsProcessing
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message, if any.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the list of suggestions.
@@ -100,7 +112,7 @@ public sealed class RecurringChargeSuggestionsViewModel
 
         try
         {
-            this.Suggestions = await this._apiService.GetSuggestionsAsync(
+            this.Suggestions = await _apiService.GetSuggestionsAsync(
                 status: this.StatusFilter);
         }
         catch (Exception ex)
@@ -126,14 +138,14 @@ public sealed class RecurringChargeSuggestionsViewModel
 
         try
         {
-            var count = await this._apiService.DetectAsync();
+            var count = await _apiService.DetectAsync();
             if (count > 0)
             {
-                this._toastService.ShowSuccess($"Found {count} recurring charge pattern(s).");
+                _toastService.ShowSuccess($"Found {count} recurring charge pattern(s).");
             }
             else
             {
-                this._toastService.ShowInfo("No new recurring charge patterns detected.");
+                _toastService.ShowInfo("No new recurring charge patterns detected.");
             }
 
             await this.InitializeAsync();
@@ -161,16 +173,16 @@ public sealed class RecurringChargeSuggestionsViewModel
 
         try
         {
-            var result = await this._apiService.AcceptAsync(id);
+            var result = await _apiService.AcceptAsync(id);
             if (result != null)
             {
-                this._toastService.ShowSuccess(
+                _toastService.ShowSuccess(
                     $"Created recurring transaction. {result.LinkedTransactionCount} existing transaction(s) linked.");
                 await this.InitializeAsync();
             }
             else
             {
-                this._toastService.ShowError("Failed to accept suggestion.");
+                _toastService.ShowError("Failed to accept suggestion.");
             }
         }
         catch (Exception ex)
@@ -196,15 +208,15 @@ public sealed class RecurringChargeSuggestionsViewModel
 
         try
         {
-            var success = await this._apiService.DismissAsync(id);
+            var success = await _apiService.DismissAsync(id);
             if (success)
             {
-                this._toastService.ShowSuccess("Suggestion dismissed.");
+                _toastService.ShowSuccess("Suggestion dismissed.");
                 await this.InitializeAsync();
             }
             else
             {
-                this._toastService.ShowError("Failed to dismiss suggestion.");
+                _toastService.ShowError("Failed to dismiss suggestion.");
             }
         }
         catch (Exception ex)

@@ -23,7 +23,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     /// <param name="factory">The test factory.</param>
     public AllocationsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_Returns_200_WithSummary()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -51,7 +51,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithoutFrequency_Returns_400()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -65,7 +65,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithInvalidFrequency_Returns_400()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=InvalidFrequency");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=InvalidFrequency");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -79,7 +79,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithAmount_CalculatesIncome()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly&amount=2000");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly&amount=2000");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -99,7 +99,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithNegativeAmount_Returns_400()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly&amount=-1000");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly&amount=-1000");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -113,7 +113,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithZeroAmount_Returns_400()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly&amount=0");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly&amount=0");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -130,7 +130,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
         var accountId = Guid.NewGuid();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/allocations/paycheck?frequency=BiWeekly&accountId={accountId}");
+        var response = await _client.GetAsync($"/api/v1/allocations/paycheck?frequency=BiWeekly&accountId={accountId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -149,7 +149,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithWeeklyFrequency_Returns_200()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=Weekly");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=Weekly");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -166,7 +166,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithMonthlyFrequency_Returns_200()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=Monthly");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=Monthly");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -183,7 +183,7 @@ public sealed class AllocationsControllerTests : IClassFixture<CustomWebApplicat
     public async Task GetPaycheckAllocation_WithoutAmount_HasNoIncomeWarning()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly");
+        var response = await _client.GetAsync("/api/v1/allocations/paycheck?frequency=BiWeekly");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
