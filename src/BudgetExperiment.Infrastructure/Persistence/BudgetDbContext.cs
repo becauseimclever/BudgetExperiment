@@ -122,6 +122,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<DismissedSuggestionPattern> DismissedSuggestionPatterns => this.Set<DismissedSuggestionPattern>();
 
+    /// <summary>
+    /// Gets the recurring charge suggestions.
+    /// </summary>
+    public DbSet<RecurringChargeSuggestion> RecurringChargeSuggestions => this.Set<RecurringChargeSuggestion>();
+
     /// <inheritdoc />
     public string? GetConcurrencyToken<T>(T entity)
         where T : class

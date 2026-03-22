@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Application.Import;
+using BudgetExperiment.Application.Recurring;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using Moq;
@@ -90,6 +91,7 @@ public class ImportServiceTests
             this._mappingRepoMock.Object,
             this._accountRepoMock.Object,
             this._reconciliationServiceMock.Object,
+            new Mock<IRecurringChargeDetectionService>().Object,
             this._userContextMock.Object,
             this._unitOfWorkMock.Object);
     }

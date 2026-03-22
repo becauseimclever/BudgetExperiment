@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.Recurring;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
@@ -24,6 +25,7 @@ public sealed class ImportService : IImportService
     private readonly IImportMappingRepository _mappingRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly IReconciliationService _reconciliationService;
+    private readonly IRecurringChargeDetectionService _recurringChargeDetectionService;
     private readonly IUserContext _userContext;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -41,6 +43,7 @@ public sealed class ImportService : IImportService
     /// <param name="mappingRepository">Import mapping repository.</param>
     /// <param name="accountRepository">Account repository.</param>
     /// <param name="reconciliationService">Reconciliation service.</param>
+    /// <param name="recurringChargeDetectionService">Recurring charge detection service.</param>
     /// <param name="userContext">User context.</param>
     /// <param name="unitOfWork">Unit of work.</param>
     public ImportService(
@@ -55,6 +58,7 @@ public sealed class ImportService : IImportService
         IImportMappingRepository mappingRepository,
         IAccountRepository accountRepository,
         IReconciliationService reconciliationService,
+        IRecurringChargeDetectionService recurringChargeDetectionService,
         IUserContext userContext,
         IUnitOfWork unitOfWork)
     {
@@ -69,6 +73,7 @@ public sealed class ImportService : IImportService
         this._mappingRepository = mappingRepository;
         this._accountRepository = accountRepository;
         this._reconciliationService = reconciliationService;
+        this._recurringChargeDetectionService = recurringChargeDetectionService;
         this._userContext = userContext;
         this._unitOfWork = unitOfWork;
     }
@@ -131,6 +136,10 @@ public sealed class ImportService : IImportService
             ? await this.RunReconciliationAsync(importStats.CreatedIds, request.Transactions, cancellationToken)
             : ReconciliationStats.Empty;
 
+        var recurringChargeSuggestions = importStats.CreatedIds.Count > 0
+            ? await this._recurringChargeDetectionService.DetectAsync(request.AccountId, cancellationToken)
+            : 0;
+
         return new ImportResult
         {
             BatchId = batch.Id,
@@ -146,6 +155,7 @@ public sealed class ImportService : IImportService
             PendingMatchCount = reconciliation.PendingMatches,
             MatchSuggestions = reconciliation.Suggestions,
             LocationEnrichedCount = importStats.LocationEnriched,
+            RecurringChargeSuggestionsCount = recurringChargeSuggestions,
         };
     }
 

@@ -73,4 +73,9 @@ public sealed record ImportResult
     /// Gets the count of transactions enriched with location data.
     /// </summary>
     public int LocationEnrichedCount { get; init; }
+
+    /// <summary>
+    /// Gets the count of new or updated recurring charge suggestions detected.
+    /// </summary>
+    public int RecurringChargeSuggestionsCount { get; init; }
 }

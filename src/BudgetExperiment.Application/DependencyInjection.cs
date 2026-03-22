@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IAutoRealizeService, AutoRealizeService>();
         services.AddScoped<IRecurringTransactionInstanceService, RecurringTransactionInstanceService>();
         services.AddScoped<IRecurringTransactionRealizationService, RecurringTransactionRealizationService>();
+        services.AddScoped<IRecurringChargeDetectionService, RecurringChargeDetectionService>();
         services.AddScoped<IRecurringTransferInstanceService, RecurringTransferInstanceService>();
         services.AddScoped<IRecurringTransferRealizationService, RecurringTransferRealizationService>();
         services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();

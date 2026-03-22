@@ -1,0 +1,176 @@
+/* ==========================================================================
+   Suggestion Card Components
+   Budget Experiment Design System
+   
+   Specialized card component for recurring charge suggestions
+   ========================================================================== */
+
+/* ==========================================================================
+   Suggestions List Container
+   ========================================================================== */
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ==========================================================================
+   Suggestion Card
+   ========================================================================== */
+
+.suggestion-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.suggestion-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ==========================================================================
+   Suggestion Card Layout
+   ========================================================================== */
+
+.suggestion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.suggestion-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.suggestion-card-title {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.suggestion-card-amount {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.suggestion-card-amount.negative {
+  color: var(--color-expense);
+}
+
+/* ==========================================================================
+   Suggestion Card Details Section
+   ========================================================================== */
+
+.suggestion-card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: var(--space-3);
+}
+
+.detail-item {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.detail-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+/* ==========================================================================
+   Suggestion Card Actions
+   ========================================================================== */
+
+.suggestion-card-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.suggestion-card-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-2) 0;
+}
+
+.suggestion-card-status.accepted {
+  color: var(--color-income);
+}
+
+.suggestion-card-status.dismissed {
+  color: var(--color-text-tertiary);
+}
+
+/* ==========================================================================
+   Confidence Badges
+   ========================================================================== */
+
+.confidence-high {
+  background-color: color-mix(in srgb, var(--color-income) 15%, transparent);
+  color: var(--color-income);
+}
+
+.confidence-medium {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: var(--color-warning);
+}
+
+.confidence-low {
+  background-color: color-mix(in srgb, var(--color-expense) 15%, transparent);
+  color: var(--color-expense);
+}
+
+/* ==========================================================================
+   Filter Bar
+   ========================================================================== */
+
+.filter-bar {
+  margin-bottom: var(--space-4);
+}
+
+.filter-group {
+  display: flex;
+  gap: var(--space-1);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.filter-btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.filter-btn:hover {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+}
+
+.filter-btn.active {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}

@@ -1,5 +1,5 @@
 # Feature 119: Recurring Charge Detection & Suggestions
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
@@ -33,12 +33,12 @@ Automatically detect recurring charges from transaction history and suggest crea
 **So that** I don't have to manually spot and create recurring transactions
 
 **Acceptance Criteria:**
-- [ ] Transactions are grouped by normalized description (stripping noise like POS/PURCHASE prefixes, trailing reference numbers)
-- [ ] Groups with ≥ 3 occurrences within the analysis window are evaluated for periodicity
-- [ ] Supported frequencies detected: Weekly, BiWeekly, Monthly, Quarterly, Yearly
-- [ ] Amount variance tolerance is configurable (default ±5 %) to handle slight fluctuations
-- [ ] Each detected pattern receives a confidence score (0.0–1.0) based on interval regularity, amount consistency, and sample size
-- [ ] Transactions already linked to a `RecurringTransaction` are excluded
+- [x] Transactions are grouped by normalized description (stripping noise like POS/PURCHASE prefixes, trailing reference numbers)
+- [x] Groups with ≥ 3 occurrences within the analysis window are evaluated for periodicity
+- [x] Supported frequencies detected: Weekly, BiWeekly, Monthly, Quarterly, Yearly
+- [x] Amount variance tolerance is configurable (default ±5 %) to handle slight fluctuations
+- [x] Each detected pattern receives a confidence score (0.0–1.0) based on interval regularity, amount consistency, and sample size
+- [x] Transactions already linked to a `RecurringTransaction` are excluded
 
 #### US-119-002: View Recurring Charge Suggestions
 **As a** budget user  
@@ -46,9 +46,9 @@ Automatically detect recurring charges from transaction history and suggest crea
 **So that** I can quickly review and act on them
 
 **Acceptance Criteria:**
-- [ ] Suggestions display: merchant/description, detected frequency, average amount, number of matching transactions, confidence score, and last occurrence date
-- [ ] Suggestions are sorted by confidence descending by default
-- [ ] User can filter by status (Pending, Accepted, Dismissed)
+- [x] Suggestions display: merchant/description, detected frequency, average amount, number of matching transactions, confidence score, and last occurrence date
+- [x] Suggestions are sorted by confidence descending by default
+- [x] User can filter by status (Pending, Accepted, Dismissed)
 
 #### US-119-003: Accept a Recurring Charge Suggestion
 **As a** budget user  
@@ -56,10 +56,10 @@ Automatically detect recurring charges from transaction history and suggest crea
 **So that** future imports are tracked and budgeted correctly
 
 **Acceptance Criteria:**
-- [ ] Accepting creates a `RecurringTransaction` with description, amount, detected recurrence pattern, account, and category (if transactions were categorized)
-- [ ] An `ImportPatternValue` is auto-generated from the normalized description so future imports link automatically
-- [ ] Existing matching transactions are retroactively linked to the new `RecurringTransaction` via `RecurringTransactionId`
-- [ ] Suggestion status changes to Accepted
+- [x] Accepting creates a `RecurringTransaction` with description, amount, detected recurrence pattern, account, and category (if transactions were categorized)
+- [x] An `ImportPatternValue` is auto-generated from the normalized description so future imports link automatically
+- [x] Existing matching transactions are retroactively linked to the new `RecurringTransaction` via `RecurringTransactionId`
+- [x] Suggestion status changes to Accepted
 - [ ] User can edit fields (description, amount, frequency, category) before confirming
 
 #### US-119-004: Dismiss a Recurring Charge Suggestion
@@ -68,9 +68,9 @@ Automatically detect recurring charges from transaction history and suggest crea
 **So that** it doesn't clutter my pending list
 
 **Acceptance Criteria:**
-- [ ] Dismissed suggestions are hidden from the default view
-- [ ] Dismissed suggestions can be viewed in a separate "Dismissed" list
-- [ ] Dismissing a suggestion does not delete it; it can be restored
+- [x] Dismissed suggestions are hidden from the default view
+- [x] Dismissed suggestions can be viewed in a separate "Dismissed" list
+- [x] Dismissing a suggestion does not delete it; it can be restored
 
 ### Post-Import Trigger
 
@@ -80,9 +80,9 @@ Automatically detect recurring charges from transaction history and suggest crea
 **So that** new patterns are surfaced without manual effort
 
 **Acceptance Criteria:**
-- [ ] After a successful CSV import, detection runs for the affected account(s)
-- [ ] Only new/changed suggestions are surfaced (no duplicate suggestions for already-pending patterns)
-- [ ] User is notified of new suggestions (UI indicator or toast)
+- [x] After a successful CSV import, detection runs for the affected account(s)
+- [x] Only new/changed suggestions are surfaced (no duplicate suggestions for already-pending patterns)
+- [x] User is notified of new suggestions (UI indicator or toast)
 
 ---
 

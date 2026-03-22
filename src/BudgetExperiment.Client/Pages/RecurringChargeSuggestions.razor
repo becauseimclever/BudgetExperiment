@@ -1,0 +1,147 @@
+@page "/recurring-charge-suggestions"
+
+@implements IDisposable
+
+@using BudgetExperiment.Client.ViewModels
+
+@inject RecurringChargeSuggestionsViewModel ViewModel
+
+<PageTitle>Recurring Charge Detection - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Recurring Charge Detection">
+        <Actions>
+            <Button Variant="ButtonVariant.Primary"
+                    OnClick="ViewModel.DetectAsync"
+                    Disabled="ViewModel.IsDetecting || ViewModel.IsProcessing">
+                @if (ViewModel.IsDetecting)
+                {
+                    <span class="spinner-sm" aria-hidden="true"></span>
+                    <span>Detecting...</span>
+                }
+                else
+                {
+                    <span>Run Detection</span>
+                }
+            </Button>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                IsDismissible="true"
+                OnDismiss="ViewModel.DismissError" />
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <button class="filter-btn @(ViewModel.StatusFilter == "Pending" ? "active" : "")"
+                    @onclick='() => ViewModel.FilterByStatusAsync("Pending")'>
+                Pending
+            </button>
+            <button class="filter-btn @(ViewModel.StatusFilter == "Accepted" ? "active" : "")"
+                    @onclick='() => ViewModel.FilterByStatusAsync("Accepted")'>
+                Accepted
+            </button>
+            <button class="filter-btn @(ViewModel.StatusFilter == "Dismissed" ? "active" : "")"
+                    @onclick='() => ViewModel.FilterByStatusAsync("Dismissed")'>
+                Dismissed
+            </button>
+        </div>
+    </div>
+
+    @if (ViewModel.IsLoading)
+    {
+        <LoadingSpinner Message="Loading suggestions..." />
+    }
+    else if (ViewModel.Suggestions.Count == 0)
+    {
+        <EmptyState Title="No Suggestions"
+                   Description="Run detection to analyze your transactions for recurring charges."
+                   Icon="refresh">
+            <Button Variant="ButtonVariant.Primary"
+                    OnClick="ViewModel.DetectAsync"
+                    Disabled="ViewModel.IsDetecting">
+                Run Detection
+            </Button>
+        </EmptyState>
+    }
+    else
+    {
+        <div class="suggestions-list">
+            @foreach (var suggestion in ViewModel.Suggestions)
+            {
+                <div class="suggestion-card">
+                    <div class="suggestion-card-header">
+                        <div class="suggestion-card-info">
+                            <h3 class="suggestion-card-title">@suggestion.SampleDescription</h3>
+                            <div class="badge-group">
+                                <span class="badge badge-frequency">@suggestion.DetectedFrequency</span>
+                                <span class="badge @RecurringChargeSuggestionsViewModel.GetConfidenceClass(suggestion.Confidence)">
+                                    @RecurringChargeSuggestionsViewModel.FormatConfidence(suggestion.Confidence) confidence
+                                </span>
+                                <span class="badge badge-count">@suggestion.MatchingTransactionCount matches</span>
+                            </div>
+                        </div>
+                        <div class="suggestion-card-amount negative">
+                            @suggestion.AverageAmount.Currency @suggestion.AverageAmount.Amount.ToString("N2")
+                        </div>
+                    </div>
+                    <div class="suggestion-card-details">
+                        <span class="detail-item">
+                            <span class="detail-label">First seen:</span> @suggestion.FirstOccurrence.ToString("MMM d, yyyy")
+                        </span>
+                        <span class="detail-item">
+                            <span class="detail-label">Last seen:</span> @suggestion.LastOccurrence.ToString("MMM d, yyyy")
+                        </span>
+                        <span class="detail-item">
+                            <span class="detail-label">Every</span> @suggestion.DetectedInterval days
+                        </span>
+                    </div>
+                    @if (suggestion.Status == "Pending")
+                    {
+                        <div class="suggestion-card-actions">
+                            <Button Variant="ButtonVariant.Success"
+                                    Size="ButtonSize.Small"
+                                    OnClick="() => ViewModel.AcceptAsync(suggestion.Id)"
+                                    Disabled="ViewModel.IsProcessing">
+                                Accept
+                            </Button>
+                            <Button Variant="ButtonVariant.Outline"
+                                    Size="ButtonSize.Small"
+                                    OnClick="() => ViewModel.DismissAsync(suggestion.Id)"
+                                    Disabled="ViewModel.IsProcessing">
+                                Dismiss
+                            </Button>
+                        </div>
+                    }
+                    else if (suggestion.Status == "Accepted")
+                    {
+                        <div class="suggestion-card-status accepted">
+                            <Icon Name="check-circle" Size="16" /> Accepted
+                        </div>
+                    }
+                    else if (suggestion.Status == "Dismissed")
+                    {
+                        <div class="suggestion-card-status dismissed">
+                            Dismissed
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ViewModel.OnStateChanged = null;
+    }
+}
