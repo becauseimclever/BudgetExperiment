@@ -2,6 +2,30 @@
 
 All notable changes to Budget Experiment.
 
+## [3.25.0] - 2026-03-23
+
+### Features
+
+- **docker:** Upgrade PostgreSQL from version 16 to 18 across all docker-compose files; use hardened DHI image `dhi.io/postgres:18` for production deployments per Docker Hardened Images policy
+
+### Refactoring
+
+- **api:** Replace string matching in `ExceptionHandlingMiddleware` with `ExceptionType` switch statement — cleaner exception routing logic
+- **api:** Remove redundant DI registrations — eliminate duplicate service registrations in composition root
+- **app:** Reduce method nesting depth in service classes — `RecurringTransactionInstanceService`, `RuleApplicationService`, `TransactionImportService`, `BudgetCalculationService` simplified for improved maintainability
+
+### Testing
+
+- **test:** Fill coverage gaps with 54 new unit tests — `RecurringTransactionInstanceServiceTests` (20 tests), `UserSettingsServiceTests` (17 tests); convert test duplicates to `[Theory]` patterns; remove low-value framework behavior tests; **zero tests skipped**, 5,450 total
+- **test:** Add complete performance baselines for all load scenarios using NBomber — `get_accounts` p95=0.66ms, `get_budgets` p95=0.76ms, `get_calendar` p95=12.02ms, `get_transactions` p95=11.61ms; fixed CI bug in `performance.yml` where `tail -1` discarded 3 of 4 CSV reports
+- **test:** Upgrade to PostgreSQL 18 in test infrastructure — remove in-memory database; use migrations with real database for improved EF Core behavior parity
+
+### Documentation
+
+- **docs:** Archive completed features 112, 114, 115, 119
+- **docs:** Close features 121, 122 (complete)
+- **docs:** Feature 123 — Backend Code Quality Cleanup (complete)
+
 ## [3.23.0] - 2026-03-11
 
 ### Features

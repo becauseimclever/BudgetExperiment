@@ -217,3 +217,15 @@ Completed comprehensive review of Feature 112 (API Performance Testing) scope an
 **Decision:** Baselines MUST be captured against real PostgreSQL via `PERF_USE_REAL_DB=true` flag (already implemented in `PerformanceWebApplicationFactory`). This requires Docker/Testcontainers in CI. Local baseline capture must use a real PostgreSQL instance. PR smoke tests can continue using in-memory for speed (they're sanity checks, not baselines).
 
 **Documentation:** Decision merged to `decisions.md`; findings integrated into engineering guide's performance testing section.
+
+### 2026-03-23 — v3.25.0 Changelog Entry (Alfred)
+
+**Task:** Compose v3.25.0 CHANGELOG entry summarizing 11 commits since v3.24.3 release.
+
+**Commits Grouped:**
+1. **Features:** PostgreSQL 18 upgrade across docker-compose files (hardened DHI image)
+2. **Refactoring:** Exception middleware switch, DI registration cleanup, service method nesting depth reduction (4 service classes)
+3. **Testing:** 54 new unit tests (coverage gaps), performance baselines (NBomber, all 4 load scenarios), Testcontainers + PostgreSQL 18, zero skipped tests
+4. **Documentation:** Archive features 112, 114, 115, 119; close 121, 122, 123
+
+**Format:** Followed existing CHANGELOG.md style (Feature/Refactoring/Testing/Documentation sections). Date: 2026-03-23. Prepended to top of CHANGELOG after intro line, before [3.23.0] entry.
