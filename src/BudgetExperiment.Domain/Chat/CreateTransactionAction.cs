@@ -17,7 +17,10 @@ public sealed record CreateTransactionAction : ChatAction
     /// <summary>
     /// Gets the target account identifier.
     /// </summary>
-    public Guid AccountId { get; init; }
+    public Guid AccountId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the target account name for display.
@@ -27,12 +30,18 @@ public sealed record CreateTransactionAction : ChatAction
     /// <summary>
     /// Gets the transaction amount.
     /// </summary>
-    public decimal Amount { get; init; }
+    public decimal Amount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the transaction date.
     /// </summary>
-    public DateOnly Date { get; init; }
+    public DateOnly Date
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the transaction description.
@@ -42,12 +51,18 @@ public sealed record CreateTransactionAction : ChatAction
     /// <summary>
     /// Gets the optional category name.
     /// </summary>
-    public string? Category { get; init; }
+    public string? Category
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the optional category identifier.
     /// </summary>
-    public Guid? CategoryId { get; init; }
+    public Guid? CategoryId
+    {
+        get; init;
+    }
 
     /// <inheritdoc/>
     public override string GetPreviewSummary() =>

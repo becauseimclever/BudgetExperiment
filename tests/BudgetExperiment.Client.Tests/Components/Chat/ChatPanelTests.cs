@@ -6,7 +6,9 @@ using BudgetExperiment.Client.Components.Chat;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Chat;
@@ -25,8 +27,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     public ChatPanelTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IChatApiService>(this._chatApi);
-        this.Services.AddSingleton<IChatContextService>(this._chatContext);
+        this.Services.AddSingleton<IChatApiService>(_chatApi);
+        this.Services.AddSingleton<IChatContextService>(_chatContext);
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
     }
@@ -56,8 +58,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WhenOpen_HasOpenClass()
     {
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -83,8 +85,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WhenOpened_ShowsLoadingWhileInitializing()
     {
-        this._chatApi.SessionToReturn = null;
-        this._chatApi.DelayMs = 5000;
+        _chatApi.SessionToReturn = null;
+        _chatApi.DelayMs = 5000;
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -98,7 +100,7 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WhenSessionNull_ShowsErrorState()
     {
-        this._chatApi.SessionToReturn = null;
+        _chatApi.SessionToReturn = null;
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -113,8 +115,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WithSessionNoMessages_ShowsWelcome()
     {
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -129,8 +131,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WelcomeScreen_ContainsExamples()
     {
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -146,8 +148,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     public void Panel_WithMessages_RendersMessageBubbles()
     {
         var sessionId = Guid.NewGuid();
-        this._chatApi.SessionToReturn = CreateSession(sessionId);
-        this._chatApi.MessagesToReturn =
+        _chatApi.SessionToReturn = CreateSession(sessionId);
+        _chatApi.MessagesToReturn =
         [
             CreateMessage(sessionId, ChatRole.User, "Hello"),
             CreateMessage(sessionId, ChatRole.Assistant, "Hi there!"),
@@ -167,8 +169,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WithSession_ShowsChatInput()
     {
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -183,8 +185,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     public void Panel_CloseButton_FiresOnToggle()
     {
         bool toggled = false;
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true)
@@ -206,8 +208,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WithSession_ShowsNewConversationButton()
     {
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -222,8 +224,8 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_NewConversation_ClosesAndReinitializesSession()
     {
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));
@@ -231,7 +233,7 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
         var newBtn = cut.Find("button[title='New conversation']");
         newBtn.Click();
 
-        Assert.True(this._chatApi.CloseSessionCalled);
+        Assert.True(_chatApi.CloseSessionCalled);
     }
 
     /// <summary>
@@ -241,9 +243,9 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     public void Panel_SendMessage_InvokesApi()
     {
         var sessionId = Guid.NewGuid();
-        this._chatApi.SessionToReturn = CreateSession(sessionId);
-        this._chatApi.MessagesToReturn = [];
-        this._chatApi.SendMessageResponseToReturn = new SendMessageResponse
+        _chatApi.SessionToReturn = CreateSession(sessionId);
+        _chatApi.MessagesToReturn = [];
+        _chatApi.SendMessageResponseToReturn = new SendMessageResponse
         {
             Success = true,
             UserMessage = CreateMessage(sessionId, ChatRole.User, "test message"),
@@ -259,7 +261,7 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
         var form = cut.Find("form");
         form.Submit();
 
-        cut.WaitForAssertion(() => Assert.Equal("test message", this._chatApi.LastSentContent));
+        cut.WaitForAssertion(() => Assert.Equal("test message", _chatApi.LastSentContent));
     }
 
     /// <summary>
@@ -269,9 +271,9 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     public void Panel_SendMessage_ShowsResponseMessages()
     {
         var sessionId = Guid.NewGuid();
-        this._chatApi.SessionToReturn = CreateSession(sessionId);
-        this._chatApi.MessagesToReturn = [];
-        this._chatApi.SendMessageResponseToReturn = new SendMessageResponse
+        _chatApi.SessionToReturn = CreateSession(sessionId);
+        _chatApi.MessagesToReturn = [];
+        _chatApi.SendMessageResponseToReturn = new SendMessageResponse
         {
             Success = true,
             UserMessage = CreateMessage(sessionId, ChatRole.User, "buy groceries"),
@@ -299,9 +301,9 @@ public class ChatPanelTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Panel_WithContext_ShowsContextHint()
     {
-        this._chatContext.SetPageType("Calendar");
-        this._chatApi.SessionToReturn = CreateSession();
-        this._chatApi.MessagesToReturn = [];
+        _chatContext.SetPageType("Calendar");
+        _chatApi.SessionToReturn = CreateSession();
+        _chatApi.MessagesToReturn = [];
 
         var cut = Render<ChatPanel>(p => p
             .Add(x => x.IsOpen, true));

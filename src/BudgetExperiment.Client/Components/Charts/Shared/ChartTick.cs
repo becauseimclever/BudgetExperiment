@@ -12,7 +12,10 @@ public sealed class ChartTick
     /// <summary>
     /// Gets or sets the tick position.
     /// </summary>
-    public double Position { get; set; }
+    public double Position
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the tick label.

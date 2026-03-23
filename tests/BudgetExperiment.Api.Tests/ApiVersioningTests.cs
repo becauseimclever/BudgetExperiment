@@ -9,6 +9,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests verifying API versioning infrastructure is properly configured.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -19,7 +20,7 @@ public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFacto
     /// <param name="factory">The test factory.</param>
     public ApiVersioningTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -30,7 +31,7 @@ public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFacto
     public async Task Response_Includes_ApiSupportedVersions_HeaderAsync()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/accounts");
+        var response = await _client.GetAsync("/api/v1/accounts");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -49,7 +50,7 @@ public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFacto
     public async Task ExistingV1Urls_ContinueToWork_AfterVersioningAsync()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/accounts");
+        var response = await _client.GetAsync("/api/v1/accounts");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -63,7 +64,7 @@ public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFacto
     public async Task VersionController_Responds_AtVersionedRouteAsync()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/version");
+        var response = await _client.GetAsync("/api/v1/version");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -77,7 +78,7 @@ public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFacto
     public async Task SuggestionsController_Responds_AtNormalizedRouteAsync()
     {
         // Act — suggestions controller should be at standardized path
-        var response = await this._client.GetAsync("/api/v1/suggestions");
+        var response = await _client.GetAsync("/api/v1/suggestions");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

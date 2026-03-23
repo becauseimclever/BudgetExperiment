@@ -19,12 +19,18 @@ public sealed class ImportWizardState
     /// <summary>
     /// Gets or sets the parsed CSV result.
     /// </summary>
-    public CsvParseResultModel? ParseResult { get; set; }
+    public CsvParseResultModel? ParseResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the selected account ID.
     /// </summary>
-    public Guid? SelectedAccountId { get; set; }
+    public Guid? SelectedAccountId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the column mappings.
@@ -49,17 +55,26 @@ public sealed class ImportWizardState
     /// <summary>
     /// Gets or sets the number of data rows to skip after the header.
     /// </summary>
-    public int RowsToSkip { get; set; }
+    public int RowsToSkip
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the debit/credit indicator settings.
     /// </summary>
-    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; set; }
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the preview result.
     /// </summary>
-    public ImportPreviewResult? PreviewResult { get; set; }
+    public ImportPreviewResult? PreviewResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the selected row indices for import.
@@ -74,7 +89,10 @@ public sealed class ImportWizardState
     /// <summary>
     /// Gets or sets the saved mapping ID if using one.
     /// </summary>
-    public Guid? SavedMappingId { get; set; }
+    public Guid? SavedMappingId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether required fields are mapped.

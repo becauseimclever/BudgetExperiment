@@ -12,10 +12,16 @@ public sealed class AcceptRecurringChargeSuggestionResultDto
     /// <summary>
     /// Gets or sets the ID of the newly created recurring transaction.
     /// </summary>
-    public Guid RecurringTransactionId { get; set; }
+    public Guid RecurringTransactionId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of existing transactions linked to the recurring transaction.
     /// </summary>
-    public int LinkedTransactionCount { get; set; }
+    public int LinkedTransactionCount
+    {
+        get; set;
+    }
 }

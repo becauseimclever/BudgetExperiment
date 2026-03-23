@@ -35,7 +35,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new InvalidOperationException("Something broke"),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -67,7 +67,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new InvalidOperationException("fail"),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -92,7 +92,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new OperationCanceledException(),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -115,7 +115,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new TaskCanceledException(),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -139,7 +139,7 @@ public sealed class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(
             _ => throw new DomainException("Amount must be positive."),
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -156,7 +156,7 @@ public sealed class ExceptionHandlingMiddlewareTests
     }
 
     /// <summary>
-    /// Middleware returns 404 ProblemDetails for DomainException containing "not found".
+    /// Middleware returns 404 ProblemDetails for DomainException with NotFound type.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -168,8 +168,8 @@ public sealed class ExceptionHandlingMiddlewareTests
         context.Response.Body = new MemoryStream();
 
         var middleware = new ExceptionHandlingMiddleware(
-            _ => throw new DomainException("Account not found."),
-            this._logger);
+            _ => throw new DomainException("Account not found.", DomainExceptionType.NotFound),
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -201,7 +201,7 @@ public sealed class ExceptionHandlingMiddlewareTests
                 nextCalled = true;
                 return Task.CompletedTask;
             },
-            this._logger);
+            _logger);
 
         // Act
         await middleware.InvokeAsync(context);

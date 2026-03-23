@@ -13,22 +13,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class TransactionRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public TransactionRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public TransactionRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task GetByIdAsync_Returns_Transaction()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var transactionRepo = new TransactionRepository(context, FakeUserContext.CreateDefault());
 
@@ -42,7 +42,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(transaction.Id);
 
@@ -58,7 +58,7 @@ public class TransactionRepositoryTests
     public async Task GetByDateRangeAsync_Returns_Transactions_In_Range()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Date Range Test", AccountType.Checking);
@@ -71,7 +71,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await transactionRepo.GetByDateRangeAsync(
             new DateOnly(2026, 1, 10),
@@ -88,7 +88,7 @@ public class TransactionRepositoryTests
     public async Task GetByDateRangeAsync_Filters_By_AccountId()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account1 = Account.Create("Account Filter Test 1", AccountType.Checking);
@@ -102,7 +102,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await transactionRepo.GetByDateRangeAsync(
             new DateOnly(2026, 2, 1),
@@ -118,7 +118,7 @@ public class TransactionRepositoryTests
     public async Task GetDailyTotalsAsync_Returns_Correct_Totals()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Daily Totals Test", AccountType.Checking);
@@ -130,7 +130,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var dailyTotals = await transactionRepo.GetDailyTotalsAsync(2026, 3, account.Id);
 
@@ -151,7 +151,7 @@ public class TransactionRepositoryTests
     public async Task GetDailyTotalsAsync_Filters_By_Month()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Month Filter Test", AccountType.Checking);
@@ -162,7 +162,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var aprilTotals = await transactionRepo.GetDailyTotalsAsync(2026, 4, account.Id);
 
@@ -175,7 +175,7 @@ public class TransactionRepositoryTests
     public async Task ListAsync_Returns_Transactions_Ordered_By_Date_Descending()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("List Order Test", AccountType.Checking);
@@ -187,7 +187,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var transactions = await transactionRepo.ListAsync(0, 100);
 
@@ -202,7 +202,7 @@ public class TransactionRepositoryTests
     public async Task CountAsync_Returns_Correct_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var transactionRepo = new TransactionRepository(context, FakeUserContext.CreateDefault());
 
@@ -226,7 +226,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Returns_Only_Uncategorized_Transactions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var categoryRepo = new BudgetCategoryRepository(context, FakeUserContext.CreateDefault());
 
@@ -242,7 +242,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync();
 
@@ -256,7 +256,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Filters_By_DateRange()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Date Filter Test", AccountType.Checking);
@@ -268,7 +268,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync(
             startDate: new DateOnly(2026, 8, 5),
@@ -284,7 +284,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Filters_By_AmountRange()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Amount Filter Test", AccountType.Checking);
@@ -296,7 +296,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync(
             minAmount: 25m,
@@ -312,7 +312,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Filters_By_Description_Contains()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Description Filter Test", AccountType.Checking);
@@ -324,7 +324,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync(
             descriptionContains: "amazon");
@@ -338,7 +338,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Filters_By_AccountId()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account1 = Account.Create("Account 1", AccountType.Checking);
@@ -352,7 +352,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync(
             accountId: account1.Id);
@@ -367,7 +367,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Sorts_By_Date_Descending_By_Default()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Sort Test", AccountType.Checking);
@@ -379,7 +379,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, _) = await transactionRepo.GetUncategorizedPagedAsync();
 
@@ -393,7 +393,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Sorts_By_Amount_Ascending()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Amount Sort Test", AccountType.Checking);
@@ -405,7 +405,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, _) = await transactionRepo.GetUncategorizedPagedAsync(
             sortBy: "Amount",
@@ -421,7 +421,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Sorts_By_Description_Ascending()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Description Sort Test", AccountType.Checking);
@@ -433,7 +433,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, _) = await transactionRepo.GetUncategorizedPagedAsync(
             sortBy: "Description",
@@ -449,7 +449,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Applies_Paging()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Paging Test", AccountType.Checking);
@@ -462,7 +462,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (page1Items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync(
             skip: 0,
@@ -484,7 +484,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Combines_Multiple_Filters()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
 
         var account = Account.Create("Combined Filter Test", AccountType.Checking);
@@ -497,7 +497,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync(
             startDate: new DateOnly(2026, 8, 10),
@@ -516,7 +516,7 @@ public class TransactionRepositoryTests
     public async Task GetUncategorizedPagedAsync_Returns_Empty_When_No_Matches()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
         var categoryRepo = new BudgetCategoryRepository(context, FakeUserContext.CreateDefault());
 
@@ -531,7 +531,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
         var (items, totalCount) = await transactionRepo.GetUncategorizedPagedAsync();
 
@@ -544,7 +544,7 @@ public class TransactionRepositoryTests
     public async Task GetByDateRangeAsync_Personal_Scope_Excludes_Shared_Transactions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
         var defaultUserContext = FakeUserContext.CreateDefault();
         var accountRepo = new AccountRepository(context, defaultUserContext);
@@ -560,7 +560,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act — query with Personal scope
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var personalContext = FakeUserContext.CreateForPersonalScope(userId);
         var transactionRepo = new TransactionRepository(verifyContext, personalContext);
         var results = await transactionRepo.GetByDateRangeAsync(
@@ -576,7 +576,7 @@ public class TransactionRepositoryTests
     public async Task GetByDateRangeAsync_Shared_Scope_Excludes_Personal_Transactions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
         var defaultUserContext = FakeUserContext.CreateDefault();
         var accountRepo = new AccountRepository(context, defaultUserContext);
@@ -592,7 +592,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act — query with Shared scope
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var sharedContext = FakeUserContext.CreateForSharedScope();
         var transactionRepo = new TransactionRepository(verifyContext, sharedContext);
         var results = await transactionRepo.GetByDateRangeAsync(
@@ -608,7 +608,7 @@ public class TransactionRepositoryTests
     public async Task GetByDateRangeAsync_All_Scope_Returns_Both_Personal_And_Shared()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
         var defaultUserContext = FakeUserContext.CreateDefault();
         var accountRepo = new AccountRepository(context, defaultUserContext);
@@ -624,7 +624,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act — query with null scope (All)
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var allContext = FakeUserContext.CreateDefault(); // null scope = show all
         var transactionRepo = new TransactionRepository(verifyContext, allContext);
         var results = await transactionRepo.GetByDateRangeAsync(
@@ -641,7 +641,7 @@ public class TransactionRepositoryTests
     public async Task GetByDateRangeAsync_Personal_Scope_Excludes_Other_Users_Personal_Transactions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
         var otherUserId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
         var defaultUserContext = FakeUserContext.CreateDefault();
@@ -658,7 +658,7 @@ public class TransactionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act — query with Personal scope for default user
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var personalContext = FakeUserContext.CreateForPersonalScope(userId);
         var transactionRepo = new TransactionRepository(verifyContext, personalContext);
         var results = await transactionRepo.GetByDateRangeAsync(

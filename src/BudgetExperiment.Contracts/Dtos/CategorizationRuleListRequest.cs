@@ -16,17 +16,32 @@ public sealed class CategorizationRuleListRequest
     public int PageSize { get; set; } = 25;
 
     /// <summary>Gets or sets the search text to filter by rule name or pattern.</summary>
-    public string? Search { get; set; }
+    public string? Search
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the category ID to filter by.</summary>
-    public Guid? CategoryId { get; set; }
+    public Guid? CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the status filter: "active", "inactive", or null for all.</summary>
-    public string? Status { get; set; }
+    public string? Status
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the sort field: "priority", "name", "category", "createdAt".</summary>
-    public string? SortBy { get; set; }
+    public string? SortBy
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the sort direction: "asc" or "desc".</summary>
-    public string? SortDirection { get; set; }
+    public string? SortDirection
+    {
+        get; set;
+    }
 }

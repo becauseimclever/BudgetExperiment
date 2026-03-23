@@ -12,20 +12,32 @@ public sealed record SuggestedCategoryRuleDto
     /// <summary>
     /// Gets the pattern to match.
     /// </summary>
-    public required string Pattern { get; init; }
+    public required string Pattern
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the match type (Contains, StartsWith, etc.).
     /// </summary>
-    public required string MatchType { get; init; }
+    public required string MatchType
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of transactions that would match this rule.
     /// </summary>
-    public required int MatchingTransactionCount { get; init; }
+    public required int MatchingTransactionCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets sample transaction descriptions that would match.
     /// </summary>
-    public required IReadOnlyList<string> SampleDescriptions { get; init; }
+    public required IReadOnlyList<string> SampleDescriptions
+    {
+        get; init;
+    }
 }

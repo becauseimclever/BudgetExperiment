@@ -46,20 +46,20 @@ public sealed class PastDueService : IPastDueService
         ICurrencyProvider currencyProvider,
         Func<DateOnly>? todayProvider = null)
     {
-        this._recurringTransactionRepo = recurringTransactionRepo;
-        this._recurringTransferRepo = recurringTransferRepo;
-        this._transactionRepo = transactionRepo;
-        this._accountRepo = accountRepo;
-        this._transactionRealizationService = transactionRealizationService;
-        this._transferRealizationService = transferRealizationService;
-        this._currencyProvider = currencyProvider;
-        this._todayProvider = todayProvider ?? (() => DateOnly.FromDateTime(DateTime.UtcNow));
+        _recurringTransactionRepo = recurringTransactionRepo;
+        _recurringTransferRepo = recurringTransferRepo;
+        _transactionRepo = transactionRepo;
+        _accountRepo = accountRepo;
+        _transactionRealizationService = transactionRealizationService;
+        _transferRealizationService = transferRealizationService;
+        _currencyProvider = currencyProvider;
+        _todayProvider = todayProvider ?? (() => DateOnly.FromDateTime(DateTime.UtcNow));
     }
 
     /// <inheritdoc/>
     public async Task<PastDueSummaryDto> GetPastDueItemsAsync(Guid? accountId = null, CancellationToken cancellationToken = default)
     {
-        var today = this._todayProvider();
+        var today = _todayProvider();
         var lookbackDate = today.AddDays(-LookbackDays);
         var yesterday = today.AddDays(-1);
 
@@ -67,8 +67,8 @@ public sealed class PastDueService : IPastDueService
 
         // Get recurring transactions
         var recurringTransactions = accountId.HasValue
-            ? await this._recurringTransactionRepo.GetByAccountIdAsync(accountId.Value, cancellationToken)
-            : await this._recurringTransactionRepo.GetActiveAsync(cancellationToken);
+            ? await _recurringTransactionRepo.GetByAccountIdAsync(accountId.Value, cancellationToken)
+            : await _recurringTransactionRepo.GetActiveAsync(cancellationToken);
 
         foreach (var recurring in recurringTransactions)
         {
@@ -76,21 +76,21 @@ public sealed class PastDueService : IPastDueService
             foreach (var date in occurrences)
             {
                 // Check if skipped
-                var exception = await this._recurringTransactionRepo.GetExceptionAsync(recurring.Id, date, cancellationToken);
+                var exception = await _recurringTransactionRepo.GetExceptionAsync(recurring.Id, date, cancellationToken);
                 if (exception?.ExceptionType == ExceptionType.Skipped)
                 {
                     continue;
                 }
 
                 // Check if realized
-                var realized = await this._transactionRepo.GetByRecurringInstanceAsync(recurring.Id, date, cancellationToken);
+                var realized = await _transactionRepo.GetByRecurringInstanceAsync(recurring.Id, date, cancellationToken);
                 if (realized != null)
                 {
                     continue;
                 }
 
                 // Get account info
-                var account = await this._accountRepo.GetByIdAsync(recurring.AccountId, cancellationToken);
+                var account = await _accountRepo.GetByIdAsync(recurring.AccountId, cancellationToken);
 
                 items.Add(new PastDueItemDto
                 {
@@ -108,8 +108,8 @@ public sealed class PastDueService : IPastDueService
 
         // Get recurring transfers
         var recurringTransfers = accountId.HasValue
-            ? await this._recurringTransferRepo.GetByAccountIdAsync(accountId.Value, cancellationToken)
-            : await this._recurringTransferRepo.GetActiveAsync(cancellationToken);
+            ? await _recurringTransferRepo.GetByAccountIdAsync(accountId.Value, cancellationToken)
+            : await _recurringTransferRepo.GetActiveAsync(cancellationToken);
 
         foreach (var recurring in recurringTransfers)
         {
@@ -117,22 +117,22 @@ public sealed class PastDueService : IPastDueService
             foreach (var date in occurrences)
             {
                 // Check if skipped
-                var exception = await this._recurringTransferRepo.GetExceptionAsync(recurring.Id, date, cancellationToken);
+                var exception = await _recurringTransferRepo.GetExceptionAsync(recurring.Id, date, cancellationToken);
                 if (exception?.ExceptionType == ExceptionType.Skipped)
                 {
                     continue;
                 }
 
                 // Check if realized
-                var realized = await this._transactionRepo.GetByRecurringTransferInstanceAsync(recurring.Id, date, cancellationToken);
+                var realized = await _transactionRepo.GetByRecurringTransferInstanceAsync(recurring.Id, date, cancellationToken);
                 if (realized.Count > 0)
                 {
                     continue;
                 }
 
                 // Get account info
-                var sourceAccount = await this._accountRepo.GetByIdAsync(recurring.SourceAccountId, cancellationToken);
-                var destAccount = await this._accountRepo.GetByIdAsync(recurring.DestinationAccountId, cancellationToken);
+                var sourceAccount = await _accountRepo.GetByIdAsync(recurring.SourceAccountId, cancellationToken);
+                var destAccount = await _accountRepo.GetByIdAsync(recurring.DestinationAccountId, cancellationToken);
 
                 items.Add(new PastDueItemDto
                 {
@@ -154,7 +154,7 @@ public sealed class PastDueService : IPastDueService
         var sortedItems = items.OrderBy(i => i.InstanceDate).ToList();
 
         // Calculate total amount using global currency
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var totalAmount = items.Count > 0
             ? items.Sum(i => i.Amount.Amount)
             : 0m;
@@ -186,7 +186,7 @@ public sealed class PastDueService : IPastDueService
                     {
                         InstanceDate = item.InstanceDate,
                     };
-                    await this._transactionRealizationService.RealizeInstanceAsync(
+                    await _transactionRealizationService.RealizeInstanceAsync(
                         item.Id,
                         realizeRequest,
                         cancellationToken);
@@ -198,7 +198,7 @@ public sealed class PastDueService : IPastDueService
                     {
                         InstanceDate = item.InstanceDate,
                     };
-                    await this._transferRealizationService.RealizeInstanceAsync(
+                    await _transferRealizationService.RealizeInstanceAsync(
                         item.Id,
                         realizeRequest,
                         cancellationToken);

@@ -10,7 +10,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class UnifiedTransactionSummaryDto
 {
     /// <summary>Gets or sets the total count of matching transactions.</summary>
-    public int TotalCount { get; set; }
+    public int TotalCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the net total amount of matching transactions.</summary>
     public MoneyDto TotalAmount { get; set; } = new();
@@ -22,5 +25,8 @@ public sealed class UnifiedTransactionSummaryDto
     public MoneyDto ExpenseTotal { get; set; } = new();
 
     /// <summary>Gets or sets the count of uncategorized transactions in the result set.</summary>
-    public int UncategorizedCount { get; set; }
+    public int UncategorizedCount
+    {
+        get; set;
+    }
 }

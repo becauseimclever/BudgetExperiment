@@ -17,12 +17,18 @@ public sealed class BudgetCategoryCreateDto
     /// <summary>
     /// Gets or sets the icon identifier.
     /// </summary>
-    public string? Icon { get; set; }
+    public string? Icon
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the hex color code.
     /// </summary>
-    public string? Color { get; set; }
+    public string? Color
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category type (defaults to "Expense").
@@ -33,5 +39,8 @@ public sealed class BudgetCategoryCreateDto
     /// Gets or sets the optional initial budget amount for the current month.
     /// When provided, a budget goal will be created for the current month.
     /// </summary>
-    public MoneyDto? InitialBudget { get; set; }
+    public MoneyDto? InitialBudget
+    {
+        get; set;
+    }
 }

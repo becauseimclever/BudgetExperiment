@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -22,14 +23,14 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <param name="userContext">The user context for scope filtering.</param>
     public RecurringTransferRepository(BudgetDbContext context, IUserContext userContext)
     {
-        this._context = context;
-        this._userContext = userContext;
+        _context = context;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<RecurringTransfer?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
@@ -38,14 +39,15 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     {
         // RecurringTransfer doesn't have a navigation property to exceptions,
         // so we fetch them separately if needed. For now, just return the entity.
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringTransfer>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
     }
@@ -53,7 +55,8 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringTransfer>> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.SourceAccountId == accountId || r.DestinationAccountId == accountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -62,7 +65,8 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringTransfer>> GetBySourceAccountIdAsync(Guid sourceAccountId, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.SourceAccountId == sourceAccountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -71,7 +75,8 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringTransfer>> GetByDestinationAccountIdAsync(Guid destinationAccountId, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.DestinationAccountId == destinationAccountId)
             .OrderBy(r => r.Description)
             .ToListAsync(cancellationToken);
@@ -80,7 +85,8 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringTransfer>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .Where(r => r.IsActive)
             .OrderBy(r => r.NextOccurrence)
             .ToListAsync(cancellationToken);
@@ -89,7 +95,8 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<RecurringTransfer>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers)
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
             .OrderBy(r => r.Description)
             .Skip(skip)
             .Take(take)
@@ -99,19 +106,21 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.RecurringTransfers).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.RecurringTransfers)
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(RecurringTransfer entity, CancellationToken cancellationToken = default)
     {
-        await this._context.RecurringTransfers.AddAsync(entity, cancellationToken);
+        await _context.RecurringTransfers.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(RecurringTransfer entity, CancellationToken cancellationToken = default)
     {
-        this._context.RecurringTransfers.Remove(entity);
+        _context.RecurringTransfers.Remove(entity);
         return Task.CompletedTask;
     }
 
@@ -122,7 +131,8 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
         DateOnly toDate,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.RecurringTransferExceptions
+        return await _context.RecurringTransferExceptions
+            .AsNoTracking()
             .Where(e => e.RecurringTransferId == recurringTransferId)
             .Where(e => e.OriginalDate >= fromDate && e.OriginalDate <= toDate)
             .OrderBy(e => e.OriginalDate)
@@ -135,7 +145,7 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
         DateOnly originalDate,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.RecurringTransferExceptions
+        return await _context.RecurringTransferExceptions
             .FirstOrDefaultAsync(
                 e => e.RecurringTransferId == recurringTransferId && e.OriginalDate == originalDate,
                 cancellationToken);
@@ -144,13 +154,13 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// <inheritdoc />
     public async Task AddExceptionAsync(RecurringTransferException exception, CancellationToken cancellationToken = default)
     {
-        await this._context.RecurringTransferExceptions.AddAsync(exception, cancellationToken);
+        await _context.RecurringTransferExceptions.AddAsync(exception, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveExceptionAsync(RecurringTransferException exception, CancellationToken cancellationToken = default)
     {
-        this._context.RecurringTransferExceptions.Remove(exception);
+        _context.RecurringTransferExceptions.Remove(exception);
         return Task.CompletedTask;
     }
 
@@ -160,12 +170,12 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
         DateOnly fromDate,
         CancellationToken cancellationToken = default)
     {
-        var exceptionsToRemove = await this._context.RecurringTransferExceptions
+        var exceptionsToRemove = await _context.RecurringTransferExceptions
             .Where(e => e.RecurringTransferId == recurringTransferId)
             .Where(e => e.OriginalDate >= fromDate)
             .ToListAsync(cancellationToken);
 
-        this._context.RecurringTransferExceptions.RemoveRange(exceptionsToRemove);
+        _context.RecurringTransferExceptions.RemoveRange(exceptionsToRemove);
     }
 
     /// <summary>
@@ -175,8 +185,8 @@ internal sealed class RecurringTransferRepository : IRecurringTransferRepository
     /// </summary>
     private IQueryable<RecurringTransfer> ApplyScopeFilter(IQueryable<RecurringTransfer> query)
     {
-        var userId = this._userContext.UserIdAsGuid;
-        return this._userContext.CurrentScope switch
+        var userId = _userContext.UserIdAsGuid;
+        return _userContext.CurrentScope switch
         {
             BudgetScope.Shared => query.Where(x => x.Scope == BudgetScope.Shared),
             BudgetScope.Personal => query.Where(x => x.Scope == BudgetScope.Personal && x.OwnerUserId == userId),

@@ -8,7 +8,9 @@ using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Shared.Budgeting;
+
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -30,19 +32,19 @@ public sealed class RecurringViewModelTests : IDisposable
     /// </summary>
     public RecurringViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new RecurringViewModel(
-            this._apiService,
-            this._toastService,
-            this._scopeService,
-            this._chatContext,
-            this._apiErrorContext);
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new RecurringViewModel(
+            _apiService,
+            _toastService,
+            _scopeService,
+            _chatContext,
+            _apiErrorContext);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -54,12 +56,12 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsRecurringTransactions()
     {
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Monthly Rent"));
+        _apiService.RecurringTransactions.Add(CreateRecurring("Monthly Rent"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.RecurringTransactions.Count.ShouldBe(1);
-        this._sut.RecurringTransactions[0].Description.ShouldBe("Monthly Rent");
+        _sut.RecurringTransactions.Count.ShouldBe(1);
+        _sut.RecurringTransactions[0].Description.ShouldBe("Monthly Rent");
     }
 
     /// <summary>
@@ -69,12 +71,12 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsCategories()
     {
-        this._apiService.Categories.Add(CreateCategory("Utilities"));
+        _apiService.Categories.Add(CreateCategory("Utilities"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Categories.Count.ShouldBe(1);
-        this._sut.Categories[0].Name.ShouldBe("Utilities");
+        _sut.Categories.Count.ShouldBe(1);
+        _sut.Categories[0].Name.ShouldBe("Utilities");
     }
 
     /// <summary>
@@ -84,9 +86,9 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -96,9 +98,9 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsPageTypeOnChatContext()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._chatContext.CurrentContext.PageType.ShouldBe("recurring transactions");
+        _chatContext.CurrentContext.PageType.ShouldBe("recurring transactions");
     }
 
     /// <summary>
@@ -108,13 +110,13 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetRecurringTransactionsException = new HttpRequestException("Server error");
+        _apiService.GetRecurringTransactionsException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load recurring transactions");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load recurring transactions");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -124,12 +126,12 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenCategoriesFail()
     {
-        this._apiService.GetCategoriesException = new HttpRequestException("Category error");
+        _apiService.GetCategoriesException = new HttpRequestException("Category error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load categories");
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load categories");
     }
 
     // --- LoadRecurringTransactionsAsync ---
@@ -141,14 +143,14 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task LoadRecurringTransactionsAsync_ClearsErrorMessage()
     {
-        this._apiService.GetRecurringTransactionsException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetRecurringTransactionsException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.GetRecurringTransactionsException = null;
-        await this._sut.LoadRecurringTransactionsAsync();
+        _apiService.GetRecurringTransactionsException = null;
+        await _sut.LoadRecurringTransactionsAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- RetryLoadAsync ---
@@ -160,13 +162,13 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_ReloadsRecurringTransactions()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.RecurringTransactions.Add(CreateRecurring("New Item"));
+        await _sut.InitializeAsync();
+        _apiService.RecurringTransactions.Add(CreateRecurring("New Item"));
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
-        this._sut.RecurringTransactions.Count.ShouldBe(1);
-        this._sut.IsRetrying.ShouldBeFalse();
+        _sut.RecurringTransactions.Count.ShouldBe(1);
+        _sut.IsRetrying.ShouldBeFalse();
     }
 
     /// <summary>
@@ -177,9 +179,9 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task RetryLoadAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -193,12 +195,12 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task DismissError_ClearsErrorMessage()
     {
-        this._apiService.GetRecurringTransactionsException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
+        _apiService.GetRecurringTransactionsException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -208,9 +210,9 @@ public sealed class RecurringViewModelTests : IDisposable
     public void DismissError_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
         notified.ShouldBeTrue();
     }
@@ -223,10 +225,10 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public void OpenAddForm_ShowsFormAndResetsModel()
     {
-        this._sut.OpenAddForm();
+        _sut.OpenAddForm();
 
-        this._sut.ShowAddForm.ShouldBeTrue();
-        this._sut.NewRecurring.Frequency.ShouldBe("Monthly");
+        _sut.ShowAddForm.ShouldBeTrue();
+        _sut.NewRecurring.Frequency.ShouldBe("Monthly");
     }
 
     /// <summary>
@@ -236,9 +238,9 @@ public sealed class RecurringViewModelTests : IDisposable
     public void OpenAddForm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenAddForm();
+        _sut.OpenAddForm();
 
         notified.ShouldBeTrue();
     }
@@ -254,12 +256,12 @@ public sealed class RecurringViewModelTests : IDisposable
         var recurring = CreateRecurring("Rent");
         recurring.Version = "v1";
 
-        this._sut.OpenEditForm(recurring);
+        _sut.OpenEditForm(recurring);
 
-        this._sut.ShowEditForm.ShouldBeTrue();
-        this._sut.EditingId.ShouldBe(recurring.Id);
-        this._sut.EditingVersion.ShouldBe("v1");
-        this._sut.EditModel.Description.ShouldBe("Rent");
+        _sut.ShowEditForm.ShouldBeTrue();
+        _sut.EditingId.ShouldBe(recurring.Id);
+        _sut.EditingVersion.ShouldBe("v1");
+        _sut.EditModel.Description.ShouldBe("Rent");
     }
 
     /// <summary>
@@ -269,9 +271,9 @@ public sealed class RecurringViewModelTests : IDisposable
     public void OpenEditForm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenEditForm(CreateRecurring("Rent"));
+        _sut.OpenEditForm(CreateRecurring("Rent"));
 
         notified.ShouldBeTrue();
     }
@@ -284,11 +286,11 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public void HideForm_HidesBothForms()
     {
-        this._sut.OpenAddForm();
-        this._sut.HideForm();
+        _sut.OpenAddForm();
+        _sut.HideForm();
 
-        this._sut.ShowAddForm.ShouldBeFalse();
-        this._sut.ShowEditForm.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeFalse();
+        _sut.ShowEditForm.ShouldBeFalse();
     }
 
     /// <summary>
@@ -298,9 +300,9 @@ public sealed class RecurringViewModelTests : IDisposable
     public void HideForm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.HideForm();
+        _sut.HideForm();
 
         notified.ShouldBeTrue();
     }
@@ -315,16 +317,16 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task CreateRecurringAsync_ClosesFormAndReloads_WhenSuccessful()
     {
         var created = CreateRecurring("New Recurring");
-        this._apiService.CreateRecurringTransactionResult = created;
-        this._apiService.RecurringTransactions.Add(created);
-        await this._sut.InitializeAsync();
-        this._sut.OpenAddForm();
+        _apiService.CreateRecurringTransactionResult = created;
+        _apiService.RecurringTransactions.Add(created);
+        await _sut.InitializeAsync();
+        _sut.OpenAddForm();
 
-        await this._sut.CreateRecurringAsync(new RecurringTransactionCreateDto { Description = "New Recurring" });
+        await _sut.CreateRecurringAsync(new RecurringTransactionCreateDto { Description = "New Recurring" });
 
-        this._sut.ShowAddForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
-        this._sut.RecurringTransactions.ShouldContain(r => r.Description == "New Recurring");
+        _sut.ShowAddForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
+        _sut.RecurringTransactions.ShouldContain(r => r.Description == "New Recurring");
     }
 
     /// <summary>
@@ -334,14 +336,14 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task CreateRecurringAsync_KeepsFormOpen_WhenApiReturnsNull()
     {
-        this._apiService.CreateRecurringTransactionResult = null;
-        await this._sut.InitializeAsync();
-        this._sut.OpenAddForm();
+        _apiService.CreateRecurringTransactionResult = null;
+        await _sut.InitializeAsync();
+        _sut.OpenAddForm();
 
-        await this._sut.CreateRecurringAsync(new RecurringTransactionCreateDto { Description = "Fail" });
+        await _sut.CreateRecurringAsync(new RecurringTransactionCreateDto { Description = "Fail" });
 
-        this._sut.ShowAddForm.ShouldBeTrue();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowAddForm.ShouldBeTrue();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -351,11 +353,11 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task CreateRecurringAsync_ResetsIsSubmitting_AfterCompletion()
     {
-        this._apiService.CreateRecurringTransactionResult = CreateRecurring("Test");
+        _apiService.CreateRecurringTransactionResult = CreateRecurring("Test");
 
-        await this._sut.CreateRecurringAsync(new RecurringTransactionCreateDto());
+        await _sut.CreateRecurringAsync(new RecurringTransactionCreateDto());
 
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- UpdateRecurringAsync ---
@@ -368,17 +370,17 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task UpdateRecurringAsync_ClosesFormAndReloads_WhenSuccessful()
     {
         var recurring = CreateRecurring("Rent");
-        this._apiService.RecurringTransactions.Add(recurring);
-        await this._sut.InitializeAsync();
-        this._sut.OpenEditForm(recurring);
+        _apiService.RecurringTransactions.Add(recurring);
+        await _sut.InitializeAsync();
+        _sut.OpenEditForm(recurring);
 
         var updated = CreateRecurring("Rent Updated");
-        this._apiService.UpdateRecurringTransactionResult = ApiResult<RecurringTransactionDto>.Success(updated);
+        _apiService.UpdateRecurringTransactionResult = ApiResult<RecurringTransactionDto>.Success(updated);
 
-        await this._sut.UpdateRecurringAsync(new RecurringTransactionUpdateDto { Description = "Rent Updated" });
+        await _sut.UpdateRecurringAsync(new RecurringTransactionUpdateDto { Description = "Rent Updated" });
 
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -389,17 +391,17 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task UpdateRecurringAsync_HandlesConflict()
     {
         var recurring = CreateRecurring("Rent");
-        this._apiService.RecurringTransactions.Add(recurring);
-        await this._sut.InitializeAsync();
-        this._sut.OpenEditForm(recurring);
+        _apiService.RecurringTransactions.Add(recurring);
+        await _sut.InitializeAsync();
+        _sut.OpenEditForm(recurring);
 
-        this._apiService.UpdateRecurringTransactionResult = ApiResult<RecurringTransactionDto>.Conflict();
+        _apiService.UpdateRecurringTransactionResult = ApiResult<RecurringTransactionDto>.Conflict();
 
-        await this._sut.UpdateRecurringAsync(new RecurringTransactionUpdateDto { Description = "Conflict" });
+        await _sut.UpdateRecurringAsync(new RecurringTransactionUpdateDto { Description = "Conflict" });
 
-        this._toastService.WarningShown.ShouldBeTrue();
-        this._sut.ShowEditForm.ShouldBeFalse();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _toastService.WarningShown.ShouldBeTrue();
+        _sut.ShowEditForm.ShouldBeFalse();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -410,16 +412,16 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task UpdateRecurringAsync_KeepsFormOpen_WhenApiReturnsFailure()
     {
         var recurring = CreateRecurring("Rent");
-        this._apiService.RecurringTransactions.Add(recurring);
-        await this._sut.InitializeAsync();
-        this._sut.OpenEditForm(recurring);
+        _apiService.RecurringTransactions.Add(recurring);
+        await _sut.InitializeAsync();
+        _sut.OpenEditForm(recurring);
 
-        this._apiService.UpdateRecurringTransactionResult = ApiResult<RecurringTransactionDto>.Failure();
+        _apiService.UpdateRecurringTransactionResult = ApiResult<RecurringTransactionDto>.Failure();
 
-        await this._sut.UpdateRecurringAsync(new RecurringTransactionUpdateDto { Description = "Fail" });
+        await _sut.UpdateRecurringAsync(new RecurringTransactionUpdateDto { Description = "Fail" });
 
-        this._sut.ShowEditForm.ShouldBeTrue();
-        this._sut.IsSubmitting.ShouldBeFalse();
+        _sut.ShowEditForm.ShouldBeTrue();
+        _sut.IsSubmitting.ShouldBeFalse();
     }
 
     // --- SkipNextAsync ---
@@ -432,13 +434,13 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task SkipNextAsync_ReloadsRecurringTransactions_WhenSuccessful()
     {
         var recurring = CreateRecurring("Rent");
-        this._apiService.RecurringTransactions.Add(recurring);
-        this._apiService.SkipNextRecurringResult = recurring;
-        await this._sut.InitializeAsync();
+        _apiService.RecurringTransactions.Add(recurring);
+        _apiService.SkipNextRecurringResult = recurring;
+        await _sut.InitializeAsync();
 
-        await this._sut.SkipNextAsync(recurring);
+        await _sut.SkipNextAsync(recurring);
 
-        this._sut.RecurringTransactions.Count.ShouldBe(1);
+        _sut.RecurringTransactions.Count.ShouldBe(1);
     }
 
     /// <summary>
@@ -449,13 +451,13 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task SkipNextAsync_DoesNotReload_WhenApiReturnsNull()
     {
         var recurring = CreateRecurring("Rent");
-        this._apiService.SkipNextRecurringResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.SkipNextRecurringResult = null;
+        await _sut.InitializeAsync();
 
-        await this._sut.SkipNextAsync(recurring);
+        await _sut.SkipNextAsync(recurring);
 
         // No exception thrown, no-op on null
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- PauseAsync ---
@@ -468,13 +470,13 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task PauseAsync_ReloadsRecurringTransactions_WhenSuccessful()
     {
         var recurring = CreateRecurring("Rent");
-        this._apiService.RecurringTransactions.Add(recurring);
-        this._apiService.PauseRecurringTransactionResult = recurring;
-        await this._sut.InitializeAsync();
+        _apiService.RecurringTransactions.Add(recurring);
+        _apiService.PauseRecurringTransactionResult = recurring;
+        await _sut.InitializeAsync();
 
-        await this._sut.PauseAsync(recurring);
+        await _sut.PauseAsync(recurring);
 
-        this._sut.RecurringTransactions.Count.ShouldBe(1);
+        _sut.RecurringTransactions.Count.ShouldBe(1);
     }
 
     /// <summary>
@@ -485,12 +487,12 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task PauseAsync_DoesNotReload_WhenApiReturnsNull()
     {
         var recurring = CreateRecurring("Rent");
-        this._apiService.PauseRecurringTransactionResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.PauseRecurringTransactionResult = null;
+        await _sut.InitializeAsync();
 
-        await this._sut.PauseAsync(recurring);
+        await _sut.PauseAsync(recurring);
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- ResumeAsync ---
@@ -503,13 +505,13 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task ResumeAsync_ReloadsRecurringTransactions_WhenSuccessful()
     {
         var recurring = CreateRecurring("Rent", isActive: false);
-        this._apiService.RecurringTransactions.Add(recurring);
-        this._apiService.ResumeRecurringTransactionResult = recurring;
-        await this._sut.InitializeAsync();
+        _apiService.RecurringTransactions.Add(recurring);
+        _apiService.ResumeRecurringTransactionResult = recurring;
+        await _sut.InitializeAsync();
 
-        await this._sut.ResumeAsync(recurring);
+        await _sut.ResumeAsync(recurring);
 
-        this._sut.RecurringTransactions.Count.ShouldBe(1);
+        _sut.RecurringTransactions.Count.ShouldBe(1);
     }
 
     /// <summary>
@@ -520,12 +522,12 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task ResumeAsync_DoesNotReload_WhenApiReturnsNull()
     {
         var recurring = CreateRecurring("Rent", isActive: false);
-        this._apiService.ResumeRecurringTransactionResult = null;
-        await this._sut.InitializeAsync();
+        _apiService.ResumeRecurringTransactionResult = null;
+        await _sut.InitializeAsync();
 
-        await this._sut.ResumeAsync(recurring);
+        await _sut.ResumeAsync(recurring);
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     // --- Delete ---
@@ -538,10 +540,10 @@ public sealed class RecurringViewModelTests : IDisposable
     {
         var recurring = CreateRecurring("ToDelete");
 
-        this._sut.OpenDeleteConfirm(recurring);
+        _sut.OpenDeleteConfirm(recurring);
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.DeletingRecurring.ShouldBe(recurring);
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.DeletingRecurring.ShouldBe(recurring);
     }
 
     /// <summary>
@@ -551,9 +553,9 @@ public sealed class RecurringViewModelTests : IDisposable
     public void OpenDeleteConfirm_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenDeleteConfirm(CreateRecurring("ToDelete"));
+        _sut.OpenDeleteConfirm(CreateRecurring("ToDelete"));
 
         notified.ShouldBeTrue();
     }
@@ -565,12 +567,12 @@ public sealed class RecurringViewModelTests : IDisposable
     public void CancelDelete_HidesDeleteDialog()
     {
         var recurring = CreateRecurring("ToDelete");
-        this._sut.OpenDeleteConfirm(recurring);
+        _sut.OpenDeleteConfirm(recurring);
 
-        this._sut.CancelDelete();
+        _sut.CancelDelete();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingRecurring.ShouldBeNull();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingRecurring.ShouldBeNull();
     }
 
     /// <summary>
@@ -581,16 +583,16 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task ConfirmDeleteAsync_ClosesDialogAndReloads_WhenSuccessful()
     {
         var recurring = CreateRecurring("ToDelete");
-        this._apiService.RecurringTransactions.Add(recurring);
-        this._apiService.DeleteRecurringTransactionResult = true;
-        await this._sut.InitializeAsync();
-        this._sut.OpenDeleteConfirm(recurring);
+        _apiService.RecurringTransactions.Add(recurring);
+        _apiService.DeleteRecurringTransactionResult = true;
+        await _sut.InitializeAsync();
+        _sut.OpenDeleteConfirm(recurring);
 
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.ShowDeleteConfirm.ShouldBeFalse();
-        this._sut.DeletingRecurring.ShouldBeNull();
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ShowDeleteConfirm.ShouldBeFalse();
+        _sut.DeletingRecurring.ShouldBeNull();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -600,9 +602,9 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task ConfirmDeleteAsync_ReturnsEarly_WhenNoDeletingRecurring()
     {
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     /// <summary>
@@ -613,15 +615,15 @@ public sealed class RecurringViewModelTests : IDisposable
     public async Task ConfirmDeleteAsync_KeepsDialogOpen_WhenApiFails()
     {
         var recurring = CreateRecurring("ToDelete");
-        this._apiService.RecurringTransactions.Add(recurring);
-        this._apiService.DeleteRecurringTransactionResult = false;
-        await this._sut.InitializeAsync();
-        this._sut.OpenDeleteConfirm(recurring);
+        _apiService.RecurringTransactions.Add(recurring);
+        _apiService.DeleteRecurringTransactionResult = false;
+        await _sut.InitializeAsync();
+        _sut.OpenDeleteConfirm(recurring);
 
-        await this._sut.ConfirmDeleteAsync();
+        await _sut.ConfirmDeleteAsync();
 
-        this._sut.ShowDeleteConfirm.ShouldBeTrue();
-        this._sut.IsDeleting.ShouldBeFalse();
+        _sut.ShowDeleteConfirm.ShouldBeTrue();
+        _sut.IsDeleting.ShouldBeFalse();
     }
 
     // --- Import Patterns ---
@@ -634,11 +636,11 @@ public sealed class RecurringViewModelTests : IDisposable
     {
         var recurring = CreateRecurring("Rent");
 
-        this._sut.OpenImportPatterns(recurring);
+        _sut.OpenImportPatterns(recurring);
 
-        this._sut.ShowImportPatterns.ShouldBeTrue();
-        this._sut.ImportPatternsRecurringId.ShouldBe(recurring.Id);
-        this._sut.ImportPatternsDescription.ShouldBe("Rent");
+        _sut.ShowImportPatterns.ShouldBeTrue();
+        _sut.ImportPatternsRecurringId.ShouldBe(recurring.Id);
+        _sut.ImportPatternsDescription.ShouldBe("Rent");
     }
 
     /// <summary>
@@ -648,9 +650,9 @@ public sealed class RecurringViewModelTests : IDisposable
     public void OpenImportPatterns_NotifiesStateChanged()
     {
         bool notified = false;
-        this._sut.OnStateChanged = () => notified = true;
+        _sut.OnStateChanged = () => notified = true;
 
-        this._sut.OpenImportPatterns(CreateRecurring("Rent"));
+        _sut.OpenImportPatterns(CreateRecurring("Rent"));
 
         notified.ShouldBeTrue();
     }
@@ -661,13 +663,13 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public void HideImportPatterns_HidesDialogAndResetsState()
     {
-        this._sut.OpenImportPatterns(CreateRecurring("Rent"));
+        _sut.OpenImportPatterns(CreateRecurring("Rent"));
 
-        this._sut.HideImportPatterns();
+        _sut.HideImportPatterns();
 
-        this._sut.ShowImportPatterns.ShouldBeFalse();
-        this._sut.ImportPatternsRecurringId.ShouldBe(Guid.Empty);
-        this._sut.ImportPatternsDescription.ShouldBe(string.Empty);
+        _sut.ShowImportPatterns.ShouldBeFalse();
+        _sut.ImportPatternsRecurringId.ShouldBe(Guid.Empty);
+        _sut.ImportPatternsDescription.ShouldBe(string.Empty);
     }
 
     /// <summary>
@@ -676,11 +678,11 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public void HandleImportPatternsSaved_HidesDialog()
     {
-        this._sut.OpenImportPatterns(CreateRecurring("Rent"));
+        _sut.OpenImportPatterns(CreateRecurring("Rent"));
 
-        this._sut.HandleImportPatternsSaved();
+        _sut.HandleImportPatternsSaved();
 
-        this._sut.ShowImportPatterns.ShouldBeFalse();
+        _sut.ShowImportPatterns.ShouldBeFalse();
     }
 
     // --- Static Helpers ---
@@ -829,14 +831,14 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task ScopeChange_ReloadsRecurringTransactions()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.RecurringTransactions.Add(CreateRecurring("New After Scope"));
+        await _sut.InitializeAsync();
+        _apiService.RecurringTransactions.Add(CreateRecurring("New After Scope"));
 
-        await this._scopeService.SetScopeAsync(BudgetScope.Personal);
+        await _scopeService.SetScopeAsync(BudgetScope.Personal);
         await Task.Delay(50);
 
-        this._sut.RecurringTransactions.Count.ShouldBe(1);
-        this._sut.RecurringTransactions[0].Description.ShouldBe("New After Scope");
+        _sut.RecurringTransactions.Count.ShouldBe(1);
+        _sut.RecurringTransactions[0].Description.ShouldBe("New After Scope");
     }
 
     // --- Dispose ---
@@ -848,14 +850,14 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_UnsubscribesFromScopeChanged()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Dispose();
+        await _sut.InitializeAsync();
+        _sut.Dispose();
 
-        this._apiService.RecurringTransactions.Add(CreateRecurring("Should Not Load"));
-        await this._scopeService.SetScopeAsync(BudgetScope.Shared);
+        _apiService.RecurringTransactions.Add(CreateRecurring("Should Not Load"));
+        await _scopeService.SetScopeAsync(BudgetScope.Shared);
         await Task.Delay(50);
 
-        this._sut.RecurringTransactions.Count.ShouldBe(0);
+        _sut.RecurringTransactions.Count.ShouldBe(0);
     }
 
     /// <summary>
@@ -865,12 +867,12 @@ public sealed class RecurringViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_ClearsChatContext()
     {
-        await this._sut.InitializeAsync();
-        this._chatContext.CurrentContext.PageType.ShouldBe("recurring transactions");
+        await _sut.InitializeAsync();
+        _chatContext.CurrentContext.PageType.ShouldBe("recurring transactions");
 
-        this._sut.Dispose();
+        _sut.Dispose();
 
-        this._chatContext.CurrentContext.PageType.ShouldBeNull();
+        _chatContext.CurrentContext.PageType.ShouldBeNull();
     }
 
     // --- OnStateChanged Callback ---
@@ -882,15 +884,15 @@ public sealed class RecurringViewModelTests : IDisposable
     public void OnStateChanged_IsInvoked_OnStateMutations()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        this._sut.OpenAddForm();
-        this._sut.HideForm();
-        this._sut.DismissError();
-        this._sut.OpenDeleteConfirm(CreateRecurring("Cat"));
-        this._sut.CancelDelete();
-        this._sut.OpenImportPatterns(CreateRecurring("Test"));
-        this._sut.HideImportPatterns();
+        _sut.OpenAddForm();
+        _sut.HideForm();
+        _sut.DismissError();
+        _sut.OpenDeleteConfirm(CreateRecurring("Cat"));
+        _sut.CancelDelete();
+        _sut.OpenImportPatterns(CreateRecurring("Test"));
+        _sut.HideImportPatterns();
 
         callCount.ShouldBe(7);
     }
@@ -935,7 +937,10 @@ public sealed class RecurringViewModelTests : IDisposable
         /// <summary>
         /// Gets a value indicating whether a warning was shown.
         /// </summary>
-        public bool WarningShown { get; private set; }
+        public bool WarningShown
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];

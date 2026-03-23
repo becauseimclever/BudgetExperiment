@@ -5,6 +5,7 @@
 using BudgetExperiment.Application.Settings;
 using BudgetExperiment.Domain.Repositories;
 using BudgetExperiment.Domain.Settings;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.Settings;

@@ -17,5 +17,8 @@ public sealed class SendMessageRequest
     /// <summary>
     /// Gets or sets the optional context from the client UI.
     /// </summary>
-    public ChatContextDto? Context { get; set; }
+    public ChatContextDto? Context
+    {
+        get; set;
+    }
 }

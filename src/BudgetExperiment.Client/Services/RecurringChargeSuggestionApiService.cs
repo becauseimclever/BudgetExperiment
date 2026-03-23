@@ -4,7 +4,9 @@
 
 using System.Net.Http.Json;
 using System.Text.Json;
+
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BudgetExperiment.Client.Services;
@@ -29,7 +31,7 @@ public sealed class RecurringChargeSuggestionApiService : IRecurringChargeSugges
     /// <param name="httpClient">The HTTP client.</param>
     public RecurringChargeSuggestionApiService(HttpClient httpClient)
     {
-        this._httpClient = httpClient;
+        _httpClient = httpClient;
     }
 
     /// <inheritdoc />
@@ -38,7 +40,7 @@ public sealed class RecurringChargeSuggestionApiService : IRecurringChargeSugges
         try
         {
             var request = new DetectRecurringChargesRequest { AccountId = accountId };
-            var response = await this._httpClient.PostAsJsonAsync(
+            var response = await _httpClient.PostAsJsonAsync(
                 $"{BaseUrl}/detect",
                 request,
                 JsonOptions,
@@ -83,7 +85,7 @@ public sealed class RecurringChargeSuggestionApiService : IRecurringChargeSugges
                 url += $"&status={status}";
             }
 
-            var result = await this._httpClient.GetFromJsonAsync<List<RecurringChargeSuggestionDto>>(
+            var result = await _httpClient.GetFromJsonAsync<List<RecurringChargeSuggestionDto>>(
                 url,
                 JsonOptions,
                 cancellationToken);
@@ -107,7 +109,7 @@ public sealed class RecurringChargeSuggestionApiService : IRecurringChargeSugges
     {
         try
         {
-            return await this._httpClient.GetFromJsonAsync<RecurringChargeSuggestionDto>(
+            return await _httpClient.GetFromJsonAsync<RecurringChargeSuggestionDto>(
                 $"{BaseUrl}/{id}",
                 JsonOptions,
                 cancellationToken);
@@ -130,7 +132,7 @@ public sealed class RecurringChargeSuggestionApiService : IRecurringChargeSugges
     {
         try
         {
-            var response = await this._httpClient.PostAsync(
+            var response = await _httpClient.PostAsync(
                 $"{BaseUrl}/{id}/accept",
                 null,
                 cancellationToken);
@@ -160,7 +162,7 @@ public sealed class RecurringChargeSuggestionApiService : IRecurringChargeSugges
     {
         try
         {
-            var response = await this._httpClient.PostAsync(
+            var response = await _httpClient.PostAsync(
                 $"{BaseUrl}/{id}/dismiss",
                 null,
                 cancellationToken);

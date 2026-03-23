@@ -12,7 +12,10 @@ public sealed record LinkableInstanceDto
     /// <summary>
     /// Gets the recurring transaction identifier.
     /// </summary>
-    public Guid RecurringTransactionId { get; init; }
+    public Guid RecurringTransactionId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the recurring transaction description.
@@ -27,15 +30,24 @@ public sealed record LinkableInstanceDto
     /// <summary>
     /// Gets the scheduled date for this instance.
     /// </summary>
-    public DateOnly InstanceDate { get; init; }
+    public DateOnly InstanceDate
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this instance is already matched to another transaction.
     /// </summary>
-    public bool IsAlreadyMatched { get; init; }
+    public bool IsAlreadyMatched
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the confidence score if auto-matched to this transaction (0.0 to 1.0).
     /// </summary>
-    public decimal? SuggestedConfidence { get; init; }
+    public decimal? SuggestedConfidence
+    {
+        get; init;
+    }
 }

@@ -12,20 +12,32 @@ public sealed class ReportWidgetLayoutPosition
     /// <summary>
     /// Gets or sets the column start (1-based).
     /// </summary>
-    public int X { get; set; }
+    public int X
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the row start (1-based).
     /// </summary>
-    public int Y { get; set; }
+    public int Y
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the column span.
     /// </summary>
-    public int Width { get; set; }
+    public int Width
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the row span.
     /// </summary>
-    public int Height { get; set; }
+    public int Height
+    {
+        get; set;
+    }
 }

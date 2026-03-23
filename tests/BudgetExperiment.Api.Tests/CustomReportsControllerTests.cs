@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the CustomReports API endpoints (ETag/concurrency).
 /// </summary>
+[Collection("ApiDb")]
 public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -23,7 +24,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     /// <param name="factory">The test factory.</param>
     public CustomReportsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -35,12 +36,12 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     {
         // Arrange
         var createDto = new CustomReportLayoutCreateDto { Name = "ETag Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/custom-reports/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/custom-reports/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -57,11 +58,11 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     {
         // Arrange
         var createDto = new CustomReportLayoutCreateDto { Name = "IfMatch Valid Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();
 
-        var getResponse = await this._client.GetAsync($"/api/v1/custom-reports/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/custom-reports/{created!.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new CustomReportLayoutUpdateDto { Name = "Updated With ETag" };
@@ -72,7 +73,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +91,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     {
         // Arrange
         var createDto = new CustomReportLayoutCreateDto { Name = "Stale IfMatch Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();
 
@@ -103,7 +104,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -118,14 +119,14 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     {
         // Arrange
         var createDto = new CustomReportLayoutCreateDto { Name = "No IfMatch Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();
 
         var updateDto = new CustomReportLayoutUpdateDto { Name = "Updated Without ETag" };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/custom-reports/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/custom-reports/{created!.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

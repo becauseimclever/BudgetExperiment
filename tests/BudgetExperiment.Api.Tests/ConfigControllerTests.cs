@@ -14,6 +14,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Config API endpoint.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ConfigControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;

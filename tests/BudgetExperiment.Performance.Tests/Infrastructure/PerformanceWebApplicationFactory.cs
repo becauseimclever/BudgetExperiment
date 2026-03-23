@@ -113,7 +113,7 @@ public sealed class PerformanceWebApplicationFactory : WebApplicationFactory<Pro
 
             services.AddDbContext<BudgetDbContext>(options =>
             {
-                options.UseInMemoryDatabase(this._dbName)
+                options.UseInMemoryDatabase(_dbName)
                        .UseInternalServiceProvider(inMemoryServiceProvider);
             });
 

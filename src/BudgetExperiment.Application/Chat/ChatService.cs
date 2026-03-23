@@ -38,13 +38,13 @@ public sealed class ChatService : IChatService
         IChatActionExecutor actionExecutor,
         IUnitOfWork unitOfWork)
     {
-        this._sessionRepository = sessionRepository;
-        this._messageRepository = messageRepository;
-        this._accountRepository = accountRepository;
-        this._categoryRepository = categoryRepository;
-        this._parser = parser;
-        this._actionExecutor = actionExecutor;
-        this._unitOfWork = unitOfWork;
+        _sessionRepository = sessionRepository;
+        _messageRepository = messageRepository;
+        _accountRepository = accountRepository;
+        _categoryRepository = categoryRepository;
+        _parser = parser;
+        _actionExecutor = actionExecutor;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
@@ -53,42 +53,42 @@ public sealed class ChatService : IChatService
         // Note: userId is reserved for future multi-user session isolation
         _ = userId;
 
-        var existingSession = await this._sessionRepository.GetActiveSessionAsync(cancellationToken);
+        var existingSession = await _sessionRepository.GetActiveSessionAsync(cancellationToken);
         if (existingSession != null && existingSession.IsActive)
         {
             return existingSession;
         }
 
         var newSession = ChatSession.Create();
-        await this._sessionRepository.AddAsync(newSession, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _sessionRepository.AddAsync(newSession, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return newSession;
     }
 
     /// <inheritdoc />
     public async Task<ChatSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
-        return await this._sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        return await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ChatSession>> GetUserSessionsAsync(string userId, CancellationToken cancellationToken = default)
     {
         // For now, return all sessions (we could add a userId filter later)
-        return await this._sessionRepository.ListAsync(0, 100, cancellationToken);
+        return await _sessionRepository.ListAsync(0, 100, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ChatMessage>?> GetMessagesAsync(Guid sessionId, int limit = 50, CancellationToken cancellationToken = default)
     {
         // Check if session exists
-        var session = await this._sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session is null)
         {
             return null;
         }
 
-        return await this._messageRepository.GetBySessionAsync(sessionId, limit, cancellationToken);
+        return await _messageRepository.GetBySessionAsync(sessionId, limit, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -98,7 +98,7 @@ public sealed class ChatService : IChatService
         ChatContext? context = null,
         CancellationToken cancellationToken = default)
     {
-        var session = await this._sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
 
         var validationError = ValidateSessionForMessage(session);
         if (validationError is not null)
@@ -107,13 +107,13 @@ public sealed class ChatService : IChatService
         }
 
         var userMessage = session!.AddUserMessage(content);
-        await this._messageRepository.AddAsync(userMessage, cancellationToken);
+        await _messageRepository.AddAsync(userMessage, cancellationToken);
 
         var parseResult = await this.ParseUserCommandAsync(content, context, cancellationToken);
 
         var assistantMessage = session.AddAssistantMessage(parseResult.ResponseText, parseResult.Action);
-        await this._messageRepository.AddAsync(assistantMessage, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _messageRepository.AddAsync(assistantMessage, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ChatResult(
             Success: parseResult.Success,
@@ -125,7 +125,7 @@ public sealed class ChatService : IChatService
     /// <inheritdoc />
     public async Task<ActionExecutionResult> ConfirmActionAsync(Guid messageId, CancellationToken cancellationToken = default)
     {
-        var message = await this._messageRepository.GetByIdAsync(messageId, cancellationToken);
+        var message = await _messageRepository.GetByIdAsync(messageId, cancellationToken);
 
         var validationError = ValidateMessageForConfirmation(message);
         if (validationError is not null)
@@ -139,28 +139,28 @@ public sealed class ChatService : IChatService
     /// <inheritdoc />
     public async Task<bool> CancelActionAsync(Guid messageId, CancellationToken cancellationToken = default)
     {
-        var message = await this._messageRepository.GetByIdAsync(messageId, cancellationToken);
+        var message = await _messageRepository.GetByIdAsync(messageId, cancellationToken);
         if (message == null || message.ActionStatus != ChatActionStatus.Pending)
         {
             return false;
         }
 
         message.MarkActionCancelled();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
     /// <inheritdoc />
     public async Task<bool> CloseSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
-        var session = await this._sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session == null || !session.IsActive)
         {
             return false;
         }
 
         session.Close();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -230,7 +230,7 @@ public sealed class ChatService : IChatService
         var accounts = await this.GetAccountInfoAsync(cancellationToken);
         var categories = await this.GetCategoryInfoAsync(cancellationToken);
 
-        return await this._parser.ParseCommandAsync(
+        return await _parser.ParseCommandAsync(
             content, accounts, categories, context, cancellationToken);
     }
 
@@ -240,7 +240,7 @@ public sealed class ChatService : IChatService
     {
         try
         {
-            var result = await this._actionExecutor.ExecuteActionAsync(message.Action!, cancellationToken);
+            var result = await _actionExecutor.ExecuteActionAsync(message.Action!, cancellationToken);
 
             if (result.Success && result.CreatedEntityId.HasValue)
             {
@@ -255,13 +255,13 @@ public sealed class ChatService : IChatService
                 message.MarkActionFailed(result.ErrorMessage ?? "Execution failed.");
             }
 
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;
         }
         catch (DomainException ex)
         {
             message.MarkActionFailed(ex.Message);
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new ActionExecutionResult(
                 Success: false,
@@ -274,13 +274,13 @@ public sealed class ChatService : IChatService
 
     private async Task<IReadOnlyList<AccountInfo>> GetAccountInfoAsync(CancellationToken cancellationToken)
     {
-        var accounts = await this._accountRepository.GetAllAsync(cancellationToken);
+        var accounts = await _accountRepository.GetAllAsync(cancellationToken);
         return accounts.Select(a => new AccountInfo(a.Id, a.Name, a.Type)).ToList();
     }
 
     private async Task<IReadOnlyList<CategoryInfo>> GetCategoryInfoAsync(CancellationToken cancellationToken)
     {
-        var categories = await this._categoryRepository.GetActiveAsync(cancellationToken);
+        var categories = await _categoryRepository.GetActiveAsync(cancellationToken);
         return categories.Select(c => new CategoryInfo(c.Id, c.Name)).ToList();
     }
 }

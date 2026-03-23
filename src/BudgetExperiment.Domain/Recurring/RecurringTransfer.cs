@@ -22,17 +22,26 @@ public sealed class RecurringTransfer
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the source account (where money is transferred from).
     /// </summary>
-    public Guid SourceAccountId { get; private set; }
+    public Guid SourceAccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the destination account (where money is transferred to).
     /// </summary>
-    public Guid DestinationAccountId { get; private set; }
+    public Guid DestinationAccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the description of the recurring transfer.
@@ -52,52 +61,82 @@ public sealed class RecurringTransfer
     /// <summary>
     /// Gets the start date for the recurring transfer.
     /// </summary>
-    public DateOnly StartDate { get; private set; }
+    public DateOnly StartDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the optional end date for the recurring transfer (null = indefinite).
     /// </summary>
-    public DateOnly? EndDate { get; private set; }
+    public DateOnly? EndDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the date of the next scheduled occurrence.
     /// </summary>
-    public DateOnly NextOccurrence { get; private set; }
+    public DateOnly NextOccurrence
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the recurring transfer is active.
     /// </summary>
-    public bool IsActive { get; private set; }
+    public bool IsActive
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the date of the last generated transfer (null if never generated).
     /// </summary>
-    public DateOnly? LastGeneratedDate { get; private set; }
+    public DateOnly? LastGeneratedDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the recurring transfer was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the recurring transfer was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID of who created this recurring transfer.
     /// </summary>
-    public Guid CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new recurring transfer.

@@ -9,6 +9,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Export API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -19,7 +20,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <param name="factory">Test factory.</param>
     public ExportControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -30,7 +31,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task ExportMonthlyCategoryReport_Returns_Csv()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/exports/categories/monthly?year=2030&month=12");
+        var response = await _client.GetAsync("/api/v1/exports/categories/monthly?year=2030&month=12");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -48,7 +49,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task ExportCategoryReportByRange_Returns_Csv()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/exports/categories/range?startDate=2030-01-01&endDate=2030-01-31");
+        var response = await _client.GetAsync("/api/v1/exports/categories/range?startDate=2030-01-01&endDate=2030-01-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -66,7 +67,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task ExportSpendingTrends_Returns_Csv()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/exports/trends?months=6");
+        var response = await _client.GetAsync("/api/v1/exports/trends?months=6");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -84,7 +85,7 @@ public sealed class ExportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task ExportBudgetComparison_Returns_Csv()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/exports/budget-comparison?year=2030&month=12");
+        var response = await _client.GetAsync("/api/v1/exports/budget-comparison?year=2030&month=12");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

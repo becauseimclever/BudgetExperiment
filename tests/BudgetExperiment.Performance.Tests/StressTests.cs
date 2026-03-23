@@ -20,6 +20,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
 {
     private readonly PerformanceWebApplicationFactory _factory;
     private readonly HttpClient _client;
+    private Guid _firstAccountId;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StressTests"/> class.
@@ -27,14 +28,14 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     /// <param name="factory">The web application factory.</param>
     public StressTests(PerformanceWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        await TestDataSeeder.SeedAsync(this._factory);
+        _firstAccountId = await TestDataSeeder.SeedAsync(_factory);
     }
 
     /// <inheritdoc/>
@@ -47,8 +48,8 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     public void TransactionsWrite_LoadTest()
     {
         var scenario = TransactionsWriteScenario.Create(
-            this._client,
-            TestDataSeeder.FirstAccountId,
+            _client,
+            _firstAccountId,
             LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 1000),
@@ -70,7 +71,7 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     [Fact]
     public void RecurringTransactions_LoadTest()
     {
-        var scenario = RecurringTransactionsScenario.Create(this._client, LoadProfile.Simulations())
+        var scenario = RecurringTransactionsScenario.Create(_client, LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 500),
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),
@@ -88,14 +89,15 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
 
     /// <summary>
     /// Transactions read under stress — ramp to 100 req/s to find degradation thresholds.
-    /// Per the feature doc, stress tests observe degradation without hard latency pass/fail.
-    /// Latency metrics are captured in the HTML/CSV report for analysis.
+    /// P99 threshold is 5× the baseline load p99 (1 000 ms) to catch catastrophic regressions
+    /// while remaining tolerant of Testcontainers / JIT overhead.
     /// </summary>
     [Fact]
     public void Transactions_StressTest()
     {
-        var scenario = TransactionsScenario.Create(this._client, StressProfile.Simulations())
+        var scenario = TransactionsScenario.Create(_client, StressProfile.Simulations())
             .WithThresholds(
+                Threshold.Create(stats => stats.Ok.Latency.Percent99 < 5000),
                 Threshold.Create(stats => stats.Fail.Request.Percent < 5));
 
         var result = NBomberRunner
@@ -111,14 +113,15 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
     /// <summary>
     /// Calendar endpoint under stress — the most complex read endpoint (9 sequential DB queries).
     /// Uses a reduced stress profile (25 req/s vs 100) because the calendar endpoint degrades
-    /// rapidly at high concurrency, creating unbounded request backlogs at 100 req/s.
-    /// Stress tests observe degradation without hard latency thresholds.
+    /// rapidly at high concurrency. P99 threshold is ~3× the baseline load p99 (3 000 ms)
+    /// to catch catastrophic regressions while allowing for concurrency-induced queuing.
     /// </summary>
     [Fact]
     public void Calendar_StressTest()
     {
-        var scenario = CalendarScenario.Create(this._client, CalendarStressProfile.Simulations())
+        var scenario = CalendarScenario.Create(_client, CalendarStressProfile.Simulations())
             .WithThresholds(
+                Threshold.Create(stats => stats.Ok.Latency.Percent99 < 10000),
                 Threshold.Create(stats => stats.Fail.Request.Percent < 5));
 
         var result = NBomberRunner
@@ -133,13 +136,17 @@ public sealed class StressTests : IClassFixture<PerformanceWebApplicationFactory
 
     /// <summary>
     /// Spike test — sudden burst of traffic followed by recovery.
-    /// Validates the system recovers gracefully and error rate stays under 5% during spike.
+    /// Validates the system recovers gracefully. P99 threshold is 8× the baseline load
+    /// p99 (1 000 ms) because burst traffic induces request queuing; the important thing
+    /// is that <em>infinite</em> slowness cannot pass.
+    /// Error rate must stay under 5% during spike.
     /// </summary>
     [Fact]
     public void Transactions_SpikeTest()
     {
-        var scenario = TransactionsScenario.Create(this._client, SpikeProfile.Simulations())
+        var scenario = TransactionsScenario.Create(_client, SpikeProfile.Simulations())
             .WithThresholds(
+                Threshold.Create(stats => stats.Ok.Latency.Percent99 < 8000),
                 Threshold.Create(stats => stats.Fail.Request.Percent < 5));
 
         var result = NBomberRunner

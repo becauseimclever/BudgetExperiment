@@ -95,11 +95,17 @@ public sealed class NominatimGeocodingService : IGeocodingService
     {
         /// <summary>Gets or sets the display name.</summary>
         [JsonPropertyName("display_name")]
-        public string? DisplayName { get; set; }
+        public string? DisplayName
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the address details.</summary>
         [JsonPropertyName("address")]
-        public NominatimAddress? Address { get; set; }
+        public NominatimAddress? Address
+        {
+            get; set;
+        }
     }
 
     /// <summary>
@@ -109,26 +115,44 @@ public sealed class NominatimGeocodingService : IGeocodingService
     {
         /// <summary>Gets or sets the city.</summary>
         [JsonPropertyName("city")]
-        public string? City { get; set; }
+        public string? City
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the town (fallback for city).</summary>
         [JsonPropertyName("town")]
-        public string? Town { get; set; }
+        public string? Town
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the village (fallback for city).</summary>
         [JsonPropertyName("village")]
-        public string? Village { get; set; }
+        public string? Village
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the state.</summary>
         [JsonPropertyName("state")]
-        public string? State { get; set; }
+        public string? State
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the ISO country code.</summary>
         [JsonPropertyName("country_code")]
-        public string? CountryCode { get; set; }
+        public string? CountryCode
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the postal code.</summary>
         [JsonPropertyName("postcode")]
-        public string? PostCode { get; set; }
+        public string? PostCode
+        {
+            get; set;
+        }
     }
 }

@@ -400,7 +400,10 @@ public class MerchantMappingServiceTests
 
     private sealed class FakeUnitOfWork : IUnitOfWork
     {
-        public int SaveCount { get; private set; }
+        public int SaveCount
+        {
+            get; private set;
+        }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -412,6 +415,11 @@ public class MerchantMappingServiceTests
             where T : class => null;
 
         public void SetExpectedConcurrencyToken<T>(T entity, string token)
+            where T : class
+        {
+        }
+
+        public void MarkAsModified<T>(T entity)
             where T : class
         {
         }

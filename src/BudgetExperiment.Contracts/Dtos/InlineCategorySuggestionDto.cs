@@ -12,12 +12,18 @@ public sealed class InlineCategorySuggestionDto
     /// <summary>
     /// Gets or sets the transaction ID this suggestion is for.
     /// </summary>
-    public Guid TransactionId { get; set; }
+    public Guid TransactionId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the suggested category ID.
     /// </summary>
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the suggested category name.

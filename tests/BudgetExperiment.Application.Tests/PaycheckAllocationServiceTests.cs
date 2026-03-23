@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;
@@ -18,15 +19,15 @@ public class PaycheckAllocationServiceTests
 
     public PaycheckAllocationServiceTests()
     {
-        this._recurringRepo = new Mock<IRecurringTransactionRepository>();
-        this._currencyProvider = new Mock<ICurrencyProvider>();
-        this._currencyProvider.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
+        _recurringRepo = new Mock<IRecurringTransactionRepository>();
+        _currencyProvider = new Mock<ICurrencyProvider>();
+        _currencyProvider.Setup(c => c.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
         // Default setup - return empty collections
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction>());
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetByAccountIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction>());
     }
@@ -59,7 +60,7 @@ public class PaycheckAllocationServiceTests
             -1200m,
             RecurrenceFrequency.Monthly);
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurring });
 
@@ -89,7 +90,7 @@ public class PaycheckAllocationServiceTests
         var rent = CreateRecurringTransaction(accountId, "Rent", -1200m, RecurrenceFrequency.Monthly);
         var insurance = CreateRecurringTransaction(accountId, "Insurance", -600m, RecurrenceFrequency.Quarterly);
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { rent, insurance });
 
@@ -122,7 +123,7 @@ public class PaycheckAllocationServiceTests
             -1200m,
             RecurrenceFrequency.Monthly);
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurring });
 
@@ -151,7 +152,7 @@ public class PaycheckAllocationServiceTests
             -5000m,
             RecurrenceFrequency.Monthly); // $60,000/year
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurring });
 
@@ -178,7 +179,7 @@ public class PaycheckAllocationServiceTests
             -1200m,
             RecurrenceFrequency.Monthly);
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurring });
 
@@ -205,7 +206,7 @@ public class PaycheckAllocationServiceTests
             -1200m,
             RecurrenceFrequency.Monthly);
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurring });
 
@@ -218,10 +219,10 @@ public class PaycheckAllocationServiceTests
 
         // Assert
         Assert.Single(result.Allocations);
-        this._recurringRepo.Verify(
+        _recurringRepo.Verify(
             r => r.GetByAccountIdAsync(accountId, It.IsAny<CancellationToken>()),
             Times.Once);
-        this._recurringRepo.Verify(
+        _recurringRepo.Verify(
             r => r.GetAllAsync(It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -234,7 +235,7 @@ public class PaycheckAllocationServiceTests
         var bill = CreateRecurringTransaction(accountId, "Rent", -1200m, RecurrenceFrequency.Monthly);
         var income = CreateRecurringTransaction(accountId, "Salary", 5000m, RecurrenceFrequency.BiWeekly);
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { bill, income });
 
@@ -259,7 +260,7 @@ public class PaycheckAllocationServiceTests
         // Pause the second one (makes it inactive)
         inactiveRecurring.Pause();
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { activeRecurring, inactiveRecurring });
 
@@ -283,7 +284,7 @@ public class PaycheckAllocationServiceTests
         var accountId = Guid.NewGuid();
         var recurring = CreateRecurringTransaction(accountId, "Rent", -1200m, RecurrenceFrequency.Monthly);
 
-        this._recurringRepo
+        _recurringRepo
             .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RecurringTransaction> { recurring });
 
@@ -324,6 +325,6 @@ public class PaycheckAllocationServiceTests
 
     private PaycheckAllocationService CreateService()
     {
-        return new PaycheckAllocationService(this._recurringRepo.Object, this._currencyProvider.Object);
+        return new PaycheckAllocationService(_recurringRepo.Object, _currencyProvider.Object);
     }
 }

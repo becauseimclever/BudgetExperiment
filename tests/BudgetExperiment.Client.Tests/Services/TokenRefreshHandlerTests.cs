@@ -263,7 +263,10 @@ public sealed class TokenRefreshHandlerTests : IDisposable
         /// <summary>
         /// Gets the last request that was sent.
         /// </summary>
-        public HttpRequestMessage? LastRequest { get; private set; }
+        public HttpRequestMessage? LastRequest
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         protected override Task<HttpResponseMessage> SendAsync(
@@ -303,7 +306,10 @@ public sealed class TokenRefreshHandlerTests : IDisposable
         /// <summary>
         /// Gets or sets the delay in milliseconds for simulating async token refresh.
         /// </summary>
-        public int DelayMs { get; set; }
+        public int DelayMs
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Sets the next result to return.
@@ -398,12 +404,18 @@ public sealed class TokenRefreshHandlerTests : IDisposable
         /// <summary>
         /// Gets a value indicating whether a warning was shown.
         /// </summary>
-        public bool WarningShown { get; private set; }
+        public bool WarningShown
+        {
+            get; private set;
+        }
 
         /// <summary>
         /// Gets the last message shown.
         /// </summary>
-        public string? LastMessage { get; private set; }
+        public string? LastMessage
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public IReadOnlyList<ToastItem> Toasts { get; } = [];
@@ -445,7 +457,10 @@ public sealed class TokenRefreshHandlerTests : IDisposable
         /// <summary>
         /// Gets a value indicating whether SaveAllAsync was called.
         /// </summary>
-        public bool SaveAllCalled { get; private set; }
+        public bool SaveAllCalled
+        {
+            get; private set;
+        }
 
         /// <inheritdoc/>
         public void RegisterForm(string formKey, Func<object?> dataProvider)

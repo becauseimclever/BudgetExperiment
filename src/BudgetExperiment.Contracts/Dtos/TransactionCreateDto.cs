@@ -10,17 +10,26 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class TransactionCreateDto
 {
     /// <summary>Gets or sets the account identifier.</summary>
-    public Guid AccountId { get; set; }
+    public Guid AccountId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the transaction amount.</summary>
     public MoneyDto Amount { get; set; } = new();
 
     /// <summary>Gets or sets the transaction date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the optional category identifier.</summary>
-    public Guid? CategoryId { get; set; }
+    public Guid? CategoryId
+    {
+        get; set;
+    }
 }

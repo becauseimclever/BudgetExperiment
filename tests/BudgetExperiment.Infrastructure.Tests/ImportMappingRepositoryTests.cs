@@ -13,22 +13,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class ImportMappingRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportMappingRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public ImportMappingRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public ImportMappingRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_Mapping()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
         var mappings = new List<ColumnMappingValue>
@@ -44,7 +44,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportMappingRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(mapping.Id);
 
@@ -61,7 +61,7 @@ public class ImportMappingRepositoryTests
     public async Task GetByIdAsync_Returns_Null_When_Not_Found()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
 
         // Act
@@ -75,7 +75,7 @@ public class ImportMappingRepositoryTests
     public async Task GetByUserAsync_Returns_Mappings_For_User()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
@@ -106,7 +106,7 @@ public class ImportMappingRepositoryTests
     public async Task GetByNameAsync_Returns_Mapping_By_Name()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -131,7 +131,7 @@ public class ImportMappingRepositoryTests
     public async Task GetByNameAsync_Returns_Null_For_Other_User()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
@@ -156,7 +156,7 @@ public class ImportMappingRepositoryTests
     public async Task RemoveAsync_Deletes_Mapping()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -182,7 +182,7 @@ public class ImportMappingRepositoryTests
     public async Task CountAsync_Returns_Total_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -207,7 +207,7 @@ public class ImportMappingRepositoryTests
     public async Task ColumnMappings_Are_Persisted_Correctly()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -225,7 +225,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportMappingRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 
@@ -245,7 +245,7 @@ public class ImportMappingRepositoryTests
     public async Task DuplicateSettings_Are_Persisted_Correctly()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -265,7 +265,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportMappingRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 
@@ -281,7 +281,7 @@ public class ImportMappingRepositoryTests
     public async Task Update_Persists_Changes()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -303,7 +303,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportMappingRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 
@@ -318,7 +318,7 @@ public class ImportMappingRepositoryTests
     public async Task SkipRowsSettings_Are_Persisted_And_Retrieved()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -335,7 +335,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportMappingRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 
@@ -348,7 +348,7 @@ public class ImportMappingRepositoryTests
     public async Task IndicatorSettings_Are_Persisted_And_Retrieved()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -371,7 +371,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportMappingRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 
@@ -392,7 +392,7 @@ public class ImportMappingRepositoryTests
     public async Task Default_Settings_Are_Persisted_For_New_Mapping()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportMappingRepository(context);
         var userId = Guid.NewGuid();
 
@@ -407,7 +407,7 @@ public class ImportMappingRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportMappingRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(importMapping.Id);
 

@@ -56,34 +56,10 @@ public sealed partial class LocationParserService : ILocationParserService
 
         foreach (var (regex, _, _) in Patterns)
         {
-            int startIndex = 0;
-            while (startIndex < description.Length)
+            var location = FindFirstValidMatch(regex, description);
+            if (location is not null)
             {
-                var match = regex.Match(description, startIndex);
-                if (!match.Success)
-                {
-                    break;
-                }
-
-                var city = match.Groups["city"].Value.Trim();
-                var state = match.Groups["state"].Value.Trim().ToUpperInvariant();
-                var zip = match.Groups["zip"].Success ? match.Groups["zip"].Value.Trim() : null;
-
-                // Validate the state abbreviation
-                var country = UsStateData.GetCountryCode(state);
-                if (country is not null && !string.IsNullOrWhiteSpace(city) && IsPlausibleCity(city))
-                {
-                    return TransactionLocationValue.Create(
-                        city: NormalizeCity(city),
-                        stateOrRegion: state,
-                        country: country,
-                        postalCode: string.IsNullOrWhiteSpace(zip) ? null : zip,
-                        coordinates: null,
-                        source: LocationSource.Parsed);
-                }
-
-                // Advance past this match's start to look for a subsequent valid match
-                startIndex = match.Index + 1;
+                return location;
             }
         }
 
@@ -93,43 +69,85 @@ public sealed partial class LocationParserService : ILocationParserService
     /// <inheritdoc/>
     public IReadOnlyList<LocationParseResult> ParseBatch(IEnumerable<string> descriptions)
     {
-        var results = new List<LocationParseResult>();
-
-        foreach (var desc in descriptions)
+        return descriptions.Select(desc =>
         {
             var location = ParseFromDescription(desc);
-            string? matchedPattern = null;
-            decimal confidence = 0m;
+            var (matchedPattern, confidence) = location is not null
+                ? FindMatchedPatternInfo(desc)
+                : (null, 0m);
 
-            if (location is not null)
-            {
-                // Determine which pattern matched for reporting
-                foreach (var (regex, patternName, patternConfidence) in Patterns)
-                {
-                    if (regex.IsMatch(desc))
-                    {
-                        var m = regex.Match(desc);
-                        var state = m.Groups["state"].Value.Trim();
-                        if (UsStateData.GetCountryCode(state) is not null)
-                        {
-                            matchedPattern = patternName;
-                            confidence = patternConfidence;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            results.Add(new LocationParseResult
+            return new LocationParseResult
             {
                 OriginalText = desc,
                 Location = location,
                 Confidence = confidence,
                 MatchedPattern = matchedPattern,
-            });
+            };
+        }).ToList();
+    }
+
+    private static TransactionLocationValue? FindFirstValidMatch(Regex regex, string description)
+    {
+        var startIndex = 0;
+        while (startIndex < description.Length)
+        {
+            var match = regex.Match(description, startIndex);
+            if (!match.Success)
+            {
+                break;
+            }
+
+            var location = TryBuildLocationFromMatch(match);
+            if (location is not null)
+            {
+                return location;
+            }
+
+            startIndex = match.Index + 1;
         }
 
-        return results;
+        return null;
+    }
+
+    private static TransactionLocationValue? TryBuildLocationFromMatch(Match match)
+    {
+        var city = match.Groups["city"].Value.Trim();
+        var state = match.Groups["state"].Value.Trim().ToUpperInvariant();
+        var zip = match.Groups["zip"].Success ? match.Groups["zip"].Value.Trim() : null;
+
+        var country = UsStateData.GetCountryCode(state);
+        if (country is null || string.IsNullOrWhiteSpace(city) || !IsPlausibleCity(city))
+        {
+            return null;
+        }
+
+        return TransactionLocationValue.Create(
+            city: NormalizeCity(city),
+            stateOrRegion: state,
+            country: country,
+            postalCode: string.IsNullOrWhiteSpace(zip) ? null : zip,
+            coordinates: null,
+            source: LocationSource.Parsed);
+    }
+
+    private static (string? PatternName, decimal Confidence) FindMatchedPatternInfo(string description)
+    {
+        foreach (var (regex, patternName, patternConfidence) in Patterns)
+        {
+            var m = regex.Match(description);
+            if (!m.Success)
+            {
+                continue;
+            }
+
+            var state = m.Groups["state"].Value.Trim();
+            if (UsStateData.GetCountryCode(state) is not null)
+            {
+                return (patternName, patternConfidence);
+            }
+        }
+
+        return (null, 0m);
     }
 
     /// <summary>

@@ -169,19 +169,31 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     private sealed class UserProfileResponse
     {
         /// <summary>Gets or sets the user ID.</summary>
-        public Guid UserId { get; set; }
+        public Guid UserId
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the username.</summary>
         public string Username { get; set; } = string.Empty;
 
         /// <summary>Gets or sets the email.</summary>
-        public string? Email { get; set; }
+        public string? Email
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the display name.</summary>
-        public string? DisplayName { get; set; }
+        public string? DisplayName
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets the avatar URL.</summary>
-        public string? AvatarUrl { get; set; }
+        public string? AvatarUrl
+        {
+            get; set;
+        }
     }
 
     /// <summary>

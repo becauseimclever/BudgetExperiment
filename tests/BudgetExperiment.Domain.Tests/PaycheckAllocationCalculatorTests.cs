@@ -20,7 +20,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Rent", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Monthly);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
+        var allocation = _calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
 
         // Assert
         Assert.Equal(14400m, allocation.AnnualAmount.Amount); // $1,200 × 12
@@ -34,7 +34,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Car Insurance", MoneyValue.Create("USD", 600m), RecurrenceFrequency.Quarterly);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
+        var allocation = _calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
 
         // Assert
         Assert.Equal(2400m, allocation.AnnualAmount.Amount); // $600 × 4
@@ -48,7 +48,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Groceries", MoneyValue.Create("USD", 200m), RecurrenceFrequency.Weekly);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
+        var allocation = _calculator.CalculateAllocation(bill, RecurrenceFrequency.BiWeekly);
 
         // Assert
         Assert.Equal(10400m, allocation.AnnualAmount.Amount); // $200 × 52
@@ -62,7 +62,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Property Tax", MoneyValue.Create("USD", 3600m), RecurrenceFrequency.Yearly);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Monthly);
+        var allocation = _calculator.CalculateAllocation(bill, RecurrenceFrequency.Monthly);
 
         // Assert
         Assert.Equal(3600m, allocation.AnnualAmount.Amount); // $3,600 × 1
@@ -76,7 +76,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Coffee", MoneyValue.Create("USD", 5m), RecurrenceFrequency.Daily);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Weekly);
+        var allocation = _calculator.CalculateAllocation(bill, RecurrenceFrequency.Weekly);
 
         // Assert
         Assert.Equal(1825m, allocation.AnnualAmount.Amount); // $5 × 365
@@ -90,7 +90,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Netflix", MoneyValue.Create("USD", 15.99m), RecurrenceFrequency.Monthly);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Monthly);
+        var allocation = _calculator.CalculateAllocation(bill, RecurrenceFrequency.Monthly);
 
         // Assert
         Assert.Equal(191.88m, allocation.AnnualAmount.Amount); // $15.99 × 12
@@ -102,7 +102,7 @@ public class PaycheckAllocationCalculatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(
-            () => this._calculator.CalculateAllocation(null!, RecurrenceFrequency.BiWeekly));
+            () => _calculator.CalculateAllocation(null!, RecurrenceFrequency.BiWeekly));
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class PaycheckAllocationCalculatorTests
         };
 
         // Act
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             bills,
             RecurrenceFrequency.BiWeekly);
 
@@ -137,7 +137,7 @@ public class PaycheckAllocationCalculatorTests
         };
 
         // Act
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             bills,
             RecurrenceFrequency.BiWeekly,
             MoneyValue.Create("USD", 2000m));
@@ -161,7 +161,7 @@ public class PaycheckAllocationCalculatorTests
         var paycheckAmount = MoneyValue.Create("USD", 400m); // Less than $553.85 required
 
         // Act
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             bills,
             RecurrenceFrequency.BiWeekly,
             paycheckAmount);
@@ -184,7 +184,7 @@ public class PaycheckAllocationCalculatorTests
         var paycheckAmount = MoneyValue.Create("USD", 2000m); // $52,000/year
 
         // Act
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             bills,
             RecurrenceFrequency.BiWeekly,
             paycheckAmount);
@@ -201,7 +201,7 @@ public class PaycheckAllocationCalculatorTests
         var bills = Array.Empty<BillInfoValue>();
 
         // Act
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             bills,
             RecurrenceFrequency.BiWeekly);
 
@@ -223,7 +223,7 @@ public class PaycheckAllocationCalculatorTests
         };
 
         // Act
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             bills,
             RecurrenceFrequency.BiWeekly,
             paycheckAmount: null);
@@ -240,7 +240,7 @@ public class PaycheckAllocationCalculatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(
-            () => this._calculator.CalculateAllocationSummary(null!, RecurrenceFrequency.BiWeekly));
+            () => _calculator.CalculateAllocationSummary(null!, RecurrenceFrequency.BiWeekly));
     }
 
     [Fact]
@@ -255,7 +255,7 @@ public class PaycheckAllocationCalculatorTests
             sourceId);
 
         // Act
-        var summary = this._calculator.CalculateAllocationSummary(
+        var summary = _calculator.CalculateAllocationSummary(
             new[] { bill },
             RecurrenceFrequency.BiWeekly);
 
@@ -277,7 +277,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Test", MoneyValue.Create("USD", 100m), frequency);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, RecurrenceFrequency.Yearly);
+        var allocation = _calculator.CalculateAllocation(bill, RecurrenceFrequency.Yearly);
 
         // Assert - Since yearly has 1 period, annual amount should be 100 * multiplier
         Assert.Equal(100m * expectedMultiplier, allocation.AnnualAmount.Amount);
@@ -293,7 +293,7 @@ public class PaycheckAllocationCalculatorTests
         var bill = BillInfoValue.Create("Annual Bill", MoneyValue.Create("USD", 1200m), RecurrenceFrequency.Yearly);
 
         // Act
-        var allocation = this._calculator.CalculateAllocation(bill, paycheckFrequency);
+        var allocation = _calculator.CalculateAllocation(bill, paycheckFrequency);
 
         // Assert - Per paycheck should be 1200 / periods
         var expectedPerPaycheck = Math.Round(1200m / expectedPeriods, 2, MidpointRounding.AwayFromZero);

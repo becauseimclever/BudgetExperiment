@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Client.Components.Charts;
+
 using Bunit;
 
 namespace BudgetExperiment.Client.Tests.Components;

@@ -8,8 +8,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -27,7 +30,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     public TransfersPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
@@ -112,7 +115,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsTransferTable_WhenDataExists()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 1),
@@ -135,7 +138,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void TransferTable_HasCorrectHeaders()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 1),
@@ -159,7 +162,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsEditAndDeleteButtons_ForEachTransfer()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 5),
@@ -180,7 +183,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void AccountDropdown_PopulatedWithAccounts()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Checking Account",
@@ -197,7 +200,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsFilterEmptyMessage_WhenNoMatchingTransfers()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 5),
@@ -220,7 +223,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsDash_WhenDescriptionIsEmpty()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 3, 5),
@@ -242,7 +245,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CreateTransferResult_IsConfigurable()
     {
-        this._apiService.CreateTransferResult = new TransferResponse
+        _apiService.CreateTransferResult = new TransferResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 4, 1),
@@ -273,7 +276,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void TransferTable_ShowsDateColumn()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 7, 15),
@@ -295,7 +298,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleTransfers()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 1, 1),
@@ -305,7 +308,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
             DestinationAccountId = Guid.NewGuid(),
             Amount = 200.00m,
         });
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 2, 1),
@@ -339,7 +342,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteButton_RemovesTransfer()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 7, 15),
@@ -367,7 +370,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void NewTransferButton_OpensDialog()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Checking",
@@ -392,7 +395,7 @@ public class TransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void EditButton_IsClickable()
     {
-        this._apiService.Transfers.Add(new TransferListItemResponse
+        _apiService.Transfers.Add(new TransferListItemResponse
         {
             TransferId = Guid.NewGuid(),
             Date = new DateOnly(2026, 7, 15),

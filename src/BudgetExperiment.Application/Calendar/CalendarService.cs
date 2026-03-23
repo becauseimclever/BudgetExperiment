@@ -20,7 +20,7 @@ public sealed class CalendarService
     /// <param name="repository">The transaction repository.</param>
     public CalendarService(ITransactionRepository repository)
     {
-        this._repository = repository;
+        _repository = repository;
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public sealed class CalendarService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var dailyTotals = await this._repository.GetDailyTotalsAsync(year, month, accountId, cancellationToken);
+        var dailyTotals = await _repository.GetDailyTotalsAsync(year, month, accountId, cancellationToken);
         return dailyTotals.Select(AccountMapper.ToDto).ToList();
     }
 }

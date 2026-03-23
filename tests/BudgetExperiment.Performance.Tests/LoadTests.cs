@@ -27,14 +27,14 @@ public sealed class LoadTests : IClassFixture<PerformanceWebApplicationFactory>,
     /// <param name="factory">The web application factory.</param>
     public LoadTests(PerformanceWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <inheritdoc/>
     public async Task InitializeAsync()
     {
-        await TestDataSeeder.SeedAsync(this._factory);
+        await TestDataSeeder.SeedAsync(_factory);
     }
 
     /// <inheritdoc/>
@@ -46,7 +46,7 @@ public sealed class LoadTests : IClassFixture<PerformanceWebApplicationFactory>,
     [Fact]
     public void Accounts_LoadTest()
     {
-        var scenario = AccountsScenario.Create(this._client, LoadProfile.Simulations())
+        var scenario = AccountsScenario.Create(_client, LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 500),
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),
@@ -68,7 +68,7 @@ public sealed class LoadTests : IClassFixture<PerformanceWebApplicationFactory>,
     [Fact]
     public void Transactions_LoadTest()
     {
-        var scenario = TransactionsScenario.Create(this._client, LoadProfile.Simulations())
+        var scenario = TransactionsScenario.Create(_client, LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 500),
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),
@@ -91,7 +91,7 @@ public sealed class LoadTests : IClassFixture<PerformanceWebApplicationFactory>,
     [Fact]
     public void Calendar_LoadTest()
     {
-        var scenario = CalendarScenario.Create(this._client, LoadProfile.Simulations())
+        var scenario = CalendarScenario.Create(_client, LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 2000),
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 3000),
@@ -113,7 +113,7 @@ public sealed class LoadTests : IClassFixture<PerformanceWebApplicationFactory>,
     [Fact]
     public void Budgets_LoadTest()
     {
-        var scenario = BudgetsScenario.Create(this._client, LoadProfile.Simulations())
+        var scenario = BudgetsScenario.Create(_client, LoadProfile.Simulations())
             .WithThresholds(
                 Threshold.Create(stats => stats.Ok.Latency.Percent95 < 500),
                 Threshold.Create(stats => stats.Ok.Latency.Percent99 < 1000),

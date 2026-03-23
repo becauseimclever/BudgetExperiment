@@ -10,7 +10,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class DaySummaryDto
 {
     /// <summary>Gets or sets the date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spending for the day.</summary>
     public MoneyDto TotalSpending { get; set; } = new();
@@ -22,7 +25,10 @@ public sealed class DaySummaryDto
     public MoneyDto NetAmount { get; set; } = new();
 
     /// <summary>Gets or sets the number of transactions.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the top spending categories for the day (up to 3).</summary>
     public IReadOnlyList<DayTopCategoryDto> TopCategories { get; set; } = [];

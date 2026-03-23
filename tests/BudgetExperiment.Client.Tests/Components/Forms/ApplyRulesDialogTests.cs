@@ -6,7 +6,9 @@ using BudgetExperiment.Client.Components.Forms;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Forms;
@@ -216,10 +218,16 @@ public sealed class ApplyRulesDialogTests : BunitContext, IAsyncLifetime
     private sealed class StubBudgetApiService : IBudgetApiService
     {
         /// <summary>Gets or sets the apply rules result to return.</summary>
-        public ApplyRulesResponse? ApplyRulesResult { get; set; }
+        public ApplyRulesResponse? ApplyRulesResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets a value indicating whether to throw on apply.</summary>
-        public bool ShouldThrow { get; set; }
+        public bool ShouldThrow
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task<ApplyRulesResponse?> ApplyCategorizationRulesAsync(ApplyRulesRequest request)

@@ -10,11 +10,20 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class RecurringTransferInstanceModifyDto
 {
     /// <summary>Gets or sets the modified amount (null = use series amount).</summary>
-    public MoneyDto? Amount { get; set; }
+    public MoneyDto? Amount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the modified description (null = use series description).</summary>
-    public string? Description { get; set; }
+    public string? Description
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the modified date for rescheduling (null = use original date).</summary>
-    public DateOnly? Date { get; set; }
+    public DateOnly? Date
+    {
+        get; set;
+    }
 }

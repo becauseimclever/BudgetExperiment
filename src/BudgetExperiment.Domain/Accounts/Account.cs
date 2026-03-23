@@ -24,7 +24,10 @@ public sealed class Account
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the account name.
@@ -34,7 +37,10 @@ public sealed class Account
     /// <summary>
     /// Gets the account type.
     /// </summary>
-    public AccountType Type { get; private set; }
+    public AccountType Type
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the initial balance for this account.
@@ -44,37 +50,55 @@ public sealed class Account
     /// <summary>
     /// Gets the date as of which the initial balance was recorded.
     /// </summary>
-    public DateOnly InitialBalanceDate { get; private set; }
+    public DateOnly InitialBalanceDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the account was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the account was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID of who created this account.
     /// </summary>
-    public Guid CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the transactions in this account.
     /// </summary>
-    public IReadOnlyCollection<Transaction> Transactions => this._transactions.AsReadOnly();
+    public IReadOnlyCollection<Transaction> Transactions => _transactions.AsReadOnly();
 
     /// <summary>
     /// Creates a new account.
@@ -266,7 +290,7 @@ public sealed class Account
 
         var transaction = Transaction.Create(this.Id, amount, date, description, categoryId);
         transaction.SetScope(this.Scope, this.OwnerUserId, this.CreatedByUserId);
-        this._transactions.Add(transaction);
+        _transactions.Add(transaction);
         this.UpdatedAtUtc = DateTime.UtcNow;
         return transaction;
     }
@@ -278,13 +302,13 @@ public sealed class Account
     /// <returns>True if removed; false if not found.</returns>
     public bool RemoveTransaction(Guid transactionId)
     {
-        var transaction = this._transactions.FirstOrDefault(t => t.Id == transactionId);
+        var transaction = _transactions.FirstOrDefault(t => t.Id == transactionId);
         if (transaction is null)
         {
             return false;
         }
 
-        this._transactions.Remove(transaction);
+        _transactions.Remove(transaction);
         this.UpdatedAtUtc = DateTime.UtcNow;
         return true;
     }

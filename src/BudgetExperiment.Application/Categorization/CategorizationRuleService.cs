@@ -27,9 +27,9 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         ICategorizationEngine engine,
         IUnitOfWork unitOfWork)
     {
-        this._repository = repository;
-        this._engine = engine;
-        this._unitOfWork = unitOfWork;
+        _repository = repository;
+        _engine = engine;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc/>
@@ -38,11 +38,11 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         IReadOnlyList<CategorizationRule> rules;
         if (activeOnly)
         {
-            rules = await this._repository.GetActiveByPriorityAsync(cancellationToken);
+            rules = await _repository.GetActiveByPriorityAsync(cancellationToken);
         }
         else
         {
-            rules = await this._repository.ListAsync(0, int.MaxValue, cancellationToken);
+            rules = await _repository.ListAsync(0, int.MaxValue, cancellationToken);
         }
 
         return rules.Select(r => CategorizationMapper.ToDto(r)).ToList();
@@ -58,7 +58,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
             _ => null,
         };
 
-        var (items, totalCount) = await this._repository.ListPagedAsync(
+        var (items, totalCount) = await _repository.ListPagedAsync(
             request.Page,
             request.PageSize,
             request.Search,
@@ -80,13 +80,13 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     /// <inheritdoc/>
     public async Task<CategorizationRuleDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var rule = await this._repository.GetByIdAsync(id, cancellationToken);
+        var rule = await _repository.GetByIdAsync(id, cancellationToken);
         if (rule is null)
         {
             return null;
         }
 
-        var version = this._unitOfWork.GetConcurrencyToken(rule);
+        var version = _unitOfWork.GetConcurrencyToken(rule);
         return CategorizationMapper.ToDto(rule, version);
     }
 
@@ -98,7 +98,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
             throw new DomainException($"Invalid match type: {dto.MatchType}");
         }
 
-        var priority = dto.Priority ?? await this._repository.GetNextPriorityAsync(cancellationToken);
+        var priority = dto.Priority ?? await _repository.GetNextPriorityAsync(cancellationToken);
 
         var rule = CategorizationRule.Create(
             dto.Name,
@@ -108,19 +108,19 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
             priority,
             dto.CaseSensitive);
 
-        await this._repository.AddAsync(rule, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _repository.AddAsync(rule, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
 
         // Re-fetch to include category navigation property
-        var created = await this._repository.GetByIdAsync(rule.Id, cancellationToken);
+        var created = await _repository.GetByIdAsync(rule.Id, cancellationToken);
         return CategorizationMapper.ToDto(created!);
     }
 
     /// <inheritdoc/>
     public async Task<CategorizationRuleDto?> UpdateAsync(Guid id, CategorizationRuleUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default)
     {
-        var rule = await this._repository.GetByIdAsync(id, cancellationToken);
+        var rule = await _repository.GetByIdAsync(id, cancellationToken);
         if (rule is null)
         {
             return null;
@@ -128,7 +128,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         if (expectedVersion is not null)
         {
-            this._unitOfWork.SetExpectedConcurrencyToken(rule, expectedVersion);
+            _unitOfWork.SetExpectedConcurrencyToken(rule, expectedVersion);
         }
 
         if (!Enum.TryParse<RuleMatchType>(dto.MatchType, ignoreCase: true, out var matchType))
@@ -137,12 +137,12 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         }
 
         rule.Update(dto.Name, matchType, dto.Pattern, dto.CategoryId, dto.CaseSensitive);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
 
         // Re-fetch to include category navigation property
-        var updated = await this._repository.GetByIdAsync(rule.Id, cancellationToken);
-        var version = this._unitOfWork.GetConcurrencyToken(updated!);
+        var updated = await _repository.GetByIdAsync(rule.Id, cancellationToken);
+        var version = _unitOfWork.GetConcurrencyToken(updated!);
         return CategorizationMapper.ToDto(updated!, version);
     }
 
@@ -153,7 +153,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         CancellationToken cancellationToken = default)
     {
         var createdRules = new List<CategorizationRuleDto>();
-        var currentPriority = await this._repository.GetNextPriorityAsync(cancellationToken);
+        var currentPriority = await _repository.GetNextPriorityAsync(cancellationToken);
 
         foreach (var pattern in patterns)
         {
@@ -166,14 +166,14 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
                 currentPriority++,
                 caseSensitive: false);
 
-            await this._repository.AddAsync(rule, cancellationToken);
+            await _repository.AddAsync(rule, cancellationToken);
         }
 
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
 
         // Re-fetch all rules to get the complete list with navigation properties
-        var allRules = await this._repository.ListAsync(0, int.MaxValue, cancellationToken);
+        var allRules = await _repository.ListAsync(0, int.MaxValue, cancellationToken);
         var patternSet = new HashSet<string>(patterns, StringComparer.OrdinalIgnoreCase);
         var matchingRules = allRules.Where(r => patternSet.Contains(r.Pattern)).ToList();
 
@@ -187,7 +187,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
         Guid? excludeRuleId = null,
         CancellationToken cancellationToken = default)
     {
-        var allRules = await this._repository.GetActiveByPriorityAsync(cancellationToken);
+        var allRules = await _repository.GetActiveByPriorityAsync(cancellationToken);
 
         // Find rules with overlapping patterns
         var conflicts = new List<CategorizationRuleDto>();
@@ -213,67 +213,67 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     /// <inheritdoc/>
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var rule = await this._repository.GetByIdAsync(id, cancellationToken);
+        var rule = await _repository.GetByIdAsync(id, cancellationToken);
         if (rule is null)
         {
             return false;
         }
 
-        await this._repository.RemoveAsync(rule, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _repository.RemoveAsync(rule, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
         return true;
     }
 
     /// <inheritdoc/>
     public async Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var rule = await this._repository.GetByIdAsync(id, cancellationToken);
+        var rule = await _repository.GetByIdAsync(id, cancellationToken);
         if (rule is null)
         {
             return false;
         }
 
         rule.Activate();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
         return true;
     }
 
     /// <inheritdoc/>
     public async Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var rule = await this._repository.GetByIdAsync(id, cancellationToken);
+        var rule = await _repository.GetByIdAsync(id, cancellationToken);
         if (rule is null)
         {
             return false;
         }
 
         rule.Deactivate();
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
         return true;
     }
 
     /// <inheritdoc/>
     public async Task<int> BulkDeleteAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
     {
-        var rules = await this._repository.GetByIdsAsync(ids, cancellationToken);
+        var rules = await _repository.GetByIdsAsync(ids, cancellationToken);
         if (rules.Count == 0)
         {
             return 0;
         }
 
-        await this._repository.RemoveBulkAsync(rules);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _repository.RemoveBulkAsync(rules);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
         return rules.Count;
     }
 
     /// <inheritdoc/>
     public async Task<int> BulkActivateAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
     {
-        var rules = await this._repository.GetByIdsAsync(ids, cancellationToken);
+        var rules = await _repository.GetByIdsAsync(ids, cancellationToken);
         var count = 0;
         foreach (var rule in rules)
         {
@@ -286,8 +286,8 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         if (count > 0)
         {
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
-            this._engine.InvalidateRuleCache();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _engine.InvalidateRuleCache();
         }
 
         return count;
@@ -296,7 +296,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     /// <inheritdoc/>
     public async Task<int> BulkDeactivateAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
     {
-        var rules = await this._repository.GetByIdsAsync(ids, cancellationToken);
+        var rules = await _repository.GetByIdsAsync(ids, cancellationToken);
         var count = 0;
         foreach (var rule in rules)
         {
@@ -309,8 +309,8 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
 
         if (count > 0)
         {
-            await this._unitOfWork.SaveChangesAsync(cancellationToken);
-            this._engine.InvalidateRuleCache();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _engine.InvalidateRuleCache();
         }
 
         return count;
@@ -320,9 +320,9 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     public async Task ReorderAsync(IReadOnlyList<Guid> ruleIds, CancellationToken cancellationToken = default)
     {
         var priorities = ruleIds.Select((id, index) => (RuleId: id, NewPriority: index + 1)).ToList();
-        await this._repository.ReorderPrioritiesAsync(priorities, cancellationToken);
-        await this._unitOfWork.SaveChangesAsync(cancellationToken);
-        this._engine.InvalidateRuleCache();
+        await _repository.ReorderPrioritiesAsync(priorities, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _engine.InvalidateRuleCache();
     }
 
     /// <inheritdoc/>
@@ -333,7 +333,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
             throw new DomainException($"Invalid match type: {request.MatchType}");
         }
 
-        var matches = await this._engine.TestPatternAsync(
+        var matches = await _engine.TestPatternAsync(
             matchType,
             request.Pattern,
             request.CaseSensitive,
@@ -350,7 +350,7 @@ public sealed class CategorizationRuleService : ICategorizationRuleService
     /// <inheritdoc/>
     public async Task<ApplyRulesResponse> ApplyRulesAsync(ApplyRulesRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await this._engine.ApplyRulesAsync(
+        var result = await _engine.ApplyRulesAsync(
             request.TransactionIds,
             request.OverwriteExisting,
             cancellationToken);

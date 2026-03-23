@@ -3,8 +3,11 @@
 // </copyright>
 
 using System.Security.Claims;
+
 using BudgetExperiment.Client.Components.Auth;
+
 using Bunit;
+
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
@@ -177,7 +180,10 @@ public class AuthInitializerTests : BunitContext
 
     private sealed class FakeJSRuntime : IJSRuntime
     {
-        public bool HideLoadingOverlayCalled { get; private set; }
+        public bool HideLoadingOverlayCalled
+        {
+            get; private set;
+        }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
@@ -202,9 +208,15 @@ public class AuthInitializerTests : BunitContext
             Initialize(uri, uri);
         }
 
-        public string? NavigatedUri { get; private set; }
+        public string? NavigatedUri
+        {
+            get; private set;
+        }
 
-        public bool ForceLoad { get; private set; }
+        public bool ForceLoad
+        {
+            get; private set;
+        }
 
         protected override void NavigateToCore(string uri, bool forceLoad)
         {

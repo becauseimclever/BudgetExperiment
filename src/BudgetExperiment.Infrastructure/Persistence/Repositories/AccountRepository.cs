@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -10,8 +11,9 @@ namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// EF Core implementation of <see cref="IAccountRepository"/>.
 /// </summary>
-internal sealed class AccountRepository : IAccountRepository
+internal sealed class AccountRepository : IAccountRepository, IAccountTransactionRangeRepository, IAccountNameLookupRepository
 {
+    private const int DefaultTransactionLookbackDays = 90;
     private readonly BudgetDbContext _context;
     private readonly IUserContext _userContext;
 
@@ -22,37 +24,72 @@ internal sealed class AccountRepository : IAccountRepository
     /// <param name="userContext">The user context for scope filtering.</param>
     public AccountRepository(BudgetDbContext context, IUserContext userContext)
     {
-        this._context = context;
-        this._userContext = userContext;
+        _context = context;
+        _userContext = userContext;
     }
 
     /// <inheritdoc />
     public async Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
+        return await this.ApplyScopeFilter(_context.Accounts)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<Account?> GetByIdWithTransactionsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
-            .Include(a => a.Transactions)
+        var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var startDate = endDate.AddDays(-DefaultTransactionLookbackDays);
+        return await GetByIdWithTransactionsAsync(id, startDate, endDate, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Account?> GetByIdWithTransactionsAsync(
+        Guid id,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken = default)
+    {
+        return await this.ApplyScopeFilter(_context.Accounts)
+            .Include(a => a.Transactions
+                .Where(t => t.Date >= startDate && t.Date <= endDate))
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
+        return await this.ApplyScopeFilter(_context.Accounts)
+            .AsNoTracking()
             .OrderBy(a => a.Name)
             .ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, string>> GetAccountNamesByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var names = await this.ApplyScopeFilter(_context.Accounts)
+            .AsNoTracking()
+            .Where(a => idList.Contains(a.Id))
+            .Select(a => new { a.Id, a.Name })
+            .ToListAsync(cancellationToken);
+
+        return names.ToDictionary(n => n.Id, n => n.Name);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Account>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts)
+        return await this.ApplyScopeFilter(_context.Accounts)
+            .AsNoTracking()
             .OrderBy(a => a.Name)
             .Skip(skip)
             .Take(take)
@@ -62,19 +99,21 @@ internal sealed class AccountRepository : IAccountRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(this._context.Accounts).LongCountAsync(cancellationToken);
+        return await this.ApplyScopeFilter(_context.Accounts)
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(Account entity, CancellationToken cancellationToken = default)
     {
-        await this._context.Accounts.AddAsync(entity, cancellationToken);
+        await _context.Accounts.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(Account entity, CancellationToken cancellationToken = default)
     {
-        this._context.Accounts.Remove(entity);
+        _context.Accounts.Remove(entity);
         return Task.CompletedTask;
     }
 
@@ -85,9 +124,9 @@ internal sealed class AccountRepository : IAccountRepository
     /// </summary>
     private IQueryable<Account> ApplyScopeFilter(IQueryable<Account> query)
     {
-        var userId = this._userContext.UserIdAsGuid;
+        var userId = _userContext.UserIdAsGuid;
 
-        return this._userContext.CurrentScope switch
+        return _userContext.CurrentScope switch
         {
             BudgetScope.Shared => query.Where(a => a.Scope == BudgetScope.Shared),
             BudgetScope.Personal => query.Where(a => a.Scope == BudgetScope.Personal && a.OwnerUserId == userId),

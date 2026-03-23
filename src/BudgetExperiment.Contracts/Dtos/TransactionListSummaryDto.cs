@@ -19,10 +19,16 @@ public sealed class TransactionListSummaryDto
     public MoneyDto TotalExpenses { get; set; } = new();
 
     /// <summary>Gets or sets the count of actual transactions.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the count of recurring transaction instances.</summary>
-    public int RecurringCount { get; set; }
+    public int RecurringCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the current balance (initial balance + total amount).</summary>
     public MoneyDto CurrentBalance { get; set; } = new();

@@ -12,15 +12,24 @@ public sealed record ExceptionContext
     /// <summary>
     /// Gets the fully-qualified exception type name.
     /// </summary>
-    public required string Type { get; init; }
+    public required string Type
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the sanitized exception message.
     /// </summary>
-    public required string Message { get; init; }
+    public required string Message
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the full stack trace (safe — contains only code paths).
     /// </summary>
-    public string? StackTrace { get; init; }
+    public string? StackTrace
+    {
+        get; init;
+    }
 }

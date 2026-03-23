@@ -36,9 +36,9 @@ public sealed class ExportController : ControllerBase
         IBudgetProgressService budgetProgressService,
         IExportService exportService)
     {
-        this._reportService = reportService;
-        this._budgetProgressService = budgetProgressService;
-        this._exportService = exportService;
+        _reportService = reportService;
+        _budgetProgressService = budgetProgressService;
+        _exportService = exportService;
     }
 
     /// <summary>
@@ -67,12 +67,12 @@ public sealed class ExportController : ControllerBase
             return this.BadRequest("Year must be between 2000 and 2100.");
         }
 
-        var report = await this._reportService.GetMonthlyCategoryReportAsync(year, month, cancellationToken);
+        var report = await _reportService.GetMonthlyCategoryReportAsync(year, month, cancellationToken);
         var table = BuildCategoryTable(
             $"Monthly Categories {report.Year}-{report.Month:D2}",
             report.Categories);
         var fileName = $"monthly-categories-{year}-{month:D2}";
-        var export = await this._exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
+        var export = await _exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
         return this.File(export.Content, export.ContentType, export.FileName);
     }
 
@@ -104,11 +104,11 @@ public sealed class ExportController : ControllerBase
             return this.BadRequest("Date range cannot exceed one year.");
         }
 
-        var report = await this._reportService.GetCategoryReportByRangeAsync(startDate, endDate, accountId, cancellationToken);
+        var report = await _reportService.GetCategoryReportByRangeAsync(startDate, endDate, accountId, cancellationToken);
         var title = $"Category Range {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}";
         var table = BuildCategoryTable(title, report.Categories);
         var fileName = $"category-range-{startDate:yyyy-MM-dd}-to-{endDate:yyyy-MM-dd}";
-        var export = await this._exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
+        var export = await _exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
         return this.File(export.Content, export.ContentType, export.FileName);
     }
 
@@ -147,10 +147,10 @@ public sealed class ExportController : ControllerBase
             return this.BadRequest("End year must be between 2000 and 2100.");
         }
 
-        var report = await this._reportService.GetSpendingTrendsAsync(months, endYear, endMonth, categoryId, cancellationToken);
+        var report = await _reportService.GetSpendingTrendsAsync(months, endYear, endMonth, categoryId, cancellationToken);
         var table = BuildTrendsTable(report);
         var fileName = $"spending-trends-{months}m";
-        var export = await this._exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
+        var export = await _exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
         return this.File(export.Content, export.ContentType, export.FileName);
     }
 
@@ -180,10 +180,10 @@ public sealed class ExportController : ControllerBase
             return this.BadRequest("Year must be between 2000 and 2100.");
         }
 
-        var summary = await this._budgetProgressService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await _budgetProgressService.GetMonthlySummaryAsync(year, month, cancellationToken);
         var table = BuildBudgetComparisonTable(summary);
         var fileName = $"budget-comparison-{year}-{month:D2}";
-        var export = await this._exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
+        var export = await _exportService.ExportTableAsync(table, ExportFormat.Csv, fileName, cancellationToken);
         return this.File(export.Content, export.ContentType, export.FileName);
     }
 

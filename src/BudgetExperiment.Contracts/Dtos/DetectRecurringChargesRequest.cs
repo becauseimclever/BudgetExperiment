@@ -12,5 +12,8 @@ public sealed record DetectRecurringChargesRequest
     /// <summary>
     /// Gets the optional account ID to scope detection. Null runs across all accounts.
     /// </summary>
-    public Guid? AccountId { get; init; }
+    public Guid? AccountId
+    {
+        get; init;
+    }
 }

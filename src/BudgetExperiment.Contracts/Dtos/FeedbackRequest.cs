@@ -12,5 +12,8 @@ public sealed class FeedbackRequest
     /// <summary>
     /// Gets or sets a value indicating whether the feedback is positive.
     /// </summary>
-    public bool IsPositive { get; set; }
+    public bool IsPositive
+    {
+        get; set;
+    }
 }

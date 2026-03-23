@@ -13,11 +13,17 @@ public sealed class TransactionUpdateDto
     public MoneyDto Amount { get; set; } = new();
 
     /// <summary>Gets or sets the transaction date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the description.</summary>
     public string Description { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the optional category identifier.</summary>
-    public Guid? CategoryId { get; set; }
+    public Guid? CategoryId
+    {
+        get; set;
+    }
 }

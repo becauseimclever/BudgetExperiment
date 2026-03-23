@@ -21,7 +21,7 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class TransactionsController : ControllerBase
 {
-    private readonly TransactionService _service;
+    private readonly ITransactionService _service;
     private readonly IUncategorizedTransactionService _uncategorizedService;
     private readonly IUnifiedTransactionService _unifiedService;
     private readonly ICategorizationEngine _categorizationEngine;
@@ -34,15 +34,15 @@ public sealed class TransactionsController : ControllerBase
     /// <param name="unifiedService">The unified transaction service.</param>
     /// <param name="categorizationEngine">The categorization engine for rule-based suggestions.</param>
     public TransactionsController(
-        TransactionService service,
+        ITransactionService service,
         IUncategorizedTransactionService uncategorizedService,
         IUnifiedTransactionService unifiedService,
         ICategorizationEngine categorizationEngine)
     {
-        this._service = service;
-        this._uncategorizedService = uncategorizedService;
-        this._unifiedService = unifiedService;
-        this._categorizationEngine = categorizationEngine;
+        _service = service;
+        _uncategorizedService = uncategorizedService;
+        _unifiedService = unifiedService;
+        _categorizationEngine = categorizationEngine;
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public sealed class TransactionsController : ControllerBase
             return this.BadRequest("startDate must be less than or equal to endDate.");
         }
 
-        var transactions = await this._service.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
+        var transactions = await _service.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
         return this.Ok(transactions);
     }
 
@@ -82,7 +82,7 @@ public sealed class TransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var transaction = await this._service.GetByIdAsync(id, cancellationToken);
+        var transaction = await _service.GetByIdAsync(id, cancellationToken);
         if (transaction is null)
         {
             return this.NotFound();
@@ -108,7 +108,7 @@ public sealed class TransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateAsync([FromBody] TransactionCreateDto dto, CancellationToken cancellationToken)
     {
-        var transaction = await this._service.CreateAsync(dto, cancellationToken);
+        var transaction = await _service.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = transaction.Id }, transaction);
     }
 
@@ -132,7 +132,7 @@ public sealed class TransactionsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var transaction = await this._service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
+        var transaction = await _service.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (transaction is null)
         {
             return this.NotFound();
@@ -157,7 +157,7 @@ public sealed class TransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await this._service.DeleteAsync(id, cancellationToken);
+        var deleted = await _service.DeleteAsync(id, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();
@@ -210,7 +210,7 @@ public sealed class TransactionsController : ControllerBase
             PageSize = pageSize,
         };
 
-        var result = await this._uncategorizedService.GetPagedAsync(filter, cancellationToken);
+        var result = await _uncategorizedService.GetPagedAsync(filter, cancellationToken);
 
         // Add pagination header
         this.Response.Headers["X-Pagination-TotalCount"] = result.TotalCount.ToString();
@@ -268,7 +268,7 @@ public sealed class TransactionsController : ControllerBase
             PageSize = pageSize,
         };
 
-        var result = await this._unifiedService.GetPagedAsync(filter, cancellationToken);
+        var result = await _unifiedService.GetPagedAsync(filter, cancellationToken);
 
         this.Response.Headers["X-Pagination-TotalCount"] = result.TotalCount.ToString();
 
@@ -299,7 +299,7 @@ public sealed class TransactionsController : ControllerBase
             return this.BadRequest("Maximum 100 transactions per request.");
         }
 
-        var suggestions = await this._categorizationEngine.GetBatchSuggestionsAsync(
+        var suggestions = await _categorizationEngine.GetBatchSuggestionsAsync(
             request.TransactionIds,
             cancellationToken);
 
@@ -329,7 +329,7 @@ public sealed class TransactionsController : ControllerBase
             return this.BadRequest("At least one transaction ID is required.");
         }
 
-        var result = await this._uncategorizedService.BulkCategorizeAsync(request, cancellationToken);
+        var result = await _uncategorizedService.BulkCategorizeAsync(request, cancellationToken);
         return this.Ok(result);
     }
 
@@ -356,7 +356,7 @@ public sealed class TransactionsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var transaction = await this._service.UpdateLocationAsync(id, dto, expectedVersion, cancellationToken);
+        var transaction = await _service.UpdateLocationAsync(id, dto, expectedVersion, cancellationToken);
         if (transaction is null)
         {
             return this.NotFound();
@@ -393,7 +393,7 @@ public sealed class TransactionsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var transaction = await this._service.UpdateCategoryAsync(id, dto, expectedVersion, cancellationToken);
+        var transaction = await _service.UpdateCategoryAsync(id, dto, expectedVersion, cancellationToken);
         if (transaction is null)
         {
             return this.NotFound();
@@ -418,7 +418,7 @@ public sealed class TransactionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteLocationAsync(Guid id, CancellationToken cancellationToken)
     {
-        var cleared = await this._service.ClearLocationAsync(id, cancellationToken);
+        var cleared = await _service.ClearLocationAsync(id, cancellationToken);
         if (!cleared)
         {
             return this.NotFound();

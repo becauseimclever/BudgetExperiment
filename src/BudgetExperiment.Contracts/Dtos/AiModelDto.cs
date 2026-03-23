@@ -17,10 +17,16 @@ public sealed class AiModelDto
     /// <summary>
     /// Gets or sets when the model was last modified.
     /// </summary>
-    public DateTime ModifiedAt { get; set; }
+    public DateTime ModifiedAt
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the model size in bytes.
     /// </summary>
-    public long SizeBytes { get; set; }
+    public long SizeBytes
+    {
+        get; set;
+    }
 }

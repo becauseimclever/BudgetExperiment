@@ -3,7 +3,9 @@
 // </copyright>
 
 using System.Globalization;
+
 using BudgetExperiment.Client.Components.Charts.Shared;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -65,7 +67,10 @@ public partial class GroupedBarChart
     /// Gets or sets the callback for bar clicks.
     /// </summary>
     [Parameter]
-    public EventCallback<(GroupedBarData Group, string SeriesId)> OnBarClick { get; set; }
+    public EventCallback<(GroupedBarData Group, string SeriesId)> OnBarClick
+    {
+        get; set;
+    }
 
     private static double MarginLeft => 48;
 
@@ -108,7 +113,10 @@ public partial class GroupedBarChart
 
     private IReadOnlyList<GroupInfo> ComputedGroups => BuildGroups();
 
-    private HoveredBarInfo? HoveredBar { get; set; }
+    private HoveredBarInfo? HoveredBar
+    {
+        get; set;
+    }
 
     private static decimal CalculateNiceStep(decimal max)
     {
@@ -311,20 +319,35 @@ public partial class GroupedBarChart
     {
         public string GroupLabel { get; set; } = string.Empty;
 
-        public double LabelX { get; set; }
+        public double LabelX
+        {
+            get; set;
+        }
 
         public List<BarRectInfo> Rects { get; set; } = [];
     }
 
     private sealed class BarRectInfo
     {
-        public double X { get; set; }
+        public double X
+        {
+            get; set;
+        }
 
-        public double Y { get; set; }
+        public double Y
+        {
+            get; set;
+        }
 
-        public double Width { get; set; }
+        public double Width
+        {
+            get; set;
+        }
 
-        public double Height { get; set; }
+        public double Height
+        {
+            get; set;
+        }
 
         public string Color { get; set; } = string.Empty;
 
@@ -336,7 +359,10 @@ public partial class GroupedBarChart
 
         public string FormattedValue { get; set; } = string.Empty;
 
-        public decimal Value { get; set; }
+        public decimal Value
+        {
+            get; set;
+        }
 
         public GroupedBarData Group { get; set; } = null!;
 

@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Client.Models;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Models;

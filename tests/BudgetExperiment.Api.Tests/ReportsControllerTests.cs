@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Reports API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -22,7 +23,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     /// <param name="factory">The test factory.</param>
     public ReportsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -33,7 +34,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetMonthlyCategoryReport_Returns_200_WithEmptyReport()
     {
         // Act - use December 2030 which should have no seed data
-        var response = await this._client.GetAsync("/api/v1/reports/categories/monthly?year=2030&month=12");
+        var response = await _client.GetAsync("/api/v1/reports/categories/monthly?year=2030&month=12");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -58,7 +59,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetMonthlyCategoryReport_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reports/categories/monthly?year=2026&month={month}");
+        var response = await _client.GetAsync($"/api/v1/reports/categories/monthly?year=2026&month={month}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -75,7 +76,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetMonthlyCategoryReport_Returns_400_ForInvalidYear(int year)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reports/categories/monthly?year={year}&month=1");
+        var response = await _client.GetAsync($"/api/v1/reports/categories/monthly?year={year}&month=1");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -98,11 +99,11 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2027, 7, 1),
         };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var categoryDto = new BudgetCategoryCreateDto { Name = "Report Test Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Create expense transactions in July 2027
@@ -114,7 +115,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             Description = "Test expense 1",
             CategoryId = category!.Id,
         };
-        await this._client.PostAsJsonAsync("/api/v1/transactions", transaction1);
+        await _client.PostAsJsonAsync("/api/v1/transactions", transaction1);
 
         var transaction2 = new TransactionCreateDto
         {
@@ -124,10 +125,10 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             Description = "Test expense 2",
             CategoryId = category.Id,
         };
-        await this._client.PostAsJsonAsync("/api/v1/transactions", transaction2);
+        await _client.PostAsJsonAsync("/api/v1/transactions", transaction2);
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/reports/categories/monthly?year=2027&month=7");
+        var response = await _client.GetAsync("/api/v1/reports/categories/monthly?year=2027&month=7");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -160,15 +161,15 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2028, 12, 1),
         };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var incomeCategoryDto = new BudgetCategoryCreateDto { Name = "Salary Category", Type = "Income" };
-        var incomeCategoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", incomeCategoryDto);
+        var incomeCategoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", incomeCategoryDto);
         var incomeCategory = await incomeCategoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         var expenseCategoryDto = new BudgetCategoryCreateDto { Name = "Expense Category", Type = "Expense" };
-        var expenseCategoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", expenseCategoryDto);
+        var expenseCategoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", expenseCategoryDto);
         var expenseCategory = await expenseCategoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
         // Create income and expense transactions in December 2028
@@ -180,7 +181,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             Description = "Paycheck",
             CategoryId = incomeCategory!.Id,
         };
-        await this._client.PostAsJsonAsync("/api/v1/transactions", incomeTransaction);
+        await _client.PostAsJsonAsync("/api/v1/transactions", incomeTransaction);
 
         var expenseTransaction = new TransactionCreateDto
         {
@@ -190,10 +191,10 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             Description = "Bills",
             CategoryId = expenseCategory!.Id,
         };
-        await this._client.PostAsJsonAsync("/api/v1/transactions", expenseTransaction);
+        await _client.PostAsJsonAsync("/api/v1/transactions", expenseTransaction);
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/reports/categories/monthly?year=2028&month=12");
+        var response = await _client.GetAsync("/api/v1/reports/categories/monthly?year=2028&month=12");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -217,7 +218,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetCategoryReportByRange_Returns_200_WithEmptyReport()
     {
         // Act - use a far-future date range with no data
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/categories/range?startDate=2035-06-01&endDate=2035-06-30");
 
         // Assert
@@ -238,7 +239,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetCategoryReportByRange_Returns_400_WhenEndBeforeStart()
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/categories/range?startDate=2026-02-15&endDate=2026-01-15");
 
         // Assert
@@ -253,7 +254,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetCategoryReportByRange_Returns_400_WhenRangeExceedsOneYear()
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/categories/range?startDate=2025-01-01&endDate=2026-06-01");
 
         // Assert
@@ -276,14 +277,14 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2029, 3, 1),
         };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var categoryDto = new BudgetCategoryCreateDto { Name = "Range Test Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
-        await this._client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
+        await _client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
         {
             AccountId = account!.Id,
             Amount = new MoneyDto { Amount = -60m, Currency = "USD" },
@@ -292,7 +293,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             CategoryId = category!.Id,
         });
 
-        await this._client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
+        await _client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
         {
             AccountId = account.Id,
             Amount = new MoneyDto { Amount = -40m, Currency = "USD" },
@@ -302,7 +303,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
         });
 
         // Act - range spanning two months
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/categories/range?startDate=2029-03-01&endDate=2029-04-30");
 
         // Assert
@@ -324,7 +325,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetSpendingTrends_Returns_200_WithEmptyData()
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/trends?months=3&endYear=2040&endMonth=3");
 
         // Assert
@@ -348,7 +349,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetSpendingTrends_Returns_400_ForInvalidMonths(int months)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reports/trends?months={months}");
+        var response = await _client.GetAsync($"/api/v1/reports/trends?months={months}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -365,7 +366,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetSpendingTrends_Returns_400_ForInvalidEndMonth(int endMonth)
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/reports/trends?months=6&endMonth={endMonth}");
+        var response = await _client.GetAsync($"/api/v1/reports/trends?months=6&endMonth={endMonth}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -381,7 +382,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetDaySummary_Returns_200_WithEmptyDay()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/reports/day-summary/2040-01-15");
+        var response = await _client.GetAsync("/api/v1/reports/day-summary/2040-01-15");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -410,14 +411,14 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2031, 5, 1),
         };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var categoryDto = new BudgetCategoryCreateDto { Name = "Day Summary Category", Type = "Expense" };
-        var categoryResponse = await this._client.PostAsJsonAsync("/api/v1/categories", categoryDto);
+        var categoryResponse = await _client.PostAsJsonAsync("/api/v1/categories", categoryDto);
         var category = await categoryResponse.Content.ReadFromJsonAsync<BudgetCategoryDto>();
 
-        await this._client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
+        await _client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
         {
             AccountId = account!.Id,
             Amount = new MoneyDto { Amount = -45m, Currency = "USD" },
@@ -426,7 +427,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
             CategoryId = category!.Id,
         });
 
-        await this._client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
+        await _client.PostAsJsonAsync("/api/v1/transactions", new TransactionCreateDto
         {
             AccountId = account.Id,
             Amount = new MoneyDto { Amount = 2000m, Currency = "USD" },
@@ -435,7 +436,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
         });
 
         // Act
-        var response = await this._client.GetAsync("/api/v1/reports/day-summary/2031-05-15");
+        var response = await _client.GetAsync("/api/v1/reports/day-summary/2031-05-15");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -459,7 +460,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetBudgetComparison_Returns_200()
     {
         // Act - month with no goals set
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             "/api/v1/reports/budget-comparison?year=2040&month=1");
 
         // Assert
@@ -481,7 +482,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetBudgetComparison_Returns_400_ForInvalidMonth(int month)
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             $"/api/v1/reports/budget-comparison?year=2026&month={month}");
 
         // Assert
@@ -499,7 +500,7 @@ public sealed class ReportsControllerTests : IClassFixture<CustomWebApplicationF
     public async Task GetBudgetComparison_Returns_400_ForInvalidYear(int year)
     {
         // Act
-        var response = await this._client.GetAsync(
+        var response = await _client.GetAsync(
             $"/api/v1/reports/budget-comparison?year={year}&month=1");
 
         // Assert

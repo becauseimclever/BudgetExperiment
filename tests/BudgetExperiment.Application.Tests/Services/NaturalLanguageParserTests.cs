@@ -3,7 +3,9 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Shouldly;
+
 using Xunit;
 
 namespace BudgetExperiment.Application.Tests.Services;
@@ -21,17 +23,17 @@ public class NaturalLanguageParserTests
 
     public NaturalLanguageParserTests()
     {
-        this._mockAiService = new MockAiService();
-        this._parser = new NaturalLanguageParser(this._mockAiService);
+        _mockAiService = new MockAiService();
+        _parser = new NaturalLanguageParser(_mockAiService);
 
-        this._accounts = new List<AccountInfo>
+        _accounts = new List<AccountInfo>
         {
             new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Checking", AccountType.Checking),
             new(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Savings", AccountType.Savings),
             new(Guid.Parse("33333333-3333-3333-3333-333333333333"), "Credit Card", AccountType.CreditCard),
         };
 
-        this._categories = new List<CategoryInfo>
+        _categories = new List<CategoryInfo>
         {
             new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "Groceries"),
             new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "Utilities"),
@@ -46,7 +48,7 @@ public class NaturalLanguageParserTests
         var input = string.Empty;
 
         // Act
-        var result = await this._parser.ParseCommandAsync(input, this._accounts, this._categories);
+        var result = await _parser.ParseCommandAsync(input, _accounts, _categories);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -61,7 +63,7 @@ public class NaturalLanguageParserTests
         var input = "   ";
 
         // Act
-        var result = await this._parser.ParseCommandAsync(input, this._accounts, this._categories);
+        var result = await _parser.ParseCommandAsync(input, _accounts, _categories);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -72,10 +74,10 @@ public class NaturalLanguageParserTests
     public async Task ParseCommandAsync_AiServiceFails_ReturnsFailure()
     {
         // Arrange
-        this._mockAiService.SetupFailure("AI service unavailable");
+        _mockAiService.SetupFailure("AI service unavailable");
 
         // Act
-        var result = await this._parser.ParseCommandAsync("Add $50 groceries", this._accounts, this._categories);
+        var result = await _parser.ParseCommandAsync("Add $50 groceries", _accounts, _categories);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -104,13 +106,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Add $45.99 groceries at Walmart to checking",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -143,13 +145,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Withdrew $20 from ATM from checking",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -178,13 +180,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Spent $10 on coffee",
             singleAccount,
-            this._categories);
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -213,13 +215,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Transfer $500 from checking to savings",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -252,13 +254,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Move $100 to savings",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -288,13 +290,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Set up monthly rent payment of $1500 on the 1st starting February",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -332,13 +334,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Every Saturday spend $150 on groceries",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -369,13 +371,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Transfer $200 to savings every other Friday",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -409,13 +411,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Add $50 groceries",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -440,13 +442,13 @@ public class NaturalLanguageParserTests
                 "response": "I'm not sure what you want me to do. Try saying something like 'Add $50 groceries' or 'Transfer $100 to savings'."
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "What's the weather?",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -458,13 +460,13 @@ public class NaturalLanguageParserTests
     public async Task ParseCommandAsync_InvalidJson_ReturnsFailure()
     {
         // Arrange
-        this._mockAiService.SetupSuccess("This is not valid JSON");
+        _mockAiService.SetupSuccess("This is not valid JSON");
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Add transaction",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -491,13 +493,13 @@ public class NaturalLanguageParserTests
             }
             Hope that helps!
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "$25 at Starbucks",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -526,20 +528,20 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Add $30",
-            this._accounts,
-            this._categories,
+            _accounts,
+            _categories,
             context);
 
         // Assert
         result.Success.ShouldBeTrue();
 
         // Verify context was included in the prompt
-        var sentPrompt = this._mockAiService.LastPrompt;
+        var sentPrompt = _mockAiService.LastPrompt;
         sentPrompt.ShouldNotBeNull();
         sentPrompt.SystemPrompt.ShouldContain("Context from the user's current view:");
         sentPrompt.SystemPrompt.ShouldContain("The user has selected January 15, 2026 on the calendar.");
@@ -567,13 +569,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Add $25 coffee",
-            this._accounts,
-            this._categories,
+            _accounts,
+            _categories,
             context);
 
         // Assert
@@ -602,13 +604,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Add $25 coffee",
-            this._accounts,
-            this._categories,
+            _accounts,
+            _categories,
             context);
 
         // Assert
@@ -637,13 +639,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Daily $5 coffee expense",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -672,13 +674,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Quarterly tax payment of $5000 on the 15th",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -706,13 +708,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Annual insurance premium of $1200 in January",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -738,13 +740,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Pay $300 to credit card from checking",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeTrue();
@@ -770,13 +772,13 @@ public class NaturalLanguageParserTests
                 }
             }
             """;
-        this._mockAiService.SetupSuccess(aiResponse);
+        _mockAiService.SetupSuccess(aiResponse);
 
         // Act
-        var result = await this._parser.ParseCommandAsync(
+        var result = await _parser.ParseCommandAsync(
             "Transfer from nonexistent to savings",
-            this._accounts,
-            this._categories);
+            _accounts,
+            _categories);
 
         // Assert
         result.Success.ShouldBeFalse();
@@ -793,26 +795,29 @@ public class NaturalLanguageParserTests
         private string _responseContent = string.Empty;
         private string _errorMessage = string.Empty;
 
-        public AiPrompt? LastPrompt { get; private set; }
+        public AiPrompt? LastPrompt
+        {
+            get; private set;
+        }
 
         public void SetupSuccess(string content)
         {
-            this._shouldFail = false;
-            this._responseContent = content;
+            _shouldFail = false;
+            _responseContent = content;
         }
 
         public void SetupFailure(string errorMessage)
         {
-            this._shouldFail = true;
-            this._errorMessage = errorMessage;
+            _shouldFail = true;
+            _errorMessage = errorMessage;
         }
 
         public Task<AiServiceStatus> GetStatusAsync(CancellationToken cancellationToken = default)
         {
             return Task.FromResult(new AiServiceStatus(
-                IsAvailable: !this._shouldFail,
+                IsAvailable: !_shouldFail,
                 CurrentModel: "test-model",
-                ErrorMessage: this._shouldFail ? this._errorMessage : null));
+                ErrorMessage: _shouldFail ? _errorMessage : null));
         }
 
         public Task<IReadOnlyList<AiModelInfo>> GetAvailableModelsAsync(CancellationToken cancellationToken = default)
@@ -827,19 +832,19 @@ public class NaturalLanguageParserTests
         {
             this.LastPrompt = prompt;
 
-            if (this._shouldFail)
+            if (_shouldFail)
             {
                 return Task.FromResult(new AiResponse(
                     Success: false,
                     Content: string.Empty,
-                    ErrorMessage: this._errorMessage,
+                    ErrorMessage: _errorMessage,
                     TokensUsed: 0,
                     Duration: TimeSpan.Zero));
             }
 
             return Task.FromResult(new AiResponse(
                 Success: true,
-                Content: this._responseContent,
+                Content: _responseContent,
                 ErrorMessage: null,
                 TokensUsed: 100,
                 Duration: TimeSpan.FromMilliseconds(500)));

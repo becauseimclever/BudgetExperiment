@@ -14,22 +14,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class ImportBatchRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImportBatchRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public ImportBatchRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public ImportBatchRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_Batch()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var repository = new ImportBatchRepository(context);
         var userId = Guid.NewGuid();
@@ -40,7 +40,7 @@ public class ImportBatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportBatchRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(batch.Id);
 
@@ -57,7 +57,7 @@ public class ImportBatchRepositoryTests
     public async Task GetByIdAsync_Returns_Null_When_Not_Found()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ImportBatchRepository(context);
 
         // Act
@@ -71,7 +71,7 @@ public class ImportBatchRepositoryTests
     public async Task GetByUserAsync_Returns_Batches_For_User_Ordered_By_Date()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var repository = new ImportBatchRepository(context);
         var userId1 = Guid.NewGuid();
@@ -98,7 +98,7 @@ public class ImportBatchRepositoryTests
     public async Task GetByAccountAsync_Returns_Batches_For_Account()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account1 = await this.CreateAccountAsync(context, "Account 1");
         var account2 = await this.CreateAccountAsync(context, "Account 2");
         var repository = new ImportBatchRepository(context);
@@ -125,7 +125,7 @@ public class ImportBatchRepositoryTests
     public async Task GetByMappingAsync_Returns_Batches_Using_Mapping()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var mapping = await this.CreateMappingAsync(context, "Test Mapping");
         var repository = new ImportBatchRepository(context);
@@ -152,7 +152,7 @@ public class ImportBatchRepositoryTests
     public async Task RemoveAsync_Deletes_Batch()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var repository = new ImportBatchRepository(context);
         var userId = Guid.NewGuid();
@@ -174,7 +174,7 @@ public class ImportBatchRepositoryTests
     public async Task CountAsync_Returns_Total_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var repository = new ImportBatchRepository(context);
         var userId = Guid.NewGuid();
@@ -194,7 +194,7 @@ public class ImportBatchRepositoryTests
     public async Task Complete_Updates_Status_And_Counts()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var repository = new ImportBatchRepository(context);
         var userId = Guid.NewGuid();
@@ -208,7 +208,7 @@ public class ImportBatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportBatchRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(batch.Id);
 
@@ -223,7 +223,7 @@ public class ImportBatchRepositoryTests
     public async Task MarkDeleted_Updates_Status()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var repository = new ImportBatchRepository(context);
         var userId = Guid.NewGuid();
@@ -238,7 +238,7 @@ public class ImportBatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportBatchRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(batch.Id);
 
@@ -250,7 +250,7 @@ public class ImportBatchRepositoryTests
     public async Task Batch_With_Mapping_Creates_Valid_Foreign_Key()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var account = await this.CreateAccountAsync(context, "Test Account");
         var mapping = await this.CreateMappingAsync(context, "My Mapping");
         var repository = new ImportBatchRepository(context);
@@ -262,7 +262,7 @@ public class ImportBatchRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ImportBatchRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(batch.Id);
 

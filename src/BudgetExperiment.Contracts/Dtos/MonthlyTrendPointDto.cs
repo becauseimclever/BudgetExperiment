@@ -10,10 +10,16 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class MonthlyTrendPointDto
 {
     /// <summary>Gets or sets the year.</summary>
-    public int Year { get; set; }
+    public int Year
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the month (1-12).</summary>
-    public int Month { get; set; }
+    public int Month
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spending for this month.</summary>
     public MoneyDto TotalSpending { get; set; } = new();
@@ -25,5 +31,8 @@ public sealed class MonthlyTrendPointDto
     public MoneyDto NetAmount { get; set; } = new();
 
     /// <summary>Gets or sets the number of transactions in this month.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 }

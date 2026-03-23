@@ -12,17 +12,26 @@ public interface IExportFormatter
     /// <summary>
     /// Gets the export format handled by this formatter.
     /// </summary>
-    ExportFormat Format { get; }
+    ExportFormat Format
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets the content type for the format.
     /// </summary>
-    string ContentType { get; }
+    string ContentType
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets the file extension for the format.
     /// </summary>
-    string FileExtension { get; }
+    string FileExtension
+    {
+        get;
+    }
 
     /// <summary>
     /// Exports the table as bytes for the target format.

@@ -6,6 +6,8 @@ using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace BudgetExperiment.Application.Calendar;
 
 /// <summary>
@@ -20,6 +22,8 @@ public sealed class DayDetailService : IDayDetailService
     private readonly IRecurringInstanceProjector _recurringInstanceProjector;
     private readonly IRecurringTransferInstanceProjector _recurringTransferInstanceProjector;
     private readonly ICurrencyProvider _currencyProvider;
+    private readonly IServiceScopeFactory? _scopeFactory;
+    private readonly IUserContext? _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DayDetailService"/> class.
@@ -31,6 +35,8 @@ public sealed class DayDetailService : IDayDetailService
     /// <param name="recurringInstanceProjector">The recurring instance projector.</param>
     /// <param name="recurringTransferInstanceProjector">The recurring transfer instance projector.</param>
     /// <param name="currencyProvider">The currency provider.</param>
+    /// <param name="scopeFactory">The scope factory for parallel query scopes.</param>
+    /// <param name="userContext">The current user context.</param>
     public DayDetailService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
@@ -38,7 +44,9 @@ public sealed class DayDetailService : IDayDetailService
         IAccountRepository accountRepository,
         IRecurringInstanceProjector recurringInstanceProjector,
         IRecurringTransferInstanceProjector recurringTransferInstanceProjector,
-        ICurrencyProvider currencyProvider)
+        ICurrencyProvider currencyProvider,
+        IServiceScopeFactory? scopeFactory = null,
+        IUserContext? userContext = null)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -47,6 +55,8 @@ public sealed class DayDetailService : IDayDetailService
         _recurringInstanceProjector = recurringInstanceProjector;
         _recurringTransferInstanceProjector = recurringTransferInstanceProjector;
         _currencyProvider = currencyProvider;
+        _scopeFactory = scopeFactory;
+        _userContext = userContext;
     }
 
     /// <inheritdoc/>
@@ -55,14 +65,49 @@ public sealed class DayDetailService : IDayDetailService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currencyTask = RunInNewScopeAsync(
+            (sp, ct) => sp.GetRequiredService<ICurrencyProvider>().GetCurrencyAsync(ct),
+            cancellationToken);
+        var transactionsTask = RunInNewScopeAsync(
+            (sp, ct) => sp.GetRequiredService<ITransactionRepository>()
+                .GetByDateRangeAsync(date, date, accountId, ct),
+            cancellationToken);
+        var recurringTransactionsTask = RunInNewScopeAsync(
+            (sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IRecurringTransactionRepository>();
+                return accountId.HasValue
+                    ? repo.GetByAccountIdAsync(accountId.Value, ct)
+                    : repo.GetActiveAsync(ct);
+            },
+            cancellationToken);
+        var recurringTransfersTask = RunInNewScopeAsync(
+            (sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IRecurringTransferRepository>();
+                return accountId.HasValue
+                    ? repo.GetByAccountIdAsync(accountId.Value, ct)
+                    : repo.GetActiveAsync(ct);
+            },
+            cancellationToken);
 
-        // Fetch data sequentially (DbContext is not thread-safe for concurrent operations)
-        var transactions = await _transactionRepository.GetByDateRangeAsync(date, date, accountId, cancellationToken);
-        var accounts = await _accountRepository.GetAllAsync(cancellationToken);
-        var accountMap = accounts.ToDictionary(a => a.Id, a => a.Name);
-        var recurringTransactions = await GetRecurringTransactionsAsync(accountId, cancellationToken);
-        var recurringTransfers = await GetRecurringTransfersAsync(accountId, cancellationToken);
+        await Task.WhenAll(
+            currencyTask,
+            transactionsTask,
+            recurringTransactionsTask,
+            recurringTransfersTask);
+
+        var currency = await currencyTask;
+        var transactions = await transactionsTask;
+        var recurringTransactions = await recurringTransactionsTask;
+        var recurringTransfers = await recurringTransfersTask;
+
+        var accountIds = transactions.Select(t => t.AccountId).Distinct().ToList();
+        var accountMap = await RunInNewScopeAsync(
+                (sp, ct) => sp.GetRequiredService<IAccountRepository>()
+                    .GetAccountNamesByIdsAsync(accountIds, ct),
+                cancellationToken)
+            ?? new Dictionary<Guid, string>();
 
         // Get recurring instances for this specific date using the projector
         var recurringInstances = await _recurringInstanceProjector.GetInstancesForDateAsync(
@@ -182,21 +227,83 @@ public sealed class DayDetailService : IDayDetailService
         };
     }
 
-    private async Task<IReadOnlyList<RecurringTransaction>> GetRecurringTransactionsAsync(
-        Guid? accountId,
+    private async Task<T> RunInNewScopeAsync<T>(
+        Func<IServiceProvider, CancellationToken, Task<T>> action,
         CancellationToken cancellationToken)
     {
-        return accountId.HasValue
-            ? await _recurringRepository.GetByAccountIdAsync(accountId.Value, cancellationToken)
-            : await _recurringRepository.GetActiveAsync(cancellationToken);
+        if (_scopeFactory is null || _userContext is null)
+        {
+            var provider = new FallbackServiceProvider(
+                _transactionRepository,
+                _recurringRepository,
+                _recurringTransferRepository,
+                _accountRepository,
+                _currencyProvider);
+            var fallbackTask = action(provider, cancellationToken);
+            return fallbackTask is null
+                ? default!
+                : await fallbackTask;
+        }
+
+        using var scope = _scopeFactory.CreateScope();
+        var scopedUserContext = scope.ServiceProvider.GetRequiredService<IUserContext>();
+        scopedUserContext.SetScope(_userContext.CurrentScope);
+        var scopedTask = action(scope.ServiceProvider, cancellationToken);
+        return scopedTask is null
+            ? default!
+            : await scopedTask;
     }
 
-    private async Task<IReadOnlyList<RecurringTransfer>> GetRecurringTransfersAsync(
-        Guid? accountId,
-        CancellationToken cancellationToken)
+    private sealed class FallbackServiceProvider : IServiceProvider
     {
-        return accountId.HasValue
-            ? await _recurringTransferRepository.GetByAccountIdAsync(accountId.Value, cancellationToken)
-            : await _recurringTransferRepository.GetActiveAsync(cancellationToken);
+        private readonly ITransactionRepository _transactionRepository;
+        private readonly IRecurringTransactionRepository _recurringRepository;
+        private readonly IRecurringTransferRepository _recurringTransferRepository;
+        private readonly IAccountRepository _accountRepository;
+        private readonly ICurrencyProvider _currencyProvider;
+
+        public FallbackServiceProvider(
+            ITransactionRepository transactionRepository,
+            IRecurringTransactionRepository recurringRepository,
+            IRecurringTransferRepository recurringTransferRepository,
+            IAccountRepository accountRepository,
+            ICurrencyProvider currencyProvider)
+        {
+            _transactionRepository = transactionRepository;
+            _recurringRepository = recurringRepository;
+            _recurringTransferRepository = recurringTransferRepository;
+            _accountRepository = accountRepository;
+            _currencyProvider = currencyProvider;
+        }
+
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(ITransactionRepository))
+            {
+                return _transactionRepository;
+            }
+
+            if (serviceType == typeof(IRecurringTransactionRepository))
+            {
+                return _recurringRepository;
+            }
+
+            if (serviceType == typeof(IRecurringTransferRepository))
+            {
+                return _recurringTransferRepository;
+            }
+
+            if (serviceType == typeof(IAccountRepository))
+            {
+                return _accountRepository;
+            }
+
+            if (serviceType == typeof(ICurrencyProvider))
+            {
+                return _currencyProvider;
+            }
+
+            return null;
+        }
     }
 }

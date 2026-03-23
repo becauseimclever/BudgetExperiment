@@ -27,12 +27,18 @@ public sealed class RecurringTransaction
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the identifier of the account this recurring transaction belongs to.
     /// </summary>
-    public Guid AccountId { get; private set; }
+    public Guid AccountId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the description of the recurring transaction.
@@ -52,67 +58,103 @@ public sealed class RecurringTransaction
     /// <summary>
     /// Gets the start date for the recurring transaction.
     /// </summary>
-    public DateOnly StartDate { get; private set; }
+    public DateOnly StartDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the optional end date for the recurring transaction (null = indefinite).
     /// </summary>
-    public DateOnly? EndDate { get; private set; }
+    public DateOnly? EndDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the optional category identifier linking to a BudgetCategory.
     /// </summary>
-    public Guid? CategoryId { get; private set; }
+    public Guid? CategoryId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the associated budget category (navigation property for queries).
     /// </summary>
-    public BudgetCategory? Category { get; private set; }
+    public BudgetCategory? Category
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the date of the next scheduled occurrence.
     /// </summary>
-    public DateOnly NextOccurrence { get; private set; }
+    public DateOnly NextOccurrence
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the recurring transaction is active.
     /// </summary>
-    public bool IsActive { get; private set; }
+    public bool IsActive
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the date of the last generated transaction (null if never generated).
     /// </summary>
-    public DateOnly? LastGeneratedDate { get; private set; }
+    public DateOnly? LastGeneratedDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the recurring transaction was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the recurring transaction was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID of who created this recurring transaction.
     /// </summary>
-    public Guid CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the import patterns used to match imported transactions.
     /// </summary>
-    public IReadOnlyCollection<ImportPatternValue> ImportPatterns => this._importPatterns.AsReadOnly();
+    public IReadOnlyCollection<ImportPatternValue> ImportPatterns => _importPatterns.AsReadOnly();
 
     /// <summary>
     /// Creates a new recurring transaction.
@@ -308,12 +350,12 @@ public sealed class RecurringTransaction
             throw new DomainException("Import pattern is required.");
         }
 
-        if (this._importPatterns.Contains(pattern))
+        if (_importPatterns.Contains(pattern))
         {
             throw new DomainException("Import pattern already exists.");
         }
 
-        this._importPatterns.Add(pattern);
+        _importPatterns.Add(pattern);
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
@@ -324,9 +366,9 @@ public sealed class RecurringTransaction
     /// <exception cref="DomainException">Thrown when pattern is not found.</exception>
     public void RemoveImportPattern(ImportPatternValue pattern)
     {
-        if (!this._importPatterns.Remove(pattern))
+        if (!_importPatterns.Remove(pattern))
         {
-            throw new DomainException("Import pattern not found.");
+            throw new DomainException("Import pattern not found.", DomainExceptionType.NotFound);
         }
 
         this.UpdatedAtUtc = DateTime.UtcNow;
@@ -339,11 +381,11 @@ public sealed class RecurringTransaction
     /// <returns>True if any pattern matches; otherwise, false.</returns>
     public bool MatchesImportDescription(string description)
     {
-        if (this._importPatterns.Count == 0)
+        if (_importPatterns.Count == 0)
         {
             return false;
         }
 
-        return this._importPatterns.Any(p => p.Matches(description));
+        return _importPatterns.Any(p => p.Matches(description));
     }
 }

@@ -27,10 +27,16 @@ public sealed class CategorizationRuleUpdateDto
     /// <summary>
     /// Gets or sets a value indicating whether matching is case-sensitive.
     /// </summary>
-    public bool CaseSensitive { get; set; }
+    public bool CaseSensitive
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the target category identifier.
     /// </summary>
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId
+    {
+        get; set;
+    }
 }

@@ -6,7 +6,9 @@ using BudgetExperiment.Client.Components.Reconciliation;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
@@ -374,15 +376,21 @@ public sealed class ImportPatternsDialogTests : BunitContext, IAsyncLifetime
         Assert.Contains("wildcard", cut.Markup);
     }
 
-    #pragma warning disable SA1201 // Elements should appear in the correct order
+#pragma warning disable SA1201 // Elements should appear in the correct order
     private sealed class StubBudgetApiService : IBudgetApiService
-    #pragma warning restore SA1201
+#pragma warning restore SA1201
     {
         /// <summary>Gets or sets the import patterns result.</summary>
-        public ImportPatternsDto? ImportPatternsResult { get; set; }
+        public ImportPatternsDto? ImportPatternsResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets a value indicating whether GetImportPatternsAsync should throw.</summary>
-        public bool ShouldThrowOnGetPatterns { get; set; }
+        public bool ShouldThrowOnGetPatterns
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task<ImportPatternsDto?> GetImportPatternsAsync(Guid recurringTransactionId) =>

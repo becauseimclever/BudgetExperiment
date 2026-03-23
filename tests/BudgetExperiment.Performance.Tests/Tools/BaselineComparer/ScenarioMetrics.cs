@@ -13,17 +13,32 @@ internal sealed class ScenarioMetrics
     public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("p50Ms")]
-    public double P50Ms { get; set; }
+    public double P50Ms
+    {
+        get; set;
+    }
 
     [JsonPropertyName("p95Ms")]
-    public double P95Ms { get; set; }
+    public double P95Ms
+    {
+        get; set;
+    }
 
     [JsonPropertyName("p99Ms")]
-    public double P99Ms { get; set; }
+    public double P99Ms
+    {
+        get; set;
+    }
 
     [JsonPropertyName("throughputRps")]
-    public double ThroughputRps { get; set; }
+    public double ThroughputRps
+    {
+        get; set;
+    }
 
     [JsonPropertyName("errorPercent")]
-    public double ErrorPercent { get; set; }
+    public double ErrorPercent
+    {
+        get; set;
+    }
 }

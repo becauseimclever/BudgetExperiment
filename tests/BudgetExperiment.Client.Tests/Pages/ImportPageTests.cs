@@ -7,8 +7,11 @@ using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -28,9 +31,9 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public ImportPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._budgetApi);
-        this.Services.AddSingleton<IImportApiService>(this._importApi);
-        this.Services.AddSingleton<ICsvParserService>(this._csvParser);
+        this.Services.AddSingleton<IBudgetApiService>(_budgetApi);
+        this.Services.AddSingleton<IImportApiService>(_importApi);
+        this.Services.AddSingleton<ICsvParserService>(_csvParser);
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
@@ -135,7 +138,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsError_WhenLoadFails()
     {
-        this._importApi.ShouldThrowOnGetMappings = true;
+        _importApi.ShouldThrowOnGetMappings = true;
 
         var cut = Render<Import>();
 
@@ -148,7 +151,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void HistoryTab_LoadsHistory()
     {
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = Guid.NewGuid(),
             AccountId = Guid.NewGuid(),
@@ -173,7 +176,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     {
         var cut = Render<Import>();
 
-        this._importApi.ShouldThrowOnGetHistory = true;
+        _importApi.ShouldThrowOnGetHistory = true;
         var historyTab = cut.FindAll(".nav-link")[1];
         historyTab.Click();
 
@@ -186,7 +189,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void MappingsTab_LoadsMappings()
     {
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = Guid.NewGuid(),
             Name = "Bank Statement",
@@ -249,7 +252,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Step1_AccountsAreAvailableForSelection()
     {
-        this._budgetApi.Accounts.Add(new AccountDto
+        _budgetApi.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Checking",
@@ -275,8 +278,8 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
 
         // Mappings were already loaded in OnInit, so we need a fresh state
         // where no mappings were loaded (empty list) and then the refresh fails
-        this._importApi.ShouldThrowOnGetMappings = true;
-        this._importApi.Mappings.Clear();
+        _importApi.ShouldThrowOnGetMappings = true;
+        _importApi.Mappings.Clear();
         var mappingsTab = cut.FindAll(".nav-link")[2];
         mappingsTab.Click();
 
@@ -289,7 +292,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void HistoryTab_ShowsBatches_WhenHistoryExists()
     {
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = Guid.NewGuid(),
             FileName = "transactions.csv",
@@ -313,7 +316,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void DeleteBatch_RemovesBatchFromHistory()
     {
         var batchId = Guid.NewGuid();
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = batchId,
             FileName = "old-import.csv",
@@ -322,7 +325,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
             AccountId = Guid.NewGuid(),
             AccountName = "Savings",
         });
-        this._importApi.DeleteBatchResult = 10;
+        _importApi.DeleteBatchResult = 10;
 
         var cut = Render<Import>();
         var historyTab = cut.FindAll(".nav-link")[1];
@@ -337,7 +340,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteBatch_ShowsError_WhenApiFails()
     {
-        this._importApi.DeleteBatchResult = null;
+        _importApi.DeleteBatchResult = null;
 
         var cut = Render<Import>();
         cut.Markup.ShouldNotBeNullOrEmpty();
@@ -349,7 +352,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void MappingsTab_ShowsSavedMappings()
     {
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = Guid.NewGuid(),
             Name = "My Bank Format",
@@ -369,8 +372,8 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteMapping_RemovesMappingFromList()
     {
-        this._importApi.DeleteMappingResult = true;
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.DeleteMappingResult = true;
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = Guid.NewGuid(),
             Name = "Old Mapping",
@@ -415,7 +418,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ExecuteResult_IsConfigurable()
     {
-        this._importApi.ExecuteResult = new ImportResult
+        _importApi.ExecuteResult = new ImportResult
         {
             BatchId = Guid.NewGuid(),
             ImportedCount = 25,
@@ -433,7 +436,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CreateMappingResult_IsConfigurable()
     {
-        this._importApi.CreateMappingResult = new ImportMappingDto
+        _importApi.CreateMappingResult = new ImportMappingDto
         {
             Id = Guid.NewGuid(),
             Name = "New Mapping",
@@ -450,7 +453,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SuggestedMapping_IsConfigurable()
     {
-        this._importApi.SuggestedMapping = new ImportMappingDto
+        _importApi.SuggestedMapping = new ImportMappingDto
         {
             Id = Guid.NewGuid(),
             Name = "auto-detect",
@@ -505,7 +508,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Step1_AccountsAreLoadedForSelection()
     {
-        this._budgetApi.Accounts.Add(new AccountDto
+        _budgetApi.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Import Account",
@@ -527,13 +530,13 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ErrorAlert_Retry_ReloadsData()
     {
-        this._importApi.ShouldThrowOnGetMappings = true;
+        _importApi.ShouldThrowOnGetMappings = true;
         var cut = Render<Import>();
 
         cut.Markup.ShouldContain("Failed to load data");
 
         // Fix the stub so retry succeeds
-        this._importApi.ShouldThrowOnGetMappings = false;
+        _importApi.ShouldThrowOnGetMappings = false;
         var retryButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Retry"));
         retryButton?.Click();
 
@@ -546,7 +549,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ErrorAlert_Dismiss_ClearsError()
     {
-        this._importApi.ShouldThrowOnGetMappings = true;
+        _importApi.ShouldThrowOnGetMappings = true;
         var cut = Render<Import>();
 
         cut.Markup.ShouldContain("Failed to load data");
@@ -565,7 +568,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void DeleteBatch_Handler_RemovesBatchAndRefreshes()
     {
         var batchId = Guid.NewGuid();
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = batchId,
             FileName = "deleteme.csv",
@@ -574,7 +577,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
             AccountId = Guid.NewGuid(),
             AccountName = "Checking",
         });
-        this._importApi.DeleteBatchResult = 5;
+        _importApi.DeleteBatchResult = 5;
 
         var cut = Render<Import>();
         var historyTab = cut.FindAll(".nav-link")[1];
@@ -597,7 +600,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void DeleteBatch_Handler_ShowsError_WhenApiFails()
     {
         var batchId = Guid.NewGuid();
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = batchId,
             FileName = "faildelete.csv",
@@ -606,7 +609,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
             AccountId = Guid.NewGuid(),
             AccountName = "Savings",
         });
-        this._importApi.DeleteBatchResult = null;
+        _importApi.DeleteBatchResult = null;
 
         var cut = Render<Import>();
         var historyTab = cut.FindAll(".nav-link")[1];
@@ -632,13 +635,13 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void UpdateMapping_Handler_ShowsConflictError()
     {
         var mappingId = Guid.NewGuid();
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = mappingId,
             Name = "Conflicting Mapping",
             ColumnMappings = [],
         });
-        this._importApi.UpdateMappingResult = ApiResult<ImportMappingDto>.Conflict();
+        _importApi.UpdateMappingResult = ApiResult<ImportMappingDto>.Conflict();
 
         var cut = Render<Import>();
         var mappingsTab = cut.FindAll(".nav-link")[2];
@@ -661,13 +664,13 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void DeleteMapping_Handler_RemovesMapping_OnSuccess()
     {
         var mappingId = Guid.NewGuid();
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = mappingId,
             Name = "Deletable Mapping",
             ColumnMappings = [],
         });
-        this._importApi.DeleteMappingResult = true;
+        _importApi.DeleteMappingResult = true;
 
         var cut = Render<Import>();
         var mappingsTab = cut.FindAll(".nav-link")[2];
@@ -695,13 +698,13 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void DeleteMapping_Handler_ShowsError_OnFailure()
     {
         var mappingId = Guid.NewGuid();
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = mappingId,
             Name = "Undeletable Mapping",
             ColumnMappings = [],
         });
-        this._importApi.DeleteMappingResult = false;
+        _importApi.DeleteMappingResult = false;
 
         var cut = Render<Import>();
         var mappingsTab = cut.FindAll(".nav-link")[2];
@@ -751,7 +754,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void HistoryTab_RefreshButton_TriggersReload()
     {
         // Add initial batch so Refresh button appears
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = Guid.NewGuid(),
             FileName = "initial.csv",
@@ -768,7 +771,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("initial.csv"));
 
         // Add a new batch and click Refresh
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = Guid.NewGuid(),
             FileName = "refreshed.csv",
@@ -791,7 +794,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void MappingsTab_RefreshButton_TriggersReload()
     {
         // Add initial mapping so Refresh button appears
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = Guid.NewGuid(),
             Name = "Initial Mapping",
@@ -804,7 +807,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Initial Mapping"));
 
-        this._importApi.Mappings.Add(new ImportMappingDto
+        _importApi.Mappings.Add(new ImportMappingDto
         {
             Id = Guid.NewGuid(),
             Name = "Refreshed Mapping",
@@ -824,7 +827,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
     public void HistoryTab_Refresh_ShowsError_WhenFails()
     {
         // Add initial batch so Refresh button appears
-        this._importApi.Batches.Add(new ImportBatchDto
+        _importApi.Batches.Add(new ImportBatchDto
         {
             Id = Guid.NewGuid(),
             FileName = "existing.csv",
@@ -840,7 +843,7 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("existing.csv"));
 
-        this._importApi.ShouldThrowOnGetHistory = true;
+        _importApi.ShouldThrowOnGetHistory = true;
         var refreshButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Refresh"));
         refreshButton?.Click();
 

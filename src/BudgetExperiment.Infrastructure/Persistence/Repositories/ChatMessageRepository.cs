@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -20,20 +21,21 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
     /// <param name="context">The database context.</param>
     public ChatMessageRepository(BudgetDbContext context)
     {
-        this._context = context;
+        _context = context;
     }
 
     /// <inheritdoc />
     public async Task<ChatMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatMessages
+        return await _context.ChatMessages
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ChatMessage>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatMessages
+        return await _context.ChatMessages
+            .AsNoTracking()
             .OrderByDescending(m => m.CreatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -43,19 +45,21 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatMessages.LongCountAsync(cancellationToken);
+        return await _context.ChatMessages
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task AddAsync(ChatMessage entity, CancellationToken cancellationToken = default)
     {
-        await this._context.ChatMessages.AddAsync(entity, cancellationToken);
+        await _context.ChatMessages.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task RemoveAsync(ChatMessage entity, CancellationToken cancellationToken = default)
     {
-        this._context.ChatMessages.Remove(entity);
+        _context.ChatMessages.Remove(entity);
         return Task.CompletedTask;
     }
 
@@ -65,7 +69,8 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
         int limit = 50,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatMessages
+        return await _context.ChatMessages
+            .AsNoTracking()
             .Where(m => m.SessionId == sessionId)
             .OrderBy(m => m.CreatedAtUtc)
             .Take(limit)
@@ -77,7 +82,8 @@ internal sealed class ChatMessageRepository : IChatMessageRepository
         Guid sessionId,
         CancellationToken cancellationToken = default)
     {
-        return await this._context.ChatMessages
+        return await _context.ChatMessages
+            .AsNoTracking()
             .Where(m => m.SessionId == sessionId && m.ActionStatus == ChatActionStatus.Pending)
             .OrderBy(m => m.CreatedAtUtc)
             .ToListAsync(cancellationToken);

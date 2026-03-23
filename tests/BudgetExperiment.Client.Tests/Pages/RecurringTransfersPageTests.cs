@@ -7,8 +7,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -26,7 +29,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     public RecurringTransfersPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
@@ -97,7 +100,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsTransferCards_WhenDataExists()
     {
-        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        _apiService.RecurringTransfers.Add(new RecurringTransferDto
         {
             Id = Guid.NewGuid(),
             Description = "Monthly Savings",
@@ -125,7 +128,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsTransferFlowArrow()
     {
-        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        _apiService.RecurringTransfers.Add(new RecurringTransferDto
         {
             Id = Guid.NewGuid(),
             Description = "Transfer",
@@ -151,7 +154,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ActiveTransfer_ShowsSkipAndPauseButtons()
     {
-        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        _apiService.RecurringTransfers.Add(new RecurringTransferDto
         {
             Id = Guid.NewGuid(),
             Description = "Active Transfer",
@@ -178,7 +181,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void PausedTransfer_ShowsResumeButton()
     {
-        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        _apiService.RecurringTransfers.Add(new RecurringTransferDto
         {
             Id = Guid.NewGuid(),
             Description = "Paused Transfer",
@@ -204,7 +207,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void InactiveTransfer_HasInactiveCssAndPausedStatus()
     {
-        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        _apiService.RecurringTransfers.Add(new RecurringTransferDto
         {
             Id = Guid.NewGuid(),
             Description = "Inactive",
@@ -231,7 +234,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsEndDate_WhenPresent()
     {
-        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        _apiService.RecurringTransfers.Add(new RecurringTransferDto
         {
             Id = Guid.NewGuid(),
             Description = "Ending Transfer",
@@ -269,7 +272,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Card_ShowsFrequency()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Weekly Transfer"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Weekly Transfer"));
 
         var cut = Render<RecurringTransfers>();
 
@@ -282,7 +285,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void Card_ShowsNextOccurrence()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
 
         var cut = Render<RecurringTransfers>();
 
@@ -295,8 +298,8 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsMultipleRecurringTransfers()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Transfer A"));
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Transfer B"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Transfer A"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Transfer B"));
 
         var cut = Render<RecurringTransfers>();
 
@@ -310,7 +313,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsActiveStatusBadge()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Active Transfer"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Active Transfer"));
 
         var cut = Render<RecurringTransfers>();
 
@@ -323,7 +326,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SkipButton_IsClickable()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
 
         var cut = Render<RecurringTransfers>();
         var skipButton = cut.FindAll("button").First(b => b.TextContent.Contains("Skip"));
@@ -338,7 +341,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void PauseButton_IsClickable()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
 
         var cut = Render<RecurringTransfers>();
         var pauseButton = cut.FindAll("button").First(b => b.TextContent.Contains("Pause"));
@@ -353,7 +356,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ResumeButton_IsClickable()
     {
-        this._apiService.RecurringTransfers.Add(new RecurringTransferDto
+        _apiService.RecurringTransfers.Add(new RecurringTransferDto
         {
             Id = Guid.NewGuid(),
             Description = "Paused Transfer",
@@ -381,7 +384,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteButton_ShowsConfirmDialog()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
 
         var cut = Render<RecurringTransfers>();
         var deleteButton = cut.FindAll("button").First(b => b.TextContent.Contains("Delete"));
@@ -396,7 +399,7 @@ public class RecurringTransfersPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void EditButton_OpensEditForm()
     {
-        this._apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
+        _apiService.RecurringTransfers.Add(CreateRecurringTransfer("Monthly Savings"));
 
         var cut = Render<RecurringTransfers>();
         var editButton = cut.FindAll("button").First(b => b.TextContent.Contains("Edit"));

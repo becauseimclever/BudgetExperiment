@@ -29,7 +29,10 @@ public sealed class BudgetCategory
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the category name.
@@ -39,22 +42,34 @@ public sealed class BudgetCategory
     /// <summary>
     /// Gets the icon identifier (e.g., "shopping", "food", "transport").
     /// </summary>
-    public string? Icon { get; private set; }
+    public string? Icon
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the hex color code.
     /// </summary>
-    public string? Color { get; private set; }
+    public string? Color
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the category type.
     /// </summary>
-    public CategoryType Type { get; private set; }
+    public CategoryType Type
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the sort order for display.
     /// </summary>
-    public int SortOrder { get; private set; }
+    public int SortOrder
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the category is active.
@@ -64,32 +79,47 @@ public sealed class BudgetCategory
     /// <summary>
     /// Gets the UTC timestamp when the category was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the category was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget scope (Shared or Personal).
     /// </summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
     /// </summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID of who created this category.
     /// </summary>
-    public Guid CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget goals for this category.
     /// </summary>
-    public IReadOnlyCollection<BudgetGoal> Goals => this._goals.AsReadOnly();
+    public IReadOnlyCollection<BudgetGoal> Goals => _goals.AsReadOnly();
 
     /// <summary>
     /// Creates a new budget category.

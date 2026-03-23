@@ -13,5 +13,8 @@ public sealed class BulkCategorizeRequest
     public IReadOnlyList<Guid> TransactionIds { get; set; } = [];
 
     /// <summary>Gets or sets the target category ID.</summary>
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId
+    {
+        get; set;
+    }
 }

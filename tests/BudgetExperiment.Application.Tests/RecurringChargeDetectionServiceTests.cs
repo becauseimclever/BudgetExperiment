@@ -9,6 +9,7 @@ using BudgetExperiment.Domain.Common;
 using BudgetExperiment.Domain.Identity;
 using BudgetExperiment.Domain.Recurring;
 using BudgetExperiment.Domain.Repositories;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;

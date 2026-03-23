@@ -48,4 +48,57 @@ public interface IRecurringTransferService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created recurring transfer DTO.</returns>
     Task<RecurringTransferDto> CreateAsync(RecurringTransferCreateDto dto, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer identifier.</param>
+    /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transfer DTO, or null if not found.</returns>
+    Task<RecurringTransferDto?> UpdateAsync(Guid id, RecurringTransferUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if deleted, false if not found.</returns>
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Pauses a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transfer DTO, or null if not found.</returns>
+    Task<RecurringTransferDto?> PauseAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resumes a paused recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transfer DTO, or null if not found.</returns>
+    Task<RecurringTransferDto?> ResumeAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Skips the next occurrence of a recurring transfer.
+    /// </summary>
+    /// <param name="id">The recurring transfer identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transfer DTO, or null if not found.</returns>
+    Task<RecurringTransferDto?> SkipNextAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates this instance and all future instances (modifies the series).
+    /// </summary>
+    /// <param name="id">The recurring transfer identifier.</param>
+    /// <param name="instanceDate">The date from which to apply changes.</param>
+    /// <param name="dto">The update data.</param>
+    /// <param name="expectedVersion">Optional concurrency token for optimistic concurrency.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transfer DTO, or null if not found.</returns>
+    Task<RecurringTransferDto?> UpdateFromDateAsync(Guid id, DateOnly instanceDate, RecurringTransferUpdateDto dto, string? expectedVersion = null, CancellationToken cancellationToken = default);
 }

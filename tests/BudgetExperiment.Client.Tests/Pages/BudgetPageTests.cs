@@ -8,8 +8,11 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.Pages;
@@ -27,7 +30,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     public BudgetPageTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._apiService);
+        this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
@@ -109,7 +112,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsSummaryCard_WhenDataExists()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -138,7 +141,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsOnTrackStatusCount()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -164,7 +167,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsWarningStatusCount()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -190,7 +193,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsOverBudgetStatusCount()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -216,7 +219,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsCategoryProgressSection_WhenDataExists()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -254,7 +257,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SetBudgetGoalResult_IsConfigurable()
     {
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
         {
             Id = Guid.NewGuid(),
             CategoryId = Guid.NewGuid(),
@@ -274,7 +277,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void DeleteBudgetGoalResult_IsConfigurable()
     {
-        this._apiService.DeleteBudgetGoalResult = true;
+        _apiService.DeleteBudgetGoalResult = true;
 
         var cut = Render<Budget>();
 
@@ -287,7 +290,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void CopyBudgetGoalsResult_IsConfigurable()
     {
-        this._apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult
+        _apiService.CopyBudgetGoalsResult = new CopyBudgetGoalsResult
         {
             GoalsCreated = 5,
         };
@@ -333,7 +336,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void EmptyState_ShowsManageCategoriesMessage()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -359,7 +362,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsNoBudgetSetStatusCount()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -385,7 +388,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void ShowsOverallProgressPercentage()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,
@@ -412,8 +415,8 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     public void EditGoal_OpensModal_AndSaveTriggersHandler()
     {
         var categoryId = Guid.NewGuid();
-        this._apiService.BudgetSummary = CreateSummaryWithProgress(categoryId);
-        this._apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
+        _apiService.BudgetSummary = CreateSummaryWithProgress(categoryId);
+        _apiService.SetBudgetGoalResult = ApiResult<BudgetGoalDto>.Success(new BudgetGoalDto
         {
             Id = Guid.NewGuid(),
             CategoryId = categoryId,
@@ -446,8 +449,8 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     public void DeleteGoal_TriggersHandler()
     {
         var categoryId = Guid.NewGuid();
-        this._apiService.BudgetSummary = CreateSummaryWithProgress(categoryId);
-        this._apiService.DeleteBudgetGoalResult = true;
+        _apiService.BudgetSummary = CreateSummaryWithProgress(categoryId);
+        _apiService.DeleteBudgetGoalResult = true;
 
         var cut = Render<Budget>();
 
@@ -468,7 +471,7 @@ public class BudgetPageTests : BunitContext, IAsyncLifetime
     [Fact]
     public void SetBudget_ButtonAppearsForNoBudgetCategory()
     {
-        this._apiService.BudgetSummary = new BudgetSummaryDto
+        _apiService.BudgetSummary = new BudgetSummaryDto
         {
             Year = DateTime.Today.Year,
             Month = DateTime.Today.Month,

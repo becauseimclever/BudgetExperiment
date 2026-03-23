@@ -13,22 +13,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class ChatSessionRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChatSessionRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public ChatSessionRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public ChatSessionRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_Session()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ChatSessionRepository(context);
         var session = ChatSession.Create();
 
@@ -37,7 +37,7 @@ public class ChatSessionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert - use shared context to verify persistence
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatSessionRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(session.Id);
 
@@ -50,7 +50,7 @@ public class ChatSessionRepositoryTests
     public async Task GetByIdAsync_Returns_Null_When_Not_Found()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ChatSessionRepository(context);
 
         // Act
@@ -64,7 +64,7 @@ public class ChatSessionRepositoryTests
     public async Task GetActiveSessionAsync_Returns_Active_Session()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ChatSessionRepository(context);
 
         var activeSession = ChatSession.Create();
@@ -76,7 +76,7 @@ public class ChatSessionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatSessionRepository(verifyContext);
         var result = await verifyRepo.GetActiveSessionAsync();
 
@@ -90,7 +90,7 @@ public class ChatSessionRepositoryTests
     public async Task GetActiveSessionAsync_Returns_Null_When_No_Active_Session()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ChatSessionRepository(context);
 
         var closedSession = ChatSession.Create();
@@ -100,7 +100,7 @@ public class ChatSessionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatSessionRepository(verifyContext);
         var result = await verifyRepo.GetActiveSessionAsync();
 
@@ -112,7 +112,7 @@ public class ChatSessionRepositoryTests
     public async Task ListAsync_Returns_Sessions_Ordered_By_LastMessageAtUtc()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ChatSessionRepository(context);
 
         var session1 = ChatSession.Create();
@@ -124,7 +124,7 @@ public class ChatSessionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatSessionRepository(verifyContext);
         var results = await verifyRepo.ListAsync(0, 10);
 
@@ -138,7 +138,7 @@ public class ChatSessionRepositoryTests
     public async Task CountAsync_Returns_Total_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ChatSessionRepository(context);
 
         await repository.AddAsync(ChatSession.Create());
@@ -156,7 +156,7 @@ public class ChatSessionRepositoryTests
     public async Task RemoveAsync_Deletes_Session()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new ChatSessionRepository(context);
         var session = ChatSession.Create();
 
@@ -168,7 +168,7 @@ public class ChatSessionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new ChatSessionRepository(verifyContext);
         var result = await verifyRepo.GetByIdAsync(session.Id);
         Assert.Null(result);

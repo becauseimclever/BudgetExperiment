@@ -29,8 +29,8 @@ public sealed class BudgetsController : ControllerBase
     /// <param name="progressService">The budget progress service.</param>
     public BudgetsController(IBudgetGoalService goalService, IBudgetProgressService progressService)
     {
-        this._goalService = goalService;
-        this._progressService = progressService;
+        _goalService = goalService;
+        _progressService = progressService;
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var goals = await this._goalService.GetByMonthAsync(year, month, cancellationToken);
+        var goals = await _goalService.GetByMonthAsync(year, month, cancellationToken);
         return this.Ok(goals);
     }
 
@@ -67,7 +67,7 @@ public sealed class BudgetsController : ControllerBase
     [ProducesResponseType<IReadOnlyList<BudgetGoalDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetGoalsByCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
     {
-        var goals = await this._goalService.GetByCategoryAsync(categoryId, cancellationToken);
+        var goals = await _goalService.GetByCategoryAsync(categoryId, cancellationToken);
         return this.Ok(goals);
     }
 
@@ -99,7 +99,7 @@ public sealed class BudgetsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var goal = await this._goalService.SetGoalAsync(categoryId, dto, expectedVersion, cancellationToken);
+        var goal = await _goalService.SetGoalAsync(categoryId, dto, expectedVersion, cancellationToken);
         if (goal is null)
         {
             return this.NotFound("Category not found.");
@@ -136,7 +136,7 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var deleted = await this._goalService.DeleteGoalAsync(categoryId, year, month, cancellationToken);
+        var deleted = await _goalService.DeleteGoalAsync(categoryId, year, month, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();
@@ -165,7 +165,7 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var summary = await this._progressService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await _progressService.GetMonthlySummaryAsync(year, month, cancellationToken);
         return this.Ok(summary);
     }
 
@@ -192,7 +192,7 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var progress = await this._progressService.GetProgressAsync(categoryId, year, month, cancellationToken);
+        var progress = await _progressService.GetProgressAsync(categoryId, year, month, cancellationToken);
         if (progress is null)
         {
             return this.NotFound();
@@ -221,7 +221,7 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var summary = await this._progressService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await _progressService.GetMonthlySummaryAsync(year, month, cancellationToken);
         return this.Ok(summary);
     }
 
@@ -253,7 +253,7 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Source and target months must be different.");
         }
 
-        var result = await this._goalService.CopyGoalsAsync(request, cancellationToken);
+        var result = await _goalService.CopyGoalsAsync(request, cancellationToken);
         return this.Ok(result);
     }
 }

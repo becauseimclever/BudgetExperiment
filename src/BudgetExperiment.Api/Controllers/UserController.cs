@@ -27,7 +27,7 @@ public sealed class UserController : ControllerBase
     /// <param name="service">The user settings service.</param>
     public UserController(IUserSettingsService service)
     {
-        this._service = service;
+        _service = service;
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public sealed class UserController : ControllerBase
     [ProducesResponseType<UserProfileDto>(StatusCodes.Status200OK)]
     public IActionResult GetProfile()
     {
-        var profile = this._service.GetCurrentUserProfile();
+        var profile = _service.GetCurrentUserProfile();
         return this.Ok(profile);
     }
 
@@ -53,7 +53,7 @@ public sealed class UserController : ControllerBase
     [ProducesResponseType<UserSettingsDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSettingsAsync(CancellationToken cancellationToken)
     {
-        var settings = await this._service.GetCurrentUserSettingsAsync(cancellationToken);
+        var settings = await _service.GetCurrentUserSettingsAsync(cancellationToken);
         return this.Ok(settings);
     }
 
@@ -70,7 +70,7 @@ public sealed class UserController : ControllerBase
         [FromBody] UserSettingsUpdateDto dto,
         CancellationToken cancellationToken)
     {
-        var settings = await this._service.UpdateCurrentUserSettingsAsync(dto, cancellationToken);
+        var settings = await _service.UpdateCurrentUserSettingsAsync(dto, cancellationToken);
         return this.Ok(settings);
     }
 
@@ -84,7 +84,7 @@ public sealed class UserController : ControllerBase
     [ProducesResponseType<UserSettingsDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> CompleteOnboardingAsync(CancellationToken cancellationToken)
     {
-        var settings = await this._service.CompleteOnboardingAsync(cancellationToken);
+        var settings = await _service.CompleteOnboardingAsync(cancellationToken);
         return this.Ok(settings);
     }
 
@@ -96,7 +96,7 @@ public sealed class UserController : ControllerBase
     [ProducesResponseType<ScopeDto>(StatusCodes.Status200OK)]
     public IActionResult GetScope()
     {
-        var scope = this._service.GetCurrentScope();
+        var scope = _service.GetCurrentScope();
         return this.Ok(scope);
     }
 
@@ -111,7 +111,7 @@ public sealed class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult SetScope([FromBody] ScopeDto dto)
     {
-        this._service.SetCurrentScope(dto);
+        _service.SetCurrentScope(dto);
         return this.Ok(dto);
     }
 }

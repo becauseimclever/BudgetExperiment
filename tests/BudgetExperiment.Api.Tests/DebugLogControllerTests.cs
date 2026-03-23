@@ -16,6 +16,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for <see cref="Controllers.DebugLogController"/>.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class DebugLogControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
@@ -111,19 +112,18 @@ public sealed class DebugLogControllerTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         var traceId = "anon-trace";
-        using var factory = new CustomWebApplicationFactory()
-            .WithWebHostBuilder(builder =>
+        var anonFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder.ConfigureServices(services =>
-                {
-                    var buffer = new DebugLogBuffer();
-                    buffer.Add(CreateEntry(traceId, "Test entry"));
-                    services.AddSingleton<IDebugLogBuffer>(buffer);
-                });
+                var buffer = new DebugLogBuffer();
+                buffer.Add(CreateEntry(traceId, "Test entry"));
+                services.AddSingleton<IDebugLogBuffer>(buffer);
             });
+        });
 
         // Use CreateClient (no auth header) instead of CreateApiClient
-        using var client = factory.CreateClient();
+        using var client = anonFactory.CreateClient();
 
         // Act
         var response = await client.GetAsync($"/api/v1/debug/logs/{traceId}");

@@ -12,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Geocoding API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class GeocodingControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

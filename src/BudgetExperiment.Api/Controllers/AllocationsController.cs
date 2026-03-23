@@ -28,7 +28,7 @@ public sealed class AllocationsController : ControllerBase
     /// <param name="service">The paycheck allocation service.</param>
     public AllocationsController(IPaycheckAllocationService service)
     {
-        this._service = service;
+        _service = service;
     }
 
     /// <summary>
@@ -96,7 +96,7 @@ public sealed class AllocationsController : ControllerBase
             });
         }
 
-        var summary = await this._service.GetAllocationSummaryAsync(
+        var summary = await _service.GetAllocationSummaryAsync(
             paycheckFrequency,
             amount,
             accountId,

@@ -6,6 +6,8 @@ using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace BudgetExperiment.Application.Calendar;
 
 /// <summary>
@@ -23,6 +25,8 @@ public sealed class CalendarGridService : ICalendarGridService
     private readonly IRecurringTransferInstanceProjector _recurringTransferInstanceProjector;
     private readonly IAutoRealizeService _autoRealizeService;
     private readonly ICurrencyProvider _currencyProvider;
+    private readonly IServiceScopeFactory? _scopeFactory;
+    private readonly IUserContext? _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CalendarGridService"/> class.
@@ -35,6 +39,8 @@ public sealed class CalendarGridService : ICalendarGridService
     /// <param name="recurringTransferInstanceProjector">The recurring transfer instance projector.</param>
     /// <param name="autoRealizeService">The auto-realize service.</param>
     /// <param name="currencyProvider">The currency provider.</param>
+    /// <param name="scopeFactory">The scope factory for parallel query scopes.</param>
+    /// <param name="userContext">The current user context.</param>
     public CalendarGridService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
@@ -43,7 +49,9 @@ public sealed class CalendarGridService : ICalendarGridService
         IRecurringInstanceProjector recurringInstanceProjector,
         IRecurringTransferInstanceProjector recurringTransferInstanceProjector,
         IAutoRealizeService autoRealizeService,
-        ICurrencyProvider currencyProvider)
+        ICurrencyProvider currencyProvider,
+        IServiceScopeFactory? scopeFactory = null,
+        IUserContext? userContext = null)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -53,6 +61,8 @@ public sealed class CalendarGridService : ICalendarGridService
         _recurringTransferInstanceProjector = recurringTransferInstanceProjector;
         _autoRealizeService = autoRealizeService;
         _currencyProvider = currencyProvider;
+        _scopeFactory = scopeFactory;
+        _userContext = userContext;
     }
 
     /// <inheritdoc/>
@@ -71,11 +81,52 @@ public sealed class CalendarGridService : ICalendarGridService
         // Auto-realize past-due items if setting is enabled
         await _autoRealizeService.AutoRealizePastDueItemsIfEnabledAsync(today, accountId, cancellationToken);
 
-        // Fetch data sequentially (DbContext is not thread-safe for concurrent operations)
-        var dailyTotalsList = await _transactionRepository.GetDailyTotalsAsync(year, month, accountId, cancellationToken);
+        var dailyTotalsTask = RunInNewScopeAsync(
+            (sp, ct) => sp.GetRequiredService<ITransactionRepository>()
+                .GetDailyTotalsAsync(year, month, accountId, ct),
+            cancellationToken);
+        var recurringTransactionsTask = RunInNewScopeAsync(
+            (sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IRecurringTransactionRepository>();
+                return accountId.HasValue
+                    ? repo.GetByAccountIdAsync(accountId.Value, ct)
+                    : repo.GetActiveAsync(ct);
+            },
+            cancellationToken);
+        var recurringTransfersTask = RunInNewScopeAsync(
+            (sp, ct) =>
+            {
+                var repo = sp.GetRequiredService<IRecurringTransferRepository>();
+                return accountId.HasValue
+                    ? repo.GetByAccountIdAsync(accountId.Value, ct)
+                    : repo.GetActiveAsync(ct);
+            },
+            cancellationToken);
+        var currencyTask = RunInNewScopeAsync(
+            (sp, ct) => sp.GetRequiredService<ICurrencyProvider>().GetCurrencyAsync(ct),
+            cancellationToken);
+        var startingBalanceTask = RunInNewScopeAsync(
+            (sp, ct) => sp.GetRequiredService<IBalanceCalculationService>()
+                .GetOpeningBalanceForDateAsync(gridStartDate, accountId, ct),
+            cancellationToken);
+        var initialBalancesTask = RunInNewScopeAsync(
+            (sp, ct) => sp.GetRequiredService<IBalanceCalculationService>()
+                .GetInitialBalancesByDateRangeAsync(gridStartDate, gridEndDate, accountId, ct),
+            cancellationToken);
+
+        await Task.WhenAll(
+            dailyTotalsTask,
+            recurringTransactionsTask,
+            recurringTransfersTask,
+            currencyTask,
+            startingBalanceTask,
+            initialBalancesTask);
+
+        var dailyTotalsList = await dailyTotalsTask;
         var dailyTotals = dailyTotalsList.ToDictionary(d => d.Date);
-        var recurringTransactions = await GetRecurringTransactionsAsync(accountId, cancellationToken);
-        var recurringTransfers = await GetRecurringTransfersAsync(accountId, cancellationToken);
+        var recurringTransactions = await recurringTransactionsTask;
+        var recurringTransfers = await recurringTransfersTask;
 
         // Project recurring instances for the grid date range using the projector
         var recurringByDate = await _recurringInstanceProjector.GetInstancesByDateRangeAsync(
@@ -93,24 +144,17 @@ public sealed class CalendarGridService : ICalendarGridService
             cancellationToken);
 
         // Build grid days
-        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await currencyTask;
         var days = BuildGridDays(gridStartDate, year, month, today, dailyTotals, recurringByDate, recurringTransfersByDate, currency);
 
         // Calculate starting balance (opening balance for grid start date)
         // This includes initial balances for accounts starting BEFORE grid start,
         // plus transactions before grid start (but not on grid start itself)
-        var startingBalance = await _balanceCalculationService.GetOpeningBalanceForDateAsync(
-            gridStartDate,
-            accountId,
-            cancellationToken);
+        var startingBalance = await startingBalanceTask;
 
         // Get initial balances for accounts that start WITHIN the grid date range
         // These need to be added to the running balance on their respective start dates
-        var initialBalancesInGrid = await _balanceCalculationService.GetInitialBalancesByDateRangeAsync(
-            gridStartDate,
-            gridEndDate,
-            accountId,
-            cancellationToken);
+        var initialBalancesInGrid = await initialBalancesTask;
 
         CalculateRunningBalances(days, startingBalance.Amount, initialBalancesInGrid, currency);
 
@@ -222,21 +266,83 @@ public sealed class CalendarGridService : ICalendarGridService
         };
     }
 
-    private async Task<IReadOnlyList<RecurringTransaction>> GetRecurringTransactionsAsync(
-        Guid? accountId,
+    private async Task<T> RunInNewScopeAsync<T>(
+        Func<IServiceProvider, CancellationToken, Task<T>> action,
         CancellationToken cancellationToken)
     {
-        return accountId.HasValue
-            ? await _recurringRepository.GetByAccountIdAsync(accountId.Value, cancellationToken)
-            : await _recurringRepository.GetActiveAsync(cancellationToken);
+        if (_scopeFactory is null || _userContext is null)
+        {
+            var provider = new FallbackServiceProvider(
+                _transactionRepository,
+                _recurringRepository,
+                _recurringTransferRepository,
+                _balanceCalculationService,
+                _currencyProvider);
+            var fallbackTask = action(provider, cancellationToken);
+            return fallbackTask is null
+                ? default!
+                : await fallbackTask;
+        }
+
+        using var scope = _scopeFactory.CreateScope();
+        var scopedUserContext = scope.ServiceProvider.GetRequiredService<IUserContext>();
+        scopedUserContext.SetScope(_userContext.CurrentScope);
+        var scopedTask = action(scope.ServiceProvider, cancellationToken);
+        return scopedTask is null
+            ? default!
+            : await scopedTask;
     }
 
-    private async Task<IReadOnlyList<RecurringTransfer>> GetRecurringTransfersAsync(
-        Guid? accountId,
-        CancellationToken cancellationToken)
+    private sealed class FallbackServiceProvider : IServiceProvider
     {
-        return accountId.HasValue
-            ? await _recurringTransferRepository.GetByAccountIdAsync(accountId.Value, cancellationToken)
-            : await _recurringTransferRepository.GetActiveAsync(cancellationToken);
+        private readonly ITransactionRepository _transactionRepository;
+        private readonly IRecurringTransactionRepository _recurringRepository;
+        private readonly IRecurringTransferRepository _recurringTransferRepository;
+        private readonly IBalanceCalculationService _balanceCalculationService;
+        private readonly ICurrencyProvider _currencyProvider;
+
+        public FallbackServiceProvider(
+            ITransactionRepository transactionRepository,
+            IRecurringTransactionRepository recurringRepository,
+            IRecurringTransferRepository recurringTransferRepository,
+            IBalanceCalculationService balanceCalculationService,
+            ICurrencyProvider currencyProvider)
+        {
+            _transactionRepository = transactionRepository;
+            _recurringRepository = recurringRepository;
+            _recurringTransferRepository = recurringTransferRepository;
+            _balanceCalculationService = balanceCalculationService;
+            _currencyProvider = currencyProvider;
+        }
+
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(ITransactionRepository))
+            {
+                return _transactionRepository;
+            }
+
+            if (serviceType == typeof(IRecurringTransactionRepository))
+            {
+                return _recurringRepository;
+            }
+
+            if (serviceType == typeof(IRecurringTransferRepository))
+            {
+                return _recurringTransferRepository;
+            }
+
+            if (serviceType == typeof(IBalanceCalculationService))
+            {
+                return _balanceCalculationService;
+            }
+
+            if (serviceType == typeof(ICurrencyProvider))
+            {
+                return _currencyProvider;
+            }
+
+            return null;
+        }
     }
 }

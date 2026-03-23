@@ -5,7 +5,9 @@
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Settings;
+
 using Moq;
+
 using Xunit;
 
 namespace BudgetExperiment.Application.Tests;
@@ -29,23 +31,23 @@ public sealed class PastDueServiceTests
     /// </summary>
     public PastDueServiceTests()
     {
-        this._recurringTransactionRepo = new Mock<IRecurringTransactionRepository>();
-        this._recurringTransferRepo = new Mock<IRecurringTransferRepository>();
-        this._transactionRepo = new Mock<ITransactionRepository>();
-        this._accountRepo = new Mock<IAccountRepository>();
-        this._transactionRealizationService = new Mock<IRecurringTransactionRealizationService>();
-        this._transferRealizationService = new Mock<IRecurringTransferRealizationService>();
-        this._currencyProvider = new Mock<ICurrencyProvider>();
-        this._currencyProvider.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
+        _recurringTransactionRepo = new Mock<IRecurringTransactionRepository>();
+        _recurringTransferRepo = new Mock<IRecurringTransferRepository>();
+        _transactionRepo = new Mock<ITransactionRepository>();
+        _accountRepo = new Mock<IAccountRepository>();
+        _transactionRealizationService = new Mock<IRecurringTransactionRealizationService>();
+        _transferRealizationService = new Mock<IRecurringTransferRealizationService>();
+        _currencyProvider = new Mock<ICurrencyProvider>();
+        _currencyProvider.Setup(x => x.GetCurrencyAsync(It.IsAny<CancellationToken>())).ReturnsAsync("USD");
 
-        this._service = new PastDueService(
-            this._recurringTransactionRepo.Object,
-            this._recurringTransferRepo.Object,
-            this._transactionRepo.Object,
-            this._accountRepo.Object,
-            this._transactionRealizationService.Object,
-            this._transferRealizationService.Object,
-            this._currencyProvider.Object,
+        _service = new PastDueService(
+            _recurringTransactionRepo.Object,
+            _recurringTransferRepo.Object,
+            _transactionRepo.Object,
+            _accountRepo.Object,
+            _transactionRealizationService.Object,
+            _transferRealizationService.Object,
+            _currencyProvider.Object,
             () => new DateOnly(2026, 1, 11)); // Fixed "today" for testing
     }
 
@@ -57,13 +59,13 @@ public sealed class PastDueServiceTests
     public async Task GetPastDueItemsAsync_NoRecurringItems_ReturnsEmpty()
     {
         // Arrange
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Empty(result.Items);
@@ -90,19 +92,19 @@ public sealed class PastDueServiceTests
 
         var account = Account.Create("Checking", AccountType.Checking);
 
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([recurring]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        this._accountRepo.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _accountRepo.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(account);
-        this._recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecurringTransactionException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Transaction?)null);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Single(result.Items);
@@ -137,15 +139,15 @@ public sealed class PastDueServiceTests
 
         var exception = RecurringTransactionException.CreateSkipped(recurring.Id, new DateOnly(2026, 1, 5));
 
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([recurring]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        this._recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync(exception);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Empty(result.Items);
@@ -177,17 +179,17 @@ public sealed class PastDueServiceTests
             new DateOnly(2026, 1, 5),
             null);
 
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([recurring]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        this._recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecurringTransactionException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync(realizedTransaction);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Empty(result.Items);
@@ -210,13 +212,13 @@ public sealed class PastDueServiceTests
             new DateOnly(2026, 1, 15), // Future date
             null);
 
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([recurring]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Empty(result.Items);
@@ -244,21 +246,21 @@ public sealed class PastDueServiceTests
         var sourceAccount = Account.Create("Checking", AccountType.Checking);
         var destAccount = Account.Create("Savings", AccountType.Savings);
 
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([recurring]);
-        this._accountRepo.Setup(r => r.GetByIdAsync(sourceAccountId, It.IsAny<CancellationToken>()))
+        _accountRepo.Setup(r => r.GetByIdAsync(sourceAccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(sourceAccount);
-        this._accountRepo.Setup(r => r.GetByIdAsync(destAccountId, It.IsAny<CancellationToken>()))
+        _accountRepo.Setup(r => r.GetByIdAsync(destAccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(destAccount);
-        this._recurringTransferRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 1), It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetExceptionAsync(recurring.Id, new DateOnly(2026, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecurringTransferException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(recurring.Id, new DateOnly(2026, 1, 1), It.IsAny<CancellationToken>()))
+        _transactionRepo.Setup(r => r.GetByRecurringTransferInstanceAsync(recurring.Id, new DateOnly(2026, 1, 1), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Single(result.Items);
@@ -290,13 +292,13 @@ public sealed class PastDueServiceTests
             new DateOnly(2025, 11, 1), // Started Nov 1
             new DateOnly(2025, 11, 30)); // Ended Nov 30 - no occurrences in Dec-Jan
 
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([recurring]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Empty(result.Items);
@@ -323,19 +325,19 @@ public sealed class PastDueServiceTests
 
         var targetAccount = Account.Create("Checking", AccountType.Checking);
 
-        this._recurringTransactionRepo.Setup(r => r.GetByAccountIdAsync(targetAccountId, It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetByAccountIdAsync(targetAccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([targetRecurring]);
-        this._recurringTransferRepo.Setup(r => r.GetByAccountIdAsync(targetAccountId, It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetByAccountIdAsync(targetAccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        this._accountRepo.Setup(r => r.GetByIdAsync(targetAccountId, It.IsAny<CancellationToken>()))
+        _accountRepo.Setup(r => r.GetByIdAsync(targetAccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(targetAccount);
-        this._recurringTransactionRepo.Setup(r => r.GetExceptionAsync(targetRecurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetExceptionAsync(targetRecurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecurringTransactionException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(targetRecurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(targetRecurring.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Transaction?)null);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync(targetAccountId);
+        var result = await _service.GetPastDueItemsAsync(targetAccountId);
 
         // Assert
         Assert.Single(result.Items);
@@ -370,23 +372,23 @@ public sealed class PastDueServiceTests
 
         var account = Account.Create("Checking", AccountType.Checking);
 
-        this._recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([recurring1, recurring2]);
-        this._recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+        _recurringTransferRepo.Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        this._accountRepo.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+        _accountRepo.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(account);
-        this._recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring1.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring1.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecurringTransactionException?)null);
-        this._recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring2.Id, new DateOnly(2026, 1, 8), It.IsAny<CancellationToken>()))
+        _recurringTransactionRepo.Setup(r => r.GetExceptionAsync(recurring2.Id, new DateOnly(2026, 1, 8), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecurringTransactionException?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring1.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring1.Id, new DateOnly(2026, 1, 5), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Transaction?)null);
-        this._transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring2.Id, new DateOnly(2026, 1, 8), It.IsAny<CancellationToken>()))
+        _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(recurring2.Id, new DateOnly(2026, 1, 8), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Transaction?)null);
 
         // Act
-        var result = await this._service.GetPastDueItemsAsync();
+        var result = await _service.GetPastDueItemsAsync();
 
         // Assert
         Assert.Equal(2, result.TotalCount);
@@ -414,14 +416,14 @@ public sealed class PastDueServiceTests
             ],
         };
 
-        this._transactionRealizationService
+        _transactionRealizationService
             .Setup(s => s.RealizeInstanceAsync(
                 transactionId,
                 It.Is<RealizeRecurringTransactionRequest>(r => r.InstanceDate == new DateOnly(2026, 1, 5)),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TransactionDto());
 
-        this._transferRealizationService
+        _transferRealizationService
             .Setup(s => s.RealizeInstanceAsync(
                 transferId,
                 It.Is<RealizeRecurringTransferRequest>(r => r.InstanceDate == new DateOnly(2026, 1, 6)),
@@ -429,7 +431,7 @@ public sealed class PastDueServiceTests
             .ReturnsAsync(new TransferResponse());
 
         // Act
-        var result = await this._service.RealizeBatchAsync(request);
+        var result = await _service.RealizeBatchAsync(request);
 
         // Assert
         Assert.Equal(2, result.SuccessCount);
@@ -455,7 +457,7 @@ public sealed class PastDueServiceTests
         };
 
         // Act
-        var result = await this._service.RealizeBatchAsync(request);
+        var result = await _service.RealizeBatchAsync(request);
 
         // Assert
         Assert.Equal(0, result.SuccessCount);
@@ -484,14 +486,14 @@ public sealed class PastDueServiceTests
             ],
         };
 
-        this._transactionRealizationService
+        _transactionRealizationService
             .Setup(s => s.RealizeInstanceAsync(
                 successId,
                 It.IsAny<RealizeRecurringTransactionRequest>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TransactionDto());
 
-        this._transactionRealizationService
+        _transactionRealizationService
             .Setup(s => s.RealizeInstanceAsync(
                 failId,
                 It.IsAny<RealizeRecurringTransactionRequest>(),
@@ -499,7 +501,7 @@ public sealed class PastDueServiceTests
             .ThrowsAsync(new DomainException("Already realized"));
 
         // Act
-        var result = await this._service.RealizeBatchAsync(request);
+        var result = await _service.RealizeBatchAsync(request);
 
         // Assert
         Assert.Equal(1, result.SuccessCount);

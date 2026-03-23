@@ -10,13 +10,19 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class BatchRealizeFailure
 {
     /// <summary>Gets or sets the recurring item identifier.</summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the type of recurring item.</summary>
     public string Type { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the instance date.</summary>
-    public DateOnly InstanceDate { get; set; }
+    public DateOnly InstanceDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the error message.</summary>
     public string Error { get; set; } = string.Empty;

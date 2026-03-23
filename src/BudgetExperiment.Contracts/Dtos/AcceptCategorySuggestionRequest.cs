@@ -12,17 +12,26 @@ public sealed record AcceptCategorySuggestionRequest
     /// <summary>
     /// Gets the custom name to use instead of the suggested name.
     /// </summary>
-    public string? CustomName { get; init; }
+    public string? CustomName
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the custom icon to use.
     /// </summary>
-    public string? CustomIcon { get; init; }
+    public string? CustomIcon
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the custom color to use.
     /// </summary>
-    public string? CustomColor { get; init; }
+    public string? CustomColor
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether to auto-create categorization rules.

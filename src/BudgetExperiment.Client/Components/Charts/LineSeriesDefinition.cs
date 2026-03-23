@@ -12,20 +12,32 @@ public sealed record LineSeriesDefinition
     /// <summary>
     /// Gets the series identifier.
     /// </summary>
-    public required string Id { get; init; }
+    public required string Id
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the label for the series.
     /// </summary>
-    public required string Label { get; init; }
+    public required string Label
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the series color.
     /// </summary>
-    public required string Color { get; init; }
+    public required string Color
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the line is dashed.
     /// </summary>
-    public bool Dashed { get; init; }
+    public bool Dashed
+    {
+        get; init;
+    }
 }

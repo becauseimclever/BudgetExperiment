@@ -12,5 +12,8 @@ public sealed record BulkAcceptCategorySuggestionsRequest
     /// <summary>
     /// Gets the list of suggestion IDs to accept.
     /// </summary>
-    public required IReadOnlyList<Guid> SuggestionIds { get; init; }
+    public required IReadOnlyList<Guid> SuggestionIds
+    {
+        get; init;
+    }
 }

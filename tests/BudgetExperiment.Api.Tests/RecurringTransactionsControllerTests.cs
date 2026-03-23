@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the RecurringTransactions API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -24,8 +25,8 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     /// <param name="factory">The test factory.</param>
     public RecurringTransactionsControllerTests(CustomWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -36,7 +37,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task GetAll_Returns_200_WithEmptyList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/recurring-transactions");
+        var response = await _client.GetAsync("/api/v1/recurring-transactions");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -52,7 +53,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -76,7 +77,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", dto);
+        var response = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -90,7 +91,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task Delete_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -111,7 +112,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}", dto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -125,7 +126,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task Pause_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/pause", null);
+        var response = await _client.PostAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/pause", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -139,7 +140,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task Resume_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/resume", null);
+        var response = await _client.PostAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/resume", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -153,7 +154,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task SkipNext_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/skip", null);
+        var response = await _client.PostAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/skip", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -167,7 +168,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task GetProjected_Returns_200_WithValidRange()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/recurring-transactions/projected?from=2026-01-01&to=2026-12-31");
+        var response = await _client.GetAsync("/api/v1/recurring-transactions/projected?from=2026-01-01&to=2026-12-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -183,7 +184,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task GetProjected_Returns_400_WhenFromAfterTo()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/recurring-transactions/projected?from=2026-12-31&to=2026-01-01");
+        var response = await _client.GetAsync("/api/v1/recurring-transactions/projected?from=2026-12-31&to=2026-01-01");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -197,7 +198,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task GetInstances_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances?from=2026-01-01&to=2026-12-31");
+        var response = await _client.GetAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances?from=2026-01-01&to=2026-12-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -218,7 +219,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances/2026-01-15", dto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances/2026-01-15", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -232,7 +233,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task SkipInstance_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances/2026-01-15");
+        var response = await _client.DeleteAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances/2026-01-15");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -253,7 +254,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances/2026-01-15/future", dto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/instances/2026-01-15/future", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -267,7 +268,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     public async Task GetImportPatterns_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/import-patterns");
+        var response = await _client.GetAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/import-patterns");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -287,7 +288,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/import-patterns", dto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transactions/{Guid.NewGuid()}/import-patterns", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -302,7 +303,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     {
         // Arrange - create an account first
         var accountDto = new AccountCreateDto { Name = "ETag Recurring Account", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransactionCreateDto
@@ -313,11 +314,11 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
             Frequency = "Monthly",
             StartDate = new DateOnly(2026, 1, 1),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<RecurringTransactionDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transactions/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/recurring-transactions/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -334,7 +335,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "IfMatch Valid Recurring", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransactionCreateDto
@@ -345,10 +346,10 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
             Frequency = "Monthly",
             StartDate = new DateOnly(2026, 1, 1),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<RecurringTransactionDto>();
 
-        var getResponse = await this._client.GetAsync($"/api/v1/recurring-transactions/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/recurring-transactions/{created!.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new RecurringTransactionUpdateDto
@@ -364,7 +365,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -382,7 +383,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "Stale IfMatch Recurring", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransactionCreateDto
@@ -393,7 +394,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
             Frequency = "Monthly",
             StartDate = new DateOnly(2026, 1, 1),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<RecurringTransactionDto>();
 
         var staleETag = new EntityTagHeaderValue("\"99999999\"");
@@ -410,7 +411,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -425,7 +426,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "No IfMatch Recurring", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransactionCreateDto
@@ -436,7 +437,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
             Frequency = "Monthly",
             StartDate = new DateOnly(2026, 1, 1),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<RecurringTransactionDto>();
 
         var updateDto = new RecurringTransactionUpdateDto
@@ -447,7 +448,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transactions/{created!.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transactions/{created!.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -464,7 +465,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "Instance Stale IfMatch", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransactionCreateDto
@@ -476,7 +477,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
             DayOfMonth = 15,
             StartDate = new DateOnly(2026, 1, 15),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<RecurringTransactionDto>();
 
         var staleETag = new EntityTagHeaderValue("\"99999999\"");
@@ -492,7 +493,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -507,7 +508,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "Future Stale IfMatch", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransactionCreateDto
@@ -519,7 +520,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
             DayOfMonth = 1,
             StartDate = new DateOnly(2026, 1, 1),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<RecurringTransactionDto>();
 
         var staleETag = new EntityTagHeaderValue("\"99999999\"");
@@ -536,7 +537,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -551,7 +552,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
     {
         // Arrange
         var accountDto = new AccountCreateDto { Name = "Future Valid IfMatch", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountDto);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountDto);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransactionCreateDto
@@ -563,10 +564,10 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
             DayOfMonth = 1,
             StartDate = new DateOnly(2026, 1, 1),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transactions", createDto);
         var created = await createResponse.Content.ReadFromJsonAsync<RecurringTransactionDto>();
 
-        var getResponse = await this._client.GetAsync($"/api/v1/recurring-transactions/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/recurring-transactions/{created!.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new RecurringTransactionUpdateDto
@@ -582,7 +583,7 @@ public sealed class RecurringTransactionsControllerTests : IClassFixture<CustomW
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

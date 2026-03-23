@@ -13,6 +13,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the RecurringTransfers API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -24,8 +25,8 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     /// <param name="factory">The test factory.</param>
     public RecurringTransfersControllerTests(CustomWebApplicationFactory factory)
     {
-        this._factory = factory;
-        this._client = factory.CreateApiClient();
+        _factory = factory;
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -36,7 +37,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetAll_Returns_200_WithEmptyList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/recurring-transfers");
+        var response = await _client.GetAsync("/api/v1/recurring-transfers");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -52,7 +53,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetAll_WithActiveFilter_Returns_200()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/recurring-transfers?isActive=true");
+        var response = await _client.GetAsync("/api/v1/recurring-transfers?isActive=true");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -68,7 +69,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetAll_WithAccountIdFilter_Returns_200()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transfers?accountId={Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/recurring-transfers?accountId={Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -84,7 +85,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -109,7 +110,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/recurring-transfers", dto);
+        var response = await _client.PostAsJsonAsync("/api/v1/recurring-transfers", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -123,7 +124,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task Delete_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -145,7 +146,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}", dto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -159,7 +160,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task Pause_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/pause", null);
+        var response = await _client.PostAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/pause", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -173,7 +174,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task Resume_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/resume", null);
+        var response = await _client.PostAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/resume", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -187,7 +188,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task SkipNext_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.PostAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/skip", null);
+        var response = await _client.PostAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/skip", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -201,7 +202,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetProjected_Returns_200_WithValidRange()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/recurring-transfers/projected?from=2026-01-01&to=2026-12-31");
+        var response = await _client.GetAsync("/api/v1/recurring-transfers/projected?from=2026-01-01&to=2026-12-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -217,7 +218,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetProjected_Returns_400_WhenFromAfterTo()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/recurring-transfers/projected?from=2026-12-31&to=2026-01-01");
+        var response = await _client.GetAsync("/api/v1/recurring-transfers/projected?from=2026-12-31&to=2026-01-01");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -231,7 +232,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetProjected_WithAccountIdFilter_Returns_200()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transfers/projected?from=2026-01-01&to=2026-12-31&accountId={Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/recurring-transfers/projected?from=2026-01-01&to=2026-12-31&accountId={Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -245,7 +246,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetInstances_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances?from=2026-01-01&to=2026-12-31");
+        var response = await _client.GetAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances?from=2026-01-01&to=2026-12-31");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -259,7 +260,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task GetInstances_Returns_400_WhenFromAfterTo()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances?from=2026-12-31&to=2026-01-01");
+        var response = await _client.GetAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances?from=2026-12-31&to=2026-01-01");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -280,7 +281,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances/2026-01-15", dto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances/2026-01-15", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -294,7 +295,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     public async Task SkipInstance_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances/2026-01-15");
+        var response = await _client.DeleteAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances/2026-01-15");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -316,7 +317,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances/2026-01-15/future", dto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transfers/{Guid.NewGuid()}/instances/2026-01-15/future", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -333,7 +334,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         var created = await this.CreateRecurringTransferAsync();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
+        var response = await _client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -350,7 +351,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     {
         // Arrange
         var created = await this.CreateRecurringTransferAsync();
-        var getResponse = await this._client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new RecurringTransferUpdateDto
@@ -366,7 +367,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -399,7 +400,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -422,7 +423,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/recurring-transfers/{created.Id}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/recurring-transfers/{created.Id}", updateDto);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -453,7 +454,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -483,7 +484,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -498,7 +499,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
     {
         // Arrange
         var created = await this.CreateRecurringTransferAsync(dayOfMonth: 1, startDate: new DateOnly(2026, 1, 1));
-        var getResponse = await this._client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/recurring-transfers/{created.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateDto = new RecurringTransferUpdateDto
@@ -514,7 +515,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -528,11 +529,11 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
         DateOnly? startDate = null)
     {
         var sourceAccountDto = new AccountCreateDto { Name = $"RT Source {Guid.NewGuid():N}", Type = "Checking" };
-        var sourceResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", sourceAccountDto);
+        var sourceResponse = await _client.PostAsJsonAsync("/api/v1/accounts", sourceAccountDto);
         var sourceAccount = await sourceResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var destAccountDto = new AccountCreateDto { Name = $"RT Dest {Guid.NewGuid():N}", Type = "Savings" };
-        var destResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", destAccountDto);
+        var destResponse = await _client.PostAsJsonAsync("/api/v1/accounts", destAccountDto);
         var destAccount = await destResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var createDto = new RecurringTransferCreateDto
@@ -545,7 +546,7 @@ public sealed class RecurringTransfersControllerTests : IClassFixture<CustomWebA
             DayOfMonth = dayOfMonth,
             StartDate = startDate ?? new DateOnly(2026, 1, 1),
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/recurring-transfers", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/recurring-transfers", createDto);
         createResponse.EnsureSuccessStatusCode();
         return (await createResponse.Content.ReadFromJsonAsync<RecurringTransferDto>())!;
     }

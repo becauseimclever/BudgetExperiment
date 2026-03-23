@@ -28,7 +28,7 @@ public sealed class CustomReportsController : ControllerBase
     /// <param name="layoutService">Layout service.</param>
     public CustomReportsController(ICustomReportLayoutService layoutService)
     {
-        this._layoutService = layoutService;
+        _layoutService = layoutService;
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public sealed class CustomReportsController : ControllerBase
     [ProducesResponseType<IReadOnlyList<CustomReportLayoutDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        var layouts = await this._layoutService.GetAllAsync(cancellationToken);
+        var layouts = await _layoutService.GetAllAsync(cancellationToken);
         return this.Ok(layouts);
     }
 
@@ -55,7 +55,7 @@ public sealed class CustomReportsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var layout = await this._layoutService.GetByIdAsync(id, cancellationToken);
+        var layout = await _layoutService.GetByIdAsync(id, cancellationToken);
         if (layout is null)
         {
             return this.NotFound();
@@ -82,7 +82,7 @@ public sealed class CustomReportsController : ControllerBase
         [FromBody] CustomReportLayoutCreateDto dto,
         CancellationToken cancellationToken)
     {
-        var layout = await this._layoutService.CreateAsync(dto, cancellationToken);
+        var layout = await _layoutService.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = layout.Id }, layout);
     }
 
@@ -108,7 +108,7 @@ public sealed class CustomReportsController : ControllerBase
             expectedVersion = ifMatch.ToString().Trim('"');
         }
 
-        var layout = await this._layoutService.UpdateAsync(id, dto, expectedVersion, cancellationToken);
+        var layout = await _layoutService.UpdateAsync(id, dto, expectedVersion, cancellationToken);
         if (layout is null)
         {
             return this.NotFound();
@@ -133,7 +133,7 @@ public sealed class CustomReportsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await this._layoutService.DeleteAsync(id, cancellationToken);
+        var deleted = await _layoutService.DeleteAsync(id, cancellationToken);
         return deleted ? this.NoContent() : this.NotFound();
     }
 }

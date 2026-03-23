@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests;

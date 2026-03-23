@@ -559,6 +559,58 @@ public class CategorizationEngineTests
         Assert.Equal(GroceryCategoryId, transaction.CategoryId);
     }
 
+    [Fact]
+    public async Task ApplyRulesAsync_MultipleCalls_UsesCachedRules()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var rules = new List<CategorizationRule>
+        {
+            CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", categoryId, priority: 1),
+        };
+        var accountId = Guid.NewGuid();
+        var t1 = Transaction.Create(accountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 1), "WALMART #1");
+        var t2 = Transaction.Create(accountId, MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 2), "WALMART #2");
+        var (engine, ruleRepo, _) = CreateEngine(rules, new List<Transaction> { t1, t2 });
+
+        // Act — apply rules twice on the same engine instance
+        await engine.ApplyRulesAsync(new[] { t1.Id });
+        await engine.ApplyRulesAsync(new[] { t2.Id });
+
+        // Assert — rule repository queried only once; second call used cached rules
+        ruleRepo.Verify(r => r.GetActiveByPriorityAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ApplyRulesAsync_StringRuleMatchesAllTransactions_RegexRuleNeverApplied()
+    {
+        // Arrange — 500 transactions all matching a Contains rule; regex rule has higher priority
+        // but string rules are always evaluated before regex rules
+        var categoryId = Guid.NewGuid();
+        var containsRule = CategorizationRule.Create(
+            "Walmart Contains", RuleMatchType.Contains, "WALMART", categoryId, priority: 10);
+        var regexRule = CategorizationRule.Create(
+            "Walmart Regex", RuleMatchType.Regex, "WALMART.*", Guid.NewGuid(), priority: 5);
+
+        var accountId = Guid.NewGuid();
+        var transactions = Enumerable.Range(0, 500)
+            .Select(i => Transaction.Create(
+                accountId,
+                MoneyValue.Create("USD", -(i + 1)),
+                new DateOnly(2026, 1, 15),
+                $"WALMART STORE #{i}"))
+            .ToList();
+
+        var (engine, _, _) = CreateEngine([containsRule, regexRule], transactions);
+
+        // Act
+        var result = await engine.ApplyRulesAsync(transactions.Select(t => t.Id));
+
+        // Assert — all 500 categorized by the string Contains rule, not the regex rule
+        Assert.Equal(500, result.Categorized);
+        Assert.All(transactions, t => Assert.Equal(categoryId, t.CategoryId));
+    }
+
     private static (CategorizationEngine Engine, Mock<ICategorizationRuleRepository> RuleRepo, Mock<ITransactionRepository> TransactionRepo)
         CreateEngine(List<CategorizationRule> rules, List<Transaction>? transactions = null)
     {

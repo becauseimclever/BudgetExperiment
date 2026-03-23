@@ -13,22 +13,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class RuleSuggestionRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RuleSuggestionRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public RuleSuggestionRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public RuleSuggestionRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task AddAsync_And_GetByIdAsync_Persists_Suggestion()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
         var categoryId = Guid.NewGuid();
         var suggestion = RuleSuggestion.CreateNewRuleSuggestion(
@@ -47,7 +47,7 @@ public class RuleSuggestionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RuleSuggestionRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(suggestion.Id);
 
@@ -65,7 +65,7 @@ public class RuleSuggestionRepositoryTests
     public async Task GetByIdAsync_Returns_Null_When_Not_Found()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         // Act
@@ -79,7 +79,7 @@ public class RuleSuggestionRepositoryTests
     public async Task GetPendingAsync_Returns_Only_Pending_Suggestions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var pending1 = CreateTestSuggestion("AMAZON.*", "Amazon Rule");
@@ -104,7 +104,7 @@ public class RuleSuggestionRepositoryTests
     public async Task GetPendingByTypeAsync_Filters_By_Type()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var newRule = CreateTestSuggestion("UBER.*", "Uber Rule");
@@ -141,7 +141,7 @@ public class RuleSuggestionRepositoryTests
     public async Task GetByStatusAsync_Paginates_Results()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         for (int i = 0; i < 10; i++)
@@ -166,7 +166,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingWithPatternAsync_Returns_True_When_Exists()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var suggestion = CreateTestSuggestion("STARBUCKS.*", "Starbucks Rule");
@@ -187,7 +187,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingWithPatternAsync_Returns_False_For_Accepted_Suggestions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var suggestion = CreateTestSuggestion("CHIPOTLE.*", "Chipotle Rule");
@@ -207,7 +207,7 @@ public class RuleSuggestionRepositoryTests
     public async Task AddRangeAsync_Persists_Multiple_Suggestions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var suggestions = new List<RuleSuggestion>
@@ -222,7 +222,7 @@ public class RuleSuggestionRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RuleSuggestionRepository(verifyContext);
         var count = await verifyRepo.CountAsync();
 
@@ -233,7 +233,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ListAsync_Orders_By_CreatedAtUtc_Descending()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var first = CreateTestSuggestion("FIRST.*", "First Rule");
@@ -259,7 +259,7 @@ public class RuleSuggestionRepositoryTests
     public async Task RemoveAsync_Deletes_Suggestion()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var suggestion = CreateTestSuggestion("DELETEME.*", "To Delete");
@@ -280,7 +280,7 @@ public class RuleSuggestionRepositoryTests
     public async Task Persists_ConflictingRuleIds_And_SampleDescriptions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var conflictingIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
@@ -295,7 +295,7 @@ public class RuleSuggestionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RuleSuggestionRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(suggestion.Id);
 
@@ -310,7 +310,7 @@ public class RuleSuggestionRepositoryTests
     public async Task Persists_SampleDescriptions()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var samples = new List<string> { "Sample 1", "Sample 2", "Sample 3" };
@@ -329,7 +329,7 @@ public class RuleSuggestionRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new RuleSuggestionRepository(verifyContext);
         var retrieved = await verifyRepo.GetByIdAsync(suggestion.Id);
 
@@ -343,7 +343,7 @@ public class RuleSuggestionRepositoryTests
     public async Task CountAsync_Returns_Total_Count()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         await repository.AddAsync(CreateTestSuggestion("A.*", "Rule A"));
@@ -362,7 +362,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingForRuleAsync_Returns_True_When_Exists()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var targetRuleId = Guid.NewGuid();
@@ -386,7 +386,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingForRuleAsync_Returns_False_When_Not_Exists()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         // Act
@@ -400,7 +400,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingForRuleAsync_Returns_False_For_Different_Type()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var targetRuleId = Guid.NewGuid();
@@ -424,7 +424,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingForRulesAsync_Returns_True_When_Same_Rules_Exist()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var ruleIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
@@ -448,7 +448,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingForRulesAsync_Returns_False_When_Different_Rules()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         var ruleIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
@@ -473,7 +473,7 @@ public class RuleSuggestionRepositoryTests
     public async Task ExistsPendingForRulesAsync_Returns_False_For_Empty_List()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var repository = new RuleSuggestionRepository(context);
 
         // Act

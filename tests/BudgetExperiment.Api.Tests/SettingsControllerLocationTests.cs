@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Net.Http.Json;
+
 using BudgetExperiment.Contracts.Dtos;
 
 namespace BudgetExperiment.Api.Tests;
@@ -11,6 +12,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the DELETE /api/v1/settings/location-data endpoint.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class SettingsControllerLocationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

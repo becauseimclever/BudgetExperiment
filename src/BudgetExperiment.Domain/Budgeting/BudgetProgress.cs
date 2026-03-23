@@ -29,7 +29,10 @@ public sealed record BudgetProgress
     /// <summary>
     /// Gets the category identifier.
     /// </summary>
-    public Guid CategoryId { get; init; }
+    public Guid CategoryId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the category name.
@@ -39,12 +42,18 @@ public sealed record BudgetProgress
     /// <summary>
     /// Gets the category icon identifier.
     /// </summary>
-    public string? CategoryIcon { get; init; }
+    public string? CategoryIcon
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the category hex color code.
     /// </summary>
-    public string? CategoryColor { get; init; }
+    public string? CategoryColor
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the target budget amount.
@@ -64,17 +73,26 @@ public sealed record BudgetProgress
     /// <summary>
     /// Gets the percentage of budget used.
     /// </summary>
-    public decimal PercentUsed { get; init; }
+    public decimal PercentUsed
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the budget status.
     /// </summary>
-    public BudgetStatus Status { get; init; }
+    public BudgetStatus Status
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of transactions in this category.
     /// </summary>
-    public int TransactionCount { get; init; }
+    public int TransactionCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Creates a budget progress for a category with a budget target.

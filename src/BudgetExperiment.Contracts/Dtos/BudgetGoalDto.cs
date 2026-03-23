@@ -12,12 +12,18 @@ public sealed class BudgetGoalDto
     /// <summary>
     /// Gets or sets the goal identifier.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category identifier.
     /// </summary>
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category name.
@@ -27,12 +33,18 @@ public sealed class BudgetGoalDto
     /// <summary>
     /// Gets or sets the year.
     /// </summary>
-    public int Year { get; set; }
+    public int Year
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the month (1-12).
     /// </summary>
-    public int Month { get; set; }
+    public int Month
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the target amount.
@@ -42,5 +54,8 @@ public sealed class BudgetGoalDto
     /// <summary>
     /// Gets or sets the concurrency token for optimistic concurrency.
     /// </summary>
-    public string? Version { get; set; }
+    public string? Version
+    {
+        get; set;
+    }
 }

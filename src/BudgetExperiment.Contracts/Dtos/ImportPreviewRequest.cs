@@ -12,7 +12,10 @@ public sealed record ImportPreviewRequest
     /// <summary>
     /// Gets the target account ID for the import.
     /// </summary>
-    public Guid AccountId { get; init; }
+    public Guid AccountId
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the raw CSV rows (without header if HasHeaderRow was true).
@@ -47,10 +50,16 @@ public sealed record ImportPreviewRequest
     /// <summary>
     /// Gets the number of rows to skip at the beginning of the file.
     /// </summary>
-    public int RowsToSkip { get; init; }
+    public int RowsToSkip
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the debit/credit indicator settings.
     /// </summary>
-    public DebitCreditIndicatorSettingsDto? IndicatorSettings { get; init; }
+    public DebitCreditIndicatorSettingsDto? IndicatorSettings
+    {
+        get; init;
+    }
 }

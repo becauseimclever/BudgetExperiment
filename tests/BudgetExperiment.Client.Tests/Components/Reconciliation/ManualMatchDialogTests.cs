@@ -6,7 +6,9 @@ using BudgetExperiment.Client.Components.Reconciliation;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
@@ -463,12 +465,15 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         IsActive = true,
     };
 
-    #pragma warning disable SA1201 // Elements should appear in the correct order
+#pragma warning disable SA1201 // Elements should appear in the correct order
     private sealed class StubBudgetApiService : IBudgetApiService
-    #pragma warning restore SA1201
+#pragma warning restore SA1201
     {
         /// <summary>Gets or sets the recurring transfers result.</summary>
-        public IReadOnlyList<RecurringTransferDto>? RecurringTransfersResult { get; set; }
+        public IReadOnlyList<RecurringTransferDto>? RecurringTransfersResult
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<RecurringTransferDto>> GetRecurringTransfersAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<RecurringTransferDto>>(this.RecurringTransfersResult ?? []);
@@ -774,7 +779,10 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
     private sealed class StubReconciliationApiService : IReconciliationApiService
     {
         /// <summary>Gets or sets the result for <see cref="CreateManualMatchAsync"/>.</summary>
-        public ReconciliationMatchDto? ManualMatchResult { get; set; }
+        public ReconciliationMatchDto? ManualMatchResult
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task<ReconciliationMatchDto?> CreateManualMatchAsync(ManualMatchRequest request) => Task.FromResult(this.ManualMatchResult);

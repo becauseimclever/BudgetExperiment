@@ -10,22 +10,40 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class UncategorizedTransactionFilterDto
 {
     /// <summary>Gets or sets the optional start date filter (inclusive).</summary>
-    public DateOnly? StartDate { get; set; }
+    public DateOnly? StartDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional end date filter (inclusive).</summary>
-    public DateOnly? EndDate { get; set; }
+    public DateOnly? EndDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional minimum amount filter (absolute value).</summary>
-    public decimal? MinAmount { get; set; }
+    public decimal? MinAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional maximum amount filter (absolute value).</summary>
-    public decimal? MaxAmount { get; set; }
+    public decimal? MaxAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional description contains filter (case-insensitive).</summary>
-    public string? DescriptionContains { get; set; }
+    public string? DescriptionContains
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the optional account filter.</summary>
-    public Guid? AccountId { get; set; }
+    public Guid? AccountId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the sort field: "Date", "Amount", or "Description".</summary>
     public string SortBy { get; set; } = "Date";

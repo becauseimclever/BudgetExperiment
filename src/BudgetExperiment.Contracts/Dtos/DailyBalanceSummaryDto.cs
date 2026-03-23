@@ -10,7 +10,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class DailyBalanceSummaryDto
 {
     /// <summary>Gets or sets the date.</summary>
-    public DateOnly Date { get; set; }
+    public DateOnly Date
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the balance at the start of this day (before any transactions).</summary>
     public MoneyDto StartingBalance { get; set; } = new();
@@ -22,5 +25,8 @@ public sealed class DailyBalanceSummaryDto
     public MoneyDto DayTotal { get; set; } = new();
 
     /// <summary>Gets or sets the number of transactions on this day.</summary>
-    public int TransactionCount { get; set; }
+    public int TransactionCount
+    {
+        get; set;
+    }
 }

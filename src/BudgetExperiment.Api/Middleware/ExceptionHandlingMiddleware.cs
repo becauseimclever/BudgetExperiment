@@ -23,8 +23,8 @@ public sealed class ExceptionHandlingMiddleware
     /// <param name="logger">Logger.</param>
     public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
-        this._next = next;
-        this._logger = logger;
+        _next = next;
+        _logger = logger;
     }
 
     /// <summary>Invoke middleware.</summary>
@@ -34,7 +34,7 @@ public sealed class ExceptionHandlingMiddleware
     {
         try
         {
-            await this._next(context).ConfigureAwait(false);
+            await _next(context).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -47,14 +47,14 @@ public sealed class ExceptionHandlingMiddleware
         // Don't process if response has already started (e.g., client disconnected)
         if (context.Response.HasStarted)
         {
-            this._logger.LogDebug("Response already started, cannot write problem details");
+            _logger.LogDebug("Response already started, cannot write problem details");
             return;
         }
 
         if (ex is OperationCanceledException or TaskCanceledException)
         {
             // Client disconnected — abort without writing a response body
-            this._logger.LogDebug("Request was cancelled");
+            _logger.LogDebug("Request was cancelled");
             context.Abort();
             return;
         }
@@ -66,21 +66,19 @@ public sealed class ExceptionHandlingMiddleware
             status = StatusCodes.Status409Conflict;
             title = "Conflict";
         }
-        else if (ex is DomainException de && de.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        else if (ex is DomainException de)
         {
-            status = (int)HttpStatusCode.NotFound;
-            title = "Not Found";
-        }
-        else if (ex is DomainException)
-        {
-            status = StatusCodes.Status400BadRequest;
-            title = "Domain Validation Error";
+            (status, title) = de.ExceptionType switch
+            {
+                DomainExceptionType.NotFound => ((int)HttpStatusCode.NotFound, "Not Found"),
+                _ => (StatusCodes.Status400BadRequest, "Domain Validation Error"),
+            };
         }
         else
         {
             status = StatusCodes.Status500InternalServerError;
             title = "Internal Server Error";
-            this._logger.LogError(ex, "Unhandled exception");
+            _logger.LogError(ex, "Unhandled exception");
         }
 
         var problem = new ProblemDetails

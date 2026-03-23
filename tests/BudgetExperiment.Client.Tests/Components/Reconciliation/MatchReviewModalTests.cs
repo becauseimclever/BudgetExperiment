@@ -5,7 +5,9 @@
 using BudgetExperiment.Client.Components.Reconciliation;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
@@ -229,27 +231,27 @@ public sealed class MatchReviewModalTests : BunitContext, IAsyncLifetime
         string level = "High",
         decimal amountVariance = 0m,
         int dateOffsetDays = 0) => new()
-    {
-        Id = Guid.NewGuid(),
-        ImportedTransactionId = Guid.NewGuid(),
-        RecurringTransactionId = Guid.NewGuid(),
-        RecurringInstanceDate = new DateOnly(2026, 3, 1),
-        ConfidenceScore = confidence,
-        ConfidenceLevel = level,
-        Status = "Suggested",
-        Source = "Auto",
-        AmountVariance = amountVariance,
-        DateOffsetDays = dateOffsetDays,
-        CreatedAtUtc = DateTime.UtcNow,
-        RecurringTransactionDescription = "Electric Bill",
-        ExpectedAmount = new MoneyDto { Amount = 150.00m, Currency = "USD" },
-        ImportedTransaction = new TransactionDto
         {
             Id = Guid.NewGuid(),
-            AccountId = Guid.NewGuid(),
-            Description = "ELECTRIC CO PAYMENT",
-            Date = new DateOnly(2026, 3, 1),
-            Amount = new MoneyDto { Amount = -150.00m, Currency = "USD" },
-        },
-    };
+            ImportedTransactionId = Guid.NewGuid(),
+            RecurringTransactionId = Guid.NewGuid(),
+            RecurringInstanceDate = new DateOnly(2026, 3, 1),
+            ConfidenceScore = confidence,
+            ConfidenceLevel = level,
+            Status = "Suggested",
+            Source = "Auto",
+            AmountVariance = amountVariance,
+            DateOffsetDays = dateOffsetDays,
+            CreatedAtUtc = DateTime.UtcNow,
+            RecurringTransactionDescription = "Electric Bill",
+            ExpectedAmount = new MoneyDto { Amount = 150.00m, Currency = "USD" },
+            ImportedTransaction = new TransactionDto
+            {
+                Id = Guid.NewGuid(),
+                AccountId = Guid.NewGuid(),
+                Description = "ELECTRIC CO PAYMENT",
+                Date = new DateOnly(2026, 3, 1),
+                Amount = new MoneyDto { Amount = -150.00m, Currency = "USD" },
+            },
+        };
 }

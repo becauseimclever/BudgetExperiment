@@ -12,10 +12,16 @@ public sealed class ApplyRulesRequest
     /// <summary>
     /// Gets or sets the transaction IDs to process. If null, all uncategorized transactions are processed.
     /// </summary>
-    public IEnumerable<Guid>? TransactionIds { get; set; }
+    public IEnumerable<Guid>? TransactionIds
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether to overwrite existing categories.
     /// </summary>
-    public bool OverwriteExisting { get; set; }
+    public bool OverwriteExisting
+    {
+        get; set;
+    }
 }

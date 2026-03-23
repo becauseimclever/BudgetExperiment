@@ -22,5 +22,8 @@ public sealed class ClarificationOptionDto
     /// <summary>
     /// Gets or sets the optional entity identifier.
     /// </summary>
-    public Guid? EntityId { get; set; }
+    public Guid? EntityId
+    {
+        get; set;
+    }
 }

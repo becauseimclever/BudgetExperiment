@@ -13,22 +13,22 @@ namespace BudgetExperiment.Infrastructure.Tests;
 [Collection("InMemoryDb")]
 public class BudgetGoalRepositoryTests
 {
-    private readonly InMemoryDbFixture _fixture;
+    private readonly PostgreSqlFixture _fixture;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetGoalRepositoryTests"/> class.
     /// </summary>
-    /// <param name="fixture">The shared in-memory database fixture.</param>
-    public BudgetGoalRepositoryTests(InMemoryDbFixture fixture)
+    /// <param name="fixture">The shared PostgreSQL database fixture.</param>
+    public BudgetGoalRepositoryTests(PostgreSqlFixture fixture)
     {
-        this._fixture = fixture;
+        _fixture = fixture;
     }
 
     [Fact]
     public async Task GetByCategoryAndMonthAsync_Returns_Matching_Goal()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -39,7 +39,7 @@ public class BudgetGoalRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new BudgetGoalRepository(verifyContext, FakeUserContext.CreateDefault());
         var result = await verifyRepo.GetByCategoryAndMonthAsync(category.Id, 2026, 3);
 
@@ -55,7 +55,7 @@ public class BudgetGoalRepositoryTests
     public async Task GetByCategoryAndMonthAsync_Returns_Null_For_Wrong_Month()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Rent", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -76,7 +76,7 @@ public class BudgetGoalRepositoryTests
     public async Task GetByCategoryAndMonthAsync_Returns_Null_For_Wrong_Category()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Utilities", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -97,7 +97,7 @@ public class BudgetGoalRepositoryTests
     public async Task GetByMonthAsync_Returns_All_Goals_For_Month_With_Category_Included()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var cat1 = BudgetCategory.Create("Food", CategoryType.Expense);
         var cat2 = BudgetCategory.Create("Transport", CategoryType.Expense);
         context.BudgetCategories.AddRange(cat1, cat2);
@@ -114,7 +114,7 @@ public class BudgetGoalRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new BudgetGoalRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await verifyRepo.GetByMonthAsync(2026, 3);
 
@@ -129,7 +129,7 @@ public class BudgetGoalRepositoryTests
     public async Task GetByCategoryAsync_Returns_Goals_Ordered_By_Year_Month_Descending()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
         context.BudgetCategories.Add(category);
         await context.SaveChangesAsync();
@@ -145,7 +145,7 @@ public class BudgetGoalRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var verifyRepo = new BudgetGoalRepository(verifyContext, FakeUserContext.CreateDefault());
         var results = await verifyRepo.GetByCategoryAsync(category.Id);
 
@@ -163,7 +163,7 @@ public class BudgetGoalRepositoryTests
     public async Task ScopeFilter_SharedScope_Returns_Only_Shared_Goals()
     {
         // Arrange
-        await using var context = this._fixture.CreateContext();
+        await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
 
         var category = BudgetCategory.Create("Mixed", CategoryType.Expense);
@@ -181,7 +181,7 @@ public class BudgetGoalRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await using var verifyContext = this._fixture.CreateSharedContext(context);
+        await using var verifyContext = _fixture.CreateSharedContext(context);
         var sharedContext = FakeUserContext.CreateForSharedScope();
         var repository = new BudgetGoalRepository(verifyContext, sharedContext);
         var results = await repository.GetByCategoryAsync(category.Id);

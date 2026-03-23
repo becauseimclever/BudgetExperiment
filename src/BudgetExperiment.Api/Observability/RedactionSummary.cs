@@ -12,10 +12,16 @@ public sealed record RedactionSummary
     /// <summary>
     /// Gets the total number of fields that were redacted.
     /// </summary>
-    public required int TotalFieldsRedacted { get; init; }
+    public required int TotalFieldsRedacted
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the categories of data that were redacted.
     /// </summary>
-    public required IReadOnlyList<string> CategoriesRedacted { get; init; }
+    public required IReadOnlyList<string> CategoriesRedacted
+    {
+        get; init;
+    }
 }

@@ -23,7 +23,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -38,7 +38,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("netflix subscription", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -54,7 +54,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, looseTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, looseTolerances);
 
         // Assert - With lowered threshold, partial match should succeed
         Assert.NotNull(result);
@@ -69,7 +69,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert - Low similarity should result in no match if below threshold
         Assert.Null(result);
@@ -83,7 +83,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -98,7 +98,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Electric Bill", 100.00m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -114,7 +114,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Electric Bill", 100.00m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, tolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, tolerances);
 
         // Assert
         Assert.Null(result);
@@ -128,7 +128,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Gym Membership", 50.00m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -143,7 +143,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", -15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -159,7 +159,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, date);
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -174,7 +174,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -189,7 +189,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -204,7 +204,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.Null(result);
@@ -218,7 +218,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -234,7 +234,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Netflix", 15.99m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -257,7 +257,7 @@ public class TransactionMatcherTests
         };
 
         // Act
-        var results = this._matcher.FindMatches(transaction, candidates, this._defaultTolerances);
+        var results = _matcher.FindMatches(transaction, candidates, _defaultTolerances);
 
         // Assert
         Assert.True(results.Count >= 1);
@@ -272,7 +272,7 @@ public class TransactionMatcherTests
         var candidates = Array.Empty<RecurringInstanceInfoValue>();
 
         // Act
-        var results = this._matcher.FindMatches(transaction, candidates, this._defaultTolerances);
+        var results = _matcher.FindMatches(transaction, candidates, _defaultTolerances);
 
         // Assert
         Assert.Empty(results);
@@ -290,7 +290,7 @@ public class TransactionMatcherTests
         };
 
         // Act
-        var results = this._matcher.FindMatches(transaction, candidates, this._defaultTolerances);
+        var results = _matcher.FindMatches(transaction, candidates, _defaultTolerances);
 
         // Assert
         Assert.Empty(results);
@@ -304,7 +304,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidateWithDescription(string.Empty, 100.00m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert - Should not throw, may or may not match depending on scoring
         // The key is that it doesn't crash
@@ -319,7 +319,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidate("Adjustment", 0m, new DateOnly(2026, 1, 15));
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -335,7 +335,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert - Pattern match should give high confidence even though description "Paycheck" != "DIRECT DEP..."
         Assert.NotNull(result);
@@ -352,7 +352,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidateWithPatterns("Netflix Subscription Monthly", 15.99m, new DateOnly(2026, 1, 15), patterns);
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert - Pattern match should work even though fuzzy matching might fail
         Assert.NotNull(result);
@@ -368,7 +368,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidateWithPatterns("Netflix Subscription", 15.99m, new DateOnly(2026, 1, 15), patterns);
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert - Should still match via fuzzy matching
         Assert.NotNull(result);
@@ -388,7 +388,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert
         Assert.NotNull(result);
@@ -404,7 +404,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert - Should not match because date is outside tolerance
         Assert.Null(result);
@@ -419,7 +419,7 @@ public class TransactionMatcherTests
         var candidate = this.CreateCandidateWithPatterns("Paycheck", 1500.00m, new DateOnly(2026, 1, 15), patterns);
 
         // Act
-        var result = this._matcher.CalculateMatch(transaction, candidate, this._defaultTolerances);
+        var result = _matcher.CalculateMatch(transaction, candidate, _defaultTolerances);
 
         // Assert - Should not match because amount is too far off
         Assert.Null(result);
@@ -440,7 +440,7 @@ public class TransactionMatcherTests
         };
 
         // Act
-        var results = this._matcher.FindMatches(transaction, candidates, looseTolerances);
+        var results = _matcher.FindMatches(transaction, candidates, looseTolerances);
 
         // Assert - Pattern match should rank higher
         Assert.Equal(2, results.Count);
@@ -450,7 +450,7 @@ public class TransactionMatcherTests
     private Transaction CreateTransaction(string description, decimal amount, DateOnly date)
     {
         return Transaction.Create(
-            this._accountId,
+            _accountId,
             MoneyValue.Create("USD", amount),
             date,
             description);
@@ -461,7 +461,7 @@ public class TransactionMatcherTests
         return new RecurringInstanceInfoValue(
             RecurringTransactionId: Guid.NewGuid(),
             InstanceDate: instanceDate,
-            AccountId: this._accountId,
+            AccountId: _accountId,
             AccountName: "Test Account",
             Description: description,
             Amount: MoneyValue.Create("USD", amount),
@@ -476,7 +476,7 @@ public class TransactionMatcherTests
         return new RecurringInstanceInfoValue(
             RecurringTransactionId: Guid.NewGuid(),
             InstanceDate: instanceDate,
-            AccountId: this._accountId,
+            AccountId: _accountId,
             AccountName: "Test Account",
             Description: description,
             Amount: MoneyValue.Create("USD", amount),
@@ -495,7 +495,7 @@ public class TransactionMatcherTests
         return new RecurringInstanceInfoValue(
             RecurringTransactionId: Guid.NewGuid(),
             InstanceDate: instanceDate,
-            AccountId: this._accountId,
+            AccountId: _accountId,
             AccountName: "Test Account",
             Description: description,
             Amount: MoneyValue.Create("USD", amount),

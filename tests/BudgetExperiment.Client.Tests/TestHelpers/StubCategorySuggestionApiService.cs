@@ -30,22 +30,34 @@ internal class StubCategorySuggestionApiService : ICategorySuggestionApiService
     /// <summary>
     /// Gets or sets the accept result returned by <see cref="AcceptAsync"/>.
     /// </summary>
-    public AcceptCategorySuggestionResultDto? AcceptResult { get; set; }
+    public AcceptCategorySuggestionResultDto? AcceptResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="DismissAsync"/> returns true.
     /// </summary>
-    public bool DismissResult { get; set; }
+    public bool DismissResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the restored suggestion returned by <see cref="RestoreAsync"/>.
     /// </summary>
-    public CategorySuggestionDto? RestoreResult { get; set; }
+    public CategorySuggestionDto? RestoreResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the count returned by <see cref="ClearDismissedPatternsAsync"/>.
     /// </summary>
-    public int ClearDismissedPatternsResult { get; set; }
+    public int ClearDismissedPatternsResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the list of rules returned by <see cref="PreviewRulesAsync"/>.

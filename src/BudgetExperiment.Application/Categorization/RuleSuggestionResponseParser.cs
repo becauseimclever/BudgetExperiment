@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Text.Json;
+
 using BudgetExperiment.Domain;
 
 namespace BudgetExperiment.Application.Categorization;
@@ -51,15 +52,7 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
         var fenceStart = content.IndexOf("```", StringComparison.Ordinal);
         if (fenceStart >= 0)
         {
-            var lineEnd = content.IndexOf('\n', fenceStart);
-            if (lineEnd >= 0)
-            {
-                var fenceEnd = content.IndexOf("```", lineEnd, StringComparison.Ordinal);
-                if (fenceEnd > lineEnd)
-                {
-                    content = content.Substring(lineEnd + 1, fenceEnd - lineEnd - 1);
-                }
-            }
+            content = ExtractFromCodeFence(content, fenceStart);
         }
 
         // Fall back to bracket matching
@@ -186,6 +179,23 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
             diagnostics.Add($"AI response was not valid JSON: {ex.Message}");
             return ParseResult<IReadOnlyList<RuleSuggestion>>.Fail(Array.Empty<RuleSuggestion>(), diagnostics);
         }
+    }
+
+    private static string ExtractFromCodeFence(string content, int fenceStart)
+    {
+        var lineEnd = content.IndexOf('\n', fenceStart);
+        if (lineEnd < 0)
+        {
+            return content;
+        }
+
+        var fenceEnd = content.IndexOf("```", lineEnd, StringComparison.Ordinal);
+        if (fenceEnd <= lineEnd)
+        {
+            return content;
+        }
+
+        return content.Substring(lineEnd + 1, fenceEnd - lineEnd - 1);
     }
 
     private static RuleSuggestion? CreateNewRuleSuggestion(
@@ -383,7 +393,10 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     /// </summary>
     private sealed record NewRuleSuggestionResponse
     {
-        public IReadOnlyList<NewRuleSuggestionItem>? Suggestions { get; init; }
+        public IReadOnlyList<NewRuleSuggestionItem>? Suggestions
+        {
+            get; init;
+        }
     }
 
     /// <summary>
@@ -391,17 +404,35 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     /// </summary>
     private sealed record NewRuleSuggestionItem
     {
-        public string? Pattern { get; init; }
+        public string? Pattern
+        {
+            get; init;
+        }
 
-        public string? MatchType { get; init; }
+        public string? MatchType
+        {
+            get; init;
+        }
 
-        public string? CategoryName { get; init; }
+        public string? CategoryName
+        {
+            get; init;
+        }
 
-        public decimal Confidence { get; init; }
+        public decimal Confidence
+        {
+            get; init;
+        }
 
-        public string? Reasoning { get; init; }
+        public string? Reasoning
+        {
+            get; init;
+        }
 
-        public IReadOnlyList<string>? SampleMatches { get; init; }
+        public IReadOnlyList<string>? SampleMatches
+        {
+            get; init;
+        }
     }
 
     /// <summary>
@@ -409,7 +440,10 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     /// </summary>
     private sealed record OptimizationSuggestionResponse
     {
-        public IReadOnlyList<OptimizationSuggestionItem>? Suggestions { get; init; }
+        public IReadOnlyList<OptimizationSuggestionItem>? Suggestions
+        {
+            get; init;
+        }
     }
 
     /// <summary>
@@ -417,15 +451,30 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     /// </summary>
     private sealed record OptimizationSuggestionItem
     {
-        public string? Type { get; init; }
+        public string? Type
+        {
+            get; init;
+        }
 
-        public string? TargetRuleId { get; init; }
+        public string? TargetRuleId
+        {
+            get; init;
+        }
 
-        public IReadOnlyList<string>? TargetRuleIds { get; init; }
+        public IReadOnlyList<string>? TargetRuleIds
+        {
+            get; init;
+        }
 
-        public string? SuggestedPattern { get; init; }
+        public string? SuggestedPattern
+        {
+            get; init;
+        }
 
-        public string? Reasoning { get; init; }
+        public string? Reasoning
+        {
+            get; init;
+        }
     }
 
     /// <summary>
@@ -433,7 +482,10 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     /// </summary>
     private sealed record ConflictDetectionResponse
     {
-        public IReadOnlyList<ConflictItem>? Conflicts { get; init; }
+        public IReadOnlyList<ConflictItem>? Conflicts
+        {
+            get; init;
+        }
     }
 
     /// <summary>
@@ -441,12 +493,24 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
     /// </summary>
     private sealed record ConflictItem
     {
-        public IReadOnlyList<string>? RuleIds { get; init; }
+        public IReadOnlyList<string>? RuleIds
+        {
+            get; init;
+        }
 
-        public string? ConflictType { get; init; }
+        public string? ConflictType
+        {
+            get; init;
+        }
 
-        public string? Description { get; init; }
+        public string? Description
+        {
+            get; init;
+        }
 
-        public string? Resolution { get; init; }
+        public string? Resolution
+        {
+            get; init;
+        }
     }
 }

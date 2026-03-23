@@ -33,11 +33,11 @@ public sealed class ReportService : IReportService
         ITrendReportBuilder trendReportBuilder,
         ILocationReportBuilder locationReportBuilder)
     {
-        this._transactionRepository = transactionRepository;
-        this._categoryRepository = categoryRepository;
-        this._currencyProvider = currencyProvider;
-        this._trendReportBuilder = trendReportBuilder;
-        this._locationReportBuilder = locationReportBuilder;
+        _transactionRepository = transactionRepository;
+        _categoryRepository = categoryRepository;
+        _currencyProvider = currencyProvider;
+        _trendReportBuilder = trendReportBuilder;
+        _locationReportBuilder = locationReportBuilder;
     }
 
     /// <inheritdoc/>
@@ -49,7 +49,7 @@ public sealed class ReportService : IReportService
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var (totalSpending, totalIncome, categorySpending) = await this.BuildCategoryReportAsync(
             startDate, endDate, accountId: null, currency, cancellationToken);
 
@@ -70,7 +70,7 @@ public sealed class ReportService : IReportService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var (totalSpending, totalIncome, categorySpending) = await this.BuildCategoryReportAsync(
             startDate, endDate, accountId, currency, cancellationToken);
 
@@ -92,7 +92,7 @@ public sealed class ReportService : IReportService
         Guid? categoryId = null,
         CancellationToken cancellationToken = default)
     {
-        return this._trendReportBuilder.GetSpendingTrendsAsync(
+        return _trendReportBuilder.GetSpendingTrendsAsync(
             months, endYear, endMonth, categoryId, cancellationToken);
     }
 
@@ -102,8 +102,8 @@ public sealed class ReportService : IReportService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        var currency = await this._currencyProvider.GetCurrencyAsync(cancellationToken);
-        var transactions = await this._transactionRepository.GetByDateRangeAsync(
+        var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
+        var transactions = await _transactionRepository.GetByDateRangeAsync(
             date, date, accountId, cancellationToken);
 
         var nonTransferTransactions = transactions.Where(t => !t.IsTransfer).ToList();
@@ -130,7 +130,7 @@ public sealed class ReportService : IReportService
         Guid? accountId = null,
         CancellationToken cancellationToken = default)
     {
-        return this._locationReportBuilder.GetSpendingByLocationAsync(
+        return _locationReportBuilder.GetSpendingByLocationAsync(
             startDate, endDate, accountId, cancellationToken);
     }
 
@@ -183,7 +183,7 @@ public sealed class ReportService : IReportService
             return "Uncategorized";
         }
 
-        var category = await this._categoryRepository.GetByIdAsync(categoryId.Value, cancellationToken);
+        var category = await _categoryRepository.GetByIdAsync(categoryId.Value, cancellationToken);
         return category?.Name ?? "Unknown";
     }
 
@@ -194,7 +194,7 @@ public sealed class ReportService : IReportService
         string currency,
         CancellationToken cancellationToken)
     {
-        var transactions = await this._transactionRepository.GetByDateRangeAsync(
+        var transactions = await _transactionRepository.GetByDateRangeAsync(
             startDate, endDate, accountId, cancellationToken);
 
         var nonTransferTransactions = transactions.Where(t => !t.IsTransfer).ToList();
@@ -269,7 +269,7 @@ public sealed class ReportService : IReportService
             return ("Uncategorized", null);
         }
 
-        var category = await this._categoryRepository.GetByIdAsync(categoryId.Value, cancellationToken);
+        var category = await _categoryRepository.GetByIdAsync(categoryId.Value, cancellationToken);
         return category != null
             ? (category.Name, category.Color)
             : ("Unknown", null);

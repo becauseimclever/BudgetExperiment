@@ -15,7 +15,10 @@ internal class StubReconciliationApiService : IReconciliationApiService
     /// <summary>
     /// Gets or sets the reconciliation status returned by <see cref="GetStatusAsync"/>.
     /// </summary>
-    public ReconciliationStatusDto? Status { get; set; }
+    public ReconciliationStatusDto? Status
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the list of pending matches returned by <see cref="GetPendingMatchesAsync"/>.
@@ -25,27 +28,42 @@ internal class StubReconciliationApiService : IReconciliationApiService
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="AcceptMatchAsync"/> returns true.
     /// </summary>
-    public bool AcceptMatchResult { get; set; }
+    public bool AcceptMatchResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="RejectMatchAsync"/> returns true.
     /// </summary>
-    public bool RejectMatchResult { get; set; }
+    public bool RejectMatchResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the number of matches accepted by <see cref="BulkAcceptMatchesAsync"/>.
     /// </summary>
-    public int BulkAcceptResult { get; set; }
+    public int BulkAcceptResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether <see cref="UnlinkMatchAsync"/> returns true.
     /// </summary>
-    public bool UnlinkMatchResult { get; set; }
+    public bool UnlinkMatchResult
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="CreateManualMatchAsync"/>.
     /// </summary>
-    public ReconciliationMatchDto? ManualMatchResult { get; set; }
+    public ReconciliationMatchDto? ManualMatchResult
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public Task<ReconciliationStatusDto?> GetStatusAsync(int year, int month, Guid? accountId = null) =>

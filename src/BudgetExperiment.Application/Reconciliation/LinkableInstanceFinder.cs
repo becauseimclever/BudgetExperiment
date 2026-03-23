@@ -34,11 +34,11 @@ public sealed class LinkableInstanceFinder : ILinkableInstanceFinder
         ITransactionMatcher transactionMatcher,
         IReconciliationMatchRepository matchRepository)
     {
-        this._transactionRepository = transactionRepository;
-        this._recurringRepository = recurringRepository;
-        this._instanceProjector = instanceProjector;
-        this._transactionMatcher = transactionMatcher;
-        this._matchRepository = matchRepository;
+        _transactionRepository = transactionRepository;
+        _recurringRepository = recurringRepository;
+        _instanceProjector = instanceProjector;
+        _transactionMatcher = transactionMatcher;
+        _matchRepository = matchRepository;
     }
 
     /// <inheritdoc />
@@ -46,7 +46,7 @@ public sealed class LinkableInstanceFinder : ILinkableInstanceFinder
         Guid transactionId,
         CancellationToken cancellationToken = default)
     {
-        var transaction = await this._transactionRepository.GetByIdAsync(transactionId, cancellationToken);
+        var transaction = await _transactionRepository.GetByIdAsync(transactionId, cancellationToken);
         if (transaction is null)
         {
             return [];
@@ -79,8 +79,8 @@ public sealed class LinkableInstanceFinder : ILinkableInstanceFinder
         var startDate = transactionDate.AddDays(-30);
         var endDate = transactionDate.AddDays(30);
 
-        var recurringTransactions = await this._recurringRepository.GetActiveAsync(cancellationToken);
-        var instancesByDate = await this._instanceProjector.GetInstancesByDateRangeAsync(
+        var recurringTransactions = await _recurringRepository.GetActiveAsync(cancellationToken);
+        var instancesByDate = await _instanceProjector.GetInstancesByDateRangeAsync(
             recurringTransactions, startDate, endDate, cancellationToken);
 
         return instancesByDate.Values.SelectMany(list => list).ToList();
@@ -91,13 +91,13 @@ public sealed class LinkableInstanceFinder : ILinkableInstanceFinder
         RecurringInstanceInfoValue instance,
         CancellationToken cancellationToken)
     {
-        var isAlreadyMatched = await this._matchRepository.IsInstanceMatchedAsync(
+        var isAlreadyMatched = await _matchRepository.IsInstanceMatchedAsync(
             instance.RecurringTransactionId, instance.InstanceDate, cancellationToken);
 
         decimal? suggestedConfidence = null;
         if (!isAlreadyMatched)
         {
-            var matchResults = this._transactionMatcher.FindMatches(
+            var matchResults = _transactionMatcher.FindMatches(
                 transaction, [instance], MatchingTolerancesValue.Default);
             suggestedConfidence = matchResults.FirstOrDefault()?.ConfidenceScore;
         }

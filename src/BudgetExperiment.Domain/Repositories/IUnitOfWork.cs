@@ -29,4 +29,14 @@ public interface IUnitOfWork
     /// <param name="token">The expected concurrency token value.</param>
     void SetExpectedConcurrencyToken<T>(T entity, string token)
         where T : class;
+
+    /// <summary>
+    /// Marks an entity as modified so that EF Core will execute an UPDATE statement for it.
+    /// Use this when you need to enforce a concurrency token check on an entity that
+    /// has no other pending changes (e.g., a parent entity whose child is being modified).
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <param name="entity">The tracked entity to mark as modified.</param>
+    void MarkAsModified<T>(T entity)
+        where T : class;
 }

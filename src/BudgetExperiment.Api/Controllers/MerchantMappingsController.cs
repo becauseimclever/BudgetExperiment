@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Api.Models;
 using BudgetExperiment.Application.Categorization;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

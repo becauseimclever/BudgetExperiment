@@ -20,7 +20,7 @@ public sealed class ProblemDetailsHandler : DelegatingHandler
     /// <param name="errorContext">The API error context to store traceId in.</param>
     public ProblemDetailsHandler(ApiErrorContext errorContext)
     {
-        this._errorContext = errorContext;
+        _errorContext = errorContext;
     }
 
     /// <inheritdoc/>
@@ -63,7 +63,7 @@ public sealed class ProblemDetailsHandler : DelegatingHandler
                 var traceId = traceIdElement.GetString();
                 if (!string.IsNullOrEmpty(traceId))
                 {
-                    this._errorContext.SetTraceId(traceId);
+                    _errorContext.SetTraceId(traceId);
                 }
             }
         }

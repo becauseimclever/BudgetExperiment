@@ -34,16 +34,19 @@ public sealed class AiSuggestionsViewModel : IDisposable
         IAiAvailabilityService availabilityService,
         IApiErrorContext apiErrorContext)
     {
-        this._aiService = aiService;
-        this._categoryService = categoryService;
-        this._availabilityService = availabilityService;
-        this._apiErrorContext = apiErrorContext;
+        _aiService = aiService;
+        _categoryService = categoryService;
+        _availabilityService = availabilityService;
+        _apiErrorContext = apiErrorContext;
     }
 
     /// <summary>
     /// Gets or sets the callback to notify the Razor page that state has changed and it should re-render.
     /// </summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets the list of pending rule suggestions.
@@ -58,62 +61,98 @@ public sealed class AiSuggestionsViewModel : IDisposable
     /// <summary>
     /// Gets the AI status.
     /// </summary>
-    public AiStatusDto? Status { get; private set; }
+    public AiStatusDto? Status
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether data is loading.
     /// </summary>
-    public bool IsLoading { get; private set; }
+    public bool IsLoading
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether AI analysis is running.
     /// </summary>
-    public bool IsAnalyzing { get; private set; }
+    public bool IsAnalyzing
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether a suggestion action is processing.
     /// </summary>
-    public bool IsProcessing { get; private set; }
+    public bool IsProcessing
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current error message.
     /// </summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the trace ID associated with the current error, if any.
     /// </summary>
-    public string? ErrorTraceId { get; private set; }
+    public string? ErrorTraceId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the current success message.
     /// </summary>
-    public string? SuccessMessage { get; private set; }
+    public string? SuccessMessage
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the analysis elapsed time.
     /// </summary>
-    public TimeSpan AnalysisElapsed { get; private set; }
+    public TimeSpan AnalysisElapsed
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the analysis error message.
     /// </summary>
-    public string? AnalysisError { get; private set; }
+    public string? AnalysisError
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the analysis result for rule suggestions.
     /// </summary>
-    public AnalysisResponseDto? RuleAnalysisResult { get; private set; }
+    public AnalysisResponseDto? RuleAnalysisResult
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the count of newly generated category suggestions.
     /// </summary>
-    public int? CategoryAnalysisCount { get; private set; }
+    public int? CategoryAnalysisCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggestion quality metrics.
     /// </summary>
-    public SuggestionMetricsDto? Metrics { get; private set; }
+    public SuggestionMetricsDto? Metrics
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether AI is available and enabled.
@@ -138,12 +177,18 @@ public sealed class AiSuggestionsViewModel : IDisposable
     /// <summary>
     /// Gets a value indicating whether review mode is active.
     /// </summary>
-    public bool IsReviewMode { get; private set; }
+    public bool IsReviewMode
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the index of the current suggestion in review mode.
     /// </summary>
-    public int ReviewIndex { get; private set; }
+    public int ReviewIndex
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Computes a composite score for ranking suggestions (confidence × impact).
@@ -175,12 +220,12 @@ public sealed class AiSuggestionsViewModel : IDisposable
     {
         try
         {
-            this.Status = await this._aiService.GetStatusAsync();
+            this.Status = await _aiService.GetStatusAsync();
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load AI status: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
     }
 
@@ -196,9 +241,9 @@ public sealed class AiSuggestionsViewModel : IDisposable
 
         try
         {
-            this._cts = new CancellationTokenSource();
-            var ruleTask = this._aiService.GetPendingSuggestionsAsync();
-            var categoryTask = this._categoryService.GetPendingAsync(this._cts.Token);
+            _cts = new CancellationTokenSource();
+            var ruleTask = _aiService.GetPendingSuggestionsAsync();
+            var categoryTask = _categoryService.GetPendingAsync(_cts.Token);
 
             await Task.WhenAll(ruleTask, categoryTask);
 
@@ -208,7 +253,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load suggestions: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
             this.RuleSuggestions = Array.Empty<RuleSuggestionDto>();
             this.CategorySuggestions = Array.Empty<CategorySuggestionDto>();
         }
@@ -226,7 +271,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
     {
         try
         {
-            this.Metrics = await this._aiService.GetMetricsAsync();
+            this.Metrics = await _aiService.GetMetricsAsync();
         }
         catch (Exception)
         {
@@ -250,20 +295,20 @@ public sealed class AiSuggestionsViewModel : IDisposable
         this.CategoryAnalysisCount = null;
         this.AnalysisError = null;
         this.AnalysisElapsed = TimeSpan.Zero;
-        this._analysisStartTime = DateTime.UtcNow;
+        _analysisStartTime = DateTime.UtcNow;
         this.SuccessMessage = null;
 
-        this._elapsedTimer = new System.Timers.Timer(1000);
-        this._elapsedTimer.Elapsed += this.OnElapsedTick;
-        this._elapsedTimer.Start();
+        _elapsedTimer = new System.Timers.Timer(1000);
+        _elapsedTimer.Elapsed += this.OnElapsedTick;
+        _elapsedTimer.Start();
 
         this.NotifyStateChanged();
 
         try
         {
-            this._cts = new CancellationTokenSource();
-            var ruleTask = this._aiService.AnalyzeAsync();
-            var categoryTask = this._categoryService.AnalyzeAsync(this._cts.Token);
+            _cts = new CancellationTokenSource();
+            var ruleTask = _aiService.AnalyzeAsync();
+            var categoryTask = _categoryService.AnalyzeAsync(_cts.Token);
 
             await Task.WhenAll(ruleTask, categoryTask);
 
@@ -304,7 +349,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
 
         try
         {
-            var rule = await this._aiService.AcceptSuggestionAsync(id);
+            var rule = await _aiService.AcceptSuggestionAsync(id);
             if (rule != null)
             {
                 this.RuleSuggestions = this.RuleSuggestions.Where(s => s.Id != id).ToList();
@@ -313,13 +358,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to accept suggestion.";
-                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+                this.ErrorTraceId = _apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to accept suggestion: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -339,7 +384,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
 
         try
         {
-            var success = await this._aiService.DismissSuggestionAsync(id);
+            var success = await _aiService.DismissSuggestionAsync(id);
             if (success)
             {
                 this.RuleSuggestions = this.RuleSuggestions.Where(s => s.Id != id).ToList();
@@ -347,13 +392,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to dismiss suggestion.";
-                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+                this.ErrorTraceId = _apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -381,7 +426,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
                 CustomName = string.IsNullOrWhiteSpace(customName) ? null : customName,
             };
 
-            var result = await this._categoryService.AcceptAsync(id, request);
+            var result = await _categoryService.AcceptAsync(id, request);
 
             if (result.Success)
             {
@@ -392,7 +437,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
                         CategoryId = result.CategoryId!.Value,
                         Patterns = suggestion.MerchantPatterns.ToList(),
                     };
-                    await this._categoryService.CreateRulesAsync(id, rulesRequest);
+                    await _categoryService.CreateRulesAsync(id, rulesRequest);
                 }
 
                 this.CategorySuggestions = this.CategorySuggestions.Where(s => s.Id != id).ToList();
@@ -401,13 +446,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to accept category suggestion.";
-                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+                this.ErrorTraceId = _apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to accept category suggestion: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -427,7 +472,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
 
         try
         {
-            var success = await this._categoryService.DismissAsync(id);
+            var success = await _categoryService.DismissAsync(id);
             if (success)
             {
                 this.CategorySuggestions = this.CategorySuggestions.Where(s => s.Id != id).ToList();
@@ -435,13 +480,13 @@ public sealed class AiSuggestionsViewModel : IDisposable
             else
             {
                 this.ErrorMessage = "Failed to dismiss suggestion.";
-                this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+                this.ErrorTraceId = _apiErrorContext.LastTraceId;
             }
         }
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -460,7 +505,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
     {
         try
         {
-            var success = await this._aiService.ProvideFeedbackAsync(id, isPositive);
+            var success = await _aiService.ProvideFeedbackAsync(id, isPositive);
             if (success)
             {
                 this.RuleSuggestions = this.RuleSuggestions.Select(s =>
@@ -499,7 +544,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to submit feedback: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
 
         this.NotifyStateChanged();
@@ -521,7 +566,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
                 var highConfidence = this.CategorySuggestions
                     .Where(s => s.Confidence >= 0.8m)
                     .Select(s => s.Id);
-                var results = await this._categoryService.BulkAcceptAsync(highConfidence);
+                var results = await _categoryService.BulkAcceptAsync(highConfidence);
                 var successCount = results.Count(r => r.Success);
                 if (successCount > 0)
                 {
@@ -538,7 +583,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
                 int accepted = 0;
                 foreach (var rule in highConfidenceRules)
                 {
-                    var result = await this._aiService.AcceptSuggestionAsync(rule.Id);
+                    var result = await _aiService.AcceptSuggestionAsync(rule.Id);
                     if (result != null)
                     {
                         accepted++;
@@ -555,7 +600,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to accept suggestions: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
         }
         finally
         {
@@ -576,12 +621,12 @@ public sealed class AiSuggestionsViewModel : IDisposable
         {
             foreach (var rule in this.RuleSuggestions.ToList())
             {
-                await this._aiService.DismissSuggestionAsync(rule.Id);
+                await _aiService.DismissSuggestionAsync(rule.Id);
             }
 
             foreach (var category in this.CategorySuggestions.ToList())
             {
-                await this._categoryService.DismissAsync(category.Id);
+                await _categoryService.DismissAsync(category.Id);
             }
 
             this.RuleSuggestions = Array.Empty<RuleSuggestionDto>();
@@ -591,7 +636,7 @@ public sealed class AiSuggestionsViewModel : IDisposable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to dismiss all suggestions: {ex.Message}";
-            this.ErrorTraceId = this._apiErrorContext.LastTraceId;
+            this.ErrorTraceId = _apiErrorContext.LastTraceId;
             await this.LoadAllSuggestionsAsync();
         }
         finally
@@ -668,14 +713,14 @@ public sealed class AiSuggestionsViewModel : IDisposable
 
         try
         {
-            this._cts?.Cancel();
+            _cts?.Cancel();
         }
         catch (ObjectDisposedException)
         {
             // CTS was already disposed
         }
 
-        this._cts?.Dispose();
+        _cts?.Dispose();
     }
 
     private string GetGroupKeyForRule(RuleSuggestionDto rule)
@@ -766,18 +811,18 @@ public sealed class AiSuggestionsViewModel : IDisposable
 
     private void OnElapsedTick(object? sender, System.Timers.ElapsedEventArgs e)
     {
-        this.AnalysisElapsed = DateTime.UtcNow - this._analysisStartTime;
+        this.AnalysisElapsed = DateTime.UtcNow - _analysisStartTime;
         this.NotifyStateChanged();
     }
 
     private void StopElapsedTimer()
     {
-        if (this._elapsedTimer != null)
+        if (_elapsedTimer != null)
         {
-            this._elapsedTimer.Stop();
-            this._elapsedTimer.Elapsed -= this.OnElapsedTick;
-            this._elapsedTimer.Dispose();
-            this._elapsedTimer = null;
+            _elapsedTimer.Stop();
+            _elapsedTimer.Elapsed -= this.OnElapsedTick;
+            _elapsedTimer.Dispose();
+            _elapsedTimer = null;
         }
     }
 

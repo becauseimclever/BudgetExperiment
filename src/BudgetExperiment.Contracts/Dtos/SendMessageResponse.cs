@@ -12,20 +12,32 @@ public sealed class SendMessageResponse
     /// <summary>
     /// Gets or sets a value indicating whether the operation succeeded.
     /// </summary>
-    public bool Success { get; set; }
+    public bool Success
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the user message that was created.
     /// </summary>
-    public ChatMessageDto? UserMessage { get; set; }
+    public ChatMessageDto? UserMessage
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the assistant's response message.
     /// </summary>
-    public ChatMessageDto? AssistantMessage { get; set; }
+    public ChatMessageDto? AssistantMessage
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the error message if the operation failed.
     /// </summary>
-    public string? ErrorMessage { get; set; }
+    public string? ErrorMessage
+    {
+        get; set;
+    }
 }

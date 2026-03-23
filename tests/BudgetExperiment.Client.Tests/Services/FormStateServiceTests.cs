@@ -235,7 +235,10 @@ public sealed class FormStateServiceTests
         /// <summary>
         /// Gets or sets the amount.
         /// </summary>
-        public decimal Amount { get; set; }
+        public decimal Amount
+        {
+            get; set;
+        }
     }
 
     /// <summary>

@@ -22,29 +22,29 @@ public class ImportMappingServiceTests
 
     public ImportMappingServiceTests()
     {
-        this._repositoryMock = new Mock<IImportMappingRepository>();
-        this._userContextMock = new Mock<IUserContext>();
-        this._unitOfWorkMock = new Mock<IUnitOfWork>();
+        _repositoryMock = new Mock<IImportMappingRepository>();
+        _userContextMock = new Mock<IUserContext>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
 
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns(this._testUserId);
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns(_testUserId);
 
-        this._service = new ImportMappingService(
-            this._repositoryMock.Object,
-            this._userContextMock.Object,
-            this._unitOfWorkMock.Object);
+        _service = new ImportMappingService(
+            _repositoryMock.Object,
+            _userContextMock.Object,
+            _unitOfWorkMock.Object);
     }
 
     [Fact]
     public async Task GetUserMappingsAsync_ReturnsMappingsForCurrentUser()
     {
         // Arrange
-        var mapping = CreateTestMapping(this._testUserId, "My Mapping");
-        this._repositoryMock
-            .Setup(r => r.GetByUserAsync(this._testUserId, It.IsAny<CancellationToken>()))
+        var mapping = CreateTestMapping(_testUserId, "My Mapping");
+        _repositoryMock
+            .Setup(r => r.GetByUserAsync(_testUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ImportMapping> { mapping });
 
         // Act
-        var result = await this._service.GetUserMappingsAsync();
+        var result = await _service.GetUserMappingsAsync();
 
         // Assert
         Assert.Single(result);
@@ -55,13 +55,13 @@ public class ImportMappingServiceTests
     public async Task GetMappingAsync_ReturnsMapping_WhenOwnedByUser()
     {
         // Arrange
-        var mapping = CreateTestMapping(this._testUserId, "My Mapping");
-        this._repositoryMock
+        var mapping = CreateTestMapping(_testUserId, "My Mapping");
+        _repositoryMock
             .Setup(r => r.GetByIdAsync(mapping.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(mapping);
 
         // Act
-        var result = await this._service.GetMappingAsync(mapping.Id);
+        var result = await _service.GetMappingAsync(mapping.Id);
 
         // Assert
         Assert.NotNull(result);
@@ -74,12 +74,12 @@ public class ImportMappingServiceTests
         // Arrange
         var otherUserId = Guid.NewGuid();
         var mapping = CreateTestMapping(otherUserId, "Other User's Mapping");
-        this._repositoryMock
+        _repositoryMock
             .Setup(r => r.GetByIdAsync(mapping.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(mapping);
 
         // Act
-        var result = await this._service.GetMappingAsync(mapping.Id);
+        var result = await _service.GetMappingAsync(mapping.Id);
 
         // Assert
         Assert.Null(result);
@@ -89,12 +89,12 @@ public class ImportMappingServiceTests
     public async Task GetMappingAsync_ReturnsNull_WhenNotFound()
     {
         // Arrange
-        this._repositoryMock
+        _repositoryMock
             .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ImportMapping?)null);
 
         // Act
-        var result = await this._service.GetMappingAsync(Guid.NewGuid());
+        var result = await _service.GetMappingAsync(Guid.NewGuid());
 
         // Assert
         Assert.Null(result);
@@ -113,24 +113,24 @@ public class ImportMappingServiceTests
             ],
         };
 
-        this._repositoryMock
-            .Setup(r => r.GetByNameAsync(this._testUserId, "New Mapping", It.IsAny<CancellationToken>()))
+        _repositoryMock
+            .Setup(r => r.GetByNameAsync(_testUserId, "New Mapping", It.IsAny<CancellationToken>()))
             .ReturnsAsync((ImportMapping?)null);
 
         // Act
-        var result = await this._service.CreateMappingAsync(request);
+        var result = await _service.CreateMappingAsync(request);
 
         // Assert
         Assert.Equal("New Mapping", result.Name);
         Assert.Single(result.ColumnMappings);
-        this._repositoryMock.Verify(r => r.AddAsync(It.IsAny<ImportMapping>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<ImportMapping>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task CreateMappingAsync_ThrowsWhenDuplicateName()
     {
         // Arrange
-        var existingMapping = CreateTestMapping(this._testUserId, "Existing");
+        var existingMapping = CreateTestMapping(_testUserId, "Existing");
         var request = new CreateImportMappingRequest
         {
             Name = "Existing",
@@ -140,12 +140,12 @@ public class ImportMappingServiceTests
             ],
         };
 
-        this._repositoryMock
-            .Setup(r => r.GetByNameAsync(this._testUserId, "Existing", It.IsAny<CancellationToken>()))
+        _repositoryMock
+            .Setup(r => r.GetByNameAsync(_testUserId, "Existing", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingMapping);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<DomainException>(() => this._service.CreateMappingAsync(request));
+        var ex = await Assert.ThrowsAsync<DomainException>(() => _service.CreateMappingAsync(request));
         Assert.Contains("already exists", ex.Message);
     }
 
@@ -153,17 +153,17 @@ public class ImportMappingServiceTests
     public async Task DeleteMappingAsync_ReturnsTrue_WhenOwnedByUser()
     {
         // Arrange
-        var mapping = CreateTestMapping(this._testUserId, "To Delete");
-        this._repositoryMock
+        var mapping = CreateTestMapping(_testUserId, "To Delete");
+        _repositoryMock
             .Setup(r => r.GetByIdAsync(mapping.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(mapping);
 
         // Act
-        var result = await this._service.DeleteMappingAsync(mapping.Id);
+        var result = await _service.DeleteMappingAsync(mapping.Id);
 
         // Assert
         Assert.True(result);
-        this._repositoryMock.Verify(r => r.RemoveAsync(mapping, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.RemoveAsync(mapping, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -172,31 +172,31 @@ public class ImportMappingServiceTests
         // Arrange
         var otherUserId = Guid.NewGuid();
         var mapping = CreateTestMapping(otherUserId, "Other User's");
-        this._repositoryMock
+        _repositoryMock
             .Setup(r => r.GetByIdAsync(mapping.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(mapping);
 
         // Act
-        var result = await this._service.DeleteMappingAsync(mapping.Id);
+        var result = await _service.DeleteMappingAsync(mapping.Id);
 
         // Assert
         Assert.False(result);
-        this._repositoryMock.Verify(r => r.RemoveAsync(It.IsAny<ImportMapping>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repositoryMock.Verify(r => r.RemoveAsync(It.IsAny<ImportMapping>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task SuggestMappingAsync_ReturnsSuggestion_WhenHeadersMatch()
     {
         // Arrange
-        var mapping = CreateTestMapping(this._testUserId, "Bank Export");
-        this._repositoryMock
-            .Setup(r => r.GetByUserAsync(this._testUserId, It.IsAny<CancellationToken>()))
+        var mapping = CreateTestMapping(_testUserId, "Bank Export");
+        _repositoryMock
+            .Setup(r => r.GetByUserAsync(_testUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ImportMapping> { mapping });
 
         var headers = new List<string> { "Date", "Description", "Amount" };
 
         // Act
-        var result = await this._service.SuggestMappingAsync(headers);
+        var result = await _service.SuggestMappingAsync(headers);
 
         // Assert
         Assert.NotNull(result);
@@ -207,15 +207,15 @@ public class ImportMappingServiceTests
     public async Task SuggestMappingAsync_ReturnsNull_WhenNoMatch()
     {
         // Arrange
-        var mapping = CreateTestMapping(this._testUserId, "Bank Export");
-        this._repositoryMock
-            .Setup(r => r.GetByUserAsync(this._testUserId, It.IsAny<CancellationToken>()))
+        var mapping = CreateTestMapping(_testUserId, "Bank Export");
+        _repositoryMock
+            .Setup(r => r.GetByUserAsync(_testUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ImportMapping> { mapping });
 
         var headers = new List<string> { "TransDate", "Memo", "Value" };
 
         // Act
-        var result = await this._service.SuggestMappingAsync(headers);
+        var result = await _service.SuggestMappingAsync(headers);
 
         // Assert
         Assert.Null(result);
@@ -225,7 +225,7 @@ public class ImportMappingServiceTests
     public async Task SuggestMappingAsync_ReturnsNull_WhenEmptyHeaders()
     {
         // Act
-        var result = await this._service.SuggestMappingAsync([]);
+        var result = await _service.SuggestMappingAsync([]);
 
         // Assert
         Assert.Null(result);
@@ -235,10 +235,10 @@ public class ImportMappingServiceTests
     public async Task GetUserMappingsAsync_ThrowsWhenNoUserId()
     {
         // Arrange
-        this._userContextMock.Setup(u => u.UserIdAsGuid).Returns((Guid?)null);
+        _userContextMock.Setup(u => u.UserIdAsGuid).Returns((Guid?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => this._service.GetUserMappingsAsync());
+        await Assert.ThrowsAsync<DomainException>(() => _service.GetUserMappingsAsync());
     }
 
     private static ImportMapping CreateTestMapping(Guid userId, string name)

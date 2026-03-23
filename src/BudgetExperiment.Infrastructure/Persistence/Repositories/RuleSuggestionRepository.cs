@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
@@ -34,6 +35,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyList<RuleSuggestion>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.RuleSuggestions
+            .AsNoTracking()
             .OrderByDescending(s => s.CreatedAtUtc)
             .Skip(skip)
             .Take(take)
@@ -43,7 +45,9 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     /// <inheritdoc />
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.RuleSuggestions.LongCountAsync(cancellationToken);
+        return await _context.RuleSuggestions
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -63,6 +67,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyList<RuleSuggestion>> GetPendingAsync(CancellationToken cancellationToken = default)
     {
         return await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Pending)
             .OrderByDescending(s => s.CreatedAtUtc)
             .ToListAsync(cancellationToken);
@@ -72,6 +77,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyList<RuleSuggestion>> GetPendingByTypeAsync(SuggestionType type, CancellationToken cancellationToken = default)
     {
         return await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Pending && s.Type == type)
             .OrderByDescending(s => s.CreatedAtUtc)
             .ToListAsync(cancellationToken);
@@ -81,6 +87,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyList<RuleSuggestion>> GetByStatusAsync(SuggestionStatus status, int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == status)
             .OrderByDescending(s => s.CreatedAtUtc)
             .Skip(skip)
@@ -117,6 +124,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
         // Check if there's a pending suggestion that involves the same set of rules
         // For RuleConflict and RuleConsolidation types, we check ConflictingRuleIds
         var pendingSuggestions = await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Pending && s.Type == type)
             .ToListAsync(cancellationToken);
 
@@ -143,6 +151,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyList<string>> GetDismissedNewRulePatternsAsync(CancellationToken cancellationToken = default)
     {
         return await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Dismissed
                 && s.Type == SuggestionType.NewRule
                 && s.SuggestedPattern != null)
@@ -155,6 +164,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyList<(string Pattern, Guid CategoryId)>> GetAcceptedNewRulesAsync(CancellationToken cancellationToken = default)
     {
         var results = await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Accepted
                 && s.Type == SuggestionType.NewRule
                 && s.SuggestedPattern != null
@@ -170,6 +180,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyDictionary<(SuggestionType Type, SuggestionStatus Status), int>> GetReviewedCountsByTypeAsync(CancellationToken cancellationToken = default)
     {
         var counts = await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Accepted || s.Status == SuggestionStatus.Dismissed)
             .GroupBy(s => new { s.Type, s.Status })
             .Select(g => new { g.Key.Type, g.Key.Status, Count = g.Count() })
@@ -184,6 +195,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<IReadOnlyDictionary<SuggestionType, int>> GetPendingCountsByTypeAsync(CancellationToken cancellationToken = default)
     {
         var counts = await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Pending)
             .GroupBy(s => s.Type)
             .Select(g => new { Type = g.Key, Count = g.Count() })
@@ -196,6 +208,7 @@ internal sealed class RuleSuggestionRepository : IRuleSuggestionRepository
     public async Task<(decimal? AcceptedAvgConfidence, decimal? DismissedAvgConfidence)> GetAverageConfidenceByStatusAsync(CancellationToken cancellationToken = default)
     {
         var averages = await _context.RuleSuggestions
+            .AsNoTracking()
             .Where(s => s.Status == SuggestionStatus.Accepted || s.Status == SuggestionStatus.Dismissed)
             .GroupBy(s => s.Status)
             .Select(g => new { Status = g.Key, AvgConfidence = g.Average(s => s.Confidence) })

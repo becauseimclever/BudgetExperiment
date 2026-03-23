@@ -12,12 +12,18 @@ public sealed record ReferenceLine
     /// <summary>
     /// Gets the value for the reference line.
     /// </summary>
-    public required decimal Value { get; init; }
+    public required decimal Value
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the label for the reference line.
     /// </summary>
-    public required string Label { get; init; }
+    public required string Label
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the reference line color.

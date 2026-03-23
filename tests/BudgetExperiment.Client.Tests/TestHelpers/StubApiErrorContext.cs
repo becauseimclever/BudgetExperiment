@@ -12,7 +12,10 @@ namespace BudgetExperiment.Client.Tests.TestHelpers;
 internal sealed class StubApiErrorContext : IApiErrorContext
 {
     /// <inheritdoc/>
-    public string? LastTraceId { get; set; }
+    public string? LastTraceId
+    {
+        get; set;
+    }
 
     /// <inheritdoc/>
     public void Clear()

@@ -14,7 +14,10 @@ public sealed class AccountBalanceInfoDto
     public MoneyDto InitialBalance { get; set; } = new();
 
     /// <summary>Gets or sets the date of the initial balance.</summary>
-    public DateOnly InitialBalanceDate { get; set; }
+    public DateOnly InitialBalanceDate
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the current balance (initial balance + sum of all transactions).</summary>
     public MoneyDto CurrentBalance { get; set; } = new();

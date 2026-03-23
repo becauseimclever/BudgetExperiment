@@ -1,4 +1,5 @@
 using BudgetExperiment.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Persistence;
@@ -146,6 +147,13 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
         {
             property.OriginalValue = xmin;
         }
+    }
+
+    /// <inheritdoc />
+    public void MarkAsModified<T>(T entity)
+        where T : class
+    {
+        this.Entry(entity).State = EntityState.Modified;
     }
 
     /// <inheritdoc />

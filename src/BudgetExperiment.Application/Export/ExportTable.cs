@@ -25,15 +25,24 @@ public sealed record ExportTable
     /// <summary>
     /// Gets the optional title for the export.
     /// </summary>
-    public string? Title { get; }
+    public string? Title
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets the column headers.
     /// </summary>
-    public IReadOnlyList<string> Columns { get; }
+    public IReadOnlyList<string> Columns
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets the row values.
     /// </summary>
-    public IReadOnlyList<IReadOnlyList<string>> Rows { get; }
+    public IReadOnlyList<IReadOnlyList<string>> Rows
+    {
+        get;
+    }
 }

@@ -23,7 +23,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "AMAZON PURCHASE",
@@ -42,7 +42,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -75.00m,
             "WALMART",
@@ -61,7 +61,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.01m,
             "AMAZON PURCHASE",
@@ -80,7 +80,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 20), // 5 days away, lookback is 3
             -50.00m,
             "AMAZON PURCHASE",
@@ -99,7 +99,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 17), // 2 days away, within 3-day lookback
             -50.00m,
             "AMAZON PURCHASE",
@@ -118,7 +118,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings(DescriptionMatchMode.Contains);
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "AMAZON PURCHASE",
@@ -137,7 +137,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings(DescriptionMatchMode.StartsWith);
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "AMAZON PURCHASE",
@@ -156,7 +156,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings(DescriptionMatchMode.Fuzzy);
 
         // Act — slight typo, still >80% similar
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "AMAZON PURCHAS",
@@ -175,7 +175,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings(DescriptionMatchMode.Fuzzy);
 
         // Act — completely different description
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "WALMART STORE",
@@ -194,7 +194,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "AMAZON PURCHASE",
@@ -212,7 +212,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "AMAZON PURCHASE",
@@ -232,7 +232,7 @@ public class ImportDuplicateDetectorTests
         var settings = DefaultSettings();
 
         // Act
-        var result = this._detector.FindDuplicate(
+        var result = _detector.FindDuplicate(
             new DateOnly(2026, 1, 15),
             -50.00m,
             "AMAZON PURCHASE",
@@ -246,42 +246,42 @@ public class ImportDuplicateDetectorTests
     [Fact]
     public void CalculateSimilarity_IdenticalStrings_ReturnsOne()
     {
-        var result = this._detector.CalculateSimilarity("hello", "hello");
+        var result = _detector.CalculateSimilarity("hello", "hello");
         Assert.Equal(1.0, result);
     }
 
     [Fact]
     public void CalculateSimilarity_CompletelyDifferent_ReturnsLow()
     {
-        var result = this._detector.CalculateSimilarity("abc", "xyz");
+        var result = _detector.CalculateSimilarity("abc", "xyz");
         Assert.True(result < 0.5);
     }
 
     [Fact]
     public void CalculateSimilarity_EmptyFirst_ReturnsZero()
     {
-        var result = this._detector.CalculateSimilarity(string.Empty, "hello");
+        var result = _detector.CalculateSimilarity(string.Empty, "hello");
         Assert.Equal(0.0, result);
     }
 
     [Fact]
     public void CalculateSimilarity_EmptySecond_ReturnsZero()
     {
-        var result = this._detector.CalculateSimilarity("hello", string.Empty);
+        var result = _detector.CalculateSimilarity("hello", string.Empty);
         Assert.Equal(0.0, result);
     }
 
     [Fact]
     public void CalculateSimilarity_CaseInsensitive()
     {
-        var result = this._detector.CalculateSimilarity("Hello", "hello");
+        var result = _detector.CalculateSimilarity("Hello", "hello");
         Assert.Equal(1.0, result);
     }
 
     [Fact]
     public void CalculateSimilarity_SimilarStrings_ReturnsHigh()
     {
-        var result = this._detector.CalculateSimilarity("AMAZON PURCHASE", "AMAZON PURCHAS");
+        var result = _detector.CalculateSimilarity("AMAZON PURCHASE", "AMAZON PURCHAS");
         Assert.True(result > 0.8);
     }
 

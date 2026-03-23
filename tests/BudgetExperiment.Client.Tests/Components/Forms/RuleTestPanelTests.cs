@@ -6,7 +6,9 @@ using BudgetExperiment.Client.Components.Forms;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Bunit;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Client.Tests.Components.Forms;
@@ -174,10 +176,16 @@ public sealed class RuleTestPanelTests : BunitContext, IAsyncLifetime
     private sealed class StubBudgetApiService : IBudgetApiService
     {
         /// <summary>Gets or sets the test pattern result to return.</summary>
-        public TestPatternResponse? TestPatternResult { get; set; }
+        public TestPatternResponse? TestPatternResult
+        {
+            get; set;
+        }
 
         /// <summary>Gets or sets a value indicating whether to throw on TestPatternAsync.</summary>
-        public bool ShouldThrow { get; set; }
+        public bool ShouldThrow
+        {
+            get; set;
+        }
 
         /// <inheritdoc/>
         public Task<TestPatternResponse?> TestPatternAsync(TestPatternRequest request)

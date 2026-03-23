@@ -34,7 +34,10 @@ public sealed class CategorySuggestion
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggested category name.
@@ -44,22 +47,34 @@ public sealed class CategorySuggestion
     /// <summary>
     /// Gets the suggested icon identifier.
     /// </summary>
-    public string? SuggestedIcon { get; private set; }
+    public string? SuggestedIcon
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggested color (hex code).
     /// </summary>
-    public string? SuggestedColor { get; private set; }
+    public string? SuggestedColor
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggested category type.
     /// </summary>
-    public CategoryType SuggestedType { get; private set; }
+    public CategoryType SuggestedType
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the confidence score (0.0 to 1.0).
     /// </summary>
-    public decimal Confidence { get; private set; }
+    public decimal Confidence
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the merchant patterns that triggered this suggestion.
@@ -69,22 +84,34 @@ public sealed class CategorySuggestion
     /// <summary>
     /// Gets the count of transactions that would match this category.
     /// </summary>
-    public int MatchingTransactionCount { get; private set; }
+    public int MatchingTransactionCount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the suggestion status.
     /// </summary>
-    public SuggestionStatus Status { get; private set; }
+    public SuggestionStatus Status
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the source of this suggestion (pattern-based or AI-discovered).
     /// </summary>
-    public CategorySuggestionSource Source { get; private set; }
+    public CategorySuggestionSource Source
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the AI reasoning for this suggestion (only set for AI-discovered suggestions).
     /// </summary>
-    public string? Reasoning { get; private set; }
+    public string? Reasoning
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the owner user ID.
@@ -94,7 +121,10 @@ public sealed class CategorySuggestion
     /// <summary>
     /// Gets the UTC timestamp when the suggestion was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new category suggestion.

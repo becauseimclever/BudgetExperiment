@@ -34,27 +34,42 @@ public sealed record RecurrencePatternValue
     /// <summary>
     /// Gets the recurrence frequency.
     /// </summary>
-    public RecurrenceFrequency Frequency { get; init; }
+    public RecurrenceFrequency Frequency
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the interval between occurrences (e.g., every 2 weeks).
     /// </summary>
-    public int Interval { get; init; }
+    public int Interval
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the day of month (1-31) for monthly, quarterly, or yearly patterns.
     /// </summary>
-    public int? DayOfMonth { get; init; }
+    public int? DayOfMonth
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the day of week for weekly or biweekly patterns.
     /// </summary>
-    public DayOfWeek? DayOfWeek { get; init; }
+    public DayOfWeek? DayOfWeek
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the month of year (1-12) for yearly patterns.
     /// </summary>
-    public int? MonthOfYear { get; init; }
+    public int? MonthOfYear
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Creates a daily recurrence pattern.

@@ -7,7 +7,9 @@ using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Shared.Budgeting;
+
 using Microsoft.JSInterop;
+
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -28,18 +30,18 @@ public sealed class TransfersViewModelTests : IDisposable
     /// </summary>
     public TransfersViewModelTests()
     {
-        this._scopeService = new ScopeService(new StubJSRuntime());
-        this._sut = new TransfersViewModel(
-            this._apiService,
-            this._scopeService,
-            this._chatContext,
-            this._apiErrorContext);
+        _scopeService = new ScopeService(new StubJSRuntime());
+        _sut = new TransfersViewModel(
+            _apiService,
+            _scopeService,
+            _chatContext,
+            _apiErrorContext);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        this._sut.Dispose();
+        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -51,12 +53,12 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsTransfers()
     {
-        this._apiService.Transfers.Add(CreateTransfer("Monthly savings"));
+        _apiService.Transfers.Add(CreateTransfer("Monthly savings"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Transfers.Count.ShouldBe(1);
-        this._sut.Transfers[0].Description.ShouldBe("Monthly savings");
+        _sut.Transfers.Count.ShouldBe(1);
+        _sut.Transfers[0].Description.ShouldBe("Monthly savings");
     }
 
     /// <summary>
@@ -66,16 +68,16 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_LoadsAccounts()
     {
-        this._apiService.Accounts.Add(new AccountDto
+        _apiService.Accounts.Add(new AccountDto
         {
             Id = Guid.NewGuid(),
             Name = "Checking",
         });
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.Accounts.Count.ShouldBe(1);
-        this._sut.Accounts[0].Name.ShouldBe("Checking");
+        _sut.Accounts.Count.ShouldBe(1);
+        _sut.Accounts[0].Name.ShouldBe("Checking");
     }
 
     /// <summary>
@@ -85,9 +87,9 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsIsLoadingToFalse()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -97,9 +99,9 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsPageTypeOnChatContext()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._chatContext.CurrentContext.PageType.ShouldBe("transfers");
+        _chatContext.CurrentContext.PageType.ShouldBe("transfers");
     }
 
     /// <summary>
@@ -109,13 +111,13 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsErrorMessage_WhenApiFails()
     {
-        this._apiService.GetTransfersException = new HttpRequestException("Server error");
+        _apiService.GetTransfersException = new HttpRequestException("Server error");
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to load transfers");
-        this._sut.IsLoading.ShouldBeFalse();
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to load transfers");
+        _sut.IsLoading.ShouldBeFalse();
     }
 
     /// <summary>
@@ -125,12 +127,12 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task InitializeAsync_SetsFilteredTransfersToAllTransfers()
     {
-        this._apiService.Transfers.Add(CreateTransfer("T1"));
-        this._apiService.Transfers.Add(CreateTransfer("T2"));
+        _apiService.Transfers.Add(CreateTransfer("T1"));
+        _apiService.Transfers.Add(CreateTransfer("T2"));
 
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        this._sut.FilteredTransfers.Count.ShouldBe(2);
+        _sut.FilteredTransfers.Count.ShouldBe(2);
     }
 
     // --- LoadDataAsync ---
@@ -142,14 +144,14 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task LoadDataAsync_ClearsErrorMessage()
     {
-        this._apiService.GetTransfersException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetTransfersException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._apiService.GetTransfersException = null;
-        await this._sut.LoadDataAsync();
+        _apiService.GetTransfersException = null;
+        await _sut.LoadDataAsync();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- RetryLoadAsync ---
@@ -161,13 +163,13 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task RetryLoadAsync_ReloadsTransfers()
     {
-        await this._sut.InitializeAsync();
-        this._apiService.Transfers.Add(CreateTransfer("New Transfer"));
+        await _sut.InitializeAsync();
+        _apiService.Transfers.Add(CreateTransfer("New Transfer"));
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
-        this._sut.Transfers.Count.ShouldBe(1);
-        this._sut.IsRetrying.ShouldBeFalse();
+        _sut.Transfers.Count.ShouldBe(1);
+        _sut.IsRetrying.ShouldBeFalse();
     }
 
     /// <summary>
@@ -178,9 +180,9 @@ public sealed class TransfersViewModelTests : IDisposable
     public async Task RetryLoadAsync_NotifiesStateChanged()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }
@@ -194,13 +196,13 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task DismissError_ClearsErrorMessage()
     {
-        this._apiService.GetTransfersException = new HttpRequestException("fail");
-        await this._sut.InitializeAsync();
-        this._sut.ErrorMessage.ShouldNotBeNull();
+        _apiService.GetTransfersException = new HttpRequestException("fail");
+        await _sut.InitializeAsync();
+        _sut.ErrorMessage.ShouldNotBeNull();
 
-        this._sut.DismissError();
+        _sut.DismissError();
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     // --- Filtering ---
@@ -213,15 +215,15 @@ public sealed class TransfersViewModelTests : IDisposable
     public async Task ApplyFilters_FiltersByAccountId()
     {
         var accountId = Guid.NewGuid();
-        this._apiService.Transfers.Add(CreateTransfer("Match", sourceAccountId: accountId));
-        this._apiService.Transfers.Add(CreateTransfer("No match"));
+        _apiService.Transfers.Add(CreateTransfer("Match", sourceAccountId: accountId));
+        _apiService.Transfers.Add(CreateTransfer("No match"));
 
-        await this._sut.InitializeAsync();
-        this._sut.SelectedAccountId = accountId.ToString();
-        this._sut.ApplyFilters();
+        await _sut.InitializeAsync();
+        _sut.SelectedAccountId = accountId.ToString();
+        _sut.ApplyFilters();
 
-        this._sut.FilteredTransfers.Count.ShouldBe(1);
-        this._sut.FilteredTransfers[0].Description.ShouldBe("Match");
+        _sut.FilteredTransfers.Count.ShouldBe(1);
+        _sut.FilteredTransfers[0].Description.ShouldBe("Match");
     }
 
     /// <summary>
@@ -232,15 +234,15 @@ public sealed class TransfersViewModelTests : IDisposable
     public async Task ApplyFilters_FiltersByDestinationAccountId()
     {
         var accountId = Guid.NewGuid();
-        this._apiService.Transfers.Add(CreateTransfer("Dest match", destinationAccountId: accountId));
-        this._apiService.Transfers.Add(CreateTransfer("No match"));
+        _apiService.Transfers.Add(CreateTransfer("Dest match", destinationAccountId: accountId));
+        _apiService.Transfers.Add(CreateTransfer("No match"));
 
-        await this._sut.InitializeAsync();
-        this._sut.SelectedAccountId = accountId.ToString();
-        this._sut.ApplyFilters();
+        await _sut.InitializeAsync();
+        _sut.SelectedAccountId = accountId.ToString();
+        _sut.ApplyFilters();
 
-        this._sut.FilteredTransfers.Count.ShouldBe(1);
-        this._sut.FilteredTransfers[0].Description.ShouldBe("Dest match");
+        _sut.FilteredTransfers.Count.ShouldBe(1);
+        _sut.FilteredTransfers[0].Description.ShouldBe("Dest match");
     }
 
     /// <summary>
@@ -250,15 +252,15 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task ApplyFilters_FiltersByFromDate()
     {
-        this._apiService.Transfers.Add(CreateTransfer("Before", date: new DateOnly(2026, 1, 1)));
-        this._apiService.Transfers.Add(CreateTransfer("After", date: new DateOnly(2026, 6, 1)));
+        _apiService.Transfers.Add(CreateTransfer("Before", date: new DateOnly(2026, 1, 1)));
+        _apiService.Transfers.Add(CreateTransfer("After", date: new DateOnly(2026, 6, 1)));
 
-        await this._sut.InitializeAsync();
-        this._sut.FromDate = new DateOnly(2026, 3, 1);
-        this._sut.ApplyFilters();
+        await _sut.InitializeAsync();
+        _sut.FromDate = new DateOnly(2026, 3, 1);
+        _sut.ApplyFilters();
 
-        this._sut.FilteredTransfers.Count.ShouldBe(1);
-        this._sut.FilteredTransfers[0].Description.ShouldBe("After");
+        _sut.FilteredTransfers.Count.ShouldBe(1);
+        _sut.FilteredTransfers[0].Description.ShouldBe("After");
     }
 
     /// <summary>
@@ -268,15 +270,15 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task ApplyFilters_FiltersByToDate()
     {
-        this._apiService.Transfers.Add(CreateTransfer("Before", date: new DateOnly(2026, 1, 1)));
-        this._apiService.Transfers.Add(CreateTransfer("After", date: new DateOnly(2026, 6, 1)));
+        _apiService.Transfers.Add(CreateTransfer("Before", date: new DateOnly(2026, 1, 1)));
+        _apiService.Transfers.Add(CreateTransfer("After", date: new DateOnly(2026, 6, 1)));
 
-        await this._sut.InitializeAsync();
-        this._sut.ToDate = new DateOnly(2026, 3, 1);
-        this._sut.ApplyFilters();
+        await _sut.InitializeAsync();
+        _sut.ToDate = new DateOnly(2026, 3, 1);
+        _sut.ApplyFilters();
 
-        this._sut.FilteredTransfers.Count.ShouldBe(1);
-        this._sut.FilteredTransfers[0].Description.ShouldBe("Before");
+        _sut.FilteredTransfers.Count.ShouldBe(1);
+        _sut.FilteredTransfers[0].Description.ShouldBe("Before");
     }
 
     /// <summary>
@@ -286,17 +288,17 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task ApplyFilters_FiltersByDateRange()
     {
-        this._apiService.Transfers.Add(CreateTransfer("Jan", date: new DateOnly(2026, 1, 1)));
-        this._apiService.Transfers.Add(CreateTransfer("Mar", date: new DateOnly(2026, 3, 15)));
-        this._apiService.Transfers.Add(CreateTransfer("Jun", date: new DateOnly(2026, 6, 1)));
+        _apiService.Transfers.Add(CreateTransfer("Jan", date: new DateOnly(2026, 1, 1)));
+        _apiService.Transfers.Add(CreateTransfer("Mar", date: new DateOnly(2026, 3, 15)));
+        _apiService.Transfers.Add(CreateTransfer("Jun", date: new DateOnly(2026, 6, 1)));
 
-        await this._sut.InitializeAsync();
-        this._sut.FromDate = new DateOnly(2026, 2, 1);
-        this._sut.ToDate = new DateOnly(2026, 4, 1);
-        this._sut.ApplyFilters();
+        await _sut.InitializeAsync();
+        _sut.FromDate = new DateOnly(2026, 2, 1);
+        _sut.ToDate = new DateOnly(2026, 4, 1);
+        _sut.ApplyFilters();
 
-        this._sut.FilteredTransfers.Count.ShouldBe(1);
-        this._sut.FilteredTransfers[0].Description.ShouldBe("Mar");
+        _sut.FilteredTransfers.Count.ShouldBe(1);
+        _sut.FilteredTransfers[0].Description.ShouldBe("Mar");
     }
 
     /// <summary>
@@ -306,21 +308,21 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task ClearFilters_ResetsAllFilters()
     {
-        this._apiService.Transfers.Add(CreateTransfer("T1"));
-        this._apiService.Transfers.Add(CreateTransfer("T2"));
+        _apiService.Transfers.Add(CreateTransfer("T1"));
+        _apiService.Transfers.Add(CreateTransfer("T2"));
 
-        await this._sut.InitializeAsync();
-        this._sut.SelectedAccountId = Guid.NewGuid().ToString();
-        this._sut.FromDate = new DateOnly(2026, 1, 1);
-        this._sut.ToDate = new DateOnly(2026, 12, 31);
-        this._sut.ApplyFilters();
+        await _sut.InitializeAsync();
+        _sut.SelectedAccountId = Guid.NewGuid().ToString();
+        _sut.FromDate = new DateOnly(2026, 1, 1);
+        _sut.ToDate = new DateOnly(2026, 12, 31);
+        _sut.ApplyFilters();
 
-        this._sut.ClearFilters();
+        _sut.ClearFilters();
 
-        this._sut.SelectedAccountId.ShouldBe(string.Empty);
-        this._sut.FromDate.ShouldBeNull();
-        this._sut.ToDate.ShouldBeNull();
-        this._sut.FilteredTransfers.Count.ShouldBe(2);
+        _sut.SelectedAccountId.ShouldBe(string.Empty);
+        _sut.FromDate.ShouldBeNull();
+        _sut.ToDate.ShouldBeNull();
+        _sut.FilteredTransfers.Count.ShouldBe(2);
     }
 
     // --- Dialog state ---
@@ -331,11 +333,11 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public void ShowCreateTransfer_OpensDialog()
     {
-        this._sut.ShowCreateTransfer();
+        _sut.ShowCreateTransfer();
 
-        this._sut.ShowTransferDialog.ShouldBeTrue();
-        this._sut.EditingTransfer.ShouldBeNull();
-        this._sut.NewTransfer.ShouldNotBeNull();
+        _sut.ShowTransferDialog.ShouldBeTrue();
+        _sut.EditingTransfer.ShouldBeNull();
+        _sut.NewTransfer.ShouldNotBeNull();
     }
 
     /// <summary>
@@ -346,13 +348,13 @@ public sealed class TransfersViewModelTests : IDisposable
     {
         var transfer = CreateTransfer("Edit me");
 
-        this._sut.ShowEditTransfer(transfer);
+        _sut.ShowEditTransfer(transfer);
 
-        this._sut.ShowTransferDialog.ShouldBeTrue();
-        this._sut.EditingTransfer.ShouldBe(transfer);
-        this._sut.EditTransfer.Amount.ShouldBe(transfer.Amount);
-        this._sut.EditTransfer.Date.ShouldBe(transfer.Date);
-        this._sut.EditTransfer.Description.ShouldBe(transfer.Description);
+        _sut.ShowTransferDialog.ShouldBeTrue();
+        _sut.EditingTransfer.ShouldBe(transfer);
+        _sut.EditTransfer.Amount.ShouldBe(transfer.Amount);
+        _sut.EditTransfer.Date.ShouldBe(transfer.Date);
+        _sut.EditTransfer.Description.ShouldBe(transfer.Description);
     }
 
     /// <summary>
@@ -361,13 +363,13 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public void HideTransferDialog_ClosesDialog()
     {
-        this._sut.ShowCreateTransfer();
-        this._sut.ShowTransferDialog.ShouldBeTrue();
+        _sut.ShowCreateTransfer();
+        _sut.ShowTransferDialog.ShouldBeTrue();
 
-        this._sut.HideTransferDialog();
+        _sut.HideTransferDialog();
 
-        this._sut.ShowTransferDialog.ShouldBeFalse();
-        this._sut.EditingTransfer.ShouldBeNull();
+        _sut.ShowTransferDialog.ShouldBeFalse();
+        _sut.EditingTransfer.ShouldBeNull();
     }
 
     // --- CRUD ---
@@ -379,7 +381,7 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task CreateTransferAsync_CallsApiAndReloads()
     {
-        this._apiService.CreateTransferResult = new TransferResponse
+        _apiService.CreateTransferResult = new TransferResponse
         {
             TransferId = Guid.NewGuid(),
             Amount = 100m,
@@ -388,10 +390,10 @@ public sealed class TransfersViewModelTests : IDisposable
             DestinationAccountId = Guid.NewGuid(),
         };
 
-        await this._sut.InitializeAsync();
-        this._sut.ShowCreateTransfer();
+        await _sut.InitializeAsync();
+        _sut.ShowCreateTransfer();
 
-        await this._sut.CreateTransferAsync(new CreateTransferRequest
+        await _sut.CreateTransferAsync(new CreateTransferRequest
         {
             SourceAccountId = Guid.NewGuid(),
             DestinationAccountId = Guid.NewGuid(),
@@ -399,7 +401,7 @@ public sealed class TransfersViewModelTests : IDisposable
             Date = new DateOnly(2026, 3, 1),
         });
 
-        this._sut.ShowTransferDialog.ShouldBeFalse();
+        _sut.ShowTransferDialog.ShouldBeFalse();
     }
 
     /// <summary>
@@ -409,12 +411,12 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task CreateTransferAsync_SetsErrorMessage_OnFailure()
     {
-        this._apiService.CreateTransferException = new HttpRequestException("Create failed");
+        _apiService.CreateTransferException = new HttpRequestException("Create failed");
 
-        await this._sut.CreateTransferAsync(new CreateTransferRequest());
+        await _sut.CreateTransferAsync(new CreateTransferRequest());
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to create transfer");
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to create transfer");
     }
 
     /// <summary>
@@ -425,7 +427,7 @@ public sealed class TransfersViewModelTests : IDisposable
     public async Task UpdateTransferAsync_CallsApiAndReloads()
     {
         var transfer = CreateTransfer("Original");
-        this._apiService.UpdateTransferResult = new TransferResponse
+        _apiService.UpdateTransferResult = new TransferResponse
         {
             TransferId = transfer.TransferId,
             Amount = 200m,
@@ -434,17 +436,17 @@ public sealed class TransfersViewModelTests : IDisposable
             DestinationAccountId = transfer.DestinationAccountId,
         };
 
-        await this._sut.InitializeAsync();
-        this._sut.ShowEditTransfer(transfer);
+        await _sut.InitializeAsync();
+        _sut.ShowEditTransfer(transfer);
 
-        await this._sut.UpdateTransferAsync(new UpdateTransferRequest
+        await _sut.UpdateTransferAsync(new UpdateTransferRequest
         {
             Amount = 200m,
             Date = new DateOnly(2026, 3, 1),
         });
 
-        this._sut.ShowTransferDialog.ShouldBeFalse();
-        this._sut.EditingTransfer.ShouldBeNull();
+        _sut.ShowTransferDialog.ShouldBeFalse();
+        _sut.EditingTransfer.ShouldBeNull();
     }
 
     /// <summary>
@@ -454,11 +456,11 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task UpdateTransferAsync_DoesNothing_WhenNoEditingTransfer()
     {
-        await this._sut.InitializeAsync();
+        await _sut.InitializeAsync();
 
-        await this._sut.UpdateTransferAsync(new UpdateTransferRequest());
+        await _sut.UpdateTransferAsync(new UpdateTransferRequest());
 
-        this._sut.ErrorMessage.ShouldBeNull();
+        _sut.ErrorMessage.ShouldBeNull();
     }
 
     /// <summary>
@@ -469,13 +471,13 @@ public sealed class TransfersViewModelTests : IDisposable
     public async Task UpdateTransferAsync_SetsErrorMessage_OnFailure()
     {
         var transfer = CreateTransfer("Fail");
-        this._sut.ShowEditTransfer(transfer);
-        this._apiService.UpdateTransferException = new HttpRequestException("Update failed");
+        _sut.ShowEditTransfer(transfer);
+        _apiService.UpdateTransferException = new HttpRequestException("Update failed");
 
-        await this._sut.UpdateTransferAsync(new UpdateTransferRequest());
+        await _sut.UpdateTransferAsync(new UpdateTransferRequest());
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to update transfer");
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to update transfer");
     }
 
     /// <summary>
@@ -486,17 +488,17 @@ public sealed class TransfersViewModelTests : IDisposable
     public async Task DeleteTransferAsync_CallsApiAndReloads()
     {
         var transfer = CreateTransfer("Delete me");
-        this._apiService.Transfers.Add(transfer);
-        this._apiService.DeleteTransferResult = true;
+        _apiService.Transfers.Add(transfer);
+        _apiService.DeleteTransferResult = true;
 
-        await this._sut.InitializeAsync();
-        this._sut.Transfers.Count.ShouldBe(1);
+        await _sut.InitializeAsync();
+        _sut.Transfers.Count.ShouldBe(1);
 
         // After delete, the stub will return the current contents of Transfers
-        this._apiService.Transfers.Clear();
-        await this._sut.DeleteTransferAsync(transfer.TransferId);
+        _apiService.Transfers.Clear();
+        await _sut.DeleteTransferAsync(transfer.TransferId);
 
-        this._sut.Transfers.Count.ShouldBe(0);
+        _sut.Transfers.Count.ShouldBe(0);
     }
 
     /// <summary>
@@ -506,12 +508,12 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task DeleteTransferAsync_SetsErrorMessage_OnFailure()
     {
-        this._apiService.DeleteTransferException = new HttpRequestException("Delete failed");
+        _apiService.DeleteTransferException = new HttpRequestException("Delete failed");
 
-        await this._sut.DeleteTransferAsync(Guid.NewGuid());
+        await _sut.DeleteTransferAsync(Guid.NewGuid());
 
-        this._sut.ErrorMessage.ShouldNotBeNull();
-        this._sut.ErrorMessage!.ShouldContain("Failed to delete transfer");
+        _sut.ErrorMessage.ShouldNotBeNull();
+        _sut.ErrorMessage!.ShouldContain("Failed to delete transfer");
     }
 
     // --- Scope changes ---
@@ -523,18 +525,18 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task ScopeChange_ReloadsTransfers()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Transfers.Count.ShouldBe(0);
+        await _sut.InitializeAsync();
+        _sut.Transfers.Count.ShouldBe(0);
 
-        this._apiService.Transfers.Add(CreateTransfer("After scope change"));
+        _apiService.Transfers.Add(CreateTransfer("After scope change"));
 
         // Trigger scope change
-        await this._scopeService.SetScopeAsync(BudgetScope.Personal);
+        await _scopeService.SetScopeAsync(BudgetScope.Personal);
 
         // Allow async void handler to complete
         await Task.Delay(50);
 
-        this._sut.Transfers.Count.ShouldBe(1);
+        _sut.Transfers.Count.ShouldBe(1);
     }
 
     // --- Dispose ---
@@ -546,14 +548,14 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_UnsubscribesFromScopeChanged()
     {
-        await this._sut.InitializeAsync();
-        this._sut.Dispose();
+        await _sut.InitializeAsync();
+        _sut.Dispose();
 
-        this._apiService.Transfers.Add(CreateTransfer("Should not load"));
-        await this._scopeService.SetScopeAsync(BudgetScope.Personal);
+        _apiService.Transfers.Add(CreateTransfer("Should not load"));
+        await _scopeService.SetScopeAsync(BudgetScope.Personal);
         await Task.Delay(50);
 
-        this._sut.Transfers.Count.ShouldBe(0);
+        _sut.Transfers.Count.ShouldBe(0);
     }
 
     /// <summary>
@@ -563,12 +565,12 @@ public sealed class TransfersViewModelTests : IDisposable
     [Fact]
     public async Task Dispose_ClearsChatContext()
     {
-        await this._sut.InitializeAsync();
-        this._chatContext.CurrentContext.PageType.ShouldBe("transfers");
+        await _sut.InitializeAsync();
+        _chatContext.CurrentContext.PageType.ShouldBe("transfers");
 
-        this._sut.Dispose();
+        _sut.Dispose();
 
-        this._chatContext.CurrentContext.PageType.ShouldBeNull();
+        _chatContext.CurrentContext.PageType.ShouldBeNull();
     }
 
     // --- OnStateChanged ---
@@ -581,9 +583,9 @@ public sealed class TransfersViewModelTests : IDisposable
     public async Task OnStateChanged_IsInvoked_OnRetry()
     {
         int callCount = 0;
-        this._sut.OnStateChanged = () => callCount++;
+        _sut.OnStateChanged = () => callCount++;
 
-        await this._sut.RetryLoadAsync();
+        await _sut.RetryLoadAsync();
 
         callCount.ShouldBeGreaterThan(0);
     }

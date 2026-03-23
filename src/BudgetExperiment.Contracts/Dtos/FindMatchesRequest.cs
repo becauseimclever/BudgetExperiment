@@ -17,15 +17,24 @@ public sealed record FindMatchesRequest
     /// <summary>
     /// Gets the date range start for recurring instances to consider.
     /// </summary>
-    public DateOnly StartDate { get; init; }
+    public DateOnly StartDate
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the date range end for recurring instances to consider.
     /// </summary>
-    public DateOnly EndDate { get; init; }
+    public DateOnly EndDate
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets custom tolerances (optional, uses defaults if null).
     /// </summary>
-    public MatchingTolerancesDto? Tolerances { get; init; }
+    public MatchingTolerancesDto? Tolerances
+    {
+        get; init;
+    }
 }

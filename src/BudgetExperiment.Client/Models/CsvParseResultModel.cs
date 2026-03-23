@@ -27,15 +27,24 @@ public sealed record CsvParseResultModel
     /// <summary>
     /// Gets a value indicating whether a header row was detected.
     /// </summary>
-    public bool HasHeaderRow { get; init; }
+    public bool HasHeaderRow
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the total row count.
     /// </summary>
-    public int RowCount { get; init; }
+    public int RowCount
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the number of rows that were skipped before the header row.
     /// </summary>
-    public int RowsSkipped { get; init; }
+    public int RowsSkipped
+    {
+        get; init;
+    }
 }

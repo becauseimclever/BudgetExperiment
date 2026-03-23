@@ -15,6 +15,7 @@ namespace BudgetExperiment.Api.Tests;
 /// <summary>
 /// Integration tests for the Import API endpoints.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
@@ -25,7 +26,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     /// <param name="factory">The test factory.</param>
     public ImportControllerTests(CustomWebApplicationFactory factory)
     {
-        this._client = factory.CreateApiClient();
+        _client = factory.CreateApiClient();
     }
 
     /// <summary>
@@ -36,7 +37,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task GetMappings_Returns_200_WithEmptyList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/import/mappings");
+        var response = await _client.GetAsync("/api/v1/import/mappings");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -52,7 +53,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task GetMappingById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/import/mappings/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/import/mappings/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -79,7 +80,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/mappings", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/mappings", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -105,7 +106,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
             },
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
 
         var updateRequest = new UpdateImportMappingRequest
@@ -115,7 +116,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/import/mappings/{created!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/api/v1/import/mappings/{created!.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -138,7 +139,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/import/mappings/{Guid.NewGuid()}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/api/v1/import/mappings/{Guid.NewGuid()}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -160,11 +161,11 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
             },
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
 
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/import/mappings/{created!.Id}");
+        var response = await _client.DeleteAsync($"/api/v1/import/mappings/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -178,7 +179,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task DeleteMapping_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/import/mappings/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/import/mappings/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -198,7 +199,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/mappings/suggest", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/mappings/suggest", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -213,7 +214,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     {
         // Arrange - need an account first
         var accountRequest = new AccountCreateDto { Name = "Import Account", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountRequest);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountRequest);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         var request = new ImportPreviewRequest
@@ -233,7 +234,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         };
 
         // Act
-        var response = await this._client.PostAsJsonAsync("/api/v1/import/preview", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/import/preview", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -249,7 +250,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task GetHistory_Returns_200_WithList()
     {
         // Act
-        var response = await this._client.GetAsync("/api/v1/import/history");
+        var response = await _client.GetAsync("/api/v1/import/history");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -265,7 +266,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task GetBatchById_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.GetAsync($"/api/v1/import/batches/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/v1/import/batches/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -279,7 +280,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     public async Task DeleteBatch_Returns_404_WhenNotFound()
     {
         // Act
-        var response = await this._client.DeleteAsync($"/api/v1/import/batches/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/import/batches/{Guid.NewGuid()}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -294,7 +295,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     {
         // Arrange - create account
         var accountRequest = new AccountCreateDto { Name = "Flow Test Account", Type = "Checking" };
-        var accountResponse = await this._client.PostAsJsonAsync("/api/v1/accounts", accountRequest);
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountRequest);
         var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
 
         // Step 1: Preview (rows provided directly, simulating client-side parsing)
@@ -317,7 +318,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
             DateFormat = "MM/dd/yyyy",
         };
 
-        var previewResponse = await this._client.PostAsJsonAsync("/api/v1/import/preview", previewRequest);
+        var previewResponse = await _client.PostAsJsonAsync("/api/v1/import/preview", previewRequest);
         Assert.Equal(HttpStatusCode.OK, previewResponse.StatusCode);
         var previewResult = await previewResponse.Content.ReadFromJsonAsync<ImportPreviewResult>();
         Assert.NotNull(previewResult);
@@ -340,14 +341,14 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
                 }).ToList(),
         };
 
-        var executeResponse = await this._client.PostAsJsonAsync("/api/v1/import/execute", executeRequest);
+        var executeResponse = await _client.PostAsJsonAsync("/api/v1/import/execute", executeRequest);
         Assert.Equal(HttpStatusCode.Created, executeResponse.StatusCode);
         var importResult = await executeResponse.Content.ReadFromJsonAsync<ImportResult>();
         Assert.NotNull(importResult);
         Assert.Equal(2, importResult.ImportedCount);
 
         // Step 3: Verify History
-        var historyResponse = await this._client.GetAsync("/api/v1/import/history");
+        var historyResponse = await _client.GetAsync("/api/v1/import/history");
         Assert.Equal(HttpStatusCode.OK, historyResponse.StatusCode);
         var batches = await historyResponse.Content.ReadFromJsonAsync<List<ImportBatchDto>>();
         Assert.NotNull(batches);
@@ -366,7 +367,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         using var content = new MultipartFormDataContent();
 
         // Act
-        var response = await this._client.PostAsync("/api/v1/import/parse", content);
+        var response = await _client.PostAsync("/api/v1/import/parse", content);
 
         // Assert — endpoint no longer exists (404 or 405 depending on routing)
         Assert.True(
@@ -390,11 +391,11 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
             },
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
 
         // Act
-        var response = await this._client.GetAsync($"/api/v1/import/mappings/{created!.Id}");
+        var response = await _client.GetAsync($"/api/v1/import/mappings/{created!.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -418,10 +419,10 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
             },
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
 
-        var getResponse = await this._client.GetAsync($"/api/v1/import/mappings/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/v1/import/mappings/{created!.Id}");
         var etag = getResponse.Headers.ETag;
 
         var updateRequest = new UpdateImportMappingRequest { Name = "Updated With ETag" };
@@ -432,7 +433,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         request.Headers.IfMatch.Add(etag!);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -457,7 +458,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
             },
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
 
         var staleETag = new System.Net.Http.Headers.EntityTagHeaderValue("\"99999999\"");
@@ -469,7 +470,7 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
         request.Headers.IfMatch.Add(staleETag);
 
         // Act
-        var response = await this._client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -491,13 +492,13 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
                 new ColumnMappingDto { ColumnIndex = 0, TargetField = ImportField.Date },
             },
         };
-        var createResponse = await this._client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/import/mappings", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<ImportMappingDto>();
 
         var updateRequest = new UpdateImportMappingRequest { Name = "Updated Without ETag" };
 
         // Act
-        var response = await this._client.PutAsJsonAsync($"/api/v1/import/mappings/{created!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/api/v1/import/mappings/{created!.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

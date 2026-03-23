@@ -13,7 +13,10 @@ public interface IDebugLogBuffer
     /// <summary>
     /// Gets a value indicating whether the debug log buffer is enabled.
     /// </summary>
-    bool IsEnabled { get; }
+    bool IsEnabled
+    {
+        get;
+    }
 
     /// <summary>
     /// Adds a log entry to the buffer.

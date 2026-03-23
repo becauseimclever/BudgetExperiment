@@ -20,15 +20,15 @@ public class RecurringTransferExceptionTests
         var modifiedDate = new DateOnly(2026, 2, 5);
 
         var result = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             modifiedAmount,
             modifiedDescription,
             modifiedDate);
 
         Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(this._validRecurringTransferId, result.RecurringTransferId);
-        Assert.Equal(this._validOriginalDate, result.OriginalDate);
+        Assert.Equal(_validRecurringTransferId, result.RecurringTransferId);
+        Assert.Equal(_validOriginalDate, result.OriginalDate);
         Assert.Equal(ExceptionType.Modified, result.ExceptionType);
         Assert.Equal(modifiedAmount, result.ModifiedAmount);
         Assert.Equal("Updated transfer description", result.ModifiedDescription);
@@ -41,8 +41,8 @@ public class RecurringTransferExceptionTests
         var modifiedAmount = MoneyValue.Create("USD", 750m);
 
         var result = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             modifiedAmount,
             null,
             null);
@@ -57,8 +57,8 @@ public class RecurringTransferExceptionTests
     public void CreateModified_With_Only_Description_Creates_Exception()
     {
         var result = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             null,
             "New transfer description",
             null);
@@ -75,8 +75,8 @@ public class RecurringTransferExceptionTests
         var modifiedDate = new DateOnly(2026, 2, 10);
 
         var result = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             null,
             null,
             modifiedDate);
@@ -93,7 +93,7 @@ public class RecurringTransferExceptionTests
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransferException.CreateModified(
                 Guid.Empty,
-                this._validOriginalDate,
+                _validOriginalDate,
                 MoneyValue.Create("USD", 500m),
                 null,
                 null));
@@ -106,8 +106,8 @@ public class RecurringTransferExceptionTests
     {
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransferException.CreateModified(
-                this._validRecurringTransferId,
-                this._validOriginalDate,
+                _validRecurringTransferId,
+                _validOriginalDate,
                 null,
                 null,
                 null));
@@ -122,8 +122,8 @@ public class RecurringTransferExceptionTests
 
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransferException.CreateModified(
-                this._validRecurringTransferId,
-                this._validOriginalDate,
+                _validRecurringTransferId,
+                _validOriginalDate,
                 zeroAmount,
                 null,
                 null));
@@ -138,8 +138,8 @@ public class RecurringTransferExceptionTests
 
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransferException.CreateModified(
-                this._validRecurringTransferId,
-                this._validOriginalDate,
+                _validRecurringTransferId,
+                _validOriginalDate,
                 negativeAmount,
                 null,
                 null));
@@ -151,8 +151,8 @@ public class RecurringTransferExceptionTests
     public void CreateModified_Trims_Description()
     {
         var result = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             null,
             "  Trimmed description  ",
             null);
@@ -164,12 +164,12 @@ public class RecurringTransferExceptionTests
     public void CreateSkipped_Creates_Skipped_Exception()
     {
         var result = RecurringTransferException.CreateSkipped(
-            this._validRecurringTransferId,
-            this._validOriginalDate);
+            _validRecurringTransferId,
+            _validOriginalDate);
 
         Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(this._validRecurringTransferId, result.RecurringTransferId);
-        Assert.Equal(this._validOriginalDate, result.OriginalDate);
+        Assert.Equal(_validRecurringTransferId, result.RecurringTransferId);
+        Assert.Equal(_validOriginalDate, result.OriginalDate);
         Assert.Equal(ExceptionType.Skipped, result.ExceptionType);
         Assert.Null(result.ModifiedAmount);
         Assert.Null(result.ModifiedDescription);
@@ -182,7 +182,7 @@ public class RecurringTransferExceptionTests
         var ex = Assert.Throws<DomainException>(() =>
             RecurringTransferException.CreateSkipped(
                 Guid.Empty,
-                this._validOriginalDate));
+                _validOriginalDate));
 
         Assert.Contains("Recurring transfer ID is required", ex.Message);
     }
@@ -191,8 +191,8 @@ public class RecurringTransferExceptionTests
     public void Update_With_Valid_Parameters_Updates_Exception()
     {
         var exception = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             MoneyValue.Create("USD", 500m),
             null,
             null);
@@ -212,8 +212,8 @@ public class RecurringTransferExceptionTests
     public void Update_Skipped_Exception_Throws()
     {
         var exception = RecurringTransferException.CreateSkipped(
-            this._validRecurringTransferId,
-            this._validOriginalDate);
+            _validRecurringTransferId,
+            _validOriginalDate);
 
         var ex = Assert.Throws<DomainException>(() =>
             exception.Update(MoneyValue.Create("USD", 500m), null, null));
@@ -225,8 +225,8 @@ public class RecurringTransferExceptionTests
     public void Update_With_Zero_Amount_Throws()
     {
         var exception = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             MoneyValue.Create("USD", 500m),
             null,
             null);
@@ -243,8 +243,8 @@ public class RecurringTransferExceptionTests
     public void Update_With_All_Null_Throws()
     {
         var exception = RecurringTransferException.CreateModified(
-            this._validRecurringTransferId,
-            this._validOriginalDate,
+            _validRecurringTransferId,
+            _validOriginalDate,
             MoneyValue.Create("USD", 500m),
             null,
             null);

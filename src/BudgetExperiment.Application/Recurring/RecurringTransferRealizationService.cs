@@ -45,7 +45,7 @@ public sealed class RecurringTransferRealizationService : IRecurringTransferReal
         var recurring = await _repository.GetByIdAsync(recurringTransferId, cancellationToken);
         if (recurring is null)
         {
-            throw new DomainException("Recurring transfer not found.");
+            throw new DomainException("Recurring transfer not found.", DomainExceptionType.NotFound);
         }
 
         // Check if already realized

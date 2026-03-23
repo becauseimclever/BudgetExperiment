@@ -23,12 +23,18 @@ public sealed record GeoCoordinateValue
     /// <summary>
     /// Gets the latitude (-90 to 90).
     /// </summary>
-    public decimal Latitude { get; init; }
+    public decimal Latitude
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the longitude (-180 to 180).
     /// </summary>
-    public decimal Longitude { get; init; }
+    public decimal Longitude
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Creates a validated <see cref="GeoCoordinateValue"/> with 6 decimal place precision.
