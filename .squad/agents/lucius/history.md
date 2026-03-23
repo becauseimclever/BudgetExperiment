@@ -26,86 +26,29 @@ Tests under `tests/` mirror the src structure.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
-### 2026-03-23 — Missing Application Service Tests: RecurringTransactionInstanceService & UserSettingsService
+## Core Context
 
-**Task:** Create comprehensive test files for two application services with zero coverage.
+### Backend Code Quality & Architecture (2026-03-22)
 
-**Files Created:**
-- `tests/BudgetExperiment.Application.Tests/Recurring/RecurringTransactionInstanceServiceTests.cs` — 20 tests
-- `tests/BudgetExperiment.Application.Tests/Settings/UserSettingsServiceTests.cs` — 17 tests
+**Architecture Quality: B+ (Strong fundamentals with targeted improvements)** — Domain: Rich behavior-focused entities, no infrastructure leakage, 21 repository interfaces, 4 domain services, comprehensive scope mgmt. Application: 87 services, explicit mapping, main issue: 54 methods exceed 20-line guideline (6 with 3+ nesting). Infrastructure: Excellent EF fluent config, repository scope filtering prevents data leaks, optimistic concurrency via PostgreSQL xmin. API: Textbook REST, DTOs-only, RFC 7807 Problem Details, ETag support, OpenAPI + Scalar configured.
 
-**RecurringTransactionInstanceService (20 tests):**
-- `GetInstancesAsync`: null when not found, occurrences in range, empty range, skipped exception, modified exception
-- `ModifyInstanceAsync`: null when not found, creates new exception, updates existing, version token sets concurrency + marks modified, no token = no concurrency setup
-- `SkipInstanceAsync`: false when not found, creates skipped, removes old + creates skipped, saves changes
-- `GetProjectedInstancesAsync`: uses account filter when ID provided, uses GetActiveAsync without ID, empty active = empty result, skipped instances filtered out, results ordered by effective date
+**Critical Issues:** (1) Six methods with 3+ nesting levels need refactoring (TransactionListService recurring, ImportValidator, RuleSuggestionParser). (2) ExceptionHandlingMiddleware uses string matching instead of DomainException.ExceptionType enum. (3) Three services registered as both interface + concrete (no justification). **Method Count:** 54 violations total — 40 Application, 19 Infrastructure configs (acceptable), ~10 spread.
 
-**UserSettingsService (17 tests):**
-- `GetCurrentUserProfile`: profile from context, null GUID = empty GUID
-- `GetCurrentUserSettingsAsync`: returns DTO, throws when unauthenticated
-- `UpdateCurrentUserSettingsAsync`: updates scope/autoRealize/lookbackDays/currency, invalid scope throws, unauthenticated throws
-- `CompleteOnboardingAsync`: sets IsOnboarded=true, throws when unauthenticated
-- `GetCurrentScope`: returns scope string, null scope returns null
-- `SetCurrentScope`: valid scope calls SetScope, null/whitespace calls SetScope(null), invalid throws
+**Positives:** Zero infrastructure types in Domain. Comprehensive scope filtering at repo level (security). No primitive obsession (proper value objects). No dead code. StyleCop warnings-as-errors enforced.
 
-**Key Learnings:**
-- SA1512 (single-line comment not followed by blank line) fires on `// --- Section ---` dividers — remove blank line after them or switch to XML doc comments
-- `GetProjectedInstancesAsync` calls `GetInstancesAsync` internally which calls `GetByIdAsync` — must mock GetByIdAsync for projected tests too, not just GetActiveAsync/GetByAccountIdAsync
-- `UserSettings.CreateDefault(userId)` is the correct factory for test instances; works perfectly for asserting post-update behavior
-- `IUserSettingsRepository.SaveAsync` returns `Task` — mock with `.Returns(Task.CompletedTask)`
-- `ITransactionRepository.GetByDateRangeAsync` returns `IReadOnlyList<Transaction>` — use `new List<Transaction>()` for empty mock return (avoids private-constructor problem)
+### Feature 111: Performance Optimizations (2026-03-22)
 
-### 2026-03-22: Backend Code Quality Deep-Dive Review
+**AsNoTracking Propagation:** Added AsNoTracking/AsNoTrackingWithIdentityResolution to all read-only repository queries; preserved change tracking on update paths. **Parallelized Hot Paths:** CalendarGridService (9+ sequential → parallelized), TransactionListService (similar), DayDetailService (orchestration-level). Used scoped query helper with fallback for test constructors. Registered DbContextFactory for future parallel support. **Bounded Eager Loading:** AccountRepository reduced to 90-day lookback (production Pis with large histories need this). Added extension interfaces (IAccountTransactionRangeRepository, IAccountNameLookupRepository). DayDetailService uses targeted account-name lookup instead of full history. **Result:** Build green (-warnaserror). No regression in entity refresh.
 
-Conducted comprehensive backend code review (Domain, Application, Infrastructure, API). Key findings:
+### CI Fixes & Infrastructure (2026-03-22 → 2026-03-23)
 
-**Architecture Quality: B+ (Strong fundamentals with targeted improvements needed)**
+**Performance CI Actions:** Fixed broken version references (checkout@v6, upload-artifact@v7, setup-dotnet@v5, cache@v5 → all @v4). Entire performance CI pipeline couldn't run.
 
-- **Domain Layer**: Rich, behavior-focused entities with proper value objects. No infrastructure leakage detected. 21 repository interfaces, 4 domain services, comprehensive scope management (Shared/Personal). Zero anemic models found.
-- **Application Layer**: 87 services properly orchestrating domain objects. Explicit mapping (no AutoMapper). Main issue: 54 methods exceed 20-line guideline (6 with critical 3+ level nesting).
-- **Infrastructure Layer**: Excellent EF Core fluent configuration isolates persistence concerns. Repository scope filtering prevents cross-tenant data leaks. Optimistic concurrency via PostgreSQL xmin properly configured.
-- **API Layer**: Textbook REST with proper HTTP verbs/status codes, DTOs-only exposure, RFC 7807 Problem Details, ETag concurrency support. OpenAPI + Scalar configured correctly.
+**Baseline Committed:** Used local stress_transactions.csv (1335 requests, p99=7.3ms) per Decision 5 (smoke tests are sanity checks, not baselines). CI Smoke artifact only contained in-memory data unsuitable for baselines. Updated baseline.json with stress data; must replace with scheduled PostgreSQL load test run eventually.
 
-**Critical Issues (Address First):**
-1. Six methods with 3+ nesting levels need immediate refactoring (TransactionListService recurring instance methods, ImportExecuteRequestValidator, RuleSuggestionResponseParser, etc.)
-2. ExceptionHandlingMiddleware uses brittle string matching instead of DomainException.ExceptionType enum
-3. Three services registered as both interface + concrete ("backward compatibility" with no justification found)
+**PostgreSQL 18 Upgrade:** Migrated docker-compose.demo.yml and docs from postgres:16 to postgres:18 using Docker Hardened Image (dhi.io/postgres:18). Npgsql 10.0.0 supports 13–18 (no driver changes). EF migrations fully compatible. Migration path: new auto-uses 18, existing demo `down -v`, production pg_dumpall/restore.
 
-**Positive Highlights:**
-- Zero infrastructure types in Domain (perfect abstraction)
-- Comprehensive scope filtering at repository level (security win)
-- No primitive obsession (proper value object usage throughout)
-- No commented-out code found
-- StyleCop warnings-as-errors enforced with zero global suppressions
-
-**Method Length Statistics:** 54 violations (40 in Application, 19 in Infrastructure configs, ~10 spread across layers). Configuration files are acceptable (EF fluent API verbosity). Priority: Refactor 6 critically nested methods, then tackle 26 methods in 21-40 line range.
-
-### 2026-03-22: Backend Code Quality Deep-Dive Review
-
-Conducted comprehensive backend code review (Domain, Application, Infrastructure, API). Key findings:
-
-**Architecture Quality: B+ (Strong fundamentals with targeted improvements needed)**
-
-- **Domain Layer**: Rich, behavior-focused entities with proper value objects. No infrastructure leakage detected. 21 repository interfaces, 4 domain services, comprehensive scope management (Shared/Personal). Zero anemic models found.
-- **Application Layer**: 87 services properly orchestrating domain objects. Explicit mapping (no AutoMapper). Main issue: 54 methods exceed 20-line guideline (6 with critical 3+ level nesting).
-- **Infrastructure Layer**: Excellent EF Core fluent configuration isolates persistence concerns. Repository scope filtering prevents cross-tenant data leaks. Optimistic concurrency via PostgreSQL xmin properly configured.
-- **API Layer**: Textbook REST with proper HTTP verbs/status codes, DTOs-only exposure, RFC 7807 Problem Details, ETag concurrency support. OpenAPI + Scalar configured correctly.
-
-**Critical Issues (Address First):**
-1. Six methods with 3+ nesting levels need immediate refactoring (TransactionListService recurring instance methods, ImportExecuteRequestValidator, RuleSuggestionResponseParser, etc.)
-2. ExceptionHandlingMiddleware uses brittle string matching instead of DomainException.ExceptionType enum
-3. Three services registered as both interface + concrete ("backward compatibility" with no justification found)
-
-**Positive Highlights:**
-- Zero infrastructure types in Domain (perfect abstraction)
-- Comprehensive scope filtering at repository level (security win)
-- No primitive obsession (proper value object usage throughout)
-- No commented-out code found
-- StyleCop warnings-as-errors enforced with zero global suppressions
-
-**Method Length Statistics:** 54 violations (40 in Application, 19 in Infrastructure configs, ~10 spread across layers). Configuration files are acceptable (EF fluent API verbosity). Priority: Refactor 6 critically nested methods, then tackle 26 methods in 21-40 line range.
-
-**Technical Debt:** Manageable. Main issue is method extraction discipline, not architectural problems. No refactoring at layer boundaries needed. Incremental cleanup viable without breaking changes.
+### Recent Work
 
 ### 2026-03-22: Three Quick-Win Code Quality Fixes Applied
 
