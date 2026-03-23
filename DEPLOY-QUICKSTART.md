@@ -17,7 +17,7 @@ Open [http://localhost:5099](http://localhost:5099). That's it!
 
 ### What's included
 
-- **PostgreSQL 16** — bundled and pre-configured, no external database needed
+- **PostgreSQL 18** — bundled and pre-configured, no external database needed
 - **Authentication disabled** — no identity provider setup required
 - **Persistent data** — stored in a Docker volume that survives restarts
 

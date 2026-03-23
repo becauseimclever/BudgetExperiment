@@ -281,7 +281,7 @@ All legacy local build/deploy scripts have been removed from the repository to a
 ### Container Security
 
 - **.NET runtime**: Microsoft `noble-chiseled` images — distroless Ubuntu, non-root by default (UID 1654), no shell or package manager, ~50% smaller attack surface
-- **PostgreSQL**: Docker Hardened Image (`dhi.io/postgres:16`) — continuously patched, SLSA Build Level 3 provenance, minimal footprint
+- **PostgreSQL**: Docker Hardened Image (`dhi.io/postgres:18`) — continuously patched, SLSA Build Level 3 provenance, minimal footprint
 - Multi-stage builds minimize image size (SDK build stage not shipped)
 - No HEALTHCHECK in Dockerfiles (chiseled images have no shell); health monitoring via external access to `/health` endpoint
 - Resource limits prevent resource exhaustion

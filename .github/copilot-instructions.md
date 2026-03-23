@@ -262,7 +262,7 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 - **Important**: Do NOT create or suggest local Docker build workflows. Direct users to CI/CD pipeline or standard .NET local development.
 - **Hardened Image Policy**:
   - **.NET runtime**: Use Microsoft `noble-chiseled-extra` images (`mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra`) — distroless Ubuntu, non-root by default, no shell/package manager, includes ICU globalization data (required for culture-aware localization). .NET is not in Docker's Hardened Images catalog.
-  - **PostgreSQL**: Use Docker Hardened Image (`dhi.io/postgres:16`) — continuously patched, SLSA provenance, drop-in replacement.
+  - **PostgreSQL**: Use Docker Hardened Image (`dhi.io/postgres:18`) — continuously patched, SLSA provenance, drop-in replacement.
   - **.NET SDK (build stage only)**: Standard `mcr.microsoft.com/dotnet/sdk:10.0` — not deployed, no hardening required.
   - **No HEALTHCHECK in Dockerfiles** — chiseled images have no shell or curl. Health monitoring via external access to `/health` endpoint.
   - **Policy**: When adding any new Docker image, always check the [Docker Hardened Images catalog](https://www.docker.com/products/hardened-images/) first. Use the hardened variant if available; otherwise use the most minimal official variant (Alpine, slim, or distroless).

@@ -1,5 +1,5 @@
 # Feature 118: Upgrade PostgreSQL to Version 18
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
@@ -36,10 +36,10 @@ All PostgreSQL image references updated to version 18. Documentation reflects th
 **So that** I benefit from the latest performance improvements, SQL features, and security fixes
 
 **Acceptance Criteria:**
-- [ ] `docker-compose.demo.yml` uses PostgreSQL 18 image
-- [ ] PostgreSQL 18 starts, accepts connections, and passes health check
-- [ ] EF Core migrations run successfully against PostgreSQL 18
-- [ ] Application reads and writes work correctly
+- [x] `docker-compose.demo.yml` uses PostgreSQL 18 image
+- [x] PostgreSQL 18 starts, accepts connections, and passes health check
+- [x] EF Core migrations run successfully against PostgreSQL 18
+- [x] Application reads and writes work correctly
 
 ### US-118-002: Document Migration Path for Existing Deployments
 **As a** platform operator with an existing PostgreSQL 16 database  
@@ -47,9 +47,9 @@ All PostgreSQL image references updated to version 18. Documentation reflects th
 **So that** I can upgrade without data loss
 
 **Acceptance Criteria:**
-- [ ] Migration/upgrade steps documented for existing deployments
-- [ ] Breaking changes (if any) between PostgreSQL 16 and 18 identified and addressed
-- [ ] Rollback guidance provided
+- [x] Migration/upgrade steps documented for existing deployments
+- [x] Breaking changes (if any) between PostgreSQL 16 and 18 identified and addressed
+- [x] Rollback guidance provided
 
 ### US-118-003: Update All Documentation References
 **As a** developer  
@@ -57,10 +57,10 @@ All PostgreSQL image references updated to version 18. Documentation reflects th
 **So that** docs are consistent and accurate
 
 **Acceptance Criteria:**
-- [ ] `DEPLOY-QUICKSTART.md` references PostgreSQL 18
-- [ ] `copilot-instructions.md` references PostgreSQL 18
-- [ ] `ci-cd-deployment.md` references PostgreSQL 18
-- [ ] Feature doc 108 references updated where relevant
+- [x] `DEPLOY-QUICKSTART.md` references PostgreSQL 18
+- [x] `copilot-instructions.md` references PostgreSQL 18
+- [x] `ci-cd-deployment.md` references PostgreSQL 18
+- [x] Feature doc 108 references updated where relevant
 
 ---
 
@@ -102,11 +102,11 @@ For existing deployments with data in PostgreSQL 16 volumes:
 **Objective:** Upgrade the PostgreSQL image in `docker-compose.demo.yml` to version 18.
 
 **Tasks:**
-- [ ] Update `docker-compose.demo.yml` image from `dhi.io/postgres:16` to `dhi.io/postgres:18`
-- [ ] Update comments in `docker-compose.demo.yml` referencing PostgreSQL 16
-- [ ] Verify PostgreSQL 18 starts and passes `pg_isready` health check
-- [ ] Verify EF Core migrations apply cleanly against PostgreSQL 18
-- [ ] Verify application CRUD operations work correctly
+- [x] Update `docker-compose.demo.yml` image from `dhi.io/postgres:16` to `dhi.io/postgres:18`
+- [x] Update comments in `docker-compose.demo.yml` referencing PostgreSQL 16
+- [x] Verify PostgreSQL 18 starts and passes `pg_isready` health check
+- [x] Verify EF Core migrations apply cleanly against PostgreSQL 18
+- [x] Verify application CRUD operations work correctly
 
 **Commit:**
 ```bash
@@ -127,10 +127,10 @@ Refs: #118"
 **Objective:** Update all documentation to reference PostgreSQL 18.
 
 **Tasks:**
-- [ ] Update `DEPLOY-QUICKSTART.md` PostgreSQL version reference
-- [ ] Update `.github/copilot-instructions.md` hardened image policy
-- [ ] Update `docs/ci-cd-deployment.md` container security section
-- [ ] Add migration notes for existing production deployments
+- [x] Update `DEPLOY-QUICKSTART.md` PostgreSQL version reference
+- [x] Update `.github/copilot-instructions.md` hardened image policy
+- [x] Update `docs/ci-cd-deployment.md` container security section
+- [x] Add migration notes for existing production deployments
 
 **Commit:**
 ```bash
