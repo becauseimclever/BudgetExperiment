@@ -1,0 +1,24 @@
+scribe: Orchestration log + decision merge (2026-03-22T19:10:35Z)
+
+Completed squad orchestration across three concurrent agents:
+
+- Alfred (Lead): Feature 112 performance testing architecture review. Decision: performance test baselines MUST use real PostgreSQL, not EF Core in-memory, to capture realistic I/O and query planning overhead.
+
+- Barbara (QA): Full audit of 45 performance tests. Findings: 17 genuine, 28 noise. Delivered 8 actionable decisions on CI action pinning, baseline infrastructure, threshold tightening, and test reclassification. Critical issue: `PerformanceWebApplicationFactory` uses InMemory by default — must switch to Testcontainers PostgreSQL; baseline.json never committed.
+
+- Lucius (Backend): Feature 111 performance optimizations complete. Three areas: (1) AsNoTracking on read-only repos, (2) parallelized hot paths (CalendarGridService, TransactionListService, DayDetailService), (3) bounded eager loading (90-day account lookback, extension interfaces). Build green (-warnaserror). Feature 111 status: Done.
+
+New files:
+- .squad/orchestration-log/{timestamp}-alfred.md
+- .squad/orchestration-log/{timestamp}-barbara.md
+- .squad/orchestration-log/{timestamp}-lucius.md
+- .squad/log/{timestamp}-feature-111-implementation.md
+
+Updated files:
+- .squad/decisions.md (merged 8 inbox decisions, deduped, archived old entry)
+- .squad/agents/{alfred,barbara,lucius}/history.md (appended session work)
+
+Deleted files:
+- .squad/decisions/inbox/{alfred-perf-review,barbara-perf-audit,lucius-feature-111}.md (archived to decisions.md)
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
