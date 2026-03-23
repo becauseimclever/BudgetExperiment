@@ -11,7 +11,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="CategorizationRuleRepository"/>.
 /// </summary>
-[Collection("InMemoryDb")]
+[Collection("PostgreSqlDb")]
 public class CategorizationRuleRepositoryTests
 {
     private readonly PostgreSqlFixture _fixture;

@@ -1,4 +1,4 @@
-// <copyright file="InMemoryDbCollection.cs" company="BecauseImClever">
+// <copyright file="PostgreSqlDbCollection.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -8,7 +8,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// Collection definition for infrastructure tests using a PostgreSQL Testcontainer.
 /// The container starts once and is shared across all test classes in the collection.
 /// </summary>
-[CollectionDefinition("InMemoryDb")]
-public sealed class InMemoryDbCollection : ICollectionFixture<PostgreSqlFixture>
+[CollectionDefinition("PostgreSqlDb")]
+public sealed class PostgreSqlDbCollection : ICollectionFixture<PostgreSqlFixture>
 {
 }

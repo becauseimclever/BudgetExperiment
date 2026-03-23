@@ -10,7 +10,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="ChatSessionRepository"/>.
 /// </summary>
-[Collection("InMemoryDb")]
+[Collection("PostgreSqlDb")]
 public class ChatSessionRepositoryTests
 {
     private readonly PostgreSqlFixture _fixture;

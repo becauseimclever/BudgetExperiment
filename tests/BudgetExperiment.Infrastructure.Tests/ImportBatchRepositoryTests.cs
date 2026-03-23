@@ -11,7 +11,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="ImportBatchRepository"/>.
 /// </summary>
-[Collection("InMemoryDb")]
+[Collection("PostgreSqlDb")]
 public class ImportBatchRepositoryTests
 {
     private readonly PostgreSqlFixture _fixture;

@@ -10,7 +10,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="CategorySuggestionRepository"/>.
 /// </summary>
-[Collection("InMemoryDb")]
+[Collection("PostgreSqlDb")]
 public class CategorySuggestionRepositoryTests
 {
     private readonly PostgreSqlFixture _fixture;

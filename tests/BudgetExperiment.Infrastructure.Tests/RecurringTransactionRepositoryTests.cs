@@ -10,7 +10,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="RecurringTransactionRepository"/>.
 /// </summary>
-[Collection("InMemoryDb")]
+[Collection("PostgreSqlDb")]
 public class RecurringTransactionRepositoryTests
 {
     private readonly PostgreSqlFixture _fixture;

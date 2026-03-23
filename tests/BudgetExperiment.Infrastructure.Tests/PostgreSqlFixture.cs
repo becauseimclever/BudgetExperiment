@@ -17,7 +17,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// </summary>
 public sealed class PostgreSqlFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:16")
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:18")
         .Build();
 
     /// <summary>
@@ -51,9 +51,9 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
     {
         await _container.StartAsync();
 
-        // Create schema once; subsequent CreateContext() calls just truncate data.
+        // Apply migrations once; subsequent CreateContext() calls just truncate data.
         await using var context = this.BuildContext();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
     }
 
     /// <inheritdoc />

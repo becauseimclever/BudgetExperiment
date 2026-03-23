@@ -11,7 +11,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="ReconciliationMatchRepository"/>.
 /// </summary>
-[Collection("InMemoryDb")]
+[Collection("PostgreSqlDb")]
 public class ReconciliationMatchRepositoryTests
 {
     private readonly PostgreSqlFixture _fixture;

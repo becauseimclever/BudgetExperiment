@@ -10,7 +10,7 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// <summary>
 /// Integration tests for <see cref="LearnedMerchantMappingRepository"/>.
 /// </summary>
-[Collection("InMemoryDb")]
+[Collection("PostgreSqlDb")]
 public class LearnedMerchantMappingRepositoryTests
 {
     private readonly PostgreSqlFixture _fixture;
