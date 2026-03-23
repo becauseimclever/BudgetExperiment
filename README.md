@@ -64,12 +64,18 @@ Built using **Clean Architecture** principles with strict layer separation:
 - `BudgetExperiment.Application` - Use cases, services, DTOs, orchestration
 - `BudgetExperiment.Infrastructure` - EF Core, repositories, database migrations
 - `BudgetExperiment.Contracts` - Shared DTOs for API and client communication
+- `BudgetExperiment.Shared` - Shared enums (BudgetScope, CategorySource, DescriptionMatchMode, etc.)
 - `BudgetExperiment.Api` - REST API, dependency injection, OpenAPI, authentication
 - `BudgetExperiment.Client` - Blazor WebAssembly UI with custom design system
 
 **Tests (`tests/`)**
-- Corresponding test projects for each layer using xUnit + Shouldly
-- Test-driven development (TDD) enforced throughout
+- `BudgetExperiment.Domain.Tests` - Pure unit tests, no external dependencies
+- `BudgetExperiment.Application.Tests` - Application services with mocked repositories
+- `BudgetExperiment.Infrastructure.Tests` - Repository integration tests (**requires Docker** for Testcontainers/PostgreSQL)
+- `BudgetExperiment.Api.Tests` - Endpoint integration tests (**requires Docker** for Testcontainers/PostgreSQL)
+- `BudgetExperiment.Client.Tests` - Blazor component tests (bUnit)
+- `BudgetExperiment.Performance.Tests` - Load and latency tests via NBomber (**requires Docker**; excluded from default test runs)
+- `BudgetExperiment.E2E.Tests` - End-to-end Playwright tests (**requires a running server**; excluded from default test runs)
 
 ## 🚀 Technology Stack
 
@@ -94,7 +100,7 @@ Built using **Clean Architecture** principles with strict layer separation:
 
 ```powershell
 git clone https://github.com/becauseimclever/BudgetExperiment.git
-cd BudgetExpirement
+cd BudgetExperiment
 ```
 
 ### 2. Configure the database connection
@@ -130,14 +136,26 @@ The application will be available at:
 
 ## 🧪 Running Tests
 
-Run all tests:
+> **Docker required** for Infrastructure, API, and Performance tests — they use Testcontainers to spin up a real PostgreSQL instance.
+
+Run the standard test suite (excludes Performance, E2E, and tests with external dependencies):
 ```powershell
-dotnet test
+dotnet test --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency&Category!=Performance"
+```
+
+Run all tests (including Performance; still excludes E2E which need a live server):
+```powershell
+dotnet test --filter "FullyQualifiedName!~E2E"
 ```
 
 Run tests for a specific project:
 ```powershell
 dotnet test tests/BudgetExperiment.Domain.Tests/BudgetExperiment.Domain.Tests.csproj
+```
+
+**E2E tests** require Playwright browsers and a running application. Set `BUDGET_APP_URL` to target the server, then run:
+```powershell
+dotnet test tests/BudgetExperiment.E2E.Tests/BudgetExperiment.E2E.Tests.csproj
 ```
 
 ## 🐳 Deployment (Docker)

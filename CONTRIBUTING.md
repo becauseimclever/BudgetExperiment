@@ -31,12 +31,24 @@ git checkout -b feature/your-feature-name
 
 ### 3. Run Tests
 
-```bash
-# Run all tests
-dotnet test
+> **Docker required** for `BudgetExperiment.Infrastructure.Tests` and `BudgetExperiment.Api.Tests` — they use Testcontainers to spin up a real PostgreSQL instance. `BudgetExperiment.Performance.Tests` also requires Docker.
 
-# Run specific project tests
+```bash
+# Standard suite — excludes Performance, E2E, and tests with external dependencies
+dotnet test --filter "FullyQualifiedName!~E2E&Category!=ExternalDependency&Category!=Performance"
+
+# Run specific project
 dotnet test tests/BudgetExperiment.Domain.Tests
+```
+
+**Performance tests** are excluded from the default filter. Run them explicitly (requires Docker):
+```bash
+dotnet test tests/BudgetExperiment.Performance.Tests
+```
+
+**E2E tests** require Playwright browsers and a running application server (`BUDGET_APP_URL` env var):
+```bash
+dotnet test tests/BudgetExperiment.E2E.Tests
 ```
 
 ### 4. Format Code
