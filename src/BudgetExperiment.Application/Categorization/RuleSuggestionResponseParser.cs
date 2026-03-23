@@ -85,16 +85,11 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
             }
 
             var categoryLookup = categories.ToDictionary(c => c.Name, c => c.Id, StringComparer.OrdinalIgnoreCase);
-            var suggestions = new List<RuleSuggestion>();
-
-            foreach (var item in parsed.Suggestions)
-            {
-                var suggestion = CreateNewRuleSuggestion(item, categoryLookup, diagnostics);
-                if (suggestion is not null)
-                {
-                    suggestions.Add(suggestion);
-                }
-            }
+            var suggestions = parsed.Suggestions
+                .Select(item => CreateNewRuleSuggestion(item, categoryLookup, diagnostics))
+                .Where(s => s is not null)
+                .Cast<RuleSuggestion>()
+                .ToList();
 
             return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(suggestions, diagnostics.Count > 0 ? diagnostics : null);
         }
@@ -128,10 +123,12 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
             foreach (var item in parsed.Suggestions)
             {
                 var suggestion = await CreateOptimizationSuggestionAsync(item, ruleLookup, ct);
-                if (suggestion is not null)
+                if (suggestion is null)
                 {
-                    suggestions.Add(suggestion);
+                    continue;
                 }
+
+                suggestions.Add(suggestion);
             }
 
             return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(suggestions, diagnostics.Count > 0 ? diagnostics : null);
@@ -166,10 +163,12 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
             foreach (var item in parsed.Conflicts)
             {
                 var suggestion = await CreateConflictSuggestionAsync(item, ruleLookup, ct);
-                if (suggestion is not null)
+                if (suggestion is null)
                 {
-                    suggestions.Add(suggestion);
+                    continue;
                 }
+
+                suggestions.Add(suggestion);
             }
 
             return ParseResult<IReadOnlyList<RuleSuggestion>>.Ok(suggestions, diagnostics.Count > 0 ? diagnostics : null);

@@ -54,16 +54,9 @@ public sealed partial class LocationParserService : ILocationParserService
             return null;
         }
 
-        foreach (var (regex, _, _) in Patterns)
-        {
-            var location = FindFirstValidMatch(regex, description);
-            if (location is not null)
-            {
-                return location;
-            }
-        }
-
-        return null;
+        return Patterns
+            .Select(p => FindFirstValidMatch(p.Regex, description))
+            .FirstOrDefault(loc => loc is not null);
     }
 
     /// <inheritdoc/>
@@ -176,15 +169,7 @@ public sealed partial class LocationParserService : ILocationParserService
 
         // Check each word individually against non-city tokens
         var words = city.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        foreach (var word in words)
-        {
-            if (IsCommonNonCityWord(word))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return !words.Any(IsCommonNonCityWord);
     }
 
     /// <summary>

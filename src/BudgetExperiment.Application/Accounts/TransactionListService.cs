@@ -308,15 +308,10 @@ public sealed class TransactionListService : ITransactionListService
 
         foreach (var (date, instances) in recurringInstances)
         {
-            foreach (var instance in instances.Where(i => i.AccountId == accountId))
-            {
-                if (IsRealizedAsTransaction(transactions, instance.RecurringTransactionId, date))
-                {
-                    continue;
-                }
-
-                items.Add(BuildRecurringTransactionItem(instance, date));
-            }
+            items.AddRange(instances
+                .Where(i => i.AccountId == accountId)
+                .Where(i => !IsRealizedAsTransaction(transactions, i.RecurringTransactionId, date))
+                .Select(i => BuildRecurringTransactionItem(i, date)));
         }
     }
 
@@ -338,15 +333,9 @@ public sealed class TransactionListService : ITransactionListService
 
         foreach (var (date, instances) in recurringTransferInstances)
         {
-            foreach (var instance in instances)
-            {
-                if (IsRealizedAsTransfer(transactions, instance.RecurringTransferId, date))
-                {
-                    continue;
-                }
-
-                items.Add(BuildRecurringTransferItem(instance, date));
-            }
+            items.AddRange(instances
+                .Where(i => !IsRealizedAsTransfer(transactions, i.RecurringTransferId, date))
+                .Select(i => BuildRecurringTransferItem(i, date)));
         }
     }
 

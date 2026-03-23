@@ -444,13 +444,13 @@ public sealed class ImportRowProcessor : IImportRowProcessor
         List<string> warnings)
     {
         // Priority 1: CSV column category
+        if (!string.IsNullOrWhiteSpace(csvCategoryName) && categoryByName.TryGetValue(csvCategoryName, out var csvCategory))
+        {
+            return new CategorizationResult(csvCategory.Id, CategorySource.CsvColumn, null, null);
+        }
+
         if (!string.IsNullOrWhiteSpace(csvCategoryName))
         {
-            if (categoryByName.TryGetValue(csvCategoryName, out var category))
-            {
-                return new CategorizationResult(category.Id, CategorySource.CsvColumn, null, null);
-            }
-
             warnings.Add($"Category '{csvCategoryName}' not found");
         }
 
