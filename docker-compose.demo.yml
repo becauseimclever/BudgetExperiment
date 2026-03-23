@@ -5,7 +5,7 @@
 #   docker compose -f docker-compose.demo.yml up -d
 #
 # This compose file includes:
-# - PostgreSQL 16 database (pre-configured, persistent volume)
+# - PostgreSQL 18 database (pre-configured, persistent volume)
 # - BudgetExperiment API + Blazor Client
 #
 # Authentication is DISABLED by default for easy evaluation.
@@ -19,9 +19,9 @@
 services:
   postgres:
     # Docker Hardened Image (dhi.io): continuously patched, SLSA provenance, minimal attack surface.
-    # Drop-in replacement for postgres:16-alpine.
-    # Fallback: postgres:16-alpine (if Docker Hardened Images subscription unavailable).
-    image: dhi.io/postgres:16
+    # Drop-in replacement for postgres:18-alpine.
+    # Fallback: postgres:18-alpine (if Docker Hardened Images subscription unavailable).
+    image: dhi.io/postgres:18
     container_name: budgetexperiment-db
     environment:
       POSTGRES_USER: budget
