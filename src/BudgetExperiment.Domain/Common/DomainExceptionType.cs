@@ -19,4 +19,9 @@ public enum DomainExceptionType
     /// A requested resource does not exist (maps to HTTP 404).
     /// </summary>
     NotFound = 1,
+
+    /// <summary>
+    /// An operation was attempted on an entity in an invalid state (maps to HTTP 422).
+    /// </summary>
+    InvalidState = 2,
 }

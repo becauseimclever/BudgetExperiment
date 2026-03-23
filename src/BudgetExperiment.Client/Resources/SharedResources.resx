@@ -124,4 +124,73 @@
     <value>over budget</value>
     <comment>Label shown when spending exceeds budget</comment>
   </data>
+  <!-- Rule Consolidation -->
+  <data name="ConsolidationSuggestions_Title" xml:space="preserve">
+    <value>Rule Consolidation</value>
+    <comment>Page title for the rule consolidation suggestions page</comment>
+  </data>
+  <data name="ConsolidationSuggestions_RunAnalysis" xml:space="preserve">
+    <value>Analyze Rules</value>
+    <comment>Button label to trigger rule consolidation analysis</comment>
+  </data>
+  <data name="ConsolidationSuggestions_Analyzing" xml:space="preserve">
+    <value>Analyzing rules for consolidation opportunities...</value>
+    <comment>Loading message shown while analysis is running</comment>
+  </data>
+  <data name="ConsolidationSuggestions_NotYetRun" xml:space="preserve">
+    <value>No analysis run yet</value>
+    <comment>Empty state title before the user has run analysis</comment>
+  </data>
+  <data name="ConsolidationSuggestions_NotYetRunDesc" xml:space="preserve">
+    <value>Click 'Analyze Rules' to detect consolidation opportunities.</value>
+    <comment>Empty state description before the user has run analysis</comment>
+  </data>
+  <data name="ConsolidationSuggestions_NoSuggestions" xml:space="preserve">
+    <value>No consolidation opportunities found</value>
+    <comment>Empty state title when analysis returned no suggestions</comment>
+  </data>
+  <data name="ConsolidationSuggestions_NoSuggestionsDesc" xml:space="preserve">
+    <value>Your rules are already well-organized.</value>
+    <comment>Empty state description when analysis returned no suggestions</comment>
+  </data>
+  <data name="ConsolidationSuggestions_Accept" xml:space="preserve">
+    <value>Consolidate</value>
+    <comment>Button label to accept a consolidation suggestion</comment>
+  </data>
+  <data name="ConsolidationSuggestions_Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+    <comment>Button label to dismiss a consolidation suggestion</comment>
+  </data>
+  <data name="ConsolidationSuggestions_Undo" xml:space="preserve">
+    <value>Undo</value>
+    <comment>Button label to undo an accepted consolidation</comment>
+  </data>
+  <data name="ConsolidationSuggestions_ConflictingRules" xml:space="preserve">
+    <value>Consolidates {0} rules</value>
+    <comment>Label showing how many rules will be consolidated (format parameter: count)</comment>
+  </data>
+  <data name="ConsolidationSuggestions_MergedPattern" xml:space="preserve">
+    <value>Merged pattern</value>
+    <comment>Label for the merged/consolidated rule pattern</comment>
+  </data>
+  <data name="Nav_ConsolidationSuggestions" xml:space="preserve">
+    <value>Rule Consolidation</value>
+    <comment>Navigation menu item for rule consolidation suggestions</comment>
+  </data>
+  <data name="Rules_FindConsolidations" xml:space="preserve">
+    <value>Find Consolidations</value>
+    <comment>Button label to navigate to the rule consolidation suggestions page</comment>
+  </data>
+  <data name="ConsolidationSuggestions_AllDone" xml:space="preserve">
+    <value>All done!</value>
+    <comment>Title shown when all consolidation suggestions have been reviewed</comment>
+  </data>
+  <data name="ConsolidationSuggestions_AllDoneDesc" xml:space="preserve">
+    <value>All consolidation suggestions have been reviewed.</value>
+    <comment>Description shown when all consolidation suggestions have been reviewed</comment>
+  </data>
+  <data name="ConsolidationSuggestions_ViewRules" xml:space="preserve">
+    <value>View your updated rules</value>
+    <comment>Link text to navigate back to the rules page after reviewing consolidations</comment>
+  </data>
 </root>

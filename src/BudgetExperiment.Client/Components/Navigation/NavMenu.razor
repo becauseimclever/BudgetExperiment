@@ -106,6 +106,16 @@
         </li>
 
         <li>
+            <NavLink class="nav-item" href="rules/consolidation" title="Rule Consolidation" aria-label="Rule consolidation suggestions">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="layers" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Rule Consolidation</span>
+                }
+            </NavLink>
+        </li>
+
+        <li>
             <NavLink class="nav-item" href="transactions" title="All Transactions" aria-label="All Transactions">
                 <span class="nav-icon" aria-hidden="true"><Icon Name="list" Size="20" /></span>
                 @if (!IsCollapsed)

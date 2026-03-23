@@ -20,14 +20,23 @@ namespace BudgetExperiment.Api.Controllers;
 public sealed class CategorizationRulesController : ControllerBase
 {
     private readonly ICategorizationRuleService _service;
+    private readonly IRuleConsolidationService _consolidationService;
+    private readonly IRuleSuggestionService _ruleSuggestionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorizationRulesController"/> class.
     /// </summary>
     /// <param name="service">The categorization rule service.</param>
-    public CategorizationRulesController(ICategorizationRuleService service)
+    /// <param name="consolidationService">The rule consolidation service.</param>
+    /// <param name="ruleSuggestionService">The rule suggestion service used for DTO mapping.</param>
+    public CategorizationRulesController(
+        ICategorizationRuleService service,
+        IRuleConsolidationService consolidationService,
+        IRuleSuggestionService ruleSuggestionService)
     {
         _service = service;
+        _consolidationService = consolidationService;
+        _ruleSuggestionService = ruleSuggestionService;
     }
 
     /// <summary>
@@ -317,5 +326,69 @@ public sealed class CategorizationRulesController : ControllerBase
 
         var count = await _service.BulkDeactivateAsync(request.Ids, cancellationToken);
         return this.Ok(new BulkRuleActionResponse { AffectedCount = count });
+    }
+
+    /// <summary>
+    /// Accepts a consolidation suggestion: creates the merged rule, deactivates source rules,
+    /// and returns the new merged rule DTO.
+    /// </summary>
+    /// <param name="id">The consolidation suggestion identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The newly created merged rule DTO.</returns>
+    [HttpPost("consolidation/{id:guid}/accept")]
+    [ProducesResponseType<CategorizationRuleDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AcceptConsolidationAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var mergedRule = await _consolidationService.AcceptConsolidationAsync(id, cancellationToken);
+        var dto = await _service.GetByIdAsync(mergedRule.Id, cancellationToken);
+        return this.Ok(dto);
+    }
+
+    /// <summary>
+    /// Undoes an accepted consolidation suggestion: reactivates the original source rules,
+    /// deactivates the merged rule, and resets the suggestion to pending.
+    /// </summary>
+    /// <param name="id">The consolidation suggestion identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>No content if successful.</returns>
+    [HttpPost("consolidation/{id:guid}/undo")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UndoConsolidationAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await _consolidationService.UndoConsolidationAsync(id, cancellationToken);
+        return this.NoContent();
+    }
+
+    /// <summary>
+    /// Dismisses a consolidation suggestion so it is no longer shown as a pending action.
+    /// </summary>
+    /// <param name="id">The consolidation suggestion identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>No content if successful.</returns>
+    [HttpPost("consolidation/{id:guid}/dismiss")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DismissConsolidationAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await _consolidationService.DismissConsolidationAsync(id, cancellationToken);
+        return this.NoContent();
+    }
+
+    /// <summary>
+    /// Analyzes active categorization rules for consolidation opportunities and
+    /// persists the results as rule suggestions.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of persisted consolidation suggestions.</returns>
+    [HttpPost("analyze-consolidation")]
+    [ProducesResponseType<IReadOnlyList<Contracts.Dtos.RuleSuggestionDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AnalyzeConsolidationAsync(CancellationToken cancellationToken)
+    {
+        var suggestions = await _consolidationService.AnalyzeAndStoreAsync(cancellationToken);
+        var dtos = await _ruleSuggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
+        return this.Ok(dtos);
     }
 }

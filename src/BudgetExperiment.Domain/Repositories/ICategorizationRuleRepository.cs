@@ -70,6 +70,14 @@ public interface ICategorizationRuleRepository : IReadRepository<CategorizationR
     Task<IReadOnlyList<CategorizationRule>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Adds a categorization rule to the store.
+    /// </summary>
+    /// <param name="entity">The rule to add.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    new Task AddAsync(CategorizationRule entity, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Removes multiple rules.
     /// </summary>
     /// <param name="rules">The rules to remove.</param>

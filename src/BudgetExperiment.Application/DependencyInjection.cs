@@ -81,6 +81,9 @@ public static class DependencyInjection
         services.AddScoped<IExportFormatter, CsvExportService>();
         services.AddScoped<IExportService, ExportService>();
         services.AddScoped<ILocationParserService, LocationParserService>();
+        services.AddScoped<IRuleConsolidationPreviewService, RuleConsolidationPreviewService>();
+        services.AddScoped<RuleConsolidationAnalyzer>();
+        services.AddScoped<IRuleConsolidationService, RuleConsolidationService>();
         return services;
     }
 }

@@ -230,6 +230,21 @@ public sealed class LinkableInstancesDialogTests : BunitContext, IAsyncLifetime
         public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns) => Task.FromResult<ImportPatternsDto?>(patterns);
 
         /// <inheritdoc/>
+        public Task<IReadOnlyList<RuleSuggestionDto>> AnalyzeConsolidationAsync() => Task.FromResult<IReadOnlyList<RuleSuggestionDto>>([]);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<RuleSuggestionDto>> GetConsolidationSuggestionsAsync() => Task.FromResult<IReadOnlyList<RuleSuggestionDto>>([]);
+
+        /// <inheritdoc/>
+        public Task<CategorizationRuleDto?> AcceptConsolidationSuggestionAsync(Guid suggestionId) => Task.FromResult<CategorizationRuleDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<bool> DismissConsolidationSuggestionAsync(Guid suggestionId) => Task.FromResult(true);
+
+        /// <inheritdoc/>
+        public Task<bool> UndoConsolidationAsync(Guid suggestionId) => Task.FromResult(true);
+
+        /// <inheritdoc/>
         public Task<IReadOnlyList<AccountDto>> GetAccountsAsync() => Task.FromResult<IReadOnlyList<AccountDto>>([]);
 
         /// <inheritdoc/>

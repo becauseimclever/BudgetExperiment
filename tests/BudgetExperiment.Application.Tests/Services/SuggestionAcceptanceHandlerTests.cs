@@ -19,6 +19,7 @@ public class SuggestionAcceptanceHandlerTests
     private readonly Mock<IRuleSuggestionRepository> _suggestionRepo;
     private readonly Mock<ICategorizationRuleRepository> _ruleRepo;
     private readonly Mock<IUnitOfWork> _unitOfWork;
+    private readonly Mock<IRuleConsolidationService> _consolidationService;
     private readonly SuggestionAcceptanceHandler _handler;
 
     public SuggestionAcceptanceHandlerTests()
@@ -26,10 +27,12 @@ public class SuggestionAcceptanceHandlerTests
         _suggestionRepo = new Mock<IRuleSuggestionRepository>();
         _ruleRepo = new Mock<ICategorizationRuleRepository>();
         _unitOfWork = new Mock<IUnitOfWork>();
+        _consolidationService = new Mock<IRuleConsolidationService>();
         _handler = new SuggestionAcceptanceHandler(
             _suggestionRepo.Object,
             _ruleRepo.Object,
-            _unitOfWork.Object);
+            _unitOfWork.Object,
+            _consolidationService.Object);
     }
 
     [Fact]
@@ -136,26 +139,6 @@ public class SuggestionAcceptanceHandlerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<DomainException>(() => _handler.AcceptSuggestionAsync(id));
-    }
-
-    [Fact]
-    public async Task AcceptSuggestionAsync_Consolidation_ThrowsDomainException()
-    {
-        // Arrange
-        var suggestion = RuleSuggestion.CreateConsolidationSuggestion(
-            title: "Consolidate rules",
-            description: "Merge rules",
-            reasoning: "Rules overlap",
-            confidence: 0.7m,
-            ruleIds: new List<Guid> { Guid.NewGuid(), Guid.NewGuid() },
-            consolidatedPattern: "MERGED");
-
-        _suggestionRepo
-            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(suggestion);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => _handler.AcceptSuggestionAsync(suggestion.Id));
     }
 
     [Fact]

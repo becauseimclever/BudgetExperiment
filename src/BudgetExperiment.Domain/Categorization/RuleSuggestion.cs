@@ -167,6 +167,14 @@ public sealed class RuleSuggestion
     }
 
     /// <summary>
+    /// Gets the ID of the merged rule created when this suggestion was accepted.
+    /// </summary>
+    public Guid? MergedRuleId
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Gets the user's feedback on the suggestion quality.
     /// </summary>
     public bool? UserFeedbackPositive
@@ -359,6 +367,34 @@ public sealed class RuleSuggestion
             OptimizedPattern = consolidatedPattern.Trim(),
             CreatedAtUtc = DateTime.UtcNow,
         };
+    }
+
+    /// <summary>
+    /// Records the ID of the merged rule created when this consolidation suggestion was accepted.
+    /// </summary>
+    /// <param name="mergedRuleId">The ID of the newly created merged rule.</param>
+    public void RecordMergedRuleId(Guid mergedRuleId)
+    {
+        if (mergedRuleId == Guid.Empty)
+        {
+            throw new DomainException("Merged rule ID cannot be empty.");
+        }
+
+        MergedRuleId = mergedRuleId;
+    }
+
+    /// <summary>
+    /// Reopens an accepted suggestion, resetting it to pending so it can be re-evaluated after an undo.
+    /// </summary>
+    public void Reopen()
+    {
+        if (Status != SuggestionStatus.Accepted)
+        {
+            throw new DomainException("Only accepted suggestions can be reopened.", DomainExceptionType.InvalidState);
+        }
+
+        Status = SuggestionStatus.Pending;
+        ReviewedAtUtc = null;
     }
 
     /// <summary>

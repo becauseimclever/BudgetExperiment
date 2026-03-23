@@ -152,5 +152,6 @@ builder.Services.AddTransient<TransfersViewModel>();
 builder.Services.AddTransient<OnboardingViewModel>();
 builder.Services.AddTransient<AiSuggestionsViewModel>();
 builder.Services.AddTransient<TransactionsViewModel>();
+builder.Services.AddTransient<ConsolidationSuggestionsViewModel>();
 
 await builder.Build().RunAsync();

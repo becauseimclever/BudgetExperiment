@@ -1579,6 +1579,123 @@ public sealed class BudgetApiService : IBudgetApiService
         }
     }
 
+    // Rule Consolidation Operations
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<RuleSuggestionDto>> AnalyzeConsolidationAsync()
+    {
+        try
+        {
+            var response = await _httpClient.PostAsync("api/v1/categorizationrules/analyze-consolidation", null);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<List<RuleSuggestionDto>>(JsonOptions);
+                return result ?? new List<RuleSuggestionDto>();
+            }
+
+            return new List<RuleSuggestionDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<RuleSuggestionDto>();
+        }
+        catch (HttpRequestException)
+        {
+            return new List<RuleSuggestionDto>();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<RuleSuggestionDto>> GetConsolidationSuggestionsAsync()
+    {
+        try
+        {
+            var result = await _httpClient.GetFromJsonAsync<List<RuleSuggestionDto>>(
+                "api/v1/suggestions?type=RuleConsolidation",
+                JsonOptions);
+            return result ?? new List<RuleSuggestionDto>();
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return new List<RuleSuggestionDto>();
+        }
+        catch (HttpRequestException)
+        {
+            return new List<RuleSuggestionDto>();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<CategorizationRuleDto?> AcceptConsolidationSuggestionAsync(Guid suggestionId)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsync(
+                $"api/v1/categorizationrules/consolidation/{suggestionId}/accept",
+                null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<CategorizationRuleDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DismissConsolidationSuggestionAsync(Guid suggestionId)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsync(
+                $"api/v1/categorizationrules/consolidation/{suggestionId}/dismiss",
+                null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> UndoConsolidationAsync(Guid suggestionId)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsync(
+                $"api/v1/categorizationrules/consolidation/{suggestionId}/undo",
+                null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+    }
+
     private async Task<ApiResult<T>> SendUpdateAsync<T>(HttpMethod method, string url, object body, string? version)
     {
         try

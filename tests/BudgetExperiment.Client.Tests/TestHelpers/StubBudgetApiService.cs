@@ -1253,6 +1253,24 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns) => Task.FromResult<ImportPatternsDto?>(null);
 
     /// <inheritdoc/>
+    public Task<IReadOnlyList<RuleSuggestionDto>> AnalyzeConsolidationAsync() =>
+        Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(new List<RuleSuggestionDto>());
+
+    /// <inheritdoc/>
+    public Task<IReadOnlyList<RuleSuggestionDto>> GetConsolidationSuggestionsAsync() =>
+        Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(new List<RuleSuggestionDto>());
+
+    /// <inheritdoc/>
+    public Task<CategorizationRuleDto?> AcceptConsolidationSuggestionAsync(Guid suggestionId) =>
+        Task.FromResult<CategorizationRuleDto?>(null);
+
+    /// <inheritdoc/>
+    public Task<bool> DismissConsolidationSuggestionAsync(Guid suggestionId) => Task.FromResult(true);
+
+    /// <inheritdoc/>
+    public Task<bool> UndoConsolidationAsync(Guid suggestionId) => Task.FromResult(true);
+
+    /// <inheritdoc/>
     public Task<UserSettingsDto?> GetUserSettingsAsync() => Task.FromResult(this.UserSettings);
 
     /// <inheritdoc/>

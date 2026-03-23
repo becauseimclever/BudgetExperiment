@@ -71,6 +71,7 @@ public sealed class ExceptionHandlingMiddleware
             (status, title) = de.ExceptionType switch
             {
                 DomainExceptionType.NotFound => ((int)HttpStatusCode.NotFound, "Not Found"),
+                DomainExceptionType.InvalidState => (StatusCodes.Status422UnprocessableEntity, "Unprocessable Entity"),
                 _ => (StatusCodes.Status400BadRequest, "Domain Validation Error"),
             };
         }

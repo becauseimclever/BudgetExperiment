@@ -1,0 +1,84 @@
+@page "/rules/consolidation"
+
+@using BudgetExperiment.Client.ViewModels
+@using BudgetExperiment.Client.Resources
+@using Microsoft.Extensions.Localization
+
+@implements IDisposable
+
+@inject ConsolidationSuggestionsViewModel ViewModel
+@inject IStringLocalizer<SharedResources> Loc
+
+<PageTitle>@Loc["ConsolidationSuggestions_Title"] - @Loc["Layout_AppName"]</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="@Loc["ConsolidationSuggestions_Title"]">
+        <Actions>
+            <Button Variant="ButtonVariant.Primary"
+                    IconLeft="layers"
+                    IsLoading="@ViewModel.IsAnalyzing"
+                    IsDisabled="@ViewModel.IsAnalyzing"
+                    OnClick="ViewModel.RunAnalysisAsync">
+                @Loc["ConsolidationSuggestions_RunAnalysis"]
+            </Button>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                TraceId="@ViewModel.ErrorTraceId"
+                OnDismiss="ViewModel.DismissError" />
+
+    @if (ViewModel.IsLoading || ViewModel.IsAnalyzing)
+    {
+        <LoadingSpinner Message="@Loc["ConsolidationSuggestions_Analyzing"]" />
+    }
+    else if (ViewModel.AllAcceptedOrDismissed)
+    {
+        <EmptyState Icon="check-circle"
+                    Title="@Loc["ConsolidationSuggestions_AllDone"]"
+                    Description="@Loc["ConsolidationSuggestions_AllDoneDesc"]" />
+        <div class="mt-3 text-center">
+            <a href="/rules">@Loc["ConsolidationSuggestions_ViewRules"] →</a>
+        </div>
+    }
+    else if (!ViewModel.HasRunAnalysis)
+    {
+        <EmptyState Icon="layers"
+                    Title="@Loc["ConsolidationSuggestions_NotYetRun"]"
+                    Description="@Loc["ConsolidationSuggestions_NotYetRunDesc"]" />
+    }
+    else if (!ViewModel.Suggestions.Any())
+    {
+        <EmptyState Icon="check-circle"
+                    Title="@Loc["ConsolidationSuggestions_NoSuggestions"]"
+                    Description="@Loc["ConsolidationSuggestions_NoSuggestionsDesc"]" />
+    }
+    else
+    {
+        <div class="suggestions-list">
+            @foreach (var suggestion in ViewModel.Suggestions)
+            {
+                <ConsolidationSuggestionCard
+                    Suggestion="suggestion"
+                    OnAccept="@(() => ViewModel.AcceptAsync(suggestion.Id))"
+                    OnDismiss="@(() => ViewModel.DismissAsync(suggestion.Id))"
+                    OnUndo="@(() => ViewModel.UndoAsync(suggestion.Id))" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.InitializeAsync();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        ViewModel.OnStateChanged = null;
+    }
+}

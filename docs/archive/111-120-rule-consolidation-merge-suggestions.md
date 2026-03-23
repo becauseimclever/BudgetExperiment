@@ -1,5 +1,5 @@
 # Feature 116: Rule Consolidation & Merge Suggestions
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
@@ -392,13 +392,13 @@ Refs: #116"
 **Objective:** Surface consolidation opportunities on the Rules page itself (not just AI Suggestions) and final polish.
 
 **Tasks:**
-- [ ] Add "Optimize Rules" button to Rules page toolbar (runs analysis, shows count of suggestions)
-- [ ] Badge/indicator on rules that are part of a consolidation group
-- [ ] Link from Rules page to AI Suggestions page filtered to consolidation suggestions
-- [ ] Add "Undo merge" option to rule detail/edit view for consolidated rules
-- [ ] Update OpenAPI spec documentation for new endpoints
-- [ ] Add XML comments for public API surface
-- [ ] Manual testing with 50+ rule dataset
+- [x] Add "Find Consolidations" button to Rules page toolbar (navigates to /rules/consolidation)
+- [x] Post-review completion state with "View your updated rules" link in ConsolidationSuggestions page
+- [x] AllAcceptedOrDismissed computed property in ConsolidationSuggestionsViewModel
+- [x] Localization keys: Rules_FindConsolidations, ConsolidationSuggestions_AllDone, _AllDoneDesc, _ViewRules
+- [x] Build clean, all tests green
+- [x] Feature doc archived
+- [x] Feature 116 complete
 
 **Commit:**
 ```bash

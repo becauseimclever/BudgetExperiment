@@ -11,6 +11,7 @@
 <div class="page-container">
     <PageHeader Title="Categorization Rules">
         <Actions>
+            <Button Variant="ButtonVariant.Outline" IconLeft="layers" OnClick="ViewModel.NavigateToConsolidations" title="Find rules that can be consolidated">Find Consolidations</Button>
             <Button Variant="ButtonVariant.Outline" IconLeft="sparkles" OnClick="ViewModel.NavigateToAiSuggestions" title="Get AI-powered rule suggestions">AI Suggestions</Button>
             <Button Variant="ButtonVariant.Secondary" IconLeft="play" IsDisabled="@(ViewModel.TotalCount == 0)" OnClick="ViewModel.ShowApplyRules">Apply Rules</Button>
             <Button Variant="ButtonVariant.Success" OnClick="ViewModel.ShowAddRule">+ Add Rule</Button>

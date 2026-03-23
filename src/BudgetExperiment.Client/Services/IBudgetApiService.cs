@@ -805,4 +805,39 @@ public interface IBudgetApiService
     /// <param name="patterns">The patterns to set.</param>
     /// <returns>The updated patterns.</returns>
     Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns);
+
+    // Rule Consolidation Operations
+
+    /// <summary>
+    /// Runs the consolidation analysis and stores the resulting suggestions.
+    /// </summary>
+    /// <returns>The newly generated consolidation suggestions.</returns>
+    Task<IReadOnlyList<RuleSuggestionDto>> AnalyzeConsolidationAsync();
+
+    /// <summary>
+    /// Gets stored consolidation suggestions (Pending and Accepted) via GET /api/v1/suggestions?type=RuleConsolidation.
+    /// </summary>
+    /// <returns>The current consolidation suggestions.</returns>
+    Task<IReadOnlyList<RuleSuggestionDto>> GetConsolidationSuggestionsAsync();
+
+    /// <summary>
+    /// Accepts a consolidation suggestion, creating the merged rule.
+    /// </summary>
+    /// <param name="suggestionId">The suggestion identifier.</param>
+    /// <returns>The newly created merged rule, or null on failure.</returns>
+    Task<CategorizationRuleDto?> AcceptConsolidationSuggestionAsync(Guid suggestionId);
+
+    /// <summary>
+    /// Dismisses a consolidation suggestion.
+    /// </summary>
+    /// <param name="suggestionId">The suggestion identifier.</param>
+    /// <returns>True if dismissed successfully (204); false otherwise.</returns>
+    Task<bool> DismissConsolidationSuggestionAsync(Guid suggestionId);
+
+    /// <summary>
+    /// Undoes an accepted consolidation suggestion, restoring the original source rules.
+    /// </summary>
+    /// <param name="suggestionId">The suggestion identifier.</param>
+    /// <returns>True if undone successfully (204); false otherwise.</returns>
+    Task<bool> UndoConsolidationAsync(Guid suggestionId);
 }

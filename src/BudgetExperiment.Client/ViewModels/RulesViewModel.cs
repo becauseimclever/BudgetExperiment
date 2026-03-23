@@ -478,6 +478,14 @@ public sealed class RulesViewModel : IDisposable
     }
 
     /// <summary>
+    /// Navigates to the rule consolidation suggestions page.
+    /// </summary>
+    public void NavigateToConsolidations()
+    {
+        _navigationManager.NavigateTo("/rules/consolidation");
+    }
+
+    /// <summary>
     /// Opens the add rule form with default values.
     /// </summary>
     public void ShowAddRule()

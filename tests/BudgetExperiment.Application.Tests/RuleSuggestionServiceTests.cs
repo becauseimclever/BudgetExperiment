@@ -1443,7 +1443,8 @@ public class RuleSuggestionServiceTests
         var acceptanceHandler = new SuggestionAcceptanceHandler(
             suggestionRepo.Object,
             ruleRepo.Object,
-            unitOfWork.Object);
+            unitOfWork.Object,
+            new Mock<IRuleConsolidationService>().Object);
 
         var service = new RuleSuggestionService(
             aiService.Object,

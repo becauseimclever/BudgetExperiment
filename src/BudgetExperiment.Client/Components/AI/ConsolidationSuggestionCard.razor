@@ -1,0 +1,166 @@
+@* ConsolidationSuggestionCard.razor - Card component for rule consolidation suggestions *@
+
+@using BudgetExperiment.Client.Resources
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<SharedResources> Loc
+
+<div class="suggestion-card consolidation-suggestion-card">
+    <div class="suggestion-card-header">
+        <div class="suggestion-card-title-row">
+            <h3 class="suggestion-card-title">@Suggestion.Title</h3>
+            <div class="suggestion-card-badges">
+                @{
+                    var confidencePct = (int)(Suggestion.Confidence * 100);
+                    var confidenceVariant = Suggestion.Confidence >= 0.8m
+                        ? BadgeVariant.Success
+                        : Suggestion.Confidence >= 0.6m
+                            ? BadgeVariant.Warning
+                            : BadgeVariant.Danger;
+                }
+                <Badge Variant="@confidenceVariant" Size="BadgeSize.Small" Text="@($"{confidencePct}%")" />
+
+                @if (!string.IsNullOrEmpty(Suggestion.SuggestedMatchType))
+                {
+                    <Badge Variant="BadgeVariant.Info" Size="BadgeSize.Small" Text="@Suggestion.SuggestedMatchType" />
+                }
+
+                @if (Suggestion.Status == "Accepted")
+                {
+                    <Badge Variant="BadgeVariant.Success" Size="BadgeSize.Small" Text="Accepted" />
+                }
+                else if (Suggestion.Status == "Dismissed")
+                {
+                    <Badge Variant="BadgeVariant.Default" Size="BadgeSize.Small" Text="Dismissed" />
+                }
+            </div>
+        </div>
+        <p class="suggestion-card-description">@Suggestion.Description</p>
+    </div>
+
+    <div class="suggestion-card-body">
+        @{
+            var mergedPattern = Suggestion.SuggestedPattern ?? Suggestion.OptimizedPattern;
+        }
+        @if (!string.IsNullOrEmpty(mergedPattern))
+        {
+            <div class="suggestion-detail">
+                <span class="suggestion-detail-label">@Loc["ConsolidationSuggestions_MergedPattern"]:</span>
+                <code class="suggestion-pattern">@mergedPattern</code>
+            </div>
+        }
+
+        @if (Suggestion.ConflictingRuleIds.Count > 0)
+        {
+            <div class="suggestion-detail">
+                <span class="suggestion-detail-label">@string.Format(Loc["ConsolidationSuggestions_ConflictingRules"], Suggestion.ConflictingRuleIds.Count)</span>
+            </div>
+        }
+
+        @if (Suggestion.SampleDescriptions.Count > 0)
+        {
+            <div class="suggestion-samples">
+                @foreach (var sample in Suggestion.SampleDescriptions.Take(3))
+                {
+                    <span class="suggestion-sample">@sample</span>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="suggestion-card-actions">
+        @if (Suggestion.Status == "Accepted")
+        {
+            <Button Variant="ButtonVariant.Secondary"
+                    Size="ButtonSize.Small"
+                    IsDisabled="@_isActioning"
+                    IsLoading="@_isActioning"
+                    OnClick="HandleUndo">
+                @Loc["ConsolidationSuggestions_Undo"]
+            </Button>
+        }
+        else if (Suggestion.Status != "Dismissed")
+        {
+            <Button Variant="ButtonVariant.Success"
+                    Size="ButtonSize.Small"
+                    IsDisabled="@_isActioning"
+                    IsLoading="@_isActioning"
+                    OnClick="HandleAccept">
+                @Loc["ConsolidationSuggestions_Accept"]
+            </Button>
+            <Button Variant="ButtonVariant.Outline"
+                    Size="ButtonSize.Small"
+                    IsDisabled="@_isActioning"
+                    OnClick="HandleDismiss">
+                @Loc["ConsolidationSuggestions_Dismiss"]
+            </Button>
+        }
+    </div>
+</div>
+
+@code {
+    private bool _isActioning;
+
+    /// <summary>
+    /// Gets or sets the consolidation suggestion to display.
+    /// </summary>
+    [Parameter]
+    public RuleSuggestionDto Suggestion { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the user accepts the suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnAccept { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the user dismisses the suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the user undoes an accepted suggestion.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnUndo { get; set; }
+
+    private async Task HandleAccept()
+    {
+        _isActioning = true;
+        try
+        {
+            await OnAccept.InvokeAsync();
+        }
+        finally
+        {
+            _isActioning = false;
+        }
+    }
+
+    private async Task HandleDismiss()
+    {
+        _isActioning = true;
+        try
+        {
+            await OnDismiss.InvokeAsync();
+        }
+        finally
+        {
+            _isActioning = false;
+        }
+    }
+
+    private async Task HandleUndo()
+    {
+        _isActioning = true;
+        try
+        {
+            await OnUndo.InvokeAsync();
+        }
+        finally
+        {
+            _isActioning = false;
+        }
+    }
+}

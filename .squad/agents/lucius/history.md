@@ -92,4 +92,114 @@ Conducted comprehensive backend code review finding B+ architecture. **Critical 
 - **From Alfred:** DIP verdict complete — all 3 controllers VERDICT A. Interfaces already existed but were incomplete. These expansions were handled by Lucius.
 - **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed. PR ready for merge.
 
+### Feature 116 Slice 2 — Strategy 3: Regex Alternation (2026)
+
+**What was added:**
+- `FindRegexAlternations` method in `RuleConsolidationAnalyzer` — Strategy 3.
+- `AddAlternationSuggestionsForGroup` — batching logic with 500-char limit per merged pattern.
+- `BuildAlternationSuggestion` — constructs `ConsolidationSuggestion` with `MergedMatchType = Regex`.
+
+**Algorithm:**
+1. Collect all `SourceRuleIds` from Strategy 1 (exact duplicates) and Strategy 2 (substring) into `allClaimedIds`.
+2. Filter active Contains rules, excluding `allClaimedIds`.
+3. Group by `CategoryId`; skip groups with `< 2` rules.
+4. For each group, escape each pattern via `Regex.Escape(pattern)` and join with `|`.
+5. If joined string ≤ 500 chars → 1 suggestion for the whole group.
+6. If > 500 chars → greedy batching: accumulate rules until adding the next would exceed 500, then emit a suggestion and start a fresh batch. Final batch always emitted (covers all IDs).
+
+**Key design decisions:**
+- `System.Text.RegularExpressions.Regex.Escape` ensures dots, plus signs, and other metacharacters are properly escaped.
+- The 500-char threshold is per `MergedPattern` string length (not per rule count).
+- Strategy 3 only promotes `Contains` → `Regex`; existing `Regex`-typed rules are ignored.
+- Rules already claimed by Strategies 1 or 2 are excluded to prevent double-reporting.
+
+**Result:** 1003 tests pass (previously 13 tests in this file; 8 new Slice 2 tests all green).
+
+### Feature 116 Slice 1 — RuleConsolidationAnalyzer (2026)
+
+**Files created:**
+- `src/BudgetExperiment.Application/Categorization/ConsolidationSuggestion.cs` — sealed record with `SourceRuleIds`, `MergedPattern`, `MergedMatchType`, `Confidence`.
+- `src/BudgetExperiment.Application/Categorization/RuleConsolidationAnalyzer.cs` — pure logic analyzer, no DI dependencies.
+
+**Key design decisions:**
+- Two strategies run sequentially: exact duplicates first, substring containment second. Exact-duplicate IDs are excluded from the substring pass to avoid double-reporting.
+- Exact duplicate key: `(CategoryId, MatchType, Pattern.ToUpperInvariant())`. Case-insensitive by normalizing to uppercase before grouping.
+- Substring containment only for `RuleMatchType.Contains` within the same `CategoryId`. Uses ordered pair iteration (i≠j) so only the broader (shorter) pattern becomes `MergedPattern`.
+- `AnalyzeAsync` is a thin orchestrator; all logic is in private static helpers to keep methods ≤20 lines.
+- `Task.FromResult` for the async signature — no I/O, no awaits needed.
+- 13 tests all pass, 0 build warnings.
+
+### Feature 116 Slice 3 — RuleConsolidationPreviewService (2026)
+
+**File created:**
+- `src/BudgetExperiment.Application/Categorization/RuleConsolidationPreviewService.cs` — sealed class implementing `IRuleConsolidationPreviewService`. Pure logic, no constructor dependencies.
+
+**Key design decisions:**
+- Single private static `Matches(RuleMatchType, pattern, description)` method using a switch expression — one responsibility, easy to extend.
+- `Contains`, `Exact`, `StartsWith`, `EndsWith`: use built-in `StringComparison.OrdinalIgnoreCase` overloads.
+- `Regex`: construct `new Regex(pattern, RegexOptions.IgnoreCase)` inline per call (acceptable for preview use, not a hot path).
+- Unmatched list built with a second `Where(!Matches)` pass (avoids allocating a set; descriptions list is small for preview scenarios).
+- `CoveragePercentage = total == 0 ? 0.0 : (double)matched.Count / total * 100.0`.
+- Registered in `DependencyInjection.AddApplication()` as `AddScoped<IRuleConsolidationPreviewService, RuleConsolidationPreviewService>()`.
+
+**Result:** Build green (0 warnings, 0 errors). 1012 Application tests pass (9 new Slice 3 tests + all prior tests).
+
+### Feature 116 Slice 4 — RuleConsolidationService & Endpoint (2026)
+
+**Files created:**
+- `src/BudgetExperiment.Application/Categorization/RuleConsolidationService.cs` — sealed class implementing `IRuleConsolidationService`.
+
+**Files modified:**
+- `src/BudgetExperiment.Application/DependencyInjection.cs` — registered `RuleConsolidationAnalyzer` (scoped) and `IRuleConsolidationService → RuleConsolidationService` (scoped).
+- `src/BudgetExperiment.Api/Controllers/CategorizationRulesController.cs` — injected `IRuleConsolidationService` and `IRuleSuggestionService`; added `POST analyze-consolidation` action.
+
+**Key design decisions:**
+- Constructor: `(ICategorizationRuleRepository, IRuleSuggestionRepository, RuleConsolidationAnalyzer, IUnitOfWork)` — exactly per Barbara's contract.
+- Early-exit guard: if `analyzer.AnalyzeAsync` returns 0 suggestions, return `Array.Empty<RuleSuggestion>()` and skip repo + unit-of-work calls.
+- `BuildSuggestion` is a private static helper that calls `RuleSuggestion.CreateConsolidationSuggestion(...)` with a human-readable title, description, and reasoning.
+- One `AddRangeAsync` call (batch insert) and one `SaveChangesAsync` call per invocation — no per-item round trips.
+- Controller delegates DTO mapping entirely to `IRuleSuggestionService.MapSuggestionsToDtosAsync` — no mapping logic in the controller.
+- `RuleConsolidationAnalyzer` registered as `AddScoped<RuleConsolidationAnalyzer>()` (concrete, no interface needed — pure logic with no I/O dependencies).
+
+**Result:** Build green (0 warnings, 0 errors). 1016 Application tests pass (4 new Slice 4 + all prior). 651 API tests pass (3 new Slice 4 + all prior).
+
+### Feature 116 Slice 5 — Accept & Dismiss Workflow (2026)
+
+**Files modified:**
+- `src/BudgetExperiment.Application/Categorization/RuleConsolidationService.cs` — added `AcceptConsolidationAsync` and `DismissConsolidationAsync` methods.
+- `src/BudgetExperiment.Application/Categorization/SuggestionAcceptanceHandler.cs` — added `IRuleConsolidationService` as 4th constructor parameter; replaced `RuleConsolidation => throw new DomainException(...)` with `await _consolidationService.AcceptConsolidationAsync(suggestionId, ct)`.
+- `src/BudgetExperiment.Api/Controllers/CategorizationRulesController.cs` — added `AcceptConsolidationAsync` and `DismissConsolidationAsync` endpoints.
+- `src/BudgetExperiment.Domain/Repositories/ICategorizationRuleRepository.cs` — added explicit `new Task AddAsync(...)` re-declaration to satisfy `<see cref="ICategorizationRuleRepository.AddAsync"/>` in Barbara's test XML docs (cref resolution requires the member be declared directly on the interface, not just inherited).
+- `tests/BudgetExperiment.Application.Tests/Services/SuggestionAcceptanceHandlerTests.cs` — added `Mock<IRuleConsolidationService>` field, updated constructor to pass 4th arg, removed `AcceptSuggestionAsync_Consolidation_ThrowsDomainException` test (behavior changed: now delegates instead of throws).
+- `tests/BudgetExperiment.Application.Tests/RuleSuggestionServiceTests.cs` — updated one inline `SuggestionAcceptanceHandler` construction to pass 4th arg.
+
+**Key design decisions:**
+- `AcceptConsolidationAsync`: Creates merged rule with `RuleMatchType.Regex` and the suggestion's `OptimizedPattern` as the pattern. Name is `"Consolidated: {pattern}"` truncated to `MaxNameLength`. Deactivates all source rules, then `AddAsync` + `SaveChangesAsync`. Does NOT call `suggestion.Accept()` — the handler does that after the service returns.
+- `DismissConsolidationAsync`: Loads suggestion, calls `suggestion.Dismiss()` (no reason), `SaveChangesAsync`. Simple 3-step flow.
+- New controller endpoints map to `consolidation/{id}/accept` and `consolidation/{id}/dismiss`. Accept returns 200 with DTO via `_service.GetByIdAsync(mergedRule.Id, ct)`. Dismiss returns 204. Middleware handles NotFound → 404 automatically.
+- No DI changes needed — `IRuleConsolidationService` was already registered in `AddApplication()`.
+- `new Task AddAsync(...)` on `ICategorizationRuleRepository` is intentional: C# interfaces allow re-declaring inherited members with `new` to make them resolvable in `cref` attributes. This avoids modifying Barbara's test files.
+
+**Result:** Build green (0 warnings, 0 errors). 1022 Application tests pass (6 new Slice 5 + all prior). 654 API tests pass (3 new Slice 5 + all prior).
+
+### Feature 116 Slice 6 — Undo Consolidation (2026)
+
+**Files modified:**
+- `src/BudgetExperiment.Application/Categorization/RuleConsolidationService.cs` — two changes:
+  1. **Retrofix**: Added `suggestion.RecordMergedRuleId(mergedRule.Id)` in `AcceptConsolidationAsync` before `SaveChangesAsync`, so the undo operation can find the merged rule.
+  2. **New method**: `UndoConsolidationAsync(Guid suggestionId, CancellationToken)` — loads suggestion (throws NotFound if absent), guards that status is Accepted (throws InvalidState if not), loads source rules via `GetByIdsAsync`, calls `Activate()` on each, loads merged rule via `GetByIdAsync(MergedRuleId.Value)`, calls `Deactivate()` on merged rule, calls `suggestion.Reopen()`, then `SaveChangesAsync`.
+- `src/BudgetExperiment.Application/Categorization/IRuleConsolidationService.cs` — fixed SA1514 spacing (blank line before new `UndoConsolidationAsync` doc header).
+- `src/BudgetExperiment.Api/Controllers/CategorizationRulesController.cs` — added `POST consolidation/{id:guid}/undo` endpoint returning 204 No Content; 404/422 handled by `ExceptionHandlingMiddleware`.
+- `src/BudgetExperiment.Infrastructure/Persistence/Configurations/RuleSuggestionConfiguration.cs` — added `builder.Property(s => s.MergedRuleId)` so EF maps the new nullable UUID column.
+
+**Migration created:**
+- `src/BudgetExperiment.Infrastructure/Persistence/Migrations/20260322221032_Feature116_AddMergedRuleId.cs` — adds nullable `MergedRuleId uuid` column to `RuleSuggestions` table (no FK constraint per spec).
+
+**Key pitfall — build-before-test after migration:**
+EF Core 10 throws `PendingModelChangesWarning` at runtime if the compiled assembly's snapshot doesn't include a newly added migration. After `dotnet ef migrations add`, always run `dotnet build` before `dotnet test --no-build`, otherwise the test host's `MigrateAsync()` will fail with "pending model changes."
+
+**Pre-existing state Barbara introduced:**
+Barbara added `MergedRuleId` to `RuleSuggestion.cs` and `Reopen()` domain method, plus `DomainExceptionType.InvalidState` enum value, and the `ExceptionHandlingMiddleware` mapping for 422 — all before this slice. Without the migration, all API tests were failing due to the `PendingModelChangesWarning`. The Feature116 migration resolved this.
+
+**Result:** Build green (0 warnings, 0 errors). 1027 Application tests pass (5 new Slice 6 + all prior). 657 API tests pass (3 new Slice 6 + all prior).
 

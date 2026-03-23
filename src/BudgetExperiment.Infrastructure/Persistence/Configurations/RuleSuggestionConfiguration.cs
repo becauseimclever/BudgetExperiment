@@ -102,6 +102,8 @@ internal sealed class RuleSuggestionConfiguration : IEntityTypeConfiguration<Rul
 
         builder.Property(s => s.UserFeedbackPositive);
 
+        builder.Property(s => s.MergedRuleId);
+
         // Indexes for efficient querying
         builder.HasIndex(s => new { s.Status, s.CreatedAtUtc })
             .HasDatabaseName("IX_RuleSuggestions_Status");

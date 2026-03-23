@@ -14,6 +14,7 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
     private readonly IRuleSuggestionRepository _suggestionRepository;
     private readonly ICategorizationRuleRepository _ruleRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRuleConsolidationService _consolidationService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SuggestionAcceptanceHandler"/> class.
@@ -21,14 +22,17 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
     /// <param name="suggestionRepository">The rule suggestion repository.</param>
     /// <param name="ruleRepository">The categorization rule repository.</param>
     /// <param name="unitOfWork">The unit of work.</param>
+    /// <param name="consolidationService">The rule consolidation service.</param>
     public SuggestionAcceptanceHandler(
         IRuleSuggestionRepository suggestionRepository,
         ICategorizationRuleRepository ruleRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IRuleConsolidationService consolidationService)
     {
         _suggestionRepository = suggestionRepository;
         _ruleRepository = ruleRepository;
         _unitOfWork = unitOfWork;
+        _consolidationService = consolidationService;
     }
 
     /// <inheritdoc/>
@@ -44,8 +48,8 @@ public sealed class SuggestionAcceptanceHandler : ISuggestionAcceptanceHandler
             SuggestionType.NewRule => await AcceptNewRuleSuggestionAsync(suggestion, ct),
             SuggestionType.PatternOptimization => await AcceptPatternOptimizationSuggestionAsync(suggestion, ct),
             SuggestionType.UnusedRule => await AcceptUnusedRuleSuggestionAsync(suggestion, ct),
-            SuggestionType.RuleConsolidation => throw new DomainException(
-                "Rule consolidation requires manual review. Accept individual changes or create a new rule manually."),
+            SuggestionType.RuleConsolidation =>
+                await _consolidationService.AcceptConsolidationAsync(suggestionId, ct),
             SuggestionType.RuleConflict => throw new DomainException(
                 "Conflict suggestions require manual resolution. Review the conflicting rules and adjust manually."),
             _ => throw new DomainException($"Unsupported suggestion type: {suggestion.Type}"),

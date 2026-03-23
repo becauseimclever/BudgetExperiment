@@ -1,4 +1,4 @@
-// <copyright file="LocationReportPageTests.cs" company="BecauseImClever">
+﻿// <copyright file="LocationReportPageTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -518,6 +518,21 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns) => Task.FromResult<ImportPatternsDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<RuleSuggestionDto>> AnalyzeConsolidationAsync() => Task.FromResult<IReadOnlyList<RuleSuggestionDto>>([]);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<RuleSuggestionDto>> GetConsolidationSuggestionsAsync() => Task.FromResult<IReadOnlyList<RuleSuggestionDto>>([]);
+
+        /// <inheritdoc/>
+        public Task<CategorizationRuleDto?> AcceptConsolidationSuggestionAsync(Guid suggestionId) => Task.FromResult<CategorizationRuleDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<bool> DismissConsolidationSuggestionAsync(Guid suggestionId) => Task.FromResult(true);
+
+        /// <inheritdoc/>
+        public Task<bool> UndoConsolidationAsync(Guid suggestionId) => Task.FromResult(true);
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<CustomReportLayoutDto>> GetCustomReportLayoutsAsync() => Task.FromResult<IReadOnlyList<CustomReportLayoutDto>>([]);
