@@ -496,6 +496,47 @@ Once the performance CI workflow runs successfully with `PERF_USE_REAL_DB=true` 
 
 ---
 
+### 18. bUnit Tests for Components With ThemeService Injection (2026-03-23)
+
+**Author:** Barbara
+
+**Trigger:** Single skipped test `EmptyState_RendersIcon` — fixed and re-enabled.
+
+**Context:** ThemeService implements IAsyncDisposable and injects IJSRuntime. Any Blazor component that directly injects ThemeService (e.g., Icon.razor) or renders such a component as a child (e.g., EmptyState.razor with Icon parameter) will fail in bUnit without proper DI setup.
+
+**Decision:** All bUnit test classes that render components injecting ThemeService (directly or through children) MUST follow this pattern:
+
+```csharp
+public class MyComponentTests : BunitContext, IAsyncLifetime
+{
+    public MyComponentTests()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.AddSingleton<ThemeService>();
+        Services.AddSingleton<CultureService>(); // if also needed
+    }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public new Task DisposeAsync() => base.DisposeAsync().AsTask();
+}
+```
+
+**Rationale:**
+- bUnit's BunitContext manages service lifetimes and calls DisposeAsync on DI container
+- Implementing IAsyncLifetime + delegating DisposeAsync to base ensures ThemeService (IAsyncDisposable) properly drained without hanging test runner
+- JSRuntimeMode.Loose prevents strict-mode failures when ThemeService lazily loads its JS module
+- CultureService also requires IJSRuntime for browser locale detection
+
+**Consequences:**
+- No skipped tests due to ThemeService complexity
+- Pattern already established in IconTests and ThemeToggleTests — EmptyStateTests now consistent
+- Future component tests rendering Icon should copy constructor pattern, not use `[Fact(Skip = ...)]`
+
+**Implementation:** EmptyStateTests updated — `EmptyState_RendersIcon` unskipped and now verifies icon container and SVG render when Icon parameter provided.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
