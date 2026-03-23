@@ -1,5 +1,5 @@
 # Feature 123: Backend Code Quality Cleanup
-> **Status:** Pending
+> **Status:** Done
 
 ## Overview
 
@@ -36,30 +36,30 @@ A code quality review on `feature/code-quality-review` surfaced four categories 
 
 ### Exception Handler
 
-- [ ] `ExceptionHandlingMiddleware` contains no `.Message.Contains(...)` calls.
-- [ ] HTTP status code mapping is driven exclusively by `DomainException.ExceptionType` (or equivalent typed exception switch) .
-- [ ] All existing `DomainException` types map to the same status codes they did before.
-- [ ] Unit tests for `ExceptionHandlingMiddleware` cover every `ExceptionType` case.
+- [x] `ExceptionHandlingMiddleware` contains no `.Message.Contains(...)` calls.
+- [x] HTTP status code mapping is driven exclusively by `DomainException.ExceptionType` (or equivalent typed exception switch) .
+- [x] All existing `DomainException` types map to the same status codes they did before.
+- [x] Unit tests for `ExceptionHandlingMiddleware` cover every `ExceptionType` case.
 
 ### DI Cleanup
 
-- [ ] The three duplicate service registrations are identified and the concrete-type registrations are removed.
-- [ ] Existing consumers (if any exist) continue to resolve their dependencies correctly.
-- [ ] A grep of the solution confirms no remaining `// backward compatibility` DI comments.
+- [x] The three duplicate service registrations are identified and the concrete-type registrations are removed.
+- [x] Existing consumers (if any exist) continue to resolve their dependencies correctly.
+- [x] A grep of the solution confirms no remaining `// backward compatibility` DI comments.
 
 ### Method Nesting
 
-- [ ] `TransactionListService` recurring instance methods: max nesting ≤ 2.
-- [ ] `ImportExecuteRequestValidator`: max nesting ≤ 2.
-- [ ] `RuleSuggestionResponseParser`: max nesting ≤ 2.
-- [ ] `ImportRowProcessor.DetermineCategory`: max nesting ≤ 2.
-- [ ] `LocationParserService` (identified method(s)): max nesting ≤ 2.
-- [ ] Refactored methods preserve all existing unit test coverage and pass without modification.
+- [x] `TransactionListService` recurring instance methods: max nesting ≤ 2.
+- [x] `ImportExecuteRequestValidator`: max nesting ≤ 2.
+- [x] `RuleSuggestionResponseParser`: max nesting ≤ 2.
+- [x] `ImportRowProcessor.DetermineCategory`: max nesting ≤ 2.
+- [x] `LocationParserService` (identified method(s)): max nesting ≤ 2.
+- [x] Refactored methods preserve all existing unit test coverage and pass without modification.
 
 ### DateTime UTC
 
-- [ ] `Reconciliation.razor` uses `DateTime.UtcNow` in every location previously using `DateTime.Now`.
-- [ ] A grep of the Client project for `DateTime.Now` (excluding comments and string literals) returns zero results after this change.
+- [x] `Reconciliation.razor` uses `DateTime.UtcNow` in every location previously using `DateTime.Now`.
+- [x] A grep of the Client project for `DateTime.Now` (excluding comments and string literals) returns zero results after this change.
 
 ---
 
@@ -135,10 +135,10 @@ If the date is displayed to the user, convert to local time via `CultureService.
 **Objective:** Replace string-matching exception mapping with type-safe enum dispatch.
 
 **Tasks:**
-- [ ] Audit `DomainExceptionType` enum — add any missing cases needed for current status code mapping
-- [ ] Rewrite `ExceptionHandlingMiddleware` status code logic to switch on `ExceptionType`
-- [ ] Write/update unit tests for the middleware covering each `ExceptionType` case
-- [ ] Run tests — confirm green
+- [x] Audit `DomainExceptionType` enum — add any missing cases needed for current status code mapping
+- [x] Rewrite `ExceptionHandlingMiddleware` status code logic to switch on `ExceptionType`
+- [x] Write/update unit tests for the middleware covering each `ExceptionType` case
+- [x] Run tests — confirm green
 
 **Commit:**
 ```bash
@@ -158,10 +158,10 @@ Refs: #123"
 **Objective:** Remove the three redundant concrete-type service registrations.
 
 **Tasks:**
-- [ ] Locate all `// backward compatibility` DI comments in the solution
-- [ ] Confirm no constructor or service locator references the concrete type directly
-- [ ] Remove the redundant `AddScoped<ConcreteType>()` registrations
-- [ ] Run full test suite — confirm no resolution failures
+- [x] Locate all `// backward compatibility` DI comments in the solution
+- [x] Confirm no constructor or service locator references the concrete type directly
+- [x] Remove the redundant `AddScoped<ConcreteType>()` registrations
+- [x] Run full test suite — confirm no resolution failures
 
 **Commit:**
 ```bash
@@ -181,12 +181,12 @@ Refs: #123"
 **Objective:** Refactor the six methods with 3+ nesting levels to ≤ 2 levels.
 
 **Tasks:**
-- [ ] `TransactionListService` recurring methods — apply guard clauses / extract helper
-- [ ] `ImportExecuteRequestValidator` — extract validation branches into named private methods
-- [ ] `RuleSuggestionResponseParser` — flatten nested parsing logic
-- [ ] `ImportRowProcessor.DetermineCategory` — guard-clause early returns for each condition
-- [ ] `LocationParserService` — extract inner logic blocks
-- [ ] Confirm all existing unit tests pass unchanged after each refactor
+- [x] `TransactionListService` recurring methods — apply guard clauses / extract helper
+- [x] `ImportExecuteRequestValidator` — extract validation branches into named private methods
+- [x] `RuleSuggestionResponseParser` — flatten nested parsing logic
+- [x] `ImportRowProcessor.DetermineCategory` — guard-clause early returns for each condition
+- [x] `LocationParserService` — extract inner logic blocks
+- [x] Confirm all existing unit tests pass unchanged after each refactor
 
 **Commit:**
 ```bash
@@ -207,11 +207,11 @@ Refs: #123"
 **Objective:** Replace `DateTime.Now` with `DateTime.UtcNow` in `Reconciliation.razor`.
 
 **Tasks:**
-- [ ] Find all `DateTime.Now` uses in `Reconciliation.razor`
-- [ ] Replace with `DateTime.UtcNow`
-- [ ] If displayed to user, ensure conversion to local via `CultureService` (check existing pattern in other components)
-- [ ] Grep Client project for remaining `DateTime.Now` references and fix any others found
-- [ ] Run Client tests — confirm green
+- [x] Find all `DateTime.Now` uses in `Reconciliation.razor`
+- [x] Replace with `DateTime.UtcNow`
+- [x] If displayed to user, ensure conversion to local via `CultureService` (check existing pattern in other components)
+- [x] Grep Client project for remaining `DateTime.Now` references and fix any others found
+- [x] Run Client tests — confirm green
 
 **Commit:**
 ```bash
