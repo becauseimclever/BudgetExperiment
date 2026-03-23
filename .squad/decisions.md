@@ -245,6 +245,80 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
+### 10. Documentation Accuracy Standard (2026-06-XX)
+
+**Author:** Alfred
+
+README.md and CONTRIBUTING.md must reflect the full project state:
+- All 7 source projects listed (including `BudgetExperiment.Shared`)
+- All 7 test projects listed with prerequisites (Docker for Testcontainers, Playwright for E2E)
+- Default `dotnet test` command **must** include the filter `"FullyQualifiedName!~E2E&Category!=ExternalDependency&Category!=Performance"`
+- Any test that requires Docker (Testcontainers) must say so explicitly
+
+**Rationale:** New contributors hitting `dotnet test` with no filter will see unexpected failures from Performance/E2E tests, and won't know why Infrastructure/Api tests need Docker running. This is a setup friction point that costs onboarding time.
+
+**Implications:** When adding a new test project with external dependencies, update both README and CONTRIBUTING in the same PR.
+
+---
+
+### 11. Feature 116 — Rule Consolidation Analyzer: Complete (2026-03-23)
+
+**Author:** Team (Alfred/Barbara/Lucius)
+
+**Status:** Done — all 8 slices implemented, all tests green (5465 passed, 1 pre-existing skip).
+
+#### Summary by Slice
+
+| Slice | Author | Focus | Status |
+|-------|--------|-------|--------|
+| 1 | Lucius | RuleConsolidationAnalyzer (Strategies 1–2) | Done |
+| 2 | Lucius | Strategy 3: Regex Alternation | Done |
+| 3 | Lucius | RuleConsolidationPreviewService | Done |
+| 4 | Lucius | RuleConsolidationService + API endpoint | Done |
+| 5 | Lucius | Accept & Dismiss workflow + API endpoints | Done |
+| 6 | Lucius | Undo consolidation + API endpoint + migration | Done |
+| 7 | Team | Client UI: consolidation page, card, VM, nav | Done |
+| 8 | Team | Rules page integration + completion state | Done |
+
+#### Key Design Decisions
+
+1. **Three consolidation strategies:**
+   - Strategy 1: Exact duplicate patterns (case-insensitive)
+   - Strategy 2: Substring containment (Contains rules only)
+   - Strategy 3: Regex alternation (multiple Contains rules → single Regex with `|`)
+
+2. **Pattern length cap:** Regex alternation suggestions split at 500 chars to prevent pathological regex lengths.
+
+3. **Preview service:** Case-insensitive matching for all pattern types (Contains/Exact/StartsWith/EndsWith/Regex).
+
+4. **Acceptance workflow:** Accept creates merged rule + deactivates sources. Undo re-activates sources + deactivates merged rule.
+
+5. **Client state management:** Optimistic updates (in-memory mutations) for Accept/Undo to keep UI responsive.
+
+6. **Navigation:** New "Find Consolidations" button on `/rules` page; hardcoded label (consistent with existing toolbar pattern).
+
+#### Test Coverage
+
+- **Domain.Tests:** 864 passed
+- **Application.Tests:** 1027 passed (13 new for analyzer, 9 new for preview, 4 new for service, 5 new for accept/dismiss, 5 new for undo)
+- **Client.Tests:** 2698 passed, 1 skipped (added stub methods for 5 new API client methods)
+- **Infrastructure.Tests:** 219 passed
+- **Api.Tests:** 657 passed (3 new for analyze endpoint, 3 new for accept/dismiss endpoints, 3 new for undo endpoint)
+- **Total:** 5465 passed, 1 skipped, 0 failed
+
+#### Files Created/Modified
+
+- **New domain:** `ConsolidationSuggestion.cs`
+- **New services:** `RuleConsolidationAnalyzer.cs`, `RuleConsolidationPreviewService.cs`, `RuleConsolidationService.cs`
+- **API endpoint:** `/api/v1/categorizationrules/analyze-consolidation` (POST), `/consolidation/{id}/accept` (POST), `/consolidation/{id}/dismiss` (POST), `/consolidation/{id}/undo` (POST)
+- **Client:** `ConsolidationSuggestionsViewModel.cs`, `ConsolidationSuggestions.razor`, `ConsolidationSuggestionCard.razor`
+- **Navigation:** New link in `NavMenu.razor`
+- **Localization:** 16 new keys in `SharedResources.resx`
+- **Migration:** `20260322221032_Feature116_AddMergedRuleId.cs` (adds `MergedRuleId` nullable UUID column to `RuleSuggestions`)
+- **Feature documentation:** Moved `docs/116-rule-consolidation-merge-suggestions.md` → `docs/archive/111-120-rule-consolidation-merge-suggestions.md`
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

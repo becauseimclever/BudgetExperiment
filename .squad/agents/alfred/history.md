@@ -33,7 +33,29 @@ Tests mirror structure under `tests/`.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
-### 2026-06-XX — Code Quality Review Feature Docs (Docs 121–124)
+### 2026-06-XX — Documentation Review (README.md & CONTRIBUTING.md)
+
+**Task:** Thorough accuracy review of README.md and CONTRIBUTING.md against actual repo state.
+
+**Findings & Changes:**
+
+1. **Missing project in README** — `BudgetExperiment.Shared` was absent from the source project list. There are 7 src/ projects, not 6. Added with accurate description (shared enums: BudgetScope, CategorySource, DescriptionMatchMode, etc.).
+
+2. **Test projects incomplete** — README only said "corresponding test projects for each layer" with no names or caveats. Expanded to list all 7 test projects (`Domain`, `Application`, `Infrastructure`, `Api`, `Client`, `Performance`, `E2E`) with Docker/Playwright prerequisites noted where applicable.
+
+3. **Typo in clone command** — `cd BudgetExpirement` → `cd BudgetExperiment`. Long-standing user-facing bug.
+
+4. **Test run commands missing required filters** — Both README and CONTRIBUTING showed bare `dotnet test`. Updated to the correct filter `"FullyQualifiedName!~E2E&Category!=ExternalDependency&Category!=Performance"` matching what CI uses. Also added notes for running Performance and E2E tests separately.
+
+5. **Docker prerequisite undocumented** — Infrastructure.Tests, Api.Tests, and Performance.Tests all use Testcontainers. This was nowhere in the docs. Added explicit callouts.
+
+**What was NOT changed:**
+- Feature descriptions, API overview, AI features, observability, deployment — all verified accurate
+- Port numbers (5099) — correct
+- Auth setup (Authentik OIDC) — correct
+- Hosted client model (API hosts Blazor WASM) — already correct
+
+
 
 **Review Scope:** Full code quality review findings from branch `feature/code-quality-review`, grouped into four actionable feature docs.
 
