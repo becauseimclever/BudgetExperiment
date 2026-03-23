@@ -2,7 +2,24 @@
 
 ## Active Decisions
 
-### 1. DIP Verdict: Three Concrete-Injecting Controllers (2026-03-22)
+### 1. Feature 122: Test Coverage Gaps Verified Complete (2026-01-09)
+
+**Author:** Alfred
+
+**Status:** Feature 122 was marked as "Pending" but upon audit, all required work was already completed in prior sprints.
+
+**Findings:**
+- **Phase 1 (Repository Tests):** All four repository test files (`AppSettingsRepositoryTests`, `CustomReportLayoutRepositoryTests`, `RecurringChargeSuggestionRepositoryTests`, `UserSettingsRepositoryTests`) exist with comprehensive coverage using PostgreSQL Testcontainers fixture (219 tests pass).
+- **Phase 2 (Controller Tests):** Both `RecurringChargeSuggestionsControllerTests` and `RecurringControllerTests` exist with full endpoint coverage including happy path, 404, and 400/422 validation scenarios.
+- **Phase 3 (Vanity Enum Tests):** Already removed in Decision #4 (2026-03-22) — 12 vanity enum test files deleted.
+
+**Test Suite Health:** 5,413 passed, 0 failed, 1 skipped (pre-existing).
+
+**Result:** Feature documentation updated to Status: Done and archived to `docs/archive/121-130-test-coverage-gaps.md`. No code changes required.
+
+---
+
+### 2. DIP Verdict: Three Concrete-Injecting Controllers (2026-03-22)
 
 **Assessed by:** Alfred
 
@@ -18,7 +35,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 2. API and Infrastructure Tests Require Docker (2026-03-22)
+### 3. API and Infrastructure Tests Require Docker (2026-03-22)
 
 **Decision:** All integration tests under `BudgetExperiment.Api.Tests` and `BudgetExperiment.Infrastructure.Tests` use Testcontainers (`postgres:16`).
 
@@ -28,7 +45,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 3. SA1101 Disabled + this._ Removal (2026-03-22)
+### 4. SA1101 Disabled + this._ Removal (2026-03-22)
 
 **Decision:** Disable SA1101 (PrefixLocalCallsWithThis), use IDE0003 (`dotnet_style_qualification_for_field = false:warning`) instead.
 
@@ -38,7 +55,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 4. Test Inventory Cleanup: Vanity Enum Tests Removed (2026-03-22)
+### 5. Test Inventory Cleanup: Vanity Enum Tests Removed (2026-03-22)
 
 **Decision:** Delete 12 vanity enum test files that only tested enum integer values (e.g., `BudgetScope.Shared == 0`).
 
@@ -50,7 +67,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 5. Performance Testing Must Use Real Database for Baselines (2026-03-22)
+### 6. Performance Testing Must Use Real Database for Baselines (2026-03-22)
 
 **Author:** Alfred
 
@@ -68,7 +85,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 6. Performance Test Audit: Eight Actionable Decisions (2026-03-22)
+### 7. Performance Test Audit: Eight Actionable Decisions (2026-03-22)
 
 **Author:** Barbara
 
@@ -150,7 +167,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 7. Feature 111: Pragmatic Performance Optimizations (2026-03-22)
+### 8. Feature 111: Pragmatic Performance Optimizations (2026-03-22)
 
 **Author:** Lucius
 
@@ -182,7 +199,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 8. Performance Test Infrastructure Fixes — Round 1: Data Accumulation & Classification (2026-03-22)
+### 9. Performance Test Infrastructure Fixes — Round 1: Data Accumulation & Classification (2026-03-22)
 
 **Author:** Barbara
 
@@ -212,7 +229,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 9. Performance Test Infrastructure Fixes — Round 2: Latency Thresholds & Relative Dates (2026-03-22)
+### 10. Performance Test Infrastructure Fixes — Round 2: Latency Thresholds & Relative Dates (2026-03-22)
 
 **Author:** Barbara
 
@@ -245,7 +262,7 @@ All three controllers assessed received **VERDICT A: Use interface** (interfaces
 
 ---
 
-### 10. Documentation Accuracy Standard (2026-06-XX)
+### 11. Documentation Accuracy Standard (2026-06-XX)
 
 **Author:** Alfred
 
@@ -261,7 +278,7 @@ README.md and CONTRIBUTING.md must reflect the full project state:
 
 ---
 
-### 11. Feature 116 — Rule Consolidation Analyzer: Complete (2026-03-23)
+### 12. Feature 116 — Rule Consolidation Analyzer: Complete (2026-03-23)
 
 **Author:** Team (Alfred/Barbara/Lucius)
 

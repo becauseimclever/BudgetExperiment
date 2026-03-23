@@ -1,5 +1,5 @@
 # Feature 122: Test Coverage Gaps and Vanity Test Cleanup
-> **Status:** Pending
+> **Status:** Done
 
 ## Overview
 
@@ -34,28 +34,28 @@ A code quality review on `feature/code-quality-review` identified meaningful tes
 
 ### Controller Coverage
 
-- [ ] `RecurringChargeSuggestionsController` — all 4 uncovered endpoints have tests covering: happy path (2xx), not-found (404), and invalid request (400) where applicable.
-- [ ] `RecurringController.GetPastDueAsync` — tests cover: returns 200 with a list when past-due items exist; returns 200 with empty list when none exist.
-- [ ] `RecurringController.RealizeBatchAsync` — tests cover: valid batch request returns 200/204; invalid/empty batch returns 400.
+- [x] `RecurringChargeSuggestionsController` — all 4 uncovered endpoints have tests covering: happy path (2xx), not-found (404), and invalid request (400) where applicable.
+- [x] `RecurringController.GetPastDueAsync` — tests cover: returns 200 with a list when past-due items exist; returns 200 with empty list when none exist.
+- [x] `RecurringController.RealizeBatchAsync` — tests cover: valid batch request returns 200/204; invalid/empty batch returns 400.
 
 ### Repository Coverage
 
-- [ ] `AppSettingsRepository` — integration tests cover: get existing settings, get when not found, upsert/save.
-- [ ] `CustomReportLayoutRepository` — integration tests cover: get by id, list by user/scope, create, update, delete.
-- [ ] `RecurringChargeSuggestionRepository` — integration tests cover: get by id, list by account and status, create, update status.
-- [ ] `UserSettingsRepository` — integration tests cover: get by user id, create, update.
-- [ ] All repository tests run against the Testcontainers PostgreSQL fixture (see Feature 121), not in-memory.
+- [x] `AppSettingsRepository` — integration tests cover: get existing settings, get when not found, upsert/save.
+- [x] `CustomReportLayoutRepository` — integration tests cover: get by id, list by user/scope, create, update, delete.
+- [x] `RecurringChargeSuggestionRepository` — integration tests cover: get by id, list by account and status, create, update status.
+- [x] `UserSettingsRepository` — integration tests cover: get by user id, create, update.
+- [x] All repository tests run against the Testcontainers PostgreSQL fixture (see Feature 121), not in-memory.
 
 ### Vanity Test Removal
 
-- [ ] All tests whose sole assertion is `Assert.Equal(<integer>, (int)SomeEnum.Member)` or equivalent are identified and removed.
-- [ ] No enum test file is left containing only vanity assertions; files are deleted if empty after cleanup.
-- [ ] If any enum is used in a JSON serialisation contract where the integer value genuinely matters (e.g., stored in DB as integer), a targeted serialisation-contract test replaces the vanity test.
+- [x] All tests whose sole assertion is `Assert.Equal(<integer>, (int)SomeEnum.Member)` or equivalent are identified and removed.
+- [x] No enum test file is left containing only vanity assertions; files are deleted if empty after cleanup.
+- [x] If any enum is used in a JSON serialisation contract where the integer value genuinely matters (e.g., stored in DB as integer), a targeted serialisation-contract test replaces the vanity test.
 
 ### General
 
-- [ ] Overall test suite remains green after all additions and removals: `dotnet test --filter "Category!=Performance"`.
-- [ ] Code coverage does not regress on any already-covered area.
+- [x] Overall test suite remains green after all additions and removals: `dotnet test --filter "Category!=Performance"`.
+- [x] Code coverage does not regress on any already-covered area.
 
 ---
 
@@ -116,12 +116,12 @@ public void SomeEnum_SerializesAsExpectedJsonValues()
 **Objective:** Add integration tests for the four untested repositories.
 
 **Tasks:**
-- [ ] Confirm Feature 121 `PostgreSqlContainerFixture` is available (or add a temporary in-project copy if 121 has not landed)
-- [ ] Write `AppSettingsRepositoryTests` — get, upsert
-- [ ] Write `CustomReportLayoutRepositoryTests` — CRUD by user/scope
-- [ ] Write `RecurringChargeSuggestionRepositoryTests` — list by account+status, status transitions
-- [ ] Write `UserSettingsRepositoryTests` — get by user, upsert
-- [ ] Run infrastructure tests — confirm green
+- [x] Confirm Feature 121 `PostgreSqlContainerFixture` is available (or add a temporary in-project copy if 121 has not landed)
+- [x] Write `AppSettingsRepositoryTests` — get, upsert
+- [x] Write `CustomReportLayoutRepositoryTests` — CRUD by user/scope
+- [x] Write `RecurringChargeSuggestionRepositoryTests` — list by account+status, status transitions
+- [x] Write `UserSettingsRepositoryTests` — get by user, upsert
+- [x] Run infrastructure tests — confirm green
 
 **Commit:**
 ```bash
@@ -142,10 +142,10 @@ Refs: #122"
 **Objective:** Add API integration tests for uncovered endpoints on `RecurringChargeSuggestionsController` and `RecurringController`.
 
 **Tasks:**
-- [ ] Write `RecurringChargeSuggestionsControllerTests` covering all 4 uncovered endpoints (happy path, 400, 404)
-- [ ] Extend `RecurringControllerTests` (or create if absent) for `GetPastDueAsync` and `RealizeBatchAsync`
-- [ ] Seed required fixtures in test setup
-- [ ] Run API tests — confirm green
+- [x] Write `RecurringChargeSuggestionsControllerTests` covering all 4 uncovered endpoints (happy path, 400, 404)
+- [x] Extend `RecurringControllerTests` (or create if absent) for `GetPastDueAsync` and `RealizeBatchAsync`
+- [x] Seed required fixtures in test setup
+- [x] Run API tests — confirm green
 
 **Commit:**
 ```bash
@@ -165,11 +165,11 @@ Refs: #122"
 **Objective:** Identify and remove all enum integer-value tests; replace with serialisation tests where the contract genuinely matters.
 
 **Tasks:**
-- [ ] Search for `(int)` casts inside test assertion expressions
-- [ ] Review each hit; remove pure vanity assertions
-- [ ] For any enum with a real serialisation contract, write a targeted replacement test
-- [ ] Delete now-empty test files
-- [ ] Run full test suite — confirm green and coverage not regressed
+- [x] Search for `(int)` casts inside test assertion expressions
+- [x] Review each hit; remove pure vanity assertions
+- [x] For any enum with a real serialisation contract, write a targeted replacement test
+- [x] Delete now-empty test files
+- [x] Run full test suite — confirm green and coverage not regressed
 
 **Commit:**
 ```bash
