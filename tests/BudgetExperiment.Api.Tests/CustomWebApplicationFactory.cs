@@ -67,7 +67,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
         using var scope = this.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.MigrateAsync();
         TruncateAllTables(db);
     }
 

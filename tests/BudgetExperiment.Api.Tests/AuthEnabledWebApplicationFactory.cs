@@ -83,7 +83,7 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
     {
         using var scope = this.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.MigrateAsync();
         TruncateAllTables(db);
     }
 

@@ -14,7 +14,7 @@ namespace BudgetExperiment.Api.Tests;
 /// </summary>
 public sealed class ApiPostgreSqlFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:16")
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:18")
         .Build();
 
     /// <summary>Gets the connection string for the running PostgreSQL container.</summary>

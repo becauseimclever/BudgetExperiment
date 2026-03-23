@@ -23,15 +23,26 @@ namespace BudgetExperiment.Api.Tests;
 /// Integration tests verifying the no-auth (Mode=None) pipeline.
 /// Ensures that all API requests auto-authenticate as the family user.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class NoAuthIntegrationTests : IAsyncLifetime
 {
+    private readonly ApiPostgreSqlFixture _dbFixture;
     private NoAuthFactory? _factory;
 
-    /// <inheritdoc />
-    public Task InitializeAsync()
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NoAuthIntegrationTests"/> class.
+    /// </summary>
+    /// <param name="dbFixture">The shared PostgreSQL container fixture.</param>
+    public NoAuthIntegrationTests(ApiPostgreSqlFixture dbFixture)
     {
-        _factory = new NoAuthFactory();
-        return Task.CompletedTask;
+        _dbFixture = dbFixture;
+    }
+
+    /// <inheritdoc />
+    public async Task InitializeAsync()
+    {
+        _factory = new NoAuthFactory(_dbFixture);
+        await _factory.InitializeAsync();
     }
 
     /// <inheritdoc />
@@ -200,9 +211,24 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
     /// Factory that configures <c>Authentication:Mode=None</c> for integration tests.
     /// Does NOT replace the authentication scheme — tests use the real NoAuthHandler.
     /// </summary>
-    private sealed class NoAuthFactory : WebApplicationFactory<Program>
+    private sealed class NoAuthFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
-        private readonly string _dbName = "TestDb_NoAuth_" + Guid.NewGuid().ToString();
+        private readonly ApiPostgreSqlFixture _dbFixture;
+
+        public NoAuthFactory(ApiPostgreSqlFixture dbFixture)
+        {
+            _dbFixture = dbFixture;
+        }
+
+        public async Task InitializeAsync()
+        {
+            using var scope = this.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+            await db.Database.MigrateAsync();
+            TruncateAllTables(db);
+        }
+
+        public new async Task DisposeAsync() => await base.DisposeAsync();
 
         /// <inheritdoc />
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -212,14 +238,14 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
                 config.Sources.Clear();
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["ConnectionStrings:AppDb"] = "Host=localhost;Database=test",
+                    ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
                     ["Authentication:Mode"] = "None",
                 });
             });
 
             builder.ConfigureServices(services =>
             {
-                // Replace Npgsql DbContext with InMemory
+                // Replace Npgsql DbContext with test container
                 var descriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<BudgetDbContext>));
                 if (descriptor != null)
@@ -234,15 +260,8 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
                     services.Remove(uowDescriptor);
                 }
 
-                var inMemoryServiceProvider = new ServiceCollection()
-                    .AddEntityFrameworkInMemoryDatabase()
-                    .BuildServiceProvider();
-
                 services.AddDbContext<BudgetDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(_dbName)
-                           .UseInternalServiceProvider(inMemoryServiceProvider);
-                });
+                    options.UseNpgsql(_dbFixture.ConnectionString));
 
                 services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
 
@@ -258,6 +277,28 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
                 .AddScheme<AuthenticationSchemeOptions, NoAuthHandler>(
                     NoAuthHandler.SchemeName, _ => { });
             });
+        }
+
+        private static void TruncateAllTables(BudgetDbContext context)
+        {
+            var tableNames = context.Model
+                .GetEntityTypes()
+                .Select(e => e.GetTableName())
+                .Where(name => name != null)
+                .Distinct()
+                .ToList();
+
+            if (tableNames.Count == 0)
+            {
+                return;
+            }
+
+            var quotedTables = string.Join(", ", tableNames.Select(t => $"\"{t}\""));
+
+            // Table names are sourced from the EF model, not user input; suppression is safe here.
+#pragma warning disable EF1002
+            context.Database.ExecuteSqlRaw($"TRUNCATE TABLE {quotedTables} CASCADE");
+#pragma warning restore EF1002
         }
     }
 }

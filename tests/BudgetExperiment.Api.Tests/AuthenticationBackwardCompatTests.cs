@@ -23,8 +23,20 @@ namespace BudgetExperiment.Api.Tests;
 /// Integration tests ensuring existing Authentik deployments continue to work
 /// after the authentication configuration refactoring (Feature 055 Phase 1).
 /// </summary>
+[Collection("ApiDb")]
 public sealed class AuthenticationBackwardCompatTests
 {
+    private readonly ApiPostgreSqlFixture _dbFixture;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthenticationBackwardCompatTests"/> class.
+    /// </summary>
+    /// <param name="dbFixture">The shared PostgreSQL container fixture.</param>
+    public AuthenticationBackwardCompatTests(ApiPostgreSqlFixture dbFixture)
+    {
+        _dbFixture = dbFixture;
+    }
+
     /// <summary>
     /// Existing Authentik config (Authority + Audience only, no Mode/Provider)
     /// continues to produce a working OIDC-mode application.
@@ -34,7 +46,7 @@ public sealed class AuthenticationBackwardCompatTests
     public async Task ExistingAuthentikConfig_ContinuesToWork()
     {
         // Arrange — only legacy config keys, no Mode or Provider
-        await using var factory = new BackwardCompatFactory(new Dictionary<string, string?>
+        await using var factory = new BackwardCompatFactory(_dbFixture, new Dictionary<string, string?>
         {
             ["Authentication:Authentik:Authority"] = "https://auth.example.com/application/o/budget/",
             ["Authentication:Authentik:Audience"] = "budget-experiment",
@@ -62,7 +74,7 @@ public sealed class AuthenticationBackwardCompatTests
     public async Task AuthentikEnabled_False_DisablesAuth()
     {
         // Arrange — legacy "Enabled=false" flag, override Authority to clear base appsettings value
-        await using var factory = new BackwardCompatFactory(new Dictionary<string, string?>
+        await using var factory = new BackwardCompatFactory(_dbFixture, new Dictionary<string, string?>
         {
             ["Authentication:Authentik:Enabled"] = "false",
             ["Authentication:Authentik:Authority"] = "https://auth.example.com/",
@@ -125,7 +137,7 @@ public sealed class AuthenticationBackwardCompatTests
     public async Task ConfigEndpoint_BackwardCompatShape()
     {
         // Arrange
-        await using var factory = new BackwardCompatFactory(new Dictionary<string, string?>
+        await using var factory = new BackwardCompatFactory(_dbFixture, new Dictionary<string, string?>
         {
             ["Authentication:Authentik:Authority"] = "https://auth.example.com/application/o/budget/",
             ["Authentication:Authentik:Audience"] = "test-audience",
@@ -156,7 +168,7 @@ public sealed class AuthenticationBackwardCompatTests
     public async Task DockerComposePi_EnvVars_BindCorrectly()
     {
         // Arrange — exact env vars from docker-compose.pi.yml
-        await using var factory = new BackwardCompatFactory(new Dictionary<string, string?>
+        await using var factory = new BackwardCompatFactory(_dbFixture, new Dictionary<string, string?>
         {
             ["Authentication:Authentik:Enabled"] = "true",
             ["Authentication:Authentik:Authority"] = "https://auth.prod.example.com/application/o/budget/",
@@ -181,17 +193,19 @@ public sealed class AuthenticationBackwardCompatTests
     /// Factory for backward-compatibility tests that accepts custom configuration
     /// and replaces real auth with a test scheme.
     /// </summary>
-    private sealed class BackwardCompatFactory : WebApplicationFactory<Program>
+    private sealed class BackwardCompatFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
+        private readonly ApiPostgreSqlFixture _dbFixture;
         private readonly Dictionary<string, string?> _config;
-        private readonly string _dbName = "TestDb_BackCompat_" + Guid.NewGuid().ToString();
 
-        public BackwardCompatFactory(Dictionary<string, string?> config)
+        public BackwardCompatFactory(ApiPostgreSqlFixture dbFixture, Dictionary<string, string?> config)
         {
-            // Always include a connection string
+            _dbFixture = dbFixture;
+
+            // Always include the test container connection string
             _config = new Dictionary<string, string?>(config)
             {
-                ["ConnectionStrings:AppDb"] = "Host=localhost;Database=test",
+                ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
             };
         }
 
@@ -202,6 +216,16 @@ public sealed class AuthenticationBackwardCompatTests
                 new System.Net.Http.Headers.AuthenticationHeaderValue("TestAuto", "authenticated");
             return client;
         }
+
+        public async Task InitializeAsync()
+        {
+            using var scope = this.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+            await db.Database.MigrateAsync();
+            TruncateAllTables(db);
+        }
+
+        public new async Task DisposeAsync() => await base.DisposeAsync();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -230,15 +254,9 @@ public sealed class AuthenticationBackwardCompatTests
                     services.Remove(uowDescriptor);
                 }
 
-                var inMemoryServiceProvider = new ServiceCollection()
-                    .AddEntityFrameworkInMemoryDatabase()
-                    .BuildServiceProvider();
-
+                // Point the app at the Testcontainer database
                 services.AddDbContext<BudgetDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(_dbName)
-                           .UseInternalServiceProvider(inMemoryServiceProvider);
-                });
+                    options.UseNpgsql(_dbFixture.ConnectionString));
 
                 services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
 
@@ -251,6 +269,28 @@ public sealed class AuthenticationBackwardCompatTests
                 .AddScheme<AuthenticationSchemeOptions, AutoAuthenticatingTestHandler>(
                     "TestAuto", options => { });
             });
+        }
+
+        private static void TruncateAllTables(BudgetDbContext context)
+        {
+            var tableNames = context.Model
+                .GetEntityTypes()
+                .Select(e => e.GetTableName())
+                .Where(name => name != null)
+                .Distinct()
+                .ToList();
+
+            if (tableNames.Count == 0)
+            {
+                return;
+            }
+
+            var quotedTables = string.Join(", ", tableNames.Select(t => $"\"{t}\""));
+
+            // Table names are sourced from the EF model, not user input; suppression is safe here.
+#pragma warning disable EF1002
+            context.Database.ExecuteSqlRaw($"TRUNCATE TABLE {quotedTables} CASCADE");
+#pragma warning restore EF1002
         }
     }
 }

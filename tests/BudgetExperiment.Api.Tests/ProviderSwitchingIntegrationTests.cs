@@ -23,8 +23,20 @@ namespace BudgetExperiment.Api.Tests;
 /// correctly updates the /api/v1/config endpoint response. Each test
 /// creates a factory with a different provider to simulate switching.
 /// </summary>
+[Collection("ApiDb")]
 public sealed class ProviderSwitchingIntegrationTests
 {
+    private readonly ApiPostgreSqlFixture _dbFixture;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProviderSwitchingIntegrationTests"/> class.
+    /// </summary>
+    /// <param name="dbFixture">The shared PostgreSQL container fixture.</param>
+    public ProviderSwitchingIntegrationTests(ApiPostgreSqlFixture dbFixture)
+    {
+        _dbFixture = dbFixture;
+    }
+
     /// <summary>
     /// Switching from Authentik to Google changes the authority in /api/v1/config.
     /// </summary>
@@ -235,27 +247,28 @@ public sealed class ProviderSwitchingIntegrationTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    private static ProviderSwitchingFactory CreateFactory(Dictionary<string, string?> configValues)
+    private ProviderSwitchingFactory CreateFactory(Dictionary<string, string?> configValues)
     {
-        return new ProviderSwitchingFactory(configValues);
+        return new ProviderSwitchingFactory(_dbFixture, configValues);
     }
 
     /// <summary>
     /// Factory that accepts arbitrary configuration for provider switching tests.
     /// </summary>
-    private sealed class ProviderSwitchingFactory : WebApplicationFactory<Program>
+    private sealed class ProviderSwitchingFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
+        private readonly ApiPostgreSqlFixture _dbFixture;
         private readonly Dictionary<string, string?> _configValues;
-        private readonly string _dbName = "TestDb_ProvSwitch_" + Guid.NewGuid().ToString();
 
-        public ProviderSwitchingFactory(Dictionary<string, string?> configValues)
+        public ProviderSwitchingFactory(ApiPostgreSqlFixture dbFixture, Dictionary<string, string?> configValues)
         {
+            _dbFixture = dbFixture;
             _configValues = configValues;
 
             // Ensure connection string is always present
             if (!_configValues.ContainsKey("ConnectionStrings:AppDb"))
             {
-                _configValues["ConnectionStrings:AppDb"] = "Host=localhost;Database=test";
+                _configValues["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString;
             }
         }
 
@@ -278,6 +291,16 @@ public sealed class ProviderSwitchingIntegrationTests
             return CreateClient();
         }
 
+        public async Task InitializeAsync()
+        {
+            using var scope = this.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+            await db.Database.MigrateAsync();
+            TruncateAllTables(db);
+        }
+
+        public new async Task DisposeAsync() => await base.DisposeAsync();
+
         /// <inheritdoc />
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -289,7 +312,24 @@ public sealed class ProviderSwitchingIntegrationTests
 
             builder.ConfigureServices(services =>
             {
-                ReplaceDbWithInMemory(services);
+                var descriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(DbContextOptions<BudgetDbContext>));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                var uowDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IUnitOfWork));
+                if (uowDescriptor != null)
+                {
+                    services.Remove(uowDescriptor);
+                }
+
+                services.AddDbContext<BudgetDbContext>(options =>
+                    options.UseNpgsql(_dbFixture.ConnectionString));
+
+                services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
 
                 var isNoAuth = _configValues.TryGetValue("Authentication:Mode", out var mode)
                     && mode != null
@@ -322,33 +362,26 @@ public sealed class ProviderSwitchingIntegrationTests
             });
         }
 
-        private void ReplaceDbWithInMemory(IServiceCollection services)
+        private static void TruncateAllTables(BudgetDbContext context)
         {
-            var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<BudgetDbContext>));
-            if (descriptor != null)
+            var tableNames = context.Model
+                .GetEntityTypes()
+                .Select(e => e.GetTableName())
+                .Where(name => name != null)
+                .Distinct()
+                .ToList();
+
+            if (tableNames.Count == 0)
             {
-                services.Remove(descriptor);
+                return;
             }
 
-            var uowDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(IUnitOfWork));
-            if (uowDescriptor != null)
-            {
-                services.Remove(uowDescriptor);
-            }
+            var quotedTables = string.Join(", ", tableNames.Select(t => $"\"{t}\""));
 
-            var inMemoryServiceProvider = new ServiceCollection()
-                .AddEntityFrameworkInMemoryDatabase()
-                .BuildServiceProvider();
-
-            services.AddDbContext<BudgetDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(_dbName)
-                       .UseInternalServiceProvider(inMemoryServiceProvider);
-            });
-
-            services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetDbContext>());
+            // Table names are sourced from the EF model, not user input; suppression is safe here.
+#pragma warning disable EF1002
+            context.Database.ExecuteSqlRaw($"TRUNCATE TABLE {quotedTables} CASCADE");
+#pragma warning restore EF1002
         }
     }
 }
