@@ -18,6 +18,12 @@ public interface IApiErrorContext
     }
 
     /// <summary>
+    /// Sets the traceId from a ProblemDetails response.
+    /// </summary>
+    /// <param name="traceId">The trace identifier.</param>
+    void SetTraceId(string traceId);
+
+    /// <summary>
     /// Clears the stored traceId.
     /// </summary>
     void Clear();

@@ -91,8 +91,7 @@ builder.Services.AddSingleton<ScopeService>();
 builder.Services.AddTransient<ScopeMessageHandler>();
 
 // Register ApiErrorContext (scoped) and ProblemDetailsHandler for traceId extraction from ProblemDetails
-builder.Services.AddScoped<ApiErrorContext>();
-builder.Services.AddScoped<IApiErrorContext>(sp => sp.GetRequiredService<ApiErrorContext>());
+builder.Services.AddScoped<IApiErrorContext, ApiErrorContext>();
 builder.Services.AddTransient<ProblemDetailsHandler>();
 
 if (isAuthOff)

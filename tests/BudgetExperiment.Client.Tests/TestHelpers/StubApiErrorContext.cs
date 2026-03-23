@@ -18,6 +18,12 @@ internal sealed class StubApiErrorContext : IApiErrorContext
     }
 
     /// <inheritdoc/>
+    public void SetTraceId(string traceId)
+    {
+        this.LastTraceId = traceId;
+    }
+
+    /// <inheritdoc/>
     public void Clear()
     {
         this.LastTraceId = null;

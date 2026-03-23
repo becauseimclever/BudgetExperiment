@@ -12,13 +12,13 @@ namespace BudgetExperiment.Client.Services;
 /// </summary>
 public sealed class ProblemDetailsHandler : DelegatingHandler
 {
-    private readonly ApiErrorContext _errorContext;
+    private readonly IApiErrorContext _errorContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProblemDetailsHandler"/> class.
     /// </summary>
     /// <param name="errorContext">The API error context to store traceId in.</param>
-    public ProblemDetailsHandler(ApiErrorContext errorContext)
+    public ProblemDetailsHandler(IApiErrorContext errorContext)
     {
         _errorContext = errorContext;
     }
