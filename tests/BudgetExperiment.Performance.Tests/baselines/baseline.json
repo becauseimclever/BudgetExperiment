@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-03-23T05:00:25.3055357Z",
+  "commitSha": "995dd0fedbe3a5752b9586e80fb41f17decdef0c",
+  "scenarios": [
+    {
+      "name": "get_transactions",
+      "p50Ms": 3.97,
+      "p95Ms": 5.74,
+      "p99Ms": 7.3,
+      "throughputRps": 22.25,
+      "errorPercent": 0
+    }
+  ]
+}
