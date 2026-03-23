@@ -99,7 +99,7 @@ public sealed class SettingsControllerTests : IClassFixture<CustomWebApplication
         var response = await _client.PutAsJsonAsync("/api/v1/settings", updateDto);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
     /// <summary>

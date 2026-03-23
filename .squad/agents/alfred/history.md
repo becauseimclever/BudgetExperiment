@@ -57,6 +57,33 @@ Tests mirror structure under `tests/`.
 
 
 
+### 2026-03-22 — Comprehensive Project Evolution Audit
+
+**Task:** Audit all archived features (001-124) for blog post material requested by Fortinbra.
+
+**Scope:** Read 12 archive group documents, 2 individual archived features, active features (111-123), README, and all team decisions.
+
+**Key Narrative Themes:**
+
+1. **Foundation → Production Journey (120+ features):** From greenfield reset (001-002) to a fully-featured multi-user budgeting application with AI, authentication, observability, and production deployment.
+
+2. **AI as a Core Competency:** Not a gimmick — AI rule suggestions, category suggestions, chat assistant, and recurring charge detection all built on local models (Ollama). Privacy-first, no cloud dependencies.
+
+3. **Architecture Discipline Under Pressure:** Clean Architecture enforced through all 120+ features. Multiple refactoring waves (020, 080, 097-104) systematically paid down tech debt. StyleCop re-enabled after being disabled. DIP violations fixed. God services decomposed.
+
+4. **Quality as Non-Negotiable:** TDD throughout. Coverage gates added (092). Testcontainers migration (121) chose fidelity over convenience. Vanity tests removed. Performance baselines on real PostgreSQL, not in-memory fakes.
+
+5. **Deployment Evolution:** From local-only → Docker Compose demo mode → multi-arch CI/CD → Raspberry Pi production → hardened images (108) → flexible auth (Authentik/Google/Microsoft/Generic OIDC).
+
+6. **UX Maturity:** Started with basic CRUD. Added calendar-first navigation (003), themes (044), mobile experience (047), localization (096), zero-flash auth (052), skeleton screens. Eventual Blazor ViewModel extraction (097-104) for testability.
+
+7. **Honest Retrospective Lessons:**
+   - **StyleCop disabled then re-enabled (078):** Warnings were initially too noisy. Should have tuned ruleset from day one instead of disabling entirely.
+   - **In-memory test databases (121 pending):** SQLite/in-memory tests gave false confidence for 80+ features. Testcontainers should have been the baseline from Feature 001.
+   - **Interface sprawl then pragmatic reversion (086, 124):** Early DIP was dogmatic. Later assessments (Feature 124) adopted "interfaces must earn their weight" — better late than never.
+   - **CSV import security (063):** File upload processed server-side for 30+ features before being moved to client-side parsing. Should have been client-first from Feature 027.
+   - **ViewModel extraction late (097-104):** Razor code-behind patterns degraded coverage reporting for 90+ features. ViewModels should have been the pattern from Client layer introduction (002).
+
 **Review Scope:** Full code quality review findings from branch `feature/code-quality-review`, grouped into four actionable feature docs.
 
 **Key Findings & Decisions:**

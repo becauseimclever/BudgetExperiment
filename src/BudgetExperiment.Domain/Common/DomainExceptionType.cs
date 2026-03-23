@@ -11,7 +11,7 @@ namespace BudgetExperiment.Domain.Common;
 public enum DomainExceptionType
 {
     /// <summary>
-    /// A domain validation rule was violated (maps to HTTP 400).
+    /// A domain validation rule was violated (maps to HTTP 422).
     /// </summary>
     Validation = 0,
 
@@ -19,4 +19,9 @@ public enum DomainExceptionType
     /// A requested resource does not exist (maps to HTTP 404).
     /// </summary>
     NotFound = 1,
+
+    /// <summary>
+    /// A resource conflict occurred (maps to HTTP 409).
+    /// </summary>
+    Conflict = 2,
 }

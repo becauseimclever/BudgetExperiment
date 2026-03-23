@@ -84,11 +84,11 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
         var response = await _client.PostAsJsonAsync("/api/v1/transfers", request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
     /// <summary>
-    /// POST /api/v1/transfers returns 400 when amount is zero.
+    /// POST /api/v1/transfers returns 422 when amount is zero.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
@@ -107,7 +107,7 @@ public sealed class TransfersControllerTests : IClassFixture<CustomWebApplicatio
         var response = await _client.PostAsJsonAsync("/api/v1/transfers", request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
     /// <summary>

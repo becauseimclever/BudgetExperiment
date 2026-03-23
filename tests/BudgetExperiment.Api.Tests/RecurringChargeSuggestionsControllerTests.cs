@@ -271,7 +271,7 @@ public sealed class RecurringChargeSuggestionsControllerTests : IClassFixture<Cu
             null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 
     private async Task SeedDetectablePatternAsync(string key)

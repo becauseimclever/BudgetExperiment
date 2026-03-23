@@ -212,6 +212,6 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
         var response = await _client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 }

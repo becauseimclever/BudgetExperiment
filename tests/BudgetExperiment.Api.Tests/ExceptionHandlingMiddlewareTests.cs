@@ -126,11 +126,11 @@ public sealed class ExceptionHandlingMiddlewareTests
     }
 
     /// <summary>
-    /// Middleware returns 400 ProblemDetails for DomainException.
+    /// Middleware returns 422 ProblemDetails for DomainException.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task InvokeAsync_DomainException_Returns400ProblemDetails()
+    public async Task InvokeAsync_DomainException_Returns422ProblemDetails()
     {
         // Arrange
         var context = new DefaultHttpContext();
@@ -145,13 +145,13 @@ public sealed class ExceptionHandlingMiddlewareTests
         await middleware.InvokeAsync(context);
 
         // Assert
-        Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, context.Response.StatusCode);
 
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var problem = await JsonSerializer.DeserializeAsync<ProblemDetails>(context.Response.Body);
         Assert.NotNull(problem);
-        Assert.Equal("Domain Validation Error", problem.Title);
-        Assert.Equal(400, problem.Status);
+        Assert.Equal("Validation Error", problem.Title);
+        Assert.Equal(422, problem.Status);
         Assert.Equal("/api/v1/budgets", problem.Instance);
     }
 
@@ -182,6 +182,64 @@ public sealed class ExceptionHandlingMiddlewareTests
         Assert.NotNull(problem);
         Assert.Equal("Not Found", problem.Title);
         Assert.Equal(404, problem.Status);
+    }
+
+    /// <summary>
+    /// Middleware returns 409 ProblemDetails for DomainException with Conflict type.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InvokeAsync_DomainExceptionConflict_Returns409ProblemDetails()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/v1/budgets";
+        context.Response.Body = new MemoryStream();
+
+        var middleware = new ExceptionHandlingMiddleware(
+            _ => throw new DomainException("Budget name already exists.", DomainExceptionType.Conflict),
+            _logger);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status409Conflict, context.Response.StatusCode);
+
+        context.Response.Body.Seek(0, SeekOrigin.Begin);
+        var problem = await JsonSerializer.DeserializeAsync<ProblemDetails>(context.Response.Body);
+        Assert.NotNull(problem);
+        Assert.Equal("Conflict", problem.Title);
+        Assert.Equal(409, problem.Status);
+    }
+
+    /// <summary>
+    /// Middleware returns 422 ProblemDetails for DomainException with Validation type.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InvokeAsync_DomainExceptionValidation_Returns422ProblemDetails()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/v1/transactions";
+        context.Response.Body = new MemoryStream();
+
+        var middleware = new ExceptionHandlingMiddleware(
+            _ => throw new DomainException("Amount must be positive.", DomainExceptionType.Validation),
+            _logger);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, context.Response.StatusCode);
+
+        context.Response.Body.Seek(0, SeekOrigin.Begin);
+        var problem = await JsonSerializer.DeserializeAsync<ProblemDetails>(context.Response.Body);
+        Assert.NotNull(problem);
+        Assert.Equal("Validation Error", problem.Title);
+        Assert.Equal(422, problem.Status);
     }
 
     /// <summary>
