@@ -100,27 +100,39 @@ jobs:
         id: baseline
         if: always()
         run: |
-          # Find the most recent CSV report
-          REPORT_CSV=$(find tests/BudgetExperiment.Performance.Tests/reports/ -name '*.csv' 2>/dev/null | sort | tail -1)
           BASELINE="tests/BudgetExperiment.Performance.Tests/baselines/baseline.json"
           THRESHOLDS="tests/BudgetExperiment.Performance.Tests/perf-thresholds.json"
+          REPORT_DIR="tests/BudgetExperiment.Performance.Tests/reports"
+          REGRESSION=false
 
-          if [ -n "$REPORT_CSV" ] && [ -f "$REPORT_CSV" ]; then
-            COMPARER_ARGS="$REPORT_CSV"
-            if [ -f "$BASELINE" ]; then
-              COMPARER_ARGS="$COMPARER_ARGS $BASELINE"
-            fi
-            if [ -f "$THRESHOLDS" ]; then
-              COMPARER_ARGS="$COMPARER_ARGS --thresholds $THRESHOLDS"
-            fi
+          # Collect all CSV reports from this run
+          mapfile -t CSV_FILES < <(find "$REPORT_DIR" -name '*.csv' 2>/dev/null | sort)
 
-            dotnet run --project tests/BudgetExperiment.Performance.Tests/Tools/BaselineComparer/ \
-              --configuration Release --no-build \
-              -- $COMPARER_ARGS > perf-summary.md || echo "regression=true" >> $GITHUB_OUTPUT
-          else
+          if [ ${#CSV_FILES[@]} -eq 0 ]; then
             echo "## Performance Results" > perf-summary.md
             echo "" >> perf-summary.md
             echo "No CSV reports found. Check the test run logs for errors." >> perf-summary.md
+          else
+            echo "## Performance Results" > perf-summary.md
+
+            # Compare each scenario CSV against the baseline separately
+            for REPORT_CSV in "${CSV_FILES[@]}"; do
+              COMPARER_ARGS="$REPORT_CSV"
+              if [ -f "$BASELINE" ]; then
+                COMPARER_ARGS="$COMPARER_ARGS $BASELINE"
+              fi
+              if [ -f "$THRESHOLDS" ]; then
+                COMPARER_ARGS="$COMPARER_ARGS --thresholds $THRESHOLDS"
+              fi
+
+              dotnet run --project tests/BudgetExperiment.Performance.Tests/Tools/BaselineComparer/ \
+                --configuration Release --no-build \
+                -- $COMPARER_ARGS >> perf-summary.md || REGRESSION=true
+            done
+          fi
+
+          if [ "$REGRESSION" = "true" ]; then
+            echo "regression=true" >> $GITHUB_OUTPUT
           fi
           cat perf-summary.md >> $GITHUB_STEP_SUMMARY
 

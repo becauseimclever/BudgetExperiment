@@ -1,14 +1,39 @@
 {
-  "generatedAt": "2026-03-23T05:00:25.3055357Z",
-  "commitSha": "995dd0fedbe3a5752b9586e80fb41f17decdef0c",
+  "generatedAt": "2026-03-23T23:06:30Z",
+  "commitSha": "99fbb31d381d9a1d23375cbb0cfa4d6e156fc2cb",
+  "note": "Initial multi-scenario baseline. Captured on development hardware using EF Core in-memory database. Latency values are lower than production (no real DB round-trip); throughput reflects LoadProfile (10 req/s, 35s). Use these as regression anchors relative to each other, not absolute production targets.",
   "scenarios": [
     {
+      "name": "get_accounts",
+      "p50Ms": 0.42,
+      "p95Ms": 0.66,
+      "p99Ms": 0.84,
+      "throughputRps": 9.14,
+      "errorPercent": 0.0
+    },
+    {
+      "name": "get_budgets",
+      "p50Ms": 0.48,
+      "p95Ms": 0.76,
+      "p99Ms": 1.54,
+      "throughputRps": 9.14,
+      "errorPercent": 0.0
+    },
+    {
+      "name": "get_calendar",
+      "p50Ms": 9.07,
+      "p95Ms": 12.02,
+      "p99Ms": 15.53,
+      "throughputRps": 9.14,
+      "errorPercent": 0.0
+    },
+    {
       "name": "get_transactions",
-      "p50Ms": 3.97,
-      "p95Ms": 5.74,
-      "p99Ms": 7.3,
-      "throughputRps": 22.25,
-      "errorPercent": 0
+      "p50Ms": 6.37,
+      "p95Ms": 11.61,
+      "p99Ms": 30.43,
+      "throughputRps": 9.14,
+      "errorPercent": 0.0
     }
   ]
 }
