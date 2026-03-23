@@ -26,6 +26,24 @@ Tests under `tests/` mirror the src structure.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Performance Baseline: Multi-Scenario Capture (2026-03-23)
+
+**Task:** Capture and commit NBomber performance baselines for all load test scenarios.
+
+**Root Cause:** Previous baseline.json only had get_transactions from an earlier stress test run. LoadTests.cs has 4 scenarios (accounts, budgets, calendar, transactions). The other three showed as "New" in every CI comparison — no regression detection.
+
+**CI Bug Discovered:** performance.yml used 	ail -1 to pick the alphabetically-last CSV file. With multiple load test CSVs (load_accounts.csv, load_budgets.csv, load_calendar.csv, load_transactions.csv), only load_transactions.csv was ever compared. Fixed by looping over all CSVs.
+
+**NBomber Behavior:** Each NBomber runner instance cleans/overwrites the reports folder on init. Running 4 sequential load tests = only the last test's CSV survives. Metrics must be extracted from console output for previous runs. The aselines/README.md instructions are correct — use the BaselineComparer --generate mode with the CSV artifact.
+
+**Metrics Captured (dev hardware, in-memory DB, LoadProfile 10 req/s 35s):**
+- get_accounts:     p95=0.66ms, p99=0.84ms, RPS=9.14
+- get_budgets:      p95=0.76ms, p99=1.54ms, RPS=9.14
+- get_calendar:     p95=12.02ms, p99=15.53ms, RPS=9.14
+- get_transactions: p95=11.61ms, p99=30.43ms, RPS=9.14
+
+**Decision:** Thresholds already correct (maxLatencyRegressionPercent=15%). No change needed to ThresholdConfig defaults.
+
 ## Core Context
 
 ### Backend Code Quality & Architecture (2026-03-22)
