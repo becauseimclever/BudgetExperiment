@@ -1,5 +1,5 @@
 # Feature 121: Testcontainers Migration for Integration Tests
-> **Status:** Pending
+> **Status:** Done
 
 ## Overview
 
@@ -25,13 +25,13 @@ The engineering guidelines (section 15) explicitly state: *"prefer Testcontainer
 
 ## Acceptance Criteria
 
-- [ ] `InMemoryDbFixture.cs` in `BudgetExperiment.Infrastructure.Tests` is removed and replaced with a `PostgreSqlContainerFixture` using `Testcontainers.PostgreSql`.
-- [ ] `CustomWebApplicationFactory.cs` in `BudgetExperiment.Api.Tests` no longer calls `UseInMemoryDatabase()`; it configures Npgsql pointing at a Testcontainers-managed PostgreSQL instance.
-- [ ] EF Core migrations are applied to the test database at fixture startup — not `EnsureCreated`.
-- [ ] All existing passing integration tests continue to pass against PostgreSQL.
-- [ ] A single shared container fixture is reused across tests within a collection (no per-test container spin-up).
-- [ ] `Testcontainers.PostgreSql` NuGet package is added to both test projects via `dotnet add package`.
-- [ ] No remaining references to `UseInMemoryDatabase` or EF Core's in-memory provider in any test project.
+- [x] `InMemoryDbFixture.cs` in `BudgetExperiment.Infrastructure.Tests` is removed and replaced with a `PostgreSqlContainerFixture` using `Testcontainers.PostgreSql`.
+- [x] `CustomWebApplicationFactory.cs` in `BudgetExperiment.Api.Tests` no longer calls `UseInMemoryDatabase()`; it configures Npgsql pointing at a Testcontainers-managed PostgreSQL instance.
+- [x] EF Core migrations are applied to the test database at fixture startup — not `EnsureCreated`.
+- [x] All existing passing integration tests continue to pass against PostgreSQL.
+- [x] A single shared container fixture is reused across tests within a collection (no per-test container spin-up).
+- [x] `Testcontainers.PostgreSql` NuGet package is added to both test projects via `dotnet add package`.
+- [x] No remaining references to `UseInMemoryDatabase` or EF Core's in-memory provider in any test project.
 
 ---
 
@@ -106,12 +106,12 @@ dotnet add tests\BudgetExperiment.Api.Tests\BudgetExperiment.Api.Tests.csproj pa
 **Objective:** Replace `InMemoryDbFixture` with a real PostgreSQL container fixture and migrate all infrastructure tests to use it.
 
 **Tasks:**
-- [ ] Add `Testcontainers.PostgreSql` to `BudgetExperiment.Infrastructure.Tests`
-- [ ] Create `PostgreSqlContainerFixture` implementing `IAsyncLifetime`
-- [ ] Apply migrations in `InitializeAsync` using `MigrateAsync()`
-- [ ] Update all test classes that use `InMemoryDbFixture` to use `PostgreSqlContainerFixture`
-- [ ] Delete `InMemoryDbFixture.cs`
-- [ ] Run all infrastructure integration tests — confirm green
+- [x] Add `Testcontainers.PostgreSql` to `BudgetExperiment.Infrastructure.Tests`
+- [x] Create `PostgreSqlContainerFixture` implementing `IAsyncLifetime`
+- [x] Apply migrations in `InitializeAsync` using `MigrateAsync()`
+- [x] Update all test classes that use `InMemoryDbFixture` to use `PostgreSqlContainerFixture`
+- [x] Delete `InMemoryDbFixture.cs`
+- [x] Run all infrastructure integration tests — confirm green
 
 **Commit:**
 ```bash
@@ -132,12 +132,12 @@ Refs: #121"
 **Objective:** Replace `UseInMemoryDatabase` in `CustomWebApplicationFactory` with a Testcontainers PostgreSQL instance.
 
 **Tasks:**
-- [ ] Add `Testcontainers.PostgreSql` to `BudgetExperiment.Api.Tests`
-- [ ] Create or update `CustomWebApplicationFactory` to hold a `PostgreSqlContainerFixture`
-- [ ] Override `ConfigureWebHost` to swap the DbContext registration to use the test container connection string
-- [ ] Apply migrations in factory `InitializeAsync`
-- [ ] Remove all references to `UseInMemoryDatabase`
-- [ ] Run all API integration tests — confirm green
+- [x] Add `Testcontainers.PostgreSql` to `BudgetExperiment.Api.Tests`
+- [x] Create or update `CustomWebApplicationFactory` to hold a `PostgreSqlContainerFixture`
+- [x] Override `ConfigureWebHost` to swap the DbContext registration to use the test container connection string
+- [x] Apply migrations in factory `InitializeAsync`
+- [x] Remove all references to `UseInMemoryDatabase`
+- [x] Run all API integration tests — confirm green
 
 **Commit:**
 ```bash
@@ -158,9 +158,9 @@ Refs: #121"
 **Objective:** Confirm no in-memory database references remain and CI passes.
 
 **Tasks:**
-- [ ] Grep solution for `UseInMemoryDatabase` and `InMemoryDatabase` — confirm zero results outside production code
-- [ ] Confirm full test suite passes: `dotnet test --filter "Category!=Performance"`
-- [ ] Update any test documentation or README comments referencing the old fixtures
+- [x] Grep solution for `UseInMemoryDatabase` and `InMemoryDatabase` — confirm zero results outside production code
+- [x] Confirm full test suite passes: `dotnet test --filter "Category!=Performance"`
+- [x] Update any test documentation or README comments referencing the old fixtures
 
 **Commit:**
 ```bash
