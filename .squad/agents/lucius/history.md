@@ -193,3 +193,44 @@ The task only flagged checkout and upload-artifact, but setup-dotnet@v5 and cach
 
 **Impact:** Performance workflow has never successfully executed on GitHub Actions due to this bug. With these corrections, scheduled, PR, and manual workflow_dispatch runs should now reach the test execution step.
 
+### 2026-03-23 — Performance Baseline Committed (Lucius)
+
+**Task:** Generate and commit `tests/BudgetExperiment.Performance.Tests/baselines/baseline.json`.
+
+**Source decision:** Used local `stress_transactions.csv` (NOT the CI Smoke artifact). The CI run #24 artifact (`performance-reports-Smoke-24`) only contained `smoke_calendar.csv` — a smoke/in-memory run with 10 requests over 10 seconds. Per Decision 5, smoke runs are "sanity checks, not baseline sources"; baselines must use real PostgreSQL data.
+
+**Baseline content:**
+- Scenario: `get_transactions` (1 scenario)
+- p50=3.97ms, p95=5.74ms, p99=7.3ms, RPS=22.25, errors=0
+- Source: local committed `stress_transactions.csv` (1335 requests, 60s run)
+- Commit SHA pinned: `995dd0fedbe3a5752b9586e80fb41f17decdef0c`
+
+**Tool used:** `BaselineComparer --generate` mode. Built fine without `--no-build`.
+
+**Commit:** `perf: establish performance baseline` pushed to main (267d73d).
+
+**Key learning:** When CI artifacts exist from Smoke profile runs, always check the artifact content and profile type before using — in-memory smoke data is not valid for performance baselines per the team's architectural decision.
+
+
+
+### 2026-03-23 — Feature 118: PostgreSQL 18 Upgrade (Lucius)
+
+**Task:** Upgrade PostgreSQL from version 16 to 18 across Docker compose, documentation, and hardened image policy.
+
+**Files Changed:**
+- `docker-compose.demo.yml`: Updated image from `dhi.io/postgres:16` → `dhi.io/postgres:18`, updated comments
+- `DEPLOY-QUICKSTART.md`: Updated bundled database version reference
+- `.github/copilot-instructions.md`: Updated hardened image policy section
+- `docs/ci-cd-deployment.md`: Updated container security PostgreSQL reference
+- `docs/118-postgresql-18-upgrade.md`: Marked status Done, checked all acceptance criteria
+
+**Validation:** Npgsql 10.0.0 supports PostgreSQL 13–18; no driver changes needed. Migration guidance documented for existing deployments (pg_dumpall/restore for production, down -v for demo).
+
+**Commits:**
+1. `feat(docker): upgrade PostgreSQL to version 18` (aea4122)
+2. `docs: update PostgreSQL references from 16 to 18` (556d126)
+3. `docs: archive feature 118 - PostgreSQL 18 upgrade complete` (0632ebb)
+
+**Archive:** Moved `docs/118-postgresql-18-upgrade.md` → `docs/archive/111-120-postgresql-18-upgrade.md` per existing archive naming pattern.
+
+**Key Pattern:** Docker Hardened Images (dhi.io) provide continuously patched, SLSA-provenance PostgreSQL images. Always check hardened catalog first; use when available.
