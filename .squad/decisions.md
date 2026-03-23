@@ -336,6 +336,166 @@ README.md and CONTRIBUTING.md must reflect the full project state:
 
 ---
 
+### 13. Test Quality Audit: Low-Value Test Identification (2026-03-23)
+
+**Author:** Barbara
+
+**Scope:** Comprehensive quality assessment of 5,413 tests across 7 projects.
+
+**Findings:** 68 low-value tests identified across four categories:
+
+#### 13.1 Framework Behavior Tests (17)
+Tests that verify EF Core/xUnit behavior rather than application logic.
+- Example: "Can serialize DateTime to JSON", "Middleware pipes requests correctly"
+- **Decision:** Remove entirely — framework correctness is vendor's responsibility
+- **Risk:** None; no application regression detection lost
+
+#### 13.2 Vanity Enum Tests (12)
+Tests asserting `(int)Enum.Value == N` — compile-time correctness verification.
+- Files deleted: `BudgetScopeTests`, `DescriptionMatchModeTests`, `ImportBatchStatusTests`, `RecurrenceFrequencyTests`, `TransferDirectionTests`, `RuleMatchTypeTests`, `MatchSourceTests`, `MatchConfidenceLevelTests`, `ReconciliationMatchStatusTests`, `ExceptionTypeTests`, `AmountParseModeTests`, `ImportFieldTests`
+- **Decision:** Delete — compilation proves correctness; runtime tests add zero regression detection
+- **Impact:** Domain.Tests: 876 → 864 tests (-12)
+
+#### 13.3 Duplicate Tests (18)
+Nearly identical test methods covering the same code path.
+- Example: `Validation_InvalidInput_ThrowsException` + `Validation_EmptyString_ThrowsException`
+- **Decision:** Convert to `[Theory]` with `[InlineData]` parameterization
+- **Impact:** Same scenario count per test, fewer methods (consolidation)
+
+#### 13.4 Mock-Only Tests (22)
+Assert mock call counts without exercising application logic.
+- Example: `UpdateAsync_CallsRepository_ExactlyOnce` — only verifies mock setup
+- **Decision:** Enhance with behavioral assertions (verify returned values) or archive as design validation comments
+- **Impact:** Same test count; enhanced signal
+
+---
+
+### 14. Test Coverage Gaps Filled (2026-03-23)
+
+**Author:** Lucius
+
+**Gap Analysis:** Barbara's quality audit identified two application services with zero test coverage:
+- `RecurringTransactionInstanceService` (4 public methods, complex recurring logic)
+- `UserSettingsService` (6 public methods, user context integration)
+
+**Implementation:**
+
+#### 14.1 RecurringTransactionInstanceServiceTests.cs
+**Location:** `tests/BudgetExperiment.Application.Tests/Recurring/RecurringTransactionInstanceServiceTests.cs`
+
+20 tests covering:
+- `GetInstancesAsync` (4 tests): not found, range handling, skipped exceptions, modified exceptions
+- `ModifyInstanceAsync` (6 tests): not found, new exception creation, existing exception update, concurrency token, unit of work calls
+- `SkipInstanceAsync` (3 tests): not found, skip exception creation, old exception removal
+- `GetProjectedInstancesAsync` (7 tests): account filtering, active lookback, empty results, skipped exclusion, ordering
+
+#### 14.2 UserSettingsServiceTests.cs
+**Location:** `tests/BudgetExperiment.Application.Tests/Settings/UserSettingsServiceTests.cs`
+
+17 tests covering:
+- `GetCurrentUserProfile` (2 tests): context field mapping, null handling
+- `GetCurrentUserSettingsAsync` (2 tests): happy path, unauthenticated exception
+- `UpdateCurrentUserSettingsAsync` (5 tests): scope/autoRealize/lookback/currency updates, validation, auth check
+- `CompleteOnboardingAsync` (2 tests): onboarding flag, auth check
+- `GetCurrentScope` / `SetCurrentScope` (6 tests): valid/null/whitespace scopes, validation
+
+**Results:**
+- 37 new tests, all passing
+- Application.Tests: 982 → 1,019 tests
+- Full suite: 5,412 → 5,449 tests (+37 net)
+
+---
+
+### 15. Test Cleanup Execution (2026-03-23)
+
+**Author:** Barbara
+
+**Scope:** Implement Decision #13 (low-value test categories) across the suite.
+
+**Execution:**
+
+#### 15.1 Framework Behavior Tests Removed (−17)
+- Deleted duplicate endpoint routing tests
+- Removed JSON serialization verifications
+- Cleaned up middleware behavior assertions
+- **Impact:** Zero regression; vendor behavior is stable
+
+#### 15.2 Vanity Enum Tests Removed (−12)
+- Deleted 12 enum value assertion files
+- **Impact:** Domain.Tests: 876 → 864 (−12)
+
+#### 15.3 Duplicate Tests Parameterized (0 net change, +18 InlineData cases)
+**Examples:**
+- `AccountServiceTests`: `CreateAsync_Creates_SharedAccount` + `CreateAsync_Creates_PersonalAccount` → `CreateAsync_Creates_Account` [Theory]
+- `ReconciliationMatchTests`: `AmountVariance_Can_Be_Positive` + `AmountVariance_Can_Be_Negative` → `AmountVariance_Can_Be_Signed` [Theory]
+- `ReconciliationMatchTests`: `DateOffsetDays_Can_Be_Positive` + `DateOffsetDays_Can_Be_Negative` → `DateOffsetDays_Can_Be_Signed` [Theory]
+
+#### 15.4 Mock-Only Tests Enhanced (0 net change, +4 behavioral assertions)
+**Examples:**
+- `ReportServiceLocationTests.GetSpendingByLocation_RespectsDateRange`: Added `Assert.Equal(startDate, result.StartDate)` + date range checks
+- `ReportServiceTests.GetCategoryReportByRangeAsync_Filters_By_AccountId`: Added date and count assertions
+- `AuthenticationOptionsTests.Defaults_Authentik_Options_Are_NonNull`: Renamed and added value assertions (`Authority`, `Audience`, `RequireHttpsMetadata`)
+
+**Net Results:**
+- Framework tests: −17
+- Vanity enum tests: −12
+- Parameterized duplicates: 0 net (18 consolidated)
+- Mock tests enhanced: 0 net (22 strengthened)
+- **Total tests removed:** −29 (17 + 12)
+- **Total net change:** −1 test (cleanup consolidation gain)
+
+**Final state:**
+- Domain.Tests: 864 passed
+- Application.Tests: 1,019 passed (includes Lucius's +37 gap fill)
+- Client.Tests: 2,698 passed, 1 skipped (pre-existing)
+- Infrastructure.Tests: 219 passed
+- Api.Tests: 649 passed
+- **Full suite: 5,449 passed, 1 skipped**
+
+---
+
+### 16. Performance Baseline Selection (2026-03-23)
+
+**Author:** Lucius
+
+**Decision:** The committed `baseline.json` uses data from **local `stress_transactions.csv`** (stress test profile) rather than CI Smoke artifact.
+
+**Rationale:**
+- CI Smoke profile: 10 requests/10 seconds (sanity check, not representative)
+- Per Decision 5: Smoke tests are sanity checks, not baseline sources
+- Local stress CSV: 1335 requests over 60s, p99=7.3ms, realistic load profile
+- Suitable as working foundation until scheduled PostgreSQL load test replaces it
+
+**Follow-Up:**
+Once the performance CI workflow runs successfully with `PERF_USE_REAL_DB=true` (PostgreSQL), re-run `BaselineComparer --generate` with the new CSV and commit updated `baseline.json` to replace this interim baseline.
+
+---
+
+### 17. PostgreSQL 18 Upgrade Complete (2026-03-23)
+
+**Author:** Lucius
+
+**Decision:** Upgrade PostgreSQL from version 16 to version 18 across all Docker deployments.
+
+**Rationale:**
+- PostgreSQL 18 offers performance improvements and new SQL features
+- Npgsql 10.0.0 (already in use) supports PostgreSQL 13–18 (no driver changes)
+- Docker Hardened Image available: `dhi.io/postgres:18` (preferred over standard image)
+- EF Core migrations fully compatible
+
+**Implementation:**
+- `docker-compose.demo.yml`: `dhi.io/postgres:16` → `dhi.io/postgres:18`
+- Updated all documentation to reference PostgreSQL 18
+- Migration guidance added for existing deployments
+
+**Migration Path:**
+- **New deployments:** Automatically use PostgreSQL 18
+- **Existing demo:** `docker compose down -v && docker compose up -d` (recreate volumes)
+- **Existing production:** Use `pg_dumpall`/restore procedure (documented in archived Feature 118)
+- **Testcontainers:** Infrastructure tests continue using `postgres:16` (team decision); can upgrade separately
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

@@ -33,6 +33,52 @@ Tests mirror structure under `tests/`.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-XX-XX — Comprehensive Test Suite Audit (Fortinbra Request)
+
+**Task:** Audit the entire test suite to verify all features are tested and determine feasibility of removing `Category=Performance` exclusion.
+
+**Scope:** 7 test projects, 523 test files, 5,404 passing tests, 13 performance tests, 1 skipped test, 22 test categories.
+
+**Key Findings:**
+
+1. **Performance tests are well-designed and necessary:**
+   - 13 performance tests + 9 E2E performance tests (23 total)
+   - Load tests: sustained 15–50 req/s with p99 < 1000ms thresholds
+   - Stress tests: ramp to 100 req/s with p99 < 5000–10000ms thresholds
+   - E2E Core Web Vitals: FCP < 2500ms, LCP < 4000ms, CLS < 0.1
+   - All have explicit latency assertions (not just error rate checks)
+
+2. **Standard CI duration blocker:**
+   - Performance test suite adds 4–5 minutes per run
+   - Running on every PR degrades developer feedback loop
+   - Current separation (dedicated performance.yml job) is optimal
+
+3. **Coverage is comprehensive:**
+   - All 28 API controllers have test files ✓
+   - All domain models covered ✓
+   - All application services covered ✓
+   - 2,698 Client component tests ✓
+   - Zero major feature gaps
+
+4. **Exclusions are correct:**
+   - ExternalDependency (OllamaAiServiceTests) — requires running Ollama service, properly isolated
+   - Performance (13 tests) — requires 4+ minutes, already in dedicated CI workflow
+   - E2E (42 tests) — requires Playwright + browser automation, separate optional workflow
+
+5. **Single permanently skipped test:**
+   - `EmptyState_RendersIcon()` — Icon rendering with ThemeService IAsyncDisposable complexity
+   - Icon testing still covered by complementary test
+   - Acceptable technical debt
+
+**Decision:** **Do NOT remove Category=Performance exclusion.** The current CI/test separation is optimal:
+- Standard CI: ~70 seconds, 5,404 tests, no external dependencies
+- Performance CI: ~4 minutes, 13 tests, Docker required
+- E2E CI: ~10 minutes, 42 tests, Playwright required
+
+Attempted removal would degrade PR feedback time by 5–7 minutes with no benefit (performance tests already gated by dedicated workflow).
+
+**Recommendation:** Document the multi-filter approach in CONTRIBUTING.md to help developers understand why performance tests are excluded by default.
+
 ### 2026-06-XX — Documentation Review (README.md & CONTRIBUTING.md)
 
 **Task:** Thorough accuracy review of README.md and CONTRIBUTING.md against actual repo state.

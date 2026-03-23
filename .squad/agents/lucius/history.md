@@ -26,6 +26,35 @@ Tests under `tests/` mirror the src structure.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-03-23 — Missing Application Service Tests: RecurringTransactionInstanceService & UserSettingsService
+
+**Task:** Create comprehensive test files for two application services with zero coverage.
+
+**Files Created:**
+- `tests/BudgetExperiment.Application.Tests/Recurring/RecurringTransactionInstanceServiceTests.cs` — 20 tests
+- `tests/BudgetExperiment.Application.Tests/Settings/UserSettingsServiceTests.cs` — 17 tests
+
+**RecurringTransactionInstanceService (20 tests):**
+- `GetInstancesAsync`: null when not found, occurrences in range, empty range, skipped exception, modified exception
+- `ModifyInstanceAsync`: null when not found, creates new exception, updates existing, version token sets concurrency + marks modified, no token = no concurrency setup
+- `SkipInstanceAsync`: false when not found, creates skipped, removes old + creates skipped, saves changes
+- `GetProjectedInstancesAsync`: uses account filter when ID provided, uses GetActiveAsync without ID, empty active = empty result, skipped instances filtered out, results ordered by effective date
+
+**UserSettingsService (17 tests):**
+- `GetCurrentUserProfile`: profile from context, null GUID = empty GUID
+- `GetCurrentUserSettingsAsync`: returns DTO, throws when unauthenticated
+- `UpdateCurrentUserSettingsAsync`: updates scope/autoRealize/lookbackDays/currency, invalid scope throws, unauthenticated throws
+- `CompleteOnboardingAsync`: sets IsOnboarded=true, throws when unauthenticated
+- `GetCurrentScope`: returns scope string, null scope returns null
+- `SetCurrentScope`: valid scope calls SetScope, null/whitespace calls SetScope(null), invalid throws
+
+**Key Learnings:**
+- SA1512 (single-line comment not followed by blank line) fires on `// --- Section ---` dividers — remove blank line after them or switch to XML doc comments
+- `GetProjectedInstancesAsync` calls `GetInstancesAsync` internally which calls `GetByIdAsync` — must mock GetByIdAsync for projected tests too, not just GetActiveAsync/GetByAccountIdAsync
+- `UserSettings.CreateDefault(userId)` is the correct factory for test instances; works perfectly for asserting post-update behavior
+- `IUserSettingsRepository.SaveAsync` returns `Task` — mock with `.Returns(Task.CompletedTask)`
+- `ITransactionRepository.GetByDateRangeAsync` returns `IReadOnlyList<Transaction>` — use `new List<Transaction>()` for empty mock return (avoids private-constructor problem)
+
 ### 2026-03-22: Backend Code Quality Deep-Dive Review
 
 Conducted comprehensive backend code review (Domain, Application, Infrastructure, API). Key findings:
@@ -234,3 +263,40 @@ The task only flagged checkout and upload-artifact, but setup-dotnet@v5 and cach
 **Archive:** Moved `docs/118-postgresql-18-upgrade.md` → `docs/archive/111-120-postgresql-18-upgrade.md` per existing archive naming pattern.
 
 **Key Pattern:** Docker Hardened Images (dhi.io) provide continuously patched, SLSA-provenance PostgreSQL images. Always check hardened catalog first; use when available.
+
+### 2026-03-23 — Test Coverage Gaps Filled + PostgreSQL 18 Upgrade
+
+**Task 1: Missing Application Service Tests (20 + 17 tests)**
+
+**RecurringTransactionInstanceServiceTests.cs — 20 tests**
+- `GetInstancesAsync`: not found (null), occurrences in range, empty query window, skipped/modified exception handling
+- `ModifyInstanceAsync`: not found (null), new exception creation, existing exception update, concurrency token + MarkAsModified, unit of work integration
+- `SkipInstanceAsync`: not found (null), skip exception creation, old exception cleanup, SaveChanges call verification
+- `GetProjectedInstancesAsync`: account filtering, GetActiveAsync fallback, empty results, skipped instance filtering, effective date ordering
+
+**UserSettingsServiceTests.cs — 17 tests**
+- `GetCurrentUserProfile`: context field mapping, null GUID handling
+- `GetCurrentUserSettingsAsync`: happy path, unauthenticated exception
+- `UpdateCurrentUserSettingsAsync`: scope/autoRealize/lookbackDays/currency updates, validation, auth checks
+- `CompleteOnboardingAsync`: flag setting, auth checks
+- `GetCurrentScope` / `SetCurrentScope`: valid/null/whitespace handling, validation
+
+**Result:** Application.Tests: 982 → 1,019 (+37); Full suite: 5,412 → 5,449
+
+**Learnings:**
+- `GetProjectedInstancesAsync` calls `GetInstancesAsync` internally which calls `GetByIdAsync` per recurring — test mocks must setup GetByIdAsync for all projected test scenarios, not just GetActiveAsync
+- `IUserSettingsRepository.SaveAsync` signature: `Task` (no return value) — mock with `.Returns(Task.CompletedTask)`
+- `UserSettings.CreateDefault(userId)` is the correct factory for test instances; works for post-update behavior assertions
+- SA1512 comment rule fires on `// --- Section ---` dividers followed by blank lines — remove blank line or use XML docs
+
+**Task 2: PostgreSQL 18 Upgrade**
+- Updated `docker-compose.demo.yml`: `dhi.io/postgres:16` → `dhi.io/postgres:18`
+- Updated documentation references (DEPLOY-QUICKSTART.md, docs/ci-cd-deployment.md)
+- Verified Npgsql 10.0.0 supports 13–18; no driver changes
+- EF Core migrations fully compatible
+- Migration path: new deployments automatic, existing demo `down -v` needed, production uses pg_dumpall/restore
+
+**Commit Messages:**
+- `feat(docker): upgrade PostgreSQL to version 18`
+- `docs: update PostgreSQL references from 16 to 18`
+- `test: fill coverage gaps for RecurringTransactionInstanceService and UserSettingsService`

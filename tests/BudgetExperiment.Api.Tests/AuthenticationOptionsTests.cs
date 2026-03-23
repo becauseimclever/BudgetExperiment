@@ -38,16 +38,18 @@ public sealed class AuthenticationOptionsTests
     }
 
     /// <summary>
-    /// Nested Authentik options are non-null by default.
+    /// Nested Authentik options are initialized with empty strings and HTTPS required by default.
     /// </summary>
     [Fact]
-    public void Defaults_Authentik_Options_Are_NonNull()
+    public void Defaults_Authentik_Options_Have_Expected_Defaults()
     {
         // Arrange
         var options = new AuthenticationOptions();
 
         // Assert
-        Assert.NotNull(options.Authentik);
+        Assert.Equal(string.Empty, options.Authentik.Authority);
+        Assert.Equal(string.Empty, options.Authentik.Audience);
+        Assert.True(options.Authentik.RequireHttpsMetadata);
     }
 
     /// <summary>

@@ -17,8 +17,10 @@ public class AccountServiceTests
 {
     private static readonly Guid TestUserId = new("11111111-1111-1111-1111-111111111111");
 
-    [Fact]
-    public async Task CreateAsync_Creates_SharedAccount()
+    [Theory]
+    [InlineData("Test", "Checking", "Shared")]
+    [InlineData("Personal Test", "Savings", "Personal")]
+    public async Task CreateAsync_Creates_Account(string name, string type, string scope)
     {
         // Arrange
         var repo = new Mock<IAccountRepository>();
@@ -27,36 +29,14 @@ public class AccountServiceTests
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
         var userContext = CreateMockUserContext();
         var service = new AccountService(repo.Object, uow.Object, userContext.Object);
-        var dto = new AccountCreateDto { Name = "Test", Type = "Checking", Scope = "Shared" };
+        var dto = new AccountCreateDto { Name = name, Type = type, Scope = scope };
 
         // Act
         var result = await service.CreateAsync(dto);
 
         // Assert
-        Assert.Equal("Test", result.Name);
-        Assert.Equal("Checking", result.Type);
-        Assert.NotEqual(Guid.Empty, result.Id);
-        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
-    }
-
-    [Fact]
-    public async Task CreateAsync_Creates_PersonalAccount()
-    {
-        // Arrange
-        var repo = new Mock<IAccountRepository>();
-        repo.Setup(r => r.AddAsync(It.IsAny<Account>(), default)).Returns(Task.CompletedTask);
-        var uow = new Mock<IUnitOfWork>();
-        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-        var userContext = CreateMockUserContext();
-        var service = new AccountService(repo.Object, uow.Object, userContext.Object);
-        var dto = new AccountCreateDto { Name = "Personal Test", Type = "Savings", Scope = "Personal" };
-
-        // Act
-        var result = await service.CreateAsync(dto);
-
-        // Assert
-        Assert.Equal("Personal Test", result.Name);
-        Assert.Equal("Savings", result.Type);
+        Assert.Equal(name, result.Name);
+        Assert.Equal(type, result.Type);
         Assert.NotEqual(Guid.Empty, result.Id);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }

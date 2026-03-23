@@ -334,7 +334,7 @@ public class ReportServiceTests
         var result = await service.GetMonthlyCategoryReportAsync(2026, 2);
 
         // Assert
-        Assert.NotNull(result);
+        Assert.Equal(2026, result.Year);
         Assert.Equal(2, result.Month);
 
         // Verify the correct date range was used
@@ -428,7 +428,8 @@ public class ReportServiceTests
         var result = await service.GetCategoryReportByRangeAsync(startDate, endDate, accountId);
 
         // Assert
-        Assert.NotNull(result);
+        Assert.Equal(startDate, result.StartDate);
+        Assert.Equal(endDate, result.EndDate);
         transactionRepo.Verify(r => r.GetByDateRangeAsync(startDate, endDate, accountId, default), Times.Once);
     }
 
@@ -846,7 +847,8 @@ public class ReportServiceTests
         var result = await service.GetDaySummaryAsync(date, accountId);
 
         // Assert
-        Assert.NotNull(result);
+        Assert.Equal(date, result.Date);
+        Assert.Equal(0, result.TransactionCount);
         transactionRepo.Verify(r => r.GetByDateRangeAsync(date, date, accountId, default), Times.Once);
     }
 

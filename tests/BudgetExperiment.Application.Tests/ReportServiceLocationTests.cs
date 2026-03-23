@@ -169,7 +169,8 @@ public class ReportServiceLocationTests
         var result = await service.GetSpendingByLocationAsync(startDate, endDate, accountId);
 
         // Assert
-        Assert.NotNull(result);
+        Assert.Equal(startDate, result.StartDate);
+        Assert.Equal(endDate, result.EndDate);
         transactionRepo.Verify(r => r.GetByDateRangeAsync(startDate, endDate, accountId, default), Times.Once);
     }
 

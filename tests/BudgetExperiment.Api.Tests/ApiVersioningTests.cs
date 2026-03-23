@@ -57,20 +57,6 @@ public sealed class ApiVersioningTests : IClassFixture<CustomWebApplicationFacto
     }
 
     /// <summary>
-    /// Requests without a version segment are handled with the default version when unspecified.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task VersionController_Responds_AtVersionedRouteAsync()
-    {
-        // Act
-        var response = await _client.GetAsync("/api/v1/version");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    /// <summary>
     /// Suggestions controller responds at the normalized versioned route.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>

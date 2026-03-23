@@ -325,11 +325,12 @@ public class ReconciliationMatchTests
         Assert.Contains("owner", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public void AmountVariance_Can_Be_Positive()
+    [Theory]
+    [InlineData(10.00)] // paid less than expected
+    [InlineData(-10.00)] // paid more than expected
+    public void AmountVariance_Can_Be_Signed(double varianceDouble)
     {
-        // Arrange - Expected was $100, actual was $90 (paid less than expected)
-        var amountVariance = 10.00m;
+        var amountVariance = (decimal)varianceDouble;
 
         // Act
         var match = ReconciliationMatch.Create(
@@ -343,36 +344,14 @@ public class ReconciliationMatchTests
             ownerUserId: null);
 
         // Assert
-        Assert.Equal(10.00m, match.AmountVariance);
+        Assert.Equal(amountVariance, match.AmountVariance);
     }
 
-    [Fact]
-    public void AmountVariance_Can_Be_Negative()
+    [Theory]
+    [InlineData(3)] // transaction occurred after scheduled date
+    [InlineData(-2)] // transaction occurred before scheduled date
+    public void DateOffsetDays_Can_Be_Signed(int dateOffsetDays)
     {
-        // Arrange - Expected was $100, actual was $110 (paid more than expected)
-        var amountVariance = -10.00m;
-
-        // Act
-        var match = ReconciliationMatch.Create(
-            _importedTransactionId,
-            _recurringTransactionId,
-            _instanceDate,
-            confidenceScore: 0.75m,
-            amountVariance,
-            dateOffsetDays: 0,
-            BudgetScope.Shared,
-            ownerUserId: null);
-
-        // Assert
-        Assert.Equal(-10.00m, match.AmountVariance);
-    }
-
-    [Fact]
-    public void DateOffsetDays_Can_Be_Positive()
-    {
-        // Arrange - Transaction occurred 3 days after scheduled date
-        var dateOffsetDays = 3;
-
         // Act
         var match = ReconciliationMatch.Create(
             _importedTransactionId,
@@ -385,28 +364,7 @@ public class ReconciliationMatchTests
             ownerUserId: null);
 
         // Assert
-        Assert.Equal(3, match.DateOffsetDays);
-    }
-
-    [Fact]
-    public void DateOffsetDays_Can_Be_Negative()
-    {
-        // Arrange - Transaction occurred 2 days before scheduled date
-        var dateOffsetDays = -2;
-
-        // Act
-        var match = ReconciliationMatch.Create(
-            _importedTransactionId,
-            _recurringTransactionId,
-            _instanceDate,
-            confidenceScore: 0.75m,
-            amountVariance: 0m,
-            dateOffsetDays,
-            BudgetScope.Shared,
-            ownerUserId: null);
-
-        // Assert
-        Assert.Equal(-2, match.DateOffsetDays);
+        Assert.Equal(dateOffsetDays, match.DateOffsetDays);
     }
 
     [Fact]
