@@ -252,3 +252,44 @@ Completed comprehensive review of Feature 112 (API Performance Testing) scope an
 - 6 open questions flagged for team discussion
 
 **Format:** Matched existing feature doc format (116, 120) — User Stories with acceptance criteria, Technical Design with code sketches, API tables, UI layout diagrams, sliced implementation plan with commit messages.
+
+### 2026-XX-XX — Feature 126: Bank Connectivity & Automatic Transaction Sync (Planning)
+
+**Task:** Write feature document `docs/126-bank-connectivity-and-transaction-sync.md` for direct bank connectivity through a financial data aggregation service, replacing manual CSV exports.
+
+**Context:** User (Fortinbra) wants to stop requiring manual CSV exports for transaction imports. Requested evaluation of financial data aggregation vendors (Plaid, MX, Finicity, Tink, Mono, TrueLayer, Akoya, Nordigen/GoCardless) for a self-hosted personal budgeting app deployed on Raspberry Pi.
+
+**Codebase Audit Findings:**
+- Existing import pipeline is comprehensive: `ImportService` orchestrates preview → execute flow with 6 sub-services (row processor, duplicate detector, transaction creator, batch manager, mapping service, preview enricher)
+- `ImportController` provides 11 endpoints for CSV import (mappings CRUD, preview, execute, history, batch management)
+- `Transaction` entity already has `ImportBatchId` and `ExternalReference` — the `ExternalReference` field is perfect for storing bank-provided transaction IDs for deterministic deduplication
+- `ImportBatch` tracks import metadata but has no concept of import source (CSV vs bank sync)
+- CSV parsing happens client-side in Blazor, with pre-parsed rows sent to the API — bank connectivity will bypass this entirely
+- Duplicate detection is heuristic (date + amount + description similarity) — bank transaction IDs eliminate this for synced transactions
+
+**Vendor Evaluation Summary:**
+- **8 vendors compared** across US/EU coverage, pricing, .NET SDK availability, self-hosted compatibility, and personal-use suitability
+- **Plaid recommended as primary** — free Launch tier (100 Items), best US coverage, `/transactions/sync` polling (no public URL needed), bank-provided transaction IDs
+- **Nordigen/GoCardless recommended as future secondary** — free tier, EU-only, ideal if EU coverage needed later
+- **5 vendors eliminated:** MX (enterprise-only), Finicity (per-call pricing), Tink (EU-only + enterprise), TrueLayer (EU-only + commercial), Akoya (commercial agreement required), Mono (Africa-only)
+
+**Architecture Decisions:**
+- `IBankConnector` interface in Domain layer — vendor-agnostic abstraction
+- Infrastructure adapters per vendor (Plaid first), swappable without domain/app changes
+- Polling-based sync via `BackgroundService` (default 6h interval) — no webhook/public URL required
+- OAuth token encryption via ASP.NET Core Data Protection API
+- Sync conflict resolution: bank data updates amount/date/description but NEVER overwrites user-applied categories
+- New entities: `BankConnection` (institution link), `LinkedAccount` (per-account mapping)
+- Existing `ExternalReference` on Transaction reused for bank transaction IDs
+
+**Document Scope:**
+- Vendor comparison table with 8 providers
+- Vendor recommendation with detailed rationale
+- Domain model: `BankConnection`, `LinkedAccount`, `IBankConnector` + 7 value objects/records
+- Application services: `IBankConnectionService` (link/manage), `IBankSyncService` (sync)
+- 12 new API endpoints for bank connectivity
+- 11 vertical implementation slices
+- 35 testable acceptance criteria (9 domain, 11 application, 7 API, 3 infrastructure, 5 UI)
+- 7 open questions flagged for team discussion
+- Detailed sync conflict resolution strategy
+- Token security considerations for Raspberry Pi deployment
