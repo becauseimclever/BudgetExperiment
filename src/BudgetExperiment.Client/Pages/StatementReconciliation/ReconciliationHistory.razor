@@ -1,0 +1,105 @@
+@page "/statement-reconciliation/history"
+
+@using BudgetExperiment.Client.Pages.StatementReconciliation
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IBudgetApiService Api
+@inject NavigationManager Navigation
+
+<PageTitle>Reconciliation History - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Reconciliation History">
+        <Actions>
+            <a href="statement-reconciliation" class="btn btn-secondary">
+                <Icon Name="arrow-left" Size="16" /> Back to Workspace
+            </a>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                IsDismissible="true"
+                OnDismiss="DismissError" />
+
+    @if (ViewModel.IsLoading)
+    {
+        <LoadingSpinner Message="Loading..." />
+    }
+    else
+    {
+        <div class="mb-3">
+            <label class="form-label">Account</label>
+            <select class="form-select" style="max-width:300px;"
+                    value="@(ViewModel.SelectedAccountId?.ToString() ?? string.Empty)"
+                    @onchange="OnAccountChanged">
+                <option value="">— Select account —</option>
+                @foreach (var account in ViewModel.Accounts)
+                {
+                    <option value="@account.Id">@account.Name</option>
+                }
+            </select>
+        </div>
+
+        @if (ViewModel.SelectedAccountId.HasValue)
+        {
+            @if (ViewModel.Records.Count == 0)
+            {
+                <EmptyState Message="No reconciliation records found for this account." />
+            }
+            else
+            {
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Statement Date</th>
+                            <th class="text-end">Statement Balance</th>
+                            <th class="text-end">Cleared Balance</th>
+                            <th class="text-center">Transactions</th>
+                            <th>Completed At</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in ViewModel.Records)
+                        {
+                            <tr>
+                                <td>@record.StatementDate.ToString("MMM d, yyyy")</td>
+                                <td class="text-end">@record.StatementBalance.ToString("C")</td>
+                                <td class="text-end">@record.ClearedBalance.ToString("C")</td>
+                                <td class="text-center">@record.TransactionCount</td>
+                                <td>@record.CompletedAtUtc.ToString("g")</td>
+                                <td>
+                                    <a href="statement-reconciliation/history/@record.Id" class="btn btn-sm btn-outline-secondary">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        }
+    }
+</div>
+
+@code {
+    private ReconciliationHistoryViewModel ViewModel = null!;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel = new ReconciliationHistoryViewModel(Api);
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.LoadAsync();
+    }
+
+    private async Task OnAccountChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var id))
+        {
+            await ViewModel.LoadHistoryAsync(id);
+        }
+    }
+
+    private void DismissError() { }
+}

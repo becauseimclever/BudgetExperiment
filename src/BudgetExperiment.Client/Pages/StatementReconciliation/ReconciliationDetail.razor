@@ -1,0 +1,84 @@
+@page "/statement-reconciliation/history/{Id:guid}"
+
+@using BudgetExperiment.Client.Pages.StatementReconciliation
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IBudgetApiService Api
+@inject NavigationManager Navigation
+
+<PageTitle>Reconciliation Detail - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Reconciliation Detail">
+        <Actions>
+            <button class="btn btn-secondary" @onclick="GoBack">
+                <Icon Name="arrow-left" Size="16" /> Back to History
+            </button>
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                IsDismissible="true"
+                OnDismiss="DismissError" />
+
+    @if (ViewModel.IsLoading)
+    {
+        <LoadingSpinner Message="Loading reconciliation detail..." />
+    }
+    else
+    {
+        <div class="mb-4">
+            <h5>Locked Transactions (@ViewModel.Transactions.Count)</h5>
+            @if (ViewModel.Transactions.Count == 0)
+            {
+                <EmptyState Message="No transactions found for this reconciliation record." />
+            }
+            else
+            {
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tx in ViewModel.Transactions)
+                        {
+                            <tr>
+                                <td>@tx.Date.ToString("MM/dd/yyyy")</td>
+                                <td>@tx.Description</td>
+                                <td class="text-end @(tx.Amount.Amount < 0 ? "text-danger" : "text-success")">
+                                    @tx.Amount.Amount.ToString("C")
+                                </td>
+                                <td>@(tx.CategoryName ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private ReconciliationDetailViewModel ViewModel = null!;
+
+    /// <summary>Gets or sets the reconciliation record ID from the route parameter.</summary>
+    [Parameter]
+    public Guid Id { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel = new ReconciliationDetailViewModel(Api);
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.LoadAsync(Id);
+    }
+
+    private void GoBack() => Navigation.NavigateTo("statement-reconciliation/history");
+
+    private void DismissError() { }
+}

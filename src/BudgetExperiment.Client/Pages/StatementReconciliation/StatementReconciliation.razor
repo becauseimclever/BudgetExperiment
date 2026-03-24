@@ -4,8 +4,6 @@
 @using BudgetExperiment.Client.Services
 @using BudgetExperiment.Contracts.Dtos
 
-@implements IDisposable
-
 @inject IBudgetApiService Api
 @inject NavigationManager Navigation
 
@@ -211,8 +209,5 @@
         selectedIds.Clear();
     }
 
-    private void DismissError() { /* ViewModel.ErrorMessage is cleared by user dismiss */ }
-
-    /// <inheritdoc />
-    public void Dispose() { }
+    private void DismissError() { }
 }
