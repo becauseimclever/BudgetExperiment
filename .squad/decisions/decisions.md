@@ -442,3 +442,175 @@ Estimated: 1 week (after critical decisions 5, 6, 10 completed)
 - Alfred review of remaining DIP assessments (Decision 1)
 - Alfred decision on vanity enum tests (Decision 14)
 - Lucius refactoring plan for 6 critically nested methods (Decision 5)
+
+---
+
+## Reconciliation System Investigation & Proposals (2026-03-24)
+
+**Author:** Alfred (Architect)  
+**Requested by:** Fortinbra  
+**Status:** Proposals & Findings Documented
+
+### Executive Summary
+
+Audited the existing reconciliation system (Features 028, 038, 039). It covers ~30% of transactions (recurring-only) and has 6 functional gaps preventing full account reconciliation against bank statements.
+
+### Current System Strengths
+
+| Layer | Status |
+|-------|--------|
+| **Domain** | `ReconciliationMatch` with confidence scoring (High/Medium/Low), status lifecycle (Suggested → Accepted/Rejected/AutoMatched), manual linking/unlinking, configurable `TransactionMatcher`. |
+| **Application** | `ReconciliationService` (orchestrator), `ReconciliationStatusBuilder`, `ReconciliationMatchActionHandler`, `LinkableInstanceFinder` — solid service layer. |
+| **API** | 10 well-designed endpoints at `/api/v1/reconciliation/` covering status, match review, linking, and bulk operations. |
+| **UI** | `/reconciliation` page with period/account filtering, match review cards, tolerance settings, full workflows. |
+| **Tests** | Domain, Application, API, Client test coverage is solid. |
+
+### Identified Gaps (6 Critical Issues)
+
+| Gap | Severity | Impact | Fix Proposal |
+|-----|----------|--------|--------------|
+| 1. No statement balance comparison | CRITICAL | Users cannot input bank ending balance or see app-to-bank discrepancy. | Proposal 2: Add statement reconciliation workflow |
+| 2. No "cleared" status on transactions | CRITICAL | No way to mark individual transactions as verified against bank statement. | Proposal 1: Add `IsCleared` + `ClearedAtUtc` to Transaction |
+| 3. No running cleared balance | CRITICAL | Cannot see sum of cleared-only transactions (standard reconciliation metric). | Derived from Proposal 1 (cleared balance display) |
+| 4. Non-recurring transactions invisible to reconciliation | HIGH | 70% of transactions (one-offs, manual entries) outside reconciliation workflow. | Proposal 3: Extend reconciliation view to all transactions, not just recurring instances |
+| 5. No line-by-line checkoff workflow | HIGH | UI is "suggestion-oriented" (accept/reject AI matches), not "user-verification-oriented" (mark cleared per line). | Proposal 2 includes checkoff mode |
+| 6. No reconciliation history or completion | HIGH | Cannot mark "reconciled through June 30" or audit past reconciliations. | Proposal 2: Add `ReconciliationSession` concept with locked records & history |
+
+### Ranked Proposals for Resolution
+
+#### Proposal 1: Transaction Cleared Status + Cleared Balance Display ⭐ **RECOMMENDED FIRST**
+
+**Problem:** User cannot mark transactions as cleared or see cleared balance.
+
+**Solution:**
+- Add `IsCleared` (bool, default false) + `ClearedAtUtc` (DateTime?, null) to `Transaction` entity
+- API endpoints for mark-cleared, mark-uncleared, bulk-clear
+- Cleared balance display in account header
+- Checkbox column in transaction table UI
+- Database migration with index on (AccountId, IsCleared)
+
+**Complexity:** Medium (domain change, migration, service, API, UI)  
+**Value:** Foundation — Proposals 2, 3, 5 depend on this  
+**Risk:** Low — optional boolean, backward-compatible
+
+**Why First:** Immediate user relief. Even without full reconciliation workflow, users can manually checkoff against bank statements and see running cleared balance.
+
+---
+
+#### Proposal 2: Statement Balance Reconciliation Workflow
+
+**Problem:** User cannot input bank's ending balance and identify the discrepancy.
+
+**Solution:**
+- New domain concept: `ReconciliationSession` (account, statement date, statement balance, reconciliation period)
+- Workflow: User enters statement balance → system shows cleared balance + difference → user checks off uncleared transactions until difference = $0.00 → "Complete Reconciliation" locks session
+- Stores historical `ReconciliationRecord` per account per period for audit trail
+- New endpoints and UI page for guided reconciliation experience
+
+**Complexity:** Large (new aggregate root, new workflow, new UI)  
+**Value:** Transforms reconciliation from ad-hoc to systematic  
+**Depends On:** Proposal 1 (cleared status)
+
+---
+
+#### Proposal 3: All-Transaction Reconciliation View (Not Just Recurring)
+
+**Problem:** Non-recurring/one-off transactions invisible to reconciliation system.
+
+**Solution:**
+- Extend Reconciliation page to show **all** transactions for the period, not just recurring instances
+- Each row shows state: matched-to-recurring, cleared, or unverified
+- Filter for "unverified only" to quickly find gaps
+- Reuse existing cleared status from Proposal 1
+
+**Complexity:** Medium (mostly UI/query changes)  
+**Value:** Closes visibility gap for 70% of transactions  
+**Depends On:** Proposal 1 (cleared status)
+
+---
+
+#### Proposal 4: Quick-Match from Transaction List
+
+**Problem:** Current workflow requires navigating to `/reconciliation`. Friction is high.
+
+**Solution:**
+- Add "Reconcile" action button per transaction row in Transactions page
+- Opens existing `LinkableInstancesDialog` inline (reuse, don't rebuild)
+- Also allow direct "mark cleared" from transaction row
+
+**Complexity:** Small (reuses existing components & APIs)  
+**Value:** Accessibility improvement  
+**PR-Level:** Yes — could ship without feature doc
+
+---
+
+#### Proposal 5: Reconciliation Summary on Account Dashboard
+
+**Problem:** User must navigate to `/reconciliation` to see if anything needs attention. No at-a-glance indicator.
+
+**Solution:**
+- Add reconciliation health badge per account (e.g., "45 of 120 transactions cleared" or "Last reconciled: June 15")
+- Clicking navigates to reconciliation for that account
+- Extend account endpoint with reconciliation summary or new dedicated endpoint
+
+**Complexity:** Small-to-Medium (new component, new endpoint/summary)  
+**Value:** Discoverability improvement  
+**Depends On:** Proposal 1 (cleared status)
+
+---
+
+### Recommendation
+
+**Start with Proposal 1 (Transaction Cleared Status)** because:
+1. **Foundation** — Proposals 2, 3, 5 depend on it
+2. **Immediate value** — Users can manually reconcile without full workflow
+3. **Moderate scope** — Clean vertical slice (domain → migration → service → API → UI)
+4. **Low risk** — Optional boolean, backward-compatible, no existing tests break
+
+**Follow-up:** Proposal 2 (Statement Balance Workflow) after Proposal 1 ships.
+
+---
+
+### Feature Documentation Required
+
+- **Proposal 1:** Yes — full feature doc (125a-like vertical slices)
+- **Proposal 2:** Yes — significant new workflow (125b-like)
+- **Proposal 3:** Likely — section within Proposal 2 doc
+- **Proposal 4:** No — small PR-level enhancement
+- **Proposal 5:** No — incremental enhancement after Proposal 1
+
+---
+
+## Performance Baseline Decision (2026-03-23)
+
+**Author:** Lucius  
+**Status:** Implemented ✅
+
+### Decision
+
+**Extended baseline.json to cover all four load test scenarios** (`get_accounts`, `get_budgets`, `get_calendar`, `get_transactions`) instead of only `get_transactions`. Fixed CI pipeline (`performance.yml`) to independently compare each scenario's CSV file against baseline.
+
+### Rationale
+
+Previously, only `get_transactions` had a baseline entry; the other three appeared "New" in every CI run, disabling regression detection for 75% of load tests. Additionally, `performance.yml` used `tail -1` to pick one CSV, missing the other three entirely.
+
+### Metrics (dev hardware, in-memory DB)
+
+| Scenario         | p95 (ms) | p99 (ms) | RPS  |
+|------------------|----------|----------|------|
+| get_accounts     | 0.66     | 0.84     | 9.14 |
+| get_budgets      | 0.76     | 1.54     | 9.14 |
+| get_calendar     | 12.02    | 15.53    | 9.14 |
+| get_transactions | 11.61    | 30.43    | 9.14 |
+
+### Future Work
+
+When running against real PostgreSQL (`PERF_USE_REAL_DB=true`), re-run load tests and regenerate `baseline.json` with real database metrics.
+
+---
+
+## Release v3.25.0 Coordination Checkpoint (2026-03-23)
+
+**Status:** lucius/history.md committed. Waiting for alfred-changelog to finish CHANGELOG before version tag.
+
+**Coordination:** Both documents (history.md, CHANGELOG) completed; tag imminent (awaiting final merge/approval).

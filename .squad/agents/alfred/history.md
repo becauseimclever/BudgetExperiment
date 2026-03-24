@@ -229,3 +229,26 @@ Completed comprehensive review of Feature 112 (API Performance Testing) scope an
 4. **Documentation:** Archive features 112, 114, 115, 119; close 121, 122, 123
 
 **Format:** Followed existing CHANGELOG.md style (Feature/Refactoring/Testing/Documentation sections). Date: 2026-03-23. Prepended to top of CHANGELOG after intro line, before [3.23.0] entry.
+
+### 2026-XX-XX — Feature 125: Data Health & Statement Reconciliation (Planning)
+
+**Task:** Write feature document `docs/125-data-health-and-statement-reconciliation.md` for two sub-features requested by Fortinbra: Data Health Dashboard (125a) and Statement Reconciliation Workflow (125b).
+
+**Context:** User reported "a mix of all" data quality issues — duplicates, wrong amounts, missing transactions, wrong dates. Existing reconciliation only covers recurring transactions (~30%). No cleared/uncleared status, no statement balance input, no reconciliation completion state.
+
+**Audit Findings Incorporated:**
+- Transaction entity has no `IsCleared`, `ClearedDate`, or reconciliation lock
+- No `ReconciliationRecord` aggregate for completion history
+- No `StatementBalance` entity for statement input
+- Existing `ReconciliationMatch` + `ReconciliationService` are solid but scoped to recurring only
+- Account has `InitialBalance` and `InitialBalanceDate` — used as foundation for cleared balance computation
+
+**Document Scope:**
+- **125a (Data Health Dashboard):** Duplicate detection (exact + near-duplicate with description similarity), amount outlier detection (3σ from merchant mean), date gap detection per account, uncategorized/orphaned summary, inline fix actions (merge, edit, delete)
+- **125b (Statement Reconciliation):** `IsCleared`/`ClearedDate`/`ReconciliationRecordId` on Transaction, `ReconciliationRecord` aggregate, `StatementBalance` entity, cleared balance computation, completion workflow with locking, reconciliation history
+- 12 vertical implementation slices (domain → infrastructure → application → API → UI per sub-feature)
+- 30 testable acceptance criteria (13 for 125a, 17 for 125b) spanning unit, integration, and bUnit test types
+- 11 new API endpoints for data health, 11 for statement reconciliation
+- 6 open questions flagged for team discussion
+
+**Format:** Matched existing feature doc format (116, 120) — User Stories with acceptance criteria, Technical Design with code sketches, API tables, UI layout diagrams, sliced implementation plan with commit messages.
