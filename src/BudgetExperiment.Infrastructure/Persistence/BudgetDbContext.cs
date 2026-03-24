@@ -128,6 +128,16 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// </summary>
     public DbSet<RecurringChargeSuggestion> RecurringChargeSuggestions => this.Set<RecurringChargeSuggestion>();
 
+    /// <summary>
+    /// Gets the reconciliation records.
+    /// </summary>
+    public DbSet<ReconciliationRecord> ReconciliationRecords => this.Set<ReconciliationRecord>();
+
+    /// <summary>
+    /// Gets the statement balances.
+    /// </summary>
+    public DbSet<StatementBalance> StatementBalances => this.Set<StatementBalance>();
+
     /// <inheritdoc />
     public string? GetConcurrencyToken<T>(T entity)
         where T : class

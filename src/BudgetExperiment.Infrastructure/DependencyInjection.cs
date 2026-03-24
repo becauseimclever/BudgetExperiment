@@ -57,6 +57,8 @@ public static class DependencyInjection
         services.AddScoped<IDismissedSuggestionPatternRepository, DismissedSuggestionPatternRepository>();
         services.AddScoped<ICustomReportLayoutRepository, CustomReportLayoutRepository>();
         services.AddScoped<IRecurringChargeSuggestionRepository, RecurringChargeSuggestionRepository>();
+        services.AddScoped<IReconciliationRecordRepository, ReconciliationRecordRepository>();
+        services.AddScoped<IStatementBalanceRepository, StatementBalanceRepository>();
 
         // AI Service - HttpClient configured dynamically from database settings
         services.AddHttpClient<IAiService, OllamaAiService>();
