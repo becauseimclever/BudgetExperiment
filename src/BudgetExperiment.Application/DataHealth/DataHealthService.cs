@@ -5,6 +5,7 @@
 using BudgetExperiment.Application.Accounts;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain.Accounts;
+using BudgetExperiment.Domain.Common;
 using BudgetExperiment.Domain.Reconciliation;
 using BudgetExperiment.Domain.Repositories;
 
@@ -81,15 +82,21 @@ public sealed class DataHealthService : IDataHealthService
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<DateGapDto>> FindDateGapsAsync(Guid? accountId, int minGapDays, CancellationToken ct)
+    public async Task<IReadOnlyList<DateGapDto>> FindDateGapsAsync(Guid? accountId, int minGapDays, CancellationToken ct)
     {
-        return Task.FromResult<IReadOnlyList<DateGapDto>>([]);
+        var allTransactions = await _transactions.GetAllForHealthAnalysisAsync(accountId, ct);
+        var accounts = await _accounts.GetAllAsync(ct);
+        var accountNames = accounts.ToDictionary(a => a.Id, a => a.Name);
+        return BuildDateGaps(allTransactions, accountNames, minGapDays);
     }
 
     /// <inheritdoc />
-    public Task<UncategorizedSummaryDto> GetUncategorizedSummaryAsync(CancellationToken ct)
+    public async Task<UncategorizedSummaryDto> GetUncategorizedSummaryAsync(CancellationToken ct)
     {
-        return Task.FromResult(new UncategorizedSummaryDto());
+        var uncategorized = await _transactions.GetUncategorizedAsync(ct);
+        var accounts = await _accounts.GetAllAsync(ct);
+        var accountNames = accounts.ToDictionary(a => a.Id, a => a.Name);
+        return BuildUncategorizedSummary(uncategorized, accountNames);
     }
 
     /// <inheritdoc />
@@ -98,7 +105,7 @@ public sealed class DataHealthService : IDataHealthService
         var primary = await _transactions.GetByIdAsync(primaryTransactionId, ct);
         if (primary is null)
         {
-            return;
+            throw new DomainException($"Transaction {primaryTransactionId} not found.", DomainExceptionType.NotFound);
         }
 
         var duplicates = await _transactions.GetByIdsAsync(duplicateIds, ct);
@@ -282,4 +289,71 @@ public sealed class DataHealthService : IDataHealthService
 
     private static string NormalizeDesc(string description) =>
         DescriptionSimilarityCalculator.NormalizeDescription(description);
+
+    private static IReadOnlyList<DateGapDto> BuildDateGaps(
+        IReadOnlyList<Transaction> transactions,
+        Dictionary<Guid, string> accountNames,
+        int minGapDays)
+    {
+        var result = new List<DateGapDto>();
+        var byAccount = transactions.GroupBy(t => t.AccountId);
+
+        foreach (var group in byAccount)
+        {
+            var ordered = group.OrderBy(t => t.Date).ToList();
+            if (ordered.Count < 2)
+            {
+                continue;
+            }
+
+            var historyDays = (ordered[^1].Date.ToDateTime(TimeOnly.MinValue) - ordered[0].Date.ToDateTime(TimeOnly.MinValue)).TotalDays;
+            if (historyDays < 30)
+            {
+                continue;
+            }
+
+            var accountName = accountNames.TryGetValue(group.Key, out var name) ? name : string.Empty;
+
+            for (var i = 0; i < ordered.Count - 1; i++)
+            {
+                var gapDays = (ordered[i + 1].Date.ToDateTime(TimeOnly.MinValue) - ordered[i].Date.ToDateTime(TimeOnly.MinValue)).TotalDays;
+                if (gapDays > minGapDays)
+                {
+                    result.Add(new DateGapDto
+                    {
+                        AccountId = group.Key,
+                        AccountName = accountName,
+                        GapStart = ordered[i].Date.AddDays(1),
+                        GapEnd = ordered[i + 1].Date.AddDays(-1),
+                        DurationDays = (int)gapDays,
+                    });
+                }
+            }
+        }
+
+        return result.OrderByDescending(g => g.DurationDays).ToList();
+    }
+
+    private static UncategorizedSummaryDto BuildUncategorizedSummary(
+        IReadOnlyList<Transaction> transactions,
+        Dictionary<Guid, string> accountNames)
+    {
+        var byAccount = transactions
+            .GroupBy(t => t.AccountId)
+            .Select(g => new AccountUncategorizedSummaryDto
+            {
+                AccountId = g.Key,
+                AccountName = accountNames.TryGetValue(g.Key, out var name) ? name : string.Empty,
+                Count = g.Count(),
+                Amount = g.Sum(t => Math.Abs(t.Amount.Amount)),
+            })
+            .ToList();
+
+        return new UncategorizedSummaryDto
+        {
+            ByAccount = byAccount,
+            TotalCount = byAccount.Sum(a => a.Count),
+            TotalAmount = byAccount.Sum(a => a.Amount),
+        };
+    }
 }
