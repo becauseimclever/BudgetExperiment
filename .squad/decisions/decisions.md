@@ -430,12 +430,56 @@ Estimated: 1 week (after critical decisions 5, 6, 10 completed)
 
 ---
 
+---
+
+## 2026-03-24: Multi-Vendor Bank Connector Support (Alfred, Copilot)
+
+**Decision:** Promote multi-vendor bank connector support from future consideration to first-class feature in Feature 126.
+
+**Key Architectural Changes:**
+- **ConnectorRegistry pattern:** `IBankConnectorRegistry` manages available connectors (Plaid, Nordigen, etc.), their regions, and enabled/configured state.
+- **`BankConnection` entity gains `ConnectorType` field:** Each linked account stores which vendor adapter it uses.
+- **User-selectable connectors at link time:** UI filters available connectors from the registry by region.
+- **Configuration via `appsettings.json`:** Each connector configured with `Enabled`, `DisplayName`, `SupportedRegions`.
+- **Seamless sync routing:** System resolves correct `IBankConnector` implementation via registry during background sync.
+
+**Rationale:**
+- User request: "Support multiple vendors; let users decide who they use, especially US vs EU."
+- Original `IBankConnector` abstraction already supports this pattern.
+- Non-Goal NG3 ("one active connector per deployment") was overly conservative.
+- Promotes architecture clarity: ConnectorRegistry is straightforward; new vendors require Infrastructure layer changes only.
+
+**Implementation Plan:**
+- Phase 1: Plaid adapter (existing plan, Slice 3–6)
+- Phase 2: Nordigen adapter (new Infrastructure project)
+- Phase 3+: Additional vendors (same pattern)
+
+**Feature Doc 126 Updates:**
+- Removed Non-Goal NG3
+- Added Goal G8 (multi-vendor with user selection)
+- Architecture section specifies ConnectorRegistry with region filtering
+- 10 new acceptance criteria (AC-126-36 through AC-126-45)
+- New Connector Configuration section showing `appsettings.json` structure
+
+**Decisions Made:**
+- `ConnectorType` is required on `BankConnection`
+- Region filtering at API level
+- Each connector independently configured (enable/disable at deployment time)
+- Backward compatible: CSV import unchanged
+
+**Status:** Specification complete; implementation can proceed.
+
+---
+
 ## Approval
 
 **Completed (2026-03-22):**
 - ✅ Testcontainers migration (Infrastructure)
 - ✅ Exception handling enum routing
 - ✅ DateTime.Now → DateTime.UtcNow
+
+**Completed (2026-03-24):**
+- ✅ Multi-Vendor Bank Connector Support (Feature 126 scope update)
 - ✅ DI registration clarification
 
 **Pending:**

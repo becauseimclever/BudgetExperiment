@@ -311,11 +311,11 @@ For each vendor, assessed against this project's specific constraints:
 
 ## Vendor Recommendation
 
-### Primary: Plaid (via `/transactions/sync` polling)
+### Primary: Plaid (US accounts)
 
 **Rationale:**
 
-1. **US coverage is non-negotiable.** This is a US-primary personal app. Plaid covers ~95% of US bank accounts. No other vendor comes close for accessible personal use.
+1. **US coverage is best-in-class.** Plaid covers ~95% of US bank accounts. For US-primary personal use, this is non-negotiable.
 
 2. **Free for personal scale.** Plaid's Launch tier provides 100 free Items. A personal household has 3–10 linked bank Items. This means **years of free use** before any pricing concern.
 
@@ -327,16 +327,20 @@ For each vendor, assessed against this project's specific constraints:
 
 6. **Merchant enrichment included.** Plaid normalizes merchant names and provides category codes — feeding directly into the app's auto-categorization pipeline.
 
-### Secondary (Future): Nordigen / GoCardless (for EU coverage)
+### Secondary: Nordigen / GoCardless (EU accounts)
 
-If the app ever needs European bank accounts, Nordigen's free tier makes it the obvious choice. The `IBankConnector` abstraction means adding a `NordigenBankConnector` adapter is a single-project change in Infrastructure.
+If the app needs European bank account support, Nordigen's free tier makes it the obvious choice for EU residents. The `IBankConnector` abstraction means adding a `NordigenBankConnector` adapter is a single Infrastructure-project change. Both Plaid and Nordigen can be active simultaneously within the same deployment — users simply select their region when linking an account.
+
+**Key advantage:** Free tier for personal use (up to 50 unique end-user agreements per day). No per-connection fees.
 
 ### Architecture Implication
 
 The abstraction layer (`IBankConnector`) is designed so that:
 - Plaid-specific details are isolated in `Infrastructure/BankConnectivity/Plaid/`
+- Nordigen-specific details (when implemented) are isolated in `Infrastructure/BankConnectivity/Nordigen/`
 - Swapping to Finicity, Akoya, or any future vendor requires only a new adapter class
-- The Domain and Application layers never reference Plaid directly
+- The Domain and Application layers never reference vendor names directly
+- The **ConnectorRegistry** (see Architecture section) manages which connectors are enabled and routes requests to the appropriate one based on user selection
 
 ---
 
@@ -349,12 +353,12 @@ The abstraction layer (`IBankConnector`) is designed so that:
 - **G5:** Vendor-agnostic abstraction allowing adapter swap without domain/application changes
 - **G6:** Manual sync trigger from the UI for immediate refresh
 - **G7:** Coexistence with CSV import — bank connectivity is additive, not a replacement
+- **G8:** **Multi-vendor support with user-selectable connectors.** A deployment can have multiple connectors (e.g., Plaid for US accounts, Nordigen/GoCardless for EU accounts) registered and active simultaneously. When a user links a bank account, they select their region/provider; the system automatically invokes the correct adapter. Each linked account stores which connector it uses, enabling seamless sync with the appropriate provider.
 
 ## Non-Goals
 
 - **NG1:** Bill payment or money movement (read-only integration)
 - **NG2:** Real-time push via webhooks (polling-only for self-hosted compatibility; webhook support is a future enhancement)
-- **NG3:** Multi-vendor simultaneous use (one active bank connector at a time per deployment)
 - **NG4:** Bank credential storage (all authentication is via OAuth — app never sees bank passwords)
 - **NG5:** Account balance sync for budgeting (account balance from bank is informational; the app's own transaction-based balance remains authoritative)
 - **NG6:** Investment or brokerage account sync (checking/savings/credit card transaction accounts only)
@@ -363,6 +367,52 @@ The abstraction layer (`IBankConnector`) is designed so that:
 ---
 
 ## Architecture
+
+### ConnectorRegistry: Managing Multiple Vendors
+
+The architecture now supports multiple simultaneous bank connectors within a single deployment. A **ConnectorRegistry** maintains metadata about each registered connector and enables routing:
+
+```csharp
+// src/BudgetExperiment.Domain/BankConnectivity/ConnectorRegistryEntry.cs
+public sealed record ConnectorRegistryEntry(
+    string ConnectorType,                    // "Plaid", "Nordigen", etc.
+    string DisplayName,                      // User-facing name
+    string[] SupportedRegions,               // ["US", "CA"] or ["EU", "UK"]
+    bool IsConfigured,                       // Has credentials been set up?
+    bool IsEnabled);                         // Can users select this connector?
+
+// src/BudgetExperiment.Domain/BankConnectivity/IBankConnectorRegistry.cs
+public interface IBankConnectorRegistry
+{
+    /// <summary>
+    /// Get all registered connectors.
+    /// </summary>
+    IReadOnlyList<ConnectorRegistryEntry> GetAll();
+
+    /// <summary>
+    /// Get connectors available for a specific region (user filtering).
+    /// </summary>
+    IReadOnlyList<ConnectorRegistryEntry> GetByRegion(string region);
+
+    /// <summary>
+    /// Resolve the IBankConnector instance for a specific connector type.
+    /// </summary>
+    IBankConnector? Resolve(string connectorType);
+}
+```
+
+**How it works:**
+1. During `BudgetExperiment.Api` startup, the application registers available connectors (e.g., Plaid, Nordigen).
+2. When the user initiates bank account linking (UI → `POST /bank-connections/link-session`), the API queries the registry to determine which connectors are available for the user's region.
+3. The user selects their preferred connector (e.g., "Plaid for US" or "Nordigen for EU").
+4. The application stores the selected `ConnectorType` in the `BankConnection` entity (new field).
+5. During sync, the system resolves the correct `IBankConnector` implementation via the registry and invokes it.
+
+This design allows:
+- Multiple connectors active simultaneously
+- Region-aware filtering in the UI ("Choose your region" → see available providers)
+- Easy addition of new adapters without touching the linking or sync logic
+- Simple enable/disable of vendors via configuration
 
 ### New Abstraction: `IBankConnector`
 
@@ -481,6 +531,7 @@ public sealed class BankConnection
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
+    public string ConnectorType { get; private set; }      // "Plaid", "Nordigen", etc.
     public string ItemId { get; private set; }          // Vendor's connection identifier
     public string InstitutionId { get; private set; }
     public string InstitutionName { get; private set; }
@@ -495,6 +546,7 @@ public sealed class BankConnection
 
     public static BankConnection Create(
         Guid userId,
+        string connectorType,
         string itemId,
         string institutionId,
         string institutionName,
@@ -502,6 +554,7 @@ public sealed class BankConnection
         BudgetScope scope,
         Guid? ownerUserId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectorType);
         ArgumentException.ThrowIfNullOrWhiteSpace(itemId);
         ArgumentException.ThrowIfNullOrWhiteSpace(institutionId);
         ArgumentException.ThrowIfNullOrWhiteSpace(institutionName);
@@ -511,6 +564,7 @@ public sealed class BankConnection
         {
             Id = Guid.CreateVersion7(),
             UserId = userId,
+            ConnectorType = connectorType,
             ItemId = itemId,
             InstitutionId = institutionId,
             InstitutionName = institutionName,
@@ -747,15 +801,77 @@ public sealed class PlaidOptions
 
 ---
 
+## Connector Configuration
+
+Multiple connectors can be enabled simultaneously via `appsettings.json` configuration. The **ConnectorRegistry** reads this configuration at startup and determines which connectors are available for user selection.
+
+**Example configuration (appsettings.json):**
+
+```json
+{
+  "BankConnectivity": {
+    "Connectors": {
+      "Plaid": {
+        "Enabled": true,
+        "DisplayName": "Plaid (US, Canada, UK)",
+        "SupportedRegions": ["US", "CA", "UK"],
+        "ClientId": "set-via-user-secrets",
+        "Secret": "set-via-user-secrets",
+        "Environment": "production"
+      },
+      "Nordigen": {
+        "Enabled": false,
+        "DisplayName": "Nordigen / GoCardless (EU)",
+        "SupportedRegions": ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "SE", "NO", "DK"],
+        "SecretId": "set-via-user-secrets",
+        "SecretKey": "set-via-user-secrets"
+      }
+    },
+    "DefaultSyncIntervalMinutes": 360,
+    "EnableManualSync": true
+  }
+}
+```
+
+**How it works:**
+
+1. **Startup:** The API's `Program.cs` instantiates the **ConnectorRegistry** by:
+   - Reading the `BankConnectivity:Connectors` configuration
+   - Creating a **ConnectorRegistryEntry** for each configured connector
+   - Instantiating and registering the corresponding `IBankConnector` implementations (Plaid, Nordigen, etc.)
+   - Marking entries as "Enabled" or "Disabled" based on configuration
+
+2. **User Linking Flow:** When the user clicks "Link Bank Account":
+   - The API queries the registry for enabled connectors
+   - The UI filters by user's region (e.g., "US" → shows Plaid; "DE" → shows Nordigen)
+   - User selects their connector
+   - The `BankConnection` entity stores the selected `ConnectorType`
+
+3. **Sync Execution:** During background sync:
+   - The system queries all `BankConnection` records
+   - For each connection, it resolves the correct `IBankConnector` via the registry using `ConnectorType`
+   - The appropriate adapter's `SyncTransactionsAsync` is invoked
+   - Results are merged and stored
+
+4. **Adding a New Connector:**
+   - Implement `IBankConnector` in Infrastructure (e.g., `NordigenBankConnector`)
+   - Add configuration to `appsettings.json`
+   - Register in `Program.cs`
+   - No domain or application layer changes required
+
+---
+
 ## Domain Model Changes Summary
 
 | Entity / Type | Layer | Change |
 |---------------|-------|--------|
-| `BankConnection` | Domain | **New** — represents a linked institution connection |
+| `BankConnection` | Domain | **New** — represents a linked institution connection; includes `ConnectorType` field to track which adapter is used |
 | `LinkedAccount` | Domain | **New** — represents a bank account within a connection |
 | `BankConnectionStatus` | Domain | **New** enum |
 | `BankAccountType` | Domain | **New** enum |
 | `IBankConnector` | Domain | **New** interface — vendor abstraction |
+| `IBankConnectorRegistry` | Domain | **New** interface — manages registered connectors and enables routing |
+| `ConnectorRegistryEntry` | Domain | **New** record — metadata for a registered connector (name, regions, enabled state) |
 | `IBankConnectionRepository` | Domain | **New** interface |
 | `ILinkedAccountRepository` | Domain | **New** interface |
 | `BankTransaction` | Domain | **New** record — vendor-normalized transaction data |
@@ -1036,6 +1152,21 @@ Bank-provided data can enhance the existing categorization pipeline:
 | AC-126-33 | Sync status badge shows red indicator when any connection has Error status | bUnit |
 | AC-126-34 | "Sync Now" button triggers sync and updates UI with results | bUnit |
 | AC-126-35 | Connection card shows "Requires Re-authentication" with action button when status is RequiresReauth | bUnit |
+
+### Multi-Vendor Support (Connector Registry & Selection)
+
+| ID | Criterion | Test Type |
+|----|-----------|-----------|
+| AC-126-36 | `IBankConnectorRegistry.GetByRegion("US")` returns only US-enabled connectors (e.g., Plaid) | Unit |
+| AC-126-37 | `IBankConnectorRegistry.GetByRegion("DE")` returns only EU-enabled connectors (e.g., Nordigen) | Unit |
+| AC-126-38 | `IBankConnectorRegistry.Resolve("Plaid")` returns the registered `PlaidBankConnector` instance | Unit |
+| AC-126-39 | `IBankConnectorRegistry.Resolve("InvalidConnector")` returns null gracefully | Unit |
+| AC-126-40 | `BankConnection.Create()` stores the provided `connectorType` and retrieves it correctly | Unit |
+| AC-126-41 | `BankConnectionService.CreateLinkSessionAsync` queries the registry for enabled connectors and filters by region | Integration |
+| AC-126-42 | When user selects a connector during linking, the `BankConnection` stores the correct `ConnectorType` | Integration |
+| AC-126-43 | `BankSyncService.SyncConnectionAsync` resolves the correct `IBankConnector` via registry using `BankConnection.ConnectorType` and invokes its methods | Unit |
+| AC-126-44 | Multiple `BankConnection` records with different `ConnectorType` values sync independently without cross-contamination | Integration |
+| AC-126-45 | UI "Link Bank Account" flow presents region/provider selection allowing user to choose Plaid (US) or Nordigen (EU) based on availability | bUnit |
 
 ---
 
