@@ -218,6 +218,16 @@
         </li>
 
         <li>
+            <NavLink class="nav-item" href="datahealth" title="Data Health" aria-label="Data Health Dashboard">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="activity" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Data Health</span>
+                }
+            </NavLink>
+        </li>
+
+        <li>
             <NavLink class="nav-item" href="import" title="Import Transactions" aria-label="Import Transactions">
                 <span class="nav-icon" aria-hidden="true"><Icon Name="upload" Size="20" /></span>
                 @if (!IsCollapsed)

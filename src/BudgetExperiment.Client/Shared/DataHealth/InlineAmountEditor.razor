@@ -1,0 +1,43 @@
+<div class="inline-editor d-flex align-items-center gap-2">
+    <input type="number"
+           class="form-control form-control-sm"
+           step="0.01"
+           @bind="_value"
+           @bind:event="oninput"
+           style="width: 120px;"
+           aria-label="Amount" />
+    <button class="btn btn-sm btn-primary" @onclick="Save">Save</button>
+    <button class="btn btn-sm btn-outline-secondary" @onclick="Cancel">Cancel</button>
+</div>
+
+@code {
+    private decimal _value;
+
+    /// <summary>Gets or sets the initial value.</summary>
+    [Parameter]
+    public decimal InitialValue { get; set; }
+
+    /// <summary>Gets or sets the callback invoked with the saved value.</summary>
+    [Parameter]
+    public EventCallback<decimal> OnSave { get; set; }
+
+    /// <summary>Gets or sets the callback invoked when editing is cancelled.</summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _value = InitialValue;
+    }
+
+    private async Task Save()
+    {
+        await OnSave.InvokeAsync(_value);
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

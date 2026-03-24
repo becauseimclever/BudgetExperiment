@@ -1,0 +1,22 @@
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="card mb-2">
+    <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-info me-2">Gap</span>
+                <strong>@Gap.AccountName</strong>
+                <span class="ms-2 text-muted">
+                    @Gap.GapStart.ToString("yyyy-MM-dd") – @Gap.GapEnd.ToString("yyyy-MM-dd")
+                </span>
+            </div>
+            <span class="badge bg-secondary">@Gap.DurationDays days</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Gets or sets the date gap to display.</summary>
+    [Parameter]
+    public DateGapDto Gap { get; set; } = default!;
+}

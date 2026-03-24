@@ -1,0 +1,135 @@
+@page "/datahealth"
+
+@using BudgetExperiment.Client.Pages.DataHealth
+@using BudgetExperiment.Client.Shared.DataHealth
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IBudgetApiService ApiService
+
+<PageTitle>Data Health - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Data Health">
+        <Actions>
+            <button class="btn btn-secondary" @onclick="RefreshAsync" disabled="@_vm.IsLoading">
+                <Icon Name="refresh" Size="16" /> Refresh
+            </button>
+        </Actions>
+    </PageHeader>
+
+    @if (_vm.ErrorMessage is not null)
+    {
+        <div class="alert alert-danger" role="alert">@_vm.ErrorMessage</div>
+    }
+
+    @if (_vm.IsLoading)
+    {
+        <div class="loading-container">
+            <span class="loading-spinner" aria-label="Loading data health report"></span>
+        </div>
+    }
+    else
+    {
+        <div class="summary-bar row g-3 mb-4">
+            <div class="col-sm-6 col-md-3">
+                <div class="stat-card">
+                    <span class="stat-label">Duplicates</span>
+                    <span class="stat-value @(_vm.DuplicateCount > 0 ? "text-warning" : "text-success")">@_vm.DuplicateCount</span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="stat-card">
+                    <span class="stat-label">Outliers</span>
+                    <span class="stat-value @(_vm.OutlierCount > 0 ? "text-warning" : "text-success")">@_vm.OutlierCount</span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="stat-card">
+                    <span class="stat-label">Date Gaps</span>
+                    <span class="stat-value @(_vm.DateGapCount > 0 ? "text-warning" : "text-success")">@_vm.DateGapCount</span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="stat-card">
+                    <span class="stat-label">Uncategorized</span>
+                    <span class="stat-value @(_vm.UncategorizedCount > 0 ? "text-warning" : "text-success")">@_vm.UncategorizedCount</span>
+                </div>
+            </div>
+        </div>
+
+        @if (_vm.Report is not null)
+        {
+            @if (_vm.Report.Duplicates.Count > 0)
+            {
+                <section class="mb-4">
+                    <h2 class="section-title">Duplicate Transactions</h2>
+                    @foreach (var cluster in _vm.Report.Duplicates)
+                    {
+                        <DuplicateClusterCard Cluster="cluster" OnMerge="HandleMerge" />
+                    }
+                </section>
+            }
+
+            @if (_vm.Report.Outliers.Count > 0)
+            {
+                <section class="mb-4">
+                    <h2 class="section-title">Amount Outliers</h2>
+                    @foreach (var outlier in _vm.Report.Outliers)
+                    {
+                        <OutlierCard Outlier="outlier" OnDismiss="HandleDismiss" />
+                    }
+                </section>
+            }
+
+            @if (_vm.Report.DateGaps.Count > 0)
+            {
+                <section class="mb-4">
+                    <h2 class="section-title">Date Gaps</h2>
+                    @foreach (var gap in _vm.Report.DateGaps)
+                    {
+                        <DateGapCard Gap="gap" />
+                    }
+                </section>
+            }
+
+            <section class="mb-4">
+                <h2 class="section-title">Uncategorized Transactions</h2>
+                <UncategorizedSummaryCard Summary="_vm.Report.Uncategorized" />
+            </section>
+
+            @if (_vm.DuplicateCount == 0 && _vm.OutlierCount == 0 && _vm.DateGapCount == 0 && _vm.UncategorizedCount == 0)
+            {
+                <div class="alert alert-success" role="alert">
+                    <Icon Name="check-circle" Size="16" /> All data health checks passed. No issues found.
+                </div>
+            }
+        }
+    }
+</div>
+
+@code {
+    private DataHealthViewModel _vm = default!;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _vm = new DataHealthViewModel(ApiService);
+        _vm.OnStateChanged = StateHasChanged;
+        await _vm.LoadAsync(null);
+    }
+
+    private async Task RefreshAsync()
+    {
+        await _vm.LoadAsync(null);
+    }
+
+    private async Task HandleMerge((Guid Primary, IReadOnlyList<Guid> Duplicates) args)
+    {
+        await _vm.MergeDuplicatesAsync(args.Primary, args.Duplicates);
+    }
+
+    private async Task HandleDismiss(Guid transactionId)
+    {
+        await _vm.DismissOutlierAsync(transactionId);
+    }
+}

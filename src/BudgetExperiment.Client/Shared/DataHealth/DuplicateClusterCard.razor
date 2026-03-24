@@ -1,0 +1,61 @@
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="badge bg-warning text-dark me-2">Duplicate Group</span>
+                <small class="text-muted">@Cluster.GroupKey</small>
+            </div>
+            <button class="btn btn-sm btn-primary" @onclick="MergePrimary" disabled="@_merging">
+                @if (_merging) { <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> }
+                Merge into First
+            </button>
+        </div>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tx in Cluster.Transactions)
+                {
+                    <tr>
+                        <td>@tx.Date.ToString("yyyy-MM-dd")</td>
+                        <td>@tx.Description</td>
+                        <td class="text-end">@tx.Amount.Amount.ToString("N2") @tx.Amount.Currency</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private bool _merging;
+
+    /// <summary>Gets or sets the duplicate cluster to display.</summary>
+    [Parameter]
+    public DuplicateClusterDto Cluster { get; set; } = default!;
+
+    /// <summary>Gets or sets the callback invoked when the user chooses to merge.</summary>
+    [Parameter]
+    public EventCallback<(Guid Primary, IReadOnlyList<Guid> Duplicates)> OnMerge { get; set; }
+
+    private async Task MergePrimary()
+    {
+        if (Cluster.Transactions.Count < 2)
+        {
+            return;
+        }
+
+        _merging = true;
+        var primary = Cluster.Transactions[0].Id;
+        var duplicates = Cluster.Transactions.Skip(1).Select(t => t.Id).ToList();
+        await OnMerge.InvokeAsync((primary, duplicates));
+        _merging = false;
+    }
+}

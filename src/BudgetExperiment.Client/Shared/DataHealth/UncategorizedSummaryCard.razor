@@ -1,0 +1,41 @@
+@using BudgetExperiment.Contracts.Dtos
+
+@if (Summary.TotalCount == 0)
+{
+    <div class="alert alert-success" role="alert">No uncategorized transactions found.</div>
+}
+else
+{
+    <div class="alert alert-warning" role="alert">
+        <strong>@Summary.TotalCount</strong> uncategorized transactions totalling <strong>@Summary.TotalAmount.ToString("N2")</strong>
+    </div>
+
+    @if (Summary.ByAccount.Count > 0)
+    {
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th class="text-end">Count</th>
+                    <th class="text-end">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Summary.ByAccount)
+                {
+                    <tr>
+                        <td>@item.AccountName</td>
+                        <td class="text-end">@item.Count</td>
+                        <td class="text-end">@item.Amount.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    /// <summary>Gets or sets the uncategorized summary to display.</summary>
+    [Parameter]
+    public UncategorizedSummaryDto Summary { get; set; } = new();
+}

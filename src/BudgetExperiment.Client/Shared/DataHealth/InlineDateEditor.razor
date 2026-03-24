@@ -1,0 +1,42 @@
+<div class="inline-editor d-flex align-items-center gap-2">
+    <input type="date"
+           class="form-control form-control-sm"
+           @bind="_value"
+           @bind:event="oninput"
+           style="width: 160px;"
+           aria-label="Date" />
+    <button class="btn btn-sm btn-primary" @onclick="Save">Save</button>
+    <button class="btn btn-sm btn-outline-secondary" @onclick="Cancel">Cancel</button>
+</div>
+
+@code {
+    private DateOnly _value;
+
+    /// <summary>Gets or sets the initial date value.</summary>
+    [Parameter]
+    public DateOnly InitialValue { get; set; }
+
+    /// <summary>Gets or sets the callback invoked with the saved date.</summary>
+    [Parameter]
+    public EventCallback<DateOnly> OnSave { get; set; }
+
+    /// <summary>Gets or sets the callback invoked when editing is cancelled.</summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _value = InitialValue;
+    }
+
+    private async Task Save()
+    {
+        await OnSave.InvokeAsync(_value);
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

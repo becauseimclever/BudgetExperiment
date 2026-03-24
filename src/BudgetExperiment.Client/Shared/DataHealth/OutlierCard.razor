@@ -1,0 +1,41 @@
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <span class="badge bg-danger me-2">Outlier</span>
+                <strong>@Outlier.Transaction.Description</strong>
+                <span class="ms-2 text-muted">@Outlier.Transaction.Date.ToString("yyyy-MM-dd")</span>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" @onclick="Dismiss" disabled="@_dismissing">
+                @if (_dismissing) { <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> }
+                Dismiss
+            </button>
+        </div>
+        <div class="mt-2">
+            <span>Amount: <strong>@Outlier.Transaction.Amount.Amount.ToString("N2") @Outlier.Transaction.Amount.Currency</strong></span>
+            <span class="ms-3 text-muted">Historical mean: @Outlier.HistoricalMean.ToString("N2")</span>
+            <span class="ms-3 text-muted">Deviation: @Outlier.DeviationFactor.ToString("N1")σ</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool _dismissing;
+
+    /// <summary>Gets or sets the outlier to display.</summary>
+    [Parameter]
+    public AmountOutlierDto Outlier { get; set; } = default!;
+
+    /// <summary>Gets or sets the callback invoked when the user dismisses this outlier.</summary>
+    [Parameter]
+    public EventCallback<Guid> OnDismiss { get; set; }
+
+    private async Task Dismiss()
+    {
+        _dismissing = true;
+        await OnDismiss.InvokeAsync(Outlier.Transaction.Id);
+        _dismissing = false;
+    }
+}
