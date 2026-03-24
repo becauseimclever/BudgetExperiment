@@ -805,6 +805,27 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<DataHealthReportDto?> GetDataHealthReportAsync(Guid? accountId = null) => Task.FromResult<DataHealthReportDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<DuplicateClusterDto>?> GetDuplicatesAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<DuplicateClusterDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<AmountOutlierDto>?> GetOutliersAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<AmountOutlierDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<DateGapDto>?> GetDateGapsAsync(Guid? accountId = null, int minGapDays = 7) => Task.FromResult<IReadOnlyList<DateGapDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<UncategorizedSummaryDto?> GetUncategorizedSummaryAsync() => Task.FromResult<UncategorizedSummaryDto?>(null);
+
+        /// <inheritdoc/>
+        public Task MergeDuplicatesAsync(MergeDuplicatesRequest request) => Task.CompletedTask;
+
+        /// <inheritdoc/>
+        public Task DismissOutlierAsync(Guid transactionId) => Task.CompletedTask;
     }
         #pragma warning restore SA1648
 
@@ -879,6 +900,27 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<DataHealthReportDto?> GetDataHealthReportAsync(Guid? accountId = null) => Task.FromResult<DataHealthReportDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<DuplicateClusterDto>?> GetDuplicatesAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<DuplicateClusterDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<AmountOutlierDto>?> GetOutliersAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<AmountOutlierDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<DateGapDto>?> GetDateGapsAsync(Guid? accountId = null, int minGapDays = 7) => Task.FromResult<IReadOnlyList<DateGapDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<UncategorizedSummaryDto?> GetUncategorizedSummaryAsync() => Task.FromResult<UncategorizedSummaryDto?>(null);
+
+        /// <inheritdoc/>
+        public Task MergeDuplicatesAsync(MergeDuplicatesRequest request) => Task.CompletedTask;
+
+        /// <inheritdoc/>
+        public Task DismissOutlierAsync(Guid transactionId) => Task.CompletedTask;
     }
         #pragma warning restore SA1648
 }

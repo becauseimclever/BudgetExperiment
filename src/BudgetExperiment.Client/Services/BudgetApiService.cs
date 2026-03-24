@@ -1773,6 +1773,140 @@ public sealed class BudgetApiService : IBudgetApiService
         }
     }
 
+    /// <inheritdoc />
+    public async Task<DataHealthReportDto?> GetDataHealthReportAsync(Guid? accountId = null)
+    {
+        try
+        {
+            var url = accountId.HasValue
+                ? $"api/v1/datahealth/report?accountId={accountId}"
+                : "api/v1/datahealth/report";
+            return await _httpClient.GetFromJsonAsync<DataHealthReportDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<DuplicateClusterDto>?> GetDuplicatesAsync(Guid? accountId = null)
+    {
+        try
+        {
+            var url = accountId.HasValue
+                ? $"api/v1/datahealth/duplicates?accountId={accountId}"
+                : "api/v1/datahealth/duplicates";
+            return await _httpClient.GetFromJsonAsync<List<DuplicateClusterDto>>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AmountOutlierDto>?> GetOutliersAsync(Guid? accountId = null)
+    {
+        try
+        {
+            var url = accountId.HasValue
+                ? $"api/v1/datahealth/outliers?accountId={accountId}"
+                : "api/v1/datahealth/outliers";
+            return await _httpClient.GetFromJsonAsync<List<AmountOutlierDto>>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<DateGapDto>?> GetDateGapsAsync(Guid? accountId = null, int minGapDays = 7)
+    {
+        try
+        {
+            var url = accountId.HasValue
+                ? $"api/v1/datahealth/date-gaps?accountId={accountId}&minGapDays={minGapDays}"
+                : $"api/v1/datahealth/date-gaps?minGapDays={minGapDays}";
+            return await _httpClient.GetFromJsonAsync<List<DateGapDto>>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<UncategorizedSummaryDto?> GetUncategorizedSummaryAsync()
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<UncategorizedSummaryDto>("api/v1/datahealth/uncategorized", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task MergeDuplicatesAsync(MergeDuplicatesRequest request)
+    {
+        try
+        {
+            await _httpClient.PostAsJsonAsync("api/v1/datahealth/merge-duplicates", request, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+        }
+        catch (HttpRequestException)
+        {
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task DismissOutlierAsync(Guid transactionId)
+    {
+        try
+        {
+            await _httpClient.PostAsJsonAsync($"api/v1/datahealth/dismiss-outlier/{transactionId}", new { }, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+        }
+        catch (HttpRequestException)
+        {
+        }
+    }
+
     private async Task<ApiResult<T>> SendUpdateAsync<T>(HttpMethod method, string url, object body, string? version)
     {
         try

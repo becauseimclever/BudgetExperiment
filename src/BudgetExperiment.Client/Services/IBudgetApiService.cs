@@ -860,4 +860,41 @@ public interface IBudgetApiService
     /// <param name="reconciliationRecordId">The reconciliation record identifier.</param>
     /// <returns>Transaction DTOs locked to the reconciliation record.</returns>
     Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId);
+
+    // Data Health Operations
+
+    /// <summary>Gets the full data health report.</summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>Data health report DTO, or null on failure.</returns>
+    Task<DataHealthReportDto?> GetDataHealthReportAsync(Guid? accountId = null);
+
+    /// <summary>Gets duplicate transaction clusters.</summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>Duplicate clusters, or null on failure.</returns>
+    Task<IReadOnlyList<DuplicateClusterDto>?> GetDuplicatesAsync(Guid? accountId = null);
+
+    /// <summary>Gets amount outlier transactions.</summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <returns>Amount outliers, or null on failure.</returns>
+    Task<IReadOnlyList<AmountOutlierDto>?> GetOutliersAsync(Guid? accountId = null);
+
+    /// <summary>Gets date gaps in transaction history.</summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="minGapDays">Minimum gap size to report.</param>
+    /// <returns>Date gaps, or null on failure.</returns>
+    Task<IReadOnlyList<DateGapDto>?> GetDateGapsAsync(Guid? accountId = null, int minGapDays = 7);
+
+    /// <summary>Gets summary of uncategorized transactions.</summary>
+    /// <returns>Uncategorized summary, or null on failure.</returns>
+    Task<UncategorizedSummaryDto?> GetUncategorizedSummaryAsync();
+
+    /// <summary>Merges duplicate transactions into a primary transaction.</summary>
+    /// <param name="request">The merge request.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task MergeDuplicatesAsync(MergeDuplicatesRequest request);
+
+    /// <summary>Dismisses a transaction outlier.</summary>
+    /// <param name="transactionId">The transaction identifier to dismiss.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task DismissOutlierAsync(Guid transactionId);
 }
