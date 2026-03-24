@@ -8,17 +8,29 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class DateGapDto
 {
     /// <summary>Gets or sets the account identifier.</summary>
-    public Guid AccountId { get; set; }
+    public Guid AccountId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the account name.</summary>
     public string AccountName { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the start date of the gap (day after last transaction).</summary>
-    public DateOnly GapStart { get; set; }
+    public DateOnly GapStart
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the end date of the gap (day before next transaction).</summary>
-    public DateOnly GapEnd { get; set; }
+    public DateOnly GapEnd
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the duration of the gap in days.</summary>
-    public int DurationDays { get; set; }
+    public int DurationDays
+    {
+        get; set;
+    }
 }

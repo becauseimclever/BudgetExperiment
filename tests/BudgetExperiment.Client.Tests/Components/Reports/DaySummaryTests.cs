@@ -1,4 +1,4 @@
-﻿// <copyright file="DaySummaryTests.cs" company="BecauseImClever">
+// <copyright file="DaySummaryTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 

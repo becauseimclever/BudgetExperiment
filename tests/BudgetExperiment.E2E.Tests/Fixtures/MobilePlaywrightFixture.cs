@@ -46,26 +46,46 @@ public class MobilePlaywrightFixture : IAsyncLifetime
     /// <summary>
     /// Gets the base URL for the application under test.
     /// </summary>
-    public string BaseUrl { get; } = Environment.GetEnvironmentVariable("BUDGET_APP_URL")
+    public string BaseUrl
+    {
+        get;
+    }
+
+    = Environment.GetEnvironmentVariable("BUDGET_APP_URL")
         ?? "https://budgetdemo.becauseimclever.com";
 
     /// <summary>
     /// Gets a value indicating whether the browser should run in headed mode.
     /// </summary>
-    public bool Headed { get; } = Environment.GetEnvironmentVariable("HEADED")
+    public bool Headed
+    {
+        get;
+    }
+
+    = Environment.GetEnvironmentVariable("HEADED")
         ?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false;
 
     /// <summary>
     /// Gets the slow motion delay in milliseconds for debugging.
     /// </summary>
-    public float SlowMo { get; } = float.TryParse(
+    public float SlowMo
+    {
+        get;
+    }
+
+    = float.TryParse(
         Environment.GetEnvironmentVariable("SLOWMO"),
         out var slowMo) ? slowMo : 0;
 
     /// <summary>
     /// Gets a value indicating whether to capture traces for debugging.
     /// </summary>
-    public bool CaptureTraces { get; } = Environment.GetEnvironmentVariable("PLAYWRIGHT_TRACES")
+    public bool CaptureTraces
+    {
+        get;
+    }
+
+    = Environment.GetEnvironmentVariable("PLAYWRIGHT_TRACES")
         ?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false;
 
     /// <inheritdoc/>

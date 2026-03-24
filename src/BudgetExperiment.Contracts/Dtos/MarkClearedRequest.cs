@@ -8,8 +8,14 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class MarkClearedRequest
 {
     /// <summary>Gets or sets the transaction identifier.</summary>
-    public Guid TransactionId { get; set; }
+    public Guid TransactionId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the date the transaction cleared.</summary>
-    public DateOnly ClearedDate { get; set; }
+    public DateOnly ClearedDate
+    {
+        get; set;
+    }
 }

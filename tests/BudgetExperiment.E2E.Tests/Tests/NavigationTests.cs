@@ -261,6 +261,9 @@ public class NavigationTests
 
         // Verify the page has loaded (navigation still visible, no error state)
         var navMenu = page.Locator("nav.nav-menu");
-        await Expect(navMenu).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(navMenu).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 }

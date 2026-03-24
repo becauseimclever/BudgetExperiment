@@ -11,8 +11,14 @@ public sealed class UncategorizedSummaryDto
     public IReadOnlyList<AccountUncategorizedSummaryDto> ByAccount { get; set; } = [];
 
     /// <summary>Gets or sets the total number of uncategorized transactions.</summary>
-    public int TotalCount { get; set; }
+    public int TotalCount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total absolute amount of uncategorized transactions.</summary>
-    public decimal TotalAmount { get; set; }
+    public decimal TotalAmount
+    {
+        get; set;
+    }
 }

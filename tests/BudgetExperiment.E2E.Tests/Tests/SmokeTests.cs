@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Text.RegularExpressions;
+
 using BudgetExperiment.E2E.Tests.Fixtures;
 using BudgetExperiment.E2E.Tests.Helpers;
 

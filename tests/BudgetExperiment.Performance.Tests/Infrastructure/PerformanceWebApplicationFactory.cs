@@ -36,7 +36,12 @@ public sealed class PerformanceWebApplicationFactory : WebApplicationFactory<Pro
     /// <summary>
     /// Gets a value indicating whether the factory is configured to use the real database.
     /// </summary>
-    public static bool UseRealDb { get; } =
+    public static bool UseRealDb
+    {
+        get;
+    }
+
+    =
         string.Equals(Environment.GetEnvironmentVariable("PERF_USE_REAL_DB"), "true", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>

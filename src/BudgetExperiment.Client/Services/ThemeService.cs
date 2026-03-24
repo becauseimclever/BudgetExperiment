@@ -38,7 +38,12 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// <summary>
     /// Gets the available theme options.
     /// </summary>
-    public static IReadOnlyList<ThemeOption> AvailableThemes { get; } = new List<ThemeOption>
+    public static IReadOnlyList<ThemeOption> AvailableThemes
+    {
+        get;
+    }
+
+    = new List<ThemeOption>
     {
         new("system", "System", "monitor"),
         new("light", "Light", "sun"),
@@ -55,7 +60,7 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// <summary>
     /// Gets the current theme name.
     /// </summary>
-    public string CurrentTheme => this.currentTheme;
+    public string CurrentTheme => currentTheme;
 
     /// <summary>
     /// Initializes the theme service by loading the saved theme from localStorage.
@@ -63,27 +68,27 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        if (this.isInitialized)
+        if (isInitialized)
         {
             return;
         }
 
         try
         {
-            this.module = await this.jsRuntime.InvokeAsync<IJSObjectReference>(
+            module = await jsRuntime.InvokeAsync<IJSObjectReference>(
                 "import",
                 "./js/theme.js");
 
-            var savedTheme = await this.module.InvokeAsync<string?>("getTheme");
-            this.currentTheme = savedTheme ?? DefaultTheme;
+            var savedTheme = await module.InvokeAsync<string?>("getTheme");
+            currentTheme = savedTheme ?? DefaultTheme;
 
-            await this.ApplyThemeAsync(this.currentTheme);
-            this.isInitialized = true;
+            await this.ApplyThemeAsync(currentTheme);
+            isInitialized = true;
         }
         catch (JSException)
         {
             // JS interop not available (e.g., prerendering)
-            this.currentTheme = DefaultTheme;
+            currentTheme = DefaultTheme;
         }
     }
 
@@ -99,13 +104,13 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
             theme = DefaultTheme;
         }
 
-        this.currentTheme = theme;
+        currentTheme = theme;
 
         try
         {
-            if (this.module != null)
+            if (module != null)
             {
-                await this.module.InvokeVoidAsync("setTheme", theme);
+                await module.InvokeVoidAsync("setTheme", theme);
             }
 
             this.ThemeChanged?.Invoke(theme);
@@ -122,14 +127,14 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// <returns>The resolved theme name.</returns>
     public async Task<string> GetResolvedThemeAsync()
     {
-        if (this.module == null)
+        if (module == null)
         {
             return "light";
         }
 
         try
         {
-            return await this.module.InvokeAsync<string>("getResolvedTheme");
+            return await module.InvokeAsync<string>("getResolvedTheme");
         }
         catch (JSException)
         {
@@ -143,14 +148,14 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// <returns>The accessibility state with detection and override information.</returns>
     public async Task<AccessibilityState> GetAccessibilityStateAsync()
     {
-        if (this.module == null)
+        if (module == null)
         {
             return new AccessibilityState(false, false, false);
         }
 
         try
         {
-            return await this.module.InvokeAsync<AccessibilityState>("getAccessibilityState");
+            return await module.InvokeAsync<AccessibilityState>("getAccessibilityState");
         }
         catch (JSException)
         {
@@ -164,13 +169,13 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task ClearThemeOverrideAsync()
     {
-        if (this.module != null)
+        if (module != null)
         {
             try
             {
-                await this.module.InvokeVoidAsync("clearThemeOverride");
-                var effectiveTheme = await this.module.InvokeAsync<string>("getEffectiveTheme");
-                this.currentTheme = effectiveTheme;
+                await module.InvokeVoidAsync("clearThemeOverride");
+                var effectiveTheme = await module.InvokeAsync<string>("getEffectiveTheme");
+                currentTheme = effectiveTheme;
                 this.ThemeChanged?.Invoke(effectiveTheme);
             }
             catch (JSException)
@@ -190,7 +195,7 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// </returns>
     public string GetThemedIcon(string iconName)
     {
-        return ThemedIconRegistry.GetThemedIcon(this.currentTheme, iconName);
+        return ThemedIconRegistry.GetThemedIcon(currentTheme, iconName);
     }
 
     /// <inheritdoc/>
@@ -205,11 +210,11 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
-        if (this.module != null)
+        if (module != null)
         {
             try
             {
-                await this.module.DisposeAsync();
+                await module.DisposeAsync();
             }
             catch (JSDisconnectedException)
             {
@@ -220,9 +225,9 @@ public sealed class ThemeService : IAsyncDisposable, IDisposable
 
     private async Task ApplyThemeAsync(string theme)
     {
-        if (this.module != null)
+        if (module != null)
         {
-            await this.module.InvokeVoidAsync("applyTheme", theme);
+            await module.InvokeVoidAsync("applyTheme", theme);
         }
     }
 }

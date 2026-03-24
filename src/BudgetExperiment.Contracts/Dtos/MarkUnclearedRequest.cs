@@ -8,5 +8,8 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class MarkUnclearedRequest
 {
     /// <summary>Gets or sets the transaction identifier.</summary>
-    public Guid TransactionId { get; set; }
+    public Guid TransactionId
+    {
+        get; set;
+    }
 }

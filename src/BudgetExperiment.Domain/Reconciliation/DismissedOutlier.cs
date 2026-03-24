@@ -12,13 +12,22 @@ public sealed class DismissedOutlier
     }
 
     /// <summary>Gets the unique identifier.</summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the transaction identifier that was dismissed.</summary>
-    public Guid TransactionId { get; private set; }
+    public Guid TransactionId
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the UTC timestamp when the outlier was dismissed.</summary>
-    public DateTime DismissedAtUtc { get; private set; }
+    public DateTime DismissedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>Creates a new DismissedOutlier record.</summary>
     /// <param name="transactionId">The transaction identifier.</param>

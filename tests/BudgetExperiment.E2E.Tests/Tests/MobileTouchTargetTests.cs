@@ -4,6 +4,7 @@
 
 using BudgetExperiment.E2E.Tests.Fixtures;
 using BudgetExperiment.E2E.Tests.Helpers;
+
 using Xunit.Abstractions;
 
 namespace BudgetExperiment.E2E.Tests.Tests;
@@ -166,7 +167,10 @@ public class MobileTouchTargetTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var prevButton = page.GetByLabel("Previous week");
         var nextButton = page.GetByLabel("Next week");
@@ -203,7 +207,10 @@ public class MobileTouchTargetTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var dayCells = page.Locator(".week-day");
         var count = await dayCells.CountAsync();
@@ -239,7 +246,10 @@ public class MobileTouchTargetTests
         // Act - open Quick Add BottomSheet
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var closeButton = page.Locator(".bottom-sheet__close");
         var box = await closeButton.BoundingBoxAsync();
@@ -267,8 +277,14 @@ public class MobileTouchTargetTests
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Act
-        var prevButton = page.GetByRole(AriaRole.Button, new() { Name = "< Previous" });
-        var nextButton = page.GetByRole(AriaRole.Button, new() { Name = "Next >" });
+        var prevButton = page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "< Previous",
+        });
+        var nextButton = page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Next >",
+        });
 
         var prevBox = await prevButton.BoundingBoxAsync();
         var nextBox = await nextButton.BoundingBoxAsync();

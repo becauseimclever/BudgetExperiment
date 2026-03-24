@@ -1,4 +1,4 @@
-﻿// <copyright file="ManualMatchDialogTests.cs" company="BecauseImClever">
+// <copyright file="ManualMatchDialogTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -775,7 +775,7 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         /// <inheritdoc/>
         public Task<UserSettingsDto?> CompleteOnboardingAsync() => Task.FromResult<UserSettingsDto?>(null);
 
-        #pragma warning disable SA1648 // inheritdoc should be used with inheriting class
+#pragma warning disable SA1648 // inheritdoc should be used with inheriting class
         /// <inheritdoc/>
         public Task<TransactionDto?> MarkTransactionClearedAsync(MarkClearedRequest request) => Task.FromResult<TransactionDto?>(null);
 
@@ -827,7 +827,7 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         /// <inheritdoc/>
         public Task DismissOutlierAsync(Guid transactionId) => Task.CompletedTask;
     }
-        #pragma warning restore SA1648
+#pragma warning restore SA1648
 
     private sealed class StubReconciliationApiService : IReconciliationApiService
     {
@@ -870,7 +870,7 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         /// <inheritdoc/>
         public Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(Guid transactionId) => Task.FromResult<IReadOnlyList<LinkableInstanceDto>>([]);
 
-        #pragma warning disable SA1648 // inheritdoc should be used with inheriting class
+#pragma warning disable SA1648 // inheritdoc should be used with inheriting class
         /// <inheritdoc/>
         public Task<TransactionDto?> MarkTransactionClearedAsync(MarkClearedRequest request) => Task.FromResult<TransactionDto?>(null);
 
@@ -922,5 +922,5 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
         /// <inheritdoc/>
         public Task DismissOutlierAsync(Guid transactionId) => Task.CompletedTask;
     }
-        #pragma warning restore SA1648
+#pragma warning restore SA1648
 }

@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Infrastructure.Persistence.Repositories;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace BudgetExperiment.Infrastructure.Tests;

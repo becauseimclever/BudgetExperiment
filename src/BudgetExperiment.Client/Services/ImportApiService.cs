@@ -114,7 +114,10 @@ public sealed class ImportApiService : IImportApiService
     {
         try
         {
-            var request = new { Headers = headers };
+            var request = new
+            {
+                Headers = headers,
+            };
             var response = await _httpClient.PostAsJsonAsync("api/v1/import/mappings/suggest", request, JsonOptions);
             if (response.StatusCode == HttpStatusCode.NoContent)
             {

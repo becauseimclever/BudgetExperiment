@@ -1,5 +1,5 @@
 # Feature 125: Data Health & Statement Reconciliation
-> **Status:** Planning  
+> **Status:** Done  
 > **Priority:** High  
 > **Effort:** Large (2 sub-features, ~12 vertical slices)
 

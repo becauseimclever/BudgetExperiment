@@ -52,7 +52,10 @@ public class SessionExpiryTests
             // Verify we're logged in and on a page with data
             await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new() { Timeout = 15000 });
+            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new()
+            {
+                Timeout = 15000,
+            });
 
             // Clear all cookies to simulate token expiry
             await context.ClearCookiesAsync();
@@ -72,7 +75,10 @@ public class SessionExpiryTests
 
             // Wait for either: session expired toast, or redirect to login
             var toastLocator = page.Locator("[data-testid='toast-warning']");
-            var loginLink = page.GetByRole(AriaRole.Link, new() { Name = "Login" });
+            var loginLink = page.GetByRole(AriaRole.Link, new()
+            {
+                Name = "Login",
+            });
 
             // Give enough time for the refresh attempt + toast / redirect
             var startTime = DateTime.UtcNow;
@@ -134,7 +140,10 @@ public class SessionExpiryTests
             // Navigate to a data-heavy page (calendar triggers multiple API calls)
             await page.GotoAsync($"{_fixture.BaseUrl}/");
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new() { Timeout = 15000 });
+            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new()
+            {
+                Timeout = 15000,
+            });
 
             // Clear cookies + tokens to simulate expiry
             await context.ClearCookiesAsync();
@@ -189,7 +198,10 @@ public class SessionExpiryTests
             // Navigate to accounts page
             await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new() { Timeout = 15000 });
+            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new()
+            {
+                Timeout = 15000,
+            });
 
             // Wait a moment for any async operations
             await Task.Delay(2000);
@@ -247,7 +259,10 @@ public class SessionExpiryTests
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Open the add transaction form
-            var addButton = page.GetByRole(AriaRole.Button, new() { Name = "+ Add Transaction" });
+            var addButton = page.GetByRole(AriaRole.Button, new()
+            {
+                Name = "+ Add Transaction",
+            });
             if (!await addButton.IsVisibleAsync())
             {
                 // Button not available, skip
@@ -321,7 +336,10 @@ public class SessionExpiryTests
             // Navigate to accounts
             await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new() { Timeout = 15000 });
+            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new()
+            {
+                Timeout = 15000,
+            });
 
             // Clear session to simulate expiry
             await context.ClearCookiesAsync();
@@ -337,7 +355,10 @@ public class SessionExpiryTests
             // Navigate to accounts to verify API calls work
             await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new() { Timeout = 15000 });
+            await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new()
+            {
+                Timeout = 15000,
+            });
 
             // The page should load without errors
             var errorToast = page.Locator("[data-testid='toast-error']");

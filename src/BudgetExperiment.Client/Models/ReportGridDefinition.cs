@@ -31,7 +31,12 @@ public sealed class ReportGridDefinition
     /// <summary>
     /// Gets or sets the breakpoint definitions.
     /// </summary>
-    public Dictionary<string, ReportGridBreakpointDefinition> Breakpoints { get; set; } =
+    public Dictionary<string, ReportGridBreakpointDefinition> Breakpoints
+    {
+        get; set;
+    }
+
+    =
         new(StringComparer.OrdinalIgnoreCase)
         {
             ["lg"] = new ReportGridBreakpointDefinition { Columns = DefaultColumnsLg },

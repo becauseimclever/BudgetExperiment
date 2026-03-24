@@ -8,5 +8,8 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class CompleteReconciliationRequest
 {
     /// <summary>Gets or sets the account identifier.</summary>
-    public Guid AccountId { get; set; }
+    public Guid AccountId
+    {
+        get; set;
+    }
 }

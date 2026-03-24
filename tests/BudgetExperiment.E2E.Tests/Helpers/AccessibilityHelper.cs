@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Text;
+
 using Deque.AxeCore.Commons;
 using Deque.AxeCore.Playwright;
 

@@ -19,13 +19,22 @@ public sealed class ReconciliationRecord
     }
 
     /// <summary>Gets the unique identifier.</summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the identifier of the account that was reconciled.</summary>
-    public Guid AccountId { get; private set; }
+    public Guid AccountId
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the statement closing date.</summary>
-    public DateOnly StatementDate { get; private set; }
+    public DateOnly StatementDate
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the balance reported on the bank statement.</summary>
     public MoneyValue StatementBalance { get; private set; } = null!;
@@ -34,19 +43,34 @@ public sealed class ReconciliationRecord
     public MoneyValue ClearedBalance { get; private set; } = null!;
 
     /// <summary>Gets the number of transactions locked to this reconciliation.</summary>
-    public int TransactionCount { get; private set; }
+    public int TransactionCount
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the UTC timestamp when the reconciliation was completed.</summary>
-    public DateTime CompletedAtUtc { get; private set; }
+    public DateTime CompletedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the identifier of the user who completed the reconciliation.</summary>
-    public Guid CompletedByUserId { get; private set; }
+    public Guid CompletedByUserId
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the budget scope of the reconciliation.</summary>
-    public BudgetScope Scope { get; private set; }
+    public BudgetScope Scope
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the owner user ID (null for shared scope).</summary>
-    public Guid? OwnerUserId { get; private set; }
+    public Guid? OwnerUserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new <see cref="ReconciliationRecord"/> after validating that balances match.

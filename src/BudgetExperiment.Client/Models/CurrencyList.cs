@@ -12,7 +12,12 @@ public static class CurrencyList
     /// <summary>
     /// Gets the list of common currencies.
     /// </summary>
-    public static IReadOnlyList<CurrencyOption> Currencies { get; } = new CurrencyOption[]
+    public static IReadOnlyList<CurrencyOption> Currencies
+    {
+        get;
+    }
+
+    = new CurrencyOption[]
     {
         new("USD", "US Dollar", "$"),
         new("EUR", "Euro", "\u20ac"),

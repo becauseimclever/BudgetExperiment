@@ -11,5 +11,8 @@ public sealed class BulkMarkClearedRequest
     public IReadOnlyList<Guid> TransactionIds { get; set; } = [];
 
     /// <summary>Gets or sets the date transactions cleared.</summary>
-    public DateOnly ClearedDate { get; set; }
+    public DateOnly ClearedDate
+    {
+        get; set;
+    }
 }

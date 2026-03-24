@@ -12,6 +12,11 @@
 <PageTitle>Reconciliation - Budget Experiment</PageTitle>
 
 <div class="page-container">
+    <div class="alert alert-info mb-3" role="alert">
+        <Icon Name="info" Size="16" /> Looking for bank statement reconciliation?
+        <a href="/statement-reconciliation" class="alert-link">Go to Statement Reconciliation</a>
+    </div>
+
     <PageHeader Title="Reconciliation">
         <Actions>
             <button class="btn btn-secondary" @onclick="ToggleSettings" disabled="@isLoading">

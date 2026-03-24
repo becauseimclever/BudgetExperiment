@@ -99,7 +99,10 @@ public class ZeroFlashAuthTests
             // Also verify current page state doesn't show flash content
             foreach (var forbiddenText in _forbiddenFlashTexts)
             {
-                var element = page.GetByText(forbiddenText, new() { Exact = false });
+                var element = page.GetByText(forbiddenText, new()
+                {
+                    Exact = false,
+                });
                 var isVisible = await element.IsVisibleAsync();
 
                 Assert.False(
@@ -194,7 +197,10 @@ public class ZeroFlashAuthTests
 
             // Check for branded overlay (if it appears)
             var brandedOverlay = page.Locator(".loading-overlay, .app-loading, [data-loading-overlay]");
-            var plainLoadingText = page.GetByText("Loading...", new() { Exact = true });
+            var plainLoadingText = page.GetByText("Loading...", new()
+            {
+                Exact = true,
+            });
 
             // If there's any loading state, it should be the branded overlay, not plain text
             if (await plainLoadingText.IsVisibleAsync())

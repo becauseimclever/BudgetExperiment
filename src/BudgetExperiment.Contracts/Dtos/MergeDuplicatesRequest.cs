@@ -8,7 +8,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class MergeDuplicatesRequest
 {
     /// <summary>Gets or sets the primary transaction identifier to keep.</summary>
-    public Guid PrimaryTransactionId { get; set; }
+    public Guid PrimaryTransactionId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the duplicate transaction identifiers to remove.</summary>
     public IReadOnlyList<Guid> DuplicateIds { get; set; } = [];

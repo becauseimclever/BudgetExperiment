@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Application.DataHealth;
+
 using Moq;
 
 namespace BudgetExperiment.Application.Tests.DataHealth;

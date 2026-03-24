@@ -116,7 +116,10 @@ public class MobileAccessibilityTests
         // Act - open Quick Add BottomSheet
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var result = await AccessibilityHelper.AnalyzePageAsync(
             page,
@@ -143,7 +146,10 @@ public class MobileAccessibilityTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var result = await AccessibilityHelper.AnalyzePageAsync(
             page,
@@ -195,7 +201,10 @@ public class MobileAccessibilityTests
         // Act - open AI chat BottomSheet
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var result = await AccessibilityHelper.AnalyzePageAsync(
             page,

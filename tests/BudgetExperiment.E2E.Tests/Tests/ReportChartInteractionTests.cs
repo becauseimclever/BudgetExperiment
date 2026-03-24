@@ -4,6 +4,7 @@
 
 using BudgetExperiment.E2E.Tests.Fixtures;
 using BudgetExperiment.E2E.Tests.Helpers;
+
 using Xunit.Abstractions;
 
 namespace BudgetExperiment.E2E.Tests.Tests;
@@ -56,7 +57,10 @@ public class ReportChartInteractionTests
 
         // Assert
         var tooltip = page.Locator(".donut-tooltip");
-        await Expect(tooltip).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(tooltip).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -87,7 +91,10 @@ public class ReportChartInteractionTests
 
         // Assert
         var tooltip = page.Locator(".bar-tooltip");
-        await Expect(tooltip).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(tooltip).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>

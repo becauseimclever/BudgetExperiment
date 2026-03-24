@@ -45,7 +45,10 @@ public class MobileQuickAddTests
 
         // Assert - BottomSheet should contain the Quick Add form
         var bottomSheet = page.Locator(".bottom-sheet.is-visible");
-        await Expect(bottomSheet).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(bottomSheet).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var form = page.Locator(".quick-add-form");
         await Expect(form).ToBeVisibleAsync();
@@ -69,7 +72,10 @@ public class MobileQuickAddTests
         // Act - open Quick Add
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - all required inputs should be visible
         await Expect(page.Locator("#qa-description")).ToBeVisibleAsync();
@@ -96,7 +102,10 @@ public class MobileQuickAddTests
         // Act - open Quick Add
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - date should default to today
         var dateInput = page.Locator("#qa-date");
@@ -122,12 +131,21 @@ public class MobileQuickAddTests
         // Act - open Quick Add then cancel
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "Cancel" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Cancel",
+        }).ClickAsync();
 
         // Assert - BottomSheet should close
-        await Expect(page.Locator(".bottom-sheet.is-visible")).Not.ToBeVisibleAsync(new() { Timeout = 3000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).Not.ToBeVisibleAsync(new()
+        {
+            Timeout = 3000,
+        });
     }
 
     /// <summary>
@@ -148,7 +166,10 @@ public class MobileQuickAddTests
         // Act - open Quick Add
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert
         var descInput = page.Locator("#qa-description");
@@ -173,7 +194,10 @@ public class MobileQuickAddTests
         // Act - open Quick Add
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert
         var amountInput = page.Locator("#qa-amount");
@@ -198,11 +222,20 @@ public class MobileQuickAddTests
         // Act - open Quick Add
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator("#fab-quickadd-label").ClickAsync();
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert
-        var saveButton = page.GetByRole(AriaRole.Button, new() { Name = "Save" });
-        var cancelButton = page.GetByRole(AriaRole.Button, new() { Name = "Cancel" });
+        var saveButton = page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Save",
+        });
+        var cancelButton = page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Cancel",
+        });
         await Expect(saveButton).ToBeVisibleAsync();
         await Expect(cancelButton).ToBeVisibleAsync();
     }

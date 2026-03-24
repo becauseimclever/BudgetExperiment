@@ -3,8 +3,11 @@
 // </copyright>
 
 using System.Text.Json;
+
 using BudgetExperiment.Client.Services;
+
 using Bunit;
+
 using Microsoft.JSInterop;
 
 namespace BudgetExperiment.Client.Tests.Services;
@@ -30,7 +33,11 @@ public class GeolocationServiceTests : BunitContext
     public async Task GetCurrentPosition_InvokesJsInterop()
     {
         // Arrange
-        var positionJson = JsonSerializer.SerializeToElement(new { latitude = 47.6062m, longitude = -122.3321m });
+        var positionJson = JsonSerializer.SerializeToElement(new
+        {
+            latitude = 47.6062m,
+            longitude = -122.3321m,
+        });
         var moduleInterop = this.JSInterop.SetupModule("./js/geolocation.js");
         moduleInterop.Setup<JsonElement>("getCurrentPosition").SetResult(positionJson);
 

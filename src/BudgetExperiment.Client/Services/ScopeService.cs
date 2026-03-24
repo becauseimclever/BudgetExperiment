@@ -36,7 +36,12 @@ public sealed class ScopeService : IAsyncDisposable
     /// <summary>
     /// Gets the available scope options.
     /// </summary>
-    public static IReadOnlyList<ScopeOption> AvailableScopes { get; } = new List<ScopeOption>
+    public static IReadOnlyList<ScopeOption> AvailableScopes
+    {
+        get;
+    }
+
+    = new List<ScopeOption>
     {
         new(BudgetScope.Shared, "Shared", "home", "Household budget visible to all family members"),
         new(BudgetScope.Personal, "Personal", "user", "Your private budget"),
@@ -46,7 +51,7 @@ public sealed class ScopeService : IAsyncDisposable
     /// <summary>
     /// Gets the current scope. Null means "All" (both Shared and Personal).
     /// </summary>
-    public BudgetScope? CurrentScope => this.currentScope;
+    public BudgetScope? CurrentScope => currentScope;
 
     /// <summary>
     /// Initializes the scope service by loading the saved scope from localStorage.
@@ -54,28 +59,28 @@ public sealed class ScopeService : IAsyncDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        if (this.isInitialized)
+        if (isInitialized)
         {
             return;
         }
 
         try
         {
-            var savedScope = await this.jsRuntime.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            var savedScope = await jsRuntime.InvokeAsync<string?>("localStorage.getItem", StorageKey);
 
-            this.currentScope = savedScope switch
+            currentScope = savedScope switch
             {
                 "Shared" => BudgetScope.Shared,
                 "Personal" => BudgetScope.Personal,
                 _ => null, // "All" or unset defaults to null (all scopes)
             };
 
-            this.isInitialized = true;
+            isInitialized = true;
         }
         catch (JSException)
         {
             // JS interop not available (e.g., prerendering)
-            this.currentScope = null;
+            currentScope = null;
         }
     }
 
@@ -86,12 +91,12 @@ public sealed class ScopeService : IAsyncDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task SetScopeAsync(BudgetScope? scope)
     {
-        this.currentScope = scope;
+        currentScope = scope;
 
         try
         {
             var storageValue = scope?.ToString() ?? "All";
-            await this.jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, storageValue);
+            await jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, storageValue);
         }
         catch (JSException)
         {
@@ -107,7 +112,7 @@ public sealed class ScopeService : IAsyncDisposable
     /// <returns>The display name.</returns>
     public string GetCurrentScopeDisplayName()
     {
-        return this.currentScope switch
+        return currentScope switch
         {
             BudgetScope.Shared => "Shared",
             BudgetScope.Personal => "Personal",
@@ -121,7 +126,7 @@ public sealed class ScopeService : IAsyncDisposable
     /// <returns>The icon name.</returns>
     public string GetCurrentScopeIcon()
     {
-        return this.currentScope switch
+        return currentScope switch
         {
             BudgetScope.Shared => "home",
             BudgetScope.Personal => "user",

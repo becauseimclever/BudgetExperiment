@@ -144,7 +144,10 @@ public class MobileFabTests
 
         // Assert - BottomSheet with Quick Add form should appear
         var bottomSheet = page.Locator(".bottom-sheet.is-visible");
-        await Expect(bottomSheet).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(bottomSheet).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -168,7 +171,10 @@ public class MobileFabTests
 
         // Assert - Mobile chat BottomSheet should appear
         var dialog = page.GetByRole(AriaRole.Dialog);
-        await Expect(dialog).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(dialog).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -191,7 +197,10 @@ public class MobileFabTests
         await page.Locator("#fab-quickadd-label").ClickAsync();
 
         // Wait for BottomSheet to appear
-        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".bottom-sheet.is-visible")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - FAB container should be hidden
         var fabContainer = page.Locator(".fab-container.is-hidden");

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Text.RegularExpressions;
+
 using BudgetExperiment.E2E.Tests.Fixtures;
 using BudgetExperiment.E2E.Tests.Helpers;
 
@@ -113,7 +114,10 @@ public class NoAuthModeTests
             _fixture.BaseUrl,
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        var loginLink = page.GetByRole(AriaRole.Link, new() { Name = "Login" });
+        var loginLink = page.GetByRole(AriaRole.Link, new()
+        {
+            Name = "Login",
+        });
         await Expect(loginLink).ToHaveCountAsync(0);
     }
 

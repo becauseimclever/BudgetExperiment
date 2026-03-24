@@ -51,7 +51,10 @@ public class CustomReportBuilderTests
 
         await widgets.First.ClickAsync();
         var configTitle = page.Locator("#widget-title");
-        await Expect(configTitle).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(configTitle).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -73,7 +76,10 @@ public class CustomReportBuilderTests
         var options = await layoutSelect.Locator("option[value]:not([value=''])").AllAsync();
         if (options.Count == 0)
         {
-            await page.GetByRole(AriaRole.Button, new() { Name = "New Layout" }).ClickAsync();
+            await page.GetByRole(AriaRole.Button, new()
+            {
+                Name = "New Layout",
+            }).ClickAsync();
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         }
 
@@ -83,7 +89,10 @@ public class CustomReportBuilderTests
 
         // Act
         await nameInput.FillAsync(updatedName);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Save" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Save",
+        }).ClickAsync();
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var selectedValue = await layoutSelect.InputValueAsync();
@@ -97,6 +106,9 @@ public class CustomReportBuilderTests
 
         // Cleanup - restore original name
         await nameInput.FillAsync(originalName);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Save" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Save",
+        }).ClickAsync();
     }
 }

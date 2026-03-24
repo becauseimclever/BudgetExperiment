@@ -19,25 +19,43 @@ public sealed class StatementBalance
     }
 
     /// <summary>Gets the unique identifier.</summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the identifier of the account this statement balance belongs to.</summary>
-    public Guid AccountId { get; private set; }
+    public Guid AccountId
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the statement closing date.</summary>
-    public DateOnly StatementDate { get; private set; }
+    public DateOnly StatementDate
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the balance as reported on the bank statement.</summary>
     public MoneyValue Balance { get; private set; } = null!;
 
     /// <summary>Gets a value indicating whether the reconciliation using this balance has been completed.</summary>
-    public bool IsCompleted { get; private set; }
+    public bool IsCompleted
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the UTC timestamp when this record was created.</summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the UTC timestamp when this record was last updated.</summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new <see cref="StatementBalance"/> for the given account and statement date.

@@ -47,7 +47,10 @@ public class MobileAiChatTests
 
         // Assert - should open as a dialog (BottomSheet)
         var dialog = page.GetByRole(AriaRole.Dialog);
-        await Expect(dialog).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(dialog).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -68,11 +71,17 @@ public class MobileAiChatTests
         // Act - open AI chat
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - welcome screen elements should be present
         var welcomeHeading = page.GetByText("Budget Assistant");
-        await Expect(welcomeHeading).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(welcomeHeading).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Example messages should be visible
         var examples = page.Locator(".mobile-chat-examples li");
@@ -98,11 +107,17 @@ public class MobileAiChatTests
         // Act - open AI chat
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert
         var chatInput = page.GetByPlaceholder("Type a message...");
-        await Expect(chatInput).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(chatInput).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -123,11 +138,17 @@ public class MobileAiChatTests
         // Act - open AI chat
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert
         var expandButton = page.GetByTitle("Expand chat");
-        await Expect(expandButton).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(expandButton).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -148,11 +169,17 @@ public class MobileAiChatTests
         // Act - open AI chat
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert
         var newChatButton = page.GetByTitle("New conversation");
-        await Expect(newChatButton).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(newChatButton).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -173,17 +200,26 @@ public class MobileAiChatTests
         // Act - open AI chat then close
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var closeButton = page.Locator(".bottom-sheet__close");
         await closeButton.ClickAsync();
 
         // Assert - dialog should disappear
-        await Expect(page.GetByRole(AriaRole.Dialog)).Not.ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).Not.ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // FAB should reappear
         var fab = page.Locator(".fab-primary");
-        await Expect(fab).ToBeVisibleAsync(new() { Timeout = 3000 });
+        await Expect(fab).ToBeVisibleAsync(new()
+        {
+            Timeout = 3000,
+        });
     }
 
     /// <summary>
@@ -207,7 +243,10 @@ public class MobileAiChatTests
 
         // Assert
         var dialog = page.GetByRole(AriaRole.Dialog);
-        await Expect(dialog).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(dialog).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         await Expect(dialog).ToHaveAttributeAsync("aria-modal", "true");
     }
 
@@ -231,13 +270,19 @@ public class MobileAiChatTests
         {
             NameRegex = new Regex("Today", RegexOptions.IgnoreCase),
         });
-        await Expect(todayButton).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(todayButton).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         await todayButton.ClickAsync();
 
         // Open AI chat
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Start a new session to ensure welcome screen shows context hint
         var newChatButton = page.GetByTitle("New conversation");
@@ -245,7 +290,10 @@ public class MobileAiChatTests
 
         // Assert - context hint should include selected date
         var contextHint = page.Locator(".mobile-chat-context");
-        await Expect(contextHint).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(contextHint).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         var hintText = await contextHint.TextContentAsync();
         Assert.NotNull(hintText);
         Assert.Contains("Selected:", hintText, StringComparison.Ordinal);
@@ -267,18 +315,27 @@ public class MobileAiChatTests
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var header = page.Locator("h2.text-secondary");
-        await Expect(header).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(header).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         var initialMonth = await header.TextContentAsync();
 
         // Act - move to next month
-        await page.GetByRole(AriaRole.Button, new() { Name = "Next >" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Next >",
+        }).ClickAsync();
         await Expect(header).Not.ToHaveTextAsync(initialMonth ?? string.Empty);
         var updatedMonth = await header.TextContentAsync();
 
         // Open AI chat
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Start a new session to ensure welcome screen shows context hint
         var newChatButton = page.GetByTitle("New conversation");
@@ -286,7 +343,10 @@ public class MobileAiChatTests
 
         // Assert - context hint should reflect the new month
         var contextHint = page.Locator(".mobile-chat-context");
-        await Expect(contextHint).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(contextHint).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         var hintText = await contextHint.TextContentAsync();
         Assert.NotNull(hintText);
         Assert.Contains("Viewing", hintText, StringComparison.Ordinal);
@@ -314,7 +374,10 @@ public class MobileAiChatTests
         // Act - open AI chat without selecting a date
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Start a new session to ensure welcome screen shows context hint
         var newChatButton = page.GetByTitle("New conversation");
@@ -322,7 +385,10 @@ public class MobileAiChatTests
 
         // Assert - hint should not include a selected date label
         var contextHint = page.Locator(".mobile-chat-context");
-        await Expect(contextHint).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(contextHint).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         var hintText = await contextHint.TextContentAsync();
         Assert.NotNull(hintText);
         Assert.DoesNotContain("Selected:", hintText, StringComparison.Ordinal);
@@ -348,7 +414,10 @@ public class MobileAiChatTests
         {
             NameRegex = new Regex("Today", RegexOptions.IgnoreCase),
         });
-        await Expect(todayButton).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(todayButton).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         await todayButton.ClickAsync();
 
         // Navigate away to Settings
@@ -358,7 +427,10 @@ public class MobileAiChatTests
         // Open AI chat
         await page.Locator(".fab-primary").ClickAsync();
         await page.Locator(".fab-ai").ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Start a new session to ensure welcome screen shows context hint if present
         var newChatButton = page.GetByTitle("New conversation");
@@ -366,6 +438,9 @@ public class MobileAiChatTests
 
         // Assert - context hint should not render
         var contextHint = page.Locator(".mobile-chat-context");
-        await Expect(contextHint).Not.ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(contextHint).Not.ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 }

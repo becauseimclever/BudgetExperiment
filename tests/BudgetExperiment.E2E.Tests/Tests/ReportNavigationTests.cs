@@ -45,7 +45,10 @@ public class ReportNavigationTests
         Assert.True(response.Ok, $"Monthly Trends page should return OK, got {response.Status}");
 
         var navMenu = page.Locator("nav.nav-menu");
-        await Expect(navMenu).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(navMenu).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -69,7 +72,10 @@ public class ReportNavigationTests
         Assert.True(response.Ok, $"Budget Comparison page should return OK, got {response.Status}");
 
         var navMenu = page.Locator("nav.nav-menu");
-        await Expect(navMenu).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(navMenu).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>

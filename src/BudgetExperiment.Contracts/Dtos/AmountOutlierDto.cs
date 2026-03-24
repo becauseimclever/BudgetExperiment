@@ -11,10 +11,16 @@ public sealed class AmountOutlierDto
     public TransactionDto Transaction { get; set; } = new();
 
     /// <summary>Gets or sets the historical mean amount for the merchant group.</summary>
-    public decimal HistoricalMean { get; set; }
+    public decimal HistoricalMean
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets how many standard deviations the transaction deviates from the mean.</summary>
-    public decimal DeviationFactor { get; set; }
+    public decimal DeviationFactor
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the normalized merchant group key.</summary>
     public string MerchantGroup { get; set; } = string.Empty;

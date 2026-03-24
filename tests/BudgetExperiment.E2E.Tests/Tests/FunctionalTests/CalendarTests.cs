@@ -40,8 +40,17 @@ public class CalendarTests
         await page.GotoAsync($"{_fixture.BaseUrl}/{now.Year}/{now.Month}");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new() { Timeout = 15000 });
-        await Expect(page.GetByRole(AriaRole.Heading, new() { Level = 2 })).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
+        await Expect(page.GetByRole(AriaRole.Heading, new()
+        {
+            Level = 2,
+        })).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
 
         var dayBalanceCount = await page.Locator(".calendar-day .day-balance").CountAsync();
         Assert.True(dayBalanceCount >= 28, $"Expected at least 28 day balance cells, got {dayBalanceCount}");
@@ -63,17 +72,32 @@ public class CalendarTests
         await page.GotoAsync($"{_fixture.BaseUrl}/{now.Year}/{now.Month}");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new() { Timeout = 15000 });
-        var heading = page.GetByRole(AriaRole.Heading, new() { Level = 2 });
-        await Expect(heading).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
+        var heading = page.GetByRole(AriaRole.Heading, new()
+        {
+            Level = 2,
+        });
+        await Expect(heading).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
         var originalHeading = await heading.TextContentAsync();
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "Next >" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Next >",
+        }).ClickAsync();
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var nextHeading = await heading.TextContentAsync();
         Assert.NotEqual(originalHeading, nextHeading);
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "< Previous" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "< Previous",
+        }).ClickAsync();
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var returnedHeading = await heading.TextContentAsync();
         Assert.Equal(originalHeading, returnedHeading);
@@ -95,9 +119,15 @@ public class CalendarTests
         await page.GotoAsync($"{_fixture.BaseUrl}/{now.Year}/{now.Month}");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
 
-        var dayWithTransactions = page.Locator(".calendar-day", new() { Has = page.Locator(".transaction-count") }).First;
+        var dayWithTransactions = page.Locator(".calendar-day", new()
+        {
+            Has = page.Locator(".transaction-count"),
+        }).First;
         var transactionDayCount = await page.Locator(".calendar-day .transaction-count").CountAsync();
 
         if (transactionDayCount == 0)
@@ -125,10 +155,16 @@ public class CalendarTests
         await page.GotoAsync($"{_fixture.BaseUrl}/{now.Year}/{now.Month}");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(page.Locator(".calendar-grid")).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
 
         var accountSelect = page.Locator("#accountSelect");
-        await Expect(accountSelect).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(accountSelect).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
 
         var options = await accountSelect.Locator("option").AllInnerTextsAsync();
         if (options.Count < 2)
@@ -172,8 +208,14 @@ public class CalendarTests
         await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        var transactionsButton = page.GetByRole(AriaRole.Button, new() { Name = "Transactions" }).First;
-        await Expect(transactionsButton).ToBeVisibleAsync(new() { Timeout = 10000 });
+        var transactionsButton = page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Transactions",
+        }).First;
+        await Expect(transactionsButton).ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
         await transactionsButton.ClickAsync();
 
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);

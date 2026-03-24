@@ -25,31 +25,49 @@ public sealed class StatementReconciliationViewModel
     }
 
     /// <summary>Gets or sets the callback to notify the Razor page that state has changed.</summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>Gets a value indicating whether initial data is loading.</summary>
     public bool IsLoading { get; private set; } = true;
 
     /// <summary>Gets a value indicating whether an action is in progress.</summary>
-    public bool IsProcessing { get; private set; }
+    public bool IsProcessing
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the current error message, if any.</summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the list of accounts available for selection.</summary>
     public IReadOnlyList<AccountDto> Accounts { get; private set; } = [];
 
     /// <summary>Gets or sets the selected account identifier.</summary>
-    public Guid? SelectedAccountId { get; set; }
+    public Guid? SelectedAccountId
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the statement closing date.</summary>
     public DateOnly StatementDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 
     /// <summary>Gets or sets the balance from the bank statement.</summary>
-    public decimal? StatementBalance { get; set; }
+    public decimal? StatementBalance
+    {
+        get; set;
+    }
 
     /// <summary>Gets the computed cleared balance (InitialBalance + sum of cleared transactions).</summary>
-    public decimal ClearedBalance { get; private set; }
+    public decimal ClearedBalance
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the computed difference between statement balance and cleared balance.</summary>
     public decimal Difference => (StatementBalance ?? 0m) - ClearedBalance;
@@ -61,10 +79,16 @@ public sealed class StatementReconciliationViewModel
     public IReadOnlyList<TransactionDto> Transactions { get; private set; } = [];
 
     /// <summary>Gets the active statement balance DTO, if one exists.</summary>
-    public StatementBalanceDto? ActiveStatementBalance { get; private set; }
+    public StatementBalanceDto? ActiveStatementBalance
+    {
+        get; private set;
+    }
 
     /// <summary>Gets or sets the last completed reconciliation record, if recently completed.</summary>
-    public ReconciliationRecordDto? LastCompletedRecord { get; set; }
+    public ReconciliationRecordDto? LastCompletedRecord
+    {
+        get; set;
+    }
 
     /// <summary>Loads accounts and resets state.</summary>
     /// <param name="ct">Cancellation token.</param>

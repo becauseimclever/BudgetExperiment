@@ -1896,7 +1896,10 @@ public sealed class BudgetApiService : IBudgetApiService
     {
         try
         {
-            await _httpClient.PostAsJsonAsync($"api/v1/datahealth/dismiss-outlier/{transactionId}", new { }, JsonOptions);
+            await _httpClient.PostAsJsonAsync(
+                $"api/v1/datahealth/dismiss-outlier/{transactionId}",
+                new { },
+                JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {

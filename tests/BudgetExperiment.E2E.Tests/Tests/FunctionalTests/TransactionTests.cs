@@ -48,34 +48,79 @@ public class TransactionTests
         await CreateAccountAsync(page, accountName);
         await OpenAccountTransactionsAsync(page, accountName);
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "+ Add Transaction" }).ClickAsync();
-        await Expect(page.Locator(".modal-dialog", new() { HasText = "Add Transaction" })).ToBeVisibleAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "+ Add Transaction",
+        }).ClickAsync();
+        await Expect(page.Locator(".modal-dialog", new()
+        {
+            HasText = "Add Transaction",
+        })).ToBeVisibleAsync();
 
         await page.Locator("#txnDescription").FillAsync(createdDescription);
         await page.Locator("#txnAmount").FillAsync("12.34");
         await page.Locator("#txnDate").FillAsync(DateTime.UtcNow.ToString("yyyy-MM-dd"));
-        await page.GetByRole(AriaRole.Button, new() { Name = "Save" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Save",
+        }).ClickAsync();
 
-        var createdRow = page.Locator("tr", new() { HasText = createdDescription });
-        await Expect(createdRow).ToBeVisibleAsync(new() { Timeout = 10000 });
+        var createdRow = page.Locator("tr", new()
+        {
+            HasText = createdDescription,
+        });
+        await Expect(createdRow).ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
 
-        await createdRow.GetByRole(AriaRole.Button, new() { Name = "Edit" }).ClickAsync();
-        await Expect(page.Locator(".modal-dialog", new() { HasText = "Edit Transaction" })).ToBeVisibleAsync();
+        await createdRow.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Edit",
+        }).ClickAsync();
+        await Expect(page.Locator(".modal-dialog", new()
+        {
+            HasText = "Edit Transaction",
+        })).ToBeVisibleAsync();
 
         await page.Locator("#txnDescription").FillAsync(updatedDescription);
         await page.Locator("#txnAmount").FillAsync("99.50");
-        await page.GetByRole(AriaRole.Button, new() { Name = "Save" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Save",
+        }).ClickAsync();
 
-        var updatedRow = page.Locator("tr", new() { HasText = updatedDescription });
-        await Expect(updatedRow).ToBeVisibleAsync(new() { Timeout = 10000 });
+        var updatedRow = page.Locator("tr", new()
+        {
+            HasText = updatedDescription,
+        });
+        await Expect(updatedRow).ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
 
-        await updatedRow.GetByRole(AriaRole.Button, new() { Name = "Delete" }).ClickAsync();
-        await Expect(page.Locator(".modal-dialog", new() { HasText = "Delete Transaction" })).ToBeVisibleAsync();
-        await page.Locator(".modal-dialog", new() { HasText = "Delete Transaction" })
-            .GetByRole(AriaRole.Button, new() { Name = "Delete" })
+        await updatedRow.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Delete",
+        }).ClickAsync();
+        await Expect(page.Locator(".modal-dialog", new()
+        {
+            HasText = "Delete Transaction",
+        })).ToBeVisibleAsync();
+        await page.Locator(".modal-dialog", new()
+        {
+            HasText = "Delete Transaction",
+        })
+            .GetByRole(AriaRole.Button, new()
+            {
+                Name = "Delete",
+            })
             .ClickAsync();
 
-        await Expect(updatedRow).Not.ToBeVisibleAsync(new() { Timeout = 10000 });
+        await Expect(updatedRow).Not.ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
 
         await DeleteAccountAsync(page, accountName);
     }
@@ -85,19 +130,37 @@ public class TransactionTests
         await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "+ Add Account" }).ClickAsync();
-        await Expect(page.Locator(".modal-dialog", new() { HasText = "Add Account" })).ToBeVisibleAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "+ Add Account",
+        }).ClickAsync();
+        await Expect(page.Locator(".modal-dialog", new()
+        {
+            HasText = "Add Account",
+        })).ToBeVisibleAsync();
 
         await page.Locator("#accountName").FillAsync(accountName);
         await page.Locator("#initialBalance").FillAsync("1000.00");
         await page.Locator("#initialBalanceDate").FillAsync(DateTime.UtcNow.ToString("yyyy-MM-dd"));
 
-        await page.Locator(".modal-dialog", new() { HasText = "Add Account" })
-            .GetByRole(AriaRole.Button, new() { Name = "Save" })
+        await page.Locator(".modal-dialog", new()
+        {
+            HasText = "Add Account",
+        })
+            .GetByRole(AriaRole.Button, new()
+            {
+                Name = "Save",
+            })
             .ClickAsync();
 
-        var accountCard = page.Locator(".card", new() { HasText = accountName });
-        await Expect(accountCard).ToBeVisibleAsync(new() { Timeout = 10000 });
+        var accountCard = page.Locator(".card", new()
+        {
+            HasText = accountName,
+        });
+        await Expect(accountCard).ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
     }
 
     private async Task OpenAccountTransactionsAsync(IPage page, string accountName)
@@ -105,12 +168,24 @@ public class TransactionTests
         await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        var accountCard = page.Locator(".card", new() { HasText = accountName });
-        await Expect(accountCard).ToBeVisibleAsync(new() { Timeout = 10000 });
-        await accountCard.GetByRole(AriaRole.Button, new() { Name = "Transactions" }).ClickAsync();
+        var accountCard = page.Locator(".card", new()
+        {
+            HasText = accountName,
+        });
+        await Expect(accountCard).ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
+        await accountCard.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Transactions",
+        }).ClickAsync();
 
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await Expect(page.Locator("table.table")).ToBeVisibleAsync(new() { Timeout = 10000 });
+        await Expect(page.Locator("table.table")).ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
     }
 
     private async Task DeleteAccountAsync(IPage page, string accountName)
@@ -118,19 +193,37 @@ public class TransactionTests
         await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        var accountCard = page.Locator(".card", new() { HasText = accountName });
+        var accountCard = page.Locator(".card", new()
+        {
+            HasText = accountName,
+        });
         if (await accountCard.CountAsync() == 0)
         {
             return;
         }
 
-        await accountCard.GetByRole(AriaRole.Button, new() { Name = "Delete" }).ClickAsync();
-        await Expect(page.Locator(".modal-dialog", new() { HasText = "Delete Account" })).ToBeVisibleAsync();
+        await accountCard.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Delete",
+        }).ClickAsync();
+        await Expect(page.Locator(".modal-dialog", new()
+        {
+            HasText = "Delete Account",
+        })).ToBeVisibleAsync();
 
-        await page.Locator(".modal-dialog", new() { HasText = "Delete Account" })
-            .GetByRole(AriaRole.Button, new() { Name = "Delete" })
+        await page.Locator(".modal-dialog", new()
+        {
+            HasText = "Delete Account",
+        })
+            .GetByRole(AriaRole.Button, new()
+            {
+                Name = "Delete",
+            })
             .ClickAsync();
 
-        await Expect(accountCard).Not.ToBeVisibleAsync(new() { Timeout = 10000 });
+        await Expect(accountCard).Not.ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
     }
 }

@@ -25,16 +25,28 @@ public sealed class DataHealthViewModel
     }
 
     /// <summary>Gets or sets the callback to notify the Razor page that state has changed.</summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>Gets a value indicating whether data is currently loading.</summary>
-    public bool IsLoading { get; private set; }
+    public bool IsLoading
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the current error message, if any.</summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the full data health report.</summary>
-    public DataHealthReportDto? Report { get; private set; }
+    public DataHealthReportDto? Report
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the count of duplicate clusters.</summary>
     public int DuplicateCount => Report?.Duplicates.Count ?? 0;

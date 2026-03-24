@@ -48,19 +48,18 @@ public sealed class DataHealthService : IDataHealthService
     /// <inheritdoc />
     public async Task<DataHealthReportDto> AnalyzeAsync(Guid? accountId, CancellationToken ct)
     {
-        var duplicatesTask = FindDuplicatesAsync(accountId, ct);
-        var outliersTask = FindOutliersAsync(accountId, ct);
-        var dateGapsTask = FindDateGapsAsync(accountId, minGapDays: 14, ct);
-        var uncategorizedTask = GetUncategorizedSummaryAsync(ct);
-
-        await Task.WhenAll(duplicatesTask, outliersTask, dateGapsTask, uncategorizedTask);
+        // Sequential: DbContext is scoped per request and cannot handle concurrent operations.
+        var duplicates = await FindDuplicatesAsync(accountId, ct);
+        var outliers = await FindOutliersAsync(accountId, ct);
+        var dateGaps = await FindDateGapsAsync(accountId, minGapDays: 14, ct);
+        var uncategorized = await GetUncategorizedSummaryAsync(ct);
 
         return new DataHealthReportDto
         {
-            Duplicates = await duplicatesTask,
-            Outliers = await outliersTask,
-            DateGaps = await dateGapsTask,
-            Uncategorized = await uncategorizedTask,
+            Duplicates = duplicates,
+            Outliers = outliers,
+            DateGaps = dateGaps,
+            Uncategorized = uncategorized,
         };
     }
 

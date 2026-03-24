@@ -25,19 +25,28 @@ public sealed class ReconciliationHistoryViewModel
     }
 
     /// <summary>Gets or sets the callback to notify the Razor page that state has changed.</summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>Gets a value indicating whether data is loading.</summary>
     public bool IsLoading { get; private set; } = true;
 
     /// <summary>Gets the current error message, if any.</summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the available accounts.</summary>
     public IReadOnlyList<AccountDto> Accounts { get; private set; } = [];
 
     /// <summary>Gets or sets the selected account identifier.</summary>
-    public Guid? SelectedAccountId { get; set; }
+    public Guid? SelectedAccountId
+    {
+        get; set;
+    }
 
     /// <summary>Gets the current page of reconciliation records.</summary>
     public IReadOnlyList<ReconciliationRecordDto> Records { get; private set; } = [];

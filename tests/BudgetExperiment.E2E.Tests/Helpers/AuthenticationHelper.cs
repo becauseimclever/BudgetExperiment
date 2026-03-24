@@ -25,7 +25,10 @@ public static class AuthenticationHelper
 
         // Wait for either: nav menu (already logged in), login button, or authentik redirect
         var navMenu = page.Locator("nav.nav-menu");
-        var loginButton = page.GetByRole(AriaRole.Link, new() { Name = "Login" });
+        var loginButton = page.GetByRole(AriaRole.Link, new()
+        {
+            Name = "Login",
+        });
         var checkingAuth = page.GetByText("Checking authentication");
 
         // Authentik uses web components - need multiple selector strategies
@@ -93,7 +96,11 @@ public static class AuthenticationHelper
         var navMenu = page.Locator("nav.nav-menu");
         try
         {
-            await navMenu.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 2000 });
+            await navMenu.WaitForAsync(new()
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = 2000,
+            });
             return true;
         }
         catch (TimeoutException)
@@ -117,11 +124,18 @@ public static class AuthenticationHelper
             .Or(page.GetByLabel("Email or Username"))
             .Or(page.GetByPlaceholder("Email or Username"));
 
-        await usernameField.First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+        await usernameField.First.WaitForAsync(new()
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = 10000,
+        });
         await usernameField.First.FillAsync(TestUsername);
 
         // Click Log in to proceed to password step
-        var loginButton = page.GetByRole(AriaRole.Button, new() { Name = "Log in" });
+        var loginButton = page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Log in",
+        });
         await loginButton.ClickAsync();
 
         // Wait for loading overlay to disappear and password field to appear
@@ -131,14 +145,24 @@ public static class AuthenticationHelper
             .Or(page.GetByLabel("Password"))
             .Or(page.Locator("input[name='password']"));
 
-        await passwordField.First.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 10000 });
+        await passwordField.First.WaitForAsync(new()
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = 10000,
+        });
         await passwordField.First.FillAsync(TestPassword);
 
         // Wait for overlay and click Continue/submit button
         await WaitForLoadingOverlayAsync(page);
-        var submitButton = page.GetByRole(AriaRole.Button, new() { Name = "Continue" })
+        var submitButton = page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Continue",
+        })
             .Or(page.Locator("button[type='submit']"))
-            .Or(page.GetByRole(AriaRole.Button, new() { Name = "Log in" }));
+            .Or(page.GetByRole(AriaRole.Button, new()
+            {
+                Name = "Log in",
+            }));
         await submitButton.First.ClickAsync(new LocatorClickOptions { Timeout = 10000 });
 
         // Wait for redirect - poll for either successful redirect or error
@@ -153,7 +177,10 @@ public static class AuthenticationHelper
             if (page.Url.StartsWith(baseUrl) && !page.Url.Contains("authentik"))
             {
                 // Wait for navigation to render (indicates app is loaded)
-                await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new() { Timeout = 10000 });
+                await Expect(page.Locator("nav.nav-menu")).ToBeVisibleAsync(new()
+                {
+                    Timeout = 10000,
+                });
                 return;
             }
 
@@ -186,7 +213,11 @@ public static class AuthenticationHelper
         var loadingOverlay = page.Locator("ak-loading-overlay");
         try
         {
-            await loadingOverlay.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = 10000 });
+            await loadingOverlay.WaitForAsync(new()
+            {
+                State = WaitForSelectorState.Hidden,
+                Timeout = 10000,
+            });
         }
         catch (TimeoutException)
         {

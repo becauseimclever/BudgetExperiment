@@ -46,7 +46,10 @@ public class MobileOrientationTests
 
             // Assert - calendar grid should still render
             var calendarGrid = page.Locator(".calendar-grid");
-            await Expect(calendarGrid).ToBeVisibleAsync(new() { Timeout = 10000 });
+            await Expect(calendarGrid).ToBeVisibleAsync(new()
+            {
+                Timeout = 10000,
+            });
         }
         finally
         {
@@ -76,7 +79,10 @@ public class MobileOrientationTests
 
             // Assert
             var fab = page.Locator(".fab-primary");
-            await Expect(fab).ToBeVisibleAsync(new() { Timeout = 5000 });
+            await Expect(fab).ToBeVisibleAsync(new()
+            {
+                Timeout = 5000,
+            });
         }
         finally
         {
@@ -106,7 +112,10 @@ public class MobileOrientationTests
 
             // Assert
             var viewToggle = page.Locator(".calendar-view-toggle");
-            await Expect(viewToggle).ToBeVisibleAsync(new() { Timeout = 5000 });
+            await Expect(viewToggle).ToBeVisibleAsync(new()
+            {
+                Timeout = 5000,
+            });
         }
         finally
         {
@@ -139,7 +148,10 @@ public class MobileOrientationTests
 
             // Assert
             var weekView = page.Locator(".week-view");
-            await Expect(weekView).ToBeVisibleAsync(new() { Timeout = 5000 });
+            await Expect(weekView).ToBeVisibleAsync(new()
+            {
+                Timeout = 5000,
+            });
 
             var dayCells = page.Locator(".week-day");
             await Expect(dayCells).ToHaveCountAsync(7);
@@ -176,7 +188,10 @@ public class MobileOrientationTests
 
             // Assert
             var bottomSheet = page.Locator(".bottom-sheet.is-visible");
-            await Expect(bottomSheet).ToBeVisibleAsync(new() { Timeout = 5000 });
+            await Expect(bottomSheet).ToBeVisibleAsync(new()
+            {
+                Timeout = 5000,
+            });
 
             var form = page.Locator(".quick-add-form");
             await Expect(form).ToBeVisibleAsync();
@@ -207,7 +222,10 @@ public class MobileOrientationTests
 
             // Assert - calendar grid should render
             var calendarGrid = page.Locator(".calendar-grid");
-            await Expect(calendarGrid).ToBeVisibleAsync(new() { Timeout = 10000 });
+            await Expect(calendarGrid).ToBeVisibleAsync(new()
+            {
+                Timeout = 10000,
+            });
         }
         finally
         {

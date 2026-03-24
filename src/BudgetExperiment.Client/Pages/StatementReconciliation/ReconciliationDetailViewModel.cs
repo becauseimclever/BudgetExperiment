@@ -25,19 +25,31 @@ public sealed class ReconciliationDetailViewModel
     }
 
     /// <summary>Gets or sets the callback to notify the Razor page that state has changed.</summary>
-    public Action? OnStateChanged { get; set; }
+    public Action? OnStateChanged
+    {
+        get; set;
+    }
 
     /// <summary>Gets a value indicating whether data is loading.</summary>
     public bool IsLoading { get; private set; } = true;
 
     /// <summary>Gets the current error message, if any.</summary>
-    public string? ErrorMessage { get; private set; }
+    public string? ErrorMessage
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the reconciliation record identifier.</summary>
-    public Guid RecordId { get; private set; }
+    public Guid RecordId
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the reconciliation history records (all, so we can find the specific one).</summary>
-    public ReconciliationRecordDto? Record { get; private set; }
+    public ReconciliationRecordDto? Record
+    {
+        get; private set;
+    }
 
     /// <summary>Gets the transactions locked to this reconciliation record.</summary>
     public IReadOnlyList<TransactionDto> Transactions { get; private set; } = [];

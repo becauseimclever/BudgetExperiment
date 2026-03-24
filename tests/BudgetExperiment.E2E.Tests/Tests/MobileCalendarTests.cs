@@ -43,7 +43,10 @@ public class MobileCalendarTests
 
         // Assert
         var calendarGrid = page.Locator(".calendar-grid");
-        await Expect(calendarGrid).ToBeVisibleAsync(new() { Timeout = 10000 });
+        await Expect(calendarGrid).ToBeVisibleAsync(new()
+        {
+            Timeout = 10000,
+        });
     }
 
     /// <summary>
@@ -65,7 +68,10 @@ public class MobileCalendarTests
 
         // Assert
         var viewToggle = page.Locator(".calendar-view-toggle");
-        await Expect(viewToggle).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(viewToggle).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
     }
 
     /// <summary>
@@ -111,7 +117,10 @@ public class MobileCalendarTests
 
         // Assert - week view should appear, month grid should not
         var weekView = page.Locator(".week-view");
-        await Expect(weekView).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(weekView).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var monthGrid = page.Locator(".calendar-grid");
         await Expect(monthGrid).Not.ToBeVisibleAsync();
@@ -137,7 +146,10 @@ public class MobileCalendarTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - should have 7 day headers
         var dayHeaders = page.Locator(".week-day-header");
@@ -161,7 +173,10 @@ public class MobileCalendarTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - should have exactly 7 day cells
         var dayCells = page.Locator(".week-day");
@@ -185,7 +200,10 @@ public class MobileCalendarTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert
         var prevButton = page.GetByLabel("Previous week");
@@ -211,7 +229,10 @@ public class MobileCalendarTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - label should contain a dash/en-dash (date range)
         var weekLabel = page.Locator(".week-label");
@@ -238,13 +259,19 @@ public class MobileCalendarTests
 
         // Act - switch to week then back to month
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         await page.GetByLabel("Month view").ClickAsync();
 
         // Assert - month grid should reappear
         var calendarGrid = page.Locator(".calendar-grid");
-        await Expect(calendarGrid).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(calendarGrid).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         var weekView = page.Locator(".week-view");
         await Expect(weekView).Not.ToBeVisibleAsync();
@@ -270,11 +297,17 @@ public class MobileCalendarTests
 
         // Get the current month heading text
         var heading = page.Locator("h2.text-secondary");
-        await Expect(heading).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(heading).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
         var originalText = await heading.TextContentAsync();
 
         // Act - click Next
-        await page.GetByRole(AriaRole.Button, new() { Name = "Next >" }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new()
+        {
+            Name = "Next >",
+        }).ClickAsync();
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Assert - heading should change
@@ -299,7 +332,10 @@ public class MobileCalendarTests
 
         // Act - switch to week view
         await page.GetByLabel("Week view").ClickAsync();
-        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new() { Timeout = 5000 });
+        await Expect(page.Locator(".week-view")).ToBeVisibleAsync(new()
+        {
+            Timeout = 5000,
+        });
 
         // Assert - day cells should have button role
         var firstDayCell = page.Locator(".week-day").First;
