@@ -1579,6 +1579,200 @@ public sealed class BudgetApiService : IBudgetApiService
         }
     }
 
+    // ─── Statement Reconciliation (Feature 125b) ──────────────────────────────
+
+    /// <inheritdoc />
+    public async Task<TransactionDto?> MarkTransactionClearedAsync(MarkClearedRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/v1/statement-reconciliation/clear", request, JsonOptions);
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions)
+                : null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<TransactionDto?> MarkTransactionUnclearedAsync(MarkUnclearedRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/v1/statement-reconciliation/unclear", request, JsonOptions);
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<TransactionDto>(JsonOptions)
+                : null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsClearedAsync(BulkMarkClearedRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/v1/statement-reconciliation/bulk-clear", request, JsonOptions);
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<List<TransactionDto>>(JsonOptions)
+                : null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsUnclearedAsync(BulkMarkUnclearedRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/v1/statement-reconciliation/bulk-unclear", request, JsonOptions);
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<List<TransactionDto>>(JsonOptions)
+                : null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<StatementBalanceDto?> GetActiveStatementBalanceAsync(Guid accountId)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<StatementBalanceDto>(
+                $"api/v1/statement-reconciliation/statement-balance?accountId={accountId}", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<ClearedBalanceDto?> GetClearedBalanceAsync(Guid accountId, DateOnly? upToDate = null)
+    {
+        try
+        {
+            var url = $"api/v1/statement-reconciliation/cleared-balance?accountId={accountId}";
+            if (upToDate.HasValue)
+            {
+                url += $"&upToDate={upToDate.Value:yyyy-MM-dd}";
+            }
+
+            return await _httpClient.GetFromJsonAsync<ClearedBalanceDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<StatementBalanceDto?> SetStatementBalanceAsync(SetStatementBalanceRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/v1/statement-reconciliation/statement-balance", request, JsonOptions);
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<StatementBalanceDto>(JsonOptions)
+                : null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<ApiResult<ReconciliationRecordDto>> CompleteReconciliationAsync(CompleteReconciliationRequest request)
+    {
+        return await this.SendUpdateAsync<ReconciliationRecordDto>(HttpMethod.Post, "api/v1/statement-reconciliation/complete", request, null);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ReconciliationRecordDto>?> GetReconciliationHistoryAsync(Guid accountId, int page = 1, int pageSize = 20)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<List<ReconciliationRecordDto>>(
+                $"api/v1/statement-reconciliation/history?accountId={accountId}&page={page}&pageSize={pageSize}", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<List<TransactionDto>>(
+                $"api/v1/statement-reconciliation/records/{reconciliationRecordId}/transactions", JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
     private async Task<ApiResult<T>> SendUpdateAsync<T>(HttpMethod method, string url, object body, string? version)
     {
         try

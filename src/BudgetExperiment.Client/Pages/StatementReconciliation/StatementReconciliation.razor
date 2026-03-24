@@ -1,0 +1,218 @@
+@page "/statement-reconciliation"
+
+@using BudgetExperiment.Client.Pages.StatementReconciliation
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+
+@implements IDisposable
+
+@inject IBudgetApiService Api
+@inject NavigationManager Navigation
+
+<PageTitle>Statement Reconciliation - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Statement Reconciliation">
+        <Actions>
+            @if (ViewModel.SelectedAccountId.HasValue)
+            {
+                <a href="statement-reconciliation/history" class="btn btn-secondary">
+                    <Icon Name="clock" Size="16" /> History
+                </a>
+            }
+        </Actions>
+    </PageHeader>
+
+    <ErrorAlert Message="@ViewModel.ErrorMessage"
+                IsDismissible="true"
+                OnDismiss="DismissError" />
+
+    @if (ViewModel.LastCompletedRecord is not null)
+    {
+        <div class="alert alert-success" role="alert">
+            <Icon Name="check-circle" Size="16" /> Reconciliation completed!
+            Statement date: @ViewModel.LastCompletedRecord.StatementDate.ToString("MMM d, yyyy"),
+            @ViewModel.LastCompletedRecord.TransactionCount transactions locked.
+            <button class="btn-close float-end" @onclick="() => ViewModel.LastCompletedRecord = null" type="button" aria-label="Dismiss"></button>
+        </div>
+    }
+
+    @if (ViewModel.IsLoading)
+    {
+        <LoadingSpinner Message="Loading accounts..." />
+    }
+    else
+    {
+        <div class="reconciliation-workspace">
+
+            @* Account Selector *@
+            <div class="form-row mb-3">
+                <label class="form-label">Account</label>
+                <select class="form-select" style="max-width:300px;"
+                        value="@(ViewModel.SelectedAccountId?.ToString() ?? string.Empty)"
+                        @onchange="OnAccountChanged">
+                    <option value="">— Select account —</option>
+                    @foreach (var account in ViewModel.Accounts)
+                    {
+                        <option value="@account.Id">@account.Name</option>
+                    }
+                </select>
+            </div>
+
+            @if (ViewModel.SelectedAccountId.HasValue)
+            {
+                @* Statement Balance Input *@
+                <StatementBalanceInput StatementDate="@ViewModel.StatementDate"
+                                       StatementBalance="@ViewModel.StatementBalance"
+                                       IsProcessing="@ViewModel.IsProcessing"
+                                       OnStatementDateChanged="@(d => ViewModel.StatementDate = d)"
+                                       OnStatementBalanceChanged="@(b => ViewModel.StatementBalance = b)"
+                                       OnSave="@SaveStatementBalance" />
+
+                @* Balance Bar *@
+                <ReconciliationBalanceBar ClearedBalance="@ViewModel.ClearedBalance"
+                                          StatementBalance="@ViewModel.StatementBalance"
+                                          Difference="@ViewModel.Difference"
+                                          IsBalanced="@ViewModel.IsBalanced" />
+
+                @* Complete Reconciliation Button *@
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-primary"
+                            @onclick="CompleteReconciliation"
+                            disabled="@(!ViewModel.IsBalanced || ViewModel.IsProcessing)">
+                        <Icon Name="check" Size="16" /> Complete Reconciliation
+                    </button>
+                    <button class="btn btn-outline-secondary"
+                            @onclick="SelectAll"
+                            disabled="@ViewModel.IsProcessing">
+                        Select All
+                    </button>
+                    <button class="btn btn-outline-secondary"
+                            @onclick="SelectNone"
+                            disabled="@ViewModel.IsProcessing">
+                        Select None
+                    </button>
+                    @if (selectedIds.Count > 0)
+                    {
+                        <button class="btn btn-outline-success"
+                                @onclick="BulkClearSelected"
+                                disabled="@ViewModel.IsProcessing">
+                            Clear Selected (@selectedIds.Count)
+                        </button>
+                        <button class="btn btn-outline-warning"
+                                @onclick="BulkUnclearSelected"
+                                disabled="@ViewModel.IsProcessing">
+                            Unclear Selected (@selectedIds.Count)
+                        </button>
+                    }
+                </div>
+
+                @* Transaction List *@
+                <div class="transaction-table">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;"></th>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                                <th style="width:80px;">Cleared</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tx in ViewModel.Transactions)
+                            {
+                                <ClearableTransactionRow Transaction="@tx"
+                                                          IsSelected="@selectedIds.Contains(tx.Id)"
+                                                          IsProcessing="@ViewModel.IsProcessing"
+                                                          OnToggleSelected="@(id => ToggleSelected(id))"
+                                                          OnMarkCleared="@(id => MarkCleared(id))"
+                                                          OnMarkUncleared="@(id => MarkUncleared(id))"
+                                                          StatementDate="@ViewModel.StatementDate" />
+                            }
+                        </tbody>
+                    </table>
+                    @if (!ViewModel.Transactions.Any())
+                    {
+                        <EmptyState Message="No transactions found for this account." />
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private StatementReconciliationViewModel ViewModel = null!;
+    private readonly HashSet<Guid> selectedIds = [];
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel = new StatementReconciliationViewModel(Api);
+        ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+        await ViewModel.LoadAsync();
+    }
+
+    private async Task OnAccountChanged(ChangeEventArgs e)
+    {
+        selectedIds.Clear();
+        if (Guid.TryParse(e.Value?.ToString(), out var id))
+        {
+            await ViewModel.LoadAccountDataAsync(id);
+        }
+        else
+        {
+            ViewModel.SelectedAccountId = null;
+        }
+    }
+
+    private void ToggleSelected(Guid id)
+    {
+        if (!selectedIds.Add(id))
+        {
+            selectedIds.Remove(id);
+        }
+    }
+
+    private void SelectAll()
+    {
+        foreach (var tx in ViewModel.Transactions.Where(t => t.ReconciliationRecordId is null))
+        {
+            selectedIds.Add(tx.Id);
+        }
+    }
+
+    private void SelectNone() => selectedIds.Clear();
+
+    private async Task MarkCleared(Guid transactionId) =>
+        await ViewModel.MarkClearedAsync(transactionId, ViewModel.StatementDate);
+
+    private async Task MarkUncleared(Guid transactionId) =>
+        await ViewModel.MarkUnclearedAsync(transactionId);
+
+    private async Task BulkClearSelected()
+    {
+        await ViewModel.BulkMarkClearedAsync(selectedIds.ToList(), ViewModel.StatementDate);
+        selectedIds.Clear();
+    }
+
+    private async Task BulkUnclearSelected()
+    {
+        await ViewModel.BulkMarkUnclearedAsync(selectedIds.ToList());
+        selectedIds.Clear();
+    }
+
+    private async Task SaveStatementBalance() => await ViewModel.SaveStatementBalanceAsync();
+
+    private async Task CompleteReconciliation()
+    {
+        await ViewModel.CompleteReconciliationAsync();
+        selectedIds.Clear();
+    }
+
+    private void DismissError() { /* ViewModel.ErrorMessage is cleared by user dismiss */ }
+
+    /// <inheritdoc />
+    public void Dispose() { }
+}

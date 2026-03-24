@@ -805,4 +805,59 @@ public interface IBudgetApiService
     /// <param name="patterns">The patterns to set.</param>
     /// <returns>The updated patterns.</returns>
     Task<ImportPatternsDto?> UpdateImportPatternsAsync(Guid recurringTransactionId, ImportPatternsDto patterns);
+
+    // Statement Reconciliation Operations (Feature 125b)
+
+    /// <summary>Marks a single transaction as cleared.</summary>
+    /// <param name="request">The mark cleared request.</param>
+    /// <returns>Updated transaction DTO.</returns>
+    Task<TransactionDto?> MarkTransactionClearedAsync(MarkClearedRequest request);
+
+    /// <summary>Unclears a single transaction.</summary>
+    /// <param name="request">The mark uncleared request.</param>
+    /// <returns>Updated transaction DTO.</returns>
+    Task<TransactionDto?> MarkTransactionUnclearedAsync(MarkUnclearedRequest request);
+
+    /// <summary>Bulk-marks multiple transactions as cleared.</summary>
+    /// <param name="request">The bulk mark cleared request.</param>
+    /// <returns>Updated transaction DTOs.</returns>
+    Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsClearedAsync(BulkMarkClearedRequest request);
+
+    /// <summary>Bulk-unclears multiple transactions (skips locked ones).</summary>
+    /// <param name="request">The bulk mark uncleared request.</param>
+    /// <returns>Updated transaction DTOs for successfully uncleared transactions.</returns>
+    Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsUnclearedAsync(BulkMarkUnclearedRequest request);
+
+    /// <summary>Gets the active (non-completed) statement balance for an account.</summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <returns>The active statement balance DTO, or null if none.</returns>
+    Task<StatementBalanceDto?> GetActiveStatementBalanceAsync(Guid accountId);
+
+    /// <summary>Gets the computed cleared balance for an account up to an optional date.</summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="upToDate">Optional upper bound date.</param>
+    /// <returns>Cleared balance DTO.</returns>
+    Task<ClearedBalanceDto?> GetClearedBalanceAsync(Guid accountId, DateOnly? upToDate = null);
+
+    /// <summary>Creates or updates the active statement balance for an account.</summary>
+    /// <param name="request">The set statement balance request.</param>
+    /// <returns>The created or updated statement balance DTO.</returns>
+    Task<StatementBalanceDto?> SetStatementBalanceAsync(SetStatementBalanceRequest request);
+
+    /// <summary>Completes reconciliation for an account.</summary>
+    /// <param name="request">The complete reconciliation request.</param>
+    /// <returns>The created reconciliation record, or failure if unbalanced.</returns>
+    Task<ApiResult<ReconciliationRecordDto>> CompleteReconciliationAsync(CompleteReconciliationRequest request);
+
+    /// <summary>Gets the reconciliation history for an account.</summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="page">1-based page number.</param>
+    /// <param name="pageSize">Number of items per page.</param>
+    /// <returns>Paged list of reconciliation record DTOs.</returns>
+    Task<IReadOnlyList<ReconciliationRecordDto>?> GetReconciliationHistoryAsync(Guid accountId, int page = 1, int pageSize = 20);
+
+    /// <summary>Gets transactions locked to a reconciliation record.</summary>
+    /// <param name="reconciliationRecordId">The reconciliation record identifier.</param>
+    /// <returns>Transaction DTOs locked to the reconciliation record.</returns>
+    Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId);
 }

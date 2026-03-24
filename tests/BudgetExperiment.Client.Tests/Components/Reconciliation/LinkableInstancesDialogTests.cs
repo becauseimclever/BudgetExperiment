@@ -1,4 +1,4 @@
-// <copyright file="LinkableInstancesDialogTests.cs" company="BecauseImClever">
+﻿// <copyright file="LinkableInstancesDialogTests.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -519,7 +519,39 @@ public sealed class LinkableInstancesDialogTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<UserSettingsDto?> CompleteOnboardingAsync() => Task.FromResult<UserSettingsDto?>(null);
+
+        #pragma warning disable SA1648 // inheritdoc should be used with inheriting class
+        /// <inheritdoc/>
+        public Task<TransactionDto?> MarkTransactionClearedAsync(MarkClearedRequest request) => Task.FromResult<TransactionDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<TransactionDto?> MarkTransactionUnclearedAsync(MarkUnclearedRequest request) => Task.FromResult<TransactionDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsClearedAsync(BulkMarkClearedRequest request) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsUnclearedAsync(BulkMarkUnclearedRequest request) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<StatementBalanceDto?> GetActiveStatementBalanceAsync(Guid accountId) => Task.FromResult<StatementBalanceDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<ClearedBalanceDto?> GetClearedBalanceAsync(Guid accountId, DateOnly? upToDate = null) => Task.FromResult<ClearedBalanceDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<StatementBalanceDto?> SetStatementBalanceAsync(SetStatementBalanceRequest request) => Task.FromResult<StatementBalanceDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<ApiResult<ReconciliationRecordDto>> CompleteReconciliationAsync(CompleteReconciliationRequest request) => Task.FromResult(ApiResult<ReconciliationRecordDto>.Failure());
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<ReconciliationRecordDto>?> GetReconciliationHistoryAsync(Guid accountId, int page = 1, int pageSize = 20) => Task.FromResult<IReadOnlyList<ReconciliationRecordDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
     }
+        #pragma warning restore SA1648
 
     private sealed class StubReconciliationApiService : IReconciliationApiService
     {
@@ -555,5 +587,37 @@ public sealed class LinkableInstancesDialogTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<LinkableInstanceDto>> GetLinkableInstancesAsync(Guid transactionId) => Task.FromResult<IReadOnlyList<LinkableInstanceDto>>([]);
+
+        #pragma warning disable SA1648 // inheritdoc should be used with inheriting class
+        /// <inheritdoc/>
+        public Task<TransactionDto?> MarkTransactionClearedAsync(MarkClearedRequest request) => Task.FromResult<TransactionDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<TransactionDto?> MarkTransactionUnclearedAsync(MarkUnclearedRequest request) => Task.FromResult<TransactionDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsClearedAsync(BulkMarkClearedRequest request) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<TransactionDto>?> BulkMarkTransactionsUnclearedAsync(BulkMarkUnclearedRequest request) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<StatementBalanceDto?> GetActiveStatementBalanceAsync(Guid accountId) => Task.FromResult<StatementBalanceDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<ClearedBalanceDto?> GetClearedBalanceAsync(Guid accountId, DateOnly? upToDate = null) => Task.FromResult<ClearedBalanceDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<StatementBalanceDto?> SetStatementBalanceAsync(SetStatementBalanceRequest request) => Task.FromResult<StatementBalanceDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<ApiResult<ReconciliationRecordDto>> CompleteReconciliationAsync(CompleteReconciliationRequest request) => Task.FromResult(ApiResult<ReconciliationRecordDto>.Failure());
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<ReconciliationRecordDto>?> GetReconciliationHistoryAsync(Guid accountId, int page = 1, int pageSize = 20) => Task.FromResult<IReadOnlyList<ReconciliationRecordDto>?>(null);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
     }
+        #pragma warning restore SA1648
 }

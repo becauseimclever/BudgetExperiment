@@ -1,0 +1,77 @@
+@using BudgetExperiment.Contracts.Dtos
+
+<tr class="@(Transaction.IsCleared ? "table-success" : string.Empty)">
+    <td>
+        @if (Transaction.ReconciliationRecordId is null)
+        {
+            <input type="checkbox"
+                   class="form-check-input"
+                   checked="@IsSelected"
+                   @onchange="() => OnToggleSelected.InvokeAsync(Transaction.Id)"
+                   disabled="@IsProcessing" />
+        }
+        else
+        {
+            <Icon Name="lock" Size="14" title="Locked to reconciliation" />
+        }
+    </td>
+    <td>@Transaction.Date.ToString("MM/dd/yyyy")</td>
+    <td>@Transaction.Description</td>
+    <td class="text-end @(Transaction.Amount.Amount < 0 ? "text-danger" : "text-success")">
+        @Transaction.Amount.Amount.ToString("C")
+    </td>
+    <td>
+        @if (Transaction.ReconciliationRecordId is not null)
+        {
+            <span class="badge bg-secondary">Reconciled</span>
+        }
+        else if (Transaction.IsCleared)
+        {
+            <button class="btn btn-sm btn-outline-warning px-1 py-0"
+                    @onclick="() => OnMarkUncleared.InvokeAsync(Transaction.Id)"
+                    disabled="@IsProcessing"
+                    title="Mark as uncleared">
+                Unclear
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-sm btn-outline-success px-1 py-0"
+                    @onclick="() => OnMarkCleared.InvokeAsync(Transaction.Id)"
+                    disabled="@IsProcessing"
+                    title="Mark as cleared">
+                Clear
+            </button>
+        }
+    </td>
+</tr>
+
+@code {
+    /// <summary>Gets or sets the transaction to display.</summary>
+    [Parameter]
+    public TransactionDto Transaction { get; set; } = null!;
+
+    /// <summary>Gets or sets a value indicating whether this transaction is selected.</summary>
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether an action is in progress.</summary>
+    [Parameter]
+    public bool IsProcessing { get; set; }
+
+    /// <summary>Gets or sets the statement date (used as cleared date when marking cleared).</summary>
+    [Parameter]
+    public DateOnly StatementDate { get; set; }
+
+    /// <summary>Gets or sets the callback when the selection checkbox is toggled.</summary>
+    [Parameter]
+    public EventCallback<Guid> OnToggleSelected { get; set; }
+
+    /// <summary>Gets or sets the callback to mark the transaction as cleared.</summary>
+    [Parameter]
+    public EventCallback<Guid> OnMarkCleared { get; set; }
+
+    /// <summary>Gets or sets the callback to mark the transaction as uncleared.</summary>
+    [Parameter]
+    public EventCallback<Guid> OnMarkUncleared { get; set; }
+}

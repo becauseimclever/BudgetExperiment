@@ -1,0 +1,44 @@
+<div class="reconciliation-balance-bar card mb-3 p-3 @(IsBalanced ? "border-success" : "border-warning")">
+    <div class="d-flex gap-4 flex-wrap">
+        <div>
+            <small class="text-muted">Cleared Balance</small>
+            <div class="fw-bold">@ClearedBalance.ToString("C")</div>
+        </div>
+        <div>
+            <small class="text-muted">Statement Balance</small>
+            <div class="fw-bold">@(StatementBalance.HasValue ? StatementBalance.Value.ToString("C") : "—")</div>
+        </div>
+        <div>
+            <small class="text-muted">Difference</small>
+            <div class="fw-bold @(IsBalanced ? "text-success" : "text-warning")">
+                @if (IsBalanced)
+                {
+                    <Icon Name="check-circle" Size="16" />
+                    <span>Balanced</span>
+                }
+                else
+                {
+                    <span>@Difference.ToString("C")</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Gets or sets the computed cleared balance.</summary>
+    [Parameter]
+    public decimal ClearedBalance { get; set; }
+
+    /// <summary>Gets or sets the statement balance (may be null if not set).</summary>
+    [Parameter]
+    public decimal? StatementBalance { get; set; }
+
+    /// <summary>Gets or sets the computed difference.</summary>
+    [Parameter]
+    public decimal Difference { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the account is balanced.</summary>
+    [Parameter]
+    public bool IsBalanced { get; set; }
+}

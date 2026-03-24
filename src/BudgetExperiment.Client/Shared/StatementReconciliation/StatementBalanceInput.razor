@@ -1,0 +1,76 @@
+@using BudgetExperiment.Contracts.Dtos
+
+<div class="statement-balance-input card mb-3 p-3">
+    <h6 class="card-subtitle mb-2 text-muted">Statement Details</h6>
+    <div class="d-flex gap-3 align-items-end flex-wrap">
+        <div>
+            <label class="form-label form-label-sm">Statement Date</label>
+            <input type="date"
+                   class="form-control form-control-sm"
+                   value="@StatementDate.ToString("yyyy-MM-dd")"
+                   @onchange="OnDateChanged"
+                   disabled="@IsProcessing" />
+        </div>
+        <div>
+            <label class="form-label form-label-sm">Statement Balance</label>
+            <input type="number"
+                   class="form-control form-control-sm"
+                   step="0.01"
+                   value="@StatementBalance"
+                   @onchange="OnBalanceChanged"
+                   disabled="@IsProcessing"
+                   placeholder="0.00" />
+        </div>
+        <button class="btn btn-sm btn-secondary"
+                @onclick="OnSave"
+                disabled="@IsProcessing">
+            Save
+        </button>
+    </div>
+</div>
+
+@code {
+    /// <summary>Gets or sets the current statement date.</summary>
+    [Parameter]
+    public DateOnly StatementDate { get; set; }
+
+    /// <summary>Gets or sets the current statement balance.</summary>
+    [Parameter]
+    public decimal? StatementBalance { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether an action is in progress.</summary>
+    [Parameter]
+    public bool IsProcessing { get; set; }
+
+    /// <summary>Gets or sets the callback when statement date changes.</summary>
+    [Parameter]
+    public EventCallback<DateOnly> OnStatementDateChanged { get; set; }
+
+    /// <summary>Gets or sets the callback when statement balance changes.</summary>
+    [Parameter]
+    public EventCallback<decimal?> OnStatementBalanceChanged { get; set; }
+
+    /// <summary>Gets or sets the save callback.</summary>
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateOnly.TryParse(e.Value?.ToString(), out var date))
+        {
+            await OnStatementDateChanged.InvokeAsync(date);
+        }
+    }
+
+    private async Task OnBalanceChanged(ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), out var balance))
+        {
+            await OnStatementBalanceChanged.InvokeAsync(balance);
+        }
+        else
+        {
+            await OnStatementBalanceChanged.InvokeAsync(null);
+        }
+    }
+}

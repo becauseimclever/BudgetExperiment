@@ -66,6 +66,16 @@
         </li>
 
         <li>
+            <NavLink class="nav-item" href="statement-reconciliation" title="Statement Reconciliation" aria-label="Statement Reconciliation">
+                <span class="nav-icon" aria-hidden="true"><Icon Name="clipboard-check" Size="20" /></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="nav-text">Statement Recon</span>
+                }
+            </NavLink>
+        </li>
+
+        <li>
             <NavLink class="nav-item" href="transfers" title="Transfers" aria-label="Transfers between accounts">
                 <span class="nav-icon" aria-hidden="true"><Icon Name="arrows-horizontal" Size="20" /></span>
                 @if (!IsCollapsed)
