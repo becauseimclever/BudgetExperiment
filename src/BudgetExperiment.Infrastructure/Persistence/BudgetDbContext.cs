@@ -1,4 +1,5 @@
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Reconciliation;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -137,6 +138,9 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// Gets the statement balances.
     /// </summary>
     public DbSet<StatementBalance> StatementBalances => this.Set<StatementBalance>();
+
+    /// <summary>Gets the dismissed outliers.</summary>
+    public DbSet<DismissedOutlier> DismissedOutliers => this.Set<DismissedOutlier>();
 
     /// <inheritdoc />
     public string? GetConcurrencyToken<T>(T entity)

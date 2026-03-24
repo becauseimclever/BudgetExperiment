@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
+using BudgetExperiment.Application.DataHealth;
 using BudgetExperiment.Application.Export;
 using BudgetExperiment.Application.Settings;
 using BudgetExperiment.Application.Transactions;
@@ -82,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<IExportService, ExportService>();
         services.AddScoped<ILocationParserService, LocationParserService>();
         services.AddScoped<IStatementReconciliationService, StatementReconciliationService>();
+        services.AddScoped<IDataHealthService, DataHealthService>();
         return services;
     }
 }
