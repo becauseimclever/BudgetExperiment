@@ -537,6 +537,70 @@ public class MyComponentTests : BunitContext, IAsyncLifetime
 
 ---
 
+### 8. Decision: Enhanced Charts — Library Selection & Migration Strategy (2026-06-XX)
+
+**Author:** Alfred (Lead/Architect)  
+**Feature:** 127 — Enhanced Charts & Visualizations  
+**Status:** Proposed
+
+#### Context
+
+The current charting system uses 11 hand-rolled SVG components (BarChart, DonutChart, LineChart, AreaChart, GroupedBarChart, StackedBarChart, SparkLine, RadialGauge, ProgressBar, ChartLegend, ChoroplethMap) with zero external dependencies. All are pure Blazor+SVG with CSS custom properties supporting 9 themes and 100% bUnit test coverage.
+
+While functional, the system has hit its scaling limit: each new chart type requires 200–400 lines of custom SVG geometry code, interactivity is limited to basic hover tooltips, there are no animations, and chart types critical for budgeting insights (treemap, heatmap, waterfall, scatter, radar, candlestick, box plot) are missing entirely.
+
+#### Decision
+
+**Adopt Blazor-ApexCharts** as the chart rendering library via a parallel introduction + gradual migration strategy.
+
+##### Why Blazor-ApexCharts
+
+1. 20+ chart types covering all proposed new visualizations
+2. ~80 KB gzipped JS payload — within budget for Raspberry Pi deployment
+3. Actively maintained Blazor WASM wrapper with strongly-typed C# API
+4. Built-in animations, zoom/pan, tooltips, legend interaction, and PNG export
+5. Programmatic theming compatible with our CSS custom property design system
+6. MIT licensed
+
+##### What We Rejected
+
+- **Chart.js (ChartJs.Blazor):** Blazor wrapper is stale (last updated 2022), .NET 10 support uncertain
+- **Plotly.NET:** ~3 MB payload, designed for data science, overkill
+- **D3.js via JS interop:** Effectively building a chart library from scratch
+- **Radzen Blazor Charts:** Tied to Radzen component library
+- **Keeping hand-rolled SVG:** Does not scale for 10+ new chart types
+
+##### Migration Approach
+
+- **No big bang.** ApexCharts and legacy SVG components coexist during migration.
+- **New chart types** (treemap, heatmap, etc.) built exclusively with ApexCharts.
+- **Existing charts** (BarChart, DonutChart, LineChart) migrated one-at-a-time in dedicated PRs.
+- **Legacy components deleted only after** all consumers are migrated and tests pass.
+- **ChartThemeService** bridges CSS custom properties → ApexCharts theme config.
+- **IChartDataService** centralizes data aggregation/statistics for testability.
+
+##### Risk Mitigations
+
+- **Slice 1 is a spike:** Validates .NET 10 compatibility and measures actual bundle size before committing to full migration.
+- **Go/no-go decision point** after Slice 1: if bundle >200 KB or .NET 10 incompatible, re-evaluate.
+- **Legacy components retained** throughout migration — instant rollback by reverting component references.
+
+#### Implications
+
+- `BudgetExperiment.Client.csproj` gains a dependency on `Blazor-ApexCharts` NuGet package
+- JS interop is introduced for charting (currently the Client has zero chart-related JS interop)
+- ~80 KB added to published payload
+- bUnit tests will need to account for ApexCharts JS interop (mock `IJSRuntime` calls)
+- All 9 themes must be verified visually after each chart migration
+
+#### Related
+
+- Feature Doc: `docs/127-enhanced-charts-and-visualizations.md`
+- Existing charts: `src/BudgetExperiment.Client/Components/Charts/`
+- Theme system: `wwwroot/css/design-system/tokens.css` + 9 theme files
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

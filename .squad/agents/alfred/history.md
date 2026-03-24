@@ -196,6 +196,34 @@ Feature Doc 124 (Controller Abstractions Assessment) should note this finding wh
 
 **Pragmatic SOLID Application:** The directive says interfaces should "earn their cost." Here, the interfaces already exist — using them costs nothing. Leaving concrete injection in place when interfaces exist and are registered is technical debt, not pragmatism.
 
+### 2026-03-24 — Multi-Vendor Bank Connector Support (Feature 126 Scope Elevation)
+
+**Task:** Update Feature 126 to promote multi-vendor bank connector support from a future consideration to a first-class feature.
+
+**Rationale:** User explicitly requested support for multiple vendors (Plaid for US, Nordigen for EU) allowing users to choose their provider at account-link time. The existing `IBankConnector` abstraction already supports this architectural pattern; this change is a scope elevation, not a redesign.
+
+**Key Changes:**
+
+1. **Removed Non-Goal NG3** (one active connector per deployment) — now a first-class goal.
+2. **Added Goal G8** explicitly stating multi-vendor support with simultaneous active connectors and user-selectable providers.
+3. **Introduced ConnectorRegistry pattern** in the Architecture section:
+   - `IBankConnectorRegistry` interface manages registered connectors.
+   - `ConnectorRegistryEntry` records hold metadata (name, regions, enabled state).
+   - Registry resolution enables routing to the correct `IBankConnector` impl at sync time.
+4. **Added `ConnectorType` field to `BankConnection` entity** — tracks which adapter is used for each linked account.
+5. **New Connector Configuration section** showing how to enable/disable vendors via `appsettings.json` (Plaid, Nordigen, etc. with Enabled/SupportedRegions/credentials).
+6. **Revised Vendor Recommendation** from "Plaid primary, Nordigen future" to "Plaid recommended for US, Nordigen for EU, both can be active simultaneously."
+7. **Added 10 new acceptance criteria (AC-126-36 through AC-126-45)** covering:
+   - Registry region filtering
+   - Connector resolution and fallback
+   - `BankConnection.ConnectorType` storage/retrieval
+   - Multi-connector sync independence
+   - UI region/provider selection
+
+**Outcome:** Feature 126 now fully specifies a production-ready multi-vendor architecture. Implementation is vendor-agnostic; adding Nordigen (or any future vendor) requires only a new Infrastructure adapter + configuration entry, zero domain/application changes.
+
+**Architecture Strength:** The original design already supported this (hence "future consideration" was overly conservative). The `IBankConnector` abstraction and ConnectorRegistry pattern ensure clean separation of vendor-specific logic from domain and application layers.
+
 **Pre-existing Issues Noted:** Repository has multiple unrelated build errors (IUnitOfWork.MarkAsModified not implemented, SA1117/SA1127/SA1210 StyleCop violations) that block `-warnaserror` builds.
 
 ### 2026-03-22T18-23-42Z — Session Close: Batch 2+3 Complete
@@ -293,3 +321,26 @@ Completed comprehensive review of Feature 112 (API Performance Testing) scope an
 - 7 open questions flagged for team discussion
 - Detailed sync conflict resolution strategy
 - Token security considerations for Raspberry Pi deployment
+
+### 2026-XX-XX — Feature 127: Enhanced Charts & Visualizations (Planning)
+
+**Task:** Audit current charting system, evaluate chart libraries, and write comprehensive feature document for enhanced charts.
+
+**Codebase Audit Findings:**
+- **No external chart library** — all 11 chart components are hand-rolled SVG rendered by Blazor
+- Chart types: BarChart, DonutChart, LineChart, AreaChart, GroupedBarChart, StackedBarChart, SparkLine, RadialGauge, ProgressBar, ChartLegend, ChoroplethMap (map, not chart)
+- Shared infrastructure: ChartAxis, ChartGrid, ChartTooltip, ChartTick in `Components/Charts/Shared/`
+- Only 3 chart types actively used in reports: BarChart (MonthlyTrends, BudgetComparison), DonutChart (MonthlyCategoriesReport, CalendarInsightsPanel)
+- 4 chart types exist in code but are only used in ComponentShowcase (LineChart, SparkLine, RadialGauge) or not used at all (AreaChart, GroupedBarChart, StackedBarChart)
+- 100% bUnit test coverage across all chart components
+- Full CSS custom property integration with 9-theme design system (light, dark, accessible, crayons, geocities, macOS, monopoly, vscode-dark, win95)
+- Strong accessibility: ARIA labels, keyboard navigation, tabindex on interactive elements
+
+**Library Recommendation:** Blazor-ApexCharts — 20+ chart types, ~80KB gzipped, actively maintained Blazor wrapper, programmatic theming, MIT license. Rejected: ChartJs.Blazor (stale wrapper), Plotly.NET (3MB, overkill), D3.js (too much custom JS), Radzen (tied to component lib).
+
+**Migration Strategy:** Parallel introduction → gradual replacement. New charts built with ApexCharts; existing SVG charts migrated one-at-a-time in dedicated PRs. Legacy components retained until all consumers migrated. Go/no-go decision after Slice 1 validates .NET 10 compat and bundle size.
+
+**New Chart Types Proposed (10):** Treemap, Heatmap, Waterfall, Scatter, Radar/Spider, Stacked Area, Candlestick, Radial Bar, Box Plot, Sunburst (via treemap drill-down).
+
+**Document:** `docs/127-enhanced-charts-and-visualizations.md` — 36 acceptance criteria, 10 implementation slices, 5 open questions.
+**Decision Record:** `.squad/decisions/inbox/alfred-charts-feature.md`
