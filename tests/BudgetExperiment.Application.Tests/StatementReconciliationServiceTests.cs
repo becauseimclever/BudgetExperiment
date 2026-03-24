@@ -125,6 +125,59 @@ public class StatementReconciliationServiceTests
         tx2.IsCleared.ShouldBeTrue();
     }
 
+    // AC-125b-07: CompleteReconciliationAsync creates record and locks all cleared transactions
+    [Fact]
+    public async Task CompleteReconciliationAsync_CreatesRecordAndLocksTransactions()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var statementDate = new DateOnly(2026, 1, 31);
+        var balanceAmount = 1000m;
+        var currency = "USD";
+
+        var account = Account.CreateShared(
+            "Test Account",
+            AccountType.Checking,
+            Guid.NewGuid(),
+            MoneyValue.Create(currency, 100m));
+
+        var sb = StatementBalance.Create(accountId, statementDate, MoneyValue.Create(currency, balanceAmount));
+
+        var tx1 = CreateTransaction(Guid.NewGuid(), accountId);
+        tx1.MarkCleared(new DateOnly(2026, 1, 10));
+        var tx2 = CreateTransaction(Guid.NewGuid(), accountId);
+        tx2.MarkCleared(new DateOnly(2026, 1, 20));
+
+        _sbRepo.Setup(r => r.GetActiveByAccountAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sb);
+        _accountRepo.Setup(r => r.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(account);
+        _txRepo.Setup(r => r.GetClearedBalanceSumAsync(accountId, statementDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MoneyValue.Create(currency, 900m)); // 100 initial + 900 = 1000
+        _txRepo.Setup(r => r.GetClearedByAccountAsync(accountId, statementDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction> { tx1, tx2 });
+        _rrRepo.Setup(r => r.AddAsync(It.IsAny<ReconciliationRecord>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var svc = CreateService();
+
+        // Act
+        var result = await svc.CompleteReconciliationAsync(accountId, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.AccountId.ShouldBe(accountId);
+        result.StatementDate.ShouldBe(statementDate);
+        result.TransactionCount.ShouldBe(2);
+
+        tx1.ReconciliationRecordId.ShouldNotBeNull();
+        tx2.ReconciliationRecordId.ShouldNotBeNull();
+        tx1.ReconciliationRecordId.ShouldBe(tx2.ReconciliationRecordId);
+
+        sb.IsCompleted.ShouldBeTrue();
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static Account CreateAccount(decimal initialBalance)
     {
         return Account.Create(
