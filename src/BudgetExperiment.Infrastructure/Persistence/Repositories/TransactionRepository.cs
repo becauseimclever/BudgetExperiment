@@ -358,6 +358,63 @@ internal sealed class TransactionRepository : ITransactionRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetClearedByAccountAsync(
+        Guid accountId,
+        DateOnly? upToDate,
+        CancellationToken ct)
+    {
+        var query = this.ApplyScopeFilter(_context.Transactions)
+            .Where(t => t.AccountId == accountId && t.IsCleared);
+
+        if (upToDate.HasValue)
+        {
+            query = query.Where(t => t.Date <= upToDate.Value);
+        }
+
+        return await query
+            .AsNoTracking()
+            .OrderBy(t => t.Date)
+            .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
+    public async Task<MoneyValue> GetClearedBalanceSumAsync(
+        Guid accountId,
+        DateOnly? upToDate,
+        CancellationToken ct)
+    {
+        var query = this.ApplyScopeFilter(_context.Transactions)
+            .AsNoTracking()
+            .Where(t => t.AccountId == accountId && t.IsCleared);
+
+        if (upToDate.HasValue)
+        {
+            query = query.Where(t => t.Date <= upToDate.Value);
+        }
+
+        var result = await query
+            .GroupBy(t => t.Amount.Currency)
+            .Select(g => new { Currency = g.Key, Total = g.Sum(t => t.Amount.Amount) })
+            .FirstOrDefaultAsync(ct);
+
+        return result is null
+            ? MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 0m)
+            : MoneyValue.Create(result.Currency, result.Total);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetByReconciliationRecordAsync(
+        Guid reconciliationRecordId,
+        CancellationToken ct)
+    {
+        return await this.ApplyScopeFilter(_context.Transactions)
+            .Where(t => t.ReconciliationRecordId == reconciliationRecordId)
+            .AsNoTracking()
+            .OrderBy(t => t.Date)
+            .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
     public async Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetUnifiedPagedAsync(
         Guid? accountId = null,
         Guid? categoryId = null,

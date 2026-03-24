@@ -874,4 +874,62 @@ public class TransactionTests
         // Assert
         Assert.Null(transaction.Location);
     }
+
+    // AC-125b-01
+    [Fact]
+    public void MarkCleared_SetsIsClearedAndClearedDate()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50.00m),
+            new DateOnly(2026, 1, 15),
+            "Groceries");
+        var clearedDate = new DateOnly(2026, 1, 20);
+
+        // Act
+        transaction.MarkCleared(clearedDate);
+
+        // Assert
+        Assert.True(transaction.IsCleared);
+        Assert.Equal(clearedDate, transaction.ClearedDate);
+    }
+
+    // AC-125b-02
+    [Fact]
+    public void MarkUncleared_OnReconciledTransaction_ThrowsDomainException()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50.00m),
+            new DateOnly(2026, 1, 15),
+            "Groceries");
+        transaction.MarkCleared(new DateOnly(2026, 1, 20));
+        transaction.LockToReconciliation(Guid.NewGuid());
+
+        // Act & Assert
+        var ex = Assert.Throws<DomainException>(transaction.MarkUncleared);
+        Assert.Equal(DomainExceptionType.InvalidOperation, ex.ExceptionType);
+    }
+
+    // AC-125b-03
+    [Fact]
+    public void MarkUncleared_OnNonReconciledClearedTransaction_ResetsBothFields()
+    {
+        // Arrange
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50.00m),
+            new DateOnly(2026, 1, 15),
+            "Groceries");
+        transaction.MarkCleared(new DateOnly(2026, 1, 20));
+
+        // Act
+        transaction.MarkUncleared();
+
+        // Assert
+        Assert.False(transaction.IsCleared);
+        Assert.Null(transaction.ClearedDate);
+    }
 }

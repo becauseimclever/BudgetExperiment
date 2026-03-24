@@ -201,6 +201,30 @@ public sealed class Transaction
     public bool IsFromImport => this.ImportBatchId.HasValue;
 
     /// <summary>
+    /// Gets a value indicating whether this transaction has been cleared by the account holder.
+    /// </summary>
+    public bool IsCleared
+    {
+        get; private set;
+    }
+
+    /// <summary>
+    /// Gets the date on which this transaction was marked as cleared (null if not cleared).
+    /// </summary>
+    public DateOnly? ClearedDate
+    {
+        get; private set;
+    }
+
+    /// <summary>
+    /// Gets the identifier of the reconciliation record this transaction is locked to (null if not reconciled).
+    /// </summary>
+    public Guid? ReconciliationRecordId
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Gets the geographic location of the transaction (null if not set).
     /// </summary>
     public TransactionLocationValue? Location
@@ -475,6 +499,62 @@ public sealed class Transaction
     public void ClearLocation()
     {
         this.Location = null;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Marks this transaction as cleared on the given date.
+    /// </summary>
+    /// <param name="clearedDate">The date the transaction was cleared.</param>
+    public void MarkCleared(DateOnly clearedDate)
+    {
+        IsCleared = true;
+        ClearedDate = clearedDate;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Unclears this transaction, removing the cleared date.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when the transaction is locked to a reconciliation record.</exception>
+    public void MarkUncleared()
+    {
+        if (ReconciliationRecordId is not null)
+        {
+            throw new DomainException(
+                "Cannot unclear a reconciled transaction. Unlock it first.",
+                DomainExceptionType.InvalidOperation);
+        }
+
+        IsCleared = false;
+        ClearedDate = null;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Locks this transaction to a completed reconciliation record.
+    /// </summary>
+    /// <param name="reconciliationRecordId">The reconciliation record identifier.</param>
+    /// <exception cref="DomainException">Thrown when the transaction is not cleared.</exception>
+    public void LockToReconciliation(Guid reconciliationRecordId)
+    {
+        if (!IsCleared)
+        {
+            throw new DomainException(
+                "Cannot reconcile an uncleared transaction.",
+                DomainExceptionType.InvalidOperation);
+        }
+
+        ReconciliationRecordId = reconciliationRecordId;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Unlocks this transaction from its reconciliation record.
+    /// </summary>
+    public void UnlockFromReconciliation()
+    {
+        ReconciliationRecordId = null;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 

@@ -83,6 +83,9 @@ public static class AccountMapper
             RecurringTransferInstanceDate = transaction.RecurringTransferInstanceDate,
             Location = ToLocationDto(transaction.Location),
             Version = version,
+            IsCleared = transaction.IsCleared,
+            ClearedDate = transaction.ClearedDate,
+            ReconciliationRecordId = transaction.ReconciliationRecordId,
         };
     }
 

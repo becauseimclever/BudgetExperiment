@@ -160,5 +160,23 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
                 .HasColumnName("Location_Source")
                 .HasConversion<int>();
         });
+
+        // Cleared state — Feature 125
+        builder.Property(t => t.IsCleared)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(t => t.ClearedDate);
+
+        builder.Property(t => t.ReconciliationRecordId);
+
+        // Filtered index on cleared transactions per account for reconciliation queries
+        builder.HasIndex(t => new { t.AccountId, t.IsCleared })
+            .HasDatabaseName("IX_Transactions_AccountId_IsCleared")
+            .HasFilter("\"IsCleared\" = TRUE");
+
+        builder.HasIndex(t => t.ReconciliationRecordId)
+            .HasDatabaseName("IX_Transactions_ReconciliationRecordId")
+            .HasFilter("\"ReconciliationRecordId\" IS NOT NULL");
     }
 }

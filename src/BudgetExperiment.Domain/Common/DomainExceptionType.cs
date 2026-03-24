@@ -24,4 +24,9 @@ public enum DomainExceptionType
     /// A resource conflict occurred (maps to HTTP 409).
     /// </summary>
     Conflict = 2,
+
+    /// <summary>
+    /// An operation is not valid in the current state (maps to HTTP 422).
+    /// </summary>
+    InvalidOperation = 3,
 }

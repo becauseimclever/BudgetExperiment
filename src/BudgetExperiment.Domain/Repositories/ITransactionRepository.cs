@@ -173,6 +173,40 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets cleared transactions for an account up to the given date.
+    /// </summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="upToDate">Optional upper bound (inclusive); returns all cleared if null.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Cleared transactions for the account.</returns>
+    Task<IReadOnlyList<Transaction>> GetClearedByAccountAsync(
+        Guid accountId,
+        DateOnly? upToDate,
+        CancellationToken ct);
+
+    /// <summary>
+    /// Computes the sum of cleared transaction amounts for an account up to the given date.
+    /// </summary>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="upToDate">Optional upper bound (inclusive); sums all cleared if null.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Sum of cleared transaction amounts.</returns>
+    Task<MoneyValue> GetClearedBalanceSumAsync(
+        Guid accountId,
+        DateOnly? upToDate,
+        CancellationToken ct);
+
+    /// <summary>
+    /// Gets all transactions locked to a specific reconciliation record.
+    /// </summary>
+    /// <param name="reconciliationRecordId">The reconciliation record identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Transactions associated with the reconciliation record.</returns>
+    Task<IReadOnlyList<Transaction>> GetByReconciliationRecordAsync(
+        Guid reconciliationRecordId,
+        CancellationToken ct);
+
+    /// <summary>
     /// Gets transactions with filtering, sorting, and paging for the unified transaction list.
     /// Includes Category navigation property. Supports sorting by account name and category name.
     /// </summary>

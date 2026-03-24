@@ -110,4 +110,22 @@ public sealed class TransactionDto
     {
         get; set;
     }
+
+    /// <summary>Gets or sets a value indicating whether this transaction has been cleared.</summary>
+    public bool IsCleared
+    {
+        get; set;
+    }
+
+    /// <summary>Gets or sets the date on which this transaction was cleared (null if not cleared).</summary>
+    public DateOnly? ClearedDate
+    {
+        get; set;
+    }
+
+    /// <summary>Gets or sets the reconciliation record identifier this transaction is locked to (null if not reconciled).</summary>
+    public Guid? ReconciliationRecordId
+    {
+        get; set;
+    }
 }
