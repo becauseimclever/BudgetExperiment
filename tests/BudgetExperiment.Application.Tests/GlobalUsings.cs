@@ -10,6 +10,7 @@ global using BudgetExperiment.Application.Calendar;
 global using BudgetExperiment.Application.Categorization;
 global using BudgetExperiment.Application.Chat;
 global using BudgetExperiment.Application.Common;
+global using BudgetExperiment.Application.DataHealth;
 global using BudgetExperiment.Application.Import;
 global using BudgetExperiment.Application.Location;
 global using BudgetExperiment.Application.Paycheck;

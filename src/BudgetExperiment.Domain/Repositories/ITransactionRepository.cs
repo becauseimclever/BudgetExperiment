@@ -238,4 +238,15 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
         int skip = 0,
         int take = 50,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all transactions for health analysis, optionally filtered by account.
+    /// Applies scope filtering. Includes Category navigation.
+    /// </summary>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>All transactions for health analysis.</returns>
+    Task<IReadOnlyList<Transaction>> GetAllForHealthAnalysisAsync(
+        Guid? accountId,
+        CancellationToken ct);
 }

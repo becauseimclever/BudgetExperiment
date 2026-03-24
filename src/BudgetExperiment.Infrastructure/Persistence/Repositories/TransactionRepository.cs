@@ -515,6 +515,26 @@ internal sealed class TransactionRepository : ITransactionRepository
         return (items, totalCount);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Transaction>> GetAllForHealthAnalysisAsync(
+        Guid? accountId,
+        CancellationToken ct)
+    {
+        var query = this.ApplyScopeFilter(_context.Transactions)
+            .Include(t => t.Category)
+            .AsNoTracking();
+
+        if (accountId.HasValue)
+        {
+            query = query.Where(t => t.AccountId == accountId.Value);
+        }
+
+        return await query
+            .OrderBy(t => t.AccountId)
+            .ThenBy(t => t.Date)
+            .ToListAsync(ct);
+    }
+
     /// <summary>
     /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
     /// in this repository MUST call this method to prevent cross-scope data leaks.
