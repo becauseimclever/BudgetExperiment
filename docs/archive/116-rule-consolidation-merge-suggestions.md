@@ -1,5 +1,5 @@
 # Feature 116: Rule Consolidation & Merge Suggestions
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 
