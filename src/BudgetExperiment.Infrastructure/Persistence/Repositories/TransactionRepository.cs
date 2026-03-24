@@ -372,7 +372,6 @@ internal sealed class TransactionRepository : ITransactionRepository
         }
 
         return await query
-            .AsNoTracking()
             .OrderBy(t => t.Date)
             .ToListAsync(ct);
     }
