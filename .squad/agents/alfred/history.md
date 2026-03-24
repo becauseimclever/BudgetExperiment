@@ -33,6 +33,155 @@ Tests mirror structure under `tests/`.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-03-24 — Feature 127: Hybrid Chart Implementation Strategy Chosen
+
+**Task:** User decided: **go hybrid**. Update Feature 127 doc to make hybrid approach the PRIMARY recommendation. Create decision record.
+
+**Decision:** **Hybrid approach is the primary strategy** for Feature 127 (Enhanced Charts & Visualizations).
+
+**Breakdown:**
+- **Tier 1 & 2 (Self-Implement):** Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick, Waterfall, Box Plot — all using existing SVG + Blazor pattern, zero new JS dependencies.
+- **Tier 3 (Library):** Treemap, Radar — use Blazor-ApexCharts for complex algorithms (squarified rectangle packing, trigonometry).
+
+**Changes Made:**
+
+1. **`docs/127-enhanced-charts-and-visualizations.md` — Library Recommendation Section:**
+   - Revised to lead with hybrid approach as PRIMARY
+   - Explained why Tier 1/2 self-implement (team skills, zero bundle impact, natural evolution of existing charts)
+   - Explained why Tier 3 uses ApexCharts (algorithms too error-prone to maintain in-house)
+   - Bundle impact: zero for Tier 1/2, ~80 KB for Tier 3 (within 200 KB budget)
+
+2. **`docs/127-enhanced-charts-and-visualizations.md` — Implementation Approach Section:**
+   - Updated to state "Hybrid is the chosen approach" as conclusion
+   - Preserved chart-by-chart assessment (all technical analysis remains)
+   - Clarified Tier classification and trade-offs
+
+3. **`docs/127-enhanced-charts-and-visualizations.md` — Implementation Slices:**
+   - Already updated to reflect hybrid build order:
+     - Slice 1: ApexCharts spike (Tier 3 only) + bundle validation
+     - Slice 2: Shared data service
+     - Slices 3–5: Self-implement Tier 1/2
+     - Slice 6: ApexCharts Tier 3 final integration
+
+4. **`docs/127-enhanced-charts-and-visualizations.md` — Architecture Section:**
+   - Added new subsection "Theming Strategy: Unified Visual Language Across All Chart Types"
+   - Documented how Tier 1/2 (SVG) and Tier 3 (ApexCharts) share CSS custom property theming
+   - Clarified component structure separating `SelfImplemented/` and `ApexCharts/` folders
+
+5. **New Decision Record:** `.squad/decisions/inbox/alfred-127-hybrid-decision.md`
+   - Formal record of hybrid decision
+   - Rationale, trade-offs, risk mitigation
+   - References to feature doc and implementation plan
+
+**Rationale:**
+- Preserves zero-JS-dependency advantage for 7 of 9 chart types (aligns with project philosophy)
+- Pragmatically outsources genuinely complex algorithms (Treemap, Radar) to library
+- Leverages team's proven SVG competency (11 existing charts, full bUnit coverage)
+- Unified visual theming across all chart types via shared CSS custom properties
+- No-regression decision point: if ApexCharts bundle proves problematic, team can pivot to all-self-implement (Slices 1 validated this)
+
+**Outcomes:**
+- Feature 127 doc now treats hybrid as PRIMARY recommendation (not secondary or optional)
+- Team has clear guidance: Tier 1/2 follow existing SVG pattern, Tier 3 use library
+- Decision recorded formally in team space
+- Implementation slices already reflect hybrid build order (Tier 1/2 first, Tier 3 after bundle validation)
+
+### 2026-XX-XX — Feature 127: Self-Implement vs. Library Assessment for Chart Types
+
+**Task:** The user asked whether the new chart types proposed in Feature 127 (Enhanced Charts & Visualizations) could be implemented self-rolled in SVG + Blazor, instead of adopting Blazor-ApexCharts. Provide an honest technical assessment for each proposed chart type.
+
+**Context:** The app already has 11 hand-rolled SVG + Blazor chart components (BarChart, DonutChart, etc.) with full bUnit coverage, 9-theme CSS support, and zero JS dependencies. The user is proud of this approach and asked if the 9 new chart types (Treemap, Heatmap, Waterfall, Scatter, Radar, Stacked Area, Candlestick, Radial Bar, Box Plot) could continue this pattern.
+
+**Methodology:** For each chart, evaluated:
+1. SVG feasibility (can it be done?)
+2. Complexity relative to BarChart/DonutChart (Low/Medium/High/Very High)
+3. Key challenges (algorithm, geometry, interaction)
+4. Time estimate (developer weeks)
+5. Maintenance burden
+6. Recommendation (self-implement or library)
+
+**Chart Assessments (Summary):**
+
+| Chart | Complexity | Feasibility | Key Challenge | Recommendation | Tier |
+|-------|-----------|-------------|---------------|----|------|
+| **Heatmap** | Low | ✅ Yes | Simple grid rendering | Self-implement | 1 |
+| **Scatter Plot** | Low | ✅ Yes | Reuse LineChart infra | Self-implement | 1 |
+| **Stacked Area** | Medium | ✅ Yes | Cumulative Y tracking | Self-implement | 1 |
+| **Radial Bar/Gauge** | Low-Medium | ✅ Yes | Extend RadialGauge | Self-implement | 1 |
+| **Candlestick** | Low | ✅ Yes | Bar + wick rendering | Self-implement | 1 |
+| **Waterfall** | Medium-High | ✅ Yes | Floating bar coordinates | Self-implement possible | 2 |
+| **Box Plot** | Medium | ✅ Yes | Quartile calculations (math-heavy) | Self-implement possible | 2 |
+| **Treemap** | High | ⚠️ Possible | Squarified algorithm + drill-down | **Library** | 3 |
+| **Radar/Spider** | Very High | ⚠️ Possible | Trigonometry (sin/cos per point) | **Library** | 3 |
+| **Sunburst** | Very High | ⚠️ Possible | Combine treemap + sunburst layout | **Library** | 3 |
+
+**Key Findings:**
+
+1. **Tier 1 (Self-Implement, Low Risk):** Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick
+   - These are natural evolutions of existing chart types or trivial SVG work
+   - Total effort: 4–7 weeks for all five
+   - Zero additional bundle size
+
+2. **Tier 2 (Self-Implement with Caveats):** Waterfall, Box Plot
+   - Feasible but require careful testing (coordinate math, statistical calculations)
+   - Self-implementation adds ~2–3 weeks of development
+   - Viable if rigor is maintained; otherwise deferred to library
+
+3. **Tier 3 (Library Recommended):** Treemap, Radar/Spider, Sunburst
+   - **Treemap:** Squarified algorithm is not domain-specific; outsource.
+   - **Radar:** Trigonometry is error-prone and unmaintainable without domain expertise.
+   - **Sunburst:** Complex layout algorithm; no clear benefit over treemap + drill-down.
+   - Using library avoids custodial burden and accumulation of subtle geometric bugs.
+
+**Recommendation: Hybrid Approach**
+
+- **Use ApexCharts (Blazor-ApexCharts NuGet) for Tier 3 charts only** → Treemap, Radar, Sunburst.
+- **Self-implement Tier 1 and Tier 2 charts** → Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick, Waterfall, Box Plot.
+- **Decision point after Slice 1:** Measure actual bundle impact. If <200 KB and acceptable, migrate to ApexCharts for all types (simplifies scope). If critical, keep hybrid.
+
+**Rationale:**
+- The team has proven SVG/Blazor competency (11 existing charts, all tested).
+- Simple charts (Heatmap, Scatter, Radial Bar) are faster to self-implement than writing library integration code.
+- Complex algorithms (Treemap, Radar) are not worth maintaining in-house; library amortizes complexity.
+- ApexCharts adds ~80 KB gzipped; acceptable within 200 KB budget, but hybrid saves ~50 KB if needed.
+- **Fastest path to value:** Commit to ApexCharts for all types (Slice 1 planned). Reduces risk, faster delivery. Hybrid only if bundle size proves critical post-measurement.
+
+**Feature Doc Update:**
+Added new section "## Implementation Approach: Self vs. Library" to Feature 127 doc (`docs/127-enhanced-charts-and-visualizations.md`) with full chart-by-chart assessment, tier classification, and hybrid recommendation.
+
+**Outcome:** User has both options documented. If they choose to proceed with ApexCharts (current recommendation), work begins immediately. If they insist on self-implementation, Tier 1 and 2 are low-risk; Tier 3 requires escalation/discussion.
+
+---
+
+### 2026-03-24 — Feature 127: Hybrid Approach Finalized and Documented
+
+**Task:** User requested confirmation of ApexCharts licensing (both ApexCharts.js library and Blazor-ApexCharts wrapper) and wanted the Feature 127 doc updated to make the **hybrid approach the primary recommendation** (not library-only).
+
+**Licensing Verified:**
+- **ApexCharts.js:** Dual-license model. Community License (free) for organizations with annual revenue <$2M USD — includes personal and small-business commercial use without restrictions. All chart types (treemap, radar, etc.) available in free tier. Attribution required.
+- **Blazor-ApexCharts wrapper:** MIT License (Copyright 2020 Joakim Dangården). Permits commercial and personal use; attribution required.
+- **Verdict:** ✅ Safe for self-hosted personal budgeting app. No CLA triggered. No "Pro tier" restrictions on specific chart types.
+
+**Feature Doc Updates Completed:**
+1. ✅ Updated status from "Planning" to "Approach Decided (Hybrid Primary)"
+2. ✅ Revised Library Recommendation section to lead with hybrid as primary strategy
+3. ✅ Added "License Notes" subsection documenting both libraries' terms
+4. ✅ Reorganized Implementation Slices to reflect hybrid build order:
+   - Slices 1–2: Foundation (ApexCharts spike, ChartDataService)
+   - Slices 3–5: Self-implement Tier 1 & 2 charts (7 types)
+   - Slice 6: ApexCharts Tier 3 integration (Treemap, Radar only)
+   - Slice 7: Visual polish (all 9 charts)
+   - Slice 8: Integrate into reports
+   - Slice 9: Optional legacy cleanup
+5. ✅ Updated Acceptance Criteria to clarify which ACs apply to self-implemented vs. ApexCharts charts
+6. ✅ Created decision record: `.squad/decisions/inbox/alfred-charts-hybrid-decision.md`
+
+**Outcome:** Feature 127 now has a clear, documented hybrid recommendation as primary strategy. User can proceed with implementation planning knowing:
+- 7 charts are self-implemented (Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick, Waterfall, Box Plot)
+- 2 charts use ApexCharts (Treemap, Radar) for algorithmic complexity
+- Zero JS-dependency risk for 7 of 9 types; acceptable 80 KB cost for 2 genuinely complex types
+- Full licensing compliance and zero CLA/attribution complications
+
 ### 2026-XX-XX — Comprehensive Test Suite Audit (Fortinbra Request)
 
 **Task:** Audit the entire test suite to verify all features are tested and determine feasibility of removing `Category=Performance` exclusion.

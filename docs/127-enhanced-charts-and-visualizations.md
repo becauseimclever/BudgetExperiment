@@ -1,7 +1,7 @@
 # Feature 127: Enhanced Charts & Visualizations
-> **Status:** Planning  
+> **Status:** Approach Decided (Hybrid Primary)  
 > **Priority:** Medium  
-> **Effort:** Large (new chart types, potential library migration, theming overhaul, data service layer)
+> **Effort:** Large (new chart types, library integration for 2 types, theming overhaul, data service layer)
 
 ## Overview
 
@@ -89,34 +89,71 @@ All charts use **pure inline SVG** with:
 
 ## Library Recommendation
 
-### Decision: **Blazor-ApexCharts** (via `Blazor-ApexCharts` NuGet package)
+### Decision: **Hybrid Approach** (Self-Implement Tier 1 & 2, Use Blazor-ApexCharts for Tier 3)
 
-#### Evaluated Options
+The hybrid approach is the **primary strategy** for Feature 127. It balances the project's zero-JS-dependency strength with pragmatic outsourcing of genuinely complex chart types.
+
+#### Hybrid Strategy Breakdown
+
+**Tier 1 & 2 (Self-Implement — Zero New JS Dependencies):**
+- **Tier 1 (Trivial → Simple):** Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick
+- **Tier 2 (Medium):** Waterfall, Box Plot
+- **Approach:** Continue the existing hand-rolled SVG + Blazor pattern using the team's proven skills and test infrastructure (bUnit, 100% coverage)
+- **Bundle impact:** Zero
+- **Effort:** 6–10 weeks combined
+
+**Tier 3 (Library — Blazor-ApexCharts for Complex Algorithms):**
+- **Types:** Treemap, Radar/Spider (and Sunburst if needed)
+- **Why library:** Squarified treemapping algorithms and trigonometric radar geometry are not domain-specific to budgeting. Their maintenance burden outweighs the benefit of in-house ownership.
+- **Bundle impact:** ~80 KB gzipped (acceptable within 200 KB budget)
+- **Effort:** Spike + integration (2–3 weeks)
+
+**Unified theming:** All charts (self-implemented and ApexCharts) share the same CSS custom property theming system, ensuring visual consistency across all 9 themes.
+
+---
+
+### Evaluated Options (for Context)
 
 | Library | Pros | Cons | Verdict |
 |---------|------|------|---------|
-| **Blazor-ApexCharts** (thirstyape) | Beautiful defaults, 20+ chart types (treemap, heatmap, radar, candlestick, radialBar, etc.), actively maintained, strong Blazor WASM support, ~80 KB gzipped JS, built-in responsiveness, animation, zoom/pan, dark mode, MIT license | Depends on ApexCharts.js via JS interop; NuGet package wraps JS library | ✅ **Recommended** |
+| **Blazor-ApexCharts** (thirstyape) | Beautiful defaults, 20+ chart types (treemap, heatmap, radar, candlestick, radialBar, etc.), actively maintained, strong Blazor WASM support, ~80 KB gzipped JS, built-in responsiveness, animation, zoom/pan, dark mode, MIT license | Depends on ApexCharts.js via JS interop; NuGet package wraps JS library | ✅ Recommended for Tier 3 only |
 | **Chart.js via ChartJs.Blazor** | Most popular JS charting library, huge ecosystem | Blazor wrapper (`ChartJs.Blazor`) is stale (last update 2022), not actively maintained for .NET 8+. `PSC.Blazor.Components.ChartJs` is more active but less mature. Chart.js v4 bundles are larger. | ❌ Wrapper maintenance risk |
 | **Plotly.NET** | Scientific charts, extremely powerful | Heavyweight (~3 MB), designed for data science, overkill for a budgeting app, poor Blazor WASM integration | ❌ Too heavy |
 | **D3.js via JS interop** | Ultimate flexibility, any chart type possible | Requires significant custom JS, effectively building a chart library from scratch, huge maintenance burden | ❌ Too much custom JS |
 | **Radzen Blazor Charts** | Native Blazor, no JS interop | Tied to Radzen component library, limited chart types, styling conflicts with custom design system | ❌ Component library dependency |
-| **Keep hand-rolled SVG** | Zero dependencies, full control, existing test suite | Every new chart type is 200–400 lines of geometry code; interactivity is limited; no animations; visual quality gap grows with each new type | ❌ Does not scale |
+| **Keep hand-rolled SVG for all** | Zero dependencies, full control, existing test suite | Treemap (squarified algorithm) and Radar (trigonometry) add unsustainable custodial burden; other 7 types are feasible | ⚠️ Hybrid is better |
 
-#### Rationale for Blazor-ApexCharts
+#### Hybrid Approach Rationale
 
-1. **Chart variety.** ApexCharts supports all chart types needed for budgeting: bar, line, area, donut/pie, treemap, heatmap, radar, radialBar, scatter, candlestick, boxPlot, and range bar. This covers every new type proposed in this feature.
-2. **Visual quality.** ApexCharts ships with smooth animations, gradient fills, responsive legends, rich tooltips with formatted data, and zoom/pan — all out of the box.
-3. **Blazor-native API.** The `Blazor-ApexCharts` wrapper provides `<ApexChart>` and `<ApexPointSeries>` Razor components with strongly-typed C# configuration. No manual JS interop needed.
-4. **Theming.** ApexCharts supports programmatic theming. Colors can be bound to CSS custom properties, enabling integration with the existing 9-theme design system.
-5. **Bundle size.** ApexCharts.js is ~80 KB gzipped — well within the 200 KB budget for a Raspberry Pi deployment.
-6. **Active maintenance.** The `Blazor-ApexCharts` NuGet package (by joamamrgn/thirstyape) is actively maintained with regular releases for latest .NET versions.
-7. **MIT license.** Compatible with the project's license.
+1. **Preserves the project's zero-JS-dependency advantage for most charts.** 7 of 9 new chart types (Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick, Waterfall, Box Plot) require zero new JS dependencies.
+2. **Pragmatic outsourcing of complex algorithms.** Treemap (squarified rectangle packing) and Radar (trigonometric polygon rendering) are error-prone if maintained in-house. The ~80 KB ApexCharts bundle is a reasonable trade-off.
+3. **Leverages existing team skills.** The team has 11 production chart components with full bUnit coverage. Self-implementing Tier 1 & 2 charts follows a proven pattern.
+4. **Unified visual language.** All charts (SVG-based and ApexCharts-based) share CSS custom property theming, ensuring consistency across all 9 themes.
+5. **Flexible decision point.** After Slice 1 (ApexCharts integration spike), if bundle size exceeds acceptable limits, the team can pivot to self-implementing all Tier 1 & 2 charts while still using ApexCharts for Tier 3 only.
 
 #### Risk Mitigation
 
-- **JS interop latency:** ApexCharts uses JS interop under the hood. For Blazor WASM (in-browser), this is a local call — not cross-process. Latency is negligible.
-- **.NET 10 compatibility:** Verify package compatibility early in Slice 1. If the NuGet package hasn't released a .NET 10 build, the `net9.0`/`net8.0` package may still work (Blazor WASM targets are forward-compatible).
-- **Bundle size validation:** Measure actual gzipped payload after integration; fail-fast in Slice 1 if >200 KB.
+- **JS interop latency (Tier 3 only):** ApexCharts uses JS interop under the hood. For Blazor WASM (in-browser), this is a local call — not cross-process. Latency is negligible.
+- **.NET 10 compatibility:** Verify ApexCharts package compatibility early in Slice 1. If the NuGet package hasn't released a .NET 10 build, the `net9.0`/`net8.0` package may still work (Blazor WASM targets are forward-compatible).
+- **Bundle size validation:** Measure actual gzipped payload after ApexCharts integration; fail-fast in Slice 1 if >200 KB gzipped.
+
+#### License Notes (Tier 3 Libraries Only)
+
+**ApexCharts.js + Blazor-ApexCharts Licensing**
+
+- **ApexCharts.js:** Dual-license model
+  - **Community License (Free):** Available for organizations with annual revenue < $2M USD — permits personal, educational, non-profit, and small-business commercial use without restriction
+  - **Commercial License (Paid):** Required for organizations with annual revenue ≥ $2M USD
+  - **Chart Type Coverage:** All chart types (including treemap, radar) are available under Community License; no "Pro" tier restrictions on specific chart types
+  - **Attribution:** Yes, brief credit required (e.g., "Powered by ApexCharts")
+
+- **Blazor-ApexCharts:** MIT License (Copyright 2020 Joakim Dangården)
+  - Permits commercial and personal use, modification, and redistribution
+  - Requires copyright notice preservation
+  - No restrictions on self-hosted applications
+
+**Recommendation for BudgetExperiment:**
+✅ Safe and fully compliant for self-hosted personal budgeting application under Community License. No CLA or contributor agreement triggered by usage. Action: Add copyright/attribution notices to `THIRD-PARTY-LICENSES.md` once integration begins.
 
 ---
 
@@ -356,28 +393,25 @@ For each existing chart replaced:
 ```
 Components/Charts/
 ├── Shared/
-│   ├── ChartThemeService.cs          # Bridges CSS vars → ApexCharts theme config
+│   ├── ChartThemeService.cs          # Bridges CSS vars → ApexCharts theme config (Tier 3 only)
 │   ├── ChartDataService.cs           # Aggregation, moving averages, statistics
 │   ├── ChartColorProvider.cs         # Category color resolution + fallback palette
-│   ├── ChartAxis.razor               # (legacy, retained during migration)
-│   ├── ChartGrid.razor               # (legacy, retained during migration)
-│   ├── ChartTooltip.razor            # (legacy, retained during migration)
-│   └── ChartTick.cs                  # (legacy, retained during migration)
-├── ApexCharts/
-│   ├── BudgetBarChart.razor          # ApexCharts bar (replaces BarChart)
-│   ├── BudgetDonutChart.razor        # ApexCharts donut (replaces DonutChart)
-│   ├── BudgetLineChart.razor         # ApexCharts line (replaces LineChart)
-│   ├── BudgetAreaChart.razor         # ApexCharts area (replaces AreaChart)
-│   ├── BudgetTreemap.razor           # NEW: Treemap
-│   ├── BudgetHeatmap.razor           # NEW: Heatmap
-│   ├── BudgetWaterfall.razor         # NEW: Waterfall
-│   ├── BudgetScatter.razor           # NEW: Scatter
-│   ├── BudgetRadar.razor             # NEW: Radar/Spider
-│   ├── BudgetStackedArea.razor       # NEW: Stacked Area
-│   ├── BudgetCandlestick.razor       # NEW: Candlestick
-│   ├── BudgetRadialBar.razor         # NEW: Gauge/Radial Bar
-│   ├── BudgetBoxPlot.razor           # NEW: Box Plot
-│   └── ChartExportButton.razor       # Download as PNG/SVG
+│   ├── ChartAxis.razor               # SVG axis renderer (Tier 1/2)
+│   ├── ChartGrid.razor               # SVG grid lines (Tier 1/2)
+│   ├── ChartTooltip.razor            # Tooltip overlay (Tier 1/2)
+│   └── ChartTick.cs                  # Tick data model (Tier 1/2)
+├── SelfImplemented/                  # Tier 1 & 2: Pure SVG + Blazor (zero JS dependency)
+│   ├── HeatmapChart.razor            # Tier 1: Grid of colored cells
+│   ├── ScatterChart.razor            # Tier 1: Point plotting with axes
+│   ├── StackedAreaChart.razor        # Tier 1: Layered filled areas
+│   ├── RadialBarChart.razor          # Tier 1: Multi-gauge dashboard
+│   ├── CandlestickChart.razor        # Tier 1: OHLC bars with wicks
+│   ├── WaterfallChart.razor          # Tier 2: Sequential bars with connectors
+│   └── BoxPlotChart.razor            # Tier 2: Quartile visualization
+├── ApexCharts/                       # Tier 3: Complex types via ApexCharts JS library
+│   ├── BudgetTreemap.razor           # Tier 3: Hierarchical rectangle packing (algorithm outsourced)
+│   ├── BudgetRadar.razor             # Tier 3: Polygonal axes (trigonometry outsourced)
+│   └── ChartExportButton.razor       # Export helper for ApexCharts
 ├── BarChart.razor                    # (legacy, retained during migration)
 ├── DonutChart.razor                  # (legacy, retained during migration)
 ├── LineChart.razor                   # (legacy, retained during migration)
@@ -390,22 +424,40 @@ Components/Charts/
     └── BoxPlotSummary.cs             # Statistical summary model
 ```
 
+### Theming Strategy: Unified Visual Language Across All Chart Types
+
+**Tier 1 & 2 (Self-Implemented) Theming:**
+- Use **CSS custom properties** for all colors, following the existing pattern established by BarChart, DonutChart, etc.
+- Properties like `--color-brand-primary`, `--color-income`, `--color-expense`, `--color-surface-elevated` are already defined in all 9 themes
+- Rendering via inline SVG; no JS interop needed
+- Theme switching is automatic — no component re-render required (CSS handles it)
+
+**Tier 3 (ApexCharts) Theming:**
+- `ChartThemeService` bridges CSS custom properties → `ApexChartOptions.Theme` configuration
+- ApexCharts components read theme config and apply colors programmatically
+- On theme change, `ChartThemeService` notifies ApexCharts components to re-render with new colors
+
+**Visual Consistency Guarantee:**
+All charts (Tier 1, 2, and 3) use the **same semantic color values** from CSS custom properties. A Heatmap (Tier 1) and a Treemap (Tier 3) on the same page will render with identical color palettes across all 9 themes (light, dark, accessible, crayons, geocities, macOS, monopoly, vscode-dark, win95).
+
 ### Data Flow
 
 ```
-Report Page → ChartDataService → Chart Component → ApexCharts (SVG/Canvas)
+Report Page → ChartDataService → Chart Component → SVG (Tier 1/2) OR ApexCharts (Tier 3)
      ↓              ↓                    ↓
- Raw DTOs     Aggregated data      Theme config from ChartThemeService
+ Raw DTOs     Aggregated data      Theme config from ChartThemeService (Tier 3 only)
               (moving avg,         Color palette from ChartColorProvider
                statistics,
                pivots)
 ```
 
 1. **Report pages** fetch raw data from `IBudgetApiService` (already exists)
-2. **`ChartDataService`** transforms raw DTOs into chart-ready models (aggregation, pivoting, statistical calculations)
-3. **Chart components** receive prepared data and delegate rendering to ApexCharts
-4. **`ChartThemeService`** provides theme configuration derived from active CSS custom properties
-5. **`ChartColorProvider`** resolves category colors (user-defined or fallback palette)
+2. **`ChartDataService`** transforms raw DTOs into chart-ready models (aggregation, pivoting, statistical calculations) — shared across all tiers
+3. **Chart components** receive prepared data:
+   - **Tier 1/2:** Render inline SVG using C# geometry calculations
+   - **Tier 3:** Delegate rendering to ApexCharts via JS interop
+4. **`ChartThemeService`** provides theme configuration derived from active CSS custom properties (Tier 3 only)
+5. **`ChartColorProvider`** resolves category colors (Tier 1/2 and Tier 3)
 
 ### Service Layer (Testable)
 
@@ -428,24 +480,27 @@ public interface IChartDataService
 ### Foundation (Slices 1–2)
 
 - **AC-127-01:** `Blazor-ApexCharts` NuGet package is added to `BudgetExperiment.Client.csproj` and builds without errors on .NET 10
-- **AC-127-02:** A `ChartThemeService` reads CSS custom properties and generates an `ApexChartOptions` theme configuration matching the active theme
-- **AC-127-03:** Charts rendered with ApexCharts respond to theme changes (switching from light to dark updates chart colors within 500ms)
+- **AC-127-02:** A `ChartThemeService` reads CSS custom properties and generates `ApexChartOptions` theme configuration for Tier 3 charts
+- **AC-127-03:** ApexCharts-rendered charts (Treemap, Radar) respond to theme changes (switching themes updates colors within 500ms)
 - **AC-127-04:** The ApexCharts JS bundle adds no more than 200 KB gzipped to the published WASM payload
 - **AC-127-05:** All existing chart components (`BarChart`, `DonutChart`, `LineChart`, etc.) continue to function without modification
 
-### New Chart Types (Slices 3–6)
+### New Chart Types — Self-Implemented (Slices 3–5)
 
-- **AC-127-06:** Treemap chart displays spending by category with rectangle sizes proportional to amounts; clicking a category drills into subcategories
-- **AC-127-07:** Heatmap chart displays a 7-row (Mon–Sun) × N-column (weeks) grid colored by spending intensity for a selected date range
-- **AC-127-08:** Waterfall chart starts at income, subtracts each spending category, and ends at net remaining — correctly handles negative net values
-- **AC-127-09:** Scatter plot displays transactions as dots (date × amount), with outliers visually distinct (>2σ from category mean)
-- **AC-127-10:** Radar chart displays budget utilization across all active budget categories on a single chart
-- **AC-127-11:** Stacked area chart shows category spending composition over 6–12 months with consistent category ordering
-- **AC-127-12:** Candlestick chart shows account balance open/high/low/close per month with green (increase) and red (decrease) coloring
-- **AC-127-13:** Radial bar chart displays budget utilization percentage for up to 8 categories simultaneously with color transitions (green → yellow → red)
-- **AC-127-14:** Box plot chart shows spending distribution (min, Q1, median, Q3, max) per category with outlier dots
+- **AC-127-06:** Heatmap chart displays a 7-row (Mon–Sun) × N-column (weeks) grid colored by spending intensity
+- **AC-127-07:** Scatter plot displays transactions as dots (date × amount), with outliers visually distinct (>2σ from category mean)
+- **AC-127-08:** Stacked area chart shows category spending composition over 6–12 months with consistent category ordering
+- **AC-127-09:** Radial bar chart displays budget utilization percentage for up to 8 categories with color transitions (green → yellow → red)
+- **AC-127-10:** Candlestick chart shows account balance open/high/low/close per month with green (increase) and red (decrease) coloring
+- **AC-127-11:** Waterfall chart starts at income, subtracts each spending category, and ends at net remaining — correctly handles negative net values
+- **AC-127-12:** Box plot chart shows spending distribution (min, Q1, median, Q3, max) per category with outlier dots
 
-### Data Service Layer (Slices 3–6)
+### New Chart Types — ApexCharts (Slice 6)
+
+- **AC-127-13:** Treemap chart displays spending by category with rectangle sizes proportional to amounts; clicking a category drills into subcategories
+- **AC-127-14:** Radar chart displays budget utilization across all active budget categories on a single chart
+
+### Data Service Layer (Slices 2–6)
 
 - **AC-127-15:** `IChartDataService` is registered in DI and has a concrete implementation in the Client project
 - **AC-127-16:** `BuildSpendingHeatmap` correctly aggregates transactions by day-of-week × week-of-month and returns a 7×N matrix
@@ -456,103 +511,106 @@ public interface IChartDataService
 
 ### Visual & Interactivity (Slice 7)
 
-- **AC-127-21:** All ApexCharts-rendered charts animate on first load (bars grow, lines draw, segments fan out)
-- **AC-127-22:** Tooltips display formatted currency values (using `CultureInfo.CurrentCulture`), category name, percentage of total, and transaction count
-- **AC-127-23:** Time-series charts (line, area, candlestick) support zoom/pan via mouse drag or pinch gesture
-- **AC-127-24:** Legend items are clickable to toggle series visibility on/off
-- **AC-127-25:** Charts export to PNG via a toolbar button (ApexCharts built-in)
+- **AC-127-21:** All ApexCharts-rendered charts (Treemap, Radar) animate on first load
+- **AC-127-22:** Tooltips display formatted currency values, category name, percentage of total, and transaction count (applies to all charts)
+- **AC-127-23:** Time-series self-implemented charts (Scatter, Stacked Area, Candlestick) support zoom/pan via mouse drag or pinch gesture
+- **AC-127-24:** Self-implemented chart legends are interactive (toggle series visibility where applicable)
+- **AC-127-25:** ApexCharts export to PNG via toolbar button (built-in feature for Treemap, Radar)
 
 ### Migration (Slice 8)
 
-- **AC-127-26:** `MonthlyTrendsReport` uses ApexCharts bar chart with identical data display to the current SVG version
-- **AC-127-27:** `BudgetComparisonReport` uses ApexCharts bar chart with identical data display
-- **AC-127-28:** `MonthlyCategoriesReport` uses ApexCharts donut chart with identical data display
-- **AC-127-29:** `CalendarInsightsPanel` uses ApexCharts donut chart in compact mode
-- **AC-127-30:** `ComponentShowcase` page displays all new and migrated chart types
+- **AC-127-26:** Existing chart usage in reports is evaluated: keep SVG or migrate to new chart components (decision per report)
+- **AC-127-27:** New chart types (Heatmap, Treemap, Waterfall, Radar, etc.) are introduced to appropriate report pages as value-adding features
+- **AC-127-28:** `ComponentShowcase` page displays all 9 new chart types (7 self-implemented + 2 ApexCharts)
+- **AC-127-29:** All charts work across all 9 themes with correct colors and readability
 
 ### Accessibility & Theme Compliance (Cross-cutting)
 
-- **AC-127-31:** All ApexCharts-rendered charts include ARIA labels matching current accessibility standard
-- **AC-127-32:** All 9 themes (light, dark, accessible, crayons, geocities, macOS, monopoly, vscode-dark, win95) render charts with correct colors — verified by manual inspection
-- **AC-127-33:** The `accessible` theme uses a colorblind-safe palette for all chart types (not just ChoroplethMap)
-- **AC-127-34:** Charts are keyboard-navigable (tab between data points, Enter to select)
+- **AC-127-30:** All self-implemented charts include ARIA labels and keyboard navigation matching current standards
+- **AC-127-31:** All ApexCharts charts include ARIA labels matching current standards
+- **AC-127-32:** All 9 themes (light, dark, accessible, crayons, geocities, macOS, monopoly, vscode-dark, win95) render all charts with correct colors
+- **AC-127-33:** The `accessible` theme uses a colorblind-safe palette for all chart types
 
-### Cleanup (Slice 9)
+### Cleanup (Slice 9 — Optional)
 
-- **AC-127-35:** All legacy SVG chart components removed from `Components/Charts/` after migration is verified complete
-- **AC-127-36:** No dead code or unused supporting types remain (`BarChartGroup`, `BarChartSeries`, etc.)
+- **AC-127-34:** If legacy SVG components are fully migrated, they are removed from `Components/Charts/` after verification
+- **AC-127-35:** No dead code or unused supporting types remain (only if cleanup slice executed)
 
 ---
 
 ## Implementation Slices
 
-### Slice 1: Library Integration & Theme Bridge
-**Commit:** `feat(charts): add Blazor-ApexCharts + ChartThemeService`
-- Add `Blazor-ApexCharts` NuGet package
-- Create `ChartThemeService` with JS interop to read CSS custom properties
+### Slice 1: Library Integration & Theme Bridge (ApexCharts for Tier 3 Only)
+**Commit:** `feat(charts): add Blazor-ApexCharts spike for treemap/radar validation`
+- Add `Blazor-ApexCharts` NuGet package to `BudgetExperiment.Client`
+- Create `ChartThemeService` to bridge CSS custom properties → ApexCharts theme configuration
 - Create `ChartColorProvider` for category color resolution
-- Add a proof-of-concept chart to `ComponentShowcase` to validate integration
-- Verify bundle size impact
+- Implement proof-of-concept treemap to validate integration and bundle size impact
+- Verify gzipped payload is <200 KB (fail-fast if exceeded)
 - Write unit tests for `ChartThemeService` and `ChartColorProvider`
 
 ### Slice 2: Chart Data Service Foundation
-**Commit:** `feat(charts): add IChartDataService with core aggregation methods`
-- Define `IChartDataService` interface with methods for all planned chart types
-- Implement `ChartDataService` with aggregation, pivoting, and statistical calculation
+**Commit:** `feat(charts): add IChartDataService with aggregation methods`
+- Define `IChartDataService` interface with methods for all chart types (self-implemented and ApexCharts)
+- Implement `ChartDataService` with aggregation, pivoting, and statistical calculations
 - Register in DI
 - Write comprehensive unit tests (edge cases, empty data, single item, large datasets)
 
-### Slice 3: Treemap & Heatmap
-**Commit:** `feat(charts): add treemap and heatmap chart types`
-- `BudgetTreemap` component with category hierarchy drill-down
-- `BudgetHeatmap` component with day-of-week × week grid
+### Slice 3: Self-Implement Tier 1 Charts — Part 1 (Heatmap, Scatter)
+**Commit:** `feat(charts): add heatmap and scatter chart components`
+- `BudgetHeatmap` component: day-of-week × week grid, colored by spending intensity
+- `BudgetScatter` component: transaction points (date × amount), outlier highlighting
 - Add to `ComponentShowcase`
-- Unit tests for data preparation + bUnit tests for rendering
+- Full bUnit test coverage (grid rendering, color mapping, tooltips, keyboard navigation)
 
-### Slice 4: Waterfall & Scatter
-**Commit:** `feat(charts): add waterfall and scatter chart types`
-- `BudgetWaterfall` component with income → spending → net flow
-- `BudgetScatter` component with outlier highlighting
+### Slice 4: Self-Implement Tier 1 Charts — Part 2 (Stacked Area, Radial Bar, Candlestick)
+**Commit:** `feat(charts): add stacked area, radial bar, and candlestick chart components`
+- `BudgetStackedArea` component: layered areas showing category composition over time
+- `BudgetRadialBar` component: multi-gauge dashboard for budget utilization
+- `BudgetCandlestick` component: OHLC bars for account balance range
 - Add to `ComponentShowcase`
-- Unit tests for data preparation + bUnit tests for rendering
+- Full bUnit test coverage
 
-### Slice 5: Radar, Stacked Area & Radial Bar
-**Commit:** `feat(charts): add radar, stacked area, and radial bar chart types`
-- `BudgetRadar` component for budget utilization
-- `BudgetStackedArea` component for spending composition over time
-- `BudgetRadialBar` component for budget gauge dashboard
+### Slice 5: Self-Implement Tier 2 Charts (Waterfall, Box Plot)
+**Commit:** `feat(charts): add waterfall and box plot chart components`
+- `BudgetWaterfall` component: floating bars showing income → spending → net flow
+- `BudgetBoxPlot` component: statistical distribution (quartiles, outliers) per category
 - Add to `ComponentShowcase`
-- Unit tests + bUnit tests
+- Comprehensive unit tests for coordinate math and statistical calculations
+- Full bUnit test coverage
 
-### Slice 6: Candlestick & Box Plot
-**Commit:** `feat(charts): add candlestick and box plot chart types`
-- `BudgetCandlestick` component for account balance range
-- `BudgetBoxPlot` component for spending distribution
-- Add to `ComponentShowcase`
-- Unit tests + bUnit tests
+### Slice 6: ApexCharts Tier 3 Integration (Treemap, Radar)
+**Commit:** `feat(charts): complete treemap and radar chart implementation`
+- `BudgetTreemap` component: category hierarchy with drill-down interaction (final polish from Slice 1 spike)
+- `BudgetRadar` component: budget utilization polygon across all categories
+- Add to `ComponentShowcase` with all 9 themes verified
+- Full bUnit test coverage
 
-### Slice 7: Visual Polish & Interactivity
+### Slice 7: Visual Polish & Interactivity (All Charts)
 **Commit:** `feat(charts): add animations, zoom, export, and enhanced tooltips`
-- Enable load animations for all ApexCharts components
-- Configure zoom/pan for time-series charts
-- Implement chart export (PNG/SVG) toolbar button
-- Enhance tooltips with formatted values, percentages, and counts
-- Verify all 9 themes render correctly
+- Enable load animations for all ApexCharts components (Treemap, Radar)
+- Enhance tooltips across all charts with formatted currency, percentage, and counts
+- Configure zoom/pan for time-series self-implemented charts (Scatter, Stacked Area, Candlestick)
+- Implement chart export (PNG/SVG) for ApexCharts charts
+- Verify all 9 themes render correctly across all 9 chart types
 
-### Slice 8: Migrate Existing Report Charts
-**Commit:** `refactor(charts): migrate report pages to ApexCharts`
-- Replace `BarChart` usage in `MonthlyTrendsReport` and `BudgetComparisonReport`
-- Replace `DonutChart` usage in `MonthlyCategoriesReport` and `CalendarInsightsPanel`
-- Update bUnit tests for migrated components
-- Visual regression verification per chart
+### Slice 8: Migrate Existing Report Charts to Hybrid Approach
+**Commit:** `refactor(charts): migrate report pages to new chart components`
+- For existing usage (BarChart, DonutChart, LineChart, AreaChart, etc.): decide on per-chart basis whether to keep self-implemented SVG or migrate to new self-implemented/ApexCharts equivalents
+- `MonthlyTrendsReport` and `BudgetComparisonReport`: keep existing `BarChart` (SVG) or migrate to `BudgetBarChart` (SVG equivalent in new architecture)
+- `MonthlyCategoriesReport` and `CalendarInsightsPanel`: keep existing `DonutChart` (SVG) or migrate to `BudgetDonutChart`
+- Introduce new chart types (heatmap, treemap, waterfall, radar, etc.) to appropriate report pages
+- Update bUnit tests; verify visual parity
+- Verify all 9 themes remain correct after changes
 
-### Slice 9: Legacy Cleanup
-**Commit:** `refactor(charts): remove legacy SVG chart components`
-- Remove all legacy SVG chart components (`BarChart`, `DonutChart`, `LineChart`, etc.)
-- Remove supporting types no longer referenced
+### Slice 9: Optional Legacy Cleanup
+**Commit:** `refactor(charts): remove legacy SVG chart components (optional)`
+- If Slice 8 migrations are complete and all consumers updated: remove old SVG chart components (`BarChart`, `DonutChart`, `LineChart`, etc.)
+- Remove supporting types no longer referenced (`BarChartGroup`, `BarChartSeries`, etc.)
 - Remove legacy `Shared/ChartAxis`, `ChartGrid`, `ChartTooltip` if no longer used
 - Update `_Imports.razor` if needed
 - Verify all tests still pass
+- **Alternative:** Retain legacy components alongside new ones for incremental migration over time (lower-risk approach)
 
 ### Slice 10: Reports Dashboard Enhancement
 **Commit:** `feat(reports): add enhanced dashboard with new chart types`
@@ -563,7 +621,189 @@ public interface IChartDataService
 
 ---
 
-## Open Questions
+## Implementation Approach: Self-Implement vs. Library
+
+### Honest Assessment: Can These Charts Be Self-Implemented in Pure SVG + Blazor?
+
+The user asked whether the new chart types could be implemented without adopting Blazor-ApexCharts, continuing the hand-rolled SVG approach that has served the project well (11 chart components, full bUnit coverage, zero JS dependencies). This section provides a frank technical assessment for each proposed chart type, ultimately supporting the **hybrid approach as the chosen strategy** (see Library Recommendation above).
+
+#### Methodology
+
+For each chart type, we evaluate:
+1. **Feasibility** — Can it be done in pure SVG + Blazor?
+2. **Complexity** — Low / Medium / High / Very High (relative to BarChart/DonutChart effort)
+3. **Key Challenges** — What makes it hard or easy?
+4. **Time Estimate** — Developer weeks for implementation + testing (using existing 11 charts as a baseline: BarChart ≈ 1 week with tests)
+5. **Maintenance Burden** — Ongoing cost to support this type alongside existing charts
+
+#### Chart-by-Chart Assessment
+
+---
+
+##### 1. **Treemap** — Hierarchical Rectangle Packing
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, but requires algorithm knowledge |
+| **Complexity** | **High** |
+| **SVG Difficulty** | Rectangle layout is straightforward; hierarchical data packing is the challenge |
+| **Algorithm Required** | Squarified treemapping (or simpler slice-and-dice) — not trivial math, but well-documented. Needs recursive hierarchy traversal. |
+| **Interactivity** | Click-to-drill requires state management in the component (tracking "current level" in hierarchy). Moderate complexity. |
+| **Time Estimate** | 1.5–2 weeks (algorithm development + testing + drill-down interaction logic) |
+| **Maintenance Cost** | Medium — algorithm-heavy code needs documentation; drill-down interaction adds complexity |
+| **Recommendation** | **Library (ApexCharts)** — While feasible, the squarified algorithm and hierarchy drill-down are not domain-specific to budgeting. Library amortizes this complexity across many users. Self-implementation is possible but adds custodial burden. **Tier 3.** |
+
+---
+
+##### 2. **Heatmap** — Grid of Colored Cells
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, straightforward SVG |
+| **Complexity** | **Low** |
+| **SVG Difficulty** | Trivial — `<rect>` elements in a grid with color scaling. No geometry calculation required. |
+| **Interactivity** | Hoverable cells with formatted tooltips. Same pattern as existing DonutChart segments. |
+| **Time Estimate** | 0.5–0.75 weeks (grid layout + color scale + tooltips) |
+| **Maintenance Cost** | Low — simple component, minimal code |
+| **Recommendation** | **Self-implement** — This is one of the easiest chart types. Requires ~150 lines of component code + CSS. Fits naturally with the existing architecture. **Tier 1 candidate.** |
+
+---
+
+##### 3. **Waterfall Chart** — Sequential Bars with Connectors
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, but requires careful coordinate math |
+| **Complexity** | **Medium-High** |
+| **SVG Difficulty** | Drawing bars is trivial; the challenge is drawing connector lines (floating bars) and calculating cumulative positions. Coordinates must track running totals carefully. |
+| **Interactivity** | Tooltips + hover highlighting. Standard pattern. |
+| **Time Estimate** | 1–1.5 weeks (coordinate logic + connector rendering + thorough testing of edge cases) |
+| **Maintenance Cost** | Medium — coordinate tracking can be error-prone if refactored carelessly. Needs good comments. |
+| **Recommendation** | **Self-implement possible, but library preferred** — The coordinate logic is not complex, but waterfall is more "statistical visualization" than a simple domain-specific chart. Library handles floating-bar semantics correctly. If bundle size is critical, this is a **Tier 2** candidate (could self-implement). |
+
+---
+
+##### 4. **Scatter Plot** — Point Plotting with Axis Scaling
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, uses existing ChartAxis infrastructure |
+| **Complexity** | **Low** |
+| **SVG Difficulty** | Plot points at (x, y) coordinates with axes. Same approach as LineChart (which already plots multi-point series). Only difference: render circles instead of lines. Outlier detection is a data preparation concern (handled in application layer). |
+| **Interactivity** | Hoverable points + tooltips. Same as LineChart. |
+| **Time Estimate** | 0.5–0.75 weeks (reuse LineChart infrastructure + modify rendering logic) |
+| **Maintenance Cost** | Low — straightforward point-rendering component |
+| **Recommendation** | **Self-implement** — This is nearly a variant of the existing LineChart. Fits naturally with the architecture. **Tier 1 candidate.** |
+
+---
+
+##### 5. **Radar/Spider Chart** — Polygonal Axes with Shaded Area
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ⚠️ Possible, but requires advanced SVG geometry |
+| **Complexity** | **Very High** |
+| **SVG Difficulty** | Must generate N axes radiating from center (N = number of categories). Each axis has ticks and labels positioned at angles. Area fill is a polygon with N vertices. Angle calculations and coordinate transforms are error-prone. |
+| **Geometry** | All coordinates must be rotated around a center point. Requires `Math.Sin()`/`Math.Cos()` for every point — much more trigonometry than BarChart. |
+| **Interactivity** | Hoverable polygon areas + tooltips. Challenging due to arbitrary polygon shapes (hit detection not trivial). |
+| **Testing** | Hard to visually verify by eye; need snapshot tests + manual inspection across all category counts. |
+| **Time Estimate** | 2–3 weeks (trigonometry + polygon rendering + robust testing + interaction logic) |
+| **Maintenance Cost** | Very High — trigonometric code is fragile. Future refactors risk breaking angle calculations. Requires domain expertise or deep documentation. |
+| **Recommendation** | **Library (ApexCharts)** — While theoretically feasible, the trigonometry and polygon rendering are error-prone and unmaintainable. This is the chart type most likely to accumulate bugs in self-implementation. Library mitigates all risk. **Tier 3.** |
+
+---
+
+##### 6. **Stacked Area** — Filled Areas Stacked on X-Axis
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, moderate math |
+| **Complexity** | **Medium** |
+| **SVG Difficulty** | Build on the existing AreaChart (which already renders filled lines). The challenge: calculate cumulative Y values as you move up the stack. Each band's Y coordinates depend on all bands below it. Requires careful coordinate tracking. |
+| **Interactivity** | Hoverable bands + tooltips. Same pattern as AreaChart. |
+| **Time Estimate** | 0.75–1.25 weeks (stacking math + rendering refactoring + edge case testing) |
+| **Maintenance Cost** | Medium — stacking logic can be refactored incorrectly; good tests needed. |
+| **Recommendation** | **Self-implement** — This is a natural evolution of the existing AreaChart. Fits the architecture well. **Tier 1 candidate.** |
+
+---
+
+##### 7. **Radial Bar / Gauge** — Arc-Based Progress Indicator
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, the project already has `RadialGauge` |
+| **Complexity** | **Low-Medium** |
+| **SVG Difficulty** | The existing `RadialGauge` component shows a single circular progress bar. A multi-gauge (several concentric rings for different categories) requires parametrizing the radius and angle per gauge. Moderate coordinate work. |
+| **Interactivity** | Non-interactive or simple tooltips on hover. |
+| **Time Estimate** | 0.5–1 week (extend RadialGauge to support multiple rings + theming) |
+| **Maintenance Cost** | Low — simple extension of existing code |
+| **Recommendation** | **Self-implement** — The project already has a radial gauge. Extending it to multi-gauge is low-risk. **Tier 1 candidate.** |
+
+---
+
+##### 8. **Candlestick** — OHLC Bars with Wicks
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, uses existing bar rendering |
+| **Complexity** | **Low** |
+| **SVG Difficulty** | Each candlestick is a vertical bar (body) with two lines (wicks) extending above and below. Rendering is trivial; the challenge is ensuring correct color semantics (green = close > open, red = close < open) and handling overlapping wicks. |
+| **Interactivity** | Tooltips on hover. Standard pattern. |
+| **Time Estimate** | 0.5–1 week (bar + wick rendering + color logic + bUnit tests) |
+| **Maintenance Cost** | Low — straightforward rendering |
+| **Recommendation** | **Self-implement** — This is simple SVG work. Fits naturally with the architecture. **Tier 1 candidate.** |
+
+---
+
+##### 9. **Box Plot** — Statistical Quartile Visualization
+
+| Criterion | Assessment |
+|-----------|------------|
+| **Feasibility** | ✅ Yes, uses existing bar rendering |
+| **Complexity** | **Medium** |
+| **SVG Difficulty** | Each box plot is a vertical bar (representing Q1–Q3), a horizontal line inside (median), and whiskers extending to min/max. Outliers rendered as circles. The challenge: ensuring correct statistical calculations in the data service layer (quartiles, outlier detection via 1.5×IQR). Rendering is straightforward. |
+| **Interactivity** | Tooltips showing quartile values. Standard pattern. |
+| **Data Prep** | The heavy lifting is in the application service (`BuildCategoryDistributions` in `IChartDataService`), not the component. |
+| **Time Estimate** | 0.75–1.5 weeks (statistical calculations + SVG rendering + comprehensive unit tests for quartiles and outlier detection) |
+| **Maintenance Cost** | Medium — statistical code must be robust; edge cases (single value, all same value) are critical. |
+| **Recommendation** | **Self-implement possible, but library preferred for robustness** — While feasible, the statistical calculations (quartiles, IQR) are prone to subtle bugs if implemented ad hoc. Library handles these robustly. If statistical rigor is critical, use library. If speed matters more, this is a **Tier 2** candidate. |
+
+---
+
+#### Tiered Recommendation
+
+**Tier 1: Self-Implement (Low Risk, Fits Architecture)**
+1. **Heatmap** — Trivial grid rendering, no complex math
+2. **Scatter Plot** — Natural evolution of LineChart, reuses axis infrastructure
+3. **Stacked Area** — Natural evolution of AreaChart, familiar stacking math
+4. **Radial Bar/Gauge** — Extends existing RadialGauge component minimally
+5. **Candlestick** — Simple bar + wick rendering, straightforward color logic
+
+**Tier 2: Self-Implement with Caveats (Medium Risk, Extra Testing)**
+1. **Waterfall** — Feasible coordinate math, but needs careful edge-case testing
+2. **Box Plot** — Feasible, but statistical calculations (quartiles, outlier detection) demand rigor
+
+**Tier 3: Library Recommended (High Risk of Self-Implementation)**
+1. **Treemap** — Squarified algorithm + drill-down interaction add custodial burden
+2. **Radar/Spider** — Trigonometric geometry is error-prone; requires domain expertise or deep documentation
+3. **Sunburst** — Combine treemap algorithm + sunburst layout math; not worth maintaining in-house
+
+---
+
+### Chosen Approach: Hybrid (Tier 1 & 2 Self-Implement + Tier 3 ApexCharts)
+
+**This is the primary recommendation and adopted strategy for Feature 127.**
+
+**Rationale:**
+- **Tier 1 & 2** (Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick, Waterfall, Box Plot) are all feasible and fit naturally with the existing SVG+Blazor architecture. Combined effort: 6–10 weeks.
+- **Tier 3** (Treemap, Radar) have complex algorithms (squarified rectangle packing, trigonometry) that are error-prone when maintained in-house. ApexCharts handles these robustly.
+- **Zero JS dependency for 7 of 9 chart types** — preserves the project's architectural advantage.
+- **Unified theming** — all charts (self-implemented and ApexCharts-based) share CSS custom property integration, ensuring visual consistency.
+- **Pragmatic balance** — the team leverages its proven SVG skills while outsourcing genuinely difficult algorithms.
+
+See **Library Recommendation** section above for full hybrid strategy details.
+
+
 
 1. **Sunburst chart:** ApexCharts does not have a native sunburst type. Should we implement sunburst as a custom SVG component (maintaining the project's existing SVG competency) or accept treemap with drill-down as an adequate substitute for hierarchical visualization?
 
