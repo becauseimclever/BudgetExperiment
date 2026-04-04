@@ -33,6 +33,34 @@ Tests mirror structure under `tests/`.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-04-04 — Feature 127 Slice 1: Blazor-ApexCharts + ChartThemeService + ChartColorProvider
+
+**Task:** Add `Blazor-ApexCharts` v6.1.0 to the Client project and create theming infrastructure for Tier 3 charts.
+
+**Delivered:**
+- `Blazor-ApexCharts` v6.1.0 added via CLI. No manual `<script>` tag needed (v6.x ES module lazy loading).
+- `IChartThemeService` + `ChartThemeService` — maps BudgetExperiment theme names to ApexCharts mode. Dark themes: only `dark` and `vscode-dark`; `system` defaults to light (cannot resolve from C# without async JS interop).
+- `IChartColorProvider` + `ChartColorProvider` — palette arrays and per-category colour hash assignment. Values hardcoded from `tokens.css`/`dark.css` (CSS vars not readable from .NET).
+- 11 new tests (6 + 5). Full suite: 2729 passed.
+- `AddApexCharts()` registered in `Program.cs`.
+
+**Cross-agent facts:**
+- Barbara wrote 20 RED tests for `ChartDataService` (Slice 2) on the same session.
+- Lucius implemented all 20 tests GREEN; Client test count hit 2718 before this slice.
+
+---
+
+### 2026-04-04 — Feature 127 Slice 2: ChartDataService Models + Interface Created
+
+**Task:** Create model types and `IChartDataService` interface for the charts data service layer (no implementation yet).
+
+**Decisions:**
+- **DailyBalanceDto created locally** — `DailyBalanceSummaryDto` exists in Contracts.Dtos but exposes `MoneyDto` for multiple balance snapshots; chart calculations need a flat `(DateOnly Date, decimal Balance)` shape. Created `DailyBalanceDto` as a client-local record in `Components/Charts/Models/`.
+- **CategorySpendingDto used from Contracts** — already exists with `CategoryName` and `Amount` (MoneyDto). Interface references it directly from `BudgetExperiment.Contracts.Dtos`. Callers must use `.Amount.Amount` to extract decimal.
+- **Models placed under `Components/Charts/Models/`** — consistent with Blazor component co-location; namespace `BudgetExperiment.Client.Components.Charts.Models`.
+- **Records used for all data types** — positional primary constructors with XML `<param>` docs per StyleCop requirements. Derived properties (`IsPositive`, `IsBullish`) in record body.
+- **Build result:** 0 warnings, 0 errors.
+
 ### 2026-03-24 — Feature 127: Hybrid Chart Implementation Strategy Chosen
 
 **Task:** User decided: **go hybrid**. Update Feature 127 doc to make hybrid approach the PRIMARY recommendation. Create decision record.
@@ -493,3 +521,11 @@ Completed comprehensive review of Feature 112 (API Performance Testing) scope an
 
 **Document:** `docs/127-enhanced-charts-and-visualizations.md` — 36 acceptance criteria, 10 implementation slices, 5 open questions.
 **Decision Record:** `.squad/decisions/inbox/alfred-charts-feature.md`
+
+## Learnings — Feature 127 Slice 1 (2026-04-04)
+
+- **Blazor-ApexCharts v6.x no script tag needed**: Unlike older Blazor component libraries, Blazor-ApexCharts v6 uses ES module lazy loading via IJSRuntime. Static web assets are served automatically by the Blazor pipeline — no manual <script> tag in index.html. The README only says AddApexCharts() and @using ApexCharts.
+- **ThemeService has no interface**: IThemeService does not exist; inject the concrete ThemeService directly, consistent with its registration in Program.cs.
+- **CSS vars cannot be read from C#**: Chart colour services must hardcode design-token values. Document the mapping so tokens.css changes trigger a service update.
+- **dark + vscode-dark are the dark themes**: When computing ApexCharts theme mode, only these two themes need "dark"; system defaults to "light" in C# since JS resolution isn't available synchronously.
+- **GetHashCode() for category colour cycling is session-stable**: Not across-run reproducible, but fine for in-session visual colour assignment. A future persistent category-colour map would supersede this.

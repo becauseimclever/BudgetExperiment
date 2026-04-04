@@ -26,6 +26,32 @@ Tests under `tests/` mirror the src structure.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-04-04 — Feature 127 Slice 2: ChartDataService Implementation (GREEN)
+
+**Task:** Implement `ChartDataService` passing all 20 RED tests written by Barbara. Register in DI.
+
+**Delivered:**
+- `src/BudgetExperiment.Client/Services/ChartDataService.cs` — sealed class implementing `IChartDataService`.
+- `Program.cs` — `AddScoped<IChartDataService, ChartDataService>()`.
+- Fixed SA1512 and SA1515 StyleCop violations in Barbara's test file.
+
+**Key algorithms:**
+- `DayOfWeek.Sunday = 0` in C# → mapped to heatmap row 6 (Mon=0…Sun=6): `dow == DayOfWeek.Sunday ? 6 : (int)dow - 1`.
+- WeekIndex = `(mondayOfThisWeek.DayNumber - mondayOfFirstWeek.DayNumber) / 7` — 0-based offset from earliest transaction.
+- Waterfall sort: ascending by `Amount.Amount` (all-negative spending = descending by absolute value). Using `.Amount.Amount` to unwrap `CategorySpendingDto.Amount: MoneyDto`.
+- Tukey's hinges: odd n excludes median, even n splits at midpoint. Shared `ComputeMedian` helper.
+- `monthsBack` reference = `list.Max(t => t.Date)` — deterministic regardless of wall clock.
+- Candlestick: sort by date before `GroupBy` so `g.First()`/`g.Last()` are chronologically correct.
+
+**Test results:** 20/20 ChartDataService tests GREEN. Full Client suite: 2718 passed, 0 failed, 1 pre-existing skip.
+
+**Cross-agent facts (same session):**
+- Alfred created the 7 model types + `IChartDataService` interface before Barbara wrote the RED tests.
+- Barbara wrote 20 xUnit RED tests establishing behavioral contracts for all 4 methods.
+- Alfred separately completed Slice 1 (ApexCharts + `ChartThemeService` + `ChartColorProvider` + 11 tests). Final Client suite: 2729.
+
+---
+
 ### Performance Baseline: Multi-Scenario Capture (2026-03-23)
 
 **Task:** Capture and commit NBomber performance baselines for all load test scenarios.
@@ -105,7 +131,8 @@ Tests under `tests/` mirror the src structure.
 
 ### Nesting Flattening Session (2025)
 - **Guard clauses are the primary tool**: Inverting conditions to return/throw early eliminates one nesting level per guard without adding abstraction overhead.
-- **LINQ FirstOrDefault > foreach+if**: ules.FirstOrDefault(r => r.Matches(description)) is cleaner and more idiomatic than a foreach with an inner if returning early.
+- **LINQ FirstOrDefault > foreach+if**: 
+ules.FirstOrDefault(r => r.Matches(description)) is cleaner and more idiomatic than a foreach with an inner if returning early.
 - **Extract tiny named methods**: IsRealizedAsTransaction, TryBuildLocationFromMatch, ParseEntityId — each does one thing. The calling code reads like prose.
 - **StyleCop ordering rules matter at refactor time**: SA1204 (static before non-static) and SA1202 (internal before private) must be respected when inserting new methods. Place static helpers in the right access group up front.
 - **Python for disk file manipulation**: The iew/dit tool in the Copilot CLI operates on a virtual layer — actual disk file writes require PowerShell or Python with open(path, 'w'). Use Python when string replacements involve special characters (em-dash, dollar signs in C# interpolation, backticks).
@@ -261,3 +288,32 @@ The task only flagged checkout and upload-artifact, but setup-dotnet@v5 and cach
 - `feat(docker): upgrade PostgreSQL to version 18`
 - `docs: update PostgreSQL references from 16 to 18`
 - `test: fill coverage gaps for RecurringTransactionInstanceService and UserSettingsService`
+
+### 2026-04-04 — Feature 127 Slice 2: ChartDataService (Lucius)
+
+**Task:** Implement ChartDataService to make 20 RED-phase tests pass (GREEN phase).
+
+**Files Created:**
+- src/BudgetExperiment.Client/Services/ChartDataService.cs — sealed class implementing IChartDataService
+- DI registration added to src/BudgetExperiment.Client/Program.cs
+
+**Files Fixed:**
+- 	ests/BudgetExperiment.Client.Tests/Services/ChartDataServiceTests.cs — removed stale TODO comment block, fixed SA1512/SA1515 violations
+
+**Result:** 20/20 ChartDataServiceTests pass. Full Client.Tests: 2718 passed, 0 failed, 1 pre-existing skip.
+
+## Learnings
+
+### 2026-04-04 — ChartDataService Algorithm Choices
+
+- **Heatmap DayIndex mapping:** C# DayOfWeek.Sunday = 0, so Mon→0...Sat→5, Sun→6 requires dow == DayOfWeek.Sunday ? 6 : (int)dow - 1. WeekIndex = (mondayOfThisWeek.DayNumber - mondayOfFirstWeek.DayNumber) / 7. Using DayNumber (int) avoids TimeSpan arithmetic.
+- **Waterfall ordering:** OrderBy(s => s.Amount.Amount) on negative spending values sorts from most-negative to least-negative, which equals "largest absolute spend first" — equivalent to OrderByDescending(s => Math.Abs(...)) but simpler.
+- **Tukey's hinges:** For odd n, exclude the median element from both halves. For even n, split into two equal halves. SA1407 fires on unarenthesized mixed arithmetic like 
+ / 2 - 1 — must write (n / 2) - 1.
+- **Box plot whiskers:** Maximum and Minimum are the extreme NON-OUTLIER values, not the raw data extremes. Always compute 
+onOutliers = sorted.Where(v => v >= lowerFence && v <= upperFence) and report 
+onOutliers.Max() / 
+onOutliers.Min().
+- **monthsBack cutoff:** Use max(transaction.Date) from the dataset, not DateTime.UtcNow, so test data stays deterministic regardless of wall-clock time.
+- **LINQ GroupBy preserves source order within groups:** After OrderBy(b => b.Date), calling GroupBy(...) then g.First() / g.Last() correctly returns the chronologically first/last balance per month without a secondary sort inside the group.
+- **SA1512 reminder:** Section separator comment lines (// ─────) followed by a blank line violate SA1512. The blank line after the last separator must be removed; the next statement must immediately follow the comment block.

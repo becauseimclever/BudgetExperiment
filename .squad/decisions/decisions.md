@@ -658,3 +658,105 @@ When running against real PostgreSQL (`PERF_USE_REAL_DB=true`), re-run load test
 **Status:** lucius/history.md committed. Waiting for alfred-changelog to finish CHANGELOG before version tag.
 
 **Coordination:** Both documents (history.md, CHANGELOG) completed; tag imminent (awaiting final merge/approval).
+
+---
+
+## Feature 127: Hybrid Chart Implementation Strategy (2026-03-24)
+
+**Author:** Alfred (via user directive)
+**Status:** Implemented ✅
+
+### Decision
+
+**Hybrid approach is the PRIMARY strategy** for Feature 127 (Enhanced Charts & Visualizations). Self-implement Tier 1 & 2 chart types (7 of 9) using existing SVG + Blazor pattern (zero new JS dependencies). Use `Blazor-ApexCharts` **only** for Tier 3 (Treemap, Radar) where algorithms are error-prone to maintain in-house.
+
+### Tier Classification
+
+| Tier | Charts | Approach | JS Dependency |
+|------|--------|----------|---------------|
+| 1 | Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick | Self-implement (SVG + Blazor) | None |
+| 2 | Waterfall, Box Plot | Self-implement (extra statistical testing) | None |
+| 3 | Treemap, Radar | `Blazor-ApexCharts` v6.1.0 | ~80 KB gzipped |
+
+### Rationale
+
+1. Preserves zero-JS-dependency advantage for 7 of 9 chart types.
+2. Squarified rectangle packing (Treemap) and trigonometric polygon rendering (Radar) are error-prone in-house; library handles this robustly.
+3. Unified visual language via CSS custom property theming across both render paths.
+4. Bundle validated in Slice 1 (~80 KB gzipped, within 200 KB budget).
+
+### Implementation Slices
+
+- **Slice 1:** ApexCharts spike + ChartThemeService + ChartColorProvider ✅ Done
+- **Slice 2:** Chart data service foundation (models + interface + implementation) ✅ Done
+- **Slice 3:** Tier 1 — Heatmap, Scatter
+- **Slice 4:** Tier 1 — Stacked Area, Radial Bar, Candlestick
+- **Slice 5:** Tier 2 — Waterfall, Box Plot
+- **Slice 6:** Tier 3 — Treemap, Radar (ApexCharts)
+
+### Feature Doc
+
+`docs/127-enhanced-charts-and-visualizations.md` updated to reflect hybrid as primary recommendation.
+
+---
+
+## Feature 127 Slice 1: ApexCharts Integration Decisions (2026-04-04)
+
+**Author:** Alfred
+**Status:** Implemented ✅
+
+### Decisions
+
+1. **Package `Blazor-ApexCharts` v6.1.0** — added via `dotnet add package`. Targets `net10.0` natively. No manual `.csproj` edits.
+2. **No manual `<script>` tag** — v6.x uses ES module lazy loading via `IJSRuntime`; static web assets served automatically.
+3. **`AddApexCharts()` registered in `Program.cs`** — adds scoped `IApexChartService` for global options; present for future Tier 3 components.
+4. **`ChartThemeService` injects concrete `ThemeService`** — `IThemeService` does not exist; consistent with existing DI registration pattern.
+5. **Dark themes are `dark` and `vscode-dark` only** — `system` defaults to light (C# cannot read browser OS preference without async JS interop).
+6. **Colours hardcoded in C#** — CSS custom properties cannot be read from .NET. Values from `tokens.css` / `dark.css` embedded. Must sync on design token changes.
+7. **`GetCategoryColor` deterministic via hash** — `Math.Abs(name.GetHashCode() % Palette.Length)` — stable per session, not cross-runtime (acceptable for visual assignment).
+
+### Test Results
+
+- 11 new tests (6 `ChartThemeServiceTests`, 5 `ChartColorProviderTests`) — all passed
+- Full Client suite: 2729 passed, 0 failed, 1 pre-existing skip
+- Build: 0 warnings, 0 errors
+
+---
+
+## Feature 127 Slice 2: ChartDataService Behavioral Contracts (2026-04-04)
+
+**Author:** Barbara (contracts), Lucius (implementation)
+**Status:** Implemented ✅
+
+### Contracts (Barbara — RED phase)
+
+20 behavioral tests established across 4 methods. Key contracts:
+
+- **`BuildSpendingHeatmap`:** 7-row invariant (Mon=0…Sun=6); absolute amounts; same-day aggregation; multi-week separation.
+- **`BuildBudgetWaterfall`:** Spending sorted by absolute amount descending; cumulative running totals from income; net segment last (`IsTotal=true`); net can be negative; `CategorySpendingDto.Amount.Amount` for decimal.
+- **`BuildBalanceCandlesticks`:** Open = first balance; Close = last; `IsBullish = Close >= Open`; multi-month ascending order.
+- **`BuildCategoryDistributions`:** Tukey's hinges; IQR × 1.5 outlier detection; `monthsBack` relative to dataset max date; one `BoxPlotSummary` per category.
+
+### Implementation (Lucius — GREEN phase)
+
+- `ChartDataService` sealed class — all 20 tests passed.
+- DayIndex mapping: `dow == DayOfWeek.Sunday ? 6 : (int)dow - 1`.
+- WeekIndex: 0-based offset from earliest transaction's Monday.
+- `monthsBack` reference: `list.Max(t => t.Date)` — deterministic regardless of wall clock.
+- Waterfall sort: ascending by `Amount.Amount` (all-negative = descending absolute).
+- Tukey's hinges: shared `ComputeMedian` helper for both half-arrays.
+
+### Test Results
+
+- ChartDataServiceTests: 20/20 passed
+- Full Client suite: 2718 passed, 0 failed, 1 pre-existing skip
+- Build: 0 warnings, 0 errors
+
+---
+
+## Process Directive: Archive Consolidation (2026-03-24)
+
+**Author:** User (via Copilot)
+**Status:** Standing policy ✅
+
+All archived feature docs must be consolidated into 10-feature range files (e.g., `111-120-*.md`). No individual standalone feature files are allowed in `docs/archive/`. When archiving a feature, always merge it into the appropriate range file, creating the range file if it does not yet exist.

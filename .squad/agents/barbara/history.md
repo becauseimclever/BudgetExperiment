@@ -147,7 +147,51 @@ Completed comprehensive audit of all performance test files across the solution.
 - `--filter "Category=Performance"`: Only 1 test runs (`ApplyRulesAsync_100Rules_1000Transactions_CompletesWithinThreshold`, 111ms).
 - Full solution build: 0 errors, 0 warnings.
 
-### 2026-07-20 — Stress/Spike Latency Thresholds + Relative Scenario Dates
+### 2026-04-04 — Feature 127 Slice 2: ChartDataService TDD Test Suite
+
+**Task (from Fortinbra):** Write RED-phase xUnit test suite for `ChartDataService` (Feature 127, Slice 2). No implementation yet — tests document expected behavior and drive Alfred's implementation.
+
+**File:** `tests/BudgetExperiment.Client.Tests/Services/ChartDataServiceTests.cs`
+
+**Tests written (20 total):**
+- `BuildSpendingHeatmap` (5 tests): empty input → 7 empty rows; Monday transaction → row[0]; same-day aggregation → single point with summed total; two non-adjacent weeks → two distinct data points in row[0] with different WeekIndex; negative expense amounts → positive TotalAmount (absolute spending intensity).
+- `BuildBudgetWaterfall` (5 tests): no spending → 2 segments; two categories → 4 segments with correct running totals; spending > income → negative Net; multiple categories ordered by absolute amount descending; last segment always IsTotal=true.
+- `BuildBalanceCandlesticks` (5 tests): empty → empty array; 3 balances/month → single OHLC candle (Open=first, High=max, Low=min, Close=last); 2 months → 2 candles ordered ascending; close > open → IsBullish=true; close < open → IsBullish=false.
+- `BuildCategoryDistributions` (5 tests): empty → empty array; 5-value single category → correct quartiles (hinge method: Q1=150, Q3=450, no outliers); 6-value set with extreme value → outlier=2000, Maximum=500 (whisker stops at last non-outlier); two categories → separate summaries; old transactions excluded by monthsBack filter.
+
+**Key design decisions embedded in tests:**
+1. **Heatmap row index mapping:** Mon=row[0], Sun=row[6] (0-indexed, ISO day-of-week ordering starting Monday).
+2. **Heatmap TotalAmount = absolute value** of expenses; tests assert positive values even for negative-amount transactions.
+3. **Waterfall spending order = descending by absolute amount** (largest spend displayed first after Income).
+4. **Candlestick IsBullish** = `Close >= Open` (defined as computed property on `CandlestickDataPoint`).
+5. **BoxPlot quartile method = Tukey's hinges** (split at median; Q1 = median of lower half, Q3 = median of upper half). Tests use 5-value set where result is unambiguous: Q1=150, Q3=450.
+6. **BoxPlot outlier detection = IQR × 1.5** method; `Maximum` is the whisker max (largest non-outlier), not the absolute max.
+7. **monthsBack filter reference date** = most recent transaction date in the dataset (not DateTime.UtcNow). Tested with 7-month-old transactions containing extreme values that must not appear in whiskers or quartiles.
+
+**Dependencies Alfred must create (all new — none exist yet):**
+- `IChartDataService` + `ChartDataService` in `BudgetExperiment.Client.Services`
+- `HeatmapDataPoint(int DayOfWeek, int WeekIndex, decimal TotalAmount, int TransactionCount)` record
+- `WaterfallSegment(string Label, decimal Amount, decimal RunningTotal, bool IsPositive, bool IsTotal)` record
+- `CandlestickDataPoint(DateOnly Date, decimal Open, decimal High, decimal Low, decimal Close)` record with `bool IsBullish => Close >= Open`
+- `BoxPlotSummary(string CategoryName, decimal Minimum, decimal Q1, decimal Median, decimal Q3, decimal Maximum, IReadOnlyList<decimal> Outliers)` record
+- `DailyBalanceDto(DateOnly Date, decimal Balance)` record (in Contracts or Client.Services)
+- `HeatmapGrouping` enum (DayOfWeekByWeek value)
+- `CandlestickInterval` enum (Monthly value)
+- Models namespace expected: `BudgetExperiment.Client.Components.Charts.Models` (matches architecture doc)
+
+**DTO conventions used in test data:**
+- `TransactionDto.Amount.Amount` (decimal) — consistent with existing `MoneyDto` pattern.
+- `CategorySpendingDto.Amount.Amount` (decimal via `MoneyDto`) — the REAL DTO in Contracts uses `MoneyDto Amount`, not `decimal TotalAmount`. Tests use `new MoneyDto { Amount = -300m }` pattern.
+- `DailyBalanceDto` is a positional record, used as `new DailyBalanceDto(date, balance)`.
+
+**Pattern note:** Pure unit tests — no DI, no mocking, no bUnit. `ChartDataService` instantiated directly as `IChartDataService _sut = new ChartDataService()`. Stays consistent with calculation-service test pattern seen in `CultureServiceTests` and `CsvParserServiceTests`.
+
+**Cross-agent facts (same session):**
+- Alfred created all 7 model types + `IChartDataService` interface (Slice 2 foundation) before Barbara wrote these tests.
+- Lucius implemented `ChartDataService` passing all 20 tests GREEN (Client suite: 2718). Fixed SA1512/SA1515 StyleCop violations in the test file.
+- Alfred separately completed Slice 1 (ApexCharts + `ChartThemeService` + `ChartColorProvider` + 11 tests). Final Client suite: 2729.
+
+---
 
 **Task (from Fortinbra):** Two remaining performance test infrastructure fixes.
 
