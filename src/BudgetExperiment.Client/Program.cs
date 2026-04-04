@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 
+using ApexCharts;
+
 using BudgetExperiment.Client;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.ViewModels;
@@ -132,11 +134,15 @@ builder.Services.AddScoped<ICsvParserService, CsvParserService>();
 builder.Services.AddScoped<IImportApiService, ImportApiService>();
 builder.Services.AddScoped<IReconciliationApiService, ReconciliationApiService>();
 builder.Services.AddScoped<IRecurringChargeSuggestionApiService, RecurringChargeSuggestionApiService>();
+builder.Services.AddScoped<IChartDataService, ChartDataService>();
 builder.Services.AddScoped<IExportDownloadService, ExportDownloadService>();
 builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddScoped<IFormStateService, FormStateService>();
 builder.Services.AddLocalization();
 builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<IChartThemeService, ChartThemeService>();
+builder.Services.AddScoped<IChartColorProvider, ChartColorProvider>();
+builder.Services.AddApexCharts();
 builder.Services.AddScoped<GeolocationService>();
 builder.Services.AddScoped<CultureService>();
 builder.Services.AddScoped<VersionService>();

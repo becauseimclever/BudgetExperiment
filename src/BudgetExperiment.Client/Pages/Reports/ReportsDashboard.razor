@@ -1,0 +1,46 @@
+@* ReportsDashboard.razor - Aggregate financial dashboard (Feature 127, Slice 10) *@
+@page "/reports/dashboard"
+
+<PageTitle>Financial Dashboard - Budget Experiment</PageTitle>
+
+<div class="page-container">
+    <PageHeader Title="Financial Dashboard" />
+
+    <div class="reports-dashboard">
+        @if (_isLoading)
+        {
+            <div class="dashboard-loading">
+                <p>Loading dashboard...</p>
+            </div>
+        }
+        else
+        {
+            <div class="dashboard-treemap">
+                <BudgetTreemap DataPoints="@_treemapData" />
+            </div>
+
+            <div class="dashboard-waterfall">
+                <WaterfallChart Segments="@_waterfallData" />
+            </div>
+
+            <div class="dashboard-radar">
+                <BudgetRadar Series="@_radarSeries" Categories="@_radarCategories" />
+            </div>
+
+            <div class="dashboard-heatmap">
+                <HeatmapChart Data="@_heatmapData" />
+            </div>
+
+            <div class="dashboard-radial-bar">
+                <RadialBarChart Segments="@_radialData" />
+            </div>
+
+            <div class="dashboard-filter">
+                @if (_selectedCategoryId.HasValue)
+                {
+                    <button class="filter-clear" @onclick="ClearFilter" type="button">Clear filter</button>
+                }
+            </div>
+        }
+    </div>
+</div>

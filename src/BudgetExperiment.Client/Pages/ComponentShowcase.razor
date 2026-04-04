@@ -67,6 +67,48 @@
     </section>
 
     <section class="showcase-section">
+        <h2>New Chart Types</h2>
+        <div class="showcase-grid">
+            <div class="showcase-card">
+                <h3>Heatmap Chart</h3>
+                <HeatmapChart Data="@heatmapData" AriaLabel="Sample spending heatmap" />
+            </div>
+            <div class="showcase-card">
+                <h3>Scatter Chart</h3>
+                <ScatterChart Points="@scatterPoints" AnimationsEnabled="false" AriaLabel="Sample transaction scatter" />
+            </div>
+            <div class="showcase-card">
+                <h3>Stacked Area Chart</h3>
+                <StackedAreaChart Series="@stackedAreaData" AriaLabel="Sample spending composition" />
+            </div>
+            <div class="showcase-card">
+                <h3>Radial Bar Chart</h3>
+                <RadialBarChart Segments="@radialBarData" Size="200" AriaLabel="Sample budget utilization" />
+            </div>
+            <div class="showcase-card">
+                <h3>Candlestick Chart</h3>
+                <CandlestickChart Candles="@candlestickData" AriaLabel="Sample account balance" />
+            </div>
+            <div class="showcase-card">
+                <h3>Waterfall Chart</h3>
+                <WaterfallChart Segments="@waterfallData" AriaLabel="Sample budget waterfall" />
+            </div>
+            <div class="showcase-card">
+                <h3>Box Plot Chart</h3>
+                <BoxPlotChart Distributions="@boxPlotData" AriaLabel="Sample spending distribution" />
+            </div>
+            <div class="showcase-card">
+                <h3>Budget Treemap</h3>
+                <BudgetTreemap DataPoints="@treemapData" AriaLabel="Sample category treemap" />
+            </div>
+            <div class="showcase-card">
+                <h3>Budget Radar</h3>
+                <BudgetRadar Series="@radarData" Categories="@radarCategories" AriaLabel="Sample budget radar" />
+            </div>
+        </div>
+    </section>
+
+    <section class="showcase-section">
         <h2>Exports</h2>
         <div class="showcase-card">
             <ExportButton Options="@exportOptions" />
@@ -141,4 +183,102 @@
             Href = "/api/v1/exports/categories/range?startDate=2026-01-01&endDate=2026-01-31",
         },
     ];
+
+    private readonly IReadOnlyList<ScatterDataPoint> scatterPoints =
+    [
+        new ScatterDataPoint(new DateOnly(2026, 1, 5), 45m, "Food"),
+        new ScatterDataPoint(new DateOnly(2026, 1, 8), 120m, "Transport"),
+        new ScatterDataPoint(new DateOnly(2026, 1, 12), 800m, "Rent", true),
+        new ScatterDataPoint(new DateOnly(2026, 1, 15), 60m, "Food"),
+        new ScatterDataPoint(new DateOnly(2026, 1, 18), 25m, "Entertainment"),
+        new ScatterDataPoint(new DateOnly(2026, 1, 22), 95m, "Food"),
+        new ScatterDataPoint(new DateOnly(2026, 1, 25), 175m, "Transport"),
+        new ScatterDataPoint(new DateOnly(2026, 1, 28), 50m, "Entertainment"),
+    ];
+
+    private readonly IReadOnlyList<StackedAreaSeries> stackedAreaData =
+    [
+        new StackedAreaSeries("Income", "#10b981",
+        [
+            new StackedAreaDataPoint(new DateOnly(2026, 1, 1), 4200m),
+            new StackedAreaDataPoint(new DateOnly(2026, 2, 1), 4050m),
+            new StackedAreaDataPoint(new DateOnly(2026, 3, 1), 4300m),
+            new StackedAreaDataPoint(new DateOnly(2026, 4, 1), 4150m),
+        ]),
+        new StackedAreaSeries("Spending", "#ef4444",
+        [
+            new StackedAreaDataPoint(new DateOnly(2026, 1, 1), 3100m),
+            new StackedAreaDataPoint(new DateOnly(2026, 2, 1), 2950m),
+            new StackedAreaDataPoint(new DateOnly(2026, 3, 1), 3220m),
+            new StackedAreaDataPoint(new DateOnly(2026, 4, 1), 3080m),
+        ]),
+    ];
+
+    private readonly IReadOnlyList<RadialBarSegment> radialBarData =
+    [
+        new RadialBarSegment("Housing", 1250m, 1500m, "#6366f1"),
+        new RadialBarSegment("Food", 620m, 500m, "#f97316"),
+        new RadialBarSegment("Transport", 180m, 300m, "#22c55e"),
+        new RadialBarSegment("Utilities", 95m, 120m, "#3b82f6"),
+    ];
+
+    private readonly IReadOnlyList<CandlestickDataPoint> candlestickData =
+    [
+        new CandlestickDataPoint(new DateOnly(2026, 1, 1), 5000m, 5800m, 4600m, 5400m),
+        new CandlestickDataPoint(new DateOnly(2026, 2, 1), 5400m, 6100m, 5200m, 5900m),
+        new CandlestickDataPoint(new DateOnly(2026, 3, 1), 5900m, 6200m, 5100m, 5300m),
+        new CandlestickDataPoint(new DateOnly(2026, 4, 1), 5300m, 5700m, 4900m, 5600m),
+    ];
+
+    private readonly IReadOnlyList<WaterfallSegment> waterfallData =
+    [
+        new WaterfallSegment("Income", 5000m, 5000m, false),
+        new WaterfallSegment("Rent", -1500m, 3500m, false),
+        new WaterfallSegment("Food", -600m, 2900m, false),
+        new WaterfallSegment("Transport", -300m, 2600m, false),
+        new WaterfallSegment("Net", 2600m, 2600m, true),
+    ];
+
+    private readonly IReadOnlyList<BoxPlotSummary> boxPlotData =
+    [
+        new BoxPlotSummary("Food", 20m, 80m, 150m, 250m, 500m, new decimal[] { 600m, 700m }),
+        new BoxPlotSummary("Transport", 10m, 50m, 100m, 180m, 300m, Array.Empty<decimal>()),
+        new BoxPlotSummary("Utilities", 50m, 90m, 110m, 140m, 200m, Array.Empty<decimal>()),
+    ];
+
+    private readonly IReadOnlyList<TreemapDataPoint> treemapData =
+    [
+        new TreemapDataPoint("Housing", 1250m, "#6366f1"),
+        new TreemapDataPoint("Food", 620m, "#f97316"),
+        new TreemapDataPoint("Transport", 310m, "#22c55e"),
+        new TreemapDataPoint("Utilities", 189m, "#3b82f6"),
+        new TreemapDataPoint("Entertainment", 95m, "#a855f7"),
+    ];
+
+    private readonly IReadOnlyList<string> radarCategories = ["Housing", "Food", "Transport", "Utilities", "Entertainment"];
+
+    private readonly IReadOnlyList<RadarDataSeries> radarData =
+    [
+        new RadarDataSeries("Budgeted", new decimal[] { 1500m, 500m, 300m, 200m, 150m }),
+        new RadarDataSeries("Actual", new decimal[] { 1250m, 620m, 310m, 189m, 95m }),
+    ];
+
+    private readonly HeatmapDataPoint[][] heatmapData = BuildShowcaseHeatmap();
+
+    private static HeatmapDataPoint[][] BuildShowcaseHeatmap()
+    {
+        decimal[][] amounts =
+        [
+            [120m, 45m, 200m, 90m],
+            [60m, 180m, 30m, 150m],
+            [200m, 75m, 120m, 60m],
+            [45m, 310m, 80m, 175m],
+            [250m, 100m, 400m, 280m],
+            [180m, 520m, 350m, 410m],
+            [90m, 60m, 150m, 100m],
+        ];
+        return amounts
+            .Select((row, day) => row.Select((amt, week) => new HeatmapDataPoint(day, week, amt, (int)(amt / 30))).ToArray())
+            .ToArray();
+    }
 }

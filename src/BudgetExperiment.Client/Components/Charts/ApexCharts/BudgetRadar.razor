@@ -1,0 +1,24 @@
+@* BudgetRadar.razor - ApexCharts radar chart for comparing budget vs actual spend across categories *@
+@namespace BudgetExperiment.Client.Components.Charts
+@using BudgetExperiment.Client.Components.Charts.Models
+
+@if (Series == null || Series.Count == 0 || Categories == null || Categories.Count == 0)
+{
+    <div class="budget-radar-empty">No data to display</div>
+}
+else
+{
+    <div class="budget-radar" role="img" aria-label="@AriaLabel">
+        <ApexChart TItem="RadarDataPoint" Options="@_options">
+            @foreach (var series in Series!)
+            {
+                <ApexPointSeries TItem="RadarDataPoint"
+                    Items="@_radarPoints[series.Label]"
+                    Name="@series.Label"
+                    SeriesType="SeriesType.Radar"
+                    XValue="@(p => p.Category)"
+                    YValue="@(p => (decimal?)p.Value)" />
+            }
+        </ApexChart>
+    </div>
+}

@@ -104,6 +104,13 @@
                 </div>
             </div>
         </div>
+        @if (treemapDataPoints.Count > 0)
+        {
+            <div class="chart-section treemap-section">
+                <BudgetTreemap DataPoints="@treemapDataPoints"
+                               AriaLabel="@($"Category spending breakdown {rangeStart:MMM yyyy}\u2013{rangeEnd:MMM yyyy}")" />
+            </div>
+        }
     }
 </div>
 
@@ -123,6 +130,7 @@
     private DateOnly rangeStart;
     private DateOnly rangeEnd;
     private List<DonutSegmentData> chartSegments = new();
+    private IReadOnlyList<TreemapDataPoint> treemapDataPoints = [];
     private MoneyDto? totalSpending;
     private MoneyDto? totalIncome;
     private IReadOnlyList<CategorySpendingDto> categoryList = [];
@@ -210,6 +218,7 @@
                 totalIncome = null;
                 categoryList = [];
                 chartSegments = new List<DonutSegmentData>();
+                treemapDataPoints = [];
             }
         }
         catch (Exception ex)
@@ -238,6 +247,17 @@
                 TransactionCount = c.TransactionCount,
                 Data = c,
             })
+            .ToList();
+
+        BuildTreemapData();
+    }
+
+    private void BuildTreemapData()
+    {
+        treemapDataPoints = categoryList
+            .Where(c => c.Amount.Amount > 0)
+            .OrderByDescending(c => c.Amount.Amount)
+            .Select(c => new TreemapDataPoint(c.CategoryName, c.Amount.Amount, c.CategoryColor))
             .ToList();
     }
 

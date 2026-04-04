@@ -1,0 +1,45 @@
+/* RadialBarChart.razor.css - Scoped styles for the radial bar chart component */
+
+.radial-bar-chart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radial-bar-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    background-color: var(--color-surface-secondary, #f3f2f1);
+    border: 1px dashed var(--color-border, #d2d0ce);
+    border-radius: var(--radius-md, 4px);
+    color: var(--color-text-muted, #6b7280);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+.radial-bar-svg {
+    width: 100%;
+    height: auto;
+}
+
+.radial-bar-track {
+    fill: none;
+    stroke: var(--color-surface-elevated, #f3f4f6);
+    stroke-width: 16;
+}
+
+.radial-bar-arc {
+    fill: none;
+    stroke-width: 16;
+    stroke-linecap: round;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    transition: stroke-dashoffset 0.4s ease;
+}
+
+.radial-bar-label {
+    fill: var(--color-text-secondary, #6b7280);
+    font-family: inherit;
+}

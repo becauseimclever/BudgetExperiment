@@ -81,10 +81,7 @@ public sealed class CalendarGridService : ICalendarGridService
         // Auto-realize past-due items if setting is enabled
         await _autoRealizeService.AutoRealizePastDueItemsIfEnabledAsync(today, accountId, cancellationToken);
 
-        var dailyTotalsTask = RunInNewScopeAsync(
-            (sp, ct) => sp.GetRequiredService<ITransactionRepository>()
-                .GetDailyTotalsAsync(year, month, accountId, ct),
-            cancellationToken);
+        var dailyTotalsTask = GetGridDailyTotalsAsync(gridStartDate, gridEndDate, accountId, cancellationToken);
         var recurringTransactionsTask = RunInNewScopeAsync(
             (sp, ct) =>
             {
@@ -291,6 +288,49 @@ public sealed class CalendarGridService : ICalendarGridService
         return scopedTask is null
             ? default!
             : await scopedTask;
+    }
+
+    private async Task<IReadOnlyList<DailyTotalValue>> GetGridDailyTotalsAsync(
+        DateOnly gridStartDate,
+        DateOnly gridEndDate,
+        Guid? accountId,
+        CancellationToken cancellationToken)
+    {
+        var monthStarts = GetMonthStartsInRange(gridStartDate, gridEndDate);
+        var monthTasks = monthStarts.Select(monthStart =>
+            RunInNewScopeAsync(
+                (sp, ct) => sp.GetRequiredService<ITransactionRepository>()
+                    .GetDailyTotalsAsync(monthStart.Year, monthStart.Month, accountId, ct),
+                cancellationToken));
+
+        var monthResults = await Task.WhenAll(monthTasks);
+
+        return monthResults
+            .Where(values => values is not null)
+            .SelectMany(values => values!)
+            .Where(d => d.Date >= gridStartDate && d.Date <= gridEndDate)
+            .GroupBy(d => d.Date)
+            .Select(g => new DailyTotalValue(
+                g.Key,
+                g.First().Total,
+                g.First().TransactionCount))
+            .OrderBy(d => d.Date)
+            .ToList();
+    }
+
+    private List<DateOnly> GetMonthStartsInRange(DateOnly startDate, DateOnly endDate)
+    {
+        var monthStarts = new List<DateOnly>();
+        var current = new DateOnly(startDate.Year, startDate.Month, 1);
+        var end = new DateOnly(endDate.Year, endDate.Month, 1);
+
+        while (current <= end)
+        {
+            monthStarts.Add(current);
+            current = current.AddMonths(1);
+        }
+
+        return monthStarts;
     }
 
     private sealed class FallbackServiceProvider : IServiceProvider

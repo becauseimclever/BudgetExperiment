@@ -1,0 +1,37 @@
+/* StackedAreaChart.razor.css - Scoped styles for the stacked area chart component */
+
+.stacked-area-chart {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.stacked-area-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    background-color: var(--color-surface-secondary, #f3f2f1);
+    border: 1px dashed var(--color-border, #d2d0ce);
+    border-radius: var(--radius-md, 4px);
+    color: var(--color-text-muted, #6b7280);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+.stacked-area-svg {
+    width: 100%;
+    height: auto;
+}
+
+.stacked-area-path {
+    transition: opacity 0.15s ease;
+}
+
+.stacked-area-path:hover {
+    opacity: 0.7;
+}
+
+.stacked-area-axis {
+    stroke: var(--chart-axis-color, #9CA3AF);
+    stroke-width: 1;
+}

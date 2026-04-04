@@ -1,0 +1,50 @@
+/* HeatmapChart.razor.css - Scoped styles for the spending heatmap component */
+
+.heatmap-chart {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.heatmap-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    background-color: var(--color-surface-secondary, #f3f2f1);
+    border: 1px dashed var(--color-border, #d2d0ce);
+    border-radius: var(--radius-md, 4px);
+    color: var(--color-text-muted, #6b7280);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+.heatmap-svg {
+    width: 100%;
+    height: auto;
+}
+
+.heatmap-row-label {
+    fill: var(--color-text-muted, #6b7280);
+    font-family: inherit;
+}
+
+.heatmap-cell {
+    rx: 2px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.heatmap-cell:hover,
+.heatmap-cell:focus-visible {
+    opacity: 0.8;
+}
+
+.heatmap-cell:focus-visible {
+    outline: 2px solid var(--color-primary, #6366f1);
+    outline-offset: 1px;
+}
+
+.heatmap-cell-empty {
+    fill: var(--color-surface-elevated, #F3F4F6);
+    opacity: 0.5;
+}

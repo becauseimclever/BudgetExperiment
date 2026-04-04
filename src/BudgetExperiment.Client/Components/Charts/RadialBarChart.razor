@@ -1,0 +1,40 @@
+@* RadialBarChart.razor - Concentric arc budget utilization chart *@
+
+<div class="radial-bar-chart" role="img" aria-label="@AriaLabel">
+    @if (IsEmpty)
+    {
+        <div class="radial-bar-chart-empty">No data</div>
+    }
+    else
+    {
+        <svg class="radial-bar-svg"
+             aria-hidden="true"
+             viewBox="0 0 @F(Size) @F(Size)"
+             width="@F(Size)"
+             height="@F(Size)">
+            <title>@AriaLabel</title>
+
+            @foreach (var ring in ComputeRingInfos())
+            {
+                <circle class="radial-bar-track"
+                        cx="@F(ring.CenterX)"
+                        cy="@F(ring.CenterY)"
+                        r="@F(ring.Radius)"
+                        fill="none"
+                        stroke-width="@F(RingThickness)" />
+
+                <circle class="radial-bar-arc"
+                        cx="@F(ring.CenterX)"
+                        cy="@F(ring.CenterY)"
+                        r="@F(ring.Radius)"
+                        fill="none"
+                        stroke="@ring.Color"
+                        stroke-width="@F(RingThickness)"
+                        stroke-dasharray="@F(ring.Circumference)"
+                        stroke-dashoffset="@F(ring.DashOffset)" />
+
+                @RenderSvgText(ring.LabelX, ring.LabelY, "radial-bar-label", "middle", "8", ring.Label)
+            }
+        </svg>
+    }
+</div>

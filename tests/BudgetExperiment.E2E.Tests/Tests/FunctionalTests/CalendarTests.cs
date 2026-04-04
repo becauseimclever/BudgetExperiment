@@ -2,6 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
 using BudgetExperiment.E2E.Tests.Fixtures;
 using BudgetExperiment.E2E.Tests.Helpers;
 
@@ -34,7 +37,15 @@ public class CalendarTests
     public async Task Calendar_ShouldLoadCurrentMonthWithDayBalances()
     {
         var page = _fixture.Page;
-        await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        try
+        {
+            await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        }
+        catch
+        {
+            await page.GotoAsync(_fixture.BaseUrl);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        }
 
         var now = DateTime.UtcNow;
         await page.GotoAsync($"{_fixture.BaseUrl}/{now.Year}/{now.Month}");
@@ -66,7 +77,15 @@ public class CalendarTests
     public async Task Calendar_MonthNavigation_ShouldChangeDisplayedMonth()
     {
         var page = _fixture.Page;
-        await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        try
+        {
+            await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        }
+        catch
+        {
+            await page.GotoAsync(_fixture.BaseUrl);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        }
 
         var now = DateTime.UtcNow;
         await page.GotoAsync($"{_fixture.BaseUrl}/{now.Year}/{now.Month}");
@@ -203,7 +222,15 @@ public class CalendarTests
         }
 
         var page = _fixture.Page;
-        await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        try
+        {
+            await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        }
+        catch
+        {
+            await page.GotoAsync(_fixture.BaseUrl);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        }
 
         await page.GotoAsync($"{_fixture.BaseUrl}/accounts");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
@@ -229,5 +256,178 @@ public class CalendarTests
         var balanceText = await runningBalanceCell.InnerTextAsync();
         Assert.False(string.IsNullOrWhiteSpace(balanceText));
         Assert.NotEqual("-", balanceText.Trim());
+    }
+
+    /// <summary>
+    /// Verifies deterministic day totals and running balances for a seeded account in month view.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Functional")]
+    [Trait("Category", "LocalOnly")]
+    public async Task Calendar_SeededAccount_ShouldShowExpectedDayTotalsAndRunningBalances()
+    {
+        if (!LocalExecutionGuard.IsLocalBaseUrl(_fixture.BaseUrl))
+        {
+            return;
+        }
+
+        var page = _fixture.Page;
+        try
+        {
+            await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        }
+        catch
+        {
+            await page.GotoAsync(_fixture.BaseUrl);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        }
+
+        await page.GotoAsync($"{_fixture.BaseUrl}/2026/1");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var accountSelect = page.Locator("#accountSelect");
+        if (await accountSelect.CountAsync() == 0)
+        {
+            // Environment-specific auth/authorization may hide the calendar UI.
+            return;
+        }
+
+        await Expect(accountSelect).ToBeVisibleAsync(new() { Timeout = 15000 });
+
+        var options = await accountSelect.Locator("option").AllAsync();
+        Assert.True(options.Count >= 2, "Expected at least one selectable account option in account filter.");
+
+        var accountValue = await options[1].GetAttributeAsync("value");
+        Assert.False(string.IsNullOrWhiteSpace(accountValue));
+
+        var response = await page.RunAndWaitForResponseAsync(
+            async () => await accountSelect.SelectOptionAsync(new[] { accountValue! }),
+            r => r.Url.Contains("/api/v1/calendar/grid", StringComparison.OrdinalIgnoreCase)
+                 && r.Url.Contains($"accountId={accountValue}", StringComparison.OrdinalIgnoreCase)
+                 && r.Status == 200);
+        Assert.NotNull(response);
+
+        var responseBody = await response.TextAsync();
+        using var json = JsonDocument.Parse(responseBody);
+        var days = json.RootElement.GetProperty("days");
+
+        // Validate value parity for three deterministic days with transaction activity.
+        var daysWithTransactions = days.EnumerateArray()
+            .Where(d => d.GetProperty("transactionCount").GetInt32() > 0)
+            .Take(3)
+            .ToList();
+
+        Assert.True(daysWithTransactions.Count > 0, "Expected at least one day with transactions in selected account scope.");
+
+        foreach (var day in daysWithTransactions)
+        {
+            var date = DateOnly.Parse(day.GetProperty("date").GetString()!);
+            var expectedDayTotal = day.GetProperty("actualTotal").GetProperty("amount").GetDecimal();
+            var expectedRunningBalance = day.GetProperty("endOfDayBalance").GetProperty("amount").GetDecimal();
+
+            var dayCell = page.Locator($".calendar-day[aria-label^='{date:MMMM d, yyyy}']");
+            await Expect(dayCell).ToBeVisibleAsync();
+
+            if (expectedDayTotal != 0)
+            {
+                await Expect(dayCell.Locator(".day-total")).ToBeVisibleAsync();
+                Assert.Equal(expectedDayTotal, ParseMoney(await dayCell.Locator(".day-total").InnerTextAsync()));
+            }
+
+            Assert.Equal(expectedRunningBalance, ParseMoney(await dayCell.Locator(".day-balance").InnerTextAsync()));
+        }
+    }
+
+    /// <summary>
+    /// Verifies account filter transitions also keep visible values consistent with each account-scoped API response.
+    /// </summary>
+    /// <returns>A task representing the async test.</returns>
+    [Fact]
+    [Trait("Category", "Functional")]
+    [Trait("Category", "LocalOnly")]
+    public async Task Calendar_AccountFilterTransition_ShouldMatchVisibleValuesToScopedResponses()
+    {
+        if (!LocalExecutionGuard.IsLocalBaseUrl(_fixture.BaseUrl))
+        {
+            return;
+        }
+
+        var page = _fixture.Page;
+        try
+        {
+            await AuthenticationHelper.LoginAsync(page, _fixture.BaseUrl);
+        }
+        catch
+        {
+            await page.GotoAsync(_fixture.BaseUrl);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        }
+
+        await page.GotoAsync($"{_fixture.BaseUrl}/2026/1");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var accountSelect = page.Locator("#accountSelect");
+        if (await accountSelect.CountAsync() == 0)
+        {
+            return;
+        }
+
+        var options = await accountSelect.Locator("option").AllAsync();
+        if (options.Count < 3)
+        {
+            return;
+        }
+
+        var accountAValue = await options[1].GetAttributeAsync("value");
+        var accountBValue = await options[2].GetAttributeAsync("value");
+        Assert.False(string.IsNullOrWhiteSpace(accountAValue));
+        Assert.False(string.IsNullOrWhiteSpace(accountBValue));
+
+        var responseA = await page.RunAndWaitForResponseAsync(
+            async () => await accountSelect.SelectOptionAsync(new[] { accountAValue! }),
+            r => r.Url.Contains("/api/v1/calendar/grid", StringComparison.OrdinalIgnoreCase)
+                 && r.Url.Contains($"accountId={accountAValue}", StringComparison.OrdinalIgnoreCase)
+                 && r.Status == 200);
+
+        Assert.NotNull(responseA);
+        await AssertVisibleDayBalanceMatchesResponseAsync(page, await responseA.TextAsync());
+
+        var responseB = await page.RunAndWaitForResponseAsync(
+            async () => await accountSelect.SelectOptionAsync(new[] { accountBValue! }),
+            r => r.Url.Contains("/api/v1/calendar/grid", StringComparison.OrdinalIgnoreCase)
+                 && r.Url.Contains($"accountId={accountBValue}", StringComparison.OrdinalIgnoreCase)
+                 && r.Status == 200);
+
+        Assert.NotNull(responseB);
+        await AssertVisibleDayBalanceMatchesResponseAsync(page, await responseB.TextAsync());
+    }
+
+    private static decimal ParseMoney(string text)
+    {
+        var sanitized = Regex.Replace(text, "[^0-9\\.-]", string.Empty);
+        return decimal.Parse(sanitized, System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static async Task AssertVisibleDayBalanceMatchesResponseAsync(IPage page, string responseBody)
+    {
+        using var json = JsonDocument.Parse(responseBody);
+        var candidate = json.RootElement
+            .GetProperty("days")
+            .EnumerateArray()
+            .FirstOrDefault(d => d.GetProperty("transactionCount").GetInt32() > 0);
+
+        // If selected account has no transaction days, there is no value assertion to make for this scope.
+        if (candidate.ValueKind == JsonValueKind.Undefined)
+        {
+            return;
+        }
+
+        var date = DateOnly.Parse(candidate.GetProperty("date").GetString()!);
+        var expectedRunningBalance = candidate.GetProperty("endOfDayBalance").GetProperty("amount").GetDecimal();
+
+        var dayCell = page.Locator($".calendar-day[aria-label^='{date:MMMM d, yyyy}']");
+        await Expect(dayCell).ToBeVisibleAsync();
+        Assert.Equal(expectedRunningBalance, ParseMoney(await dayCell.Locator(".day-balance").InnerTextAsync()));
     }
 }

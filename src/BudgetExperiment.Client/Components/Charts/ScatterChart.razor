@@ -1,0 +1,45 @@
+@* ScatterChart.razor - Transaction scatter plot SVG component *@
+
+<div class="@ContainerClass" role="img" aria-label="@AriaLabel">
+    @if (!Points.Any())
+    {
+        <div class="scatter-chart-empty">No data to display</div>
+    }
+    else
+    {
+        <svg class="scatter-svg"
+             aria-hidden="true"
+             viewBox="0 0 @F(ViewBoxWidth) @F(ViewBoxHeight)"
+             preserveAspectRatio="xMidYMid meet">
+            <title>@AriaLabel</title>
+
+            @* X axis *@
+            <line class="scatter-axis"
+                  x1="@F(MarginLeft)"
+                  y1="@F(ChartAreaBottom)"
+                  x2="@F(ViewBoxWidth - MarginRight)"
+                  y2="@F(ChartAreaBottom)"
+                  stroke="var(--chart-axis-color, #9CA3AF)"
+                  stroke-width="1" />
+
+            @* Y axis *@
+            <line class="scatter-axis"
+                  x1="@F(MarginLeft)"
+                  y1="@F(MarginTop)"
+                  x2="@F(MarginLeft)"
+                  y2="@F(ChartAreaBottom)"
+                  stroke="var(--chart-axis-color, #9CA3AF)"
+                  stroke-width="1" />
+
+            @* Data points *@
+            @foreach (var point in Points)
+            {
+                <circle class="@GetCircleClass(point)"
+                        cx="@F(MapDateToX(point.Date))"
+                        cy="@F(MapAmountToY(point.Amount))"
+                        r="@(point.IsOutlier && ShowOutlierMarkers ? "6" : "4")"
+                        fill="@GetPointFill(point)" />
+            }
+        </svg>
+    }
+</div>

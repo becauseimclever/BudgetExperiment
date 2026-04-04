@@ -1,0 +1,47 @@
+/* CandlestickChart.razor.css - Scoped styles for the candlestick chart component */
+
+.candlestick-chart {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.candlestick-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    background-color: var(--color-surface-secondary, #f3f2f1);
+    border: 1px dashed var(--color-border, #d2d0ce);
+    border-radius: var(--radius-md, 4px);
+    color: var(--color-text-muted, #6b7280);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+.candlestick-svg {
+    width: 100%;
+    height: auto;
+}
+
+.candlestick-body {
+    stroke-width: 1;
+}
+
+.candlestick-body.candlestick-bullish {
+    fill: var(--color-income, #22c55e);
+    stroke: var(--color-income, #22c55e);
+}
+
+.candlestick-body.candlestick-bearish {
+    fill: var(--color-expense, #ef4444);
+    stroke: var(--color-expense, #ef4444);
+}
+
+.candlestick-wick {
+    stroke: var(--chart-grid-color, #e5e7eb);
+}
+
+.candlestick-axis {
+    stroke: var(--chart-axis-color, #9CA3AF);
+    stroke-width: 1;
+}

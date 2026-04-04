@@ -137,6 +137,35 @@
                     </div>
                 }
 
+                @* Waterfall Chart: Budget → per-category spending → remaining *@
+                @if (waterfallSegments.Count > 0)
+                {
+                    <div class="chart-section">
+                        <WaterfallChart Segments="@waterfallSegments"
+                                        AriaLabel="@($"Budget flow for {new DateOnly(selectedYear, selectedMonth, 1):MMMM yyyy}")" />
+                    </div>
+                }
+
+                @* Radial Bar Chart: Per-category budget utilization *@
+                @if (radialBarSegments.Count > 0)
+                {
+                    <div class="chart-section">
+                        <RadialBarChart Segments="@radialBarSegments"
+                                        Size="240"
+                                        AriaLabel="@($"Budget utilization by category for {new DateOnly(selectedYear, selectedMonth, 1):MMMM yyyy}")" />
+                    </div>
+                }
+
+                @* Radar Chart: Budget vs. actual across categories *@
+                @if (radarSeries.Count > 0 && radarCategories.Count > 0)
+                {
+                    <div class="chart-section">
+                        <BudgetRadar Series="@radarSeries"
+                                     Categories="@radarCategories"
+                                     AriaLabel="@($"Budget vs actual radar for {new DateOnly(selectedYear, selectedMonth, 1):MMMM yyyy}")" />
+                    </div>
+                }
+
                 @* Data Table *@
                 <div class="data-table">
                     <h3>Category Breakdown</h3>
@@ -217,6 +246,10 @@
     private BudgetSummaryDto? summary;
     private List<BarChartGroup> chartGroups = new();
     private List<BarChartSeries> chartSeries = new();
+    private IReadOnlyList<WaterfallSegment> waterfallSegments = [];
+    private IReadOnlyList<RadialBarSegment> radialBarSegments = [];
+    private IReadOnlyList<RadarDataSeries> radarSeries = [];
+    private IReadOnlyList<string> radarCategories = [];
     private int selectedYear;
     private int selectedMonth;
     private string? errorMessage;
@@ -288,6 +321,10 @@
         {
             chartGroups = new List<BarChartGroup>();
             chartSeries = new List<BarChartSeries>();
+            waterfallSegments = [];
+            radialBarSegments = [];
+            radarSeries = [];
+            radarCategories = [];
             return;
         }
 
@@ -311,6 +348,8 @@
                 },
             })
             .ToList();
+
+        BuildNewCharts();
     }
 
     private async Task PreviousMonth()
@@ -421,6 +460,63 @@
     private static string TruncateLabel(string name)
     {
         return name.Length > 12 ? name[..10] + "…" : name;
+    }
+
+    private void BuildNewCharts()
+    {
+        BuildWaterfallSegments();
+        BuildRadialBarSegments();
+        BuildRadarChartData();
+    }
+
+    private void BuildWaterfallSegments()
+    {
+        var budgetedCategories = summary!.CategoryProgress
+            .Where(c => c.Status != "NoBudgetSet")
+            .OrderByDescending(c => c.SpentAmount.Amount)
+            .ToList();
+
+        var segments = new List<WaterfallSegment>();
+        var runningTotal = summary.TotalBudgeted.Amount;
+        segments.Add(new WaterfallSegment("Budget", runningTotal, runningTotal, false));
+
+        foreach (var category in budgetedCategories)
+        {
+            var delta = -category.SpentAmount.Amount;
+            runningTotal += delta;
+            segments.Add(new WaterfallSegment(TruncateLabel(category.CategoryName), delta, runningTotal, false));
+        }
+
+        segments.Add(new WaterfallSegment("Remaining", runningTotal, runningTotal, true));
+        waterfallSegments = segments;
+    }
+
+    private void BuildRadialBarSegments()
+    {
+        radialBarSegments = summary!.CategoryProgress
+            .Where(c => c.Status != "NoBudgetSet" && c.TargetAmount.Amount > 0)
+            .Take(8)
+            .Select(c => new RadialBarSegment(
+                TruncateLabel(c.CategoryName),
+                c.SpentAmount.Amount,
+                c.TargetAmount.Amount,
+                c.CategoryColor ?? "#6366f1"))
+            .ToList();
+    }
+
+    private void BuildRadarChartData()
+    {
+        var budgetedCategories = summary!.CategoryProgress
+            .Where(c => c.Status != "NoBudgetSet" && c.TargetAmount.Amount > 0)
+            .Take(10)
+            .ToList();
+
+        radarCategories = budgetedCategories.Select(c => TruncateLabel(c.CategoryName)).ToList();
+        radarSeries =
+        [
+            new RadarDataSeries("Budgeted", budgetedCategories.Select(c => c.TargetAmount.Amount).ToList()),
+            new RadarDataSeries("Actual", budgetedCategories.Select(c => c.SpentAmount.Amount).ToList()),
+        ];
     }
 
     private async Task RetryLoad()

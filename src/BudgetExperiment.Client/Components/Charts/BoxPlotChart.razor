@@ -1,0 +1,63 @@
+@* BoxPlotChart.razor - Category spending distribution box plot SVG chart *@
+
+<div class="box-plot-chart" role="img" aria-label="@AriaLabel">
+    @if (_isEmpty)
+    {
+        <div class="box-plot-chart-empty">No data to display</div>
+    }
+    else
+    {
+        <svg class="box-plot-svg"
+             aria-hidden="true"
+             viewBox="0 0 400 200"
+             preserveAspectRatio="xMidYMid meet">
+
+            <line class="box-plot-axis"
+                  x1="@F(MarginLeft)"
+                  y1="@F(ChartAreaBottom)"
+                  x2="@F(PlotRight)"
+                  y2="@F(ChartAreaBottom)"
+                  stroke-width="1" />
+
+            @foreach (var dist in _computedDistributions)
+            {
+                <rect class="box-plot-box"
+                      x="@F(dist.BoxX)"
+                      y="@F(dist.BoxY)"
+                      width="@F(dist.BoxWidth)"
+                      height="@F(dist.BoxHeight)" />
+
+                <line class="box-plot-median"
+                      x1="@F(dist.BoxX)"
+                      y1="@F(dist.MedianY)"
+                      x2="@F(dist.BoxX + dist.BoxWidth)"
+                      y2="@F(dist.MedianY)"
+                      stroke-width="1.5" />
+
+                <line class="box-plot-whisker"
+                      x1="@F(dist.CenterX)"
+                      y1="@F(dist.LowerWhiskerTop)"
+                      x2="@F(dist.CenterX)"
+                      y2="@F(dist.LowerWhiskerBottom)"
+                      stroke-width="1" />
+
+                <line class="box-plot-whisker"
+                      x1="@F(dist.CenterX)"
+                      y1="@F(dist.UpperWhiskerTop)"
+                      x2="@F(dist.CenterX)"
+                      y2="@F(dist.UpperWhiskerBottom)"
+                      stroke-width="1" />
+
+                @foreach (var oy in dist.OutlierYs)
+                {
+                    <circle class="box-plot-outlier"
+                            cx="@F(dist.CenterX)"
+                            cy="@F(oy)"
+                            r="3" />
+                }
+
+                @RenderSvgText(dist.LabelX, dist.LabelY, "box-plot-label", "middle", "7", dist.LabelText)
+            }
+        </svg>
+    }
+</div>

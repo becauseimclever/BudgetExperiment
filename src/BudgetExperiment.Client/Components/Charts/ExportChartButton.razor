@@ -1,0 +1,8 @@
+@* ExportChartButton.razor - Chart export action button *@
+
+@if (Visible)
+{
+    <button type="button" class="export-chart-btn" aria-label="Export chart" @onclick="HandleExportAsync">
+        Export
+    </button>
+}

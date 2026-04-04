@@ -1,0 +1,56 @@
+@* HeatmapChart.razor - Spending heatmap SVG component *@
+
+<div class="heatmap-chart" role="img" aria-label="@AriaLabel">
+    @if (IsEmpty)
+    {
+        <div class="heatmap-chart-empty">No data to display</div>
+    }
+    else
+    {
+        <svg class="heatmap-svg"
+             aria-hidden="true"
+             viewBox="0 0 @F(ComputedViewBoxWidth) @F(ComputedViewBoxHeight)"
+             preserveAspectRatio="xMidYMid meet">
+            <title>@AriaLabel</title>
+
+            @* Row labels *@
+            @for (var day = 0; day < RowLabels.Length; day++)
+            {
+                @RenderSvgText(LabelAreaWidth - 4, RowLabelY(day), "heatmap-row-label", "end", "8", RowLabels[day])
+            }
+
+            @* Data cells *@
+            @foreach (var row in Data!)
+            {
+                @foreach (var point in row)
+                {
+                    @if (point.TotalAmount == 0)
+                    {
+                        <rect class="heatmap-cell heatmap-cell-empty"
+                              x="@F(CellX(point.WeekIndex))"
+                              y="@F(CellY(point.DayOfWeek))"
+                              width="@F(CellSize)"
+                              height="@F(CellSize)"
+                              rx="2"
+                              ry="2"
+                              data-day="@point.DayOfWeek"
+                              data-week="@point.WeekIndex" />
+                    }
+                    else
+                    {
+                        <rect class="heatmap-cell"
+                              x="@F(CellX(point.WeekIndex))"
+                              y="@F(CellY(point.DayOfWeek))"
+                              width="@F(CellSize)"
+                              height="@F(CellSize)"
+                              rx="2"
+                              ry="2"
+                              fill="@ComputeCellFill(point.TotalAmount)"
+                              data-day="@point.DayOfWeek"
+                              data-week="@point.WeekIndex" />
+                    }
+                }
+            }
+        </svg>
+    }
+</div>

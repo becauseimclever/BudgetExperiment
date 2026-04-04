@@ -1,0 +1,32 @@
+@* StackedAreaChart.razor - Multi-series stacked area SVG component *@
+
+<div class="stacked-area-chart" role="img" aria-label="@AriaLabel">
+    @if (IsEmpty)
+    {
+        <div class="stacked-area-chart-empty">No data to display</div>
+    }
+    else
+    {
+        <svg class="stacked-area-svg"
+             aria-hidden="true"
+             viewBox="0 0 400 200">
+            <title>@AriaLabel</title>
+
+            @foreach (var info in ComputeStackedPaths())
+            {
+                <path class="stacked-area-path"
+                      fill="@info.Color"
+                      fill-opacity="0.8"
+                      d="@info.PathData" />
+            }
+
+            <line class="stacked-area-axis"
+                  x1="@F(MarginLeft)"
+                  y1="@F(ChartAreaBottom)"
+                  x2="@F(PlotRight)"
+                  y2="@F(ChartAreaBottom)"
+                  stroke="var(--chart-axis-color, #9CA3AF)"
+                  stroke-width="1" />
+        </svg>
+    }
+</div>

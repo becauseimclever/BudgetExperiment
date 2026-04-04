@@ -1,5 +1,5 @@
 # Feature 127: Enhanced Charts & Visualizations
-> **Status:** Approach Decided (Hybrid Primary)  
+> **Status:** Done  
 > **Priority:** Medium  
 > **Effort:** Large (new chart types, library integration for 2 types, theming overhaul, data service layer)
 
@@ -479,62 +479,62 @@ public interface IChartDataService
 
 ### Foundation (Slices 1–2)
 
-- **AC-127-01:** `Blazor-ApexCharts` NuGet package is added to `BudgetExperiment.Client.csproj` and builds without errors on .NET 10
-- **AC-127-02:** A `ChartThemeService` reads CSS custom properties and generates `ApexChartOptions` theme configuration for Tier 3 charts
-- **AC-127-03:** ApexCharts-rendered charts (Treemap, Radar) respond to theme changes (switching themes updates colors within 500ms)
-- **AC-127-04:** The ApexCharts JS bundle adds no more than 200 KB gzipped to the published WASM payload
-- **AC-127-05:** All existing chart components (`BarChart`, `DonutChart`, `LineChart`, etc.) continue to function without modification
+- **AC-127-01:** ✅ `Blazor-ApexCharts` NuGet package is added to `BudgetExperiment.Client.csproj` and builds without errors on .NET 10
+- **AC-127-02:** ✅ A `ChartThemeService` reads CSS custom properties and generates `ApexChartOptions` theme configuration for Tier 3 charts
+- **AC-127-03:** ✅ ApexCharts-rendered charts (Treemap, Radar) respond to theme changes (switching themes updates colors within 500ms)
+- **AC-127-04:** ✅ The ApexCharts JS bundle adds no more than 200 KB gzipped to the published WASM payload
+- **AC-127-05:** ✅ All existing chart components (`BarChart`, `DonutChart`, `LineChart`, etc.) continue to function without modification
 
 ### New Chart Types — Self-Implemented (Slices 3–5)
 
-- **AC-127-06:** Heatmap chart displays a 7-row (Mon–Sun) × N-column (weeks) grid colored by spending intensity
-- **AC-127-07:** Scatter plot displays transactions as dots (date × amount), with outliers visually distinct (>2σ from category mean)
-- **AC-127-08:** Stacked area chart shows category spending composition over 6–12 months with consistent category ordering
-- **AC-127-09:** Radial bar chart displays budget utilization percentage for up to 8 categories with color transitions (green → yellow → red)
-- **AC-127-10:** Candlestick chart shows account balance open/high/low/close per month with green (increase) and red (decrease) coloring
-- **AC-127-11:** Waterfall chart starts at income, subtracts each spending category, and ends at net remaining — correctly handles negative net values
-- **AC-127-12:** Box plot chart shows spending distribution (min, Q1, median, Q3, max) per category with outlier dots
+- **AC-127-06:** ✅ Heatmap chart displays a 7-row (Mon–Sun) × N-column (weeks) grid colored by spending intensity
+- **AC-127-07:** ✅ Scatter plot displays transactions as dots (date × amount), with outliers visually distinct (>2σ from category mean)
+- **AC-127-08:** ✅ Stacked area chart shows category spending composition over 6–12 months with consistent category ordering
+- **AC-127-09:** ✅ Radial bar chart displays budget utilization percentage for up to 8 categories with color transitions (green → yellow → red)
+- **AC-127-10:** ✅ Candlestick chart shows account balance open/high/low/close per month with green (increase) and red (decrease) coloring
+- **AC-127-11:** ✅ Waterfall chart starts at income, subtracts each spending category, and ends at net remaining — correctly handles negative net values
+- **AC-127-12:** ✅ Box plot chart shows spending distribution (min, Q1, median, Q3, max) per category with outlier dots
 
 ### New Chart Types — ApexCharts (Slice 6)
 
-- **AC-127-13:** Treemap chart displays spending by category with rectangle sizes proportional to amounts; clicking a category drills into subcategories
-- **AC-127-14:** Radar chart displays budget utilization across all active budget categories on a single chart
+- **AC-127-13:** ✅ Treemap chart displays spending by category with rectangle sizes proportional to amounts; clicking a category drills into subcategories
+- **AC-127-14:** ✅ Radar chart displays budget utilization across all active budget categories on a single chart
 
 ### Data Service Layer (Slices 2–6)
 
-- **AC-127-15:** `IChartDataService` is registered in DI and has a concrete implementation in the Client project
-- **AC-127-16:** `BuildSpendingHeatmap` correctly aggregates transactions by day-of-week × week-of-month and returns a 7×N matrix
-- **AC-127-17:** `BuildBudgetWaterfall` produces segments that sum from income to net remaining with running totals
-- **AC-127-18:** `BuildBalanceCandlesticks` correctly computes open/high/low/close from daily balance data
-- **AC-127-19:** `BuildCategoryDistributions` calculates correct quartiles and identifies outliers using 1.5×IQR method
-- **AC-127-20:** All `IChartDataService` methods have unit tests with edge cases (empty data, single transaction, all same amount)
+- **AC-127-15:** ✅ `IChartDataService` is registered in DI and has a concrete implementation in the Client project
+- **AC-127-16:** ✅ `BuildSpendingHeatmap` correctly aggregates transactions by day-of-week × week-of-month and returns a 7×N matrix
+- **AC-127-17:** ✅ `BuildBudgetWaterfall` produces segments that sum from income to net remaining with running totals
+- **AC-127-18:** ✅ `BuildBalanceCandlesticks` correctly computes open/high/low/close from daily balance data
+- **AC-127-19:** ✅ `BuildCategoryDistributions` calculates correct quartiles and identifies outliers using 1.5×IQR method
+- **AC-127-20:** ✅ All `IChartDataService` methods have unit tests with edge cases (empty data, single transaction, all same amount)
 
 ### Visual & Interactivity (Slice 7)
 
-- **AC-127-21:** All ApexCharts-rendered charts (Treemap, Radar) animate on first load
-- **AC-127-22:** Tooltips display formatted currency values, category name, percentage of total, and transaction count (applies to all charts)
-- **AC-127-23:** Time-series self-implemented charts (Scatter, Stacked Area, Candlestick) support zoom/pan via mouse drag or pinch gesture
-- **AC-127-24:** Self-implemented chart legends are interactive (toggle series visibility where applicable)
-- **AC-127-25:** ApexCharts export to PNG via toolbar button (built-in feature for Treemap, Radar)
+- **AC-127-21:** ✅ All ApexCharts-rendered charts (Treemap, Radar) animate on first load
+- **AC-127-22:** ✅ Tooltips display formatted currency values, category name, percentage of total, and transaction count (applies to all charts)
+- **AC-127-23:** ✅ Time-series self-implemented charts (Scatter, Stacked Area, Candlestick) support zoom/pan via mouse drag or pinch gesture
+- **AC-127-24:** ✅ Self-implemented chart legends are interactive (toggle series visibility where applicable)
+- **AC-127-25:** ✅ ApexCharts export to PNG via toolbar button (built-in feature for Treemap, Radar)
 
 ### Migration (Slice 8)
 
-- **AC-127-26:** Existing chart usage in reports is evaluated: keep SVG or migrate to new chart components (decision per report)
-- **AC-127-27:** New chart types (Heatmap, Treemap, Waterfall, Radar, etc.) are introduced to appropriate report pages as value-adding features
-- **AC-127-28:** `ComponentShowcase` page displays all 9 new chart types (7 self-implemented + 2 ApexCharts)
-- **AC-127-29:** All charts work across all 9 themes with correct colors and readability
+- **AC-127-26:** ✅ Existing chart usage in reports is evaluated: keep SVG or migrate to new chart components (decision per report)
+- **AC-127-27:** ✅ New chart types (Heatmap, Treemap, Waterfall, Radar, etc.) are introduced to appropriate report pages as value-adding features
+- **AC-127-28:** ✅ `ComponentShowcase` page displays all 9 new chart types (7 self-implemented + 2 ApexCharts)
+- **AC-127-29:** ✅ All charts work across all 9 themes with correct colors and readability
 
 ### Accessibility & Theme Compliance (Cross-cutting)
 
-- **AC-127-30:** All self-implemented charts include ARIA labels and keyboard navigation matching current standards
-- **AC-127-31:** All ApexCharts charts include ARIA labels matching current standards
-- **AC-127-32:** All 9 themes (light, dark, accessible, crayons, geocities, macOS, monopoly, vscode-dark, win95) render all charts with correct colors
-- **AC-127-33:** The `accessible` theme uses a colorblind-safe palette for all chart types
+- **AC-127-30:** ✅ All self-implemented charts include ARIA labels and keyboard navigation matching current standards
+- **AC-127-31:** ✅ All ApexCharts charts include ARIA labels matching current standards
+- **AC-127-32:** ✅ All 9 themes (light, dark, accessible, crayons, geocities, macOS, monopoly, vscode-dark, win95) render all charts with correct colors
+- **AC-127-33:** ✅ The `accessible` theme uses a colorblind-safe palette for all chart types
 
 ### Cleanup (Slice 9 — Optional)
 
-- **AC-127-34:** If legacy SVG components are fully migrated, they are removed from `Components/Charts/` after verification
-- **AC-127-35:** No dead code or unused supporting types remain (only if cleanup slice executed)
+- **AC-127-34:** ✅ If legacy SVG components are fully migrated, they are removed from `Components/Charts/` after verification
+- **AC-127-35:** ✅ No dead code or unused supporting types remain (only if cleanup slice executed)
 
 ---
 

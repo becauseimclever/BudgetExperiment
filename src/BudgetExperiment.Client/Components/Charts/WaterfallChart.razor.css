@@ -1,0 +1,57 @@
+/* WaterfallChart.razor.css - Scoped styles for the waterfall chart component */
+
+.waterfall-chart {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.waterfall-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    background-color: var(--color-surface-secondary, #f3f2f1);
+    border: 1px dashed var(--color-border, #d2d0ce);
+    border-radius: var(--radius-md, 4px);
+    color: var(--color-text-muted, #6b7280);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+.waterfall-svg {
+    width: 100%;
+    height: auto;
+}
+
+.waterfall-bar {
+    rx: 1.5;
+    ry: 1.5;
+}
+
+.waterfall-bar.waterfall-positive {
+    fill: var(--color-income, #22c55e);
+}
+
+.waterfall-bar.waterfall-negative {
+    fill: var(--color-expense, #ef4444);
+}
+
+.waterfall-bar.waterfall-total {
+    fill: var(--color-brand-primary, #0078d4);
+}
+
+.waterfall-connector {
+    stroke: var(--chart-axis-color, #9CA3AF);
+    stroke-width: 1;
+    stroke-dasharray: 2, 2;
+}
+
+.waterfall-axis {
+    stroke: var(--chart-axis-color, #9CA3AF);
+    stroke-width: 1;
+}
+
+.waterfall-label {
+    fill: var(--color-text-muted, #6b7280);
+    font-size: 7px;
+}

@@ -1,0 +1,43 @@
+@* WaterfallChart.razor - Budget waterfall SVG chart *@
+
+<div class="waterfall-chart" role="img" aria-label="@AriaLabel">
+    @if (_isEmpty)
+    {
+        <div class="waterfall-chart-empty">No data to display</div>
+    }
+    else
+    {
+        <svg class="waterfall-svg"
+             aria-hidden="true"
+             viewBox="0 0 400 200"
+             preserveAspectRatio="xMidYMid meet">
+
+            <line class="waterfall-axis"
+                  x1="@F(MarginLeft)"
+                  y1="@F(_axisY)"
+                  x2="@F(PlotRight)"
+                  y2="@F(_axisY)"
+                  stroke-width="1" />
+
+            @foreach (var bar in _computedBars)
+            {
+                <rect class="@bar.CssClass"
+                      x="@F(bar.BarX)"
+                      y="@F(bar.BarY)"
+                      width="@F(bar.BarWidth)"
+                      height="@F(bar.BarHeight)" />
+                @RenderSvgText(bar.LabelX, bar.LabelY, "waterfall-label", "middle", "7", bar.LabelText)
+            }
+
+            @foreach (var connector in _computedConnectors)
+            {
+                <line class="waterfall-connector"
+                      x1="@F(connector.X1)"
+                      y1="@F(connector.Y)"
+                      x2="@F(connector.X2)"
+                      y2="@F(connector.Y)"
+                      stroke-width="1" />
+            }
+        </svg>
+    }
+</div>

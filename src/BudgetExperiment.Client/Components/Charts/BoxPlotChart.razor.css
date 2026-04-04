@@ -1,0 +1,58 @@
+/* BoxPlotChart.razor.css - Scoped styles for the box plot chart component */
+
+.box-plot-chart {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.box-plot-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    background-color: var(--color-surface-secondary, #f3f2f1);
+    border: 1px dashed var(--color-border, #d2d0ce);
+    border-radius: var(--radius-md, 4px);
+    color: var(--color-text-muted, #6b7280);
+    font-size: var(--text-sm, 0.875rem);
+}
+
+.box-plot-svg {
+    width: 100%;
+    height: auto;
+}
+
+.box-plot-box {
+    fill: var(--color-brand-primary, #0078d4);
+    fill-opacity: 0.2;
+    stroke: var(--color-brand-primary, #0078d4);
+    stroke-width: 1.5;
+    rx: 1.5;
+    ry: 1.5;
+}
+
+.box-plot-median {
+    stroke: var(--color-brand-primary, #0078d4);
+    stroke-width: 2;
+}
+
+.box-plot-whisker {
+    stroke: var(--chart-axis-color, #9CA3AF);
+    stroke-width: 1;
+}
+
+.box-plot-outlier {
+    fill: var(--color-warning, #f59e0b);
+    stroke: var(--color-warning, #f59e0b);
+}
+
+.box-plot-axis {
+    stroke: var(--chart-axis-color, #9CA3AF);
+    stroke-width: 1;
+}
+
+.box-plot-label {
+    fill: var(--color-text-muted, #6b7280);
+    font-size: 7px;
+}

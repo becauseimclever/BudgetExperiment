@@ -397,6 +397,250 @@ public class CalendarGridServiceTests
     }
 
     [Fact]
+    public async Task GetCalendarGridAsync_I3_PrefixSumCorrectness_RunningBalanceMatchesOpeningPlusCumulativeDayTotals()
+    {
+        // Arrange
+        var startingBalance = MoneyValue.Create("USD", 1000m);
+        _balanceService
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        var gridStartDate = new DateOnly(2025, 12, 28);
+        var dailyTotals = new List<DailyTotalValue>
+        {
+            new(gridStartDate, MoneyValue.Create("USD", 50m), 1),
+            new(gridStartDate.AddDays(1), MoneyValue.Create("USD", -20m), 1),
+            new(gridStartDate.AddDays(3), MoneyValue.Create("USD", 100m), 1),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(dailyTotals);
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert explicit expected balances for first four days
+        Assert.Equal(1050m, result.Days[0].EndOfDayBalance.Amount); // 1000 + 50
+        Assert.Equal(1030m, result.Days[1].EndOfDayBalance.Amount); // 1050 - 20
+        Assert.Equal(1030m, result.Days[2].EndOfDayBalance.Amount); // unchanged
+        Assert.Equal(1130m, result.Days[3].EndOfDayBalance.Amount); // 1030 + 100
+
+        // Assert I3 invariant across all grid days
+        var expectedRunningBalance = result.StartingBalance.Amount;
+        foreach (var day in result.Days)
+        {
+            expectedRunningBalance += day.CombinedTotal.Amount;
+            Assert.Equal(expectedRunningBalance, day.EndOfDayBalance.Amount);
+        }
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_I5_TransferNetZeroInAggregateScope_PairedLegsNetToZeroDayContribution()
+    {
+        // Arrange
+        var startingBalance = MoneyValue.Create("USD", 2500m);
+        _balanceService
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(new List<DailyTotalValue>());
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var sourceAccountId = Guid.NewGuid();
+        var destinationAccountId = Guid.NewGuid();
+        var transferId = Guid.NewGuid();
+        var transferDate = new DateOnly(2026, 1, 10);
+
+        _recurringTransferRepo
+            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransfer>
+            {
+                CreateTestRecurringTransfer(sourceAccountId, destinationAccountId, transferDate),
+            });
+
+        var gridStartDate = new DateOnly(2025, 12, 28);
+        var gridEndDate = gridStartDate.AddDays(41);
+        _recurringTransferInstanceProjector
+            .Setup(p => p.GetInstancesByDateRangeAsync(
+                It.IsAny<IReadOnlyList<RecurringTransfer>>(),
+                gridStartDate,
+                gridEndDate,
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<DateOnly, List<RecurringTransferInstanceInfoValue>>
+            {
+                {
+                    transferDate, new List<RecurringTransferInstanceInfoValue>
+                    {
+                        new(
+                            transferId,
+                            transferDate,
+                            sourceAccountId,
+                            "Checking",
+                            "Move to savings",
+                            MoneyValue.Create("USD", -300m),
+                            false,
+                            false,
+                            "Source"),
+                        new(
+                            transferId,
+                            transferDate,
+                            destinationAccountId,
+                            "Savings",
+                            "Move to savings",
+                            MoneyValue.Create("USD", 300m),
+                            false,
+                            false,
+                            "Destination"),
+                    }
+                },
+            });
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert
+        var day = result.Days.Single(d => d.Date == transferDate);
+        Assert.Equal(0m, day.ProjectedTotal.Amount);
+        Assert.Equal(0m, day.CombinedTotal.Amount);
+        Assert.Equal(2, day.RecurringCount);
+        Assert.True(day.HasRecurring);
+        Assert.Equal(2500m, day.EndOfDayBalance.Amount);
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_I7_DeterministicRecompute_ReturnsSameDayTotalsAndBalances()
+    {
+        // Arrange
+        var startingBalance = MoneyValue.Create("USD", 800m);
+        _balanceService
+            .Setup(s => s.GetOpeningBalanceForDateAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(startingBalance);
+
+        var gridStartDate = new DateOnly(2025, 12, 28);
+        var dailyTotals = new List<DailyTotalValue>
+        {
+            new(gridStartDate, MoneyValue.Create("USD", 25m), 1),
+            new(gridStartDate.AddDays(2), MoneyValue.Create("USD", -10m), 1),
+            new(gridStartDate.AddDays(4), MoneyValue.Create("USD", 40m), 1),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(dailyTotals);
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(default))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var first = await service.GetCalendarGridAsync(2026, 1);
+        var second = await service.GetCalendarGridAsync(2026, 1);
+
+        // Assert
+        Assert.Equal(first.Days.Count, second.Days.Count);
+
+        for (int i = 0; i < first.Days.Count; i++)
+        {
+            Assert.Equal(first.Days[i].Date, second.Days[i].Date);
+            Assert.Equal(first.Days[i].ActualTotal.Amount, second.Days[i].ActualTotal.Amount);
+            Assert.Equal(first.Days[i].ProjectedTotal.Amount, second.Days[i].ProjectedTotal.Amount);
+            Assert.Equal(first.Days[i].CombinedTotal.Amount, second.Days[i].CombinedTotal.Amount);
+            Assert.Equal(first.Days[i].EndOfDayBalance.Amount, second.Days[i].EndOfDayBalance.Amount);
+            Assert.Equal(first.Days[i].TransactionCount, second.Days[i].TransactionCount);
+            Assert.Equal(first.Days[i].RecurringCount, second.Days[i].RecurringCount);
+        }
+    }
+
+    [Fact]
+    public async Task GetCalendarGridAsync_I4_ScopeAdditivity_NullScopeAggregateTotalsEqualSumOfPerAccountTotals()
+    {
+        // Arrange
+        // I4 (Scope Commutativity) — the current API supports single-accountId or null (all).
+        // We test the equivalent additive property: aggregate(null) == f(A) + f(B) per day.
+        var accountA = Guid.NewGuid();
+        var accountB = Guid.NewGuid();
+
+        // Jan 5, 2026 is at grid index 8 (Dec 28, 2025 = index 0; +8 days = Jan 5)
+        var jan5 = new DateOnly(2026, 1, 5);
+        const int jan5GridIndex = 8;
+
+        var accountATotals = new List<DailyTotalValue>
+        {
+            new(jan5, MoneyValue.Create("USD", 300m), 1),
+        };
+        var accountBTotals = new List<DailyTotalValue>
+        {
+            new(jan5, MoneyValue.Create("USD", -80m), 1),
+        };
+
+        // Aggregate (null scope): 300 + (-80) = 220
+        var aggregateTotals = new List<DailyTotalValue>
+        {
+            new(jan5, MoneyValue.Create("USD", 220m), 1),
+        };
+
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), null, default))
+            .ReturnsAsync(aggregateTotals);
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), accountA, default))
+            .ReturnsAsync(accountATotals);
+        _transactionRepo
+            .Setup(r => r.GetDailyTotalsAsync(It.IsAny<int>(), It.IsAny<int>(), accountB, default))
+            .ReturnsAsync(accountBTotals);
+
+        _recurringRepo
+            .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountA, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+        _recurringRepo
+            .Setup(r => r.GetByAccountIdAsync(accountB, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecurringTransaction>());
+
+        var service = CreateService();
+
+        // Act
+        var gridAggregate = await service.GetCalendarGridAsync(2026, 1);
+        var gridA = await service.GetCalendarGridAsync(2026, 1, accountA);
+        var gridB = await service.GetCalendarGridAsync(2026, 1, accountB);
+
+        // Assert — I4: aggregate total must equal sum of individual account totals per day
+        var aggregateDayTotal = gridAggregate.Days[jan5GridIndex].ActualTotal.Amount;
+        var aDayTotal = gridA.Days[jan5GridIndex].ActualTotal.Amount;
+        var bDayTotal = gridB.Days[jan5GridIndex].ActualTotal.Amount;
+
+        Assert.Equal(220m, aggregateDayTotal);
+        Assert.Equal(300m, aDayTotal);
+        Assert.Equal(-80m, bDayTotal);
+        Assert.Equal(aggregateDayTotal, aDayTotal + bDayTotal);
+    }
+
+    [Fact]
     public async Task GetCalendarGridAsync_IncludesRecurringInEndOfDayBalance()
     {
         // Arrange - Starting balance of 1000, recurring transaction of -50 on Jan 15
@@ -570,6 +814,20 @@ public class CalendarGridServiceTests
         idProperty?.SetValue(recurring, id);
 
         return recurring;
+    }
+
+    private static RecurringTransfer CreateTestRecurringTransfer(
+        Guid sourceAccountId,
+        Guid destinationAccountId,
+        DateOnly startDate)
+    {
+        return RecurringTransfer.Create(
+            sourceAccountId,
+            destinationAccountId,
+            "Transfer",
+            MoneyValue.Create("USD", 300m),
+            RecurrencePatternValue.CreateMonthly(1, startDate.Day),
+            startDate);
     }
 
     private CalendarGridService CreateService()

@@ -148,6 +148,126 @@ public class TransactionRepositoryTests
     }
 
     [Fact]
+    public async Task GetDailyTotalsAsync_WithNullAccountId_AggregatesAcrossAccountsForSameDay()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var accountA = Account.Create("Aggregate A", AccountType.Checking);
+        accountA.AddTransaction(MoneyValue.Create("USD", 100m), new DateOnly(2026, 3, 10), "A day 10");
+
+        var accountB = Account.Create("Aggregate B", AccountType.Savings);
+        accountB.AddTransaction(MoneyValue.Create("USD", -40m), new DateOnly(2026, 3, 10), "B day 10");
+
+        await accountRepo.AddAsync(accountA);
+        await accountRepo.AddAsync(accountB);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
+        var dailyTotals = await transactionRepo.GetDailyTotalsAsync(2026, 3, null);
+
+        // Assert
+        var day10Total = dailyTotals.Single(d => d.Date == new DateOnly(2026, 3, 10));
+        Assert.Equal(60m, day10Total.Total.Amount);
+        Assert.Equal(2, day10Total.TransactionCount);
+    }
+
+    [Fact]
+    public async Task GetDailyTotalsAsync_WithPairedTransferAcrossAccounts_NetsZeroForAggregateScope()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var sourceAccount = Account.Create("Transfer Source", AccountType.Checking);
+        sourceAccount.AddTransaction(MoneyValue.Create("USD", -300m), new DateOnly(2026, 3, 11), "Transfer out");
+
+        var destinationAccount = Account.Create("Transfer Destination", AccountType.Savings);
+        destinationAccount.AddTransaction(MoneyValue.Create("USD", 300m), new DateOnly(2026, 3, 11), "Transfer in");
+
+        await accountRepo.AddAsync(sourceAccount);
+        await accountRepo.AddAsync(destinationAccount);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
+        var dailyTotals = await transactionRepo.GetDailyTotalsAsync(2026, 3, null);
+
+        // Assert
+        var transferDayTotal = dailyTotals.Single(d => d.Date == new DateOnly(2026, 3, 11));
+        Assert.Equal(0m, transferDayTotal.Total.Amount);
+        Assert.Equal(2, transferDayTotal.TransactionCount);
+    }
+
+    [Fact]
+    public async Task GetDailyTotalsAsync_AfterDelete_RecomputeIsStable()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(context, FakeUserContext.CreateDefault());
+
+        var account = Account.Create("Delete Stability", AccountType.Checking);
+        var toDelete = account.AddTransaction(
+            MoneyValue.Create("USD", 50m),
+            new DateOnly(2026, 3, 12),
+            "Delete me");
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        await transactionRepo.RemoveAsync(toDelete);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var verifyRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault());
+        var firstRead = await verifyRepo.GetDailyTotalsAsync(2026, 3, account.Id);
+        var secondRead = await verifyRepo.GetDailyTotalsAsync(2026, 3, account.Id);
+
+        // Assert
+        Assert.DoesNotContain(firstRead, d => d.Date == new DateOnly(2026, 3, 12));
+        Assert.Equal(firstRead.Count, secondRead.Count);
+        Assert.Equal(
+            firstRead.Select(d => (d.Date, d.Total.Amount, d.TransactionCount)).ToList(),
+            secondRead.Select(d => (d.Date, d.Total.Amount, d.TransactionCount)).ToList());
+    }
+
+    [Fact]
+    public async Task GetDailyTotalsAsync_AfterLateInsert_RecomputeIncludesInsertedEarlierDate()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(context, FakeUserContext.CreateDefault());
+
+        var account = Account.Create("Late Insert", AccountType.Checking);
+        account.AddTransaction(MoneyValue.Create("USD", 10m), new DateOnly(2026, 3, 20), "Original later day");
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        var firstRead = await transactionRepo.GetDailyTotalsAsync(2026, 3, account.Id);
+        Assert.Single(firstRead);
+        Assert.Equal(new DateOnly(2026, 3, 20), firstRead[0].Date);
+
+        account.AddTransaction(MoneyValue.Create("USD", 25m), new DateOnly(2026, 3, 10), "Late inserted earlier day");
+        await context.SaveChangesAsync();
+
+        // Act
+        var secondRead = await transactionRepo.GetDailyTotalsAsync(2026, 3, account.Id);
+
+        // Assert
+        Assert.Equal(2, secondRead.Count);
+        Assert.Contains(secondRead, d => d.Date == new DateOnly(2026, 3, 10) && d.Total.Amount == 25m);
+        Assert.Contains(secondRead, d => d.Date == new DateOnly(2026, 3, 20) && d.Total.Amount == 10m);
+    }
+
+    [Fact]
     public async Task GetDailyTotalsAsync_Filters_By_Month()
     {
         // Arrange

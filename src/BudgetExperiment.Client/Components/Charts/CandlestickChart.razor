@@ -1,0 +1,40 @@
+@* CandlestickChart.razor - Financial candlestick SVG chart *@
+
+<div class="candlestick-chart" role="img" aria-label="@AriaLabel">
+    @if (IsEmpty)
+    {
+        <div class="candlestick-chart-empty">No data to display</div>
+    }
+    else
+    {
+        <svg class="candlestick-svg"
+             aria-hidden="true"
+             viewBox="0 0 400 200">
+            <title>@AriaLabel</title>
+
+            <line class="candlestick-axis"
+                  x1="@F(MarginLeft)"
+                  y1="@F(ChartAreaBottom)"
+                  x2="@F(PlotRight)"
+                  y2="@F(ChartAreaBottom)"
+                  stroke="var(--chart-axis-color, #9CA3AF)"
+                  stroke-width="1" />
+
+            @foreach (var candle in ComputeCandleRenders())
+            {
+                <line class="candlestick-wick"
+                      x1="@F(candle.CenterX)"
+                      y1="@F(candle.WickTop)"
+                      x2="@F(candle.CenterX)"
+                      y2="@F(candle.WickBottom)"
+                      stroke-width="1" />
+
+                <rect class="@GetCandleBodyClass(candle)"
+                      x="@F(candle.BodyX)"
+                      y="@F(candle.BodyY)"
+                      width="@F(candle.BodyWidth)"
+                      height="@F(candle.BodyHeight)" />
+            }
+        </svg>
+    }
+</div>

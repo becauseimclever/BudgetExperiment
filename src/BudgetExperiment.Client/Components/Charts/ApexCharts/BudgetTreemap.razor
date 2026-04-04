@@ -1,0 +1,21 @@
+@* BudgetTreemap.razor - ApexCharts treemap chart for category spending visualization *@
+@namespace BudgetExperiment.Client.Components.Charts
+@using BudgetExperiment.Client.Components.Charts.Models
+
+@if (DataPoints == null || DataPoints.Count == 0)
+{
+    <div class="budget-treemap-empty">No data to display</div>
+}
+else
+{
+    <div class="budget-treemap" role="img" aria-label="@AriaLabel">
+        <ApexChart TItem="TreemapDataPoint" Options="@_options">
+            <ApexPointSeries TItem="TreemapDataPoint"
+                Items="@DataPoints"
+                Name="Spending"
+                SeriesType="SeriesType.Treemap"
+                XValue="@(dp => dp.Label)"
+                YValue="@(dp => (decimal?)dp.Value)" />
+        </ApexChart>
+    </div>
+}

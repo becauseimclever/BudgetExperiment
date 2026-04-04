@@ -134,6 +134,13 @@
                     </table>
                 </div>
             </div>
+            @if (stackedAreaSeries.Count > 0)
+            {
+                <div class="chart-section">
+                    <StackedAreaChart Series="@stackedAreaSeries"
+                                      AriaLabel="@($"Monthly spending composition over {selectedMonths} months")" />
+                </div>
+            }
         </div>
     }
 </div>
@@ -143,6 +150,7 @@
     private IReadOnlyList<BudgetCategoryDto>? categories;
     private List<BarChartGroup> chartGroups = new();
     private List<BarChartSeries> chartSeries = new();
+    private IReadOnlyList<StackedAreaSeries> stackedAreaSeries = [];
     private int selectedMonths = 6;
     private Guid? selectedCategoryId;
     private string? errorMessage;
@@ -227,6 +235,7 @@
         {
             chartGroups = new List<BarChartGroup>();
             chartSeries = new List<BarChartSeries>();
+            stackedAreaSeries = [];
             return;
         }
 
@@ -250,6 +259,8 @@
                 },
             })
             .ToList();
+
+        BuildStackedAreaData();
     }
 
     private async Task SetMonthCount(int months)
@@ -306,6 +317,28 @@
         };
 
         return $"{arrow} {Math.Abs(report.TrendPercentage):N1}%";
+    }
+
+    private void BuildStackedAreaData()
+    {
+        if (report == null)
+        {
+            stackedAreaSeries = [];
+            return;
+        }
+
+        var ordered = report.MonthlyData.OrderBy(m => m.Year).ThenBy(m => m.Month).ToList();
+        stackedAreaSeries =
+        [
+            new StackedAreaSeries(
+                "Income",
+                "var(--color-income, #10B981)",
+                ordered.Select(m => new StackedAreaDataPoint(new DateOnly(m.Year, m.Month, 1), m.TotalIncome.Amount)).ToList()),
+            new StackedAreaSeries(
+                "Spending",
+                "var(--color-expense, #EF4444)",
+                ordered.Select(m => new StackedAreaDataPoint(new DateOnly(m.Year, m.Month, 1), m.TotalSpending.Amount)).ToList()),
+        ];
     }
 
     private async Task RetryLoad()
