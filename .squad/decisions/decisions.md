@@ -760,3 +760,79 @@ When running against real PostgreSQL (`PERF_USE_REAL_DB=true`), re-run load test
 **Status:** Standing policy ✅
 
 All archived feature docs must be consolidated into 10-feature range files (e.g., `111-120-*.md`). No individual standalone feature files are allowed in `docs/archive/`. When archiving a feature, always merge it into the appropriate range file, creating the range file if it does not yet exist.
+
+---
+
+## Feature 127 Slices 3–7: Chart Component Implementation Decisions (2026-04-04)
+
+**Authors:** Alfred (patterns), Barbara (contracts), Lucius (implementations)
+**Status:** Implemented ✅
+
+### Decision: SVG Chart Component Accessibility Pattern (Slice 3)
+
+All new self-implemented SVG chart components use the following dual-role accessibility pattern:
+- **Outer div:** `<div class="X" role="img" aria-label="@AriaLabel">` — accessible image wrapper for screen readers
+- **Inner SVG:** `<svg class="X-svg" aria-hidden="true">` — decorative; screen readers skip it
+- `<title>@AriaLabel</title>` as first child of SVG for SVG-aware readers
+
+This differs from the existing BarChart pattern (which puts `role="img"` on the SVG itself). New components follow the outer-div pattern consistently.
+
+### Decision: SA1204 Static-Before-Instance Ordering (Slice 4 — reinforced Slices 5–7)
+
+Within `private` method/property groups in `.razor.cs` partial classes, **static members MUST appear before instance members**. This includes:
+- `private static` helper methods (`F()`, `MapX()`, `MapY()`, `GetCandleBodyClass()`, etc.) before `private` instance methods
+- `private static` computed properties before `private` instance computed properties
+
+Correct ordering template:
+```
+[Parameter] public props → private static constants → private static props → private instance props →
+protected methods (OnParametersSet) → private static methods → private instance methods → nested private types
+```
+Violation = build error (SA1204). This rule applies even when the static helper is conceptually a "helper for" an instance method.
+
+### Decision: SA1407 Mixed Arithmetic Parentheses (Slice 4)
+
+Mixed arithmetic operators (`+`, `-`, `*`, `/`) require explicit grouping parentheses on each side of every precedence boundary. Even when precedence is unambiguous: `a + b * c` must be written as `a + (b * c)`. Pattern to follow: `return ChartAreaBottom - (ratio * ChartHeight);`.
+
+### Decision: ApexCharts Components — @namespace Directive Required (Slice 6)
+
+Razor files placed in a subdirectory (`ApexCharts/`) receive a namespace suffix from the Razor compiler (`...Charts.ApexCharts`). The code-behind declares the parent namespace (`...Charts`). Mismatch causes CS0115. **Fix:** Add `@namespace BudgetExperiment.Client.Components.Charts` to the `.razor` file. This is required for any component in any subdirectory.
+
+### Decision: ApexCharts Components — IServiceProvider for Optional Services (Slice 6)
+
+In .NET 10 + bUnit, `[Inject] private IService? Prop { get; set; }` (nullable) still throws `InvalidOperationException` when the service is not registered in the test context. **Fix:** Inject `IServiceProvider` (always available) and resolve optionally:
+
+```csharp
+[Inject]
+private IServiceProvider Services { get; set; } = default!;
+
+// In OnParametersSet:
+var theme = Services.GetService<IChartThemeService>()?.GetApexChartsThemeMode() ?? "light";
+```
+
+This is the established pattern for all ApexCharts components where `IChartThemeService` / `IChartColorProvider` may not be registered in test DI contexts.
+
+### Decision: ApexCharts bUnit Testing Pattern (Slice 6)
+
+ApexCharts renders via JS interop; SVG/canvas content is invisible to bUnit. Tests for ApexCharts-backed components must:
+1. Set `JSInterop.Mode = JSRuntimeMode.Loose` in constructor — suppresses unhandled JS calls
+2. Assert outer wrapper div CSS class and `role`/`aria-label` attributes
+3. Assert empty-state div presence/absence via `FindAll(".xxx-empty").Count`
+4. Do **not** assert SVG, canvas, or any JS-rendered content
+
+### Summary of New Chart Components Delivered (Slices 3–7)
+
+| Component | Tier | Slice | Tests |
+|-----------|------|-------|-------|
+| HeatmapChart | 1 (SVG) | 3 | 8 |
+| ScatterChart | 1 (SVG) | 3 | 8 (+2 Slice 7) |
+| StackedAreaChart | 1 (SVG) | 4 | 8 |
+| RadialBarChart | 1 (SVG) | 4 | 8 |
+| CandlestickChart | 1 (SVG) | 4 | 8 |
+| WaterfallChart | 2 (SVG) | 5 | 8 |
+| BoxPlotChart | 2 (SVG) | 5 | 8 |
+| BudgetTreemap | 3 (ApexCharts) | 6 | 6 |
+| BudgetRadar | 3 (ApexCharts) | 6 | 6 |
+| ExportChartButton | Utility | 7 | 5 |
+
+**Total tests added:** 75 (slices 3–7). Suite total: **2804 passed**.

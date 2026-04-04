@@ -48,6 +48,49 @@ Tests under `tests/` mirror the src structure.
 **Cross-agent facts (same session):**
 - Alfred created the 7 model types + `IChartDataService` interface before Barbara wrote the RED tests.
 - Barbara wrote 20 xUnit RED tests establishing behavioral contracts for all 4 methods.
+
+### 2026-04-04 — Feature 127 Slice 5: WaterfallChart and BoxPlotChart Blazor SVG Components (GREEN)
+
+**Task:** Implement `WaterfallChart` and `BoxPlotChart` Razor components to pass 16 RED bUnit tests written by Barbara.
+
+**Delivered:**
+- `src/BudgetExperiment.Client/Components/Charts/WaterfallChart.razor` + `.razor.cs` + `.razor.css`
+- `src/BudgetExperiment.Client/Components/Charts/BoxPlotChart.razor` + `.razor.cs` + `.razor.css`
+- Fixed xUnit2013 lint error in `BoxPlotChartTests.cs`: `Assert.Equal(0, outliers.Count)` → `Assert.Empty(outliers)`.
+
+**SVG geometry choices:**
+- Both use `OnParametersSet()` to precompute render info into private `_fields` — avoids double computation when both bars/connectors (waterfall) and box/whsker/outlier collections (boxplot) are iterated in the razor.
+- WaterfallChart: Y-range includes 0 explicitly. Non-total bars: start = `RunningTotal - Amount`, end = `RunningTotal`. Total bars: start = 0, end = RunningTotal. N-1 horizontal connector lines at each bar's `RunningTotal` Y level.
+- BoxPlotChart: 2 whisker lines per distribution (lower: Q1→Min, upper: Q3→Max). Outlier circles rendered for every value in `d.Outliers`. `RenderSvgText` via `MarkupString` for labels.
+
+**StyleCop member ordering (SA1202 + SA1204):**
+- Methods must be ordered: `protected` → `private static` → `private instance`.
+- SA1204: Within the private method group, static methods BEFORE non-static.
+- SA1202: `protected override OnParametersSet()` MUST come before all private methods, even private static helpers like `F()`.
+
+**Test results:** 2785 passed, 0 failed, 1 pre-existing skip. All 16 new tests GREEN.
+
+---
+
+
+
+**Task:** Implement `HeatmapChart` and `ScatterChart` Razor components to pass 16 RED bUnit tests written by Barbara.
+
+**Delivered:**
+- `src/BudgetExperiment.Client/Components/Charts/HeatmapChart.razor` + `.razor.cs` + `.razor.css`
+- `src/BudgetExperiment.Client/Components/Charts/ScatterChart.razor` + `.razor.cs` + `.razor.css`
+- Fixed SA1512 violations in `HeatmapChartTests.cs` and `ScatterChartTests.cs` (Barbara's NOTE comments followed by blank line before usings).
+
+**SVG geometry choices:**
+- HeatmapChart: jagged array iteration — outer `Data[]` rows = days, inner arrays = week cells. `IsEmpty` means null Data OR all rows have Length=0 (not zero-amount). CellSize=16, CellGap=2, LabelAreaWidth=32. ViewBox width computed from max WeekIndex+1.
+- ScatterChart: fixed ViewBox 400×200. X maps DateOnly ticks linearly; Y maps Amount with SVG Y-inversion (`ChartAreaBottom - ratio * ChartHeight`). Single-point case uses `ratio=0.5` to center.
+- Both use `aria-hidden="true"` on the SVG with `role="img" aria-label="..."` on the outer div — different from BarChart which puts `role="img"` on the SVG itself.
+
+**Test-to-component mapping notes:**
+- `heatmap-cell-empty` class only applies when `TotalAmount == 0` regardless of non-zero `TransactionCount`. bUnit `ClassName` check works because the full class string contains both "heatmap-cell" and "heatmap-cell-empty".
+- Outlier circles: `scatter-point scatter-point-outlier` (both classes) — `FindAll("circle.scatter-point")` matches both, then `ClassName.Contains("scatter-point-outlier")` differentiates.
+- `RenderSvgText` via MarkupString used for `heatmap-row-label` elements (same pattern as BarChart axis labels) — avoids Blazor `<text>` element discrimination issues.
+- Barbara's test files have the same SA1512 pattern issue (blank line after NOTE comment block) — fix proactively when implementing components for her tests.
 - Alfred separately completed Slice 1 (ApexCharts + `ChartThemeService` + `ChartColorProvider` + 11 tests). Final Client suite: 2729.
 
 ---
@@ -70,6 +113,28 @@ Tests under `tests/` mirror the src structure.
 
 **Decision:** Thresholds already correct (maxLatencyRegressionPercent=15%). No change needed to ThresholdConfig defaults.
 
+### 2026-04-04 — Feature 127 Slice 4: StackedAreaChart, RadialBarChart, CandlestickChart (GREEN)
+
+**Task:** Implement 3 new Blazor SVG chart components to pass 24 RED bUnit tests written by Barbara.
+
+**Delivered:**
+- `src/.../Charts/StackedAreaChart.razor` + `.razor.cs` + `.razor.css`
+- `src/.../Charts/RadialBarChart.razor` + `.razor.cs` + `.razor.css`
+- `src/.../Charts/CandlestickChart.razor` + `.razor.cs` + `.razor.css`
+
+**Key implementation choices:**
+- StackedAreaChart: cumulative stacking via `baselines[]` clone + `tops[]` per-series pass. `AllDates` gathered from union of all series points (Distinct + OrderBy). Single-point edge case handled by centering X at `MarginLeft + ChartWidth/2` — degenerate vertical path is valid SVG. `ComputeStackedPaths()` returns list of private `StackedPathInfo` records with Color + PathData.
+- RadialBarChart: ring `i` has radius = `Size/2 - 10 - i*22`. `DashOffset = max(0, circ * (1 - pct/100))`. Labels rendered as SVG `<text>` via `RenderSvgText` MarkupString — bUnit FindAll(".radial-bar-label") matches SVG text elements. `stroke-dashoffset` attribute output via F() is always a plain double string (parseable by test assertions).
+- CandlestickChart: static helper `GetCandleBodyClass()` returns combined class string (`"candlestick-body candlestick-bullish"` or `"...-bearish"`) — avoids Razor string-literal-in-attribute parsing complexity. Body height clamped to minimum 1px for doji candles.
+
+**StyleCop SA1204 lesson (IMPORTANT):** Static methods must appear BEFORE instance methods in the class body, even when they are private helpers called by instance methods. Ordering: `[Parameter]` public props → private static constants/props → private instance props → private static methods (including `F()`, `MapX()`, `MapY()`) → private instance methods → nested private types. Build will fail otherwise.
+
+**SA1407 lesson:** Mixed arithmetic `a + b * c` must use explicit grouping: `a + (b * c)`. Even when precedence is unambiguous, StyleCop requires parentheses around each precedence group in mixed-operator expressions. Pattern from ScatterChart: `return ChartAreaBottom - (ratio * ChartHeight);` — match this pattern exactly.
+
+**Test results:** 2769 passed, 0 failed, 1 pre-existing skip. All 24 new tests GREEN.
+
+---
+
 ## Core Context
 
 ### Backend Code Quality & Architecture (2026-03-22)
@@ -88,219 +153,38 @@ Tests under `tests/` mirror the src structure.
 
 **Performance CI Actions:** Fixed broken version references (checkout@v6, upload-artifact@v7, setup-dotnet@v5, cache@v5 → all @v4). Entire performance CI pipeline couldn't run.
 
-**Baseline Committed:** Used local stress_transactions.csv (1335 requests, p99=7.3ms) per Decision 5 (smoke tests are sanity checks, not baselines). CI Smoke artifact only contained in-memory data unsuitable for baselines. Updated baseline.json with stress data; must replace with scheduled PostgreSQL load test run eventually.
+**Baseline Committed:** Used local stress_transactions.csv (1335 requests, p99=7.3ms) per Decision 5 (smoke tests are sanity checks, not baselines). CI Smoke artifact only contained in-memory data unsuitable for baselines. Updated baseline.json with stress data.
 
-**PostgreSQL 18 Upgrade:** Migrated docker-compose.demo.yml and docs from postgres:16 to postgres:18 using Docker Hardened Image (dhi.io/postgres:18). Npgsql 10.0.0 supports 13–18 (no driver changes). EF migrations fully compatible. Migration path: new auto-uses 18, existing demo `down -v`, production pg_dumpall/restore.
+**PostgreSQL 18 Upgrade:** Migrated docker-compose.demo.yml and docs from postgres:16 to postgres:18 using Docker Hardened Image (dhi.io/postgres:18). Npgsql 10.0.0 supports 13–18 (no driver changes). EF migrations fully compatible.
 
-### Recent Work
+### Code Quality Fixes (2026-03-22)
 
-### 2026-03-22: Three Quick-Win Code Quality Fixes Applied
+- **ExceptionHandlingMiddleware:** Replaced string matching with `switch (domainEx.ExceptionType)` enum routing. Created `DomainExceptionType` enum (Validation=0, NotFound=1). Updated all 17 "not found" throw sites.
+- **DI registrations clarified:** All three "backward compat" concrete registrations (`TransactionService`, `RecurringTransactionService`, `RecurringTransferService`) are legitimate — controllers inject concrete types. Comments updated to name actual consumers.
+- **DateTime.Now → DateTime.UtcNow** in Reconciliation.razor (3 occurrences).
+- **Interface expansion:** Expanded 2 service interfaces (+8 methods total). Switched 3 controllers to interface injection to satisfy DIP. Removed `this._` usages (1,474 occurrences).
 
-**Fix 1: ExceptionHandlingMiddleware — enum-based routing (done)**
+### Test Gaps Filled (2026-03-23)
 
-- Created `DomainExceptionType` enum (`Validation = 0`, `NotFound = 1`) in `BudgetExperiment.Domain.Common`.
-- Updated `DomainException` to accept an optional `DomainExceptionType` parameter (defaults to `Validation` so all existing callers without a type remain valid).
-- Updated `ExceptionHandlingMiddleware` to `switch (domainEx.ExceptionType)` — no more string matching.
-- Updated all 17 "not found" throw sites across Domain, Application (Recurring, Accounts, Import, Categorization) to pass `DomainExceptionType.NotFound`.
-- Updated existing middleware test to use typed constructor.
+- `RecurringTransactionInstanceServiceTests` — 20 new tests (GetInstancesAsync, ModifyInstanceAsync, SkipInstanceAsync, GetProjectedInstancesAsync).
+- `UserSettingsServiceTests` — 17 new tests (GetCurrentUserProfile, GetCurrentUserSettingsAsync, UpdateCurrentUserSettingsAsync, CompleteOnboardingAsync, GetCurrentScope, SetCurrentScope).
+- Result: Application.Tests: 982 → 1,019 (+37). Full suite: 5,412 → 5,449.
 
-**Fix 2: Redundant DI registrations — comments corrected (done)**
+### Feature 127: Chart Component StyleCop Rules (2026-04-04)
 
-- Investigated all three "backward compat" concrete registrations: `TransactionService`, `RecurringTransactionService`, `RecurringTransferService`.
-- Found concrete consumers in the API controllers (`TransactionsController`, `RecurringTransactionsController`, `RecurringTransfersController` each inject the concrete type directly).
-- Updated comments in `DependencyInjection.cs` to name the actual consumer rather than vague "backward compatibility".
-- No registrations removed — all three are legitimately needed.
+- **SA1204:** All `private static` methods/properties MUST appear before `private` instance members. Applies to `.razor.cs` partial classes. Violation = build error.
+- **SA1407:** Mixed arithmetic requires explicit parentheses: `a + (b * c)` not `a + b * c`.
+- **SA1202:** `protected override OnParametersSet()` must come before all private methods.
+- **SA1201 (ApexCharts):** Fields → Properties (public `[Parameter]` before private `[Inject]`) → Methods → Nested types (private `record` AFTER methods).
+- **`@namespace` directive:** Required for `.razor` files in subdirectories (e.g., `ApexCharts/`) to match the code-behind namespace.
+- **`[Inject]` nullable workaround:** Inject `IServiceProvider` and use `GetService<T>()` — nullable `[Inject]` still throws in .NET 10 + bUnit when service is unregistered.
+- **`@if (Visible)` for visibility-controlled components:** `cut.Markup.Trim()` returns empty when `Visible=false` — cleaner than CSS display:none.
 
-**Fix 3: DateTime.Now → DateTime.UtcNow in Reconciliation.razor (done)**
+---
 
-- Replaced `DateTime.Now.Month/.Year` (3 occurrences) with `DateTime.UtcNow` for field initializers and year-range loop.
+## Recent Work
 
-**Also fixed (pre-existing build error):**
-- `PostgreSqlFixture.cs`: Updated `new PostgreSqlBuilder()` → `new PostgreSqlBuilder("postgres:16")` (obsolete parameterless constructor).
-
-**Result:** Build clean (0 warnings, 0 errors), 5415 tests pass, 1 pre-existing skip.
-
-### Cross-Agent Note: DI Validation & Architectural Clarity (2026-03-22T10-04-29)
-
-**Finding:** All three concrete service registrations (`TransactionService`, `RecurringTransactionService`, `RecurringTransferService`) are load-bearing — controllers directly inject the concrete types. Comments clarified to name actual consumers.
-
-**Relevance to Feature Doc 124:** When Alfred assesses DIP for `TransactionsController`, `RecurringTransactionsController`, and other controller abstractions, these findings provide the DI implementation context. Extracting interfaces requires changes to both service registration and controller injection sites. Assessment should use pragmatic directive: interface only if realistic substitution scenario exists.
-
-
-## Learnings
-
-### Nesting Flattening Session (2025)
-- **Guard clauses are the primary tool**: Inverting conditions to return/throw early eliminates one nesting level per guard without adding abstraction overhead.
-- **LINQ FirstOrDefault > foreach+if**: 
-ules.FirstOrDefault(r => r.Matches(description)) is cleaner and more idiomatic than a foreach with an inner if returning early.
-- **Extract tiny named methods**: IsRealizedAsTransaction, TryBuildLocationFromMatch, ParseEntityId — each does one thing. The calling code reads like prose.
-- **StyleCop ordering rules matter at refactor time**: SA1204 (static before non-static) and SA1202 (internal before private) must be respected when inserting new methods. Place static helpers in the right access group up front.
-- **Python for disk file manipulation**: The iew/dit tool in the Copilot CLI operates on a virtual layer — actual disk file writes require PowerShell or Python with open(path, 'w'). Use Python when string replacements involve special characters (em-dash, dollar signs in C# interpolation, backticks).
-- **CRLF awareness**: C# files in this repo use CRLF. Always normalize with .replace('\r\n', '\n') before string matching in Python scripts.
-- **Nested ternaries count as nesting depth**: Guid.TryParse(...) ? eid : null embedded inside another ternary hits 3 levels — extract to ParseEntityId(opt).
-
-### Style Enforcement Session — this._ Removal (2026)
-- **SA1101 is disabled in .editorconfig (`SA1101.severity = none`)**: This project chose `_camelCase` fields over the `this.` qualifier. Any `this._field` usage is inconsistency, not compliance.
-- **dotnet format --severity warn is dangerous**: It applies not just code-style fixes but also whitespace reformatting (expanding single-line `new { }` to multi-line), changes concrete type annotations to interfaces, and can cascade into SA1413/SA1500 violations. Use `--diagnostics IDE0003` or avoid it entirely for style-only tasks.
-- **dotnet format --verify-no-changes has pre-existing whitespace conflicts**: The codebase has single-line `new { id = x }` anonymous objects that `dotnet format` wants to expand. These cannot be applied without triggering SA1413 (trailing commas required). This is a known tension; don't chase this rabbit unless the whole SA1413 + SA1413 fix cycle is intended.
-- **Concurrent agent awareness**: Alfred (frontend/architecture agent) was working on controller interface changes (doc 124) simultaneously. When stashing/popping, check for other agents' unstaged changes in the working tree before making assumptions about baseline state.
-- **Interfaces must be complete before switching controllers**: When changing `RecurringTransfersController` from `RecurringTransferService` to `IRecurringTransferService`, ensure the interface has ALL methods the controller uses. Missing methods cause CS1061. Always cross-check concrete class public API against the interface before the switch.
-- **PowerShell -replace with -NoNewline on CRLF files**: Using `Set-Content -NoNewline` on CRLF files preserves the content correctly. The `this\._` regex in PowerShell does not escape the dot specially (it's already literal in a character sequence context). The replacement `this\._` → `_` is safe for this codebase.
-
-### 2026-03-22T18-23-42Z — Session Close: Batch 2+3 Complete
-
-**Cross-Team Summary:**
-
-- **From Barbara:** Testcontainers migration complete; real concurrency bug found and fixed in `IUnitOfWork.MarkAsModified`. API tests now run against PostgreSQL. 55 new high-value tests added. Vanity enum tests cleaned up (12 deleted).
-- **From Alfred:** DIP verdict complete — all 3 controllers VERDICT A. Interfaces already existed but were incomplete. These expansions were handled by Lucius.
-- **From Coordinator:** 5,409 tests passing, 0 build warnings. All assertion bugs fixed. PR ready for merge.
-
-### 2026-03-22: Feature 111 performance optimizations
-
-- Added AsNoTracking/AsNoTrackingWithIdentityResolution to read-only repository queries while preserving tracking for update paths.
-- Parallelized CalendarGridService, TransactionListService, and DayDetailService reads via scoped parallel query helper with fallback for test constructors.
-- Bounded account transaction eager loading to a 90-day lookback and added range/name lookup repository extensions for targeted account name retrieval.
-- Registered DbContextFactory for future parallel query support.
-
-### 2026-03-22 — Feature 111: Complete Implementation (Lucius)
-
-**Feature 111: Pragmatic Performance Optimizations** fully implemented across three areas:
-
-#### Area 1: AsNoTracking Propagation
-- Added AsNoTracking/AsNoTrackingWithIdentityResolution to all read-only repository queries
-- Preserved change tracking on update paths (critical for concurrency)
-- No regression in entity refresh behavior
-
-#### Area 2: Parallelized Hot Paths
-- CalendarGridService: 9+ sequential queries → parallelized via scoped helper
-- TransactionListService: Similar parallelization for transaction fetching
-- DayDetailService: Orchestration-level parallelization
-- Registered `IDbContextFactory<BudgetDbContext>` for future parallel context usage
-- Fallback behavior for test constructors when scope factory unavailable
-
-#### Area 3: Bounded Eager Loading
-- AccountRepository: Reduced eager loading to 90-day lookback window (production Pis with large histories need this bound)
-- Added non-breaking extension interfaces: `IAccountTransactionRangeRepository`, `IAccountNameLookupRepository`
-- DayDetailService now uses targeted account-name lookup instead of loading full history
-
-**Architectural Notes:**
-- `IDbContextFactory` could not be injected directly into Application services without layering conflicts; scoped query helpers + fallback providers preserve scope filtering and test constructors
-- Extension interfaces avoid breaking changes to existing `IAccountRepository` implementers and tests
-- No areas skipped
-
-**Result:** Build green (-warnaserror enabled). Feature 111 documentation status updated to Done.
-
-### 2026-03-22 — CI Fix: performance.yml Action Versions (Lucius)
-
-**Task:** Fix non-existent GitHub Actions version references in `.github/workflows/performance.yml`.
-
-**Root Cause:** Four action references used versions that do not exist on GitHub Actions:
-- `actions/checkout@v6` (latest major: v4)
-- `actions/upload-artifact@v7` (2 occurrences; latest major: v4)
-- `actions/setup-dotnet@v5` (latest major: v4)
-- `actions/cache@v5` (latest major: v4)
-
-The task only flagged checkout and upload-artifact, but setup-dotnet@v5 and cache@v5 were caught during the audit and corrected in the same pass.
-
-**Fix Applied:** All five occurrences updated to v4. No workflow logic, job structure, or environment variables changed.
-
-**Validation:** Python script confirmed all `uses:` references are now `@v4` (except `marocchino/sticky-pull-request-comment@v3` which is correct). YAML structure verified by visual review — no indentation errors.
-
-**Commit:** `ci: fix GitHub Actions version references in performance.yml` on branch `feature/code-quality-review`.
-
-**Impact:** Performance workflow has never successfully executed on GitHub Actions due to this bug. With these corrections, scheduled, PR, and manual workflow_dispatch runs should now reach the test execution step.
-
-### 2026-03-23 — Performance Baseline Committed (Lucius)
-
-**Task:** Generate and commit `tests/BudgetExperiment.Performance.Tests/baselines/baseline.json`.
-
-**Source decision:** Used local `stress_transactions.csv` (NOT the CI Smoke artifact). The CI run #24 artifact (`performance-reports-Smoke-24`) only contained `smoke_calendar.csv` — a smoke/in-memory run with 10 requests over 10 seconds. Per Decision 5, smoke runs are "sanity checks, not baseline sources"; baselines must use real PostgreSQL data.
-
-**Baseline content:**
-- Scenario: `get_transactions` (1 scenario)
-- p50=3.97ms, p95=5.74ms, p99=7.3ms, RPS=22.25, errors=0
-- Source: local committed `stress_transactions.csv` (1335 requests, 60s run)
-- Commit SHA pinned: `995dd0fedbe3a5752b9586e80fb41f17decdef0c`
-
-**Tool used:** `BaselineComparer --generate` mode. Built fine without `--no-build`.
-
-**Commit:** `perf: establish performance baseline` pushed to main (267d73d).
-
-**Key learning:** When CI artifacts exist from Smoke profile runs, always check the artifact content and profile type before using — in-memory smoke data is not valid for performance baselines per the team's architectural decision.
-
-
-
-### 2026-03-23 — Feature 118: PostgreSQL 18 Upgrade (Lucius)
-
-**Task:** Upgrade PostgreSQL from version 16 to 18 across Docker compose, documentation, and hardened image policy.
-
-**Files Changed:**
-- `docker-compose.demo.yml`: Updated image from `dhi.io/postgres:16` → `dhi.io/postgres:18`, updated comments
-- `DEPLOY-QUICKSTART.md`: Updated bundled database version reference
-- `.github/copilot-instructions.md`: Updated hardened image policy section
-- `docs/ci-cd-deployment.md`: Updated container security PostgreSQL reference
-- `docs/118-postgresql-18-upgrade.md`: Marked status Done, checked all acceptance criteria
-
-**Validation:** Npgsql 10.0.0 supports PostgreSQL 13–18; no driver changes needed. Migration guidance documented for existing deployments (pg_dumpall/restore for production, down -v for demo).
-
-**Commits:**
-1. `feat(docker): upgrade PostgreSQL to version 18` (aea4122)
-2. `docs: update PostgreSQL references from 16 to 18` (556d126)
-3. `docs: archive feature 118 - PostgreSQL 18 upgrade complete` (0632ebb)
-
-**Archive:** Moved `docs/118-postgresql-18-upgrade.md` → `docs/archive/111-120-postgresql-18-upgrade.md` per existing archive naming pattern.
-
-**Key Pattern:** Docker Hardened Images (dhi.io) provide continuously patched, SLSA-provenance PostgreSQL images. Always check hardened catalog first; use when available.
-
-### 2026-03-23 — Test Coverage Gaps Filled + PostgreSQL 18 Upgrade
-
-**Task 1: Missing Application Service Tests (20 + 17 tests)**
-
-**RecurringTransactionInstanceServiceTests.cs — 20 tests**
-- `GetInstancesAsync`: not found (null), occurrences in range, empty query window, skipped/modified exception handling
-- `ModifyInstanceAsync`: not found (null), new exception creation, existing exception update, concurrency token + MarkAsModified, unit of work integration
-- `SkipInstanceAsync`: not found (null), skip exception creation, old exception cleanup, SaveChanges call verification
-- `GetProjectedInstancesAsync`: account filtering, GetActiveAsync fallback, empty results, skipped instance filtering, effective date ordering
-
-**UserSettingsServiceTests.cs — 17 tests**
-- `GetCurrentUserProfile`: context field mapping, null GUID handling
-- `GetCurrentUserSettingsAsync`: happy path, unauthenticated exception
-- `UpdateCurrentUserSettingsAsync`: scope/autoRealize/lookbackDays/currency updates, validation, auth checks
-- `CompleteOnboardingAsync`: flag setting, auth checks
-- `GetCurrentScope` / `SetCurrentScope`: valid/null/whitespace handling, validation
-
-**Result:** Application.Tests: 982 → 1,019 (+37); Full suite: 5,412 → 5,449
-
-**Learnings:**
-- `GetProjectedInstancesAsync` calls `GetInstancesAsync` internally which calls `GetByIdAsync` per recurring — test mocks must setup GetByIdAsync for all projected test scenarios, not just GetActiveAsync
-- `IUserSettingsRepository.SaveAsync` signature: `Task` (no return value) — mock with `.Returns(Task.CompletedTask)`
-- `UserSettings.CreateDefault(userId)` is the correct factory for test instances; works for post-update behavior assertions
-- SA1512 comment rule fires on `// --- Section ---` dividers followed by blank lines — remove blank line or use XML docs
-
-**Task 2: PostgreSQL 18 Upgrade**
-- Updated `docker-compose.demo.yml`: `dhi.io/postgres:16` → `dhi.io/postgres:18`
-- Updated documentation references (DEPLOY-QUICKSTART.md, docs/ci-cd-deployment.md)
-- Verified Npgsql 10.0.0 supports 13–18; no driver changes
-- EF Core migrations fully compatible
-- Migration path: new deployments automatic, existing demo `down -v` needed, production uses pg_dumpall/restore
-
-**Commit Messages:**
-- `feat(docker): upgrade PostgreSQL to version 18`
-- `docs: update PostgreSQL references from 16 to 18`
-- `test: fill coverage gaps for RecurringTransactionInstanceService and UserSettingsService`
-
-### 2026-04-04 — Feature 127 Slice 2: ChartDataService (Lucius)
-
-**Task:** Implement ChartDataService to make 20 RED-phase tests pass (GREEN phase).
-
-**Files Created:**
-- src/BudgetExperiment.Client/Services/ChartDataService.cs — sealed class implementing IChartDataService
-- DI registration added to src/BudgetExperiment.Client/Program.cs
-
-**Files Fixed:**
-- 	ests/BudgetExperiment.Client.Tests/Services/ChartDataServiceTests.cs — removed stale TODO comment block, fixed SA1512/SA1515 violations
-
-**Result:** 20/20 ChartDataServiceTests pass. Full Client.Tests: 2718 passed, 0 failed, 1 pre-existing skip.
+*(2026-03-22/23 verbose entries summarized in Core Context above.)*
 
 ## Learnings
 
@@ -317,3 +201,57 @@ onOutliers.Min().
 - **monthsBack cutoff:** Use max(transaction.Date) from the dataset, not DateTime.UtcNow, so test data stays deterministic regardless of wall-clock time.
 - **LINQ GroupBy preserves source order within groups:** After OrderBy(b => b.Date), calling GroupBy(...) then g.First() / g.Last() correctly returns the chronologically first/last balance per month without a secondary sort inside the group.
 - **SA1512 reminder:** Section separator comment lines (// ─────) followed by a blank line violate SA1512. The blank line after the last separator must be removed; the next statement must immediately follow the comment block.
+
+---
+
+## Session: 2026-04-04 — Feature 127 Slice 6: BudgetTreemap and BudgetRadar (ApexCharts Tier 3)
+
+**Requested by:** Fortinbra  
+**Status:** Complete
+
+### Work Done
+- Created `src/BudgetExperiment.Client/Components/Charts/ApexCharts/` subdirectory (first ApexCharts-backed components in the project).
+- Implemented `BudgetTreemap` (`BudgetTreemap.razor` + `BudgetTreemap.razor.cs`) — treemap chart backed by Blazor-ApexCharts.
+- Implemented `BudgetRadar` (`BudgetRadar.razor` + `BudgetRadar.razor.cs`) — radar chart backed by Blazor-ApexCharts, with per-series `ApexPointSeries` rendered from a `Dictionary<string, List<RadarDataPoint>>`.
+- Both components in namespace `BudgetExperiment.Client.Components.Charts` (physical path in `ApexCharts/` subdirectory, requiring `@namespace` directive in `.razor` files).
+
+### Build/Test Outcomes
+- 0 errors after SA1201 member ordering fixes and namespace directive.
+- 2797 passed, 0 failed (12 new tests green; ≥ 2797 total confirmed).
+
+### Key Decisions / Lessons Learned
+- **`@namespace` directive is required** when `.razor` files live in a subdirectory but the component must be in the parent namespace. Without it, Razor generates the class in a derived namespace (`.ApexCharts`) causing CS0115 on `override OnParametersSet()`.
+- **`[Inject]` with nullable type does NOT suppress the DI exception in Blazor/.NET 10**: Even `[Inject] private IFoo? Foo { get; set; }` throws `InvalidOperationException` if `IFoo` is not registered. Fix: inject `IServiceProvider` (always available) and call `GetService<T>()` (returns null when not registered).
+- **SA1201 ordering for ApexCharts components**: Fields → Properties (public `[Parameter]` before private `[Inject]`) → Methods → Nested types (private `record` must come AFTER the method, not before).
+
+---
+
+## Session: 2026-04-04 — Feature 127 Slice 7: Visual Polish & Interactivity (GREEN)
+
+**Requested by:** Fortinbra
+**Status:** Complete
+
+### Work Done
+
+**Part 1: `ExportChartButton` (new component)**
+- `src/.../Charts/ExportChartButton.razor` — `@if (Visible)` guard around `<button type="button" class="export-chart-btn" aria-label="Export chart">Export</button>`
+- `src/.../Charts/ExportChartButton.razor.cs` — Params: `ChartTitle string` (default `"chart"`), `Visible bool` (default `true`). `HandleExportAsync` returns `Task.CompletedTask` (JS screenshot interop deferred).
+- No CSS file — styles inherited from global chart stylesheet.
+
+**Part 2: `AnimationsEnabled` parameter on `ScatterChart`**
+- `ScatterChart.razor.cs` — Added `AnimationsEnabled bool` param (default `true`) + `ContainerClass` private computed property.
+- `ScatterChart.razor` — Outer div: `class="@ContainerClass"` (was hardcoded `"scatter-chart"`).
+- `ScatterChart.razor.css` — Added `.chart-no-animation *` and `@media (prefers-reduced-motion: reduce)` rules.
+
+**Test file fix:**
+- `ScatterChartTests.cs` — Removed blank line between `// NOTE:` comment and `[Fact]` attribute (SA1512).
+
+### Build/Test Outcomes
+- 0 errors, 0 warnings.
+- **2804 passed, 0 failed, 1 pre-existing skip.**
+- All 7 new tests (5 ExportChartButtonTests + 2 ScatterChart animation) GREEN.
+
+### Key Decisions / Lessons Learned
+- **SA1204 applies to properties too**: `ContainerClass` is a private instance computed property; it must appear AFTER all `private static` properties in the class body. Block order: `[Parameter]` public props → `private static` props → `private` instance computed props → methods.
+- **Visibility-controlled components**: `@if (Visible) { ... }` is cleaner than a CSS `display:none` approach for components with `Visible` bool params. When `Visible=false`, `cut.Markup.Trim()` returns empty string in bUnit assertions.
+- **Feature 127 scope**: All slices 1–7 complete. Final test count: **2804 passed**.
