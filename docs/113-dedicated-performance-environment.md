@@ -1,5 +1,5 @@
 # Feature 113: Dedicated Performance Test Environment (Pi 5)
-> **Status:** Planning
+> **Status:** On Hold — external dependency
 
 ## Overview
 

@@ -1,5 +1,5 @@
 # Feature 126: Bank Connectivity & Automatic Transaction Sync
-> **Status:** Planning  
+> **Status:** On Hold — external dependency
 > **Priority:** Medium  
 > **Effort:** X-Large (new external integration, OAuth flow, background sync, new domain aggregates)
 
