@@ -1,5 +1,5 @@
 # Feature 120: Plugin System
-> **Status:** Planning
+> **Status:** On Hold — pivoting, indefinitely deferred
 
 ## Overview
 
