@@ -227,3 +227,64 @@ Tests under `tests/` mirror the src structure.
 - `PluginsTestWebApplicationFactory` must register `AutoAuthenticatingTestHandler` under `"TestAuto"` scheme — otherwise all requests return 401. Pattern matches `CustomWebApplicationFactory`.
 - `AddInMemoryCollection` requires `using Microsoft.Extensions.Configuration;` — not in implicit usings for test project.
 
+
+### 2026-04-05 — Feature 129: Feature Flag Implementation Research (GREEN)
+
+**Requested by:** Fortinbra (via Alfred's architecture task)
+
+**Research Scope:**
+- Survey existing config infrastructure (Program.cs, appsettings.json, *Options.cs patterns)
+- Evaluate .NET Options pattern (IOptions<T>, IOptionsMonitor<T>, IOptionsSnapshot<T>)
+- Evaluate Microsoft.FeatureManagement NuGet package vs hand-rolled approach
+- Recommend Blazor WASM client delivery pattern (bake into HTML vs /api/v1/features endpoint)
+- Produce concrete implementation code sketches
+
+**Deliverable:** docs/129b-feature-flag-implementation.md — 10 sections, 450+ lines, complete implementation proposal.
+
+**Key Findings:**
+
+1. **Existing Config Patterns:**
+   - DatabaseOptions, AuthenticationOptions, ClientConfigOptions all follow const string SectionName, IOptions<T> injection, property initializers for defaults.
+   - DI registration: builder.Services.Configure<TOptions>(builder.Configuration.GetSection(TOptions.SectionName)) in API Program.cs.
+   - Client config delivered via /api/v1/config endpoint (ConfigController), fetched at Client startup before DI registration.
+   - No usage of IOptionsMonitor or IOptionsSnapshot in the codebase — all config is startup-bound, not runtime-hot-reloadable.
+
+2. **Recommended Approach: Hand-Rolled IOptions<T>**
+   - Why not Microsoft.FeatureManagement? It's excellent for complex scenarios (A/B testing, targeting, external providers, percentage rollouts), but we don't need that complexity yet. Our flags control gradual rollout of backend-completed features to client UI. Simple on/off switches are sufficient.
+   - Benefits: Zero external dependencies, aligns with no magic principle (§3, §8 copilot-instructions.md), trivial to test (mock IOptions<T>), matches existing config patterns exactly.
+   - Extensibility: If we need runtime toggles later, upgrade IOptions<T> → IOptionsMonitor<T> (file-watch reload). If we need targeting/A/B, migrate to Microsoft.FeatureManagement (~2 hours effort).
+
+3. **Layer Placement:**
+   - Shared (BudgetExperiment.Shared): FeatureFlagOptions.cs POCO. Rationale: Both API and Client need same shape; avoids DTO mapping; matches existing BudgetScope, CategorySource enum pattern.
+   - API (BudgetExperiment.Api): FeaturesController exposing /api/v1/features endpoint, [AllowAnonymous] (client needs flags before auth), ResponseCache(Duration = 3600) (flags change at deployment, not per request).
+   - Client (BudgetExperiment.Client): IFeatureFlagService + FeatureFlagService (fetches flags at startup, caches them, exposes IsEnabled(string) method for components).
+
+4. **Client Delivery Pattern: /api/v1/features Endpoint (Option B)**
+   - Why not bake into HTML? Matches existing /api/v1/config pattern (simpler deployment, consistent approach). Client fetches flags at startup (line ~142 in Program.cs), before RunAsync().
+   - Graceful Degradation: If API unavailable (network failure, dev environment), client defaults to all-false flags except completed features (AdvancedCharts, RecurringChargeSuggestions) which use property initializers to default true.
+
+5. **Migration Path for Existing Features:**
+   - Problem: We already ship advanced charts, recurring charge suggestions. Setting flags to false by default breaks production.
+   - Solution: Default-on via property initializers (public bool AdvancedCharts { get; set; } = true;). New features (Kakeibo, Kaizen, MonthlyReflection) default to false.
+   - Rollout: Wrap existing nav links in @if (FeatureFlagService.IsEnabled("AdvancedCharts")) — no behavior change (always true). New features hidden by default, enabled via appsettings.json override.
+
+6. **Code Sketches Provided:**
+   - FeatureFlagOptions.cs (11 properties, XML docs, default values)
+   - FeaturesController.cs (GET endpoint, IOptions<T> injection, [AllowAnonymous], ResponseCache)
+   - DI registration in API Program.cs (1 line: Configure<FeatureFlagOptions>)
+   - IFeatureFlagService.cs + FeatureFlagService.cs (Client-side service with LoadFlagsAsync(), IsEnabled(string), graceful degradation)
+   - Client DI registration + startup flag loading (replace await builder.Build().RunAsync() with var host = builder.Build(); await LoadFlags(); await host.RunAsync())
+
+**Open Questions for Alfred (§8 of proposal):**
+- Flag naming convention: feature-based (Kakeibo) vs page-based (KakeiboCategorizationPage)?
+- Inventory management: code-first (FeatureFlagOptions is canonical) vs separate docs/feature-flag-inventory.md?
+- Blazor component pattern: inline @if (IsEnabled("Flag")) vs code-behind property?
+- Backend flag usage: Should API endpoints check flags (return 404 if disabled) or only client hides UI?
+
+**Estimated Effort:**
+- Lucius (implementation): 2 hours (POCO, controller, service, DI wiring)
+- Barbara (tests): 3 hours (unit + integration tests)
+- Alfred (review): 1 hour
+- Total: ~6 hours
+
+**Status:** Proposal complete, awaiting Alfred's architecture alignment and answer to open questions. No implementation yet — coordinate with Alfred first.

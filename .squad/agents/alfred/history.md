@@ -119,3 +119,33 @@ All technical content (architecture diagram, setup commands, test commands, Dock
 **Test Infrastructure:**
 - All API/Infrastructure tests use PostgreSQL Testcontainers.
 - Integration tests for plugin loading will need sample plugin DLL fixture.
+
+### Feature 129: Kakeibo Alignment Audit — Complete (2026-04-07)
+
+**Scope:** Audited all existing features (27 distinct features) against the Kakeibo + Kaizen calendar-first philosophy established in Feature 128. Scored alignment (🟢/🟡/🔴/⚪), identified required changes, prioritized implementation order.
+
+**Key Findings:**
+1. **5 Immediate-Priority Features:** Calendar (homepage + views), Transaction Management, Budget Categories & Goals, Onboarding Flow — these touch the core Kakeibo workflow (mindful recording, category routing, philosophy introduction). Must be modified before Feature 128 ships.
+2. **12 Soon-Priority Features:** Reports, AI Chat Assistant, AI Rule Suggestions, Transaction List, Uncategorized Transactions, Settings, Weekly Kaizen Goals — these augment Kakeibo but aren't blocking. Can follow in Phase 2-4.
+3. **8 Low-Priority Features:** Paycheck Planner, Location Report, Export enhancements, Custom Reports Builder — nice-to-have Kakeibo awareness but not critical to philosophy.
+4. **Custom Reports Builder is a 🔴 Tension:** Encourages endless data exploration — opposite of Kakeibo's "simple, consistent reflection" philosophy. Recommend feature-flagging (default off) for power users only.
+5. **17 Feature Flag Candidates Identified:** Split between user-simplification flags (hide features you don't use) and experimental rollout flags (phased release of new Kakeibo features). Custom Reports Builder, Advanced Charts, Geocoding stub are default-off. Core Kakeibo features (heatmap, reflection prompts, micro-goals) are default-on but user-controllable.
+
+**Feature Flag Architecture Designed:**
+- **Configuration:** Hierarchical `FeatureFlags` section in `appsettings.json`, overrideable via env vars (Docker/production)
+- **Scope:** Instance-level flags (per-deployment), not per-user. User preferences (e.g., "hide Paycheck Planner in my menu") handled separately via `UserSettings` entity.
+- **API Surface:** `GET /api/v1/config/feature-flags` endpoint returns JSON tree of flags. Client-side `FeatureFlagClientService` fetches once on load, caches in memory.
+- **Naming Convention:** `{Area}:{SubArea?}:{Feature}` in PascalCase (e.g., `Kakeibo:MonthlyReflectionPrompts`). Maps to `__` double-underscore in env vars.
+- **Clean Architecture Placement:** `IFeatureFlagService` in Application layer. Domain remains flag-agnostic (business logic is not conditional on deployment config). Controllers check flags to conditionally expose endpoints. Client components inject `IFeatureFlagClientService` and conditionally render UI.
+- **Default Strategy:** Core Kakeibo/Kaizen features default ON. Experimental/incomplete features (Custom Reports, Advanced Charts, Geocoding stub, Candlestick chart with no data source) default OFF.
+- **Blazor Pattern:** Scoped service fetches flags from API in `Program.cs` before root component render. Components use `@if (FeatureFlags.IsEnabled("Feature.Name"))` to conditionally render sections. Nav menu items conditionally shown based on flags + user settings.
+
+**Implementation Order (Recommended):**
+1. **Phase 1 (Immediate):** Budget categories Kakeibo routing, onboarding Kakeibo setup, transaction entry Kakeibo selector — foundational domain changes
+2. **Phase 2 (Immediate):** Calendar heatmap, month intention prompt, week summary Kakeibo breakdown, day cell badges — visual philosophy layer
+3. **Phase 3 (Soon):** Monthly reflection panel, Kaizen micro-goals, Kaizen dashboard — close the ritual loop
+4. **Phase 4 (Soon):** Transaction list Kakeibo filter, AI Kakeibo awareness, settings preferences — supporting features
+5. **Phase 5 (Low Priority):** Reports Kakeibo grouping, paycheck planner breakdown, location report filtering, export Kakeibo column — nice-to-have enhancements
+6. **Phase 6 (Low Priority):** Feature flag system implementation, feature-flag Custom Reports Builder, user settings for feature toggles — infrastructure and simplification
+
+**Deliverable:** `docs/129-feature-audit-kakeibo-alignment.md` — 27 features audited, 17 feature flags proposed, architecture fully specified (configuration shape, API surface, client pattern, naming conventions, default strategy). Ready for Lucius to implement.
