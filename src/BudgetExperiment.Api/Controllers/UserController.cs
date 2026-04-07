@@ -89,6 +89,19 @@ public sealed class UserController : ControllerBase
     }
 
     /// <summary>
+    /// Marks the Kakeibo category setup wizard as complete for the current user.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>No content.</returns>
+    [HttpPost("onboarding/kakeibo-setup/complete")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> CompleteKakeiboSetupAsync(CancellationToken cancellationToken)
+    {
+        await _service.MarkKakeiboSetupCompleteAsync(cancellationToken);
+        return this.NoContent();
+    }
+
+    /// <summary>
     /// Gets the current session's budget scope.
     /// </summary>
     /// <returns>The current scope selection.</returns>

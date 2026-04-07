@@ -1,5 +1,6 @@
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.FeatureFlags;
+using BudgetExperiment.Domain.Kaizen;
 using BudgetExperiment.Domain.Reconciliation;
 using BudgetExperiment.Domain.Reflection;
 
@@ -149,6 +150,9 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
 
     /// <summary>Gets the monthly Kakeibo reflections.</summary>
     public DbSet<MonthlyReflection> MonthlyReflections => this.Set<MonthlyReflection>();
+
+    /// <summary>Gets the Kaizen micro-goals.</summary>
+    public DbSet<KaizenGoal> KaizenGoals => this.Set<KaizenGoal>();
 
     /// <inheritdoc />
     public string? GetConcurrencyToken<T>(T entity)

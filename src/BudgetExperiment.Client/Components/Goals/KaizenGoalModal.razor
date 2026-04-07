@@ -1,0 +1,350 @@
+@* KaizenGoalModal.razor - Modal for creating or editing a weekly Kaizen micro-goal *@
+
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IBudgetApiService ApiService
+@inject IFeatureFlagClientService FeatureFlags
+
+@if (!FeatureFlags.IsEnabled("Kaizen:MicroGoals"))
+{
+    return;
+}
+
+@if (IsVisible)
+{
+    <div class="modal-overlay" @onclick="HandleOverlayClick" role="dialog" aria-modal="true"
+         aria-labelledby="kaizen-modal-title">
+        <div class="modal-container kaizen-goal-modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3 id="kaizen-modal-title" class="modal-title">
+                    @if (ExistingGoal is not null)
+                    {
+                        <span>Edit goal for week of @FormatWeekRange()</span>
+                    }
+                    else
+                    {
+                        <span>Set a goal for the week of @FormatWeekRange()</span>
+                    }
+                </h3>
+                <button type="button" class="modal-close" @onclick="HandleCancel" aria-label="Close">
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body">
+                @* Description *@
+                <div class="form-group">
+                    <label class="form-label" for="kaizen-description">
+                        What's your goal for this week?
+                        <span class="required-marker" aria-hidden="true">*</span>
+                    </label>
+                    <textarea id="kaizen-description"
+                              class="form-control @(_descriptionError is not null ? "is-invalid" : "")"
+                              rows="3"
+                              maxlength="500"
+                              placeholder="e.g., Spend $10 less on coffee, No dining out on weekdays, Stay under $200 on Wants"
+                              @bind="_description"
+                              @oninput="OnDescriptionInput"
+                              aria-required="true"
+                              aria-describedby="kaizen-desc-counter @(_descriptionError is not null ? "kaizen-desc-error" : "")"></textarea>
+                    <div id="kaizen-desc-counter"
+                         class="char-counter @(_description?.Length >= 480 ? "counter-warning" : "")">
+                        @(_description?.Length ?? 0) / 500
+                    </div>
+                    @if (_descriptionError is not null)
+                    {
+                        <div id="kaizen-desc-error" class="invalid-feedback" role="alert">
+                            @_descriptionError
+                        </div>
+                    }
+                </div>
+
+                @* Target Amount *@
+                <div class="form-group">
+                    <label class="form-label" for="kaizen-target">
+                        Target amount <span class="optional-label">(optional)</span>
+                    </label>
+                    <input id="kaizen-target"
+                           type="number"
+                           class="form-control @(_targetAmountError is not null ? "is-invalid" : "")"
+                           min="0"
+                           step="0.01"
+                           placeholder="0.00"
+                           @bind="_targetAmount"
+                           @oninput="OnTargetAmountInput"
+                           aria-describedby="@(_targetAmountError is not null ? "kaizen-target-error" : "")" />
+                    @if (_targetAmountError is not null)
+                    {
+                        <div id="kaizen-target-error" class="invalid-feedback" role="alert">
+                            @_targetAmountError
+                        </div>
+                    }
+                </div>
+
+                @* Kakeibo Category Scope *@
+                <div class="form-group">
+                    <label class="form-label" for="kaizen-kakeibo">
+                        Category this goal applies to <span class="optional-label">(optional)</span>
+                    </label>
+                    <select id="kaizen-kakeibo"
+                            class="form-control"
+                            @bind="_kakeiboCategory">
+                        <option value="">Any</option>
+                        <option value="Essentials">Essentials</option>
+                        <option value="Wants">Wants</option>
+                        <option value="Culture">Culture</option>
+                        <option value="Unexpected">Unexpected</option>
+                    </select>
+                </div>
+
+                @* Help text *@
+                <p class="kaizen-help-text">
+                    A micro-goal is a small improvement you choose for this week. Consistency matters more than size.
+                </p>
+
+                @if (_errorMessage is not null)
+                {
+                    <div class="alert alert-danger" role="alert">@_errorMessage</div>
+                }
+            </div>
+
+            <div class="modal-footer">
+                @if (ExistingGoal is not null)
+                {
+                    <button type="button"
+                            class="btn btn-link btn-danger-link kaizen-delete-btn"
+                            @onclick="HandleDelete"
+                            disabled="@_isSaving">
+                        Delete Goal
+                    </button>
+                }
+                <div class="modal-footer-actions">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            @onclick="HandleCancel"
+                            disabled="@_isSaving">
+                        Cancel
+                    </button>
+                    <button type="button"
+                            class="btn btn-primary"
+                            @onclick="HandleSave"
+                            disabled="@_isSaving">
+                        @(_isSaving ? "Saving…" : "Save Goal")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Whether the modal is currently visible.
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// The Monday of the ISO week this goal is for.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public DateOnly WeekStart { get; set; }
+
+    /// <summary>
+    /// The existing goal to edit, or null if creating a new goal.
+    /// </summary>
+    [Parameter]
+    public KaizenGoalDto? ExistingGoal { get; set; }
+
+    /// <summary>
+    /// Callback invoked when a goal is saved (created or updated).
+    /// </summary>
+    [Parameter]
+    public EventCallback<KaizenGoalDto> OnGoalSaved { get; set; }
+
+    /// <summary>
+    /// Callback invoked when the modal is closed without saving.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancelled { get; set; }
+
+    /// <summary>
+    /// Callback invoked when the goal is deleted.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnGoalDeleted { get; set; }
+
+    private string? _description;
+    private decimal? _targetAmount;
+    private string? _kakeiboCategory;
+    private bool _isSaving;
+    private string? _errorMessage;
+    private string? _descriptionError;
+    private string? _targetAmountError;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        if (ExistingGoal is not null)
+        {
+            _description = ExistingGoal.Description;
+            _targetAmount = ExistingGoal.TargetAmount;
+            _kakeiboCategory = ExistingGoal.KakeiboCategory ?? string.Empty;
+        }
+        else
+        {
+            _description = null;
+            _targetAmount = null;
+            _kakeiboCategory = string.Empty;
+        }
+
+        _errorMessage = null;
+        _descriptionError = null;
+        _targetAmountError = null;
+    }
+
+    private void OnDescriptionInput(ChangeEventArgs e)
+    {
+        _description = e.Value?.ToString();
+        _descriptionError = null;
+    }
+
+    private void OnTargetAmountInput(ChangeEventArgs e)
+    {
+        _targetAmountError = null;
+        if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
+        {
+            _targetAmount = null;
+            return;
+        }
+
+        if (decimal.TryParse(e.Value?.ToString(), out var parsed))
+        {
+            _targetAmount = parsed;
+        }
+    }
+
+    private bool Validate()
+    {
+        var valid = true;
+        _descriptionError = null;
+        _targetAmountError = null;
+
+        if (string.IsNullOrWhiteSpace(_description))
+        {
+            _descriptionError = "Description is required.";
+            valid = false;
+        }
+        else if (_description.Length > 500)
+        {
+            _descriptionError = "Description cannot exceed 500 characters.";
+            valid = false;
+        }
+
+        if (_targetAmount is < 0)
+        {
+            _targetAmountError = "Target amount must be non-negative.";
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private async Task HandleSave()
+    {
+        if (!Validate())
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _errorMessage = null;
+
+        try
+        {
+            KaizenGoalDto? result;
+
+            if (ExistingGoal is not null)
+            {
+                var dto = new UpdateKaizenGoalDto
+                {
+                    Description = _description!,
+                    TargetAmount = _targetAmount,
+                    KakeiboCategory = string.IsNullOrEmpty(_kakeiboCategory) ? null : _kakeiboCategory,
+                    IsAchieved = ExistingGoal.IsAchieved,
+                };
+
+                result = await ApiService.UpdateKaizenGoalAsync(ExistingGoal.Id, dto);
+            }
+            else
+            {
+                var dto = new CreateKaizenGoalDto
+                {
+                    Description = _description!,
+                    TargetAmount = _targetAmount,
+                    KakeiboCategory = string.IsNullOrEmpty(_kakeiboCategory) ? null : _kakeiboCategory,
+                };
+
+                result = await ApiService.CreateKaizenGoalAsync(WeekStart, dto);
+            }
+
+            if (result is not null)
+            {
+                await OnGoalSaved.InvokeAsync(result);
+            }
+            else
+            {
+                _errorMessage = "Failed to save goal. Please try again.";
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task HandleDelete()
+    {
+        if (ExistingGoal is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _errorMessage = null;
+
+        try
+        {
+            var deleted = await ApiService.DeleteKaizenGoalAsync(ExistingGoal.Id);
+            if (deleted)
+            {
+                await OnGoalDeleted.InvokeAsync();
+            }
+            else
+            {
+                _errorMessage = "Failed to delete goal. Please try again.";
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancelled.InvokeAsync();
+    }
+
+    private Task HandleOverlayClick()
+    {
+        return OnCancelled.InvokeAsync();
+    }
+
+    private string FormatWeekRange()
+    {
+        var sunday = WeekStart.AddDays(6);
+        return $"{WeekStart:MMM d}–{sunday:MMM d, yyyy}";
+    }
+}

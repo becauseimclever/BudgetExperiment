@@ -90,6 +90,13 @@ public sealed class UserSettings
     public bool HasSeenKakeiboSelectorTooltip { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the user has completed the Kakeibo category setup wizard.
+    /// False for new users until they complete onboarding step 5.
+    /// False for existing users until they complete the post-migration Kakeibo setup prompt.
+    /// </summary>
+    public bool HasCompletedKakeiboSetup { get; set; }
+
+    /// <summary>
     /// Gets the UTC timestamp when the settings were created.
     /// </summary>
     public DateTime CreatedAtUtc

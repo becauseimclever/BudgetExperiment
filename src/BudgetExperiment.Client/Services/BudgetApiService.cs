@@ -751,6 +751,13 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<bool> MarkKakeiboSetupCompleteAsync()
+    {
+        var response = await _httpClient.PostAsync("api/v1/user/onboarding/kakeibo-setup/complete", null);
+        return response.IsSuccessStatusCode;
+    }
+
+    /// <inheritdoc />
     public async Task<PaycheckAllocationSummaryDto?> GetPaycheckAllocationAsync(string frequency, decimal? amount = null, Guid? accountId = null)
     {
         var url = $"api/v1/allocations/paycheck?frequency={Uri.EscapeDataString(frequency)}";
@@ -1995,6 +2002,117 @@ public sealed class BudgetApiService : IBudgetApiService
         {
             ex.Redirect();
             return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<KaizenGoalDto?> GetKaizenGoalByWeekAsync(DateOnly weekStart)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/v1/goals/kaizen/week/{weekStart:yyyy-MM-dd}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent
+                || response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<KaizenGoalDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<KaizenGoalDto?> CreateKaizenGoalAsync(DateOnly weekStart, CreateKaizenGoalDto dto)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/v1/goals/kaizen/week/{weekStart:yyyy-MM-dd}",
+                dto,
+                JsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<KaizenGoalDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<KaizenGoalDto?> UpdateKaizenGoalAsync(Guid goalId, UpdateKaizenGoalDto dto)
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync(
+                $"api/v1/goals/kaizen/{goalId}",
+                dto,
+                JsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<KaizenGoalDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteKaizenGoalAsync(Guid goalId)
+    {
+        try
+        {
+            var response = await _httpClient.DeleteAsync($"api/v1/goals/kaizen/{goalId}");
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/v1/goals/kaizen?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<IReadOnlyList<KaizenGoalDto>>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
         }
     }
 

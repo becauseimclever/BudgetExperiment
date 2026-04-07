@@ -1,0 +1,152 @@
+@* KaizenWeekGoalCard.razor - Card displaying current week's Kaizen micro-goal and achievement status *@
+
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IBudgetApiService ApiService
+@inject IFeatureFlagClientService FeatureFlags
+
+@if (!FeatureFlags.IsEnabled("Kaizen:MicroGoals"))
+{
+    return;
+}
+
+<div class="kaizen-week-goal-card" role="region" aria-label="Weekly Kaizen goal">
+    @if (_isLoading)
+    {
+        <div class="kaizen-goal-loading">
+            <span class="sr-only">Loading goal…</span>
+        </div>
+    }
+    else if (_goal is not null)
+    {
+        <div class="kaizen-goal-content">
+            <div class="kaizen-goal-header">
+                <span class="kaizen-goal-label">This week's goal</span>
+                <button type="button"
+                        class="kaizen-achievement-badge @(_goal.IsAchieved ? "achieved" : "not-achieved")"
+                        @onclick="ToggleAchievementAsync"
+                        disabled="@_isUpdating"
+                        aria-label="@(_goal.IsAchieved ? "Mark as not achieved" : "Mark as achieved")"
+                        title="@(_goal.IsAchieved ? "Click to mark as not achieved" : "Click to mark as achieved")">
+                    @(_goal.IsAchieved ? "✓" : "✗")
+                </button>
+            </div>
+            <p class="kaizen-goal-description">@_goal.Description</p>
+            @if (_goal.KakeiboCategory is not null)
+            {
+                <span class="kaizen-goal-category badge-kakeibo">@_goal.KakeiboCategory</span>
+            }
+            @if (_goal.TargetAmount.HasValue)
+            {
+                <span class="kaizen-goal-target">Target: @_goal.TargetAmount.Value.ToString("N2")</span>
+            }
+            <button type="button"
+                    class="btn btn-link kaizen-edit-link"
+                    @onclick="OpenModal"
+                    aria-label="Edit this week's goal">
+                Edit
+            </button>
+        </div>
+    }
+    else
+    {
+        <button type="button"
+                class="kaizen-set-goal-cta"
+                @onclick="OpenModal"
+                aria-label="Set a goal for this week">
+            Set a goal for this week →
+        </button>
+    }
+
+    @if (_errorMessage is not null)
+    {
+        <div class="alert alert-danger alert-sm" role="alert">@_errorMessage</div>
+    }
+</div>
+
+<KaizenGoalModal IsVisible="_modalVisible"
+                 WeekStart="WeekStart"
+                 ExistingGoal="_goal"
+                 OnGoalSaved="HandleGoalSaved"
+                 OnCancelled="CloseModal"
+                 OnGoalDeleted="HandleGoalDeleted" />
+
+@code {
+    /// <summary>
+    /// The Monday of the ISO week to display the goal for.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public DateOnly WeekStart { get; set; }
+
+    private KaizenGoalDto? _goal;
+    private bool _isLoading = true;
+    private bool _isUpdating;
+    private bool _modalVisible;
+    private string? _errorMessage;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _goal = await ApiService.GetKaizenGoalByWeekAsync(WeekStart);
+        _isLoading = false;
+    }
+
+    private void OpenModal()
+    {
+        _errorMessage = null;
+        _modalVisible = true;
+    }
+
+    private void CloseModal()
+    {
+        _modalVisible = false;
+    }
+
+    private void HandleGoalSaved(KaizenGoalDto savedGoal)
+    {
+        _goal = savedGoal;
+        _modalVisible = false;
+        _errorMessage = null;
+    }
+
+    private void HandleGoalDeleted()
+    {
+        _goal = null;
+        _modalVisible = false;
+        _errorMessage = null;
+    }
+
+    private async Task ToggleAchievementAsync()
+    {
+        if (_goal is null || _isUpdating)
+        {
+            return;
+        }
+
+        _isUpdating = true;
+        _errorMessage = null;
+
+        var dto = new UpdateKaizenGoalDto
+        {
+            Description = _goal.Description,
+            TargetAmount = _goal.TargetAmount,
+            KakeiboCategory = _goal.KakeiboCategory,
+            IsAchieved = !_goal.IsAchieved,
+        };
+
+        var updated = await ApiService.UpdateKaizenGoalAsync(_goal.Id, dto);
+        if (updated is not null)
+        {
+            _goal = updated;
+        }
+        else
+        {
+            _errorMessage = "Could not update goal status. Please try again.";
+        }
+
+        _isUpdating = false;
+    }
+}

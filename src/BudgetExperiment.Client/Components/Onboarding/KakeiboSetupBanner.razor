@@ -1,0 +1,55 @@
+@* KakeiboSetupBanner.razor — Non-blocking banner prompting existing users to complete Kakeibo category setup *@
+@using BudgetExperiment.Client.Services
+@inject IBudgetApiService ApiService
+@inject NavigationManager NavigationManager
+
+@if (_showBanner)
+{
+    <div class="kakeibo-setup-banner" role="complementary" aria-label="Kakeibo setup available">
+        <span class="kakeibo-setup-banner-text">
+            ✨ <strong>New:</strong> Kakeibo category setup available. Take 2 minutes to categorise your spending by intent.
+        </span>
+        <div class="kakeibo-setup-banner-actions">
+            <button class="btn btn-sm btn-primary" @onclick="SetUpNow">Set up now</button>
+            <button class="btn btn-sm btn-ghost kakeibo-setup-banner-dismiss"
+                    @onclick="DismissAsync"
+                    aria-label="Dismiss Kakeibo setup banner">×</button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showBanner;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the user has completed the Kakeibo setup.
+    /// When false, the banner is displayed.
+    /// </summary>
+    [Parameter]
+    public bool HasCompletedKakeiboSetup { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _showBanner = !HasCompletedKakeiboSetup;
+    }
+
+    private void SetUpNow()
+    {
+        NavigationManager.NavigateTo("/onboarding?step=kakeibo");
+    }
+
+    private async Task DismissAsync()
+    {
+        _showBanner = false;
+
+        try
+        {
+            await ApiService.MarkKakeiboSetupCompleteAsync();
+        }
+        catch
+        {
+            // Best-effort dismiss; silently ignore if the request fails
+        }
+    }
+}

@@ -6,6 +6,7 @@
 @using BudgetExperiment.Client.Components.Navigation
 @using BudgetExperiment.Client.Components.Common
 @using BudgetExperiment.Client.Components.Forms
+@using BudgetExperiment.Client.Components.Onboarding
 @using BudgetExperiment.Client.Services
 @using BudgetExperiment.Client.Resources
 @using Microsoft.Extensions.Localization
@@ -58,6 +59,11 @@
     </header>
 
     <AuthOffBanner />
+
+    @if (_showKakeiboSetupBanner)
+    {
+        <KakeiboSetupBanner HasCompletedKakeiboSetup="false" />
+    }
 
     <div class="app-content-wrapper">
         <aside class="app-sidebar @(navCollapsed ? "collapsed" : "expanded")" role="navigation" aria-label="@Loc["Nav_MainNavigation"]">
@@ -123,6 +129,7 @@
     private IReadOnlyList<BudgetCategoryDto> quickAddCategories = Array.Empty<BudgetCategoryDto>();
     private QuickAddForm? quickAddFormRef;
     private bool onboardingChecked;
+    private bool _showKakeiboSetupBanner;
 
     /// <inheritdoc />
     protected override void OnInitialized()
@@ -160,6 +167,11 @@
                     if (userSettings is { IsOnboarded: false })
                     {
                         NavigationManager.NavigateTo("/onboarding");
+                    }
+                    else if (userSettings is { IsOnboarded: true, HasCompletedKakeiboSetup: false })
+                    {
+                        _showKakeiboSetupBanner = true;
+                        StateHasChanged();
                     }
                 }
                 catch

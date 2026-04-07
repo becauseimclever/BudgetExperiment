@@ -69,6 +69,8 @@
                 @_totalTransactions transaction@(_totalTransactions != 1 ? "s" : "") this week
             </span>
         </div>
+
+        <KaizenWeekGoalCard WeekStart="GetIsoMonday()" />
     </div>
 }
 
@@ -181,6 +183,19 @@
     private static string FormatAmount(decimal amount)
     {
         return $"${Math.Abs(amount):N2}";
+    }
+
+    private DateOnly GetIsoMonday()
+    {
+        if (Days.Count == 0)
+        {
+            return DateOnly.FromDateTime(DateTime.Today);
+        }
+
+        var firstDay = Days[0].Date;
+        var dow = (int)firstDay.DayOfWeek;
+        var daysSinceMonday = dow == 0 ? 6 : dow - 1;
+        return firstDay.AddDays(-daysSinceMonday);
     }
 
     private static string FormatSignedAmount(decimal amount)

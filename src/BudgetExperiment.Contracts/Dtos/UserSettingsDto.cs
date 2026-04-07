@@ -47,4 +47,10 @@ public sealed class UserSettingsDto
     {
         get; set;
     }
+
+    /// <summary>Gets or sets a value indicating whether the user has completed the Kakeibo category setup wizard.</summary>
+    public bool HasCompletedKakeiboSetup
+    {
+        get; set;
+    }
 }

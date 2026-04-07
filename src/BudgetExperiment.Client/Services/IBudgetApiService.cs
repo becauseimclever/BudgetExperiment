@@ -444,6 +444,12 @@ public interface IBudgetApiService
     /// <returns>The updated user settings.</returns>
     Task<UserSettingsDto?> CompleteOnboardingAsync();
 
+    /// <summary>
+    /// Marks the Kakeibo category setup wizard as complete for the current user.
+    /// </summary>
+    /// <returns>True if the operation succeeded.</returns>
+    Task<bool> MarkKakeiboSetupCompleteAsync();
+
     // Paycheck Allocation Operations
 
     /// <summary>
@@ -921,4 +927,34 @@ public interface IBudgetApiService
     /// <param name="reflectionId">The reflection identifier.</param>
     /// <returns>True if deleted; false otherwise.</returns>
     Task<bool> DeleteReflectionAsync(Guid reflectionId);
+
+    // Kaizen Micro-Goal Operations
+
+    /// <summary>Gets the Kaizen goal for the current user for a specific week.</summary>
+    /// <param name="weekStart">The Monday of the ISO week.</param>
+    /// <returns>The goal DTO, or null if not set or feature is disabled.</returns>
+    Task<KaizenGoalDto?> GetKaizenGoalByWeekAsync(DateOnly weekStart);
+
+    /// <summary>Creates a new Kaizen goal for the specified week.</summary>
+    /// <param name="weekStart">The Monday of the ISO week.</param>
+    /// <param name="dto">The creation data.</param>
+    /// <returns>The created goal DTO, or null on failure.</returns>
+    Task<KaizenGoalDto?> CreateKaizenGoalAsync(DateOnly weekStart, CreateKaizenGoalDto dto);
+
+    /// <summary>Updates an existing Kaizen goal.</summary>
+    /// <param name="goalId">The goal identifier.</param>
+    /// <param name="dto">The update data.</param>
+    /// <returns>The updated goal DTO, or null on failure.</returns>
+    Task<KaizenGoalDto?> UpdateKaizenGoalAsync(Guid goalId, UpdateKaizenGoalDto dto);
+
+    /// <summary>Deletes a Kaizen goal by ID.</summary>
+    /// <param name="goalId">The goal identifier.</param>
+    /// <returns>True if deleted; false otherwise.</returns>
+    Task<bool> DeleteKaizenGoalAsync(Guid goalId);
+
+    /// <summary>Gets Kaizen goals within an inclusive week range.</summary>
+    /// <param name="from">The earliest week start date (inclusive).</param>
+    /// <param name="to">The latest week start date (inclusive).</param>
+    /// <returns>List of goals ordered by week descending, or null on failure.</returns>
+    Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to);
 }

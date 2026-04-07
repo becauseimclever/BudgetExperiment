@@ -92,7 +92,7 @@ public sealed class OnboardingViewModelTests
     }
 
     /// <summary>
-    /// Verifies NextStep does not exceed step 4.
+    /// Verifies NextStep does not exceed step 5.
     /// </summary>
     [Fact]
     public void NextStep_DoesNotExceedMaxStep()
@@ -100,9 +100,10 @@ public sealed class OnboardingViewModelTests
         _sut.NextStep(); // 2
         _sut.NextStep(); // 3
         _sut.NextStep(); // 4
-        _sut.NextStep(); // still 4
+        _sut.NextStep(); // 5
+        _sut.NextStep(); // still 5
 
-        _sut.CurrentStep.ShouldBe(4);
+        _sut.CurrentStep.ShouldBe(5);
     }
 
     /// <summary>
@@ -128,10 +129,11 @@ public sealed class OnboardingViewModelTests
         _sut.NextStep(); // 2
         _sut.NextStep(); // 3
         _sut.NextStep(); // 4
+        _sut.NextStep(); // 5
 
         int callCount = 0;
         _sut.OnStateChanged = () => callCount++;
-        _sut.NextStep(); // still 4
+        _sut.NextStep(); // still 5
 
         callCount.ShouldBe(0);
     }

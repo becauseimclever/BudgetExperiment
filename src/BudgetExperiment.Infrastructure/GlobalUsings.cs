@@ -12,6 +12,7 @@ global using BudgetExperiment.Application.Chat;
 global using BudgetExperiment.Application.Common;
 global using BudgetExperiment.Application.FeatureFlags;
 global using BudgetExperiment.Application.Import;
+global using BudgetExperiment.Application.Kaizen;
 global using BudgetExperiment.Application.Paycheck;
 global using BudgetExperiment.Application.Reconciliation;
 global using BudgetExperiment.Application.Recurring;

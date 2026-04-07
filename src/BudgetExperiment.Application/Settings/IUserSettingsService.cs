@@ -40,6 +40,13 @@ public interface IUserSettingsService
     Task<UserSettingsDto> CompleteOnboardingAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Marks the Kakeibo category setup wizard as complete for the current user.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the async operation.</returns>
+    Task MarkKakeiboSetupCompleteAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets the current session scope.
     /// </summary>
     /// <returns>The scope DTO.</returns>

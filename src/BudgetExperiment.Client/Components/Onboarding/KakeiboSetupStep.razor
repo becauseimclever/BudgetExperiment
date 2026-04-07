@@ -1,0 +1,223 @@
+@* KakeiboSetupStep.razor — Onboarding step 5: Kakeibo category assignment *@
+@using BudgetExperiment.Contracts.Dtos
+@using BudgetExperiment.Client.Services
+@inject IBudgetApiService ApiService
+
+<div class="kakeibo-setup-step">
+    <div class="onboarding-header">
+        <h1>How you spend your money</h1>
+        <p>Let's place your spending categories into four Kakeibo buckets. This helps you see where your money really goes.</p>
+    </div>
+
+    @* Four Kakeibo explanation cards *@
+    <div class="kakeibo-buckets-grid">
+        <div class="kakeibo-bucket-card kakeibo-essentials">
+            <span class="kakeibo-bucket-icon" aria-hidden="true">🏠</span>
+            <div>
+                <strong>Essentials <span class="kakeibo-japanese">必要</span></strong>
+                <p>Things you need to live: groceries, utilities, housing, healthcare.</p>
+            </div>
+        </div>
+        <div class="kakeibo-bucket-card kakeibo-wants">
+            <span class="kakeibo-bucket-icon" aria-hidden="true">🎁</span>
+            <div>
+                <strong>Wants <span class="kakeibo-japanese">欲しい</span></strong>
+                <p>Things you enjoy but don't need: dining, entertainment, hobbies, travel.</p>
+            </div>
+        </div>
+        <div class="kakeibo-bucket-card kakeibo-culture">
+            <span class="kakeibo-bucket-icon" aria-hidden="true">📚</span>
+            <div>
+                <strong>Culture <span class="kakeibo-japanese">文化</span></strong>
+                <p>Things that enrich your mind and spirit: education, books, charity, museums.</p>
+            </div>
+        </div>
+        <div class="kakeibo-bucket-card kakeibo-unexpected">
+            <span class="kakeibo-bucket-icon" aria-hidden="true">⚡</span>
+            <div>
+                <strong>Unexpected <span class="kakeibo-japanese">予期しない</span></strong>
+                <p>Things you didn't plan for: emergency repairs, medical surprises.</p>
+            </div>
+        </div>
+    </div>
+
+    @* Category assignment section *@
+    <div class="kakeibo-category-section">
+        <h2>Your expense categories</h2>
+
+        @if (_isLoading)
+        {
+            <p class="kakeibo-loading">Loading categories…</p>
+        }
+        else if (_expenseCategories.Count == 0)
+        {
+            <p class="kakeibo-empty">No expense categories found. You can set these up later from Settings.</p>
+        }
+        else
+        {
+            <div class="kakeibo-category-list">
+                @foreach (var category in _expenseCategories)
+                {
+                    <div class="kakeibo-category-row">
+                        <span class="kakeibo-category-name">@category.Name</span>
+                        <select class="form-select kakeibo-bucket-select"
+                                value="@GetBucket(category.Id)"
+                                @onchange="e => OnBucketChanged(category.Id, e.Value?.ToString())">
+                            <option value="Essentials">🏠 Essentials</option>
+                            <option value="Wants">🎁 Wants</option>
+                            <option value="Culture">📚 Culture</option>
+                            <option value="Unexpected">⚡ Unexpected</option>
+                        </select>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @* Monthly reflection teaser *@
+    <div class="kakeibo-reflection-teaser">
+        <p>💡 At the start of each month, you'll be asked: <em>"What do you want to save?"</em> — a gentle reminder to set your intention.</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger">@_errorMessage</div>
+    }
+
+    <div class="onboarding-actions">
+        <button class="btn btn-secondary" @onclick="HandleBack" disabled="@_isSaving">← Back</button>
+        <div>
+            <button class="btn-skip" @onclick="HandleSkip" disabled="@_isSaving">Skip for now</button>
+            <button class="btn btn-primary" @onclick="HandleCompleteAsync" disabled="@_isSaving">
+                @(_isSaving ? "Saving…" : "Complete Setup →")
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<BudgetCategoryDto> _expenseCategories = new();
+    private Dictionary<Guid, string> _bucketSelections = new();
+    private Dictionary<Guid, string> _initialBuckets = new();
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the user completes or skips the step.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnComplete { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the user navigates back.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var categories = await ApiService.GetCategoriesAsync(activeOnly: true);
+            _expenseCategories = categories
+                .Where(c => string.Equals(c.Type, "Expense", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var cat in _expenseCategories)
+            {
+                var bucket = cat.KakeiboCategory ?? "Wants";
+                _bucketSelections[cat.Id] = bucket;
+                _initialBuckets[cat.Id] = bucket;
+            }
+        }
+        catch
+        {
+            _errorMessage = "Failed to load categories. You can assign them later from Settings.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetBucket(Guid categoryId)
+    {
+        return _bucketSelections.TryGetValue(categoryId, out var bucket) ? bucket : "Wants";
+    }
+
+    private void OnBucketChanged(Guid categoryId, string? value)
+    {
+        if (value != null)
+        {
+            _bucketSelections[categoryId] = value;
+        }
+    }
+
+    private void HandleBack()
+    {
+        OnBack.InvokeAsync();
+    }
+
+    private async Task HandleSkip()
+    {
+        _isSaving = true;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await ApiService.MarkKakeiboSetupCompleteAsync();
+        }
+        catch
+        {
+            // Best-effort; don't block navigation on skip
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+
+        await OnComplete.InvokeAsync();
+    }
+
+    private async Task HandleCompleteAsync()
+    {
+        _isSaving = true;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var changedCategories = _expenseCategories
+                .Where(c => _bucketSelections.TryGetValue(c.Id, out var newBucket)
+                            && _initialBuckets.TryGetValue(c.Id, out var oldBucket)
+                            && newBucket != oldBucket)
+                .ToList();
+
+            foreach (var category in changedCategories)
+            {
+                await ApiService.UpdateCategoryAsync(
+                    category.Id,
+                    new BudgetCategoryUpdateDto
+                    {
+                        Name = category.Name,
+                        KakeiboCategory = _bucketSelections[category.Id],
+                    },
+                    category.Version);
+            }
+
+            await ApiService.MarkKakeiboSetupCompleteAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to save: {ex.Message}";
+            _isSaving = false;
+            return;
+        }
+
+        _isSaving = false;
+        await OnComplete.InvokeAsync();
+    }
+}

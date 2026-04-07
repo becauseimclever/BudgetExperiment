@@ -1,6 +1,6 @@
 # Feature 133: Onboarding — Kakeibo Setup Step
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 

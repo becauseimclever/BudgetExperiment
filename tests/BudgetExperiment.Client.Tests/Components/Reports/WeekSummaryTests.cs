@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Client.Components.Reports;
 using BudgetExperiment.Client.Services;
+using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
 
 using Bunit;
@@ -25,6 +26,8 @@ public class WeekSummaryTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
+        this.Services.AddSingleton<IFeatureFlagClientService>(new StubFeatureFlagClientService());
+        this.Services.AddSingleton<IBudgetApiService>(new StubBudgetApiService());
     }
 
     /// <inheritdoc/>

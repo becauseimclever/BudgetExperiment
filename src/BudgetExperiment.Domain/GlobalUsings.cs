@@ -10,6 +10,7 @@ global using BudgetExperiment.Domain.Common;
 global using BudgetExperiment.Domain.FeatureFlags;
 global using BudgetExperiment.Domain.Identity;
 global using BudgetExperiment.Domain.Import;
+global using BudgetExperiment.Domain.Kaizen;
 global using BudgetExperiment.Domain.Paycheck;
 global using BudgetExperiment.Domain.Reconciliation;
 global using BudgetExperiment.Domain.Recurring;

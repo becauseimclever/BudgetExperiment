@@ -62,6 +62,7 @@ public static class DependencyInjection
         services.AddScoped<IDismissedOutlierRepository, DismissedOutlierRepository>();
         services.AddScoped<IFeatureFlagRepository, FeatureFlagRepository>();
         services.AddScoped<IMonthlyReflectionRepository, MonthlyReflectionRepository>();
+        services.AddScoped<IKaizenGoalRepository, KaizenGoalRepository>();
 
         // AI Service - HttpClient configured dynamically from database settings
         services.AddHttpClient<IAiService, OllamaAiService>();

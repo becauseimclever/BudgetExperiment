@@ -1,17 +1,19 @@
 @page "/onboarding"
 @layout EmptyLayout
 
+@using BudgetExperiment.Client.Components.Onboarding
 @using BudgetExperiment.Client.ViewModels
 
 @inject OnboardingViewModel ViewModel
+@inject NavigationManager NavigationManager
 
 <PageTitle>Welcome - Budget Experiment</PageTitle>
 
 <div class="onboarding-overlay">
     <div class="onboarding-card">
         @* Step indicators *@
-        <div class="onboarding-steps" role="progressbar" aria-valuenow="@ViewModel.CurrentStep" aria-valuemin="1" aria-valuemax="4">
-            @for (var i = 1; i <= 4; i++)
+        <div class="onboarding-steps" role="progressbar" aria-valuenow="@ViewModel.CurrentStep" aria-valuemin="1" aria-valuemax="5">
+            @for (var i = 1; i <= 5; i++)
             {
                 var stepClass = i < ViewModel.CurrentStep ? "completed" : (i == ViewModel.CurrentStep ? "active" : "");
                 <div class="onboarding-step-dot @stepClass" aria-hidden="true"></div>
@@ -116,7 +118,7 @@
 
             case 4:
                 <div class="onboarding-header">
-                    <h1>You're All Set!</h1>
+                    <h1>You're Almost There!</h1>
                     <p>Here's a summary of your choices. You can change these anytime in Settings.</p>
                 </div>
 
@@ -137,11 +139,14 @@
                 }
 
                 <div class="onboarding-actions">
-                    <button class="btn btn-secondary" @onclick="ViewModel.PreviousStep" disabled="@ViewModel.IsSaving">Back</button>
-                    <button class="btn btn-primary" @onclick="ViewModel.CompleteOnboardingAsync" disabled="@ViewModel.IsSaving">
-                        @(ViewModel.IsSaving ? "Saving..." : "Get Started!")
-                    </button>
+                    <button class="btn btn-secondary" @onclick="ViewModel.PreviousStep">Back</button>
+                    <button class="btn btn-primary" @onclick="ViewModel.NextStep">Next →</button>
                 </div>
+                break;
+
+            case 5:
+                <KakeiboSetupStep OnComplete="ViewModel.CompleteOnboardingAsync"
+                                  OnBack="ViewModel.PreviousStep" />
                 break;
         }
     </div>
@@ -151,5 +156,13 @@
     protected override void OnInitialized()
     {
         ViewModel.OnStateChanged = () => InvokeAsync(StateHasChanged);
+
+        // Support ?step=kakeibo query parameter for post-migration banner redirect
+        var uri = new Uri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        if (string.Equals(query["step"], "kakeibo", StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.JumpToStep(5);
+        }
     }
 }

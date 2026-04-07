@@ -86,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<IDataHealthService, DataHealthService>();
         services.AddScoped<IFeatureFlagService, FeatureFlagService>();
         services.AddScoped<IReflectionService, ReflectionService>();
+        services.AddScoped<IKaizenGoalService, KaizenGoalService>();
         return services;
     }
 }

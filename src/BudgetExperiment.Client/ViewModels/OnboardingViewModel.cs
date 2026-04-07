@@ -42,7 +42,7 @@ public sealed class OnboardingViewModel
     }
 
     /// <summary>
-    /// Gets the current wizard step (1–4).
+    /// Gets the current wizard step (1–5).
     /// </summary>
     public int CurrentStep { get; private set; } = 1;
 
@@ -108,9 +108,22 @@ public sealed class OnboardingViewModel
     /// </summary>
     public void NextStep()
     {
-        if (this.CurrentStep < 4)
+        if (this.CurrentStep < 5)
         {
             this.CurrentStep++;
+            this.NotifyStateChanged();
+        }
+    }
+
+    /// <summary>
+    /// Jumps directly to the specified wizard step.
+    /// </summary>
+    /// <param name="step">The step number (1–5).</param>
+    public void JumpToStep(int step)
+    {
+        if (step >= 1 && step <= 5)
+        {
+            this.CurrentStep = step;
             this.NotifyStateChanged();
         }
     }

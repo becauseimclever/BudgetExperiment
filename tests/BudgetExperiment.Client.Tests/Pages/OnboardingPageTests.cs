@@ -183,7 +183,7 @@ public class OnboardingPageTests : BunitContext, IAsyncLifetime
         cut.Find(".btn-primary").Click();
         cut.Find(".btn-primary").Click();
 
-        cut.Markup.ShouldContain("You're All Set!");
+        cut.Markup.ShouldContain("You're Almost There!");
     }
 
     /// <summary>
@@ -219,16 +219,16 @@ public class OnboardingPageTests : BunitContext, IAsyncLifetime
     }
 
     /// <summary>
-    /// Verifies the final step has a Get Started button.
+    /// Verifies step 4 (summary) has a Next button that advances to step 5.
     /// </summary>
     [Fact]
-    public void Step4_HasGetStartedButton()
+    public void Step4_HasNextButton()
     {
         var cut = Render<Onboarding>();
         cut.Find(".btn-primary").Click();
         cut.Find(".btn-primary").Click();
         cut.Find(".btn-primary").Click();
 
-        cut.Markup.ShouldContain("Get Started!");
+        cut.Markup.ShouldContain("Next");
     }
 }

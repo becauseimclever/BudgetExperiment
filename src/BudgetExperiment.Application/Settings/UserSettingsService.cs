@@ -124,6 +124,19 @@ public sealed class UserSettingsService : IUserSettingsService
     }
 
     /// <inheritdoc />
+    public async Task MarkKakeiboSetupCompleteAsync(CancellationToken cancellationToken = default)
+    {
+        var userId = _userContext.UserIdAsGuid
+            ?? throw new DomainException("User is not authenticated.");
+
+        var settings = await _repository.GetByUserIdAsync(userId, cancellationToken);
+        settings.HasCompletedKakeiboSetup = true;
+
+        await _repository.SaveAsync(settings, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public ScopeDto GetCurrentScope()
     {
         return new ScopeDto
@@ -162,6 +175,7 @@ public sealed class UserSettingsService : IUserSettingsService
             TimeZoneId = settings.TimeZoneId,
             FirstDayOfWeek = settings.FirstDayOfWeek,
             IsOnboarded = settings.IsOnboarded,
+            HasCompletedKakeiboSetup = settings.HasCompletedKakeiboSetup,
         };
     }
 }

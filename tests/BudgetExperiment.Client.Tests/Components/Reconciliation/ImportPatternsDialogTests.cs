@@ -757,5 +757,23 @@ public sealed class ImportPatternsDialogTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<bool> DeleteReflectionAsync(Guid reflectionId) => Task.FromResult(false);
+
+        /// <inheritdoc/>
+        public Task<bool> MarkKakeiboSetupCompleteAsync() => Task.FromResult(true);
+
+        /// <inheritdoc/>
+        public Task<KaizenGoalDto?> GetKaizenGoalByWeekAsync(DateOnly weekStart) => Task.FromResult<KaizenGoalDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<KaizenGoalDto?> CreateKaizenGoalAsync(DateOnly weekStart, CreateKaizenGoalDto dto) => Task.FromResult<KaizenGoalDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<KaizenGoalDto?> UpdateKaizenGoalAsync(Guid goalId, UpdateKaizenGoalDto dto) => Task.FromResult<KaizenGoalDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<bool> DeleteKaizenGoalAsync(Guid goalId) => Task.FromResult(false);
+
+        /// <inheritdoc/>
+        public Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<KaizenGoalDto>?>(null);
     }
 }
