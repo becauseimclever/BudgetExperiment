@@ -2,6 +2,24 @@
 
 Thank you for considering contributing to Budget Experiment! This document outlines the development practices and release process.
 
+## 🧘 Design Philosophy — Kakeibo + Kaizen
+
+BudgetExperiment is guided by two Japanese philosophies:
+
+**Kakeibo** (家計簿, "household ledger") — mindful, intentional recording of spending. Not just tracking numbers, but understanding *why* money moves. The app asks the four Kakeibo questions: How much did I receive? How much do I want to save? How much did I spend? How can I improve?
+
+**Kaizen** (改善, "continuous improvement") — small, consistent changes compound into meaningful transformation. Micro-goals over grand resolutions. Reflection over regret.
+
+### How this affects contributions
+
+- **The calendar is the centerpiece.** Every feature should strengthen or deepen the calendar experience. Ask: does this feature help the user engage with their money more mindfully on the calendar?
+- **Features should invite reflection, not just display data.** A summary is good; a summary that asks "how does that feel?" is Kakeibo.
+- **Small and consistent beats large and occasional.** Prefer incremental improvements that fit within the existing daily/weekly/monthly rhythm over large feature additions that live outside the calendar.
+- **No gamification.** Kakeibo is quiet and honest — no streaks, badges, or confetti. A simple checkmark is enough.
+- **Categorization carries intention.** Every Expense category routes to one of the four Kakeibo buckets (Essentials, Wants, Culture, Unexpected). New categories must specify their Kakeibo routing.
+
+See `docs/128-kakeibo-kaizen-calendar-first.md` for the full feature specification.
+
 ## 📋 Development Guidelines
 
 Please review the comprehensive engineering guide in [`.github/copilot-instructions.md`](.github/copilot-instructions.md) for:

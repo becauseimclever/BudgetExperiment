@@ -76,6 +76,21 @@ Tests mirror structure under `tests/`.
 - Docker prerequisite for Testcontainers tests (Infrastructure.Tests, Api.Tests) now documented.
 - Typo: `cd BudgetExpirement` → `cd BudgetExperiment` fixed.
 
+### Feature 128: Kakeibo + Kaizen Calendar-First Philosophy — Documentation Update
+
+**What Changed:**
+- **README.md opening**: Replaced feature-list tagline with Kakeibo + Kaizen philosophy statement. Calendar described as "the household ledger" and the centerpiece of interaction.
+- **Purpose section**: Reframed entirely — leads with WHY (Kakeibo + Kaizen), then lists capabilities as tools serving the mindful philosophy. Calendar described as primary surface, not just a view.
+- **Key Domain Concepts**: Added three new Kakeibo entities: `KakeiboCategory` (four spending buckets), `MonthlyReflection` (monthly journal + savings intention), `KaizenGoal` (weekly micro-improvement). Updated `BudgetCategory` and `Transaction` descriptions to mention Kakeibo routing and override.
+- **Development Guidelines**: Added "Philosophy First" bullet — every feature must deepen the Kakeibo + Kaizen rhythm. Points to `docs/128-kakeibo-kaizen-calendar-first.md` for full spec.
+- **CONTRIBUTING.md**: Added entire "Design Philosophy — Kakeibo + Kaizen" section after intro, before Development Guidelines. Explains how philosophy affects contributions: calendar as centerpiece, reflection over data display, no gamification, categorization carries intention, small/consistent over large/occasional.
+
+**Why:**
+The application's identity has fundamentally pivoted. It is no longer described as "a capable transaction tracker" — it is a mindful budgeting application built around Kakeibo + Kaizen philosophy. The calendar is the centerpiece. All future features and enhancements must support this philosophy. README and CONTRIBUTING must communicate this to contributors immediately, not bury it in feature specs.
+
+**What Stayed the Same:**
+All technical content (architecture diagram, setup commands, test commands, Docker info, API list, release process, localization section) remains unchanged. Surgical edits only — no file rewrites.
+
 ## Learnings
 
 ### Feature 120: Plugin System Planning (2026-03-22)

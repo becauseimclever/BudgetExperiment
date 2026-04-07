@@ -8,20 +8,28 @@
 
 # Budget Experiment
 
-A clean architecture .NET 10 budgeting application with multi-user authentication, transaction tracking, budget categories, and intelligent paycheck allocation planning.
+A mindful budgeting application built on Kakeibo philosophy — the Japanese art of conscious money management. The calendar is the household ledger. Every week is a chapter. Every month is an invitation to reflect.
 
 ## 🎯 Purpose
 
-Budget Experiment helps you manage your finances by:
+Budget Experiment helps you understand your relationship with money through **Kakeibo** (家計簿, "household ledger") — the Japanese practice of mindful, intentional recording. Not just tracking numbers, but understanding *why* money moves. The application asks the four Kakeibo questions at the right moments: *How much did I receive? How much do I want to save? How much did I spend? How can I improve?*
+
+The **calendar is the centerpiece** — the primary surface for every financial decision. Every day is a journal entry. Every week offers a Kakeibo spending breakdown (Essentials, Wants, Culture, Unexpected). Every month closes with reflection and opens with intention-setting.
+
+**Kaizen** (改善, "continuous improvement") philosophy runs through the design: small weekly micro-goals, not grand resolutions. Compare yourself to yourself, not arbitrary benchmarks. Progress is quiet and honest — a checkmark, not confetti.
+
+The application supports this mindful rhythm with:
+- **Calendar-first design**: Daily transaction summaries, weekly Kakeibo breakdowns, monthly reflections — all anchored to the calendar
+- **Four Kakeibo categories**: Every expense maps to Essentials, Wants, Culture, or Unexpected — categories with intentional meaning
+- **Monthly reflection ritual**: Set savings goals at month-start, journal improvements at month-end
+- **Weekly Kaizen micro-goals**: Small, self-chosen improvements (e.g., "spend $10 less on dining than last week")
 - **Multi-user authentication**: Secure login via Authentik OIDC with personal and shared budget scopes
 - **Transaction management**: Track income and expenses across multiple accounts
-- **Budget categories & goals**: Set spending targets and monitor progress
 - **Paycheck allocation planning**: Distribute bill amounts across pay periods to ensure timely payments
 - **Recurring transactions**: Automate regular income and expenses with flexible scheduling
 - **AI Chat Assistant**: Create transactions via natural language - "Add $50 for groceries at Walmart"
 - **AI-powered categorization**: Get intelligent rule suggestions using local AI (via Ollama)
 - **CSV import**: Import transactions from Bank of America, Capital One, and UHCU with duplicate detection
-- **Calendar view**: Visualize daily transaction summaries and navigate spending history
 - **Reports & analytics**: Category spending, monthly trends, budget vs. actual comparison, date range filtering, week summaries, CSV exports, and a custom report builder
 - **Component showcase**: Dedicated UI page for chart and component previews
 
@@ -177,6 +185,7 @@ Note: Local Docker builds are not supported. Pull pre-built images from `ghcr.io
 
 This project follows strict engineering practices:
 
+- **Philosophy First**: The calendar is the centerpiece. Every feature should deepen the Kakeibo + Kaizen rhythm — mindful recording, intentional categorization, and continuous small improvement. See `docs/128-kakeibo-kaizen-calendar-first.md` for the design philosophy.
 - **TDD First**: Write failing tests before implementation
 - **SOLID Principles**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
 - **Clean Code**: Short methods, guard clauses, no commented code
@@ -189,11 +198,14 @@ See [`.github/copilot-instructions.md`](.github/copilot-instructions.md) for com
 
 ### Entities
 - **Account** - Financial account with type (Checking, Savings, Credit, etc.) and running balance
-- **Transaction** - Individual financial transaction with amount, date, description, and category
+- **Transaction** - Individual financial transaction with amount, date, description, and category; carries optional Kakeibo override for intentional one-off categorization
 - **RecurringTransaction** - Template for auto-generated transactions with recurrence pattern
 - **RecurringTransfer** - Scheduled transfers between accounts
-- **BudgetCategory** - Spending category with type (Income, Expense, Transfer, Savings)
+- **BudgetCategory** - Spending category with type (Income, Expense, Transfer, Savings); routes to a Kakeibo bucket (Essentials, Wants, Culture, Unexpected) for mindful aggregation
 - **BudgetGoal** - Monthly or yearly spending/savings target for a category
+- **KakeiboCategory** - The four spending buckets (Essentials, Wants, Culture, Unexpected) that give every expense intentional meaning
+- **MonthlyReflection** - A monthly journal entry capturing savings intention, actual outcome, and improvement notes; anchored to the calendar
+- **KaizenGoal** - A weekly micro-improvement goal (e.g., "spend $10 less on dining than last week")
 
 ### Value Objects
 - **MoneyValue** - Amount with currency validation and arithmetic operations
