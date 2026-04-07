@@ -39,6 +39,7 @@ public static class BudgetMapper
             SortOrder = category.SortOrder,
             IsActive = category.IsActive,
             Version = version,
+            KakeiboCategory = category.KakeiboCategory?.ToString(),
         };
     }
 

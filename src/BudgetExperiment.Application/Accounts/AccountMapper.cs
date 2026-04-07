@@ -86,6 +86,8 @@ public static class AccountMapper
             IsCleared = transaction.IsCleared,
             ClearedDate = transaction.ClearedDate,
             ReconciliationRecordId = transaction.ReconciliationRecordId,
+            KakeiboOverride = transaction.KakeiboOverride?.ToString(),
+            EffectiveKakeiboCategory = transaction.GetEffectiveKakeiboCategory().ToString(),
         };
     }
 

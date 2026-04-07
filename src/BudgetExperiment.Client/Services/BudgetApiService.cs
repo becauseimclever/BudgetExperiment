@@ -1910,6 +1910,94 @@ public sealed class BudgetApiService : IBudgetApiService
         }
     }
 
+    /// <inheritdoc />
+    public async Task<MonthlyReflectionDto?> GetReflectionByMonthAsync(int year, int month)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/v1/reflections/month/{year}/{month}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent
+                || response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<MonthlyReflectionDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<MonthlyReflectionDto?> CreateOrUpdateReflectionAsync(
+        int year,
+        int month,
+        CreateOrUpdateMonthlyReflectionDto dto)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/v1/reflections/month/{year}/{month}",
+                dto,
+                JsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<MonthlyReflectionDto>(JsonOptions);
+            }
+
+            return null;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<MonthFinancialSummaryDto?> GetMonthFinancialSummaryAsync(int year, int month)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/v1/calendar/month/{year}/{month}/summary");
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<MonthFinancialSummaryDto>(JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteReflectionAsync(Guid reflectionId)
+    {
+        try
+        {
+            var response = await _httpClient.DeleteAsync($"api/v1/reflections/{reflectionId}");
+            return response.IsSuccessStatusCode;
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return false;
+        }
+    }
+
     private async Task<ApiResult<T>> SendUpdateAsync<T>(HttpMethod method, string url, object body, string? version)
     {
         try

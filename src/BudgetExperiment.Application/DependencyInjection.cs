@@ -84,6 +84,8 @@ public static class DependencyInjection
         services.AddScoped<ILocationParserService, LocationParserService>();
         services.AddScoped<IStatementReconciliationService, StatementReconciliationService>();
         services.AddScoped<IDataHealthService, DataHealthService>();
+        services.AddScoped<IFeatureFlagService, FeatureFlagService>();
+        services.AddScoped<IReflectionService, ReflectionService>();
         return services;
     }
 }

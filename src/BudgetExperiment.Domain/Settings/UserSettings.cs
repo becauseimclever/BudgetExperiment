@@ -84,6 +84,12 @@ public sealed class UserSettings
     }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the user has seen the Kakeibo selector tooltip.
+    /// Used to show the "What kind of spending is this?" tooltip only once.
+    /// </summary>
+    public bool HasSeenKakeiboSelectorTooltip { get; set; }
+
+    /// <summary>
     /// Gets the UTC timestamp when the settings were created.
     /// </summary>
     public DateTime CreatedAtUtc

@@ -92,6 +92,13 @@ public sealed class TransactionService : ITransactionService
 
         var amount = MoneyValue.Create(dto.Amount.Currency, dto.Amount.Amount);
         var transaction = account.AddTransaction(amount, dto.Date, dto.Description, categoryId);
+
+        if (!string.IsNullOrWhiteSpace(dto.KakeiboOverride) &&
+            Enum.TryParse<KakeiboCategory>(dto.KakeiboOverride, ignoreCase: true, out var kakeibo))
+        {
+            transaction.SetKakeiboOverride(kakeibo);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return AccountMapper.ToDto(transaction);
     }
@@ -122,6 +129,16 @@ public sealed class TransactionService : ITransactionService
         transaction.UpdateDate(dto.Date);
         transaction.UpdateDescription(dto.Description);
         transaction.UpdateCategory(dto.CategoryId);
+
+        if (!string.IsNullOrWhiteSpace(dto.KakeiboOverride) &&
+            Enum.TryParse<KakeiboCategory>(dto.KakeiboOverride, ignoreCase: true, out var kakeibo))
+        {
+            transaction.SetKakeiboOverride(kakeibo);
+        }
+        else
+        {
+            transaction.SetKakeiboOverride(null);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var version = _unitOfWork.GetConcurrencyToken(transaction);

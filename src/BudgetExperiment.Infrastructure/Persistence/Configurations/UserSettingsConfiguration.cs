@@ -59,6 +59,10 @@ internal sealed class UserSettingsConfiguration : IEntityTypeConfiguration<UserS
         builder.Property(u => u.UpdatedAtUtc)
             .IsRequired();
 
+        builder.Property(u => u.HasSeenKakeiboSelectorTooltip)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         // Unique constraint: one settings record per user
         builder.HasIndex(u => u.UserId)
             .IsUnique();

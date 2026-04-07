@@ -78,6 +78,9 @@ internal sealed class BudgetCategoryConfiguration : IEntityTypeConfiguration<Bud
         builder.Property(c => c.CreatedByUserId)
             .IsRequired();
 
+        builder.Property(c => c.KakeiboCategory)
+            .IsRequired(false);
+
         // Indexes for scope filtering
         builder.HasIndex(c => c.Scope);
         builder.HasIndex(c => c.OwnerUserId);

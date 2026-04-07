@@ -1,6 +1,6 @@
 # Feature 135: Monthly Reflection Panel
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 

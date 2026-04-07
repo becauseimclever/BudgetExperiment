@@ -734,5 +734,17 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task DismissOutlierAsync(Guid transactionId) => Task.CompletedTask;
+
+        /// <inheritdoc/>
+        public Task<MonthlyReflectionDto?> GetReflectionByMonthAsync(int year, int month) => Task.FromResult<MonthlyReflectionDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<MonthlyReflectionDto?> CreateOrUpdateReflectionAsync(int year, int month, CreateOrUpdateMonthlyReflectionDto dto) => Task.FromResult<MonthlyReflectionDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<MonthFinancialSummaryDto?> GetMonthFinancialSummaryAsync(int year, int month) => Task.FromResult<MonthFinancialSummaryDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<bool> DeleteReflectionAsync(Guid reflectionId) => Task.FromResult(false);
     }
 }

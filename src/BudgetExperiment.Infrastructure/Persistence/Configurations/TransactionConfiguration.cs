@@ -178,5 +178,9 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.HasIndex(t => t.ReconciliationRecordId)
             .HasDatabaseName("IX_Transactions_ReconciliationRecordId")
             .HasFilter("\"ReconciliationRecordId\" IS NOT NULL");
+
+        builder.Property(t => t.KakeiboOverride)
+            .HasConversion<int?>()
+            .IsRequired(false);
     }
 }

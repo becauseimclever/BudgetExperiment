@@ -1,6 +1,6 @@
 # Feature 132: Transaction Entry — Kakeibo Selector
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -253,20 +253,20 @@ Used to show the tooltip only on first encounter.
 
 ## Acceptance Criteria
 
-- [ ] `KakeiboCategory? KakeiboOverride` field added to `Transaction` entity.
-- [ ] Database migration creates `KakeiboOverride` column (int null, default null).
-- [ ] `GetEffectiveKakeiboCategory()` computed property returns `KakeiboOverride ?? BudgetCategory.KakeiboCategory ?? Wants`.
-- [ ] Create/Edit transaction endpoints accept `KakeiboOverride` in request DTO.
-- [ ] Create/Edit endpoints return `KakeiboOverride` and `EffectiveKakeiboCategory` in response.
-- [ ] `KakeiboSelector` component renders four clear category buttons with icons and labels.
-- [ ] Selector defaults to `BudgetCategory.KakeiboCategory` on initial render.
-- [ ] Selector is only visible/functional if feature flag `Features:Kakeibo:TransactionOverride` is enabled.
-- [ ] Tooltip "What kind of spending is this?" displays on first use (checked via `HasSeenKakeiboSelectorTooltip`).
-- [ ] Modal integration: captures selector value and sends override only if different from category routing.
-- [ ] If override equals category routing, request sends `KakeiboOverride = null`.
-- [ ] Transaction list endpoint returns `EffectiveKakeiboCategory` for all items.
-- [ ] All existing tests pass; new unit tests for effective category computation.
-- [ ] Accessibility: keyboard navigation, ARIA labels, sufficient contrast on selector buttons.
+- [x] `KakeiboCategory? KakeiboOverride` field added to `Transaction` entity.
+- [x] Database migration creates `KakeiboOverride` column (int null, default null).
+- [x] `GetEffectiveKakeiboCategory()` computed property returns `KakeiboOverride ?? BudgetCategory.KakeiboCategory ?? Wants`.
+- [x] Create/Edit transaction endpoints accept `KakeiboOverride` in request DTO.
+- [x] Create/Edit endpoints return `KakeiboOverride` and `EffectiveKakeiboCategory` in response.
+- [x] `KakeiboSelector` component renders four clear category buttons with icons and labels.
+- [x] Selector defaults to `BudgetCategory.KakeiboCategory` on initial render.
+- [x] Selector is only visible/functional if feature flag `Kakeibo:TransactionOverride` is enabled.
+- [x] Tooltip "What kind of spending is this?" displays on first use (checked via `HasSeenKakeiboSelectorTooltip`).
+- [x] Modal integration: captures selector value and sends override only if different from category routing.
+- [x] If override equals category routing, request sends `KakeiboOverride = null`.
+- [x] Transaction list endpoint returns `EffectiveKakeiboCategory` for all items.
+- [x] All existing tests pass; new unit tests for effective category computation.
+- [x] Accessibility: keyboard navigation, ARIA labels, sufficient contrast on selector buttons.
 
 ## Implementation Order
 

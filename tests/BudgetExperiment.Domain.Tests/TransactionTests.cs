@@ -932,4 +932,74 @@ public class TransactionTests
         Assert.False(transaction.IsCleared);
         Assert.Null(transaction.ClearedDate);
     }
+
+    [Fact]
+    public void KakeiboOverride_Is_Null_By_Default()
+    {
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50m),
+            new DateOnly(2026, 1, 9),
+            "Coffee");
+
+        Assert.Null(transaction.KakeiboOverride);
+    }
+
+    [Fact]
+    public void SetKakeiboOverride_Sets_Override()
+    {
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50m),
+            new DateOnly(2026, 1, 9),
+            "Coffee");
+
+        transaction.SetKakeiboOverride(KakeiboCategory.Culture);
+
+        Assert.Equal(KakeiboCategory.Culture, transaction.KakeiboOverride);
+    }
+
+    [Fact]
+    public void SetKakeiboOverride_Null_Clears_Override()
+    {
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50m),
+            new DateOnly(2026, 1, 9),
+            "Coffee");
+        transaction.SetKakeiboOverride(KakeiboCategory.Culture);
+
+        transaction.SetKakeiboOverride(null);
+
+        Assert.Null(transaction.KakeiboOverride);
+    }
+
+    [Fact]
+    public void GetEffectiveKakeiboCategory_Returns_Override_When_Set()
+    {
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50m),
+            new DateOnly(2026, 1, 9),
+            "Birthday dinner");
+        transaction.SetKakeiboOverride(KakeiboCategory.Culture);
+
+        var effective = transaction.GetEffectiveKakeiboCategory();
+
+        Assert.Equal(KakeiboCategory.Culture, effective);
+    }
+
+    [Fact]
+    public void GetEffectiveKakeiboCategory_Returns_Wants_Fallback_When_No_Override_And_No_Category()
+    {
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            MoneyValue.Create("USD", 50m),
+            new DateOnly(2026, 1, 9),
+            "Misc purchase");
+
+        var effective = transaction.GetEffectiveKakeiboCategory();
+
+        Assert.Equal(KakeiboCategory.Wants, effective);
+    }
 }

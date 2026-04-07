@@ -1,5 +1,7 @@
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.FeatureFlags;
 using BudgetExperiment.Domain.Reconciliation;
+using BudgetExperiment.Domain.Reflection;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -141,6 +143,12 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
 
     /// <summary>Gets the dismissed outliers.</summary>
     public DbSet<DismissedOutlier> DismissedOutliers => this.Set<DismissedOutlier>();
+
+    /// <summary>Gets the feature flags.</summary>
+    public DbSet<FeatureFlag> FeatureFlags => this.Set<FeatureFlag>();
+
+    /// <summary>Gets the monthly Kakeibo reflections.</summary>
+    public DbSet<MonthlyReflection> MonthlyReflections => this.Set<MonthlyReflection>();
 
     /// <inheritdoc />
     public string? GetConcurrencyToken<T>(T entity)

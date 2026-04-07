@@ -1,0 +1,341 @@
+@* MonthlyReflectionPanel.razor - Monthly Kakeibo reflection panel component *@
+@* Displays financial summary and allows editing intention, gratitude, and improvement journal entries. *@
+
+@using BudgetExperiment.Client.Services
+@using BudgetExperiment.Contracts.Dtos
+
+@inject IBudgetApiService ApiService
+@inject IFeatureFlagClientService FeatureFlags
+@inject CultureService Culture
+
+@if (!FeatureFlags.IsEnabled("Kakeibo:MonthlyReflectionPrompts"))
+{
+    return;
+}
+
+<div class="reflection-panel">
+    @* Header *@
+    <div class="reflection-header">
+        <h3 class="reflection-title">Monthly Reflection — @GetMonthLabel()</h3>
+        <span class="reflection-status-badge @GetStatusClass()">@GetStatusLabel()</span>
+    </div>
+
+    @if (_isLoading)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        @* Financial Summary (read-only) *@
+        <div class="reflection-section reflection-summary">
+            <h4>Financial Summary</h4>
+            <div class="reflection-summary-metrics">
+                <div class="metric">
+                    <span class="metric-label">Total Income</span>
+                    <span class="metric-value income">@FormatAmount(_summary?.TotalIncome ?? 0)</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Spending</span>
+                    <span class="metric-value expense">@FormatAmount(_summary?.TotalExpenses ?? 0)</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Computed Savings</span>
+                    <span class="metric-value @GetSavingsClass()">@FormatAmount(_summary?.ComputedSavings ?? 0)</span>
+                </div>
+            </div>
+
+            @* Kakeibo Breakdown *@
+            @if (_summary is not null)
+            {
+                <div class="kakeibo-breakdown">
+                    <h5>Kakeibo Breakdown</h5>
+                    <div class="kakeibo-bars">
+                        <div class="kakeibo-bar">
+                            <span class="kakeibo-label">Essentials</span>
+                            <div class="kakeibo-bar-track">
+                                <div class="kakeibo-bar-fill essentials"
+                                     style="width: @GetBreakdownPercent(_summary.ExpenseBreakdown.Essentials)%"></div>
+                            </div>
+                            <span class="kakeibo-amount">@FormatAmount(_summary.ExpenseBreakdown.Essentials)</span>
+                        </div>
+                        <div class="kakeibo-bar">
+                            <span class="kakeibo-label">Wants</span>
+                            <div class="kakeibo-bar-track">
+                                <div class="kakeibo-bar-fill wants"
+                                     style="width: @GetBreakdownPercent(_summary.ExpenseBreakdown.Wants)%"></div>
+                            </div>
+                            <span class="kakeibo-amount">@FormatAmount(_summary.ExpenseBreakdown.Wants)</span>
+                        </div>
+                        <div class="kakeibo-bar">
+                            <span class="kakeibo-label">Culture</span>
+                            <div class="kakeibo-bar-track">
+                                <div class="kakeibo-bar-fill culture"
+                                     style="width: @GetBreakdownPercent(_summary.ExpenseBreakdown.Culture)%"></div>
+                            </div>
+                            <span class="kakeibo-amount">@FormatAmount(_summary.ExpenseBreakdown.Culture)</span>
+                        </div>
+                        <div class="kakeibo-bar">
+                            <span class="kakeibo-label">Unexpected</span>
+                            <div class="kakeibo-bar-track">
+                                <div class="kakeibo-bar-fill unexpected"
+                                     style="width: @GetBreakdownPercent(_summary.ExpenseBreakdown.Unexpected)%"></div>
+                            </div>
+                            <span class="kakeibo-amount">@FormatAmount(_summary.ExpenseBreakdown.Unexpected)</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Savings Goal *@
+        <div class="reflection-section">
+            <label class="reflection-field-label" for="savingsGoal">
+                Savings Goal
+                <small>How much did you want to save this month?</small>
+            </label>
+            @if (IsPastMonth())
+            {
+                <p class="reflection-readonly-value">@FormatAmount(_savingsGoal)</p>
+                <small class="reflection-hint">This was the goal set at month start.</small>
+            }
+            else
+            {
+                <input id="savingsGoal"
+                       type="number"
+                       min="0"
+                       step="0.01"
+                       class="form-control"
+                       @bind="_savingsGoal"
+                       @oninput="OnFieldChanged" />
+            }
+
+            @if (_summary?.ComputedSavings is not null && _savingsGoal > 0)
+            {
+                var computedSavings = _summary.ComputedSavings;
+                var goalDiff = computedSavings - _savingsGoal;
+                <p class="savings-progress @(goalDiff >= 0 ? "on-track" : "behind")">
+                    @if (goalDiff >= 0)
+                    {
+                        <span>🎉 Saved @FormatAmount(computedSavings) — @FormatAmount(goalDiff) over goal!</span>
+                    }
+                    else
+                    {
+                        <span>Saved @FormatAmount(computedSavings) of @FormatAmount(_savingsGoal) goal
+                            (@(Math.Abs(Math.Round(goalDiff / _savingsGoal * 100, 0)))% away)</span>
+                    }
+                </p>
+            }
+        </div>
+
+        @* Intention *@
+        <div class="reflection-section">
+            <label class="reflection-field-label" for="intention">
+                What's your intention for this month?
+            </label>
+            @if (IsPastMonth())
+            {
+                <p class="reflection-readonly-value">@(_intentionText ?? "—")</p>
+            }
+            else
+            {
+                <textarea id="intention"
+                          class="form-control"
+                          rows="3"
+                          maxlength="280"
+                          placeholder="e.g., save for a vacation, reduce dining out, focus on essentials"
+                          @bind="_intentionText"
+                          @oninput="OnFieldChanged"></textarea>
+                <div class="char-counter @(_intentionText?.Length >= 260 ? "counter-warning" : "")">
+                    @(_intentionText?.Length ?? 0) / 280
+                </div>
+            }
+        </div>
+
+        @* Gratitude *@
+        <div class="reflection-section">
+            <label class="reflection-field-label" for="gratitude">
+                @(IsPastMonth() ? "What went well last month?" : "What went well this month?")
+            </label>
+            <textarea id="gratitude"
+                      class="form-control"
+                      rows="5"
+                      maxlength="2000"
+                      placeholder="e.g., I stuck to my grocery budget, enjoyed a great meal with friends without guilt"
+                      @bind="_gratitudeText"
+                      @oninput="OnFieldChanged"></textarea>
+            <div class="char-counter @(_gratitudeText?.Length >= 1900 ? "counter-warning" : "")">
+                @(_gratitudeText?.Length ?? 0) / 2000
+            </div>
+        </div>
+
+        @* Improvement *@
+        <div class="reflection-section">
+            <label class="reflection-field-label" for="improvement">
+                What would you do differently next month?
+            </label>
+            <textarea id="improvement"
+                      class="form-control"
+                      rows="5"
+                      maxlength="2000"
+                      placeholder="e.g., plan better for unexpected expenses, save more from dining"
+                      @bind="_improvementText"
+                      @oninput="OnFieldChanged"></textarea>
+            <div class="char-counter @(_improvementText?.Length >= 1900 ? "counter-warning" : "")">
+                @(_improvementText?.Length ?? 0) / 2000
+            </div>
+        </div>
+
+        @* Error *@
+        <ErrorAlert Message="@_errorMessage" IsDismissible="true" />
+
+        @* Action Buttons *@
+        <div class="reflection-actions">
+            <Button Variant="ButtonVariant.Primary"
+                    OnClick="SaveAsync"
+                    Disabled="@(!_isDirty || _isSaving)">
+                @(_isSaving ? "Saving…" : "Save Changes")
+            </Button>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The year for this reflection.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public int Year { get; set; }
+
+    /// <summary>
+    /// The month (1-12) for this reflection.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public int Month { get; set; }
+
+    private MonthFinancialSummaryDto? _summary;
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private bool _isDirty;
+    private string? _errorMessage;
+
+    private decimal _savingsGoal;
+    private string? _intentionText;
+    private string? _gratitudeText;
+    private string? _improvementText;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _isDirty = false;
+        _errorMessage = null;
+
+        _summary = await ApiService.GetMonthFinancialSummaryAsync(Year, Month);
+
+        if (_summary?.Reflection is not null)
+        {
+            var r = _summary.Reflection;
+            _savingsGoal = r.SavingsGoal;
+            _intentionText = r.IntentionText;
+            _gratitudeText = r.GratitudeText;
+            _improvementText = r.ImprovementText;
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        _isSaving = true;
+        _errorMessage = null;
+
+        var dto = new CreateOrUpdateMonthlyReflectionDto
+        {
+            SavingsGoal = _savingsGoal,
+            IntentionText = _intentionText,
+            GratitudeText = _gratitudeText,
+            ImprovementText = _improvementText,
+        };
+
+        var result = await ApiService.CreateOrUpdateReflectionAsync(Year, Month, dto);
+
+        if (result is not null)
+        {
+            _isDirty = false;
+            if (_summary is not null)
+            {
+                _summary.Reflection = result;
+            }
+        }
+        else
+        {
+            _errorMessage = "Failed to save reflection. Please try again.";
+        }
+
+        _isSaving = false;
+    }
+
+    private void OnFieldChanged()
+    {
+        _isDirty = true;
+    }
+
+    private string GetMonthLabel()
+    {
+        return new DateTime(Year, Month, 1).ToString("MMMM yyyy");
+    }
+
+    private string GetStatusLabel()
+    {
+        if (_summary?.Reflection is null)
+        {
+            return IsCurrentMonth() ? "In Progress" : "Not Reflected";
+        }
+
+        return IsCurrentMonth() ? "In Progress" : "Completed";
+    }
+
+    private string GetStatusClass()
+    {
+        if (_summary?.Reflection is null)
+        {
+            return IsCurrentMonth() ? "badge-info" : "badge-secondary";
+        }
+
+        return IsCurrentMonth() ? "badge-info" : "badge-success";
+    }
+
+    private bool IsCurrentMonth()
+    {
+        var now = DateTime.UtcNow;
+        return Year == now.Year && Month == now.Month;
+    }
+
+    private bool IsPastMonth()
+    {
+        var now = DateTime.UtcNow;
+        return Year < now.Year || (Year == now.Year && Month < now.Month);
+    }
+
+    private string GetSavingsClass()
+    {
+        var savings = _summary?.ComputedSavings ?? 0;
+        return savings >= 0 ? "positive" : "negative";
+    }
+
+    private string FormatAmount(decimal amount)
+    {
+        return amount.FormatCurrency(Culture.CurrentCulture);
+    }
+
+    private double GetBreakdownPercent(decimal amount)
+    {
+        var total = _summary?.TotalExpenses ?? 0;
+        if (total == 0)
+        {
+            return 0;
+        }
+
+        return Math.Min(100, (double)(amount / total * 100));
+    }
+}

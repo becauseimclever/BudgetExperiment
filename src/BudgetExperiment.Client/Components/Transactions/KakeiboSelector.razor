@@ -1,0 +1,80 @@
+@* KakeiboSelector.razor - Per-transaction Kakeibo category override selector *@
+
+@inject IFeatureFlagClientService FeatureFlags
+
+@if (FeatureFlags.IsEnabled("Kakeibo:TransactionOverride"))
+{
+    <div class="kakeibo-selector" role="group" aria-label="Kakeibo spending category">
+        @if (_showTooltip)
+        {
+            <div class="kakeibo-tooltip" role="status">
+                What kind of spending is this?
+            </div>
+        }
+        @foreach (var bucket in Buckets)
+        {
+            <button type="button"
+                    class="kakeibo-btn @(SelectedValue == bucket.Value ? "kakeibo-btn--selected" : "")"
+                    title="@bucket.Description"
+                    aria-pressed="@(SelectedValue == bucket.Value ? "true" : "false")"
+                    @onclick="() => SelectAsync(bucket.Value)">
+                <span class="kakeibo-icon" aria-hidden="true">@bucket.Icon</span>
+                <span class="kakeibo-label">@bucket.Label</span>
+            </button>
+        }
+    </div>
+}
+
+@code {
+    private record BucketOption(string Value, string Label, string Icon, string Description);
+
+    private static readonly BucketOption[] Buckets =
+    [
+        new("Essentials", "Essentials", "🏠", "Things needed to live"),
+        new("Wants",      "Wants",      "🎁", "Things enjoyed but not essential"),
+        new("Culture",    "Culture",    "📚", "Things that enrich mind and spirit"),
+        new("Unexpected", "Unexpected", "⚡", "Things that were not planned"),
+    ];
+
+    /// <summary>
+    /// Gets or sets the initial Kakeibo value (enum name string), e.g. from the selected category's routing.
+    /// </summary>
+    [Parameter]
+    public string? InitialValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked when the user selects or deselects a Kakeibo bucket.
+    /// The argument is the selected enum name, or null if the selection was toggled off.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string?> OnSelected { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the "What kind of spending is this?" tooltip.
+    /// Controlled by <c>UserSettings.HasSeenKakeiboSelectorTooltip</c>.
+    /// </summary>
+    [Parameter]
+    public bool ShowTooltip { get; set; }
+
+    private string? SelectedValue { get; set; }
+    private bool _showTooltip;
+    private bool _initialised;
+
+    /// <inheritdoc/>
+    protected override void OnParametersSet()
+    {
+        if (!_initialised)
+        {
+            SelectedValue = InitialValue;
+            _showTooltip = ShowTooltip;
+            _initialised = true;
+        }
+    }
+
+    private async Task SelectAsync(string value)
+    {
+        SelectedValue = SelectedValue == value ? null : value;
+        _showTooltip = false;
+        await OnSelected.InvokeAsync(SelectedValue);
+    }
+}

@@ -66,4 +66,13 @@ public sealed class BudgetCategoryDto
     {
         get; set;
     }
+
+    /// <summary>
+    /// Gets or sets the Kakeibo spending bucket.
+    /// Populated for Expense categories only; null for Income and Transfer.
+    /// </summary>
+    public string? KakeiboCategory
+    {
+        get; set;
+    }
 }

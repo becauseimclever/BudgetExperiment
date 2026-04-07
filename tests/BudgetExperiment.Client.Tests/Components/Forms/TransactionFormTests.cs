@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Client.Components.Forms;
 using BudgetExperiment.Client.Services;
+using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
 
 using Bunit;
@@ -28,6 +29,7 @@ public sealed class TransactionFormTests : BunitContext, IAsyncLifetime
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
         Services.AddSingleton<CultureService>();
+        Services.AddSingleton<IFeatureFlagClientService>(new StubFeatureFlagClientService());
     }
 
     /// <inheritdoc/>

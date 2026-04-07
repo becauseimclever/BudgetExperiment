@@ -897,4 +897,28 @@ public interface IBudgetApiService
     /// <param name="transactionId">The transaction identifier to dismiss.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task DismissOutlierAsync(Guid transactionId);
+
+    /// <summary>Gets the monthly Kakeibo reflection for the current user.</summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <returns>The reflection DTO, or null if not found or feature is disabled.</returns>
+    Task<MonthlyReflectionDto?> GetReflectionByMonthAsync(int year, int month);
+
+    /// <summary>Creates or updates the monthly Kakeibo reflection for the current user.</summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <param name="dto">The create/update data.</param>
+    /// <returns>The saved reflection DTO, or null on failure.</returns>
+    Task<MonthlyReflectionDto?> CreateOrUpdateReflectionAsync(int year, int month, CreateOrUpdateMonthlyReflectionDto dto);
+
+    /// <summary>Gets the monthly financial summary including Kakeibo breakdown and reflection.</summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <returns>The financial summary DTO, or null on failure.</returns>
+    Task<MonthFinancialSummaryDto?> GetMonthFinancialSummaryAsync(int year, int month);
+
+    /// <summary>Deletes a monthly reflection by ID.</summary>
+    /// <param name="reflectionId">The reflection identifier.</param>
+    /// <returns>True if deleted; false otherwise.</returns>
+    Task<bool> DeleteReflectionAsync(Guid reflectionId);
 }

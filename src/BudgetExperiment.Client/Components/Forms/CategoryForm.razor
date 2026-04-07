@@ -71,6 +71,20 @@
         </div>
     }
 
+    @if (Model.Type == "Expense")
+    {
+        <FormField Label="Kakeibo Category:" InputId="kakeiboCategory"
+                   HelpText="Kakeibo is a Japanese budgeting philosophy. Choose what kind of spending this is.">
+            <select id="kakeiboCategory" class="form-control" @bind="Model.KakeiboCategory">
+                <option value="">-- Select Kakeibo bucket --</option>
+                <option value="Essentials">🏠 Essentials — things needed to live</option>
+                <option value="Wants">🛍️ Wants — things enjoyed but not essential</option>
+                <option value="Culture">📚 Culture — things that enrich mind and spirit</option>
+                <option value="Unexpected">⚡ Unexpected — things that were not planned</option>
+            </select>
+        </FormField>
+    }
+
     @if (Model.Type == "Expense" && !ShowSortOrder)
     {
         <div class="form-group">

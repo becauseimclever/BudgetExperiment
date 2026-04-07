@@ -146,6 +146,7 @@ builder.Services.AddApexCharts();
 builder.Services.AddScoped<GeolocationService>();
 builder.Services.AddScoped<CultureService>();
 builder.Services.AddScoped<VersionService>();
+builder.Services.AddSingleton<IFeatureFlagClientService, FeatureFlagClientService>();
 builder.Services.AddTransient<CategoriesViewModel>();
 builder.Services.AddTransient<RulesViewModel>();
 builder.Services.AddTransient<AccountsViewModel>();
@@ -158,4 +159,9 @@ builder.Services.AddTransient<OnboardingViewModel>();
 builder.Services.AddTransient<AiSuggestionsViewModel>();
 builder.Services.AddTransient<TransactionsViewModel>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+var featureFlagService = host.Services.GetRequiredService<IFeatureFlagClientService>();
+await featureFlagService.LoadFlagsAsync();
+
+await host.RunAsync();

@@ -117,6 +117,12 @@ public sealed class BudgetCategory
     }
 
     /// <summary>
+    /// Gets the Kakeibo spending bucket for this category.
+    /// Set only for Expense categories; null for Income and Transfer.
+    /// </summary>
+    public global::BudgetExperiment.Shared.Budgeting.KakeiboCategory? KakeiboCategory { get; private set; }
+
+    /// <summary>
     /// Gets the budget goals for this category.
     /// </summary>
     public IReadOnlyCollection<BudgetGoal> Goals => _goals.AsReadOnly();
@@ -183,6 +189,23 @@ public sealed class BudgetCategory
     public void Activate()
     {
         this.IsActive = true;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the Kakeibo spending bucket for this category.
+    /// Only valid for Expense categories; throws for Income and Transfer.
+    /// </summary>
+    /// <param name="kakeiboCategory">The Kakeibo bucket, or null to clear.</param>
+    /// <exception cref="DomainException">Thrown when attempting to set Kakeibo on a non-Expense category.</exception>
+    public void SetKakeiboCategory(global::BudgetExperiment.Shared.Budgeting.KakeiboCategory? kakeiboCategory)
+    {
+        if (kakeiboCategory is not null && this.Type != CategoryType.Expense)
+        {
+            throw new DomainException("Kakeibo category can only be set on Expense-type categories.");
+        }
+
+        this.KakeiboCategory = kakeiboCategory;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 

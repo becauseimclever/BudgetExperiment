@@ -139,6 +139,12 @@ public partial class Program
         // Apply migrations based on configuration (defaults to enabled)
         await ApplyMigrationsAsync(app);
 
+        // Seed feature flags (all environments — idempotent, never overwrites)
+        await SeedFeatureFlagsAsync(app);
+
+        // Seed Kakeibo defaults (all environments — idempotent, only updates NULL rows)
+        await SeedKakeiboDefaultsAsync(app);
+
         // Seed data ONLY in development
         if (app.Environment.IsDevelopment())
         {
@@ -286,6 +292,50 @@ public partial class Program
         {
             logger.LogCritical(ex, "Failed to apply database migrations. Application cannot start.");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Seeds default feature flags into the database. Runs in all environments; idempotent.
+    /// </summary>
+    /// <param name="app">The web application.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private static async Task SeedFeatureFlagsAsync(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        try
+        {
+            await FeatureFlagSeeder.SeedAsync(context);
+            logger.LogInformation("Feature flags seeded successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to seed feature flags. Continuing startup...");
+        }
+    }
+
+    /// <summary>
+    /// Seeds Kakeibo default routing for existing expense categories. Runs in all environments; idempotent.
+    /// </summary>
+    /// <param name="app">The web application.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    private static async Task SeedKakeiboDefaultsAsync(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        try
+        {
+            await KakeiboDefaultSeeder.SeedAsync(context);
+            logger.LogInformation("Kakeibo defaults seeded successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to seed Kakeibo defaults. Continuing startup...");
         }
     }
 

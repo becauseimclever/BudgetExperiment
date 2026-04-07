@@ -32,4 +32,7 @@ public sealed class TransactionCreateDto
     {
         get; set;
     }
+
+    /// <summary>Gets or sets the per-transaction Kakeibo override (enum name, e.g. "Essentials", "Wants", "Culture", "Unexpected"). Null means defer to category routing.</summary>
+    public string? KakeiboOverride { get; set; }
 }

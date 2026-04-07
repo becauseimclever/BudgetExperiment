@@ -1,0 +1,58 @@
+.kakeibo-selector {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 0.5rem 0;
+}
+
+.kakeibo-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1 1 0;
+    min-width: 4rem;
+    padding: 0.5rem 0.25rem;
+    border: 2px solid var(--color-border, #d1d5db);
+    border-radius: 0.5rem;
+    background: var(--color-surface, #ffffff);
+    color: var(--color-text-muted, #6b7280);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+    .kakeibo-btn:hover {
+        border-color: var(--color-primary, #3b82f6);
+        color: var(--color-primary, #3b82f6);
+    }
+
+    .kakeibo-btn:focus-visible {
+        outline: 2px solid var(--color-primary, #3b82f6);
+        outline-offset: 2px;
+    }
+
+.kakeibo-btn--selected {
+    border-color: var(--color-primary, #3b82f6);
+    background: var(--color-primary-light, #eff6ff);
+    color: var(--color-primary, #3b82f6);
+    font-weight: 600;
+}
+
+.kakeibo-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.kakeibo-label {
+    text-align: center;
+}
+
+.kakeibo-tooltip {
+    width: 100%;
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #6b7280);
+    font-style: italic;
+    margin-bottom: 0.25rem;
+}

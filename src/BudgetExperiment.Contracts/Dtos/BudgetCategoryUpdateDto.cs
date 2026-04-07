@@ -40,4 +40,13 @@ public sealed class BudgetCategoryUpdateDto
     {
         get; set;
     }
+
+    /// <summary>
+    /// Gets or sets the Kakeibo spending bucket.
+    /// Required for Expense categories; must be null for Income and Transfer.
+    /// </summary>
+    public string? KakeiboCategory
+    {
+        get; set;
+    }
 }

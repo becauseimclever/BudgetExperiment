@@ -5,6 +5,7 @@
 @page "/{Year:int}/{Month:int}"
 
 @using BudgetExperiment.Client.Components.Forms
+@using BudgetExperiment.Client.Components.Reflection
 @using BudgetExperiment.Client.Services
 
 @implements IDisposable
@@ -13,6 +14,7 @@
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
 @inject IChatContextService ChatContext
+@inject IFeatureFlagClientService FeatureFlags
 
 <PageTitle>Budget Experiment</PageTitle>
 
@@ -27,6 +29,16 @@
                 <Icon Name="chart" Size="16" />
                 Reports
             </a>
+            @if (FeatureFlags.IsEnabled("Kakeibo:MonthlyReflectionPrompts"))
+            {
+                <button type="button"
+                        class="btn-view-reports"
+                        title="Monthly Reflection for @currentDate.ToString("MMMM yyyy")"
+                        @onclick="ToggleReflectionPanel">
+                    <Icon Name="journal" Size="16" />
+                    Reflection
+                </button>
+            }
             <Button Variant="ButtonVariant.Primary" OnClick="NextMonth">Next &gt;</Button>
         </div>
     </div>
@@ -161,6 +173,15 @@
                      OnSave="SaveBudgetGoal"
                      OnDelete="DeleteBudgetGoal"
                      OnClose="HideBudgetGoalModal" />
+
+    <Modal IsVisible="@showReflectionPanel"
+           Title="@GetReflectionPanelTitle()"
+           OnClose="HideReflectionPanel">
+        @if (showReflectionPanel)
+        {
+            <MonthlyReflectionPanel Year="@currentDate.Year" Month="@currentDate.Month" />
+        }
+    </Modal>
 </div>
 
 @code {
@@ -222,6 +243,9 @@
     private bool showBudgetGoalModal = false;
     private GoalEditMode budgetGoalMode = GoalEditMode.Create;
     private BudgetProgressDto? editingBudgetProgress;
+
+    // Reflection panel state
+    private bool showReflectionPanel = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -487,6 +511,18 @@
         var prev = currentDate.AddMonths(-1);
         Navigation.NavigateTo($"/{prev.Year}/{prev.Month}");
     }
+
+    private void ToggleReflectionPanel()
+    {
+        showReflectionPanel = !showReflectionPanel;
+    }
+
+    private void HideReflectionPanel()
+    {
+        showReflectionPanel = false;
+    }
+
+    private string GetReflectionPanelTitle() => $"Monthly Reflection \u2014 {currentDate:MMMM yyyy}";
 
     private void NextMonth()
     {
@@ -806,7 +842,6 @@
     {
         showPastDueReview = true;
     }
-
     private void HidePastDueReview()
     {
         showPastDueReview = false;

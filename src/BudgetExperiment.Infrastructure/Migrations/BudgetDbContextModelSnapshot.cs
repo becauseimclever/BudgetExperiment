@@ -116,6 +116,9 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<int?>("KakeiboOverride")
+                        .HasColumnType("integer");
+
                     b.Property<Guid?>("OwnerUserId")
                         .HasColumnType("uuid");
 
@@ -209,6 +212,9 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("KakeiboCategory")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -653,6 +659,23 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.HasIndex("LastMessageAtUtc");
 
                     b.ToTable("ChatSessions", (string)null);
+                });
+
+            modelBuilder.Entity("BudgetExperiment.Domain.FeatureFlags.FeatureFlag", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("FeatureFlags", (string)null);
                 });
 
             modelBuilder.Entity("BudgetExperiment.Domain.Import.ImportBatch", b =>
@@ -1239,6 +1262,54 @@ namespace BudgetExperiment.Infrastructure.Migrations
                     b.ToTable("RecurringTransferExceptions", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetExperiment.Domain.Reflection.MonthlyReflection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ActualSavings")
+                        .HasPrecision(19, 2)
+                        .HasColumnType("numeric(19,2)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GratitudeText")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ImprovementText")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("IntentionText")
+                        .HasMaxLength(280)
+                        .HasColumnType("character varying(280)");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("SavingsGoal")
+                        .HasPrecision(19, 2)
+                        .HasColumnType("numeric(19,2)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Year", "Month")
+                        .IsUnique();
+
+                    b.ToTable("MonthlyReflections", (string)null);
+                });
+
             modelBuilder.Entity("BudgetExperiment.Domain.Reports.CustomReportLayout", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1386,6 +1457,11 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
+
+                    b.Property<bool>("HasSeenKakeiboSelectorTooltip")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsOnboarded")
                         .ValueGeneratedOnAdd()

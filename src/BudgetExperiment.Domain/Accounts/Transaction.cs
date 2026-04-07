@@ -233,6 +233,12 @@ public sealed class Transaction
     }
 
     /// <summary>
+    /// Gets the per-transaction Kakeibo override.
+    /// If null, the effective Kakeibo category is derived from <see cref="Category"/>.<see cref="BudgetCategory.KakeiboCategory"/>.
+    /// </summary>
+    public KakeiboCategory? KakeiboOverride { get; private set; }
+
+    /// <summary>
     /// Creates a new transaction.
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
@@ -395,6 +401,25 @@ public sealed class Transaction
         this.Description = description.Trim();
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Sets or clears the per-transaction Kakeibo override.
+    /// </summary>
+    /// <param name="kakeiboOverride">The override, or null to clear and defer to category routing.</param>
+    public void SetKakeiboOverride(KakeiboCategory? kakeiboOverride)
+    {
+        this.KakeiboOverride = kakeiboOverride;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Returns the effective Kakeibo category for this transaction.
+    /// Uses <see cref="KakeiboOverride"/> if set; otherwise falls back to the category's routing.
+    /// Returns <see cref="KakeiboCategory.Wants"/> as the ultimate fallback for uncategorized transactions.
+    /// </summary>
+    /// <returns>The effective <see cref="KakeiboCategory"/> for this transaction.</returns>
+    public KakeiboCategory GetEffectiveKakeiboCategory()
+        => KakeiboOverride ?? Category?.KakeiboCategory ?? KakeiboCategory.Wants;
 
     /// <summary>
     /// Updates the amount.

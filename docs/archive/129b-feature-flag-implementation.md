@@ -3,7 +3,7 @@
 **Author:** Lucius  
 **Created:** 2026-04-05  
 **Updated:** 2026-04-09 (Runtime toggleability — Database + Cache)  
-**Status:** Approved (Alfred — `.squad/decisions/inbox/alfred-runtime-feature-flags.md`)  
+**Status:** Done  
 **Related:** Feature 128 (Alfred's architecture), Feature 129 (Kakeibo alignment audit)
 
 ---

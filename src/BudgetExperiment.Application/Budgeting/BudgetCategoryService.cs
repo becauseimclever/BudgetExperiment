@@ -73,6 +73,21 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
         }
 
         var category = BudgetCategory.Create(dto.Name, categoryType, dto.Icon, dto.Color);
+
+        if (!string.IsNullOrWhiteSpace(dto.KakeiboCategory))
+        {
+            if (!Enum.TryParse<KakeiboCategory>(dto.KakeiboCategory, ignoreCase: true, out var kakeibo))
+            {
+                throw new DomainException($"Invalid Kakeibo category: {dto.KakeiboCategory}");
+            }
+
+            category.SetKakeiboCategory(kakeibo);
+        }
+        else if (categoryType == CategoryType.Expense)
+        {
+            category.SetKakeiboCategory(KakeiboCategory.Wants);
+        }
+
         await _repository.AddAsync(category, cancellationToken);
 
         // If initial budget is provided and category is Expense type, create a budget goal for the current month
@@ -108,6 +123,16 @@ public sealed class BudgetCategoryService : IBudgetCategoryService
             dto.Icon ?? category.Icon,
             dto.Color ?? category.Color,
             dto.SortOrder ?? category.SortOrder);
+
+        if (dto.KakeiboCategory is not null)
+        {
+            if (!Enum.TryParse<KakeiboCategory>(dto.KakeiboCategory, ignoreCase: true, out var kakeibo))
+            {
+                throw new DomainException($"Invalid Kakeibo category: {dto.KakeiboCategory}");
+            }
+
+            category.SetKakeiboCategory(kakeibo);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var version = _unitOfWork.GetConcurrencyToken(category);

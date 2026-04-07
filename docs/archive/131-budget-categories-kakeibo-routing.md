@@ -1,6 +1,6 @@
 # Feature 131: Budget Categories — Kakeibo Category Routing
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -167,19 +167,19 @@ Returns all categories including their Kakeibo routing. Used by onboarding/setup
 
 ## Acceptance Criteria
 
-- [ ] `KakeiboCategory` enum exists with four values (Essentials, Wants, Culture, Unexpected).
-- [ ] `BudgetCategory.KakeiboCategory` field is added and nullable.
-- [ ] Database migration creates the schema change with correct data type (int null).
-- [ ] Seed/startup logic applies smart defaults from Feature 128 mapping table (name-based routing).
-- [ ] Migration default for unrecognized category names is `Wants`.
-- [ ] Category edit endpoint validates: non-null for Expense, null for Income/Transfer.
-- [ ] Category edit form shows Kakeibo dropdown (Expense only) with helpful tooltip.
+- [x] `KakeiboCategory` enum exists with four values (Essentials, Wants, Culture, Unexpected).
+- [x] `BudgetCategory.KakeiboCategory` field is added and nullable.
+- [x] Database migration creates the schema change with correct data type (int null).
+- [x] Seed/startup logic applies smart defaults from Feature 128 mapping table (name-based routing).
+- [x] Migration default for unrecognized category names is `Wants`.
+- [x] Category edit endpoint validates: non-null for Expense, null for Income/Transfer.
+- [x] Category edit form shows Kakeibo dropdown (Expense only) with helpful tooltip.
 - [ ] Kakeibo Setup Wizard displays on first login post-migration (controlled by `HasCompletedKakeiboSetup` flag).
 - [ ] Wizard shows all Expense categories grouped by their assigned Kakeibo bucket.
 - [ ] Wizard allows user to change any category's routing before final confirmation.
 - [ ] Wizard sets `HasCompletedKakeiboSetup = true` on successful completion.
-- [ ] Category routing changes are retroactive — no per-transaction data changes; aggregations computed from current category routing.
-- [ ] All existing tests pass; no breaking changes to category entity or API.
+- [x] Category routing changes are retroactive — no per-transaction data changes; aggregations computed from current category routing.
+- [x] All existing tests pass; no breaking changes to category entity or API.
 
 ## Implementation Order
 
