@@ -75,3 +75,32 @@ Tests mirror structure under `tests/`.
 - Test run command requires `Category!=Performance` filter — updated README and CONTRIBUTING.
 - Docker prerequisite for Testcontainers tests (Infrastructure.Tests, Api.Tests) now documented.
 - Typo: `cd BudgetExpirement` → `cd BudgetExperiment` fixed.
+
+## Learnings
+
+### Feature 120: Plugin System Planning (2026-03-22)
+
+**Domain Event Scaffolding Discovery:**
+- `Transaction._domainEvents` exists at line 17 (`List<object>`) but is never dispatched or consumed.
+- No `IDomainEvent` interface exists — must be created in Domain layer.
+- No Events folder exists in Domain — needs creation.
+- `BudgetDbContext` does not override `SaveChangesAsync` to dispatch events — wiring required.
+
+**Plugin Architecture Boundary Issue:**
+- `IDomainEventHandler<TEvent>` requires constraint `where TEvent : IDomainEvent`.
+- Plugin.Abstractions must have zero core deps per spec — but needs `IDomainEvent`.
+- **Resolution:** Recommend moving `IDomainEvent` marker to Plugin.Abstractions; Domain references Abstractions for the marker only. This inverts typical layering but keeps plugin authoring simple (single SDK reference).
+
+**Blazor WASM Limitation:**
+- WASM cannot dynamically load assemblies at runtime.
+- Plugin Blazor pages cannot be hot-pluggable in current architecture.
+- **MVP Scope:** Plugin UI limited to navigation links and management page. Full page support deferred.
+
+**Existing Patterns Observed:**
+- Report builders use `ITrendReportBuilder`, `ILocationReportBuilder` — not a unified `IReportBuilder` interface yet.
+- Import service uses composition of sub-services (`IImportRowProcessor`, etc.) — no `IImportParser` abstraction exists.
+- NavMenu renders static nav items — no dynamic plugin section yet.
+
+**Test Infrastructure:**
+- All API/Infrastructure tests use PostgreSQL Testcontainers.
+- Integration tests for plugin loading will need sample plugin DLL fixture.

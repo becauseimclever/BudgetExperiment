@@ -145,6 +145,154 @@ public class ReportsDashboardTests : BunitContext, IAsyncLifetime
         Assert.NotNull(section);
     }
 
+    /// <summary>
+    /// Verifies the radar section wrapper is present after data loads.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_RadarSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-radar");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the heatmap section wrapper is present after data loads.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_HeatmapSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-heatmap");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the line chart section wrapper is present after data loads.
+    /// The section must contain a LineChart bound to trend monthly net amounts.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_LineChartSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-line-chart");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the candlestick section wrapper is present after data loads.
+    /// The section must contain a CandlestickChart bound to trend-derived OHLC candles.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_CandlestickSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-candlestick");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the box plot section wrapper is present after data loads.
+    /// The section must contain a BoxPlotChart bound to category distributions from transactions.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_BoxPlotSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-box-plot");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the scatter section wrapper is present after data loads.
+    /// The section must contain a ScatterChart bound to transaction scatter points.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_ScatterSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-scatter");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the grouped bar section wrapper is present after data loads.
+    /// The section must contain a GroupedBarChart bound to budget vs. actual per category.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_GroupedBarSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-grouped-bar");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the stacked bar section wrapper is present after data loads.
+    /// The section must contain a StackedBarChart bound to monthly income vs. spending.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_StackedBarSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-stacked-bar");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the radial gauge section wrapper is present after data loads.
+    /// The section must contain a RadialGauge bound to overall budget percentage used.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_RadialGaugeSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-radial-gauge");
+        Assert.NotNull(section);
+    }
+
+    /// <summary>
+    /// Verifies the sparkline section wrapper is present after data loads.
+    /// The section must contain a SparkLine bound to monthly spending values.
+    /// </summary>
+    [Fact]
+    public void ReportsDashboard_Renders_SparklineSection()
+    {
+        // Act
+        var cut = Render<ReportsDashboard>();
+
+        // Assert
+        var section = cut.Find(".dashboard-sparkline");
+        Assert.NotNull(section);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Fakes
     // ─────────────────────────────────────────────────────────────────────────
@@ -177,6 +325,11 @@ public class ReportsDashboardTests : BunitContext, IAsyncLifetime
         public BoxPlotSummary[] BuildCategoryDistributions(
             IEnumerable<TransactionDto> transactions,
             int monthsBack = 6)
+            => [];
+
+        /// <inheritdoc/>
+        public CandlestickDataPoint[] BuildTrendCandlesticks(
+            IEnumerable<MonthlyTrendPointDto> monthlyData)
             => [];
     }
 

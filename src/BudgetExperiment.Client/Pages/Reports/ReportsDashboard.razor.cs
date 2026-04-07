@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Client.Components.Charts;
 using BudgetExperiment.Client.Components.Charts.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
@@ -10,7 +11,8 @@ using Microsoft.AspNetCore.Components;
 namespace BudgetExperiment.Client.Pages.Reports;
 
 /// <summary>
-/// Aggregate financial dashboard page combining treemap, waterfall, radar, heatmap, and radial bar
+/// Aggregate financial dashboard page combining treemap, waterfall, radar, heatmap, radial bar,
+/// line chart, candlestick, box plot, scatter, grouped bar, stacked bar, radial gauge, and sparkline
 /// charts for a monthly spending overview (Feature 127, Slice 10).
 /// </summary>
 public partial class ReportsDashboard
@@ -28,6 +30,30 @@ public partial class ReportsDashboard
     private IReadOnlyList<string> _radarCategories = [];
 
     private HeatmapDataPoint[][] _heatmapData = [[], [], [], [], [], [], []];
+
+    private IReadOnlyList<LineData> _lineChartData = [];
+
+    private IReadOnlyList<LineSeriesDefinition> _lineChartSeries = [];
+
+    private IReadOnlyList<CandlestickDataPoint> _candlestickData = [];
+
+    private IReadOnlyList<BoxPlotSummary> _boxPlotData = [];
+
+    private IReadOnlyList<ScatterDataPoint> _scatterPoints = [];
+
+    private IReadOnlyList<GroupedBarData> _groupedBarData = [];
+
+    private IReadOnlyList<BarSeriesDefinition> _groupedBarSeries = [];
+
+    private IReadOnlyList<GroupedBarData> _stackedBarData = [];
+
+    private IReadOnlyList<BarSeriesDefinition> _stackedBarSeries = [];
+
+    private decimal _gaugeValue;
+
+    private decimal _gaugeMax = 1m;
+
+    private IReadOnlyList<decimal> _sparklineValues = [];
 
     private int _selectedYear = DateTime.UtcNow.Year;
 
@@ -79,6 +105,10 @@ public partial class ReportsDashboard
                 var monthEnd = new DateOnly(_selectedYear, _selectedMonth, daysInMonth);
                 var transactions = await BudgetApiService.GetTransactionsAsync(monthStart, monthEnd);
                 _heatmapData = ChartDataService.BuildSpendingHeatmap(transactions);
+                _boxPlotData = ChartDataService.BuildCategoryDistributions(transactions);
+                _scatterPoints = transactions
+                    .Select(t => new ScatterDataPoint(t.Date, t.Amount.Amount, t.CategoryName ?? "Unknown"))
+                    .ToArray();
             }
             catch (Exception)
             {
@@ -110,11 +140,76 @@ public partial class ReportsDashboard
                     new RadarDataSeries("Budget", budgetSummary.CategoryProgress.Select(c => c.TargetAmount.Amount).ToArray()),
                     new RadarDataSeries("Actual", budgetSummary.CategoryProgress.Select(c => c.SpentAmount.Amount).ToArray()),
                 ];
+
+                _groupedBarData = budgetSummary.CategoryProgress
+                    .Select(c => new GroupedBarData
+                    {
+                        GroupId = c.CategoryName,
+                        GroupLabel = c.CategoryName,
+                        Values = new Dictionary<string, decimal>
+                        {
+                            ["budget"] = c.TargetAmount.Amount,
+                            ["actual"] = c.SpentAmount.Amount,
+                        }.AsReadOnly(),
+                    })
+                    .ToArray();
+
+                _groupedBarSeries =
+                [
+                    new BarSeriesDefinition { Id = "budget", Label = "Budget", Color = "#6366f1" },
+                    new BarSeriesDefinition { Id = "actual", Label = "Actual", Color = "#22c55e" },
+                ];
+
+                _gaugeValue = budgetSummary.TotalSpent.Amount;
+                _gaugeMax = budgetSummary.TotalBudgeted.Amount > 0 ? budgetSummary.TotalBudgeted.Amount : 1m;
             }
         }
         catch (Exception)
         {
             // Fault-tolerant: use empty radar and radial bar data.
+        }
+
+        try
+        {
+            var trends = await BudgetApiService.GetSpendingTrendsAsync(12);
+            if (trends != null)
+            {
+                _lineChartData = trends.MonthlyData
+                    .Select(m => new LineData { Label = $"{m.Year}-{m.Month:D2}", Value = m.TotalSpending.Amount })
+                    .ToArray();
+
+                _lineChartSeries =
+                [
+                    new LineSeriesDefinition { Id = "spending", Label = "Monthly Spending", Color = "#6366f1" },
+                ];
+
+                _candlestickData = ChartDataService.BuildTrendCandlesticks(trends.MonthlyData);
+
+                _sparklineValues = trends.MonthlyData.Select(m => m.TotalSpending.Amount).ToArray();
+
+                _stackedBarData = trends.MonthlyData
+                    .Select(m => new GroupedBarData
+                    {
+                        GroupId = $"{m.Year}-{m.Month:D2}",
+                        GroupLabel = $"{m.Year}-{m.Month:D2}",
+                        Values = new Dictionary<string, decimal>
+                        {
+                            ["income"] = m.TotalIncome.Amount,
+                            ["spending"] = m.TotalSpending.Amount,
+                        }.AsReadOnly(),
+                    })
+                    .ToArray();
+
+                _stackedBarSeries =
+                [
+                    new BarSeriesDefinition { Id = "income", Label = "Income", Color = "#22c55e" },
+                    new BarSeriesDefinition { Id = "spending", Label = "Spending", Color = "#ef4444" },
+                ];
+            }
+        }
+        catch (Exception)
+        {
+            // Fault-tolerant: continue with empty trends data.
         }
 
         _isLoading = false;

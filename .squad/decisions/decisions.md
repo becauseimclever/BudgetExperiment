@@ -836,3 +836,60 @@ ApexCharts renders via JS interop; SVG/canvas content is invisible to bUnit. Tes
 | ExportChartButton | Utility | 7 | 5 |
 
 **Total tests added:** 75 (slices 3–7). Suite total: **2804 passed**.
+
+---
+
+## 2026-04-04: Feature 127 — Enhanced Charts & Visualizations (Slices 8–10)
+
+**Author:** Alfred, Barbara, Lucius
+**Requested by:** Fortinbra
+**Status:** All decisions implemented and complete
+
+---
+
+### DECISION 127-A: Keep All Legacy SVG Charts
+
+**Slice:** 8 (Migration Assessment)
+**Status:** Done
+
+**Decision:** `BarChart`, `DonutChart`, `LineChart`, `SparkLine`, `GroupedBarChart`, and `StackedBarChart` are **retained**. Only `AreaChart` is removed (zero consumers).
+
+**Rationale:** `BarChart` and `DonutChart` are production-quality with full bUnit test coverage and active consumers in `MonthlyTrendsReport`, `BudgetComparisonReport`, `MonthlyCategoriesReport`, `CalendarInsightsPanel`. No functional or quality gap justifies replacement.
+
+---
+
+### DECISION 127-B: AreaChart Removal (Slice 9 Scope)
+
+**Status:** Done
+
+`AreaChart` is a thin wrapper over `LineChart` with zero page, component, or non-self test consumers. Deleted: `AreaChart.razor`, `AreaChart.razor.cs`, `AreaChartTests.cs`. All 13 chart models verified active. Test count stable: 2804.
+
+---
+
+### DECISION 127-C: Report Page Data Availability Constraint
+
+**Slice:** 8 — Accepted (architectural)
+
+`HeatmapChart`, `ScatterChart`, `CandlestickChart`, `BoxPlotChart` are ComponentShowcase only. Existing report pages do not fetch raw `TransactionDto[]` or `DailyBalanceDto[]`.
+
+**Wired to reports:** `WaterfallChart`, `RadialBarChart`, `BudgetRadar` to BudgetComparisonReport; `BudgetTreemap` to MonthlyCategoriesReport; `StackedAreaChart` to MonthlyTrendsReport. Zero new API calls.
+
+---
+
+### DECISION 127-D: ReportsDashboard Page Design
+
+**Slice:** 10 — Done
+
+Route `/reports/dashboard`. Layout: 2-col CSS grid. Data loading: fault-tolerant per-call try-catch; `_isLoading = true` before first await; `GetMonthlyCategoryReportAsync` always first call (loading-state test pin).
+
+**SA1201 in code-behind pages:** Private `_state` fields before `[Inject]` properties.
+
+---
+
+### DECISION 127-E: Global Chart Models @using in _Imports.razor
+
+**Slice:** 8 — Done
+
+`@using BudgetExperiment.Client.Components.Charts.Models` added globally to `_Imports.razor`. Eliminates per-file boilerplate.
+
+**Suite total after Feature 127:** 2808 passed.

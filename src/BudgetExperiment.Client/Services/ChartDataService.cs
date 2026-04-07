@@ -84,6 +84,33 @@ public sealed class ChartDataService : IChartDataService
     }
 
     /// <inheritdoc />
+    public CandlestickDataPoint[] BuildTrendCandlesticks(IEnumerable<MonthlyTrendPointDto> monthlyData)
+    {
+        var sorted = monthlyData.OrderBy(m => m.Year).ThenBy(m => m.Month).ToList();
+        if (sorted.Count == 0)
+        {
+            return [];
+        }
+
+        var result = new List<CandlestickDataPoint>(sorted.Count);
+        var runningBalance = 0m;
+        foreach (var point in sorted)
+        {
+            var open = runningBalance;
+            var close = runningBalance + point.NetAmount.Amount;
+            result.Add(new CandlestickDataPoint(
+                new DateOnly(point.Year, point.Month, 1),
+                open,
+                Math.Max(open, close),
+                Math.Min(open, close),
+                close));
+            runningBalance = close;
+        }
+
+        return [.. result];
+    }
+
+    /// <inheritdoc />
     public BoxPlotSummary[] BuildCategoryDistributions(
         IEnumerable<TransactionDto> transactions,
         int monthsBack = 6)

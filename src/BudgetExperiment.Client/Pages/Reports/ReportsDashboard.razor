@@ -35,6 +35,38 @@
                 <RadialBarChart Segments="@_radialData" />
             </div>
 
+            <div class="dashboard-line-chart">
+                <LineChart Data="@_lineChartData" Series="@_lineChartSeries" />
+            </div>
+
+            <div class="dashboard-candlestick">
+                <CandlestickChart Candles="@_candlestickData" />
+            </div>
+
+            <div class="dashboard-box-plot">
+                <BoxPlotChart Distributions="@_boxPlotData" />
+            </div>
+
+            <div class="dashboard-scatter">
+                <ScatterChart Points="@_scatterPoints" />
+            </div>
+
+            <div class="dashboard-grouped-bar">
+                <GroupedBarChart Data="@_groupedBarData" Series="@_groupedBarSeries" />
+            </div>
+
+            <div class="dashboard-stacked-bar">
+                <StackedBarChart Data="@_stackedBarData" Series="@_stackedBarSeries" />
+            </div>
+
+            <div class="dashboard-radial-gauge">
+                <RadialGauge Value="@_gaugeValue" MaxValue="@_gaugeMax" Label="Budget Used" />
+            </div>
+
+            <div class="dashboard-sparkline">
+                <SparkLine Values="@_sparklineValues" />
+            </div>
+
             <div class="dashboard-filter">
                 @if (_selectedCategoryId.HasValue)
                 {

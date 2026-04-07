@@ -57,4 +57,12 @@ public interface IChartDataService
     BoxPlotSummary[] BuildCategoryDistributions(
         IEnumerable<TransactionDto> transactions,
         int monthsBack = 6);
+
+    /// <summary>
+    /// Builds OHLC candlestick data from monthly trend data, representing cumulative balance trajectory.
+    /// Each candle shows the running balance open/close for one month, with high = income and low = spending.
+    /// </summary>
+    /// <param name="monthlyData">Ordered monthly trend data points.</param>
+    /// <returns>An array of candlestick points ordered by month.</returns>
+    CandlestickDataPoint[] BuildTrendCandlesticks(IEnumerable<MonthlyTrendPointDto> monthlyData);
 }

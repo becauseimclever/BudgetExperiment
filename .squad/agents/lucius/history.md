@@ -96,3 +96,134 @@ Tests under `tests/` mirror the src structure.
 - `IChartDataService` has no `BuildTreemapData` — treemap data built directly in code-behind from `MonthlyCategoryReportDto.Categories`.
 - `HeatmapChart` parameter is `Data` (not `DataPoints`).
 - `_Imports.razor` — added `@using BudgetExperiment.Client.Components.Charts.Models` globally in Slice 8.
+
+### 2026-04-05 — Feature 120 Slice 1: Domain Event Foundation (GREEN)
+
+**Requested by:** Fortinbra (via Barbara's RED tests) — Status: Complete
+
+**Files created:**
+- `src/BudgetExperiment.Plugin.Abstractions/BudgetExperiment.Plugin.Abstractions.csproj` — new `net10.0` classlib, no core deps, inherits StyleCop from Directory.Build.props.
+- `src/BudgetExperiment.Plugin.Abstractions/IDomainEvent.cs` — `IDomainEvent` interface with `EventId` (Guid) and `OccurredAtUtc` (DateTime) members.
+
+**Files modified:**
+- `src/BudgetExperiment.Domain/Accounts/Transaction.cs` — added `using BudgetExperiment.Plugin.Abstractions;`, changed `_domainEvents` from `List<object>` to `List<IDomainEvent>`, added `DomainEvents` property, `RaiseDomainEvent()`, and `ClearDomainEvents()`.
+- `tests/BudgetExperiment.Domain.Tests/Entities/TransactionDomainEventTests.cs` — reordered members to satisfy SA1201 (nested `TestDomainEvent` class moved after `[Fact]` methods).
+
+**Project references added:**
+- `BudgetExperiment.Domain` → `Plugin.Abstractions`
+- `BudgetExperiment.Domain.Tests` → `Plugin.Abstractions`
+
+**Tests:** Barbara's 5 tests: 5/5 GREEN. Domain.Tests total: 877 passed. Application.Tests: 1036 passed. Client.Tests: 2818 passed, 1 pre-existing skip.
+
+**Key Decisions / Lessons:**
+- SA1201: nested classes MUST appear AFTER methods in a containing class — this applies to test files too.
+- `IDomainEvent` in `Plugin.Abstractions` with zero core dependencies is the right seam for plugin extensibility.
+- `DomainEvents` as `IReadOnlyList<IDomainEvent>` (via `.AsReadOnly()`) correctly enforces read-only access at the API boundary.
+
+### 2026-04-05 — Feature 120 Slice 2: Dispatch Wiring (GREEN)
+
+**Requested by:** Fortinbra (via Barbara's RED tests) — Status: Complete
+
+**Files created:**
+- `src/BudgetExperiment.Plugin.Abstractions/IDomainEventHandler.cs` — `IDomainEventHandler<TEvent>` interface with `HandleAsync`.
+- `src/BudgetExperiment.Application/Events/IDomainEventDispatcher.cs` — `IDomainEventDispatcher` interface with `DispatchAsync(IEnumerable<IDomainEvent>, CancellationToken)`.
+- `src/BudgetExperiment.Infrastructure/Events/DomainEventDispatcher.cs` — Implementation using `IServiceProvider` to resolve `IEnumerable<IDomainEventHandler<TEvent>>` at runtime via reflection + `GetServices`.
+
+**Files modified:**
+- `src/BudgetExperiment.Infrastructure/Persistence/BudgetDbContext.cs` — Added new constructor `(DbContextOptions, IDomainEventDispatcher)`. `OnConfiguring` intercepts the bare `:memory:` SQLite shorthand (which fails `SqliteConnectionStringBuilder` in `Microsoft.Data.Sqlite` 10.0.0), creates an explicit `SqliteConnection("DataSource=:memory:")`, opens it, and wires it via `UseSqlite(connection)`. Constructor body: detects ``:memory:`` from raw options, calls `EnsureCreated()` (triggers lazy init → `OnConfiguring`), then anchors EF Core's `_openedCount` at 1 via `Database.OpenConnection()` so `ProcessConnectionOpened` (FK pragma) is never triggered again, then disables FK enforcement directly on the connection. Added `SaveChangesAsync` override: save-first, then `DispatchAndClearEventsAsync`. Added `DisposeAsync` override: base + dispose `_sqliteMemoryConnection`.
+- `src/BudgetExperiment.Infrastructure/DependencyInjection.cs` — Added `services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>()`.
+- `tests/BudgetExperiment.Infrastructure.Tests/PostgreSqlFixture.cs` — Made Docker startup resilient: container build/start moved inside `try/catch` in `InitializeAsync`; `DisposeAsync` handles null container; added `IsDockerUnavailableException` static helper (SA1204: static before instance). Tests that use their own SQLite provider (e.g. `BudgetDbContextDomainEventTests`) now proceed even when Docker is not running.
+
+**Project references added:**
+- `BudgetExperiment.Application` → `Plugin.Abstractions`
+- `BudgetExperiment.Infrastructure` → `Plugin.Abstractions`
+
+**Packages added:**
+- `Microsoft.EntityFrameworkCore.Sqlite` `10.0.0` → `BudgetExperiment.Infrastructure` (needed for `UseSqlite(DbConnection)` in `OnConfiguring` to fix `:memory:` shorthand)
+- `Microsoft.EntityFrameworkCore.Sqlite` `10.0.0` → `BudgetExperiment.Infrastructure.Tests` (enables `UseSqlite(":memory:")` in test helper)
+
+**Tests:** Barbara's Slice 2 tests: 6/6 GREEN (3 Application, 3 Infrastructure). Application.Tests: 1039 passed. Domain.Tests: 877 passed. Client.Tests: 2818 passed, 1 pre-existing skip. Infrastructure/Api tests that require Docker: pre-existing failures unrelated to this slice.
+
+**Key Decisions / Lessons:**
+- `Microsoft.Data.Sqlite` 10.0.0 BREAKS `UseSqlite(":memory:")` — bare `:memory:` fails `SqliteConnectionStringBuilder` (requires `Key=Value` ADO.NET format). Workaround: intercept in `OnConfiguring`, open a real `SqliteConnection("DataSource=:memory:")`, and pass it via `UseSqlite(connection)`.
+- EF Core's `RelationalConnection.OpenAsync` calls `ProcessConnectionOpened` (runs `PRAGMA foreign_keys = ON;`) whenever `_openedCount` transitions from 0→1, even for already-open external connections. Fix: anchor `_openedCount` at 1 via `Database.OpenConnection()` after schema creation, then disable FKs on the raw connection.
+- `PostgreSqlFixture` must lazily build/start the container (inside `InitializeAsync` try-catch, not as a field initializer) so test classes that use their own provider don't fail when Docker is unavailable.
+- `DomainEventDispatcher` resolves `IEnumerable<IDomainEventHandler<TEvent>>` via `IServiceProvider.GetServices(handlerType)` using `typeof(IDomainEventHandler<>).MakeGenericType(domainEvent.GetType())` — correct pattern for open-generic DI resolution.
+- Domain events are collected from `ChangeTracker.Entries<Transaction>()` after a successful save. Only `Transaction` entities are checked (the only aggregate in scope for Slice 2); extend to an `IHasDomainEvents` interface when more aggregates need this.
+
+### 2026-04-05 — Feature 120 Slice 3: Plugin.Abstractions Full SDK (GREEN)
+
+**Requested by:** Fortinbra (via Barbara's RED tests) — Status: Complete
+
+**Files created:**
+- `src/BudgetExperiment.Plugin.Abstractions/IPlugin.cs` — `IPlugin` interface: `Name`, `Version`, `Description` (string), `ConfigureServices(IServiceCollection)`, `InitializeAsync(IPluginContext, CancellationToken)`, `ShutdownAsync(CancellationToken)`.
+- `src/BudgetExperiment.Plugin.Abstractions/IPluginContext.cs` — `IPluginContext` interface: `Services` (IServiceProvider), `Configuration` (IConfiguration), `LoggerFactory` (ILoggerFactory).
+- `src/BudgetExperiment.Plugin.Abstractions/PluginNavItem.cs` — `sealed record PluginNavItem(string Label, string Route, string IconCssClass, int Order = 100)` — positional record with default Order of 100.
+- `src/BudgetExperiment.Plugin.Abstractions/IPluginNavigationProvider.cs` — `IPluginNavigationProvider` interface: `GetNavItems() → IReadOnlyList<PluginNavItem>`.
+- `src/BudgetExperiment.Plugin.Abstractions/IImportParser.cs` — `IImportParser` interface: `Name`, `SupportedExtensions`, `ParseAsync(Stream, CancellationToken)`.
+- `src/BudgetExperiment.Plugin.Abstractions/IReportBuilder.cs` — `IReportBuilder` interface: `ReportName`, `ReportDescription`, `BuildAsync(IPluginContext, CancellationToken)`.
+- `src/BudgetExperiment.Plugin.Abstractions/PluginControllerBase.cs` — `abstract class PluginControllerBase : ControllerBase` with `[ApiController]` and `[Route("api/v1/plugins/{pluginName}/[controller]")]`.
+
+**Files modified:**
+- `src/BudgetExperiment.Plugin.Abstractions/BudgetExperiment.Plugin.Abstractions.csproj` — Added `<FrameworkReference Include="Microsoft.AspNetCore.App" />` to give the classlib access to `ControllerBase`, `IConfiguration`, `ILoggerFactory`, etc. without individual NuGet packages.
+- `tests/BudgetExperiment.Domain.Tests/BudgetExperiment.Domain.Tests.csproj` — Added `<FrameworkReference Include="Microsoft.AspNetCore.App" />` so the test project can directly reference `ControllerBase` (needed by `PluginAbstractionsContractTests`).
+- `tests/BudgetExperiment.Domain.Tests/Plugin/PluginAbstractionsContractTests.cs` — Fixed 5 StyleCop violations in Barbara's test file: added `<returns>` XML doc to 4 async test methods (SA1615), removed `#region`/`#endregion` block (SA1124).
+
+**Tests:** Barbara's 20 Slice 3 tests: **20/20 GREEN**. Domain.Tests total: 897 passed (was 877; +20 new). Application.Tests: 1039 passed (unchanged).
+
+**Key Decisions / Lessons:**
+- `PluginNavItem` MUST be a `positional record` — Barbara's tests use `new PluginNavItem("Label", "/route", "icon-css")` and `new PluginNavItem("Label", "/route", "icon-css", 50)`. A class with property setters would not satisfy these constructor calls.
+- For `net10.0` classlibs that need ASP.NET Core types (ControllerBase, IConfiguration, etc.), use `<FrameworkReference Include="Microsoft.AspNetCore.App" />` in the csproj — NOT individual NuGet packages. This is the canonical approach for ASP.NET Core class libraries.
+- FrameworkReference is NOT transitively available to referencing projects. If a test project directly uses ASP.NET Core types (e.g., `typeof(ControllerBase)`), it needs its own FrameworkReference even if its Plugin.Abstractions reference has one.
+- StyleCop SA1124 (no regions) and SA1615 (async methods need `<returns>`) are enforced even in test files — fix them in the test file directly when caught by the build.
+
+### 2026-04-05 — Feature 120 Slice 4: Plugin.Hosting (GREEN)
+
+**Requested by:** Fortinbra (via Barbara's RED tests) — Status: Complete
+
+**Files created:**
+- `src/BudgetExperiment.Plugin.Hosting/PluginRegistration.cs` — `sealed class` (not record) with `IPlugin Plugin`, `bool IsEnabled { get; set; }`, `string LoadedFromPath`. Mutable `IsEnabled` required for Enable/Disable mutations.
+- `src/BudgetExperiment.Plugin.Hosting/PluginRegistry.cs` — `Register(PluginRegistration)` (takes full registration, not just IPlugin+path), `Disable(string)`, `Enable(string)`, `GetPlugin(string) → PluginRegistration?`, `Plugins` as `IReadOnlyList<PluginRegistration>`.
+- `src/BudgetExperiment.Plugin.Hosting/PluginLoader.cs` — `LoadPlugins(string folderPath)` scans folder for `*.dll`, uses `Assembly.LoadFrom`, catches outer `Exception` to skip unloadable DLLs, catches inner `ReflectionTypeLoadException` (via `GetExportedTypes` private static helper) to handle partial assemblies. Static helper placed before instance methods (SA1204).
+- `src/BudgetExperiment.Plugin.Hosting/ServiceCollectionExtensions.cs` — `AddPluginHosting(IServiceCollection, string pluginsFolder = "plugins")` registers `PluginLoader` and `PluginRegistry` as singletons.
+
+**Packages added:**
+- `Microsoft.Extensions.DependencyInjection.Abstractions` `10.0.0-preview.4.25258.110` → `BudgetExperiment.Plugin.Hosting` (for `IServiceCollection` in DI extension).
+
+**Test file fixes (Barbara's files):**
+- `GlobalUsings.cs` — Added `global using Shouldly;`, fixed SA1210 (alphabetical order).
+- `PluginRegistryTests.cs` — Fixed SA1516 (blank lines between properties in `TestPlugin`). Fixed CS8602: captured `ShouldNotBeNull()` return value for null-flow (`var nonNullResult = retrieved.ShouldNotBeNull(); nonNullResult.Plugin.Name.ShouldBe(...)`).
+- `PluginLoaderTests.cs` — Fixed SA1516 (blank lines between properties in `TestPlugin`).
+
+**Tests:** Barbara's 8 Slice 4 tests: **8/8 GREEN**. Domain.Tests: 897. Application.Tests: 1039. Client.Tests: 2818 passed, 1 pre-existing skip. Plugin.Hosting.Tests: 8 passed.
+
+**Key Decisions / Lessons:**
+- `PluginRegistry.Register` takes a `PluginRegistration` (not `IPlugin + path string`) — the tests construct `PluginRegistration` themselves and pass it to `Register`. Always read the tests, not just the spec description.
+- `PluginLoader` must catch `ReflectionTypeLoadException` inside `GetTypes()` calls, not just the outer `Assembly.LoadFrom`. When loading a test assembly that references missing deps (xUnit, Shouldly, etc.), `GetTypes()` throws; use `ex.Types.Where(t => t is not null)` to still find valid types.
+- Shouldly 4.x does NOT auto-add `global using Shouldly;` — it must be explicitly added to `GlobalUsings.cs`. The test project was missing it.
+- `ShouldNotBeNull()` returns `T` (non-nullable) in Shouldly 4.x — capture the return value to satisfy the nullable flow analyzer: `var result = retrieved.ShouldNotBeNull()`.
+- SA1516: All properties in a class must be separated by blank lines, even in test inner classes.
+
+### 2026-04-05 — Feature 120 Slice 5: PluginsController API (GREEN)
+
+**Requested by:** Fortinbra (via Barbara's RED tests) — Status: Complete
+
+**Files created:**
+- `src/BudgetExperiment.Api/Controllers/PluginsController.cs` — `[Route("api/v1/plugins")]` controller with `GetAll()`, `GetByName(string)`, `Enable(string)`, `Disable(string)`. Uses `PluginRegistry` singleton injected via constructor. Static `ToDto(PluginRegistration)` helper maps to positional `PluginDto` record using constructor syntax.
+- `tests/BudgetExperiment.Api.Tests/PluginsTestWebApplicationFactory.cs` — Extracted from Barbara's test file to satisfy SA1402 (one type per file). Added auth bypass: registers `AutoAuthenticatingTestHandler` under `"TestAuto"` scheme. Seeds `PluginRegistry` with test `IPlugin` instances. Added `using Microsoft.Extensions.Configuration;` for `AddInMemoryCollection`.
+
+**Files modified:**
+- `src/BudgetExperiment.Api/Program.cs` — Added `using BudgetExperiment.Plugin.Hosting;` and `builder.Services.AddPluginHosting();` after `AddInfrastructure`.
+- `tests/BudgetExperiment.Api.Tests/PluginsControllerTests.cs` — Removed `PluginsTestWebApplicationFactory` class (moved to its own file per SA1402). Fixed SA1518 (trailing newline).
+- `src/BudgetExperiment.Api/BudgetExperiment.Api.csproj` — Added reference to `BudgetExperiment.Plugin.Hosting`.
+- `tests/BudgetExperiment.Api.Tests/BudgetExperiment.Api.Tests.csproj` — Added reference to `BudgetExperiment.Plugin.Hosting`.
+
+**Tests:** Barbara's 7 Slice 5 tests: **7/7 GREEN**. Domain.Tests: 897. Application.Tests: 1039. Infrastructure.Tests: 226. Api.Tests: 667 passed (includes the 7 new). Client.Tests: 2818 passed, 1 pre-existing skip.
+
+**Key Decisions / Lessons:**
+- `PluginDto` is a positional record — use constructor syntax in `ToDto`: `new PluginDto(r.Plugin.Name, r.Plugin.Version, ...)` not object initializer `new() { Name = ... }`.
+- SA1402 applies to test files too — `PluginsTestWebApplicationFactory` had to be extracted from `PluginsControllerTests.cs` into its own file.
+- `WebApplicationFactory.ConfigureServices` runs AFTER `Program.cs`, so a re-registered `AddSingleton<PluginRegistry>` in the test factory correctly overrides the one from `AddPluginHosting()` (DI resolves last registration wins).
+- `PluginsTestWebApplicationFactory` must register `AutoAuthenticatingTestHandler` under `"TestAuto"` scheme — otherwise all requests return 401. Pattern matches `CustomWebApplicationFactory`.
+- `AddInMemoryCollection` requires `using Microsoft.Extensions.Configuration;` — not in implicit usings for test project.
+
