@@ -288,3 +288,53 @@ Tests under `tests/` mirror the src structure.
 - Total: ~6 hours
 
 **Status:** Proposal complete, awaiting Alfred's architecture alignment and answer to open questions. No implementation yet — coordinate with Alfred first.
+
+
+## Learnings
+
+### 2026-04-09 — Feature 129b: Runtime Feature Flags (DB-backed + Cache)
+
+**Requested by:** User (via charter spawn, Alfred coordination) — Status: Documentation update complete
+
+**Context:** User requested runtime toggleability for feature flags without performance impacts. Previously wrote docs/129b-feature-flag-implementation.md proposing IOptions<T> (deployment-time config, requires restart). This was insufficient. Alfred approved Option B (DB-backed + IMemoryCache) in .squad/decisions/inbox/alfred-runtime-feature-flags.md.
+
+**Task:** Update docs/129b-feature-flag-implementation.md to reflect the new architecture.
+
+**Changes made:**
+- **Executive Summary:** Updated to reflect DB-backed + cache approach (was IOptions<T>). Added rationale: file-based flags don't hot-reload in Docker; env vars don't hot-reload; DB is source of truth across all deployment contexts.
+- **Section 1:** Replaced "Configuration Shape" with "Storage & Runtime Toggleability". New DB schema: FeatureFlags table (Name TEXT PK, IsEnabled BOOL, UpdatedAtUtc TIMESTAMP). Seed data: 17 flags from Feature 129 audit, default-on for shipped features, default-off for experimental. Optional file-based seeding from ppsettings.json for dev convenience (DB is source of truth after seed).
+- **Section 2:** Updated layer placement diagram. Added Infrastructure → Database layer. Flow: Client → API → Application IFeatureFlagService (uses IMemoryCache + IFeatureFlagRepository) → Infrastructure FeatureFlagRepository (EF Core) → PostgreSQL.
+- **Section 3:** Complete rewrite of code sketches:
+  - Added FeatureFlag.cs entity (Domain)
+  - Added FeatureFlagConfiguration.cs (Infrastructure) with HasData seeding all 17 flags
+  - Added IFeatureFlagRepository interface (Application) — GetAllAsync, GetByNameAsync, UpdateAsync
+  - Added FeatureFlagRepository implementation (Infrastructure) — EF Core, AsNoTracking on reads
+  - Added IFeatureFlagService interface (Application) — IsEnabledAsync, GetAllAsync, SetFlagAsync
+  - Added FeatureFlagService implementation (Application) — uses IMemoryCache (5-min TTL), invalidates on write
+  - Updated FeaturesController — GET endpoint uses service (60s cache), new PUT endpoint for admin toggles ([Authorize])
+  - Added DTOs: UpdateFeatureFlagRequest, UpdateFeatureFlagResponse
+  - Updated DI registration for Application (AddMemoryCache, IFeatureFlagService), Infrastructure (IFeatureFlagRepository)
+  - Updated client service: IFeatureFlagClientService + FeatureFlagClientService (uses Dictionary<string, bool>, not POCO)
+  - Client RefreshAsync() method for re-fetching after admin toggle
+- **Section 4:** New flag inventory table (17 flags from Feature 129 audit) — Calendar:SpendingHeatmap, Kakeibo:MonthlyReflectionPrompts, AI:ChatAssistant, etc. Default-on/off strategy documented.
+- **Section 5:** New admin UI sketch (optional Phase 2) — Blazor page /admin/features with toggles calling PUT endpoint. Curl examples for CLI admin.
+- **Section 6:** Updated testing strategy — unit tests for service (cache behavior), repository (CRUD), controller (GET/PUT), client service (graceful degradation). Integration tests for DB → API round-trip. Performance tests: cache hit path < 1 µs.
+- **Section 7:** New migration path section — retrofitting existing features with default-on flags (no breaking changes).
+- **Section 8:** Removed old "Runtime Toggles Without Restart" (now implemented), kept per-user flags and Microsoft.FeatureManagement migration as future extensions.
+- **Section 9:** Updated decision rationale table — DB-backed + cache, hierarchical colon-separated naming, GET public / PUT admin.
+- **Section 10:** Answered open questions (deferred to Alfred's decision).
+- **Section 11:** Updated implementation checklist (21 items for Lucius + Barbara).
+- **Section 12:** Updated effort estimate (13 hours total — was 6 hours for file-based approach).
+- **Conclusion:** DB-backed + cache delivers zero per-request overhead, runtime toggleability, no external dependencies.
+
+**Key Decisions / Lessons:**
+- **DB-backed vs file-based:** Docker environment variables don't hot-reload. Modifying ppsettings.json in containers is ephemeral/unsafe. Database is the only reliable runtime toggle mechanism across all deployment contexts (local dev, Docker, Raspberry Pi).
+- **IMemoryCache TTL:** 5-minute cache TTL allows stale reads during DB downtime but invalidates immediately on admin toggle. Zero per-request overhead (cache hit = no DB access).
+- **Client cache:** 60-second ResponseCache on GET endpoint (was 3600 for file-based). Eventual consistency is acceptable (1-hour client-side cache is fine per Alfred's decision).
+- **Flag naming:** Hierarchical colon-separated (e.g., Calendar:SpendingHeatmap) matches Feature 129 audit inventory. Groups related flags, extensible to nested categories.
+- **Admin endpoint:** PUT /api/v1/features/{flagName} requires [Authorize]. Returns 200 + updated state, 404 if unknown flag. No 403 (unknown flag is 404, not forbidden).
+- **Seed strategy:** HasData() in EF Core configuration seeds 17 flags. Optional ppsettings.json FeatureFlags section for dev convenience (hydrate DB on first run). DB is source of truth after initial seed.
+- **Graceful degradation:** Client service defaults to empty dictionary (all flags off) on API failure. Completed features should not rely solely on flags (check authentication state, etc.).
+- **Alfred's coordination:** Waited for Alfred's decision file (.squad/decisions/inbox/alfred-runtime-feature-flags.md) before finalizing the doc. Option B (DB-backed + cache) was approved. Document reflects that decision.
+
+**No code written** — this was a documentation-only task. Implementation checklist created for future handoff to Lucius (implementation) + Barbara (tests).

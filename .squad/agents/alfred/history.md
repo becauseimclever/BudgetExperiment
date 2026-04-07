@@ -149,3 +149,52 @@ All technical content (architecture diagram, setup commands, test commands, Dock
 6. **Phase 6 (Low Priority):** Feature flag system implementation, feature-flag Custom Reports Builder, user settings for feature toggles — infrastructure and simplification
 
 **Deliverable:** `docs/129-feature-audit-kakeibo-alignment.md` — 27 features audited, 17 feature flags proposed, architecture fully specified (configuration shape, API surface, client pattern, naming conventions, default strategy). Ready for Lucius to implement.
+
+### Feature Flag Runtime Toggleability Decision (2026-04-09)
+
+**Request:** User wants feature flags toggleable at runtime without performance impact or process restart.
+
+**Options Evaluated:**
+1. **Option A** (`IOptionsMonitor<T>` file hot-reload): Free, zero new dependencies, hot-reload from JSON. **Blocker:** Env vars do not hot-reload in .NET; incompatible with Docker + Raspberry Pi (production deployment) where flags are set via `.env` file.
+2. **Option B** (Database-backed + in-memory cache): Cache-first reads (zero per-request overhead), DB write on toggle, works everywhere. **Cost:** One new table, cache invalidation pattern.
+3. **Option C** (File rewrite via API): Rewrite `appsettings.json` on toggle. **Blockers:** Container filesystem is ephemeral (changes lost on restart), non-idiomatic practice.
+
+**Decision: Option B** — Database-backed with in-memory cache (5-minute TTL per-server, 1-hour client cache TTL).
+
+**Rationale:**
+Option B is the only approach compatible with all three deployment contexts (local dev with file config, Docker via env vars, and persistent Raspberry Pi setups). Zero per-request overhead via cache. Admin toggle endpoint (`PUT /api/v1/features/{name}`) is simple and secure. Database as source of truth is enterprise-standard practice.
+
+**Key Design Decisions:**
+- **Server cache TTL:** 5 minutes (eventually consistent, tolerates DB transient failures).
+- **Client cache TTL:** Keep 1 hour as proposed in 129b; eventual consistency acceptable for rare admin toggles.
+- **Admin endpoint:** `PUT /api/v1/features/{flagName}` with `{enabled: bool}` payload (admin-protected, invalidates cache immediately).
+- **Seeding:** Migration seeds default flags from Feature 129 audit (17 flags, per-flag default on/off).
+
+**Implications:**
+- `docs/129-feature-audit-kakeibo-alignment.md`: Feature Flag Architecture section needs "Runtime Toggleability" subsection explaining cache strategy. Replace "file-based config only" with "database + optional file seeding".
+- `docs/129b-feature-flag-implementation.md`: Add FeatureFlagsDbContext migration sketch, update FeaturesController to use cache + invalidation pattern, explain seed strategy.
+
+**Deliverable:** `.squad/decisions/inbox/alfred-runtime-feature-flags.md` with full architecture, implementation checklist, and admin UI sketch.
+
+### Feature 130: Serialization Alternatives Investigation — Research Complete (2026-04-10)
+
+**Scope:** Evaluated 7 serialization candidates for network-level optimization targeting Raspberry Pi deployment (ARM64, bandwidth-constrained).
+
+**Key Findings:**
+1. **HTTP compression (Brotli) is the immediate win.** Already configured in `Program.cs`; just needs Pi testing. Provides 40-45% bandwidth reduction with zero breaking changes.
+2. **System.Text.Json + source generation is the baseline.** No action needed; already optimal for uncompressed JSON.
+3. **Binary formats (MessagePack, CBOR, Avro, FlatBuffers) are deferred.** Each adds 50-200 KB to Blazor bundle and custom formatter complexity. OpenAPI tooling incompatibility for all.
+4. **Protocol Buffers + gRPC is rejected.** Architectural mismatch (polyglot RPC framework for single-tier app), breaking API changes, gRPC-Web kludge, OpenAPI incompatibility.
+
+**Recommendation Hierarchy:**
+1. Deploy Brotli (already configured) and test on Pi. Target: 40-45% bandwidth reduction.
+2. Monitor post-deployment metrics. Only pursue binary formats if bandwidth remains a constraint.
+3. If binary format needed, prioritize MessagePack (best ecosystem + encoding speed balance).
+4. Never pursue Protocol Buffers + gRPC or Avro for this app.
+
+**Bandwidth Reduction Estimates:**
+- Brotli: -40-45% (immediate, zero cost).
+- MessagePack over Brotli: +5-10% (marginal, high complexity cost).
+- FlatBuffers over Brotli: +10-15% (only valuable for 10,000+ object exports, zero-copy semantics).
+
+**Deliverable:** `docs/130-serialization-alternatives-investigation.md` — comprehensive 8-section analysis (What it is, Wire format, WASM compatibility, ASP.NET Core support, Pros, Cons, Bandwidth, CPU, OpenAPI, Verdict) + Appendix with performance benchmarks.

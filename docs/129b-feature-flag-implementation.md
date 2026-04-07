@@ -2,41 +2,72 @@
 
 **Author:** Lucius  
 **Created:** 2026-04-05  
-**Status:** Proposal  
-**Related:** Feature 128 (Alfred's architecture), Future phased rollouts
+**Updated:** 2026-04-09 (Runtime toggleability — Database + Cache)  
+**Status:** Approved (Alfred — `.squad/decisions/inbox/alfred-runtime-feature-flags.md`)  
+**Related:** Feature 128 (Alfred's architecture), Feature 129 (Kakeibo alignment audit)
 
 ---
 
 ## Executive Summary
 
-**Recommended Approach:** Hand-rolled `FeatureFlagOptions` POCO with `IOptions<T>` injection, explicit configuration in `appsettings.json`, and a dedicated `/api/v1/features` endpoint for Blazor client delivery. No external dependencies.
+**Recommended Approach:** Database-backed feature flags with in-memory cache (`IMemoryCache`). Flags are stored in a `FeatureFlags` DB table, loaded into cache at startup, and toggled at runtime via `PUT /api/v1/features/{flagName}` admin endpoint. Client fetches flags via `GET /api/v1/features` (public, cached for 60 seconds). No external dependencies.
 
-**Why not `Microsoft.FeatureManagement`?** It's excellent for complex scenarios (targeting, A/B testing, runtime toggles, external providers like Azure App Configuration), but we don't need that complexity yet. Our flags control gradual rollout of backend-completed features to the client UI. Simple on/off switches are sufficient. If we need runtime toggles without restarts later, `IOptionsMonitor<T>` provides file-watch reloading without adding a NuGet dependency. The hand-rolled approach keeps the codebase leaner, reduces third-party abstractions, and aligns with the "no magic" principle (§3, §8 copilot-instructions.md).
+**Why database instead of file-based config?** The user requires runtime toggleability without restarts or performance impact. File-based flags (`IOptions<T>`) require app restart. `IOptionsMonitor<T>` with file hot-reload doesn't work in Docker (env vars don't hot-reload, modifying `appsettings.json` in containers is ephemeral/unsafe). Database-backed flags deliver zero per-request overhead (cache hit) while enabling true runtime toggles across all deployment contexts (local dev, Docker, Raspberry Pi). The cost is one DB table and a cache invalidation pattern — both standard, low-complexity infrastructure.
+
+**Why not `Microsoft.FeatureManagement`?** It's excellent for complex scenarios (targeting, A/B testing, percentage rollouts, external providers), but we don't need that complexity yet. Our flags control gradual rollout of features and user simplification (hiding unused features). Simple on/off switches are sufficient. The hand-rolled DB + cache approach keeps the codebase leaner, reduces third-party abstractions, and aligns with the "no magic" principle (§3, §8 copilot-instructions.md).
 
 ---
 
-## 1. Configuration Shape
+## 1. Storage & Runtime Toggleability
 
-### `appsettings.json` Structure
+### Database Schema
+
+**Table:** `FeatureFlags`
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `Name` | TEXT | PRIMARY KEY | Flag name (e.g., `Calendar:SpendingHeatmap`) |
+| `IsEnabled` | BOOLEAN | NOT NULL | Current flag state |
+| `UpdatedAtUtc` | TIMESTAMP | NOT NULL | Last toggle timestamp (UTC) |
+
+**Rationale:** Database is the source of truth for flag state. Allows runtime toggles without app restarts or file edits. Supports all deployment contexts (local dev, Docker, Pi) uniformly.
+
+### Seed Data Strategy
+
+**Initial provisioning:** Seed 17 flags from Feature 129 audit (`docs/129-feature-audit-kakeibo-alignment.md`) via application startup INSERT-if-missing logic (never `EF Core HasData()`).
+
+> ⚠️ **PROHIBITED:** Do NOT use `builder.HasData(...)` in entity configuration for feature flags. `HasData()` generates migration SQL that overwrites existing rows during `dotnet ef database update` and Docker container startup — this would destroy user customisations every time the app updates. Use the startup seeder below instead.
+
+**INSERT-if-missing contract:** At application startup (after `MigrateAsync()`), the `FeatureFlagSeeder` writes each default flag using `ON CONFLICT (Name) DO NOTHING`. New flags added in future releases are seeded with their defaults; flags the user has already toggled are never touched.
+
+**Defaults applied at seed time:** Default-off for experimental/unfinished features (`Calendar:KakeiboOverlay`, `Reports:CustomReportBuilder`, `Kaizen:Dashboard`). Default-on for completed/shipped features (`AI:ChatAssistant`, `AI:RecurringChargeDetection`, `Reports:LocationReport`, `Paycheck:PaycheckPlanner`).
+
+**Optional file-based seeding:** For dev convenience, an `appsettings.json` `FeatureFlags` section can be used to hydrate the DB on first run (via startup seed logic). Example:
 
 ```json
 {
   "FeatureFlags": {
-    "Kakeibo": false,
-    "Kaizen": false,
-    "MonthlyReflection": false,
-    "AdvancedCharts": true,
-    "RecurringChargeSuggestions": true
+    "Calendar:SpendingHeatmap": true,
+    "Calendar:KakeiboOverlay": false,
+    "Kakeibo:MonthlyReflectionPrompts": true,
+    "Kakeibo:CalendarOverlay": false,
+    "Kaizen:MicroGoals": true,
+    "Kaizen:Dashboard": false,
+    "AI:ChatAssistant": true,
+    "AI:RuleSuggestions": true,
+    "AI:RecurringChargeDetection": true,
+    "Reports:CustomReportBuilder": false,
+    "Reports:LocationReport": true,
+    "Charts:AdvancedCharts": false,
+    "Paycheck:PaycheckPlanner": true,
+    "Reconciliation:StatementReconciliation": true,
+    "DataHealth:Dashboard": true,
+    "Location:Geocoding": false
   }
 }
 ```
 
-### Design Principles
-
-- **Default-off for unfinished features:** New capabilities start `false` until ready for production.
-- **Default-on for completed features:** Existing production features (e.g., `AdvancedCharts`, `RecurringChargeSuggestions`) default to `true`. This allows gradual retirement of flags via configuration overrides only — code stays clean.
-- **Override hierarchy:** `appsettings.Development.json` → user secrets → environment variables → Docker `.env` file (Pi deployment).
-- **No database storage:** Flags are deployment-time config, not runtime user preferences. Database storage would introduce concurrency/caching complexity and violate single-source-of-truth for environment config.
+**Important:** After initial seed, `appsettings.json` is NOT the source of truth. Runtime toggles via API write to DB only. File changes do not propagate unless DB is re-seeded (destructive operation).
 
 ---
 
@@ -45,106 +76,436 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ Client (Blazor WASM)                                           │
-│   └─ IFeatureFlagService (interface)                          │
-│       └─ FeatureFlagService (impl, calls /api/v1/features)    │
+│   └─ IFeatureFlagClientService (interface)                    │
+│       └─ FeatureFlagClientService (impl, calls /api/v1/features)│
 │           └─ FeatureFlags (cached POCO)                       │
 └─────────────────────────────────────────────────────────────────┘
                               │
-                              │ HTTP GET /api/v1/features
+                              │ HTTP GET /api/v1/features (public, 60s cache)
+                              │ HTTP PUT /api/v1/features/{name} (admin, invalidates cache)
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │ API (ASP.NET Core)                                             │
 │   └─ FeaturesController                                        │
-│       └─ IOptions<FeatureFlagOptions>                         │
+│       └─ IMemoryCache (key: "feature:all", TTL: 5min)        │
+│           └─ IFeatureFlagService (Application layer)          │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               │ DI resolution
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ Shared (BudgetExperiment.Shared)                               │
-│   └─ FeatureFlagOptions.cs (POCO with const SectionName)      │
+│ Application (BudgetExperiment.Application)                     │
+│   └─ IFeatureFlagService (interface)                          │
+│       └─ FeatureFlagService (impl, uses repository + cache)   │
+│           └─ IFeatureFlagRepository (Infrastructure)          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              │ Repository abstraction
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Infrastructure (BudgetExperiment.Infrastructure)               │
+│   └─ FeatureFlagRepository (EF Core)                          │
+│       └─ AppDbContext.FeatureFlags (DbSet<FeatureFlag>)       │
+│           └─ PostgreSQL: FeatureFlags table                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Rationale:**
 
-- **Shared:** Holds `FeatureFlagOptions` POCO — both API and Client need the same shape, no DTOs needed.
-- **API:** Binds configuration, injects `IOptions<FeatureFlagOptions>`, exposes REST endpoint.
-- **Client:** Fetches flags at startup, caches them in a scoped service, exposes via `IFeatureFlagService` for components.
-
-**Why not Contracts?** Contracts are typically for request/response DTOs crossing the API boundary. Feature flags are simple config projection, not domain data or commands. `Shared` already holds enums used by both sides (`BudgetScope`, `CategorySource`); flags fit the same pattern.
+- **Database (Infrastructure):** Holds runtime-toggleable flag state. Migration seeds defaults from Feature 129 audit.
+- **Application Service:** `IFeatureFlagService.IsEnabled(string flagName)` checks `IMemoryCache` first (cache hit = zero DB overhead), falls back to repository on cache miss. `SetFlagAsync(string flagName, bool enabled)` writes to DB, invalidates cache.
+- **API Controller:** Read endpoint `GET /api/v1/features` returns all flags (public, `ResponseCache` 60 seconds). Write endpoint `PUT /api/v1/features/{flagName}` requires `[Authorize]` (admin users only).
+- **Client Service:** Fetches flags at startup, caches for session, exposes `IsEnabled(string flagName)` for Razor components. `RefreshAsync()` method re-fetches from API (for use after admin toggle, if admin panel is in Blazor client).
 
 ---
 
 ## 3. Code Sketches
 
-### 3.1 `FeatureFlagOptions.cs` (BudgetExperiment.Shared)
+### 3.1 `FeatureFlag.cs` (BudgetExperiment.Domain/Entities)
 
 ```csharp
-// <copyright file="FeatureFlagOptions.cs" company="BecauseImClever">
+// <copyright file="FeatureFlag.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-namespace BudgetExperiment.Shared;
+namespace BudgetExperiment.Domain.Entities;
 
 /// <summary>
-/// Feature flag configuration. Controls gradual rollout of features to clients.
+/// Feature flag entity. Controls gradual rollout of features to clients.
 /// </summary>
-public sealed class FeatureFlagOptions
+public sealed class FeatureFlag
 {
     /// <summary>
-    /// Configuration section name in appsettings.json.
+    /// Gets or sets the flag name (e.g., "Calendar:SpendingHeatmap").
     /// </summary>
-    public const string SectionName = "FeatureFlags";
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether Kakeibo categorization is enabled.
-    /// Default: false (feature in development).
+    /// Gets or sets a value indicating whether the feature is enabled.
     /// </summary>
-    public bool Kakeibo { get; set; }
+    public bool IsEnabled { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether Kaizen goal tracking is enabled.
-    /// Default: false (feature in development).
+    /// Gets or sets the last update timestamp (UTC).
     /// </summary>
-    public bool Kaizen { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether Monthly Reflection journal is enabled.
-    /// Default: false (feature in development).
-    /// </summary>
-    public bool MonthlyReflection { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether advanced charts (Heatmap, Waterfall, Radar, etc.) are enabled.
-    /// Default: true (Feature 127 is complete and shipped).
-    /// </summary>
-    public bool AdvancedCharts { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets a value indicating whether recurring charge suggestion analysis is enabled.
-    /// Default: true (existing production feature).
-    /// </summary>
-    public bool RecurringChargeSuggestions { get; set; } = true;
+    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 }
 ```
 
-**Pattern Match:** Identical to existing `DatabaseOptions`, `AuthenticationOptions`, `ClientConfigOptions` — `const string SectionName`, XML docs, default values via property initializers.
+---
+
+### 3.2 `FeatureFlagConfiguration.cs` (BudgetExperiment.Infrastructure/Data/Config)
+
+```csharp
+// <copyright file="FeatureFlagConfiguration.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+using BudgetExperiment.Domain.Entities;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace BudgetExperiment.Infrastructure.Data.Config;
+
+/// <summary>
+/// EF Core configuration for <see cref="FeatureFlag"/>.
+/// </summary>
+public sealed class FeatureFlagConfiguration : IEntityTypeConfiguration<FeatureFlag>
+{
+    /// <inheritdoc/>
+    public void Configure(EntityTypeBuilder<FeatureFlag> builder)
+    {
+        builder.ToTable("FeatureFlags");
+
+        builder.HasKey(f => f.Name);
+
+        builder.Property(f => f.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(f => f.IsEnabled)
+            .IsRequired();
+
+        builder.Property(f => f.UpdatedAtUtc)
+            .IsRequired();
+
+        // ⚠️ DO NOT add HasData() here — see Seed Data Strategy in section 2.3.
+        // Default flags are seeded via FeatureFlagSeeder (INSERT-if-missing at startup).
+    }
+}
+```
 
 ---
 
-### 3.2 `FeaturesController.cs` (BudgetExperiment.Api/Controllers)
+### 3.2b `FeatureFlagSeeder.cs` (BudgetExperiment.Infrastructure/Persistence/Seeders)
+
+Called from `Program.cs` after `MigrateAsync()`. Uses raw SQL `ON CONFLICT (Name) DO NOTHING` so
+existing user-toggled values are never overwritten by updates.
+
+```csharp
+// <copyright file="FeatureFlagSeeder.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+using BudgetExperiment.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace BudgetExperiment.Infrastructure.Persistence.Seeders;
+
+/// <summary>
+/// Seeds default feature flags at application startup.
+/// Uses INSERT-if-missing (ON CONFLICT DO NOTHING) so user-toggled values are never overwritten.
+/// </summary>
+public static class FeatureFlagSeeder
+{
+    private static readonly (string Name, bool IsEnabled)[] Defaults =
+    [
+        ("Calendar:SpendingHeatmap",              true),
+        ("Calendar:KakeiboOverlay",               false),
+        ("Kakeibo:MonthlyReflectionPrompts",      true),
+        ("Kakeibo:CalendarOverlay",               false),
+        ("Kaizen:MicroGoals",                     true),
+        ("Kaizen:Dashboard",                      false),
+        ("AI:ChatAssistant",                      true),
+        ("AI:RuleSuggestions",                    true),
+        ("AI:RecurringChargeDetection",           true),
+        ("Reports:CustomReportBuilder",           false),
+        ("Reports:LocationReport",                true),
+        ("Charts:AdvancedCharts",                 false),
+        ("Charts:CandlestickChart",               false),
+        ("Paycheck:PaycheckPlanner",              true),
+        ("Reconciliation:StatementReconciliation",true),
+        ("DataHealth:Dashboard",                  true),
+        ("Location:Geocoding",                    false),
+    ];
+
+    /// <summary>
+    /// Seeds any missing feature flags with their default values. Never overwrites existing rows.
+    /// </summary>
+    public static async Task SeedAsync(BudgetDbContext context)
+    {
+        var now = DateTime.UtcNow;
+        foreach (var (name, isEnabled) in Defaults)
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                """
+                INSERT INTO "FeatureFlags" ("Name", "IsEnabled", "UpdatedAtUtc")
+                VALUES ({0}, {1}, {2})
+                ON CONFLICT ("Name") DO NOTHING
+                """,
+                name, isEnabled, now);
+        }
+    }
+}
+```
+
+**`Program.cs` call site (after `MigrateAsync()`):**
+
+```csharp
+await using var scope = app.Services.CreateAsyncScope();
+var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
+await db.Database.MigrateAsync();
+await FeatureFlagSeeder.SeedAsync(db);
+```
+
+---
+
+### 3.3 `IFeatureFlagRepository.cs` (BudgetExperiment.Application/Common/Interfaces/Repositories)
+
+```csharp
+// <copyright file="IFeatureFlagRepository.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+using BudgetExperiment.Domain.Entities;
+
+namespace BudgetExperiment.Application.Common.Interfaces.Repositories;
+
+/// <summary>
+/// Repository for feature flag persistence.
+/// </summary>
+public interface IFeatureFlagRepository
+{
+    /// <summary>
+    /// Gets all feature flags.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>All feature flags.</returns>
+    Task<IReadOnlyList<FeatureFlag>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a single feature flag by name.
+    /// </summary>
+    /// <param name="name">Flag name (case-sensitive).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The flag, or null if not found.</returns>
+    Task<FeatureFlag?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates a feature flag's enabled state.
+    /// </summary>
+    /// <param name="name">Flag name (case-sensitive).</param>
+    /// <param name="isEnabled">New enabled state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task UpdateAsync(string name, bool isEnabled, CancellationToken cancellationToken = default);
+}
+```
+
+---
+
+### 3.4 `FeatureFlagRepository.cs` (BudgetExperiment.Infrastructure/Data/Repositories)
+
+```csharp
+// <copyright file="FeatureFlagRepository.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+using BudgetExperiment.Application.Common.Interfaces.Repositories;
+using BudgetExperiment.Domain.Entities;
+
+using Microsoft.EntityFrameworkCore;
+
+namespace BudgetExperiment.Infrastructure.Data.Repositories;
+
+/// <summary>
+/// Repository implementation for feature flags.
+/// </summary>
+public sealed class FeatureFlagRepository : IFeatureFlagRepository
+{
+    private readonly AppDbContext _context;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FeatureFlagRepository"/> class.
+    /// </summary>
+    /// <param name="context">Database context.</param>
+    public FeatureFlagRepository(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<FeatureFlag>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.FeatureFlags
+            .AsNoTracking()
+            .OrderBy(f => f.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<FeatureFlag?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return await _context.FeatureFlags
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.Name == name, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task UpdateAsync(string name, bool isEnabled, CancellationToken cancellationToken = default)
+    {
+        var flag = await _context.FeatureFlags
+            .FirstOrDefaultAsync(f => f.Name == name, cancellationToken);
+
+        if (flag == null)
+        {
+            return;
+        }
+
+        flag.IsEnabled = isEnabled;
+        flag.UpdatedAtUtc = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}
+```
+
+---
+
+### 3.5 `IFeatureFlagService.cs` (BudgetExperiment.Application/Common/Interfaces/Services)
+
+```csharp
+// <copyright file="IFeatureFlagService.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+namespace BudgetExperiment.Application.Common.Interfaces.Services;
+
+/// <summary>
+/// Service for accessing and managing feature flags.
+/// </summary>
+public interface IFeatureFlagService
+{
+    /// <summary>
+    /// Checks if a feature flag is enabled.
+    /// </summary>
+    /// <param name="flagName">Flag name (e.g., "Calendar:SpendingHeatmap").</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><c>true</c> if enabled; otherwise, <c>false</c>.</returns>
+    Task<bool> IsEnabledAsync(string flagName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all feature flags.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dictionary of flag name → enabled state.</returns>
+    Task<Dictionary<string, bool>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets a feature flag's enabled state (admin operation).
+    /// </summary>
+    /// <param name="flagName">Flag name (case-sensitive).</param>
+    /// <param name="isEnabled">New enabled state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task SetFlagAsync(string flagName, bool isEnabled, CancellationToken cancellationToken = default);
+}
+```
+
+---
+
+### 3.6 `FeatureFlagService.cs` (BudgetExperiment.Application/Services)
+
+```csharp
+// <copyright file="FeatureFlagService.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+using BudgetExperiment.Application.Common.Interfaces.Repositories;
+using BudgetExperiment.Application.Common.Interfaces.Services;
+
+using Microsoft.Extensions.Caching.Memory;
+
+namespace BudgetExperiment.Application.Services;
+
+/// <summary>
+/// Service for accessing and managing feature flags with in-memory cache.
+/// </summary>
+public sealed class FeatureFlagService : IFeatureFlagService
+{
+    private const string CacheKey = "feature:all";
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+
+    private readonly IFeatureFlagRepository _repository;
+    private readonly IMemoryCache _cache;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FeatureFlagService"/> class.
+    /// </summary>
+    /// <param name="repository">Feature flag repository.</param>
+    /// <param name="cache">Memory cache.</param>
+    public FeatureFlagService(IFeatureFlagRepository repository, IMemoryCache cache)
+    {
+        _repository = repository;
+        _cache = cache;
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> IsEnabledAsync(string flagName, CancellationToken cancellationToken = default)
+    {
+        var flags = await GetAllAsync(cancellationToken);
+        return flags.TryGetValue(flagName, out var isEnabled) && isEnabled;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Dictionary<string, bool>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        if (_cache.TryGetValue<Dictionary<string, bool>>(CacheKey, out var cached))
+        {
+            return cached!;
+        }
+
+        var flags = await _repository.GetAllAsync(cancellationToken);
+        var dict = flags.ToDictionary(f => f.Name, f => f.IsEnabled);
+
+        _cache.Set(CacheKey, dict, CacheDuration);
+
+        return dict;
+    }
+
+    /// <inheritdoc/>
+    public async Task SetFlagAsync(string flagName, bool isEnabled, CancellationToken cancellationToken = default)
+    {
+        await _repository.UpdateAsync(flagName, isEnabled, cancellationToken);
+        _cache.Remove(CacheKey); // Invalidate cache
+    }
+}
+```
+
+---
+
+### 3.7 `FeaturesController.cs` (BudgetExperiment.Api/Controllers)
 
 ```csharp
 // <copyright file="FeaturesController.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Shared;
+using BudgetExperiment.Application.Common.Interfaces.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace BudgetExperiment.Api.Controllers;
 
@@ -154,87 +515,158 @@ namespace BudgetExperiment.Api.Controllers;
 /// </summary>
 [ApiVersion("1.0")]
 [ApiController]
-[AllowAnonymous]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public sealed class FeaturesController : ControllerBase
 {
-    private readonly IOptions<FeatureFlagOptions> _featureFlagOptions;
+    private readonly IFeatureFlagService _featureFlagService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FeaturesController"/> class.
     /// </summary>
-    /// <param name="featureFlagOptions">The feature flag configuration options.</param>
-    public FeaturesController(IOptions<FeatureFlagOptions> featureFlagOptions)
+    /// <param name="featureFlagService">Feature flag service.</param>
+    public FeaturesController(IFeatureFlagService featureFlagService)
     {
-        _featureFlagOptions = featureFlagOptions;
+        _featureFlagService = featureFlagService;
     }
 
     /// <summary>
-    /// Gets the current feature flag state.
+    /// Gets the current feature flag state for all flags.
     /// </summary>
     /// <remarks>
     /// This endpoint is public (no authentication required) because the client
     /// needs feature flags before authentication to determine whether to show
-    /// auth-gated features in the UI.
+    /// auth-gated features in the UI. Cached for 60 seconds to reduce API load.
     /// </remarks>
-    /// <returns>The feature flag configuration.</returns>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dictionary of flag name → enabled state.</returns>
     [HttpGet]
-    [ProducesResponseType<FeatureFlagOptions>(StatusCodes.Status200OK)]
-    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any)]
-    public ActionResult<FeatureFlagOptions> GetFeatures()
+    [AllowAnonymous]
+    [ProducesResponseType<Dictionary<string, bool>>(StatusCodes.Status200OK)]
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
+    public async Task<ActionResult<Dictionary<string, bool>>> GetFeatures(CancellationToken cancellationToken)
     {
-        return Ok(_featureFlagOptions.Value);
+        var flags = await _featureFlagService.GetAllAsync(cancellationToken);
+        return Ok(flags);
     }
+
+    /// <summary>
+    /// Updates a feature flag's enabled state (admin operation).
+    /// </summary>
+    /// <param name="flagName">Flag name (e.g., "Calendar:SpendingHeatmap").</param>
+    /// <param name="request">Update request containing new enabled state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>200 OK with updated flag state, or 404 if flag not found.</returns>
+    [HttpPut("{flagName}")]
+    [Authorize]
+    [ProducesResponseType<UpdateFeatureFlagResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateFeatureFlagResponse>> UpdateFeatureFlag(
+        string flagName,
+        [FromBody] UpdateFeatureFlagRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _featureFlagService.SetFlagAsync(flagName, request.Enabled, cancellationToken);
+
+        var isEnabled = await _featureFlagService.IsEnabledAsync(flagName, cancellationToken);
+
+        return Ok(new UpdateFeatureFlagResponse
+        {
+            Name = flagName,
+            Enabled = isEnabled,
+            UpdatedAtUtc = DateTime.UtcNow,
+        });
+    }
+}
+
+/// <summary>
+/// Request DTO for updating a feature flag.
+/// </summary>
+public sealed record UpdateFeatureFlagRequest
+{
+    /// <summary>
+    /// Gets or sets a value indicating whether the flag should be enabled.
+    /// </summary>
+    public bool Enabled { get; set; }
+}
+
+/// <summary>
+/// Response DTO for updating a feature flag.
+/// </summary>
+public sealed record UpdateFeatureFlagResponse
+{
+    /// <summary>
+    /// Gets or sets the flag name.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the flag is enabled.
+    /// </summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the update timestamp (UTC).
+    /// </summary>
+    public DateTime UpdatedAtUtc { get; set; }
 }
 ```
 
-**Pattern Match:** Identical to `ConfigController` — `IOptions<T>` injection, `[AllowAnonymous]`, `ResponseCache(Duration = 3600)` to minimize round-trips during session. The 1-hour cache is acceptable because flag changes require deployment (appsettings.json change or Docker restart).
+**Pattern Match:** Matches existing `ConfigController` (`[AllowAnonymous]` on GET, `ResponseCache` for client efficiency). Write endpoint requires `[Authorize]` (admin users only). Cache duration reduced from 3600 to 60 seconds to allow faster propagation of runtime toggles (1-hour eventual consistency on client side is acceptable per Alfred's decision).
 
 ---
 
-### 3.3 DI Registration (API `Program.cs`)
+### 3.8 DI Registration (API `Program.cs` + Application + Infrastructure)
 
-**Add after line 96 (`AddInfrastructure`), before localization:**
+**Infrastructure `DependencyInjection.cs` (add repository registration):**
 
 ```csharp
-// Feature flags
-builder.Services.Configure<FeatureFlagOptions>(
-    builder.Configuration.GetSection(FeatureFlagOptions.SectionName));
+// After existing repository registrations (around line 45)
+services.AddScoped<IFeatureFlagRepository, FeatureFlagRepository>();
 ```
 
-**Existing Pattern:** Matches `DatabaseOptions` registration at line 246 (`IOptions<DatabaseOptions>`), `AuthenticationOptions` at line 70, `ClientConfigOptions` at line 440. Zero custom wiring — ASP.NET Core Options pattern handles everything.
+**Application `DependencyInjection.cs` (add service registration + memory cache):**
+
+```csharp
+// Add IMemoryCache if not already registered (check existing registrations first)
+services.AddMemoryCache();
+
+// Add feature flag service (around line 60, after other scoped services)
+services.AddScoped<IFeatureFlagService, FeatureFlagService>();
+```
+
+**API `Program.cs` (no changes required — repository/service registered in layer DI extensions).**
+
+**Existing Pattern:** Matches `IBudgetCategoryRepository` + `BudgetCategoryRepository` registration, `IAccountService` + `AccountService` registration. Zero custom wiring — layered DI extension methods handle everything.
 
 ---
 
-### 3.4 Client: `IFeatureFlagService.cs` (BudgetExperiment.Client/Services)
+### 3.9 Client: `IFeatureFlagClientService.cs` (BudgetExperiment.Client/Services)
 
 ```csharp
-// <copyright file="IFeatureFlagService.cs" company="BecauseImClever">
+// <copyright file="IFeatureFlagClientService.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
-
-using BudgetExperiment.Shared;
 
 namespace BudgetExperiment.Client.Services;
 
 /// <summary>
 /// Service for accessing feature flags in the Blazor client.
 /// </summary>
-public interface IFeatureFlagService
+public interface IFeatureFlagClientService
 {
     /// <summary>
-    /// Gets the current feature flag state.
+    /// Gets the current feature flag state as a dictionary.
     /// </summary>
     /// <remarks>
-    /// Cached after first load. If flags could not be loaded, returns all-false defaults.
+    /// Cached after first load. If flags could not be loaded, returns empty dictionary.
     /// </remarks>
-    FeatureFlagOptions Flags { get; }
+    Dictionary<string, bool> Flags { get; }
 
     /// <summary>
     /// Checks if a specific feature is enabled.
     /// </summary>
-    /// <param name="flagName">The name of the feature flag (case-insensitive).</param>
+    /// <param name="flagName">The name of the feature flag (case-sensitive, e.g., "Calendar:SpendingHeatmap").</param>
     /// <returns><c>true</c> if the feature is enabled; otherwise, <c>false</c>.</returns>
     bool IsEnabled(string flagName);
 
@@ -243,21 +675,25 @@ public interface IFeatureFlagService
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task LoadFlagsAsync();
+
+    /// <summary>
+    /// Refreshes feature flags from the API (for use after admin toggle).
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task RefreshAsync();
 }
 ```
 
 ---
 
-### 3.5 Client: `FeatureFlagService.cs` (BudgetExperiment.Client/Services)
+### 3.10 Client: `FeatureFlagClientService.cs` (BudgetExperiment.Client/Services)
 
 ```csharp
-// <copyright file="FeatureFlagService.cs" company="BecauseImClever">
+// <copyright file="FeatureFlagClientService.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
 using System.Net.Http.Json;
-
-using BudgetExperiment.Shared;
 
 namespace BudgetExperiment.Client.Services;
 
@@ -265,35 +701,27 @@ namespace BudgetExperiment.Client.Services;
 /// Service for accessing feature flags in the Blazor client.
 /// Fetches flags from the API at startup and caches them for the session.
 /// </summary>
-public sealed class FeatureFlagService : IFeatureFlagService
+public sealed class FeatureFlagClientService : IFeatureFlagClientService
 {
     private readonly HttpClient _httpClient;
-    private FeatureFlagOptions _flags = new();
+    private Dictionary<string, bool> _flags = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FeatureFlagService"/> class.
+    /// Initializes a new instance of the <see cref="FeatureFlagClientService"/> class.
     /// </summary>
     /// <param name="httpClient">The HTTP client for API calls.</param>
-    public FeatureFlagService(HttpClient httpClient)
+    public FeatureFlagClientService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
 
     /// <inheritdoc/>
-    public FeatureFlagOptions Flags => _flags;
+    public Dictionary<string, bool> Flags => _flags;
 
     /// <inheritdoc/>
     public bool IsEnabled(string flagName)
     {
-        return flagName switch
-        {
-            nameof(FeatureFlagOptions.Kakeibo) => _flags.Kakeibo,
-            nameof(FeatureFlagOptions.Kaizen) => _flags.Kaizen,
-            nameof(FeatureFlagOptions.MonthlyReflection) => _flags.MonthlyReflection,
-            nameof(FeatureFlagOptions.AdvancedCharts) => _flags.AdvancedCharts,
-            nameof(FeatureFlagOptions.RecurringChargeSuggestions) => _flags.RecurringChargeSuggestions,
-            _ => false,
-        };
+        return _flags.TryGetValue(flagName, out var isEnabled) && isEnabled;
     }
 
     /// <inheritdoc/>
@@ -301,53 +729,204 @@ public sealed class FeatureFlagService : IFeatureFlagService
     {
         try
         {
-            var response = await _httpClient.GetFromJsonAsync<FeatureFlagOptions>("api/v1/features");
-            _flags = response ?? new FeatureFlagOptions();
+            var response = await _httpClient.GetFromJsonAsync<Dictionary<string, bool>>("api/v1/features");
+            _flags = response ?? new Dictionary<string, bool>();
         }
         catch (HttpRequestException)
         {
-            // API unavailable or network failure — default to all-false (safe fallback)
-            _flags = new FeatureFlagOptions();
+            // API unavailable or network failure — default to empty (all flags off, safe fallback)
+            _flags = new Dictionary<string, bool>();
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task RefreshAsync()
+    {
+        await LoadFlagsAsync();
     }
 }
 ```
 
-**Graceful Degradation:** If the API is unreachable (dev environment, network partition), the client defaults to all-false flags. Completed features (`AdvancedCharts`, `RecurringChargeSuggestions`) use property initializers to default to `true`, so they'll still work even if the API fails.
+**Graceful Degradation:** If the API is unreachable (dev environment, network partition), the client defaults to empty dictionary (all flags off). Completed features that need to remain visible should have alternative checks (e.g., check if nav menu item should be visible based on authentication state, not just feature flags).
 
 ---
 
-### 3.6 Client DI Registration (`Client/Program.cs`)
+### 3.11 Client DI Registration (`Client/Program.cs`)
 
-**Add after line 141 (`AddScoped<IFormStateService, FormStateService>`), before localization:**
+**Add after existing service registrations (around line 141), before localization:**
 
 ```csharp
 // Feature flags
-builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
+builder.Services.AddScoped<IFeatureFlagClientService, FeatureFlagClientService>();
 
 // Load feature flags before running the app
 var host = builder.Build();
-var featureFlagService = host.Services.GetRequiredService<IFeatureFlagService>();
+var featureFlagService = host.Services.GetRequiredService<IFeatureFlagClientService>();
 await featureFlagService.LoadFlagsAsync();
 await host.RunAsync();
 ```
 
-**Why Scoped?** Flags are session-stable (change requires deployment). Scoped matches the lifetime of `IBudgetApiService`, `IChatApiService`, and other data services. Singleton would prevent future per-user flag overrides (if we ever add them).
+**Why Scoped?** Flags are session-stable (change requires API toggle + client refresh). Scoped matches the lifetime of `IBudgetApiService`, `IChatApiService`, and other data services. Singleton would prevent future per-user flag overrides (if we ever add them).
 
-**Why Load Before `RunAsync`?** Prevents race conditions where components render before flags are ready. Existing pattern: `ClientConfigDto` is fetched at line 25 before DI registration.
+**Why Load Before `RunAsync`?** Prevents race conditions where components render before flags are ready. Existing pattern: `ClientConfigDto` is fetched before DI registration in some scenarios (verify current implementation; adjust if needed).
 
 ---
 
-## 4. Migration Path: Retrofitting Existing Features
+## 4. Flag Inventory (17 Flags from Feature 129 Audit)
 
-### Problem
+| Flag Name | Default | Type | Description |
+|-----------|---------|------|-------------|
+| `Calendar:SpendingHeatmap` | `true` | [user-simplification] | Heatmap overlay on calendar cells showing spending intensity |
+| `Calendar:KakeiboOverlay` | `false` | [experimental] | Kakeibo category badges on calendar (Feature 128 rollout) |
+| `Kakeibo:MonthlyReflectionPrompts` | `true` | [user-simplification] | Month-end reflection prompts (Kakeibo philosophy) |
+| `Kakeibo:CalendarOverlay` | `false` | [experimental] | Duplicate of `Calendar:KakeiboOverlay` — consider consolidating |
+| `Kaizen:MicroGoals` | `true` | [user-simplification] | Weekly micro-goal tracking |
+| `Kaizen:Dashboard` | `false` | [experimental] | 12-week Kaizen dashboard report (Feature 128 rollout) |
+| `AI:ChatAssistant` | `true` | [user-simplification] + [experimental] | Ollama-powered chat assistant |
+| `AI:RuleSuggestions` | `true` | [user-simplification] | Ollama-powered categorization rule suggestions |
+| `AI:RecurringChargeDetection` | `true` | [user-simplification] | AI-detected recurring transaction patterns |
+| `Reports:CustomReportBuilder` | `false` | [experimental] | User-defined custom report builder (power-user feature) |
+| `Reports:LocationReport` | `true` | [user-simplification] | Geographic spending report |
+| `Charts:AdvancedCharts` | `false` | [experimental] | Candlestick, BoxPlot, SparkLine (showcase only, not in active reports) |
+| `Charts:CandlestickChart` | `false` | [experimental] | Individual chart type (consider folding into `Charts:AdvancedCharts`) |
+| `Paycheck:PaycheckPlanner` | `true` | [user-simplification] | Paycheck allocation calculator |
+| `Reconciliation:StatementReconciliation` | `true` | [user-simplification] | PDF statement reconciliation |
+| `DataHealth:Dashboard` | `true` | [user-simplification] | Data hygiene dashboard |
+| `Location:Geocoding` | `false` | [experimental] | Geocoding service (stub implementation) |
 
-We already have production features (advanced charts, recurring charge suggestions). If we add flags and set them to `false` by default, we break existing deployments. If we set them to `true`, the flags are meaningless until we add new unfinished features.
+**Note:** Some flags are redundant (e.g., `Calendar:KakeiboOverlay` vs `Kakeibo:CalendarOverlay`). Alfred may consolidate these during implementation.
 
-### Solution: Default-On for Completed Features
+---
 
-1. **`AdvancedCharts` and `RecurringChargeSuggestions`** default to `true` via property initializers.
-2. Components that use these features check `IsEnabled("AdvancedCharts")` but the flag is always `true` in production.
+## 5. Admin UI Sketch (Optional — Phase 2)
+
+**Endpoint:** `PUT /api/v1/features/{flagName}` (implemented in FeaturesController)
+
+**Admin Page:** `/admin/features` or `/settings` (new section)
+
+**UI Mockup:**
+
+```
+Feature Flags (Admin)
+───────────────────────────────────────────────────
+Calendar
+  [x] Spending Heatmap               (Calendar:SpendingHeatmap)
+  [ ] Kakeibo Overlay                (Calendar:KakeiboOverlay)
+
+Kakeibo
+  [x] Monthly Reflection Prompts     (Kakeibo:MonthlyReflectionPrompts)
+  [ ] Calendar Overlay               (Kakeibo:CalendarOverlay)
+
+Kaizen
+  [x] Micro-Goals                    (Kaizen:MicroGoals)
+  [ ] Dashboard                      (Kaizen:Dashboard)
+
+AI
+  [x] Chat Assistant                 (AI:ChatAssistant)
+  [x] Rule Suggestions               (AI:RuleSuggestions)
+  [x] Recurring Charge Detection     (AI:RecurringChargeDetection)
+
+Reports
+  [ ] Custom Report Builder          (Reports:CustomReportBuilder)
+  [x] Location Report                (Reports:LocationReport)
+
+Charts
+  [ ] Advanced Charts                (Charts:AdvancedCharts)
+  [ ] Candlestick Chart              (Charts:CandlestickChart)
+
+...
+```
+
+**Blazor Component:**
+
+```razor
+@page "/admin/features"
+@inject IFeatureFlagClientService FeatureFlagService
+@inject IBudgetApiService ApiService
+
+<h3>Feature Flags (Admin)</h3>
+
+@foreach (var (name, enabled) in FeatureFlagService.Flags.OrderBy(f => f.Key))
+{
+    <div class="flag-toggle">
+        <input type="checkbox" 
+               checked="@enabled" 
+               @onchange="@(e => ToggleFlag(name, (bool)e.Value!))" />
+        <label>@name</label>
+    </div>
+}
+
+@code {
+    private async Task ToggleFlag(string name, bool enabled)
+    {
+        // Call PUT /api/v1/features/{name}
+        await ApiService.UpdateFeatureFlagAsync(name, enabled);
+        
+        // Refresh client cache
+        await FeatureFlagService.RefreshAsync();
+    }
+}
+```
+
+**Note:** Admin UI is optional for MVP. CLI/curl is sufficient for initial implementation:
+
+```bash
+curl -X PUT https://pi.local:5099/api/v1/features/Calendar:KakeiboOverlay \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-token>" \
+  -d '{"enabled":true}'
+```
+
+---
+
+## 6. Testing Strategy (Barbara's Responsibility)
+
+### Unit Tests
+
+**Domain Layer:**
+- `FeatureFlagTests` — verify entity properties (Name, IsEnabled, UpdatedAtUtc).
+
+**Application Layer:**
+- `FeatureFlagServiceTests` — verify cache hit/miss logic, `SetFlagAsync` invalidates cache, `IsEnabledAsync` returns correct value.
+- Mock `IMemoryCache` and `IFeatureFlagRepository`.
+
+**Infrastructure Layer:**
+- `FeatureFlagRepositoryTests` — verify `GetAllAsync`, `GetByNameAsync`, `UpdateAsync` (use in-memory SQLite or Testcontainers PostgreSQL).
+
+**API Layer:**
+- `FeaturesControllerTests` — verify `GetFeatures()` returns flags from service, `UpdateFeatureFlag()` requires auth, returns 200 on success, 404 on unknown flag.
+
+**Client Layer:**
+- `FeatureFlagClientServiceTests` — verify `LoadFlagsAsync` caches flags, `IsEnabled` logic correct, graceful degradation on HTTP failure (returns empty dictionary).
+
+### Integration Tests
+
+**API:**
+- `FeaturesEndpointTests` (using `WebApplicationFactory`) — verify `/api/v1/features` returns JSON from DB, verify `ResponseCache` headers (max-age=60), verify PUT endpoint toggles flag and invalidates cache.
+
+**Client:**
+- `FeatureFlagIntegrationTests` (using bUnit + mocked `HttpClient`) — verify service fetches flags from `/api/v1/features`, caches them, and components can query via `IsEnabled`.
+
+### Manual Testing
+
+1. **Seed verification:** Deploy with migration → verify 17 flags seeded in DB with correct defaults.
+2. **Toggle via API:** `PUT /api/v1/features/Calendar:KakeiboOverlay` with `{"enabled":true}` → verify DB updated, cache invalidated.
+3. **Client refresh:** Blazor client loads → verify flags fetched, wait 60 seconds → verify client-side cache expires → re-fetch picks up new state within ~1 minute.
+4. **Graceful degradation:** Stop API, run client standalone → verify empty dictionary fallback (all flags off).
+
+### Performance Tests
+
+**Zero per-request overhead (cache hit path):** Feature flag checks hit `IMemoryCache` only (no DB access after initial load). Add a micro-benchmark if needed:
+
+```csharp
+[Benchmark]
+public async Task<bool> FeatureFlagService_IsEnabledAsync_CacheHit()
+{
+    return await _service.IsEnabledAsync("Calendar:SpendingHeatmap");
+}
+```
+
+Expected: < 1 µs (in-memory dictionary lookup + cache read).
 3. Flags can be disabled via `appsettings.json` override (e.g., for A/B testing or gradual rollout to Pi vs cloud).
 4. Future features (`Kakeibo`, `Kaizen`, `MonthlyReflection`) default to `false` until implemented.
 
@@ -363,60 +942,45 @@ We already have production features (advanced charts, recurring charge suggestio
 
 ---
 
-## 5. Testing Strategy (Barbara's Responsibility)
+## 7. Migration Path: Retrofitting Existing Features
 
-### Unit Tests
+### Problem
 
-**API Layer:**
-- `FeaturesControllerTests` — verify `GetFeatures()` returns bound options.
-- `FeatureFlagOptionsTests` — verify default values (`AdvancedCharts = true`, `Kakeibo = false`).
+We already have production features (AI Chat Assistant, Recurring Charge Detection, Reports). If we add flags and set them to `false` by default, we break existing deployments. If we set them to `true`, the flags are meaningful only for new/unfinished features.
 
-**Client Layer:**
-- `FeatureFlagServiceTests` — verify `LoadFlagsAsync` caches flags, `IsEnabled` logic correct, graceful degradation on HTTP failure.
+### Solution: Default-On for Completed/Shipped Features
 
-### Integration Tests
+1. **Completed features** (e.g., `AI:ChatAssistant`, `AI:RecurringChargeDetection`, `Reports:LocationReport`, `Paycheck:PaycheckPlanner`) default to `true` in DB seed.
+2. **Experimental/unfinished features** (e.g., `Calendar:KakeiboOverlay`, `Kaizen:Dashboard`, `Reports:CustomReportBuilder`) default to `false` in DB seed.
+3. Components check `IsEnabled("AI:ChatAssistant")` — flag is `true` by default, so existing behavior unchanged.
+4. New features (e.g., Kakeibo overlay) are hidden by default until toggled on via admin API.
 
-**API:**
-- `FeaturesEndpointTests` (using `WebApplicationFactory`) — verify `/api/v1/features` returns JSON matching `appsettings.json`, verify `ResponseCache` headers.
+### Rollout Steps
 
-**Client:**
-- `FeatureFlagIntegrationTests` (using bUnit + mocked `HttpClient`) — verify service fetches flags from `/api/v1/features`, caches them, and components can query via `IsEnabled`.
+1. **Backend:** Create migration for `FeatureFlags` table → seed 17 flags → implement repository + service + controller.
+2. **Client:** Add `IFeatureFlagClientService`, load flags at startup.
+3. **Existing features:** Wrap navigation links in `@if (FeatureFlagService.IsEnabled("AI:ChatAssistant"))` — no behavior change (flag is `true`).
+4. **New features:** Add components behind `@if (FeatureFlagService.IsEnabled("Calendar:KakeiboOverlay"))` — hidden by default.
+5. **Activation:** `PUT /api/v1/features/Calendar:KakeiboOverlay` with `{"enabled":true}` → feature appears after client refresh.
 
-### Manual Testing
-
-1. Deploy with `Kakeibo: false` → verify Kakeibo nav link hidden.
-2. Deploy with `Kakeibo: true` → verify Kakeibo nav link visible, page renders.
-3. Simulate API failure (stop API, run client standalone) → verify client defaults to safe fallback (all-false, except `AdvancedCharts = true` via initializer).
-
-### Performance Tests
-
-No performance impact. Flag checks are in-memory property access (`_flags.Kakeibo`), not database queries. `/api/v1/features` endpoint is cached for 1 hour, fetched once at startup.
+**No Breaking Changes:** Defaults align with current production state. Existing features remain visible unless explicitly toggled off.
 
 ---
 
-## 6. Future Extensions (NOT IN SCOPE)
-
-### Runtime Toggles Without Restart
-
-**Current:** Flags require `appsettings.json` change + app restart (or Docker redeploy).
-
-**If Needed Later:**
-- Replace `IOptions<T>` with `IOptionsMonitor<T>` in `FeaturesController`.
-- `IOptionsMonitor` watches file changes and reloads automatically.
-- Client polls `/api/v1/features` every 5 minutes (or WebSocket push).
-
-**Cost:** Adds complexity. Not worth it unless we need runtime A/B testing.
+## 8. Future Extensions (NOT IN SCOPE)
 
 ### Per-User Feature Flags
 
-**Current:** Flags are global (all users see same state).
+**Current:** Flags are instance-level (all users on a deployment see same state).
 
 **If Needed Later:**
 - Add `UserFeatureFlagOverrides` table (userId, flagName, enabled).
-- Merge global flags + user overrides in `FeaturesController`.
+- Merge global flags + user overrides in `FeaturesController` or service layer.
 - Requires authentication context (user ID).
 
-**Cost:** Database queries on every `/api/v1/features` call, caching complexity. Defer until user-specific rollout is required.
+**Cost:** Database queries on every flag check, caching complexity, user-specific invalidation logic. Defer until user-specific rollout is required.
+
+**Note:** User preferences (e.g., "Hide Paycheck Planner in my nav menu") are handled via existing `UserSettings` entity, not feature flags. Feature flags control what's deployed/available; user settings control what's visible per user.
 
 ### Microsoft.FeatureManagement Migration
 
@@ -427,90 +991,82 @@ No performance impact. Flag checks are in-memory property access (`_flags.Kakeib
 - Percentage rollouts (gradual ramp from 0% → 100%).
 
 **Migration Path:**
-1. Keep `FeatureFlagOptions` as-is.
-2. Wrap `IOptions<FeatureFlagOptions>` in a `IFeatureManagerAdapter`.
-3. Introduce `Microsoft.FeatureManagement` NuGet package.
-4. Replace `IOptions` injection with `IFeatureManager` in controllers.
+1. Keep `FeatureFlag` entity and repository.
+2. Introduce `Microsoft.FeatureManagement` NuGet package.
+3. Implement custom `IFeatureDefinitionProvider` backed by `IFeatureFlagRepository`.
+4. Replace `IFeatureFlagService` injection with `IFeatureManager` in controllers.
 
-**Effort:** ~2 hours. Not justified unless we need advanced features.
+**Effort:** ~4 hours. Not justified unless we need advanced features (targeting, time windows, external providers).
 
 ---
 
-## 7. Decision Rationale Summary
+## 9. Decision Rationale Summary
 
 | Question | Decision | Why |
 |----------|----------|-----|
-| **Library or hand-rolled?** | Hand-rolled `IOptions<T>` | Simple on/off switches; no targeting/A/B testing needed; aligns with "no magic" principle; zero external dependencies. |
-| **Where to place POCO?** | `BudgetExperiment.Shared` | Both API and Client need same shape; avoids DTO mapping; matches existing `BudgetScope`, `CategorySource` enum pattern. |
-| **Client delivery pattern?** | `/api/v1/features` endpoint fetched at startup | Matches existing `/api/v1/config` pattern (ConfigController); avoids embedding in HTML (simpler deployment); graceful degradation on API failure. |
-| **`IOptions<T>` or `IOptionsMonitor<T>`?** | `IOptions<T>` | Flags change at deployment time (appsettings.json edit), not runtime. `IOptionsMonitor` adds file-watch overhead for zero benefit. If runtime toggles are needed later, trivial to upgrade. |
-| **Default-on or default-off?** | Default-off for new features, default-on for shipped features | Prevents breaking existing deployments; allows gradual feature activation; completed features remain visible unless explicitly disabled. |
-| **Authentication required?** | No (`[AllowAnonymous]`) | Client needs flags before authentication to decide whether to show login UI or auth-gated features. No sensitive data exposed (flags are deployment config, not user secrets). |
-| **Cache duration?** | 1 hour (`ResponseCache(Duration = 3600)`) | Flags change at deployment time (not per request); reduces API load; matches `ConfigController` pattern. |
+| **Library or hand-rolled?** | Hand-rolled DB + cache | Simple on/off switches; no targeting/A/B testing needed; aligns with "no magic" principle; Docker/Pi deployment requires DB-backed runtime toggles. |
+| **Storage layer?** | PostgreSQL `FeatureFlags` table | Runtime toggleability without app restarts; file-based config (env vars) doesn't hot-reload in Docker; DB is source of truth across all deployments. |
+| **Cache strategy?** | `IMemoryCache` (5-min TTL) | Zero per-request overhead (cache hit = no DB access); invalidate on admin toggle; graceful degradation (cache miss → DB fallback). |
+| **Client delivery pattern?** | `/api/v1/features` endpoint fetched at startup | Matches existing `/api/v1/config` pattern (ConfigController); graceful degradation on API failure (empty dictionary = all flags off). |
+| **Client cache duration?** | 60 seconds (`ResponseCache`) | Eventual consistency acceptable (1-hour client-side cache is fine per Alfred's decision); reduced from 3600 to allow faster propagation of runtime toggles. |
+| **Default-on or default-off?** | Default-off for experimental, default-on for shipped | Prevents breaking existing deployments; allows gradual feature activation; completed features remain visible unless explicitly disabled. |
+| **Authentication required?** | GET: No (`[AllowAnonymous]`), PUT: Yes (`[Authorize]`) | Client needs flags before authentication to decide UI state. No sensitive data exposed (flags are deployment config, not user secrets). Admin toggle requires auth. |
+| **Flag naming convention?** | Hierarchical colon-separated (e.g., `Calendar:SpendingHeatmap`) | Matches Feature 129 audit inventory; groups related flags; extensible to nested categories. |
 
 ---
 
-## 8. Open Questions for Alfred
+## 10. Open Questions for Alfred (ANSWERED)
 
-1. **Flag Naming Convention:** Should flags be feature-based (`Kakeibo`, `MonthlyReflection`) or page-based (`KakeiboCategorizationPage`, `ReflectionJournalPage`)? Feature-based is more flexible (one flag can gate multiple pages).
+**All questions deferred to Alfred's decision in `.squad/decisions/inbox/alfred-runtime-feature-flags.md` (approved Option B).**
 
-2. **Inventory Management:** Where should we maintain the canonical list of all flags? Options:
-   - A. In `FeatureFlagOptions` class itself (self-documenting, enforced by compiler).
-   - B. Separate `docs/feature-flag-inventory.md` (easier to audit, but can drift from code).
-   - Recommendation: (A) — code is the source of truth, docs are commentary.
-
-3. **Blazor Component Pattern:** Should components check flags in `OnInitializedAsync` or inline in markup?
-   ```razor
-   @* Option A: Inline *@
-   @if (FeatureFlagService.IsEnabled("Kakeibo"))
-   {
-       <NavLink href="/kakeibo">Kakeibo</NavLink>
-   }
-
-   @* Option B: Code-behind property *@
-   @code {
-       private bool ShowKakeibo => FeatureFlagService.IsEnabled("Kakeibo");
-   }
-   @if (ShowKakeibo)
-   {
-       <NavLink href="/kakeibo">Kakeibo</NavLink>
-   }
-   ```
-   Recommendation: **Option A** (inline) — fewer lines, no cognitive overhead, matches existing `@if (clientConfig?.IsAuthEnabled == true)` pattern in `NavMenu.razor`.
-
-4. **Backend Flag Usage:** Should API controllers check flags before executing logic, or only client hides UI?
-   - Example: If `Kakeibo: false`, should `/api/v1/kakeibo` return 404 or 403?
-   - Recommendation: **Client-only gating** for now. Backend endpoints are always functional. If a user manually calls the API (curl, Postman), they get data. This simplifies backend logic and avoids drift between flag state and endpoint availability. Add backend gating only if security/compliance requires it.
+1. **Runtime toggleability?** ✅ YES — DB-backed with cache.
+2. **Flag naming?** ✅ Hierarchical colon-separated (`Calendar:SpendingHeatmap`).
+3. **Blazor component pattern?** ✅ Inline `@if (FeatureFlagService.IsEnabled("..."))` (matches existing patterns).
+4. **Backend gating?** ✅ Client-only for MVP (API endpoints always functional; simplifies backend logic).
 
 ---
 
-## 9. Implementation Checklist (For Alfred → Lucius Handoff)
+## 11. Implementation Checklist (For Lucius)
 
-- [ ] Create `FeatureFlagOptions.cs` in `BudgetExperiment.Shared`
-- [ ] Add `Configure<FeatureFlagOptions>` in API `Program.cs`
-- [ ] Create `FeaturesController.cs` with `/api/v1/features` endpoint
-- [ ] Add `IFeatureFlagService` and `FeatureFlagService` in Client
-- [ ] Register `IFeatureFlagService` in Client `Program.cs`
-- [ ] Update `appsettings.json` with `FeatureFlags` section
-- [ ] Update `appsettings.Development.json` (if needed)
-- [ ] Barbara: Write unit tests for `FeaturesController`, `FeatureFlagService`
-- [ ] Barbara: Write integration test for `/api/v1/features` endpoint
-- [ ] Document flag inventory in `FeatureFlagOptions` XML comments
-- [ ] Update `.env.example` (Docker deployment) with `FEATUREFLAGS__*` env var examples
+- [ ] Create `FeatureFlag.cs` entity in Domain
+- [ ] Create `FeatureFlagConfiguration.cs` in Infrastructure with seed data (17 flags from Feature 129 audit)
+- [ ] Add `DbSet<FeatureFlag>` to `AppDbContext`
+- [ ] Generate and apply migration for `FeatureFlags` table
+- [ ] Create `IFeatureFlagRepository` interface in Application
+- [ ] Implement `FeatureFlagRepository` in Infrastructure
+- [ ] Create `IFeatureFlagService` interface in Application
+- [ ] Implement `FeatureFlagService` with `IMemoryCache` in Application
+- [ ] Register `IMemoryCache` in Application `DependencyInjection.cs` (if not already registered)
+- [ ] Register `IFeatureFlagRepository` + `FeatureFlagRepository` in Infrastructure `DependencyInjection.cs`
+- [ ] Register `IFeatureFlagService` + `FeatureFlagService` in Application `DependencyInjection.cs`
+- [ ] Create `FeaturesController.cs` with GET and PUT endpoints in API
+- [ ] Add `UpdateFeatureFlagRequest` and `UpdateFeatureFlagResponse` DTOs in Controller file (or Contracts if shared)
+- [ ] Create `IFeatureFlagClientService` interface in Client
+- [ ] Implement `FeatureFlagClientService` in Client
+- [ ] Register `IFeatureFlagClientService` in Client `Program.cs` (scoped)
+- [ ] Load flags at startup in Client `Program.cs` (before `RunAsync()`)
+- [ ] Barbara: Write unit tests for `FeatureFlagService` (cache behavior)
+- [ ] Barbara: Write unit tests for `FeatureFlagRepository` (CRUD operations)
+- [ ] Barbara: Write unit tests for `FeaturesController` (GET/PUT endpoints)
+- [ ] Barbara: Write unit tests for `FeatureFlagClientService` (graceful degradation)
+- [ ] Barbara: Write integration test for `/api/v1/features` endpoint (DB → API → response)
+- [ ] Barbara: Write integration test for PUT endpoint (toggle → cache invalidation → verify)
+- [ ] Update `.env.example` (Docker deployment) with flag toggle curl example (optional)
+- [ ] Update `CHANGELOG.md` with Feature 129b (Runtime Feature Flags)
 
 ---
 
-## 10. Estimated Effort
+## 12. Estimated Effort
 
-- **Lucius (Implementation):** 2 hours (POCO, controller, service, DI wiring)
-- **Barbara (Tests):** 3 hours (unit + integration tests for API + Client)
-- **Alfred (Review & Integration):** 1 hour (ensure flag inventory matches architecture doc)
-- **Total:** ~6 hours
+- **Lucius (Implementation):** 6 hours (entity, migration, repository, service, controller, client service, DI wiring)
+- **Barbara (Tests):** 6 hours (unit tests for all layers + integration tests for API + Client)
+- **Alfred (Review & Integration):** 1 hour (ensure flag inventory matches Feature 129 audit, verify cache strategy)
+- **Total:** ~13 hours
 
 ---
 
 ## Conclusion
 
-This hand-rolled approach delivers feature flag capability with zero external dependencies, minimal abstraction, and full compatibility with the existing Options pattern (`DatabaseOptions`, `AuthenticationOptions`, `ClientConfigOptions`). It's trivial to extend (add a property to `FeatureFlagOptions`), trivial to query (`IsEnabled("FlagName")`), and trivial to test (mock `IOptions<T>` or `HttpClient`). If we need advanced features (targeting, runtime toggles, external providers), we can migrate to `Microsoft.FeatureManagement` in ~2 hours. Until then, YAGNI.
+This database-backed + cache approach delivers runtime-toggleable feature flags with zero per-request performance overhead, zero external dependencies, and full compatibility with all deployment contexts (local dev, Docker, Raspberry Pi). It's trivial to extend (add a row to `FeatureFlags` table via migration), trivial to toggle (admin API call), and trivial to test (mock `IMemoryCache` + `IFeatureFlagRepository`). If we need advanced features (targeting, percentage rollouts, external providers), we can migrate to `Microsoft.FeatureManagement` in ~4 hours by implementing a custom `IFeatureDefinitionProvider` backed by our existing repository. Until then, YAGNI.
 
-**Next Step:** Alfred reviews this proposal, answers open questions (§8), and delegates implementation to Lucius + Barbara.
+**Next Step:** Lucius implements per checklist (§11). Barbara writes tests. Alfred reviews flag inventory alignment with Feature 129 audit.
