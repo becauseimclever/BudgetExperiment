@@ -1,6 +1,6 @@
 # Feature 134: Calendar — Kakeibo Enhancements
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 

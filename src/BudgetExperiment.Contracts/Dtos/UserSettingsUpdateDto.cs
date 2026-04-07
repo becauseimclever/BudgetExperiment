@@ -44,4 +44,7 @@ public sealed class UserSettingsUpdateDto
     {
         get; set;
     }
+
+    /// <summary>Gets or sets a value indicating whether the spending heatmap overlay is enabled on the calendar.</summary>
+    public bool? ShowSpendingHeatmap { get; set; }
 }

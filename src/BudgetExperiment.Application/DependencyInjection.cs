@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.AddScoped<IFeatureFlagService, FeatureFlagService>();
         services.AddScoped<IReflectionService, ReflectionService>();
         services.AddScoped<IKaizenGoalService, KaizenGoalService>();
+        services.AddScoped<IKakeiboCalendarService, KakeiboCalendarService>();
         return services;
     }
 }

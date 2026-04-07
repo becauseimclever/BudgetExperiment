@@ -1,0 +1,35 @@
+/* KakeiboBreakdownBar.razor.css - Scoped styles for the Kakeibo spending breakdown bar */
+
+.breakdown-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: var(--space-2) 0;
+}
+
+.breakdown-segment {
+    height: 100%;
+    transition: opacity 0.2s;
+    cursor: pointer;
+}
+
+.breakdown-segment:hover {
+    opacity: 0.8;
+}
+
+.segment-essentials {
+    background-color: #16a34a;
+}
+
+.segment-wants {
+    background-color: #d97706;
+}
+
+.segment-culture {
+    background-color: #2563eb;
+}
+
+.segment-unexpected {
+    background-color: #dc2626;
+}

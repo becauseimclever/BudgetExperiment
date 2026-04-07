@@ -28,6 +28,7 @@
             {
                 <CalendarDay Day="@day"
                              IsSelected="@(day.Date == SelectedDate)"
+                             HeatmapClass="@GetHeatmapClass(day.Date)"
                              OnClick="HandleDayClick" />
             }
         </div>
@@ -65,6 +66,12 @@
     [Parameter]
     public EventCallback<int> OnWeekSelected { get; set; }
 
+    /// <summary>
+    /// Gets or sets the heatmap intensity data, keyed by day-of-month (1-based). Null disables the heatmap.
+    /// </summary>
+    [Parameter]
+    public HeatmapDataResponse? HeatmapData { get; set; }
+
     private async Task HandleDayClick(DateOnly date)
     {
         await OnDaySelected.InvokeAsync(date);
@@ -100,6 +107,22 @@
         var start = week.Days[0].Date;
         var end = week.Days[^1].Date;
         return $"Week of {start:MMMM d} to {end:MMMM d}";
+    }
+
+    private string GetHeatmapClass(DateOnly date)
+    {
+        if (HeatmapData is null || !HeatmapData.Days.TryGetValue(date.Day, out var day))
+        {
+            return string.Empty;
+        }
+
+        return day.Intensity switch
+        {
+            "Low" => "heatmap-low",
+            "Moderate" => "heatmap-moderate",
+            "High" => "heatmap-high",
+            _ => string.Empty,
+        };
     }
 
     private sealed class WeekRow

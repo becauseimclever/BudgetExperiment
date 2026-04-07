@@ -67,6 +67,10 @@ internal sealed class UserSettingsConfiguration : IEntityTypeConfiguration<UserS
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(u => u.ShowSpendingHeatmap)
+            .IsRequired()
+            .HasDefaultValue(true);
+
         // Unique constraint: one settings record per user
         builder.HasIndex(u => u.UserId)
             .IsUnique();

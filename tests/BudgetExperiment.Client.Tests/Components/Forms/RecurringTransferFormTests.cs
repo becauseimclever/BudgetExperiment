@@ -607,5 +607,9 @@ public sealed class RecurringTransferFormTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<KaizenGoalDto>?>(null);
+
+        /// <inheritdoc />
+        public Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)
+            => Task.FromResult<HeatmapDataResponse?>(null);
     }
 }

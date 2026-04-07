@@ -67,3 +67,16 @@
         font-size: 0.6rem;
     }
 }
+
+/* Spending heatmap overlay classes applied to individual day cells */
+::deep .heatmap-low {
+    background-color: rgba(22, 163, 74, 0.12);
+}
+
+::deep .heatmap-moderate {
+    background-color: rgba(217, 119, 6, 0.15);
+}
+
+::deep .heatmap-high {
+    background-color: rgba(220, 38, 38, 0.15);
+}

@@ -21,6 +21,8 @@
             </button>
         </div>
 
+        <KakeiboBreakdownBar Breakdown="@WeekBreakdown" />
+
         <div class="week-summary-stats">
             <div class="stat-item income">
                 <span class="stat-label">Income</span>
@@ -92,6 +94,12 @@
     /// </summary>
     [Parameter]
     public EventCallback OnClose { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Kakeibo spending breakdown for this week, or null to hide the bar.
+    /// </summary>
+    [Parameter]
+    public KakeiboBreakdownDto? WeekBreakdown { get; set; }
 
     private decimal _totalIncome;
     private decimal _totalSpending;

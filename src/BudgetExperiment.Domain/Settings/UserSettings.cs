@@ -97,6 +97,11 @@ public sealed class UserSettings
     public bool HasCompletedKakeiboSetup { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the spending heatmap overlay is enabled on the calendar.
+    /// </summary>
+    public bool ShowSpendingHeatmap { get; set; } = true;
+
+    /// <summary>
     /// Gets the UTC timestamp when the settings were created.
     /// </summary>
     public DateTime CreatedAtUtc

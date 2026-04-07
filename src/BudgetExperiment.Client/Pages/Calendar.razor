@@ -58,6 +58,21 @@
 
     <BudgetAlert BudgetSummary="@budgetSummary" OnViewBudgetClick="NavigateToBudget" />
 
+    <KakeiboMonthHeader Year="@currentDate.Year"
+                        Month="@currentDate.Month"
+                        SavingsProgress="@calendarGrid?.SavingsProgress"
+                        OnOpenIntentionPrompt="ShowIntentionPrompt"
+                        OnOpenReflection="ToggleReflectionPanel" />
+
+    @if (showIntentionPrompt)
+    {
+        <MonthIntentionPrompt Year="@currentDate.Year"
+                              Month="@currentDate.Month"
+                              PreviousMonthGoal="@previousMonthGoal"
+                              OnDismissed="HideIntentionPrompt"
+                              OnGoalSet="HandleGoalSet" />
+    }
+
     <CalendarBudgetPanel Summary="@budgetSummary"
                          Year="@currentDate.Year"
                          Month="@currentDate.Month"
@@ -75,6 +90,8 @@
                 OnDismiss="DismissError" />
 
     <CalendarViewToggle @ref="viewToggle" CurrentView="@calendarViewMode" CurrentViewChanged="OnViewModeChanged" />
+
+    <SpendingHeatmapToggle IsEnabled="@showHeatmap" IsEnabledChanged="OnHeatmapToggled" />
 
     @if (isLoading)
     {
@@ -100,7 +117,8 @@
                               SelectedDate="@selectedDate"
                               OnDaySelected="SelectDate"
                               SelectedWeekIndex="@selectedWeekIndex"
-                              OnWeekSelected="SelectWeek" />
+                              OnWeekSelected="SelectWeek"
+                              HeatmapData="@(showHeatmap ? heatmapData : null)" />
             </SwipeContainer>
         }
     }
@@ -109,6 +127,7 @@
     {
         <WeekSummary Days="@GetSelectedWeekDays()"
                      IsVisible="true"
+                     WeekBreakdown="@GetSelectedWeekBreakdown()"
                      OnClose="ClearWeekSelection" />
     }
 
@@ -247,6 +266,14 @@
     // Reflection panel state
     private bool showReflectionPanel = false;
 
+    // Heatmap state
+    private bool showHeatmap = true;
+    private HeatmapDataResponse? heatmapData;
+
+    // Kakeibo intention prompt state
+    private bool showIntentionPrompt = false;
+    private decimal? previousMonthGoal;
+
     protected override async Task OnInitializedAsync()
     {
         ScopeService.ScopeChanged += OnScopeChanged;
@@ -268,7 +295,8 @@
             LoadCategories(),
             LoadCalendarData(),
             LoadPastDueItems(),
-            LoadBudgetSummary());
+            LoadBudgetSummary(),
+            LoadHeatmapData());
     }
 
     protected override async Task OnParametersSetAsync()
@@ -285,6 +313,7 @@
                     UpdateChatContext();
                 await LoadCalendarData();
                 await LoadBudgetSummary();
+                await LoadHeatmapData();
             }
         }
     }
@@ -523,6 +552,61 @@
     }
 
     private string GetReflectionPanelTitle() => $"Monthly Reflection \u2014 {currentDate:MMMM yyyy}";
+
+    private async Task LoadHeatmapData()
+    {
+        if (!FeatureFlags.IsEnabled("Calendar:SpendingHeatmap"))
+        {
+            return;
+        }
+
+        try
+        {
+            heatmapData = await ApiService.GetCalendarHeatmapAsync(currentDate.Year, currentDate.Month);
+        }
+        catch
+        {
+            heatmapData = null;
+        }
+    }
+
+    private async Task OnHeatmapToggled(bool enabled)
+    {
+        showHeatmap = enabled;
+        if (enabled && heatmapData is null)
+        {
+            await LoadHeatmapData();
+        }
+    }
+
+    private void ShowIntentionPrompt()
+    {
+        var prevMonth = currentDate.AddMonths(-1);
+        previousMonthGoal = null;
+        showIntentionPrompt = true;
+    }
+
+    private void HideIntentionPrompt()
+    {
+        showIntentionPrompt = false;
+    }
+
+    private async Task HandleGoalSet(decimal goal)
+    {
+        showIntentionPrompt = false;
+        await LoadCalendarData();
+    }
+
+    private KakeiboBreakdownDto? GetSelectedWeekBreakdown()
+    {
+        if (calendarGrid is null || selectedWeekIndex < 0)
+        {
+            return null;
+        }
+
+        calendarGrid.WeekKakeiboBreakdowns.TryGetValue(selectedWeekIndex, out var breakdown);
+        return breakdown;
+    }
 
     private void NextMonth()
     {

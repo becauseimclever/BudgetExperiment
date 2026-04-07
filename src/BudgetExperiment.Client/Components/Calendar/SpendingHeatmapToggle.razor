@@ -1,0 +1,43 @@
+@* SpendingHeatmapToggle.razor - Toggle for the spending heatmap calendar overlay *@
+
+@inject IFeatureFlagClientService FeatureFlags
+@inject IBudgetApiService ApiService
+
+@if (FeatureFlags.IsEnabled("Calendar:SpendingHeatmap"))
+{
+    <label class="heatmap-toggle" title="Toggle spending heatmap">
+        <input type="checkbox"
+               checked="@IsEnabled"
+               @onchange="HandleChange"
+               aria-label="Spending Heatmap" />
+        <span class="heatmap-toggle-label">Spending Heatmap</span>
+    </label>
+}
+
+@code {
+    /// <summary>Gets or sets a value indicating whether the heatmap is currently enabled.</summary>
+    [Parameter]
+    public bool IsEnabled { get; set; }
+
+    /// <summary>Gets or sets the callback raised when the toggle changes.</summary>
+    [Parameter]
+    public EventCallback<bool> IsEnabledChanged { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        var newValue = e.Value is bool b && b;
+        await IsEnabledChanged.InvokeAsync(newValue);
+
+        try
+        {
+            await ApiService.UpdateUserSettingsAsync(new UserSettingsUpdateDto
+            {
+                ShowSpendingHeatmap = newValue,
+            });
+        }
+        catch
+        {
+            // Best-effort: if the API call fails, the UI toggle already reflects the user's intent.
+        }
+    }
+}

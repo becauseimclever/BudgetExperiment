@@ -62,4 +62,7 @@ public sealed class CalendarDaySummaryDto
     {
         get; set;
     }
+
+    /// <summary>Gets or sets the dominant Kakeibo category name for this day (null when overlay is disabled or no expenses).</summary>
+    public string? DominantKakeiboCategory { get; set; }
 }

@@ -1,0 +1,149 @@
+@* MonthIntentionPrompt.razor - Non-blocking prompt to set a savings goal for the month *@
+
+@inject IFeatureFlagClientService FeatureFlags
+@inject IBudgetApiService ApiService
+
+@if (FeatureFlags.IsEnabled("Kakeibo:MonthlyReflectionPrompts") && _isVisible)
+{
+    <div class="intention-prompt" role="dialog" aria-modal="true" aria-label="Set monthly savings goal">
+        <div class="intention-prompt-content">
+            <h4 class="intention-prompt-title">
+                What do you want to save in @MonthName?
+            </h4>
+
+            @if (PreviousMonthGoal.HasValue && PreviousMonthGoal.Value > 0)
+            {
+                <p class="intention-prompt-hint">
+                    Last month's goal: $@PreviousMonthGoal.Value.ToString("N2")
+                </p>
+            }
+
+            <div class="intention-prompt-field">
+                <label for="savingsGoalInput" class="form-label">Savings goal ($)</label>
+                <input id="savingsGoalInput"
+                       type="number"
+                       class="form-control"
+                       min="0"
+                       step="0.01"
+                       placeholder="0.00"
+                       @bind="_savingsGoal"
+                       @bind:event="oninput"
+                       aria-label="Savings goal amount" />
+            </div>
+
+            <div class="intention-prompt-field">
+                <label for="intentionTextInput" class="form-label">
+                    Intention for this month
+                    <span class="char-counter">@(_intentionText.Length)/280</span>
+                </label>
+                <textarea id="intentionTextInput"
+                          class="form-control"
+                          rows="3"
+                          maxlength="280"
+                          placeholder="What do you want to focus on this month?"
+                          @bind="_intentionText"
+                          @bind:event="oninput"
+                          aria-label="Monthly intention text"></textarea>
+            </div>
+
+            @if (_errorMessage != null)
+            {
+                <p class="intention-prompt-error" role="alert">@_errorMessage</p>
+            }
+
+            <div class="intention-prompt-actions">
+                <button type="button"
+                        class="btn btn-primary"
+                        @onclick="HandleSetGoal"
+                        disabled="@_isSubmitting"
+                        aria-label="Set savings goal">
+                    @if (_isSubmitting)
+                    {
+                        <span>Saving…</span>
+                    }
+                    else
+                    {
+                        <span>Set Goal</span>
+                    }
+                </button>
+                <button type="button"
+                        class="btn btn-secondary"
+                        @onclick="HandleDismiss"
+                        disabled="@_isSubmitting"
+                        aria-label="Dismiss prompt">
+                    Maybe Later
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Gets or sets the year of the month for which the goal is being set.</summary>
+    [Parameter]
+    public int Year { get; set; }
+
+    /// <summary>Gets or sets the month (1-12) for which the goal is being set.</summary>
+    [Parameter]
+    public int Month { get; set; }
+
+    /// <summary>Gets or sets the savings goal from the previous month, if any.</summary>
+    [Parameter]
+    public decimal? PreviousMonthGoal { get; set; }
+
+    /// <summary>Gets or sets the callback invoked when the user dismisses the prompt.</summary>
+    [Parameter]
+    public EventCallback OnDismissed { get; set; }
+
+    /// <summary>Gets or sets the callback invoked when the user sets a goal, passing the goal amount.</summary>
+    [Parameter]
+    public EventCallback<decimal> OnGoalSet { get; set; }
+
+    private bool _isVisible = true;
+    private decimal _savingsGoal;
+    private string _intentionText = string.Empty;
+    private bool _isSubmitting;
+    private string? _errorMessage;
+
+    private string MonthName =>
+        new DateTime(Year, Month, 1).ToString("MMMM yyyy");
+
+    private async Task HandleSetGoal()
+    {
+        if (_savingsGoal <= 0)
+        {
+            _errorMessage = "Please enter a savings goal greater than zero.";
+            return;
+        }
+
+        _isSubmitting = true;
+        _errorMessage = null;
+
+        try
+        {
+            var dto = new CreateOrUpdateMonthlyReflectionDto
+            {
+                SavingsGoal = _savingsGoal,
+                IntentionText = string.IsNullOrWhiteSpace(_intentionText) ? null : _intentionText,
+            };
+
+            await ApiService.CreateOrUpdateReflectionAsync(Year, Month, dto);
+            _isVisible = false;
+            await OnGoalSet.InvokeAsync(_savingsGoal);
+        }
+        catch
+        {
+            _errorMessage = "Failed to save goal. Please try again.";
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task HandleDismiss()
+    {
+        _isVisible = false;
+        await OnDismissed.InvokeAsync();
+    }
+}

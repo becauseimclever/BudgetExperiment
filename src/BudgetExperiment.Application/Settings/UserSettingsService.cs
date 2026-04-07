@@ -102,6 +102,11 @@ public sealed class UserSettingsService : IUserSettingsService
             settings.UpdateFirstDayOfWeek(dto.FirstDayOfWeek.Value);
         }
 
+        if (dto.ShowSpendingHeatmap.HasValue)
+        {
+            settings.ShowSpendingHeatmap = dto.ShowSpendingHeatmap.Value;
+        }
+
         await _repository.SaveAsync(settings, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -176,6 +181,7 @@ public sealed class UserSettingsService : IUserSettingsService
             FirstDayOfWeek = settings.FirstDayOfWeek,
             IsOnboarded = settings.IsOnboarded,
             HasCompletedKakeiboSetup = settings.HasCompletedKakeiboSetup,
+            ShowSpendingHeatmap = settings.ShowSpendingHeatmap,
         };
     }
 }

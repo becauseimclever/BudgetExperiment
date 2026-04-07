@@ -1,0 +1,31 @@
+@* KaikeboDayCellBadge.razor - Tiny badge showing the dominant Kakeibo category for a day *@
+
+@inject IFeatureFlagClientService FeatureFlags
+
+@if (FeatureFlags.IsEnabled("Kakeibo:CalendarOverlay") && DominantCategory != null)
+{
+    <span class="kakeibo-day-badge"
+          title="Mostly @DominantCategory: $@Amount.ToString("N2")"
+          aria-label="Mostly @DominantCategory: $@Amount.ToString("N2")">
+        @GetCategoryIcon()
+    </span>
+}
+
+@code {
+    /// <summary>Gets or sets the dominant Kakeibo category name. Null or empty hides the badge.</summary>
+    [Parameter]
+    public string? DominantCategory { get; set; }
+
+    /// <summary>Gets or sets the total spend amount for the day.</summary>
+    [Parameter]
+    public decimal Amount { get; set; }
+
+    private string GetCategoryIcon() => DominantCategory switch
+    {
+        "Essentials" => "🏠",
+        "Wants" => "🎁",
+        "Culture" => "📚",
+        "Unexpected" => "⚡",
+        _ => string.Empty,
+    };
+}

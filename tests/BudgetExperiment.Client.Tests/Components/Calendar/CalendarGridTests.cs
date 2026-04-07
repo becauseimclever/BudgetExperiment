@@ -25,6 +25,7 @@ public class CalendarGridTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
+        this.Services.AddSingleton<IFeatureFlagClientService>(new TestHelpers.StubFeatureFlagClientService());
     }
 
     /// <inheritdoc/>

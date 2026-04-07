@@ -856,6 +856,10 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<KaizenGoalDto>?>(null);
+
+        /// <inheritdoc />
+        public Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)
+            => Task.FromResult<HeatmapDataResponse?>(null);
     }
 #pragma warning restore SA1648
 
@@ -981,6 +985,10 @@ public sealed class ManualMatchDialogTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<KaizenGoalDto>?>(null);
+
+        /// <inheritdoc />
+        public Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)
+            => Task.FromResult<HeatmapDataResponse?>(null);
     }
 #pragma warning restore SA1648
 }

@@ -21,6 +21,8 @@
         <div class="transaction-count">
             @Day.TransactionCount txn@(Day.TransactionCount != 1 ? "s" : "")
         </div>
+        <KaikeboDayCellBadge DominantCategory="@Day.DominantKakeiboCategory"
+                             Amount="@Math.Abs(Day.ActualTotal.Amount)" />
     }
     @if (Day.HasRecurring)
     {
@@ -50,6 +52,12 @@
     public bool IsSelected { get; set; }
 
     /// <summary>
+    /// Optional CSS class for the spending heatmap overlay (e.g. "heatmap-low").
+    /// </summary>
+    [Parameter]
+    public string HeatmapClass { get; set; } = string.Empty;
+
+    /// <summary>
     /// Callback when the day is clicked.
     /// </summary>
     [Parameter]
@@ -65,6 +73,7 @@
             if (IsSelected) classes.Add("selected");
             if (Day.HasRecurring) classes.Add("has-recurring");
             if (Day.IsBalanceNegative) classes.Add("balance-negative");
+            if (!string.IsNullOrEmpty(HeatmapClass)) classes.Add(HeatmapClass);
             return string.Join(" ", classes);
         }
     }

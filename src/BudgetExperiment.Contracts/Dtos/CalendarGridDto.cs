@@ -29,4 +29,17 @@ public sealed class CalendarGridDto
 
     /// <summary>Gets or sets the starting balance at the beginning of the first day in the grid.</summary>
     public MoneyDto StartingBalance { get; set; } = new();
+
+    /// <summary>Gets or sets the Kakeibo spending breakdown for this month (null when overlay is disabled).</summary>
+    public KakeiboBreakdownDto? KakeiboBreakdown { get; set; }
+
+    /// <summary>Gets or sets the savings progress for this month (null when no goal is set or feature is disabled).</summary>
+    public SavingsProgressResponse? SavingsProgress { get; set; }
+
+    /// <summary>
+    /// Gets or sets per-week Kakeibo breakdowns indexed by 0-based week number.
+    /// Empty when the Kakeibo overlay feature flag is disabled.
+    /// </summary>
+    public IReadOnlyDictionary<int, KakeiboBreakdownDto> WeekKakeiboBreakdowns { get; set; } =
+        new Dictionary<int, KakeiboBreakdownDto>();
 }

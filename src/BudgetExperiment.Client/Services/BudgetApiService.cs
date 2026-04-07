@@ -254,6 +254,27 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
+    public async Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<HeatmapDataResponse>(
+                $"api/v1/calendar/heatmap/{year}/{month}",
+                JsonOptions,
+                ct);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<DayDetailDto> GetDayDetailAsync(DateOnly date, Guid? accountId = null)
     {
         try

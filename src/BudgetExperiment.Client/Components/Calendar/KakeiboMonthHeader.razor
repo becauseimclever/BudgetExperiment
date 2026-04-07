@@ -1,0 +1,68 @@
+@* KakeiboMonthHeader.razor - Month header enhancement with savings progress and goal CTA *@
+
+@inject IFeatureFlagClientService FeatureFlags
+
+<div class="kakeibo-month-header">
+    @if (FeatureFlags.IsEnabled("Kakeibo:MonthlyReflectionPrompts"))
+    {
+        @if (SavingsProgress != null && SavingsProgress.SavingsGoal > 0)
+        {
+            var progressClass = SavingsProgress.ProgressPercentage >= 50 ? "on-track"
+                                : SavingsProgress.ProgressPercentage >= 25 ? "behind"
+                                : "significantly-behind";
+            <div class="savings-progress-container">
+                <div class="savings-progress-label">
+                    <span>Savings: $@SavingsProgress.ActualSavings.ToString("N2") / $@SavingsProgress.SavingsGoal.ToString("N2")</span>
+                    <button type="button"
+                            class="btn-link savings-reflection-link"
+                            @onclick="() => OnOpenReflection.InvokeAsync()"
+                            aria-label="Open monthly reflection">
+                        Reflect →
+                    </button>
+                </div>
+                <progress class="savings-progress @progressClass"
+                          value="@SavingsProgress.ProgressPercentage"
+                          max="100"
+                          aria-label="@($"Savings progress: {SavingsProgress.ProgressPercentage}%")">
+                </progress>
+                <span class="savings-progress-pct">@SavingsProgress.ProgressPercentage%</span>
+            </div>
+        }
+        else
+        {
+            <div class="savings-goal-cta">
+                <button type="button"
+                        class="btn-link"
+                        @onclick="() => OnOpenIntentionPrompt.InvokeAsync()"
+                        aria-label="Set a savings goal for this month">
+                    Set a savings goal for @MonthName →
+                </button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>Gets or sets the year.</summary>
+    [Parameter]
+    public int Year { get; set; }
+
+    /// <summary>Gets or sets the month (1-12).</summary>
+    [Parameter]
+    public int Month { get; set; }
+
+    /// <summary>Gets or sets the savings progress data, or null if no goal has been set.</summary>
+    [Parameter]
+    public SavingsProgressResponse? SavingsProgress { get; set; }
+
+    /// <summary>Gets or sets the callback to open the intention/goal prompt.</summary>
+    [Parameter]
+    public EventCallback OnOpenIntentionPrompt { get; set; }
+
+    /// <summary>Gets or sets the callback to open the monthly reflection panel.</summary>
+    [Parameter]
+    public EventCallback OnOpenReflection { get; set; }
+
+    private string MonthName =>
+        new DateTime(Year, Month, 1).ToString("MMMM yyyy");
+}

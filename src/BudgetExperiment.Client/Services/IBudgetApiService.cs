@@ -121,6 +121,15 @@ public interface IBudgetApiService
     Task<CalendarGridDto> GetCalendarGridAsync(int year, int month, Guid? accountId = null);
 
     /// <summary>
+    /// Gets the monthly spending heatmap data for the calendar overlay.
+    /// </summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Heatmap data, or null if the feature flag is disabled or the request fails.</returns>
+    Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default);
+
+    /// <summary>
     /// Gets detailed information for a specific day.
     /// </summary>
     /// <param name="date">The date to get details for.</param>

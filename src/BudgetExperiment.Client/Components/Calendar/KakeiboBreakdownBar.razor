@@ -1,0 +1,71 @@
+@* KakeiboBreakdownBar.razor - Horizontal stacked bar showing Kakeibo category spending *@
+
+@using BudgetExperiment.Shared.Budgeting
+
+@inject IFeatureFlagClientService FeatureFlags
+
+@if (FeatureFlags.IsEnabled("Kakeibo:CalendarOverlay") && Breakdown != null && Breakdown.Essentials + Breakdown.Wants + Breakdown.Culture + Breakdown.Unexpected > 0)
+{
+    var total = Breakdown.Essentials + Breakdown.Wants + Breakdown.Culture + Breakdown.Unexpected;
+
+    <div class="breakdown-bar" role="img" aria-label="Kakeibo spending breakdown">
+        @if (Breakdown.Essentials > 0)
+        {
+            <div class="breakdown-segment segment-essentials"
+                 style="width: @SegmentWidth(Breakdown.Essentials, total)%"
+                 title="Essentials: $@Breakdown.Essentials.ToString("N2")"
+                 @onclick="@(() => RaiseSelection(KakeiboCategory.Essentials))"
+                 role="button"
+                 aria-label="@($"Essentials: ${Breakdown.Essentials:N2}")">
+            </div>
+        }
+        @if (Breakdown.Wants > 0)
+        {
+            <div class="breakdown-segment segment-wants"
+                 style="width: @SegmentWidth(Breakdown.Wants, total)%"
+                 title="Wants: $@Breakdown.Wants.ToString("N2")"
+                 @onclick="@(() => RaiseSelection(KakeiboCategory.Wants))"
+                 role="button"
+                 aria-label="@($"Wants: ${Breakdown.Wants:N2}")">
+            </div>
+        }
+        @if (Breakdown.Culture > 0)
+        {
+            <div class="breakdown-segment segment-culture"
+                 style="width: @SegmentWidth(Breakdown.Culture, total)%"
+                 title="Culture: $@Breakdown.Culture.ToString("N2")"
+                 @onclick="@(() => RaiseSelection(KakeiboCategory.Culture))"
+                 role="button"
+                 aria-label="@($"Culture: ${Breakdown.Culture:N2}")">
+            </div>
+        }
+        @if (Breakdown.Unexpected > 0)
+        {
+            <div class="breakdown-segment segment-unexpected"
+                 style="width: @SegmentWidth(Breakdown.Unexpected, total)%"
+                 title="Unexpected: $@Breakdown.Unexpected.ToString("N2")"
+                 @onclick="@(() => RaiseSelection(KakeiboCategory.Unexpected))"
+                 role="button"
+                 aria-label="@($"Unexpected: ${Breakdown.Unexpected:N2}")">
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Gets or sets the Kakeibo spending breakdown data to render.</summary>
+    [Parameter]
+    public KakeiboBreakdownDto? Breakdown { get; set; }
+
+    /// <summary>Gets or sets the callback raised when a segment is clicked.</summary>
+    [Parameter]
+    public EventCallback<KakeiboCategory?> OnCategorySelected { get; set; }
+
+    private async Task RaiseSelection(KakeiboCategory category)
+    {
+        await OnCategorySelected.InvokeAsync(category);
+    }
+
+    private static double SegmentWidth(decimal amount, decimal total) =>
+        total > 0 ? Math.Round((double)(amount / total) * 100, 2) : 0;
+}
