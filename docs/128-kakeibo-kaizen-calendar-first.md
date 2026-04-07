@@ -55,16 +55,45 @@ These four questions structure the monthly experience:
 
 ## The Four Kakeibo Categories
 
-Every transaction gets a `KakeiboCategory` — a layer of intentional meaning on top of the existing budget category system:
+The existing `BudgetCategory` system is kept intact — users keep their familiar category names (Groceries, Dining, Utilities, etc.). Each **Expense** category is *routed* to exactly one of the four Kakeibo buckets. This many-to-one mapping is the bridge between common budgeting vocabulary and Kakeibo philosophy.
 
-| Category | Japanese | Meaning | Examples |
-|----------|----------|---------|---------|
-| **Essentials** | 必要 (Hitsuyō) | Things needed to live | Rent, groceries, utilities, transport, medication |
-| **Wants** | 欲しい (Hoshii) | Things enjoyed but not essential | Dining out, subscriptions, clothing beyond need |
-| **Culture** | 文化 (Bunka) | Things that enrich mind and spirit | Books, courses, concerts, museum, travel |
-| **Unexpected** | 予期しない (Yokishinai) | Things that were not planned | Medical copay, car repair, gift, emergency |
+| Kakeibo Bucket | Japanese | Meaning | Default Category Mappings |
+|----------------|----------|---------|--------------------------|
+| **Essentials** | 必要 (Hitsuyō) | Things needed to live | Groceries, Utilities, Gas, Transportation, Healthcare, Insurance, Housing/Rent |
+| **Wants** | 欲しい (Hoshii) | Things enjoyed but not essential | Dining, Entertainment, Shopping, Subscriptions, Health & Fitness, Pets, Travel |
+| **Culture** | 文化 (Bunka) | Things that enrich mind and spirit | Education, Charity, Books, Concerts, Museums |
+| **Unexpected** | 予期しない (Yokishinai) | Things that were not planned | Unexpected (any user-tagged one-off) |
 
-`KakeiboCategory` is a classification *overlay* on the existing category system, not a replacement. A `BudgetCategory` like "Restaurants" defaults to **Wants** but the user can override per-transaction.
+**Routing rules:**
+- Only `CategoryType.Expense` categories are routed. `Income` and `Transfer` categories are excluded from all Kakeibo aggregation — they are not spending.
+- Every Expense category has exactly one `KakeiboCategory`. No category is unrouted.
+- The default assigned on migration is `Wants` — the most neutral bucket. Users correct this in a one-time **Kakeibo Setup** flow.
+- Users may change a category's routing at any time on the category settings page. The change is retroactive — all past transactions via that category re-aggregate under the new bucket instantly (no per-transaction data changes; routing is always computed from the category's current `KakeiboCategory`).
+- Users may also override the routing on an **individual transaction** — useful for one-off surprises (an unexpected medical bill in the "Healthcare" Essentials category still goes to Unexpected for that specific visit).
+
+### Suggested Default Routing (seed / migration defaults)
+
+| Existing Category | Kakeibo Bucket |
+|-------------------|---------------|
+| Groceries | Essentials |
+| Utilities | Essentials |
+| Gas | Essentials |
+| Transportation | Essentials |
+| Healthcare | Essentials |
+| Insurance | Essentials |
+| Housing / Rent | Essentials |
+| Dining | Wants |
+| Entertainment | Wants |
+| Shopping | Wants |
+| Subscriptions | Wants |
+| Health & Fitness | Wants |
+| Pets | Wants |
+| Travel | Wants |
+| Education | Culture |
+| Charity | Culture |
+| *All others* | Wants (migration default) |
+
+> **Design note:** `MerchantKnowledgeBase` already knows 15 category families by name. The migration can apply the table above programmatically — no manual data patching needed.
 
 ---
 
@@ -214,23 +243,43 @@ public enum KakeiboCategory
 }
 ```
 
-#### Domain Change: `BudgetCategory` — add default Kakeibo mapping
+#### Domain Change: `BudgetCategory` — add Kakeibo routing
+The routing lives on the category, not the transaction. One field, one change point.
+
 ```csharp
 // Add to BudgetCategory entity
-public KakeiboCategory DefaultKakeiboCategory { get; private set; }
-    = KakeiboCategory.Wants; // sensible default
+public KakeiboCategory KakeiboCategory { get; private set; }
+    = KakeiboCategory.Wants; // safe default; corrected by Kakeibo Setup flow
 
-public void SetDefaultKakeiboCategory(KakeiboCategory category)
-    => DefaultKakeiboCategory = category;
+public void SetKakeiboCategory(KakeiboCategory kakeibo)
+{
+    // Only meaningful on Expense categories — Guard enforced at the service layer.
+    this.KakeiboCategory = kakeibo;
+    this.UpdatedAtUtc = DateTime.UtcNow;
+}
 ```
 
-#### Domain Change: `Transaction` — add Kakeibo override
+`CategoryType.Income` and `CategoryType.Transfer` categories are not routed — the service layer filters them out of all Kakeibo aggregation queries.
+
+#### Domain Change: `Transaction` — per-transaction override (optional)
+Category routing handles 99% of cases. The override exists for one-off surprises.
+
 ```csharp
 // Add to Transaction entity
-public KakeiboCategory? KakeiboCategory { get; private set; } // null = use category default
+// Null = use the linked category's KakeiboCategory (resolved at query time — no join needed)
+public KakeiboCategory? KakeiboOverride { get; private set; }
 
-public void SetKakeiboCategory(KakeiboCategory? category)
-    => KakeiboCategory = category;
+public void SetKakeiboOverride(KakeiboCategory? override)
+    => KakeiboOverride = override;
+```
+
+**Effective Kakeibo category resolution** (Application layer, not Domain):
+```csharp
+// KakeiboResolver.cs — pure static helper
+public static KakeiboCategory Resolve(Transaction tx, BudgetCategory? category)
+    => tx.KakeiboOverride
+       ?? category?.KakeiboCategory
+       ?? KakeiboCategory.Wants;  // fallback for uncategorised transactions
 ```
 
 #### New Entity: `MonthlyReflection`
@@ -303,11 +352,18 @@ Existing `PUT /api/v1/transactions/{id}` gains `KakeiboCategory` field in the re
 ### Database Changes
 
 ```sql
--- BudgetCategories: add default Kakeibo classification
-ALTER TABLE "BudgetCategories" ADD COLUMN "DefaultKakeiboCategory" integer NOT NULL DEFAULT 2;
+-- BudgetCategories: add Kakeibo routing (Wants=2 is the migration default)
+ALTER TABLE "BudgetCategories" ADD COLUMN "KakeiboCategory" integer NOT NULL DEFAULT 2;
 
--- Transactions: add optional Kakeibo override
-ALTER TABLE "Transactions" ADD COLUMN "KakeiboCategory" integer NULL;
+-- Apply known defaults from MerchantKnowledgeBase category families:
+UPDATE "BudgetCategories" SET "KakeiboCategory" = 1 -- Essentials
+  WHERE "Name" IN ('Groceries','Utilities','Gas','Transportation','Healthcare','Insurance','Housing','Rent');
+UPDATE "BudgetCategories" SET "KakeiboCategory" = 3 -- Culture
+  WHERE "Name" IN ('Education','Charity');
+-- All others remain 2 (Wants) — user corrects any outliers in Kakeibo Setup
+
+-- Transactions: optional per-transaction override
+ALTER TABLE "Transactions" ADD COLUMN "KakeiboOverride" integer NULL;
 
 -- New table: MonthlyReflections
 CREATE TABLE "MonthlyReflections" (
@@ -363,7 +419,16 @@ CREATE TABLE "KaizenGoals" (
 
 #### New DTOs (Contracts)
 ```csharp
-// MonthlyReflectionDto — GET/PUT reflection
+// BudgetCategoryDto — add routing field (already has Name, Icon, Color, Type, SortOrder)
+public KakeiboCategory KakeiboCategory { get; set; } = KakeiboCategory.Wants;
+
+// BudgetCategoryUpdateDto — allow setting routing
+public KakeiboCategory? KakeiboCategory { get; set; }
+
+// TransactionDto — expose effective Kakeibo (computed, read-only)
+public KakeiboCategory EffectiveKakeiboCategory { get; set; }
+// TransactionUpdateDto — allow one-off override
+public KakeiboCategory? KakeiboOverride { get; set; }
 public sealed record MonthlyReflectionDto(
     int Year, int Month,
     decimal? SavingsGoal, string? Intention, string? ReflectionText,
@@ -617,8 +682,13 @@ dotnet ef migrations add Feature128_KaizenGoals \
   --startup-project src/BudgetExperiment.Api
 ```
 
-### Data Seeding Note
-Existing `BudgetCategory` records will receive `DefaultKakeiboCategory = Wants` as the migration default. After deploying, users should review their categories and reassign Essentials categories (rent, utilities, groceries) to `KakeiboCategory.Essentials`. A one-time "Kakeibo Setup" prompt can guide this on first run.
+### Data Migration Note
+The migration applies Kakeibo routing automatically using the known category names from `MerchantKnowledgeBase`:
+- Groceries, Utilities, Gas, Transportation, Healthcare, Insurance, Housing/Rent → **Essentials**
+- Education, Charity → **Culture**
+- All others → **Wants** (safe default)
+
+Most users will need only minor corrections. A **Kakeibo Setup** prompt (one-time, dismissible) guides them through reviewing their category routing after the first login post-migration. The prompt shows each Expense category and its assigned bucket with a one-click override — it's a review, not a form.
 
 ---
 
