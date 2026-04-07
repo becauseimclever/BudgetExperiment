@@ -93,6 +93,64 @@ All technical content (architecture diagram, setup commands, test commands, Dock
 
 ## Learnings
 
+### Features 131–136: Kakeibo Foundation Implementation Specs — Complete (2026-04-10)
+
+**Scope:** Created six coordinated feature specification documents defining the foundational Kakeibo alignment work. Each document follows Feature 128's format with Status, Prerequisites, Feature Flags, Domain/API/UI Changes, and Acceptance Criteria.
+
+**Documents Created:**
+
+1. **Feature 131: Budget Categories — Kakeibo Category Routing**
+   - Core foundation: `BudgetCategory.KakeiboCategory` enum field (Essentials/Wants/Culture/Unexpected).
+   - Smart-defaulted migration (Groceries→Essentials, Dining→Wants, Education→Culture).
+   - One-time Kakeibo Setup Wizard on first login post-migration.
+   - No feature flag (always on).
+   - **Dependency:** All downstream features depend on this.
+
+2. **Feature 132: Transaction Entry — Kakeibo Selector**
+   - Add `Transaction.KakeiboOverride` nullable field for per-transaction overrides.
+   - KakeiboSelector component (4 icons: Essentials/Wants/Culture/Unexpected) in transaction modal.
+   - Default to category routing; allow override for one-off exceptions.
+   - Feature flag: `Features:Kakeibo:TransactionOverride` (default: true).
+   - **Depends on:** Feature 131.
+
+3. **Feature 133: Onboarding — Kakeibo Setup Step**
+   - Extend onboarding from 4 to 5 steps; Step 5 explains four Kakeibo categories.
+   - Show all Expense categories, ask user to confirm/correct Kakeibo routing.
+   - Trigger on first login post-migration for existing users (`HasCompletedKakeiboSetup` flag).
+   - No feature flag (always on).
+   - **Depends on:** Feature 131.
+
+4. **Feature 134: Calendar — Kakeibo Enhancements**
+   - 6 enhancements: spending heatmap (green/amber/red), month savings progress bar, month-start intention prompt, week summary Kakeibo breakdown bars, day cell Kakeibo badges, month header reflection link.
+   - Feature flags: `Features:Calendar:SpendingHeatmap` (true), `Features:Kakeibo:CalendarOverlay` (false), `Features:Kakeibo:MonthlyReflectionPrompts` (true).
+   - Aggregation service: `IKakeiboCalendarService`.
+   - **Depends on:** Features 131, 132; coordinates with Feature 135 (savings progress bar).
+
+5. **Feature 135: Monthly Reflection Panel**
+   - New entity: `MonthlyReflection` (year, month, SavingsGoal, ActualSavings, IntentionText, GratitudeText, ImprovementText).
+   - UI: panel showing income/spending/savings, Kakeibo breakdown, fields for gratitude/improvement journaling.
+   - Accessible from calendar month header; also standalone reflection history page.
+   - Feature flag: `Features:Kakeibo:MonthlyReflectionPrompts` (shared with Feature 134, true).
+   - **Depends on:** Features 131, 132, 134 (coordinates with calendar savings progress).
+
+6. **Feature 136: Kaizen Micro-Goals**
+   - New entity: `KaizenGoal` (WeekStartDate, Description, TargetAmount, KakeiboCategory, IsAchieved).
+   - UI: week summary card showing goal + status (✓/✗), goal-setting modal, week-end achievement reminder.
+   - Kaizen Dashboard report: 12-week rolling view with goal outcomes overlaid, trend line for improvable spend.
+   - Feature flag: `Features:Kaizen:MicroGoals` (true).
+   - **Depends on:** Features 131, 134.
+
+**Architectural Decisions Embedded:**
+
+- **KakeiboCategory placement:** Enum in Domain; field on `BudgetCategory`, optional override on `Transaction`. Routing is computed at read time (no per-transaction data mutations on category change).
+- **Feature flags:** 3 new flags defined; Feature 131 has no flag (foundation, always on); Features 134 and 135 share `Features:Kakeibo:MonthlyReflectionPrompts`.
+- **Migration defaults:** Smart name-based routing applied via startup seeder (not `HasData()`), allowing users to customize without losing changes on subsequent `dotnet ef database update`.
+- **API Endpoints:** RESTful CRUD for reflections and goals; calendar endpoints enhanced with Kakeibo breakdown aggregations; monthly summary endpoint for reflection panel.
+- **UI Patterns:** Non-blocking prompts (modals/inline), permissive defaults (can skip setup), no gamification, non-judgmental language.
+- **Implementation precedence:** Feature 131 must complete first; 132–136 can follow in phases.
+
+**All six documents follow Feature 128 spec style and are ready for implementation.**
+
 ### Feature 120: Plugin System Planning (2026-03-22)
 
 **Domain Event Scaffolding Discovery:**

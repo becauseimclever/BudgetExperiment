@@ -338,3 +338,35 @@ Tests under `tests/` mirror the src structure.
 - **Alfred's coordination:** Waited for Alfred's decision file (.squad/decisions/inbox/alfred-runtime-feature-flags.md) before finalizing the doc. Option B (DB-backed + cache) was approved. Document reflects that decision.
 
 **No code written** — this was a documentation-only task. Implementation checklist created for future handoff to Lucius (implementation) + Barbara (tests).
+
+### 2026-04-10 — Features 137–144: Kakeibo Alignment Feature Specs (GREEN)
+
+**Requested by:** Fortinbra (Lucius charter task) — Status: Complete
+
+**Deliverable:** 8 feature specification documents in `docs/137-144`, implementing Kakeibo alignment for Reports, AI, Settings, and utility pages.
+
+**Files created:**
+- `docs/137-kaizen-dashboard-report.md` — 12-week rolling Kakeibo spending chart with KaizenGoal outcomes overlaid. Flag: `Features:Kaizen:Dashboard` (default: false).
+- `docs/138-transactions-list-kakeibo-filter.md` — Kakeibo filter dropdown + badges on `/transactions` list. Flag: `Features:Kakeibo:TransactionFilter` (default: true).
+- `docs/139-ai-chat-kakeibo-awareness.md` — AI Chat confirms Kakeibo category in transactions, asks clarification via `AskKakeiboCategory` action, supports Kakeibo-aware queries.
+- `docs/140-ai-rule-suggestions-kakeibo-display.md` — Suggestion cards show Kakeibo category badge; optional AI-driven override suggestions based on merchant context.
+- `docs/141-settings-kakeibo-preferences.md` — `UserSettings` gains 4 bool fields: `ShowSpendingHeatmap`, `ShowMonthlyReflectionPrompts`, `EnableKaizenMicroGoals`, `ShowKakeiboCalendarBadges` (all true by default).
+- `docs/142-uncategorized-transactions-kakeibo-display.md` — Category dropdown on `/uncategorized` shows Kakeibo bucket preview (e.g., "Dining → Wants"); optional direct override UI.
+- `docs/143-reports-kakeibo-grouping.md` — Monthly Categories, Budget Comparison, Monthly Trends reports gain `groupByKakeibo` query param and toggle to aggregate by Kakeibo bucket instead of category.
+- `docs/144-custom-reports-builder-feature-flag.md` — Custom Reports Builder feature-flagged off by default (`Features:Reports:CustomReportBuilder: false`) due to Kakeibo philosophy tension (calendar-first vs. endless exploration).
+
+**Key Implementation Decisions:**
+
+1. **Feature Flags & Defaults:** 137 flag default false (shipped true); 138 flag default true (on by default); 139–140 reuse existing AI flags; 141 no flag needed; 142 no flag; 143 no flag; 144 flag default false (users opt in).
+
+2. **DTO & API Field Additions:** `TransactionSummaryDto.EffectiveKakeiboCategory: string?` resolved server-side; `KaizenDashboardDto.Weeks`, `CategorySuggestionDto.SuggestedKakeiboCategory`, `UserSettingsDto` extended with 4 bool fields, report endpoints accept `groupByKakeibo: bool?`.
+
+3. **Color Scheme (Consistency):** Essentials: blue (#3b82f6), Wants: green (#10b981), Culture: purple (#a855f7), Unexpected: orange (#f97316).
+
+4. **Dependencies:** All depend on 129b; 137 also 131+136; 138 also 131+132; 139 also 131+132+138; 140 also 131; 141 also 134+135+136; 142 also 131; 143 also 131.
+
+5. **Server-Side Resolution:** Effective Kakeibo category resolved server-side (override checked first), enabling API filtering/grouping. Weekly summaries computed via service aggregation.
+
+6. **UI State Management:** Filter selections and report toggles persist to `localStorage`. Feature flag visibility checked before rendering nav items. Educational note dismissal stored in `localStorage`.
+
+7. **Philosophical Gate (144):** Custom Reports Builder off by default to reinforce Kakeibo philosophy: calendar is primary reflection surface. Power users can opt in.
