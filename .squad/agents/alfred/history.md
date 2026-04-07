@@ -256,3 +256,28 @@ Option B is the only approach compatible with all three deployment contexts (loc
 - FlatBuffers over Brotli: +10-15% (only valuable for 10,000+ object exports, zero-copy semantics).
 
 **Deliverable:** `docs/130-serialization-alternatives-investigation.md` — comprehensive 8-section analysis (What it is, Wire format, WASM compatibility, ASP.NET Core support, Pros, Cons, Bandwidth, CPU, OpenAPI, Verdict) + Appendix with performance benchmarks.
+
+## Feature 131–136: Kakeibo Foundation & Kaizen Integration — COMPLETE (2026-04-10)
+
+Created 6 comprehensive feature specification documents:
+
+1. **Feature 131: Budget Categories — Kakeibo Routing** — KakeiboCategory enum on BudgetCategory, optional KakeiboOverride on Transaction, non-destructive seeding strategy.
+2. **Feature 132: Transaction Entry — Kakeibo Selector** — Per-transaction override UI, feature flag Features:Kakeibo:TransactionOverride (default: true).
+3. **Feature 133: Onboarding — Kakeibo Setup** — Kakeibo intro as Step 5 of onboarding flow, reusable component.
+4. **Feature 134: Calendar — Kakeibo Enhancements** — Spending heatmap, breakdown bars, badges overlay. Feature flags: Features:Calendar:SpendingHeatmap (true), Features:Kakeibo:CalendarOverlay (false), Features:Kakeibo:MonthlyReflectionPrompts (true).
+5. **Feature 135: Monthly Reflection Panel** — MonthlyReflection entity (one per user per month), editable fields vary by month age. Shared flag with 134.
+6. **Feature 136: Kaizen Micro-Goals** — KaizenGoal entity with ISO 8601 week starts, non-gamified achievement tracking (✓/✗), week-end reflection prompt. Feature flag Features:Kaizen:MicroGoals (true).
+
+**Key Architectural Decisions:**
+- KakeiboCategory as enum routing point (primary on category, optional override per transaction).
+- Smart-defaulted migration via startup seeder (non-destructive, no HasData()).
+- MonthlyReflection as separate domain entity (not nested in UserSettings).
+- No gamification in micro-goals—intrinsic motivation via reflection.
+- Week-end prompt is non-judgmental, dismissable.
+- Reflection editability: current all-editable, past savings read-only, future preview-only.
+
+**Dependencies:** All depend on Feature 129b (Feature Flag Infrastructure). Feature 131 is blocking for 132–136.
+
+**Implementation Order:** 131 → 132 → 133 → 134–136 (3–4 weeks estimated).
+
+**Decision Document:** .squad/decisions/inbox/alfred-feature-docs-131-136.md (12 decisions, testing strategy, open questions).

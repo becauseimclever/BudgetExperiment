@@ -2,23 +2,6 @@
 
 ## Active Decisions
 
-### 1. Feature 122: Test Coverage Gaps Verified Complete (2026-01-09)
-
-**Author:** Alfred
-
-**Status:** Feature 122 was marked as "Pending" but upon audit, all required work was already completed in prior sprints.
-
-**Findings:**
-- **Phase 1 (Repository Tests):** All four repository test files (`AppSettingsRepositoryTests`, `CustomReportLayoutRepositoryTests`, `RecurringChargeSuggestionRepositoryTests`, `UserSettingsRepositoryTests`) exist with comprehensive coverage using PostgreSQL Testcontainers fixture (219 tests pass).
-- **Phase 2 (Controller Tests):** Both `RecurringChargeSuggestionsControllerTests` and `RecurringControllerTests` exist with full endpoint coverage including happy path, 404, and 400/422 validation scenarios.
-- **Phase 3 (Vanity Enum Tests):** Already removed in Decision #4 (2026-03-22) — 12 vanity enum test files deleted.
-
-**Test Suite Health:** 5,413 passed, 0 failed, 1 skipped (pre-existing).
-
-**Result:** Feature documentation updated to Status: Done and archived to `docs/archive/121-130-test-coverage-gaps.md`. No code changes required.
-
----
-
 ### 2. DIP Verdict: Three Concrete-Injecting Controllers (2026-03-22)
 
 **Assessed by:** Alfred
@@ -654,3 +637,605 @@ This is architectural guidance at the product level.
 - Full spec: `docs/128-kakeibo-kaizen-calendar-first.md`
 - README.md lines 11-26 (Purpose section), lines 177-186 (Development Guidelines), lines 190-206 (Key Domain Concepts)
 - CONTRIBUTING.md new section after intro (Design Philosophy)
+
+
+---
+
+# Feature Specs 131–136: Kakeibo Foundation Decisions
+
+**Created:** 2026-04-10  
+**Author:** Alfred  
+**Status:** Complete — all six specs are finalized and ready for implementation phase  
+**Related:** Features 128, 129, 129b, 130
+
+---
+
+## Summary
+
+Six coordinated feature specification documents (131–136) define the foundational implementation work for the Kakeibo + Kaizen philosophy established in Feature 128. These specs complete the architectural vision and provide implementation teams with sufficient detail to begin TDD-driven development immediately.
+
+All documents follow Feature 128's format and have been reviewed for internal consistency, dependency ordering, and alignment with SOLID/Clean Code principles.
+
+---
+
+## Key Architectural Decisions
+
+### 1. KakeiboCategory Placement and Routing
+
+**Decision:** `KakeiboCategory` is an enum in the Domain layer. It is placed on `BudgetCategory` (not `Transaction`) as the primary routing point. Transactions can optionally override via `Transaction.KakeiboOverride` (nullable).
+
+**Rationale:**
+- **Single source of truth:** Category routing is the primary classification; one change point.
+- **Retroactive changes:** Changing a category's Kakeibo routing automatically re-aggregates all past transactions via that category (no per-transaction mutations).
+- **Per-transaction flexibility:** Individual transactions can override the category's routing for one-off exceptions (e.g., an unexpected medical bill in Healthcare stays in Unexpected for that specific transaction).
+- **Computed property pattern:** Effective Kakeibo = `KakeiboOverride ?? BudgetCategory.KakeiboCategory ?? Wants` (fallback for safety).
+
+**Implementation precedent:** This mirrors the existing `BudgetCategory` / `Transaction.Amount` relationship — category defines policy, transaction carries specific instance data.
+
+---
+
+### 2. Migration Seeding Strategy (No HasData)
+
+**Decision:** Smart-defaulted migration (Groceries→Essentials, Dining→Wants, Education→Culture, unknown→Wants) is applied via a startup seeder using `ON CONFLICT (Name) DO NOTHING`, NOT via EF Core's `HasData()`.
+
+**Rationale:**
+- **Destructive HasData behavior:** `HasData()` generates migration SQL that overwrites existing rows on every `dotnet ef database update` and Docker startup. If users have already customized their category routing, the customization is lost when the app updates — unacceptable.
+- **Non-destructive seeder:** INSERT-if-missing logic respects user changes. New defaults are seeded on first run; user customizations survive all future updates.
+- **Precedent in codebase:** Feature 129b already recommends this pattern for feature flag defaults.
+
+**Implementation:** New service `KakeiboDefaultSeeder` in Application layer, registered in startup chain before migrations (so seed is applied immediately after migration runs). Idempotent per-flag.
+
+---
+
+### 3. Feature Flag Defaults and Scope
+
+**Decisions:**
+
+| Feature | Flag | Default | Scope | Rationale |
+|---------|------|---------|-------|-----------|
+| 131 | None | N/A | Always on | Foundation; no opt-out |
+| 132 | `Features:Kakeibo:TransactionOverride` | `true` | User choice | Override capability enabled by default; users can disable for pure category-driven routing |
+| 133 | None | N/A | Always on | Onboarding is always enabled |
+| 134 | `Features:Calendar:SpendingHeatmap` | `true` | User/UX preference | Spending heatmap visible by default; users can toggle in calendar settings |
+| 134 | `Features:Kakeibo:CalendarOverlay` | `false` | Feature rollout | Kakeibo badges/breakdown bars default OFF during development; toggled ON when shipped |
+| 134 | `Features:Kakeibo:MonthlyReflectionPrompts` | `true` | Feature rollout | Reflection prompts visible by default; can be disabled to hide all monthly reflection UI |
+| 135 | `Features:Kakeibo:MonthlyReflectionPrompts` | `true` | Shared with 134 | One flag controls both calendar prompts and reflection panel visibility |
+| 136 | `Features:Kaizen:MicroGoals` | `true` | User choice | Micro-goals visible by default; users can disable if they prefer non-ritual budgeting |
+
+**Naming convention:** Hierarchical PascalCase: `{Area}:{SubArea?}:{Feature}` (e.g., `Kakeibo:MonthlyReflectionPrompts`, not `monthly_reflection_prompts` or `KakeiboMonthlyReflectionPrompts`).
+
+---
+
+### 4. Entity Design — MonthlyReflection vs. UserSettings
+
+**Decision:** Monthly reflection data (savings goal, intention, gratitude, improvement) is stored in a separate `MonthlyReflection` entity (one per user per month), not in `UserSettings`.
+
+**Rationale:**
+- **Bounded context:** Reflections are journal/ritual data, separate from user preferences (theme, locale, feature toggles). Keep concerns separated.
+- **Queryability:** Reflection history can be queried (recent 12 months, all-time trend) without deserializing a large settings JSON blob.
+- **Scalability:** Millions of monthly reflections per user over time; a dedicated table with indexes is correct schema design.
+- **Audit trail:** CreatedAtUtc / UpdatedAtUtc fields track when reflections were created/modified (supports Reflection History view).
+
+**Unique constraint:** `(UserId, Year, Month)` ensures one reflection per user per month.
+
+---
+
+### 5. Weekly Goal Identification (ISO Week Start)
+
+**Decision:** `KaizenGoal.WeekStartDate` is the ISO 8601 week start (Monday, DateOnly type), used as the unique key for week identification.
+
+**Rationale:**
+- **International standard:** ISO 8601 unambiguous across locales (Monday = week start universally in ISO).
+- **Natural key:** Uniqueness constraint is `(UserId, WeekStartDate)` — one goal per user per week, no compound surrogate keys.
+- **DateOnly over DateTime:** Week is a date concept; `DateTime` adds no value and complicates comparisons.
+- **API paths:** `POST /api/v1/goals/kaizen/week/{weekStart}` (format: `YYYY-MM-DD`) is clean and unambiguous.
+
+---
+
+### 6. Computed Savings in MonthlyReflection
+
+**Decision:** `ActualSavings` (Income - Expenses) is computed on-demand from transaction data but can be cached in the `MonthlyReflection.ActualSavings` column for read access.
+
+**Rationale:**
+- **Computation cost:** Income and expense transactions for a month are <1000 items typically; aggregation is O(n) with minimal cost.
+- **Cache pattern:** Cache the computed value in the reflection record on first read (or explicitly on month close). Subsequent reads are O(1).
+- **Staleness acceptable:** Monthly reflections are not real-time; a few-minute staleness on the cached value is acceptable.
+- **Optional caching:** Implementation can defer caching and compute on-demand initially; optimize later if needed.
+
+---
+
+### 7. Service Aggregation — KakeiboCalendarService
+
+**Decision:** A new application service `IKakeiboCalendarService` is introduced to centralize Kakeibo-aware aggregations (month breakdown, week breakdown, predominant category per day).
+
+**Rationale:**
+- **Separation of concerns:** Calendar logic (display, navigation) stays in `ICalendarService`. Kakeibo-specific aggregations are distinct.
+- **Reusability:** Reports, dashboard, and other features can consume the same aggregation methods without reimplementing.
+- **Testing:** Aggregation logic is testable in isolation from calendar UI/state.
+
+**Method signatures:**
+```csharp
+Task<KakeiboBreakdown> GetMonthBreakdownAsync(int year, int month, Guid userId);
+Task<KakeiboBreakdown> GetWeekBreakdownAsync(DateOnly weekStart, Guid userId);
+Task<KakeiboCategory> GetDominantCategoryAsync(DateOnly date, Guid userId);
+```
+
+---
+
+### 8. No Gamification in Micro-Goals
+
+**Decision:** `KaizenGoal` is entirely non-gamified. Achievements are marked with a quiet checkmark (✓/✗), no confetti, no streaks, no badges, no leaderboards.
+
+**Rationale:**
+- **Philosophy alignment:** Kaizen is about continuous self-improvement, not performance maximization or external validation. Gamification undermines this.
+- **Sustainable practice:** Intrinsic motivation (personal growth) is more sustainable than extrinsic rewards (points, badges).
+- **Simplicity:** Non-gamified design is simpler to build and maintain.
+- **Future:** If gamification is desired later, it can be added as an opt-in toggle without breaking the core functionality.
+
+---
+
+### 9. Week-End Goal Achievement Prompt (Non-Blocking)
+
+**Decision:** At week end, a non-blocking, non-judgmental prompt appears: "How did it go? Did you achieve your goal?" with buttons "✓ Yes" and "✗ No". Dismissal is allowed; no guilt language; both outcomes are equally valid.
+
+**Rationale:**
+- **Kakeibo philosophy:** Reflection without judgment. The goal is learning, not perfection.
+- **UX respect:** Users should not feel pressured or ashamed if a goal is not met.
+- **Optional:** Users who don't set goals are not prompted; the feature is entirely optional.
+- **Psychological safety:** The app's tone should be supportive, not evaluative.
+
+---
+
+### 10. Reflection Panel Read-Only vs. Editable Fields
+
+**Decision:**
+
+- **Current month:** All fields (Savings Goal, Intention, Gratitude, Improvement) are editable.
+- **Past months:** Savings Goal is read-only (audit trail — it was the original goal); Gratitude and Improvement are editable (allows users to add reflections retroactively).
+- **Future months:** Only Savings Goal and Intention are shown (non-editable; shown as placeholders/previews).
+
+**Rationale:**
+- **Audit trail:** The original savings goal should not change (historical record). Users can see their original intention vs. actual outcome.
+- **Journaling flexibility:** Gratitude and improvement can be written/updated later if the user reflects on a past month.
+- **Future clarity:** Future months are scaffolding only; no data collection.
+
+---
+
+### 11. KakeiboSelector Component in Transaction Modal
+
+**Decision:** The `KakeiboSelector` component is always visible (not hidden) in the transaction add/edit modal if feature flag `Features:Kakeibo:TransactionOverride` is enabled. If disabled, the selector is hidden entirely (read-only UI).
+
+**Rationale:**
+- **Simplicity:** One flag controls visibility and editability; no partially-visible/disabled UI states.
+- **Users in disabled mode:** Still get the benefit of Kakeibo routing via their category selection (which has a default Kakeibo value); they just can't override on a per-transaction basis.
+- **Phased rollout:** Default on, but can be disabled for users who want simpler transaction entry.
+
+---
+
+### 12. Kakeibo Setup Wizard (Feature 131) vs. Onboarding Kakeibo Step (Feature 133)
+
+**Decision:** 
+
+- **Feature 131** includes a one-time **Kakeibo Setup Wizard** accessible from category settings and triggered on first login post-migration.
+- **Feature 133** integrates Kakeibo setup as **Step 5 of the onboarding flow** for new users.
+
+Both use the same or similar UI components (e.g., `KakeiboSetupStep.razor` component).
+
+**Rationale:**
+- **New users:** Get Kakeibo introduction as part of standard onboarding (Step 5).
+- **Existing users (post-migration):** Get wizard on next login if they haven't completed setup yet (`HasCompletedKakeiboSetup == false`).
+- **Component reuse:** Same setup UI serves both flows, reducing duplication.
+- **Flag:** `HasCompletedKakeiboSetup` on `UserSettings` prevents re-display for users who have already completed setup.
+
+---
+
+## Implementation Order (Recommended)
+
+1. **Feature 131** (Budget Categories — Kakeibo Routing)
+   - Core foundation; all downstream features depend on this
+   - Estimated effort: 3–4 days (entity, migration, seeder, API, UI)
+
+2. **Feature 132** (Transaction Entry — Kakeibo Selector)
+   - Depends on Feature 131
+   - Estimated effort: 2–3 days (entity field, component, modal integration)
+
+3. **Feature 133** (Onboarding — Kakeibo Setup Step)
+   - Depends on Feature 131
+   - Can run in parallel with Feature 132
+   - Estimated effort: 2–3 days (UI component, flow integration)
+
+4. **Features 134–136** (Calendar, Reflection, Micro-Goals)
+   - Depend on Features 131–133
+   - Can be parallelized (134 and 135 are more tightly coupled; 136 can proceed independently)
+   - Estimated effort: 5–7 days per feature
+
+**Total estimated effort:** 3–4 weeks for foundational work (131–136), assuming 1–2 developer teams working in parallel.
+
+---
+
+## Testing Strategy Implications
+
+### Unit Tests
+- `KakeiboCategory` enum values and naming
+- `Transaction.GetEffectiveKakeiboCategory()` computed property (all override combinations)
+- `IKakeiboCalendarService` aggregation methods
+- `IReflectionService` CRUD and authorization
+- `IKaizenGoalService` CRUD and authorization
+
+### Integration Tests
+- Database migrations (seeding defaults, no HasData destructiveness)
+- Repository queries with Kakeibo aggregations
+- API endpoints (create, read, update, delete, list for reflections and goals)
+- Feature flag toggles affecting endpoint visibility and UI rendering
+
+### End-to-End Tests (Blazor/WebApplicationFactory)
+- Onboarding flow with Kakeibo setup step
+- Transaction entry with Kakeibo selector
+- Calendar rendering with heatmap, breakdown bars, badges
+- Reflection panel editing and history view
+- Micro-goal setting and achievement marking
+
+### Exclusions
+- Performance tests for aggregation queries (can be deferred)
+- Load testing for concurrent reflection/goal updates (low priority)
+
+---
+
+## Open Questions / Deferred Decisions
+
+1. **Reflection History UI:** Should it be timeline view, table view, or both? Consider deferring to Feature 135 implementation phase.
+2. **Kaizen Dashboard:** Should it show 12-week rolling or calendar-year view? Consider user research or MVP with rolling window.
+3. **Backward Compatibility:** If migration adds Kakeibo fields to existing categories, should we run data cleanup (e.g., audit log) for compliance? Defer if not required.
+4. **Goal Computation:** Should `KaizenGoal.IsAchieved` be auto-computed from actual spend (if `TargetAmount` is set) or always manual? Defer to Feature 136 implementation; allow both patterns.
+
+---
+
+## Related Documentation
+
+- `docs/128-kakeibo-kaizen-calendar-first.md` — Philosophy and four Kakeibo questions
+- `docs/129-feature-audit-kakeibo-alignment.md` — Alignment audit and feature flag candidates
+- `docs/129b-feature-flag-implementation.md` — Feature flag architecture (database + cache)
+- `docs/131-budget-categories-kakeibo-routing.md` — Feature 131 full spec
+- `docs/132-transaction-entry-kakeibo-selector.md` — Feature 132 full spec
+- `docs/133-onboarding-kakeibo-setup.md` — Feature 133 full spec
+- `docs/134-calendar-kakeibo-enhancements.md` — Feature 134 full spec
+- `docs/135-monthly-reflection-panel.md` — Feature 135 full spec
+- `docs/136-kaizen-micro-goals.md` — Feature 136 full spec
+
+---
+
+## Sign-Off
+
+**Alfred (Lead):** These specs are complete, internally consistent, and ready for implementation. Feature 131 is the blocking dependency; teams can begin TDD-driven development immediately after Feature 129b (feature flag infrastructure) is merged.
+
+
+---
+
+# Lucius: Feature Specifications 137–144 — Implementation Decisions
+
+**Date:** 2026-04-10  
+**Author:** Lucius (Backend Dev)  
+**Charter Task:** Create 8 feature spec documents for Kakeibo alignment (Reports, AI, Settings, utilities)
+
+---
+
+## Summary
+
+Created 8 comprehensive feature specification documents (137–144) defining backend and frontend requirements for Kakeibo + Kaizen alignment across Reports, AI Chat, Settings, and utility pages. All specs follow the standard format: Status (Planned), Prerequisites, Feature Flag (where applicable), Overview, Domain Model Changes, API Changes, UI Changes, Acceptance Criteria, Implementation Notes.
+
+---
+
+## Feature Breakdown & Key Decisions
+
+### Feature 137: Kaizen Dashboard Report
+
+**Type:** New Report / Data Visualization  
+**Scope:** Backend (aggregation service, API endpoint), Frontend (chart component)
+
+**Key Decisions:**
+- **Flag:** `Features:Kaizen:Dashboard` (default: `false` during dev, `true` when shipped)
+- **Depends On:** 131 (KakeiboCategory), 136 (KaizenGoal entity), 129b (Feature Flag system)
+- **New Endpoint:** `GET /api/v1/reports/kaizen-dashboard?weeks=12`
+- **DTO:** `KaizenDashboardDto` with `List<WeeklyKakeiboSummary>` — each week contains `Essentials`, `Wants`, `Culture`, `Unexpected` amounts + `KaizenGoalDescription?` and `KaizenGoalAchieved?`
+- **Aggregation:** Weekly grouping of transactions by effective Kakeibo category; join with `KaizenGoal` for outcomes
+- **Caching:** 1-hour `IMemoryCache` per `userId:weeks` to avoid repeated aggregation
+- **Chart:** Stacked area chart with month boundaries marked; Kaizen badges (✓/✗) overlaid on week columns
+
+---
+
+### Feature 138: Transactions List — Kakeibo Filter and Badge
+
+**Type:** UI Enhancement + API Filter  
+**Scope:** Backend (filtering logic), Frontend (dropdown + badge component)
+
+**Key Decisions:**
+- **Flag:** `Features:Kakeibo:TransactionFilter` (default: `true` — on by default)
+- **Depends On:** 131 (KakeiboCategory), 132 (KakeiboOverride), 129b
+- **New Query Param:** `GET /api/v1/transactions?kakeiboCategory=Wants` (optional)
+- **DTO Change:** `TransactionSummaryDto` gains `EffectiveKakeiboCategory: string?` (resolved server-side)
+- **Effective Category Logic:** `Transaction.KakeiboOverride ?? BudgetCategory.KakeiboCategory`
+- **Filter Options:** All / Essentials / Wants / Culture / Unexpected
+- **UI:** Dropdown filter + colored badge per transaction row (Expense only; Income/Transfer → no badge)
+- **State:** Filter selection persisted to `localStorage` across page reloads
+
+---
+
+### Feature 139: AI Chat — Kakeibo Awareness
+
+**Type:** AI Service Enhancement  
+**Scope:** AI action builder logic, chat UI
+
+**Key Decisions:**
+- **Flag:** None (enhances existing `Features:AI:ChatAssistant`)
+- **Depends On:** 131, 132, 138 (for Kakeibo query support)
+- **New Action Type:** `ClarificationNeededAction.AskKakeiboCategory` — prompts user to confirm/select bucket when determinism unclear
+- **Behavior:**
+  - AI includes Kakeibo intent in confirmation messages: "Dinner at Olive Garden — Dining (Wants). Confirm?"
+  - If category's `KakeiboCategory` is null or default (Wants), asks clarification: "Is this Essentials, Wants, Culture, or Unexpected?"
+  - Supports natural language Kakeibo queries: "How much on Wants this week?" — queries via `GET /api/v1/transactions?kakeiboCategory=Wants`
+- **UI:** Clarification dialog with four buttons (one per bucket); color-coded badges in messages
+
+---
+
+### Feature 140: AI Rule Suggestions — Kakeibo Display
+
+**Type:** UI Information Display  
+**Scope:** Frontend (badge addition), Backend (minor DTO field)
+
+**Key Decisions:**
+- **Flag:** None (enhances existing `Features:AI:RuleSuggestions`)
+- **Depends On:** 131 (KakeiboCategory)
+- **DTO Change:** `CategorySuggestionDto` gains `SuggestedKakeiboCategory: string?` (from suggested category's `KakeiboCategory`)
+- **Optional Enhancement:** `KakeiboOverrideSuggestion: string?` + `KakeiboOverrideReasoning: string?` — AI can suggest alternative buckets based on merchant context
+- **UI:** Kakeibo badge next to category name (e.g., "Dining → **Wants**"); optional override callout with reasoning
+- **Interaction:** User accepts category + override in a single action if override is suggested
+
+---
+
+### Feature 141: Settings — Kakeibo/Kaizen Preferences
+
+**Type:** User Settings / Data Model  
+**Scope:** Domain (new fields), API (DTO extension), Frontend (settings UI)
+
+**Key Decisions:**
+- **Flag:** None (settings page always available; individual toggles control feature visibility)
+- **Depends On:** 134 (Calendar heatmap), 135 (Monthly Reflection), 136 (Kaizen Goals)
+- **New Fields on `UserSettings`:**
+  - `ShowSpendingHeatmap: bool = true`
+  - `ShowMonthlyReflectionPrompts: bool = true`
+  - `EnableKaizenMicroGoals: bool = true`
+  - `ShowKakeiboCalendarBadges: bool = true`
+- **Migration:** Add 4 columns to `UserSettings` table with `DEFAULT TRUE`
+- **DTO Change:** `UserSettingsDto` extended with 4 bool fields
+- **API:** No new endpoints; `GET/PUT /api/v1/settings` extended
+- **UI:** New "Kakeibo & Kaizen Preferences" section with 4 toggle switches
+- **Semantics:** These are **user preferences** controlling visibility. **Server feature flags** (129b) control whether feature exists at all.
+
+---
+
+### Feature 142: Uncategorized Transactions — Kakeibo Display
+
+**Type:** UI Information Display  
+**Scope:** Frontend (category dropdown enhancement)
+
+**Key Decisions:**
+- **Flag:** None (informational enhancement, always useful)
+- **Depends On:** 131 (KakeiboCategory)
+- **No API Changes:** Category dropdown already fetches category list; enrich client-side with `KakeiboCategory`
+- **UI:** When user hovers/selects category, display Kakeibo badge preview (e.g., "Dining → **Wants**")
+- **Confirmation:** After categorization, brief feedback message shows (1–2 sec): "✓ Dining (Wants)"
+- **Optional:** Direct Kakeibo override button during categorization (deferred to follow-up if needed)
+
+---
+
+### Feature 143: Reports — Kakeibo Grouping
+
+**Type:** Report Enhancement / Aggregation Toggle  
+**Scope:** Backend (grouping logic, query param), Frontend (toggle UI)
+
+**Key Decisions:**
+- **Flag:** None (toggles are UI controls within existing report pages)
+- **Depends On:** 131 (KakeiboCategory)
+- **Affected Reports:**
+  1. Monthly Categories Report: toggle "Group by: [Categories] [Kakeibo Buckets]"
+  2. Budget Comparison Report: dropdown "Variance by: [Category] [Kakeibo Bucket]"
+  3. Monthly Trends Report: toggle "Trend by: [Categories] [Kakeibo Buckets]"
+- **New Query Params:** All three report endpoints accept `groupByKakeibo: bool?` (optional, default: false)
+- **Aggregation:** When `true`, group by effective Kakeibo category (override checked first); sum amounts per bucket
+- **Response DTO:** Restructured to group by bucket name when `groupByKakeibo=true`; backward-compatible (optional param)
+- **UI State:** Grouping selection persisted to `localStorage` per report
+- **Color Consistency:** Four Kakeibo colors applied to chart segments/lines
+
+---
+
+### Feature 144: Custom Reports Builder — Feature Flag
+
+**Type:** Philosophical Gate / Feature Toggle  
+**Scope:** Backend (flag check middleware/guard), Frontend (nav item visibility, route guard)
+
+**Key Decisions:**
+- **Flag:** `Features:Reports:CustomReportBuilder` (default: `false` — off by default)
+- **Depends On:** 129b (Feature Flag system)
+- **Rationale:** Custom Reports Builder creates tension with Kakeibo philosophy (calendar-first, intentional reflection) by encouraging endless data exploration. Default-off but available for power users who opt in.
+- **Route Guard:** `GET /api/v1/reports/custom/{...}` checks flag; returns 404 if disabled
+- **Nav Item:** "Custom Report Builder" menu link hidden unless flag enabled; controlled by `IFeatureFlagClientService`
+- **When Enabled:** Page displays educational note at top: "The calendar is your primary reflection surface. Custom reports are for deep-dive analysis only."
+- **Dismissal:** Note can be dismissed; dismissal stored in `localStorage`
+- **Runtime Toggle:** Admin can enable/disable via `PUT /api/v1/features/Features:Reports:CustomReportBuilder` without restart
+
+---
+
+## Consistent Decisions Across All 8 Features
+
+### 1. Feature Flag Strategy
+
+| Feature | Flag Name | Default | Rationale |
+|---------|-----------|---------|-----------|
+| 137 | `Features:Kaizen:Dashboard` | false | Behind flag during dev; shipped = true |
+| 138 | `Features:Kakeibo:TransactionFilter` | true | On by default; users see immediately |
+| 139 | (reuse `Features:AI:ChatAssistant`) | — | Enhances existing flag |
+| 140 | (reuse `Features:AI:RuleSuggestions`) | — | Enhances existing flag |
+| 141 | (none) | — | Settings always available; toggles per-user |
+| 142 | (none) | — | Informational, always useful |
+| 143 | (none) | — | Report toggles are UI controls |
+| 144 | `Features:Reports:CustomReportBuilder` | false | Philosophical gate; users opt in |
+
+### 2. Kakeibo Color Scheme (Universal)
+
+Applied to badges, chart lines, toggles, and report segments across all features:
+
+```
+Essentials: #3b82f6 (blue)
+Wants: #10b981 (green)
+Culture: #a855f7 (purple)
+Unexpected: #f97316 (orange/red)
+```
+
+### 3. Server-Side Resolution Pattern
+
+All features resolve **effective Kakeibo category** server-side:
+
+```csharp
+EffectiveKakeiboCategory = Transaction.KakeiboOverride ?? BudgetCategory.KakeiboCategory
+```
+
+This ensures:
+- Consistency across API, filtering, aggregation
+- Client doesn't need to manage routing logic
+- API-level filtering and grouping work correctly
+
+### 4. DTO & API Field Additions
+
+**New Fields (across all specs):**
+
+| DTO | Field | Type | Purpose |
+|-----|-------|------|---------|
+| `TransactionSummaryDto` | `EffectiveKakeiboCategory` | `string?` | Show user which Kakeibo bucket transaction belongs to |
+| `KaizenDashboardDto` | `Weeks` | `List<WeeklyKakeiboSummary>` | Weekly spending aggregations + goal outcomes |
+| `CategorySuggestionDto` | `SuggestedKakeiboCategory` | `string?` | Show suggested category's Kakeibo bucket |
+| `CategorySuggestionDto` | `KakeiboOverrideSuggestion` | `string?` | Optional AI-driven override suggestion |
+| `UserSettingsDto` | `ShowSpendingHeatmap` | `bool` | User preference |
+| `UserSettingsDto` | `ShowMonthlyReflectionPrompts` | `bool` | User preference |
+| `UserSettingsDto` | `EnableKaizenMicroGoals` | `bool` | User preference |
+| `UserSettingsDto` | `ShowKakeiboCalendarBadges` | `bool` | User preference |
+
+**New Query Parameters:**
+
+| Endpoint | Param | Type | Purpose |
+|----------|-------|------|---------|
+| `GET /api/v1/transactions` | `kakeiboCategory` | `string?` | Filter by Kakeibo bucket (138) |
+| `GET /api/v1/reports/monthly-categories` | `groupByKakeibo` | `bool?` | Group by bucket instead of category (143) |
+| `GET /api/v1/reports/budget-comparison` | `groupByKakeibo` | `bool?` | Show variance by bucket (143) |
+| `GET /api/v1/reports/monthly-trends` | `groupByKakeibo` | `bool?` | Show trend lines per bucket (143) |
+
+### 5. Dependency Hierarchy
+
+```
+All 8 features depend on:
+  └─ 129b (Feature Flag Implementation) ✓
+
+Additionally:
+  137 ← 131 (KakeiboCategory) + 136 (KaizenGoal)
+  138 ← 131 + 132 (KakeiboOverride)
+  139 ← 131 + 132 + 138
+  140 ← 131
+  141 ← 134 (Heatmap) + 135 (Monthly Reflection) + 136 (Goals)
+  142 ← 131
+  143 ← 131
+  144 ← (none, only 129b)
+```
+
+### 6. UI State Persistence Pattern
+
+Features that accept user selections (filter, toggle, dismissal) persist to `localStorage`:
+
+- **138:** `transaction-filter:kakeiboCategory` (filter choice)
+- **143:** `report:{reportName}:groupBy=Kakeibo` (grouping choice per report)
+- **144:** `customReportBuilderEducationalNoteDismissed` (dismissal flag)
+
+### 7. Standards Adherence
+
+All 8 specs follow:
+- Clean code & SOLID principles (backend services properly abstracted)
+- TDD format (Acceptance Criteria written as testable statements)
+- Consistent naming (Kakeibo features use consistent terminology and color codes)
+- Documentation (Implementation Notes guide backend & frontend devs)
+- OpenAPI spec updates required for API changes
+
+---
+
+## Implementation Sequence (Recommended)
+
+1. **Foundation:** Merge 129b (Feature Flag Implementation) first — all 8 features depend on it
+2. **Domain Model:** Complete 131 (KakeiboCategory), 132 (KakeiboOverride), 136 (KaizenGoal) before implementing any feature
+3. **Settings:** Implement 141 (UserSettings new fields + settings UI) early — provides per-user control layer
+4. **Transactions:** Implement 138 (filter + badge) — customers see Kakeibo immediately when viewing transactions
+5. **Reports:** Implement 137 (dashboard), 143 (grouping) — provides reflection/analysis surface
+6. **AI:** Implement 139, 140 — builds intelligence into suggestions and transactions
+7. **Utility:** Implement 142 (uncategorized display) — polish on transaction entry
+8. **Philosophy:** Implement 144 (custom reports gating) — reinforces calendar-first design
+
+---
+
+## Acceptance Criteria Highlights
+
+All 8 specs include comprehensive acceptance criteria covering:
+- Feature flag behavior (if applicable)
+- API correctness (endpoints, params, response shape)
+- Service-layer aggregation (effective category resolution, grouping logic)
+- UI elements (dropdowns, badges, toggles, charts)
+- State persistence (localStorage, if applicable)
+- Test coverage (unit, integration, API)
+- Documentation (OpenAPI spec updates)
+
+---
+
+## Notes for Implementation Teams
+
+### Backend (Lucius) Priorities
+
+1. **Effective Kakeibo Resolution:** Build a single, reusable function to resolve `Transaction.KakeiboOverride ?? BudgetCategory.KakeiboCategory`. Used by all features.
+2. **Aggregation Services:** Implement `IKakeiboAggregationService` (weekly summaries, category grouping, variance calculations) — used by 137, 143.
+3. **Caching:** Use `IMemoryCache` with appropriate TTLs (1 hour for weekly summaries, 5 min for category/transaction lists).
+4. **Filtering:** Implement Kakeibo filter at the repository level in `TransactionRepository.GetAsync(kakeiboCategory)` — ensures query efficiency.
+5. **DTOs:** Carefully version DTOs to ensure backward compatibility; new fields should be optional where possible.
+
+### Frontend (Client) Priorities
+
+1. **Color Scheme:** Define Kakeibo color constants in a shared client utility; use consistently across all 8 features.
+2. **Feature Flag Service:** Integrate `IFeatureFlagClientService` into layout and route guards; check flags before rendering nav items and allowing route access.
+3. **localStorage Strategy:** Use a consistent key naming scheme (e.g., `feature:{name}:{state}`) to avoid conflicts.
+4. **Accessibility:** Ensure all badges, tooltips, and toggle switches are keyboard-accessible and screen-reader friendly.
+5. **Chart Library:** Verify chart library (Chart.js, Plotly, etc.) supports stacked area charts with custom colors and overlaid markers (for 137).
+
+---
+
+## Risks & Mitigations
+
+| Risk | Mitigation |
+|------|-----------|
+| **Feature flag cascade:** Many features depend on 129b being rock-solid | 129b must be thoroughly tested before any of 137–144 are implemented. Recommend 2–3 code reviews. |
+| **Effective Kakeibo resolution bugs:** If override logic is wrong, all filtering/grouping cascades fail | Implement unit tests for `EffectiveKakeiboCategory` resolution with explicit test cases (override set, override null, category null, etc.) |
+| **Performance:** Weekly aggregations could be slow for users with 10k+ transactions | Implement caching early (1-hour TTL for weekly summaries). Monitor query performance in CI stress tests. Consider denormalization if aggregation remains slow post-optimization. |
+| **Backward Compatibility:** Adding fields to existing DTOs could break old clients | New fields should be optional (nullable or default values). Existing endpoints should work unchanged when new params are omitted. |
+| **Color scheme inconsistency:** If colors vary across reports/badges, Kakeibo philosophy is diluted | Define color constants in shared utility; code review checklist must include "Kakeibo colors match spec." |
+
+---
+
+## Success Criteria (Completed Task)
+
+✅ **8 feature specification documents created** (137–144) in `docs/` directory  
+✅ **All specs follow standard format:** Status, Prerequisites, Feature Flag (if applicable), Overview, Domain Model Changes, API Changes, UI Changes, Acceptance Criteria, Implementation Notes  
+✅ **Feature flags defined** with clear defaults and rationale  
+✅ **Dependencies documented** (all depend on 129b; some depend on 131, 132, 134, 135, 136, etc.)  
+✅ **DTOs and API endpoints specified** with request/response examples  
+✅ **Color scheme standardized** (blue/green/purple/orange across all features)  
+✅ **Acceptance criteria testable** (all are actionable, measurable statements)  
+✅ **Implementation notes comprehensive** (guide both backend and frontend developers)  
+✅ **Consistent naming & terminology** across all 8 docs (Kakeibo, bucket, override, effective category)  
+
+---
+
+**Status:** ✅ **GREEN** — All 8 feature specs created and ready for implementation planning.
+
+
