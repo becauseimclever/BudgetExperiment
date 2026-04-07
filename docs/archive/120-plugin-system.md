@@ -1,5 +1,5 @@
 # Feature 120: Plugin System
-> **Status:** On Hold — pivoting, indefinitely deferred
+> **Status:** Canceled — feature on hold indefinitely; no value under Kakeibo/Kaizen pivot
 
 ## Overview
 
@@ -547,3 +547,4 @@ git commit -m "feat(plugin): add NuGet-based plugin distribution
 
 Refs: #120"
 ```
+

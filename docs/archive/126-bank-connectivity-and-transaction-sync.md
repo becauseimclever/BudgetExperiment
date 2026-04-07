@@ -1,5 +1,5 @@
 # Feature 126: Bank Connectivity & Automatic Transaction Sync
-> **Status:** On Hold — external dependency
+> **Status:** Canceled — external dependency with no value under Kakeibo/Kaizen pivot; deferred indefinitely
 > **Priority:** Medium  
 > **Effort:** X-Large (new external integration, OAuth flow, background sync, new domain aggregates)
 
@@ -1491,3 +1491,4 @@ Refs: #126"
 6. **Existing CSV-imported transactions and bank sync overlap.** When a user links a bank account that already has CSV-imported transactions, the initial bank sync will return transactions that already exist in the app (matched by date/amount/description but with different IDs). Should the sync (a) import them as duplicates and let Feature 125a's duplicate detection handle it, (b) run the existing `ImportDuplicateDetector` during sync to skip likely matches, or (c) offer a one-time "reconcile existing with bank" workflow? Recommend (b) for MVP — leverage existing duplicate detection during the initial sync, with (c) as a future enhancement.
 
 7. **Sandbox vs. Production testing.** Plaid's sandbox uses fake institutions and data. Integration tests can use sandbox mode, but there's no way to test against a real bank without a production key. Should we (a) test only against sandbox in CI, (b) add an optional manual integration test suite that uses production credentials (excluded from CI), or (c) accept sandbox-only automated testing? Recommend (c) — sandbox tests in CI, real-bank testing is manual during initial development only.
+
