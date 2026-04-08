@@ -1239,3 +1239,1028 @@ All 8 specs include comprehensive acceptance criteria covering:
 **Status:** ✅ **GREEN** — All 8 feature specs created and ready for implementation planning.
 
 
+
+
+## Merged from Inbox (2026-04-08)
+
+# Feature 120: Plugin System — Implementation Slice Plan
+
+**Author:** Alfred (Lead)  
+**Date:** 2026-03-22  
+**Requested by:** Fortinbra
+
+---
+
+## Executive Summary
+
+Feature 120 introduces a plugin architecture enabling third-party extensions. The spec defines 8 user stories across authoring, management, domain events, and UI integration. This plan decomposes the feature into **10 ordered slices** following TDD and Clean Architecture constraints.
+
+**Critical precondition identified:** The existing `Transaction._domainEvents` collection (line 17 in `Transaction.cs`) is typed as `List<object>` and is never dispatched. Slice 1 must wire up domain event infrastructure before any plugin event subscriptions are possible.
+
+---
+
+## Slice Plan
+
+### Slice 1: Domain Event Foundation
+
+**Layer(s):** Domain, Infrastructure  
+**Projects:** `BudgetExperiment.Domain`, `BudgetExperiment.Infrastructure`
+
+**Delivers:**
+- `IDomainEvent` marker interface with `OccurredAtUtc` property
+- Core event record types: `TransactionCreatedEvent`, `TransactionUpdatedEvent`, `TransactionDeletedEvent`, `TransactionCategorizedEvent`, `ImportCompletedEvent`, `RuleSuggestionAcceptedEvent`, `ReconciliationMatchedEvent`
+- `IDomainEventDispatcher` interface in Domain
+- Refactor `Transaction._domainEvents` from `List<object>` to `List<IDomainEvent>`
+- Add `RaiseDomainEvent()` protected method and `ClearDomainEvents()` to entity base or Transaction
+- `DomainEventDispatcher` implementation in Infrastructure (resolves handlers via DI, logs failures, does not rethrow)
+
+**Acceptance Criteria Closed:** US-120-008 (partial — IDomainEvent, dispatcher, event types)
+
+**Dependencies:** None (foundation slice)
+
+**Assigned:** Lucius (backend/infra)
+
+**Risks/Decisions:**
+- **Decision needed:** Where to place `IDomainEventDispatcher` implementation — Infrastructure or a new `BudgetExperiment.Application.Events` namespace? Recommendation: Infrastructure, since dispatch wiring requires DbContext access.
+- **Risk:** Event dispatch timing. Spec requires post-commit dispatch. Implementation will collect events from tracked entities before `SaveChangesAsync`, then dispatch after successful commit.
+
+---
+
+### Slice 2: Domain Event Dispatch Wiring
+
+**Layer(s):** Infrastructure  
+**Projects:** `BudgetExperiment.Infrastructure`
+
+**Delivers:**
+- Override `BudgetDbContext.SaveChangesAsync` to:
+  1. Collect all domain events from tracked entities implementing `IHasDomainEvents`
+  2. Call `base.SaveChangesAsync()` (commit)
+  3. Dispatch collected events via `IDomainEventDispatcher`
+  4. Clear events from entities
+- `IHasDomainEvents` interface for entities that raise events
+- Transaction entity implements `IHasDomainEvents`
+
+**Acceptance Criteria Closed:** US-120-008 (completes event dispatch after SaveChanges)
+
+**Dependencies:** Slice 1
+
+**Assigned:** Lucius
+
+**Risks/Decisions:**
+- **Risk:** Dispatcher must be resolved at dispatch time, not constructor-injected into DbContext (to avoid captive dependency). Use `IServiceProvider` to resolve.
+- **Architectural note:** Handler failures are logged but do not roll back the committed transaction (per spec).
+
+---
+
+### Slice 3: Plugin Abstractions Project
+
+**Layer(s):** SDK (new)  
+**Projects:** `BudgetExperiment.Plugin.Abstractions` (new)
+
+**Delivers:**
+- New project with **zero dependencies on core projects** (only Microsoft.Extensions.* and System.*)
+- `IPlugin` interface (Name, Version, Description, ConfigureServices, InitializeAsync)
+- `IPluginContext` interface (Services, Configuration, LoggerFactory)
+- `IDomainEventHandler<TEvent>` interface (requires `IDomainEvent` from Domain — **BOUNDARY ISSUE**)
+- `IImportParser` interface with `ParsedTransactionRow` DTO
+- `IReportBuilder` interface with `ReportParameters`, `ReportResult` types
+- `IPluginNavigationProvider` interface with `PluginNavItem` record
+- `PluginControllerBase` abstract class
+- `PluginAttribute` for assembly metadata
+
+**Acceptance Criteria Closed:** US-120-001 (SDK interfaces), US-120-002 (PluginControllerBase), US-120-003 (IImportParser), US-120-004 (IReportBuilder), US-120-009 (IPluginNavigationProvider)
+
+**Dependencies:** Slice 1 (IDomainEvent must exist)
+
+**Assigned:** Lucius
+
+**Risks/Decisions:**
+- **CRITICAL BOUNDARY DECISION:** `IDomainEventHandler<TEvent>` has a constraint `where TEvent : IDomainEvent`. This requires Plugin.Abstractions to reference Domain (or duplicate the interface).
+  - **Option A:** Plugin.Abstractions references Domain (breaks "no core deps" constraint)
+  - **Option B:** Move `IDomainEvent` to Plugin.Abstractions and have Domain reference it (inverts dependency)
+  - **Option C:** Duplicate `IDomainEvent` in Abstractions as `IPluginDomainEvent` (breaks type compatibility)
+  - **Recommendation:** Option B — `IDomainEvent` is a marker interface with one property. Plugin.Abstractions becomes the contract boundary; Domain references it for the marker. This preserves plugin author experience (single SDK reference) and type safety.
+
+---
+
+### Slice 4: Plugin Hosting Project
+
+**Layer(s):** Hosting (new)  
+**Projects:** `BudgetExperiment.Plugin.Hosting` (new)
+
+**Delivers:**
+- New project referencing Plugin.Abstractions + Domain
+- `PluginScanner` — scans directory for assemblies with `IPlugin` implementations
+- `PluginDescriptor` — metadata record (name, version, assembly path, status, capabilities)
+- `PluginRegistry` — tracks loaded plugins, queryable by name
+- `PluginLoader` — loads assemblies, instantiates `IPlugin`, invokes `ConfigureServices`
+- `PluginHostedService` — `IHostedService` that calls `IPlugin.InitializeAsync` on startup
+- `AddPlugins(IConfiguration)` extension method for DI
+- Configuration binding for `Plugins:Path` and `Plugins:Disabled`
+- Logging throughout (discovery, loading, failures)
+
+**Acceptance Criteria Closed:** US-120-005 (folder-based install), US-120-007 (disable via config)
+
+**Dependencies:** Slice 3
+
+**Assigned:** Lucius
+
+**Risks/Decisions:**
+- **Assembly loading:** Use `AssemblyLoadContext` for isolation? MVP spec says shared AppDomain — use default context with assembly scanning.
+- **Risk:** Incompatible plugin (wrong SDK version) could crash host. Implement version check and graceful skip.
+
+---
+
+### Slice 5: API Integration + Management Endpoints
+
+**Layer(s):** API, Contracts  
+**Projects:** `BudgetExperiment.Api`, `BudgetExperiment.Contracts`
+
+**Delivers:**
+- `builder.Services.AddPlugins(configuration)` call in `Program.cs`
+- `ApplicationPartManager` configuration to add plugin assemblies (controller discovery)
+- Route convention to prefix plugin controllers with `/api/v1/plugins/{pluginName}/`
+- `PluginsController` with:
+  - `GET /api/v1/plugins` — list all plugins
+  - `GET /api/v1/plugins/{name}` — plugin detail
+- `PluginInfoResponse` DTO in Contracts
+- `Plugins` section in `appsettings.json`
+- OpenAPI integration (plugin endpoints appear in Scalar)
+
+**Acceptance Criteria Closed:** US-120-002 (route prefix), US-120-006 (management endpoint)
+
+**Dependencies:** Slice 4
+
+**Assigned:** Lucius
+
+**Risks/Decisions:**
+- **Route convention:** Use `IApplicationModelConvention` to apply prefix dynamically based on `PluginControllerBase` inheritance.
+- **Auth:** Plugin endpoints participate in same auth pipeline (no special handling needed).
+
+---
+
+### Slice 6: Import Parser Extension Point
+
+**Layer(s):** Application  
+**Projects:** `BudgetExperiment.Application`
+
+**Delivers:**
+- Modify `ImportService` to resolve `IEnumerable<IImportParser>` from DI
+- Parser selection logic: match by file extension from `SupportedExtensions`
+- Fallback to core CSV parser if no plugin matches
+- Registration point for plugin parsers (via `IServiceCollection`)
+
+**Acceptance Criteria Closed:** US-120-003 (import parser integration)
+
+**Dependencies:** Slice 4 (plugin DI registration)
+
+**Assigned:** Lucius
+
+**Risks/Decisions:**
+- **Risk:** Plugin parser returns invalid DTOs. Add validation layer before committing transactions.
+- **Decision:** Plugin parsers return `ParsedTransactionRow` (defined in Abstractions) — need mapping to internal DTO.
+
+---
+
+### Slice 7: Report Builder Extension Point
+
+**Layer(s):** Application, API  
+**Projects:** `BudgetExperiment.Application`, `BudgetExperiment.Api`
+
+**Delivers:**
+- Modify `ReportService` to resolve `IEnumerable<IReportBuilder>` from DI
+- Expose plugin report types via existing reports API
+- Add endpoint to list available report types (core + plugins)
+- Plugin reports use same `ReportParameters` input shape
+
+**Acceptance Criteria Closed:** US-120-004 (report builder integration)
+
+**Dependencies:** Slice 4
+
+**Assigned:** Lucius
+
+**Risks/Decisions:**
+- **Decision:** How do plugin reports appear in UI? Slice 9 (Blazor) will need a "plugin reports" section.
+
+---
+
+### Slice 8: Blazor UI Integration — Navigation + Routing
+
+**Layer(s):** Client  
+**Projects:** `BudgetExperiment.Client`
+
+**Delivers:**
+- `PluginNavigationService` — aggregates `IPluginNavigationProvider` nav items via API call
+- New `/api/v1/plugins/navigation` endpoint returning all plugin nav items
+- Modify `NavMenu.razor` to render "Plugins" section with plugin nav items
+- Configure Blazor router `AdditionalAssemblies` for plugin page discovery
+- **Note:** Blazor WASM cannot load plugin assemblies dynamically. Plugin pages must be pre-registered or use a different approach (see Risk below).
+
+**Acceptance Criteria Closed:** US-120-009 (navigation items in sidebar)
+
+**Dependencies:** Slice 5 (API returns plugin data), Slice 4
+
+**Assigned:** Barbara (tests) + Lucius (implementation)
+
+**Risks/Decisions:**
+- **CRITICAL RISK:** Blazor WebAssembly runs in browser; it cannot dynamically load plugin assemblies at runtime. Options:
+  - **Option A:** Plugin UI is server-rendered (not viable for WASM-only client)
+  - **Option B:** Plugin pages are pre-compiled and served as separate Blazor projects (complex)
+  - **Option C:** MVP: Plugins contribute API endpoints only; UI pages are deferred to Phase 2 or require Blazor Server hybrid
+  - **Recommendation:** For MVP, implement navigation items that link to plugin API endpoints or external URLs. Full Blazor page support deferred. Update spec acceptance criteria accordingly.
+
+---
+
+### Slice 9: Plugin Management Page
+
+**Layer(s):** Client  
+**Projects:** `BudgetExperiment.Client`
+
+**Delivers:**
+- `Plugins.razor` page at `/plugins`
+- Displays installed plugins: name, version, description, status, capabilities
+- Shows plugin load errors for troubleshooting
+- Disabled plugins shown with visual indicator
+- Uses `PluginInfoResponse` from API
+
+**Acceptance Criteria Closed:** US-120-006 (management UI)
+
+**Dependencies:** Slice 5 (API endpoint), Slice 8
+
+**Assigned:** Barbara (tests) + Lucius (implementation)
+
+**Risks/Decisions:**
+- **Style:** Use existing card/list patterns from codebase.
+
+---
+
+### Slice 10: Sample Plugin + Documentation
+
+**Layer(s):** Samples, Docs  
+**Projects:** `samples/SamplePlugin/` (new), `docs/`
+
+**Delivers:**
+- Sample plugin project demonstrating:
+  - `IPlugin` implementation
+  - `PluginControllerBase` endpoint
+  - `IDomainEventHandler<TransactionCreatedEvent>` subscription
+  - `IPluginNavigationProvider` for nav item
+- `docs/plugin-authoring-guide.md` with SDK reference
+- Update `README.md` with plugin system section
+- Integration test that loads sample plugin and verifies functionality
+
+**Acceptance Criteria Closed:** US-120-001 (sample plugin demonstrates all extension points)
+
+**Dependencies:** Slices 1-9 complete
+
+**Assigned:** Both (Lucius: sample, Barbara: integration tests, both: docs)
+
+**Risks/Decisions:**
+- Sample plugin should be simple but exercise all extension points.
+
+---
+
+## Test Strategy (TDD Per Slice)
+
+| Slice | Test Type | Test Focus |
+|-------|-----------|------------|
+| 1 | Unit | Event record equality, dispatcher resolves handlers, logs failures |
+| 2 | Integration | SaveChangesAsync dispatches events post-commit, failures don't rollback |
+| 3 | Unit | Interface contracts, PluginControllerBase route attribute |
+| 4 | Unit | Scanner finds IPlugin, Loader instantiates, Registry tracks |
+| 5 | API Integration | /api/v1/plugins returns list, plugin controller routing works |
+| 6 | Integration | Plugin parser selected by extension, fallback to core |
+| 7 | Integration | Plugin report appears in report list |
+| 8 | bUnit | NavMenu renders plugin section |
+| 9 | bUnit | Plugins page displays plugin list |
+| 10 | Integration | Sample plugin loads, endpoint responds, event handled |
+
+**Assigned:** Barbara owns test slices; writes failing tests before Lucius implements.
+
+---
+
+## Dependency Graph
+
+```
+Slice 1 (Domain Events)
+    ↓
+Slice 2 (Dispatch Wiring)
+    ↓
+Slice 3 (Plugin.Abstractions) ←─ depends on IDomainEvent from Slice 1
+    ↓
+Slice 4 (Plugin.Hosting)
+    ↓
+    ├─→ Slice 5 (API Integration)
+    │       ↓
+    │   Slice 8 (Client Navigation) ─→ Slice 9 (Management Page)
+    │
+    ├─→ Slice 6 (Import Parser Extension)
+    │
+    └─→ Slice 7 (Report Builder Extension)
+
+Slice 10 (Sample + Docs) ← depends on all above
+```
+
+---
+
+## Open Decisions Requiring Resolution
+
+### Decision 1: IDomainEvent Location
+**Question:** Where does `IDomainEvent` live given Plugin.Abstractions must have no core deps?
+
+**Recommendation:** Move `IDomainEvent` to Plugin.Abstractions. Domain references Abstractions for the marker only. This inverts the expected dependency but keeps plugin authoring simple (single NuGet reference).
+
+**Assigned to:** Alfred to confirm before Slice 3 starts.
+
+---
+
+### Decision 2: Blazor Plugin Pages
+**Question:** Can Blazor WASM support dynamic plugin page loading?
+
+**Answer:** No — WASM cannot load assemblies dynamically. 
+
+**Recommendation:** MVP scopes plugin UI to navigation links only. Full page support requires either:
+- Blazor Server hosting (different architecture)
+- Plugin pages compiled into client at build time (not hot-pluggable)
+
+**Action:** Update US-120-009 acceptance criteria to clarify MVP scope.
+
+**Assigned to:** Alfred to update spec; Fortinbra to confirm scope reduction is acceptable.
+
+---
+
+### Decision 3: DomainEventDispatcher Location
+**Question:** Infrastructure or Application layer?
+
+**Recommendation:** Infrastructure. The dispatcher is called from `BudgetDbContext.SaveChangesAsync` and needs `IServiceProvider` to resolve handlers. Application layer would require passing dispatcher through UnitOfWork abstraction (leaky).
+
+---
+
+## Summary Table
+
+| Slice | Name | Layers | Deps | Agent | AC Closed |
+|-------|------|--------|------|-------|-----------|
+| 1 | Domain Event Foundation | Domain, Infra | — | Lucius | US-120-008 (partial) |
+| 2 | Dispatch Wiring | Infra | 1 | Lucius | US-120-008 |
+| 3 | Plugin.Abstractions | SDK | 1 | Lucius | US-120-001,002,003,004,009 |
+| 4 | Plugin.Hosting | Hosting | 3 | Lucius | US-120-005,007 |
+| 5 | API Integration | API, Contracts | 4 | Lucius | US-120-002,006 |
+| 6 | Import Parser Extension | Application | 4 | Lucius | US-120-003 |
+| 7 | Report Builder Extension | App, API | 4 | Lucius | US-120-004 |
+| 8 | Client Navigation | Client | 5,4 | Both | US-120-009 |
+| 9 | Management Page | Client | 5,8 | Both | US-120-006 |
+| 10 | Sample + Docs | Samples | 1-9 | Both | US-120-001 |
+
+---
+
+**Next Step:** Resolve Decision 1 (IDomainEvent location) before starting Slice 1. Barbara to begin writing failing tests for Slice 1 domain event types.
+
+
+---
+
+# Feature Flags Architecture
+
+**Date:** 2026-04-07  
+**Status:** Approved  
+**Context:** Feature 129 (Kakeibo Alignment Audit)
+
+## Decision
+
+Implement a hierarchical feature flag system with instance-level (per-deployment) flags for two purposes:
+
+1. **User Simplification** — Allow users to hide features they don't use via `UserSettings` (persisted per-user in database). Feature flags control what's *available* on a deployment; user settings control what's *visible* to individual users.
+
+2. **Phased Rollout** — Deploy experimental features behind flags (default off), enable progressively via environment variables, flip to default-on when stable.
+
+## Configuration Shape
+
+**`appsettings.json`:**
+```json
+{
+  "FeatureFlags": {
+    "Calendar": { "SpendingHeatmap": true, "KakeiboOverlay": false },
+    "Kakeibo": { "MonthlyReflectionPrompts": true },
+    "Kaizen": { "MicroGoals": true, "Dashboard": false },
+    "AI": { "ChatAssistant": true, "RuleSuggestions": true },
+    "Reports": { "CustomReportBuilder": false, "LocationReport": true },
+    "Charts": { "AdvancedCharts": false },
+    "Paycheck": { "PaycheckPlanner": true },
+    "Reconciliation": { "StatementReconciliation": true },
+    "DataHealth": { "Dashboard": true },
+    "Location": { "Geocoding": false }
+  }
+}
+```
+
+**Environment Variable Overrides (Docker):**
+```bash
+FeatureFlags__Kakeibo__CalendarOverlay=true
+FeatureFlags__Reports__CustomReportBuilder=true
+```
+
+## API Surface
+
+**Server-Side:** `IFeatureFlagService` in Application layer. Methods: `IsEnabled(string flagPath)`, `GetAllFlags()`.
+
+**Client-Side:** `GET /api/v1/config/feature-flags` endpoint returns JSON tree. `FeatureFlagClientService` (scoped) fetches on app load, caches in memory.
+
+**DTO:** `FeatureFlagsDto` in Contracts (nested structure matching JSON above).
+
+## Naming Convention
+
+Pattern: `{Area}:{SubArea?}:{Feature}` in PascalCase.  
+Examples: `Calendar:SpendingHeatmap`, `Kakeibo:MonthlyReflectionPrompts`, `Reports:CustomReportBuilder`.
+
+Environment vars: Replace `:` with `__` (e.g., `FeatureFlags__Calendar__SpendingHeatmap`).
+
+## Clean Architecture Placement
+
+- **Domain:** Flag-agnostic. Entities exist regardless of UI visibility.
+- **Application:** `IFeatureFlagService` reads flags from `IConfiguration`. Services may conditionally enable use cases (rare).
+- **API:** Controllers check flags via injected `IFeatureFlagService` to conditionally expose endpoints. `ConfigController` exposes flags to client.
+- **Client:** `IFeatureFlagClientService` fetches flags from API, caches in memory. Components inject service and use `@if (FeatureFlags.IsEnabled("Feature.Name"))` to conditionally render.
+- **Contracts:** `FeatureFlagsDto` only.
+
+## Blazor Client Pattern
+
+**Service:** `IFeatureFlagClientService` initialized in `Program.cs` before root component render. Components inject and check flags:
+
+```razor
+@inject IFeatureFlagClientService FeatureFlags
+
+@if (FeatureFlags.IsEnabled("Calendar.SpendingHeatmap"))
+{
+    <SpendingHeatmapOverlay ... />
+}
+```
+
+**Graceful Fallback:** If API call fails, assume all flags `false` (safe default).
+
+## Default Strategy
+
+**Default-On (`true`):** Core Kakeibo/Kaizen features, established features (AI Chat, Paycheck Planner, Location Report).  
+**Default-Off (`false`):** Experimental features (Custom Reports Builder, Advanced Charts, Geocoding stub, in-development Kakeibo features during rollout).
+
+**Migration for New Features:**
+1. Develop behind flag (default `false`)
+2. Test with flag `true` in dev/staging
+3. Deploy to production with flag `false`
+4. Gather feedback (enable via env var for beta users)
+5. Flip to `true` in `appsettings.json` when ready for GA
+6. Remove flag 6-12 months post-launch when stable
+
+## First-Pass Flags (17 Total)
+
+| Flag | Type | Default | Purpose |
+|------|------|---------|---------|
+| `Calendar:SpendingHeatmap` | user-simplification | `true` | Heatmap toggle |
+| `Calendar:KakeiboOverlay` | experimental | `false` → `true` | Feature 128 rollout |
+| `Kakeibo:MonthlyReflectionPrompts` | user-simplification | `true` | Reflection prompts |
+| `Kaizen:MicroGoals` | user-simplification | `true` | Weekly goals |
+| `Kaizen:Dashboard` | experimental | `false` → `true` | Kaizen report |
+| `AI:ChatAssistant` | user-simplification + experimental | `true` | AI chat panel |
+| `AI:RuleSuggestions` | user-simplification | `true` | AI categorization |
+| `AI:RecurringChargeDetection` | user-simplification | `true` | AI pattern detection |
+| `Reports:CustomReportBuilder` | experimental | `false` | Power-user feature |
+| `Reports:LocationReport` | user-simplification | `true` | Geographic spending |
+| `Reports:CandlestickChart` | experimental | `false` | No data source yet |
+| `Charts:AdvancedCharts` | experimental | `false` | Showcase only |
+| `Paycheck:PaycheckPlanner` | user-simplification | `true` | Paycheck tool |
+| `Reconciliation:StatementReconciliation` | user-simplification | `true` | PDF upload |
+| `DataHealth:Dashboard` | user-simplification | `true` | Data quality |
+| `Location:Geocoding` | experimental | `false` | Stub only |
+
+## Rationale
+
+- **Instance-level flags (not per-user):** Simpler architecture, no per-user flag storage. User preferences handled separately via `UserSettings`.
+- **Hierarchical naming:** Clear namespacing prevents collisions, self-documenting.
+- **API endpoint (not embedded in HTML):** Allows dynamic flag changes without API restart.
+- **Default-on for core features:** Users opt out if they don't want them; flag system doesn't hide shipped features by default.
+- **Default-off for experiments:** Explicit opt-in for incomplete/questionable features.
+
+## Implementation Scope
+
+Lucius implements in Phase 6 (low priority, after core Kakeibo features ship). Feature 128 can proceed without flags initially; flags added post-launch for simplification and future experimental features.
+
+
+---
+
+# Kakeibo Alignment Audit Complete
+
+**Date:** 2026-04-07  
+**Status:** Approved  
+**Context:** Feature 129 (Kakeibo Alignment Audit)
+
+## Decision
+
+Feature audit complete. 27 features audited against Kakeibo + Kaizen calendar-first philosophy. Top 3 priority modifications identified:
+
+### 1. Calendar UI Kakeibo Enhancements (🟢 Aligned → Immediate Priority)
+**What:** Calendar is already the homepage but needs Kakeibo overlay. Add:
+- Spending heatmap (intensity-based day cell tinting)
+- Month-start intention prompt (savings goal + intention text)
+- Week summary Kakeibo breakdown (mini-bars: Essentials/Wants/Culture/Unexpected)
+- Day cell Kakeibo badges
+- Month-end reflection panel (four questions)
+
+**Why:** The calendar IS the household ledger. All Kakeibo philosophy flows through this surface. Without these visual cues, users won't experience the mindful budgeting rhythm.
+
+**Priority:** Immediate — Feature 128 Phase 2.
+
+### 2. Budget Categories Kakeibo Routing (🟡 Needs Work → Immediate Priority)
+**What:** Add `KakeiboCategory` field to `BudgetCategory` entity. Every Expense category maps to exactly one of four Kakeibo buckets (Essentials/Wants/Culture/Unexpected). Migration applies smart defaults (Groceries → Essentials, Dining → Wants, Education → Culture). One-time **Kakeibo Setup Wizard** in onboarding guides users to review/confirm routing.
+
+**Why:** Categories are the bridge between familiar vocabulary (Groceries, Dining) and Kakeibo philosophy. This routing must exist before transaction entry changes go live. Without it, transactions cannot be categorized by Kakeibo intent.
+
+**Priority:** Immediate — Feature 128 Phase 1 (foundation).
+
+### 3. Transaction Entry Kakeibo Selector (🟡 Needs Work → Immediate Priority)
+**What:** Add `KakeiboSelector` component to transaction add/edit modal. Four icons (Essentials/Wants/Culture/Unexpected) with labels. Default derived from selected `BudgetCategory.KakeiboCategory`. Allow per-transaction override. Small educational tooltip on first use.
+
+**Why:** Every transaction entry is a mindful recording act. The Kakeibo category picker reinforces the philosophy at the moment of entry. Users consciously choose intent, not just account category.
+
+**Priority:** Immediate — Feature 128 Phase 1 (foundation).
+
+## Additional High-Priority Modifications (Top 5-10)
+
+4. **Onboarding Kakeibo Setup** — Add 5th step to onboarding wizard: introduce four Kakeibo categories, guide user to confirm/correct routing for existing Expense categories. First impression must communicate philosophy.
+5. **Kaizen Micro-Goals** — Weekly goal setting and outcome tracking. Embed in week summary. Closes the Kaizen continuous improvement loop.
+6. **Monthly Reflection Panel** — End-of-month four-questions panel (income/savings goal/actual savings/reflection text). Closes the Kakeibo monthly ritual loop.
+7. **Transaction List Kakeibo Filter** — Add filter dropdown on `/transactions` page. Display Kakeibo badges on transaction rows. Supports bulk analysis by Kakeibo category.
+8. **AI Chat Kakeibo Awareness** — AI must prompt for Kakeibo category when creating transactions (clarification action). Should suggest but allow override. AI must support, not bypass, mindful categorization.
+9. **Settings Kakeibo Preferences** — Add user settings: "Show spending heatmap by default", "Remind me to set monthly savings intention", "Enable weekly Kaizen micro-goals". User control over philosophy features.
+10. **Reports Kakeibo Grouping** — Add Kakeibo grouping toggle to Monthly Categories Report and Budget Comparison Report. Show spending by bucket, not just individual categories.
+
+## Feature Flag Recommendations
+
+17 flags proposed. Top 3 flag decisions:
+
+1. **Custom Reports Builder → Default OFF** (🔴 Tension) — Encourages endless data exploration, opposite of Kakeibo's simple reflection. Feature-flag for power users only.
+2. **Kakeibo Calendar Overlay → Default OFF during development, ON when shipped** (experimental rollout) — Phase Feature 128 safely without disrupting existing users.
+3. **Advanced Charts → Default OFF** (experimental, showcase only) — SparkLine, LineChart, GroupedBarChart have no consumers. Keep in codebase for future but don't expose in production.
+
+## Implementation Order
+
+**Phase 1 (Immediate):** Budget categories Kakeibo routing, onboarding setup, transaction entry selector — domain foundation.  
+**Phase 2 (Immediate):** Calendar heatmap, intention prompt, week breakdown, day badges — visual philosophy layer.  
+**Phase 3 (Soon):** Reflection panel, Kaizen goals, Kaizen dashboard — close ritual loops.  
+**Phase 4 (Soon):** Transaction list filter, AI awareness, settings preferences — supporting features.  
+**Phase 5 (Low):** Reports grouping, paycheck breakdown, location filtering, export column — nice-to-haves.  
+**Phase 6 (Low):** Feature flag system, Custom Reports flag, user settings toggles — simplification infrastructure.
+
+## Rationale
+
+Audit revealed that **5 features require immediate changes** (calendar, transaction entry, budget categories, onboarding, Kaizen goals) to support Kakeibo philosophy. **12 features need soon-priority modifications** (reports, AI, settings, list views) to augment the philosophy. **8 features need low-priority enhancements** (paycheck, location, export) or should be feature-flagged (Custom Reports Builder). One feature (Custom Reports Builder) has philosophical tension and should be opt-in only.
+
+The recommended implementation order prioritizes the calendar (the philosophical centerpiece) and transaction entry (the mindful recording act) first, followed by reflection/Kaizen tracking, then supporting features, and finally optional enhancements. Feature flag architecture provides clean user simplification and phased rollout without polluting the domain layer.
+
+## Next Steps
+
+Lucius implements Feature 128 Phases 1-4 per the recommended order. Feature flag system (Phase 6) deferred to post-launch unless Custom Reports Builder needs gating earlier.
+
+
+---
+
+# Architecture Decision: Runtime Feature Flag Storage
+
+**Date:** 2026-04-09  
+**By:** Alfred (Lead)  
+**Status:** Approved  
+
+---
+
+## Decision: Option B — Database-backed flags with in-memory cache
+
+### Rationale
+
+Option A (file hot-reload) is incompatible with Docker: environment variables used in production do not hot-reload. Option C (file rewrite) is fundamentally unsafe — container filesystems are ephemeral, and modifying appsettings.json in production is not idiomatic. Option B is the only choice that meets the requirement of runtime toggleability across all deployment contexts (local dev, Docker, Raspberry Pi).
+
+Database-backed flags with in-memory cache deliver zero per-request overhead (cache hit) while enabling true runtime toggles via a simple admin API. The cost is one new table and a cache invalidation pattern — both standard, low-complexity infrastructure.
+
+### Architecture
+
+**Storage:** New `FeatureFlags` table (columns: `Id`, `Name`, `Enabled`, `CreatedAt`, `UpdatedAt`). One row per flag.
+
+**Runtime Behavior:**
+1. **Startup:** Load all flags from DB into `IMemoryCache` (keyed `feature:all`). Cache TTL: 5 minutes (allows stale reads during DB downtime; updated on each toggle).
+2. **Read Path:** Check `IMemoryCache` first (cache hit = no DB access). Fall back to DB only on cache miss (startup or after expiry).
+3. **Write Path:** `PUT /api/v1/features/{flagName}` (admin endpoint) updates the DB row, invalidates cache immediately.
+4. **Client Cache:** Client-side flag cache TTL remains **1 hour** — client polling is infrequent enough that eventual consistency is acceptable. Admin toggling a flag will propagate to UI within ~1 hour.
+
+### Implications for `docs/129-feature-audit-kakeibo-alignment.md`
+
+**Feature Flag Architecture section (lines 494–802):**
+- Update "Configuration Shape" subsection (currently lines 504–561): Replace "file-based + env vars only" with "database + file fallback for seeding".
+  - Explain: Flags are stored in `FeatureFlags` DB table. Dev/staging can seed defaults from `appsettings.json` migration or init script. Production uses DB as source of truth.
+- Add new "Runtime Toggleability" subsection explaining the cache strategy and admin endpoint.
+- Update "Default Strategy" (lines 600–630) to clarify: defaults are applied at DB seed time, not via appsettings.json.
+- Explain cache TTL and eventual consistency trade-off.
+
+### Implications for `docs/129b-feature-flag-implementation.md`
+
+**Lucius must update:**
+1. **Layer Placement diagram (lines 45–67):** Add Infrastructure → Database layer below API.
+2. **Configuration section (lines 34–40):** Replace "No database storage" rationale with "Database is source of truth; file-based seeding is optional (dev convenience only)".
+3. **Code Sketches (lines 79+):** 
+   - Add `FeatureFlagsDbContext` and migration sketch.
+   - Update `FeaturesController` to inject `IMemoryCache` and implement cache invalidation.
+   - Add `IFeatureFlagRepository` interface for read/write (just GetAllAsync and UpdateAsync).
+   - Update example `appsettings.json` to show seeding migration or init script (no longer the source of truth).
+4. **Testing section (add if missing):** Mock `IMemoryCache` for unit tests; use real cache + test DB for integration tests.
+
+### Admin UI Shape
+
+**Endpoint:** `PUT /api/v1/features/{flagName}`  
+**Payload:** `{ "enabled": true }`  
+**Response:** 200 OK with updated flag state  
+**Auth:** Admin-only (protected by existing authorization middleware)
+
+**Optional UI (Phase 2):** Dedicated admin page `/admin/features` listing all flags with toggle switches, wired to the endpoint above. For MVP, CLI/curl is sufficient:
+```bash
+curl -X PUT https://localhost:5099/api/v1/features/Reports:CustomReportBuilder \
+  -H "Content-Type: application/json" \
+  -d '{"enabled":true}' \
+  -H "Authorization: Bearer <admin-token>"
+```
+
+Or if deployed on Raspberry Pi, SSH into the container and hit localhost:5000 directly (no TLS in local deployments).
+
+### Client-Side Cache TTL
+
+**Keep 1 hour as proposed.** Rationale:
+- Client polling for flag changes every 5 minutes (or on-demand) would be excessive for a feature flag service.
+- 1-hour eventual consistency is acceptable for a household app. Admins toggling features are rare events.
+- If a specific flag needs immediate propagation (e.g., emergency shutdown of a broken feature), admin can restart the affected client or browser refresh forces a new fetch.
+- This aligns with typical SaaS feature flag services (Unleash, LaunchDarkly) which use 5–60 minute polling or client-requested updates.
+
+---
+
+## Implementation Checklist (for Lucius)
+
+- [ ] Create `FeatureFlags` table migration (Id, Name, Enabled, CreatedAt, UpdatedAt)
+- [ ] Seed default flags from Feature 129 audit (17 flags, default on/off as specified)
+- [ ] Create `FeatureFlagRepository` (GetAllAsync, UpdateAsync)
+- [ ] Update `FeaturesController` GET endpoint to use cache
+- [ ] Add `PUT /api/v1/features/{flagName}` admin endpoint with cache invalidation
+- [ ] Update `Program.cs` DI registration for cache and repository
+- [ ] Update docs/129b with new architecture sections
+- [ ] Add unit tests for cache behavior
+- [ ] Add integration tests for DB + cache round-trip
+
+
+---
+
+# Decision: Serialization Alternatives Investigation (Feature 130)
+
+**Date:** 2026-04-10  
+**Author:** Alfred  
+**Status:** Ready for Scribe (merge to decisions.md)
+
+---
+
+## What Was Decided
+
+Investigated 7 serialization candidates for BudgetExperiment API to optimize bandwidth for Raspberry Pi ARM64 deployment. Evaluated each against Blazor WASM compatibility, ASP.NET Core support, OpenAPI tooling, and complexity.
+
+## The Decision
+
+### Immediate Action: Deploy Brotli HTTP Compression
+**Already configured in `Program.cs` (lines 75-85, 155).** Test on Raspberry Pi hardware.
+
+- **Benefit:** 40-45% bandwidth reduction on all API responses.
+- **Cost:** ~5% CPU overhead on ARM64 (negligible for total page load).
+- **Breaking changes:** None. Compression is transparent HTTP-level optimization.
+- **OpenAPI impact:** None. Scalar UI unaffected.
+- **Timeline:** This sprint (test on Pi).
+
+### Defer: Binary Serialization Formats
+MessagePack, CBOR, FlatBuffers, Avro — all deferred to future feature flag (if needed).
+
+**Rationale:**
+- Brotli provides sufficient bandwidth savings (40-45% vs JSON) without custom code.
+- Each binary format adds 50-200 KB to Blazor WASM bundle.
+- All binary formats require custom `OutputFormatter`/`InputFormatter` (maintenance burden).
+- All binary formats break OpenAPI/Scalar UI tooling (no schema introspection).
+- Only pursue if post-deployment metrics prove bandwidth is still a constraint.
+
+### Reject: Protocol Buffers + gRPC
+**Not recommended for this app.**
+
+**Rationale:**
+- gRPC is designed for polyglot microservices; BudgetExperiment is single-tier.
+- gRPC-Web in browser is a workaround, not a native fit.
+- Requires gRPC-Web proxy (e.g., Envoy) or custom middleware.
+- Breaking changes to API contract; existing clients break.
+- OpenAPI tooling incompatibility (gRPC uses proto, not OpenAPI).
+- Marginal bandwidth gain (0-15% over Brotli) does not justify operational complexity.
+
+### Reject: Apache Avro
+**Not recommended for this app.**
+
+**Rationale:**
+- Avro is optimized for big-data (Hadoop, Kafka); not idiomatic for HTTP APIs.
+- Schema management complexity (schema-on-read pattern is operational burden).
+- WASM bundle bloat (~200 KB gzipped, largest impact of all candidates).
+- No compelling advantage over MessagePack if binary format ever needed.
+- Team lacks Avro expertise in web context.
+
+## Monitoring & Future Reconsideration
+
+### If Brotli Deployment Shows Bandwidth is Still Inadequate
+1. Implement MessagePack as opt-in binary format via feature flag and Accept header.
+2. Client requests: `Accept: application/messagepack` opt-in (JSON default).
+3. Responses: automatic content negotiation (same format as request content-type).
+4. **No breaking changes** — JSON remains default.
+
+### If Large-Payload Exports Become a Performance Pain Point (10,000+ objects)
+1. Reconsider FlatBuffers for zero-copy deserialization semantics.
+2. Only for export/bulk download endpoints, not standard REST API.
+3. Measure GC pressure and memory bandwidth before pursuing.
+
+## Why This Matters
+
+- **Raspberry Pi is bandwidth-constrained.** A typical page load (5-6 API calls) can be 30-50 KB uncompressed. Brotli reduces this to 10-15 KB immediately.
+- **No breaking changes.** Brotli is transparent; all existing clients work without modification.
+- **Proven in production.** Every major API (Google, AWS, GitHub) uses Brotli compression. Industry standard.
+- **Binary formats add complexity without commensurate benefit.** The sweet spot is JSON + compression.
+
+## Implications
+
+1. **No code changes required** — Brotli is already configured.
+2. **Test on Raspberry Pi** — measure CPU, memory, and decompression transparency.
+3. **Document metrics** — bandwidth, CPU, memory post-deployment.
+4. **Keep binary format infrastructure in a future branch** (if ever needed) — `features/binary-serialization` skeleton with MessagePack formatters, feature flag, and content negotiation logic ready to go.
+
+## Appendix: Verdict Summary
+
+| Candidate | Recommendation | Rationale |
+|-----------|---|---|
+| **JSON + Brotli** | 🟢 Deploy now | 40-45% reduction, zero cost, transparent. |
+| **JSON + Source Gen** | 🟢 Already optimal | Baseline for uncompressed JSON. |
+| **MessagePack** | 🟡 Defer, opt-in if needed | High complexity, +5-10% over Brotli. |
+| **CBOR** | 🟡 Defer, niche | Slightly better than MessagePack, less ecosystem. |
+| **FlatBuffers** | 🟡 Defer, niche future | Zero-copy only valuable for 10,000+ objects. |
+| **Protobuf + gRPC** | 🔴 Reject | Architectural mismatch, breaking changes. |
+| **Apache Avro** | 🔴 Reject | Big-data focus, bundle bloat, not idiomatic. |
+
+---
+
+**Ready for Scribe:** Merge to `.squad/decisions.md` under "## Active Decisions" as a new decision record.
+
+
+---
+
+### 20260406-235342: User directive
+**By:** Fortinbra (via Copilot)
+**What:** Budget scopes (Personal vs Shared) do not fit the Kakeibo household-ledger model. There is only one scope — the shared family/household ledger. The BudgetScope enum and any personal/shared scope logic should be removed or collapsed to a single scope.
+**Why:** Kakeibo is explicitly a household ledger (家計簿). The concept of a personal scope alongside a shared scope introduces a duality that contradicts the philosophy. User decision — captured for team memory.
+
+
+---
+
+### 20260407-001043: User directive
+**By:** User (via Copilot)
+**What:** When a user changes a feature flag selection, the client cache must be invalidated immediately so the new state is visible right away. The user should not have to wait up to 1 hour for the cache to expire.
+**Implications:**
+- After a successful PUT /api/v1/admin/features/{flagName}, the admin UI must call IFeatureFlagClientService.RefreshAsync() to force a re-fetch
+- The admin toggle action is a two-step: (1) write to server, (2) refresh local cache
+- Lucius should update the Blazor client service to expose RefreshAsync() and call it from the admin toggle component
+- The 1-hour ResponseCache on GET /api/v1/features is still fine for passive reads; admin toggles bypass it by explicitly refreshing
+
+---
+
+### 20260407-000737: User directive
+**By:** User (via Copilot)
+**What:** A user's feature flag selections must persist across application restarts AND application updates (new Docker image deployments).
+**Why:** User request — the household instance owner customizes their feature set once and expects it to survive upgrades.
+**Implications:**
+- DB-backed storage already handles restart persistence (external Postgres survives container restart)
+- EF Core HasData() is PROHIBITED for feature flag seeding — it runs on every migration and can overwrite user customizations
+- Correct seeding strategy: application startup inserts ONLY missing flags (INSERT ... WHERE NOT EXISTS / ON CONFLICT DO NOTHING)
+- When a new flag is introduced in an app update, it gets seeded with its code-defined default ONLY if no row exists for it yet
+- User-set values in the DB are always the authoritative source of truth — migrations/deployments must never reset them
+- The 'default' value in code serves only as the initial seed value for new instances, not an override
+
+---
+
+### 20260407-000616: User directive
+**By:** User (via Copilot)
+**What:** Feature flags must be toggleable at runtime without restarting the application, with no performance impact on hot paths.
+**Why:** User wants to enable/disable features on a live instance (Raspberry Pi Docker deployment) without a container restart. Flags must not add per-request latency.
+**Implications:**
+- IOptions<T> (deployment-time only) is NOT sufficient — requires restart to pick up changes
+- IOptionsMonitor<T> enables hot-reload from config file but only works with file-based config, not Docker env vars
+- DB-backed flags with in-memory caching satisfies both runtime toggle AND zero hot-path overhead
+- Admin UI or API endpoint needed to toggle flags without SSH/file editing
+- Client-side cache TTL (Lucius proposed 1hr) must be reconsidered — shorter TTL or server push for fast propagation
+
+---
+
+# Decision: Feature Flag Implementation Approach
+
+**Author:** Lucius  
+**Date:** 2026-04-05  
+**Status:** Proposed (awaiting Alfred's review)
+
+## Summary
+
+Hand-rolled `FeatureFlagOptions` POCO with `IOptions<T>` injection, explicit configuration in `appsettings.json`, and `/api/v1/features` endpoint for Blazor client delivery. No external dependencies (no `Microsoft.FeatureManagement`).
+
+## Rationale
+
+- Simple on/off switches sufficient for gradual feature rollout to client UI
+- Zero external dependencies, aligns with "no magic" principle
+- Matches existing config patterns (`DatabaseOptions`, `AuthenticationOptions`, `ClientConfigOptions`)
+- Trivial to test (mock `IOptions<T>` or `HttpClient`)
+- Extensible: upgrade to `IOptionsMonitor<T>` for runtime toggles, or migrate to `Microsoft.FeatureManagement` (~2 hours) if targeting/A/B testing needed
+
+## Details
+
+See full implementation proposal: `docs/129b-feature-flag-implementation.md`
+
+**Key Architectural Decisions:**
+- **POCO location:** `BudgetExperiment.Shared` (shared by API + Client, matches `BudgetScope` pattern)
+- **API endpoint:** `/api/v1/features` (`[AllowAnonymous]`, 1-hour cache)
+- **Client service:** `IFeatureFlagService` fetched at startup, cached for session
+- **Default strategy:** Default-off for new features, default-on for completed features (via property initializers)
+- **Graceful degradation:** Client falls back to all-false if API unavailable (except completed features with `true` initializers)
+
+## Open Questions (for Alfred)
+
+1. Flag naming: feature-based (`Kakeibo`) or page-based (`KakeiboCategorizationPage`)?
+2. Inventory source-of-truth: code (`FeatureFlagOptions` properties) or separate `docs/feature-flag-inventory.md`?
+3. Component pattern: inline `@if (IsEnabled("Flag"))` or code-behind property?
+4. Backend enforcement: API endpoints check flags (404 if disabled) or client-only gating?
+
+## Next Steps
+
+1. Alfred reviews proposal, answers open questions
+2. Alfred confirms flag inventory aligns with architecture doc
+3. Lucius implements (POCO, controller, service, DI wiring) — ~2 hours
+4. Barbara writes tests (unit + integration) — ~3 hours
+
+
+---
+
+# Decision: Runtime Feature Flags Architecture Update
+
+**Date:** 2026-04-09  
+**By:** Lucius (Backend Dev)  
+**Status:** Implementation Proposed  
+**Related:** Alfred's decision in `alfred-runtime-feature-flags.md` (Option B approved)
+
+---
+
+## Context
+
+User requested runtime toggleability for feature flags without performance impacts. Alfred approved Option B (DB-backed + `IMemoryCache`) in `.squad/decisions/inbox/alfred-runtime-feature-flags.md`. Lucius updated `docs/129b-feature-flag-implementation.md` to reflect the new architecture.
+
+---
+
+## Architecture Summary
+
+**Storage:** PostgreSQL `FeatureFlags` table (`Name` TEXT PK, `IsEnabled` BOOL, `UpdatedAtUtc` TIMESTAMP).
+
+**Read Path:** Application `IFeatureFlagService` checks `IMemoryCache` first (key: `"feature:all"`, TTL: 5 minutes). Cache miss → fetch from DB via `IFeatureFlagRepository`, cache result.
+
+**Write Path:** Admin endpoint `PUT /api/v1/features/{flagName}` (requires `[Authorize]`) → `IFeatureFlagService.SetFlagAsync` → updates DB → invalidates cache immediately.
+
+**Client:** Blazor client fetches flags via `GET /api/v1/features` (public, cached 60 seconds) at startup. `IFeatureFlagClientService` exposes `IsEnabled(string flagName)` + `RefreshAsync()`.
+
+**Performance:** Zero per-request overhead (cache hit = in-memory dictionary lookup, < 1 µs). No DB access on read after initial cache load.
+
+---
+
+## Implementation Details
+
+### New Domain Entity
+- `FeatureFlag.cs` (Domain/Entities) — `Name`, `IsEnabled`, `UpdatedAtUtc`
+
+### Infrastructure
+- `FeatureFlagConfiguration.cs` (Infrastructure/Data/Config) — EF Core fluent config + `HasData()` seeds 17 flags from Feature 129 audit
+- `IFeatureFlagRepository` (Application interface) — `GetAllAsync`, `GetByNameAsync`, `UpdateAsync`
+- `FeatureFlagRepository` (Infrastructure implementation) — EF Core, `AsNoTracking` on reads
+
+### Application Service
+- `IFeatureFlagService` (Application interface) — `IsEnabledAsync`, `GetAllAsync`, `SetFlagAsync`
+- `FeatureFlagService` (Application implementation) — uses `IMemoryCache` (5-min TTL), invalidates on write
+- Requires `IMemoryCache` registration in Application `DependencyInjection.cs` (if not already present)
+
+### API Controller
+- `FeaturesController` (API/Controllers):
+  - `GET /api/v1/features` — returns all flags as `Dictionary<string, bool>`, `[AllowAnonymous]`, `ResponseCache(Duration = 60)`
+  - `PUT /api/v1/features/{flagName}` — body: `{"enabled": true/false}`, requires `[Authorize]`, returns 200 + updated state or 404
+- DTOs: `UpdateFeatureFlagRequest`, `UpdateFeatureFlagResponse`
+
+### Client Service
+- `IFeatureFlagClientService` (Client interface) — `Flags` (Dictionary), `IsEnabled`, `LoadFlagsAsync`, `RefreshAsync`
+- `FeatureFlagClientService` (Client implementation) — fetches from API, caches for session, graceful degradation (empty dict on API failure)
+
+### Seed Data (17 Flags from Feature 129 Audit)
+| Flag Name | Default | Type |
+|-----------|---------|------|
+| `Calendar:SpendingHeatmap` | `true` | [user-simplification] |
+| `Calendar:KakeiboOverlay` | `false` | [experimental] |
+| `Kakeibo:MonthlyReflectionPrompts` | `true` | [user-simplification] |
+| `Kakeibo:CalendarOverlay` | `false` | [experimental] (duplicate — consider consolidating) |
+| `Kaizen:MicroGoals` | `true` | [user-simplification] |
+| `Kaizen:Dashboard` | `false` | [experimental] |
+| `AI:ChatAssistant` | `true` | [user-simplification] + [experimental] |
+| `AI:RuleSuggestions` | `true` | [user-simplification] |
+| `AI:RecurringChargeDetection` | `true` | [user-simplification] |
+| `Reports:CustomReportBuilder` | `false` | [experimental] |
+| `Reports:LocationReport` | `true` | [user-simplification] |
+| `Charts:AdvancedCharts` | `false` | [experimental] |
+| `Charts:CandlestickChart` | `false` | [experimental] (consider folding into `Charts:AdvancedCharts`) |
+| `Paycheck:PaycheckPlanner` | `true` | [user-simplification] |
+| `Reconciliation:StatementReconciliation` | `true` | [user-simplification] |
+| `DataHealth:Dashboard` | `true` | [user-simplification] |
+| `Location:Geocoding` | `false` | [experimental] |
+
+---
+
+## Testing Strategy (Barbara's Responsibility)
+
+**Unit Tests:**
+- `FeatureFlagServiceTests` — cache hit/miss, `SetFlagAsync` invalidates cache, `IsEnabledAsync` correctness
+- `FeatureFlagRepositoryTests` — `GetAllAsync`, `GetByNameAsync`, `UpdateAsync` (use Testcontainers PostgreSQL or in-memory SQLite)
+- `FeaturesControllerTests` — GET returns flags from service, PUT requires auth, returns 200 or 404
+- `FeatureFlagClientServiceTests` — `LoadFlagsAsync` caches, `IsEnabled` correctness, graceful degradation on HTTP failure
+
+**Integration Tests:**
+- `FeaturesEndpointTests` (WebApplicationFactory) — `/api/v1/features` returns JSON from DB, verify `ResponseCache` headers (max-age=60)
+- PUT endpoint integration — toggle flag → verify DB updated, cache invalidated, GET returns new state
+
+**Performance:**
+- Micro-benchmark `IsEnabledAsync` cache hit path — expect < 1 µs (in-memory dictionary lookup)
+
+---
+
+## Migration & Rollout
+
+1. **Migration:** Create `FeatureFlags` table, seed 17 flags via `HasData()`
+2. **Backend:** Implement entity, repository, service, controller
+3. **Client:** Implement client service, load at startup
+4. **Existing features:** Wrap nav links in `@if (FeatureFlagService.IsEnabled("AI:ChatAssistant"))` — no behavior change (flag is `true` by default)
+5. **New features:** Add components behind `@if (FeatureFlagService.IsEnabled("Calendar:KakeiboOverlay"))` — hidden by default
+6. **Activation:** `PUT /api/v1/features/Calendar:KakeiboOverlay` with `{"enabled":true}` → feature appears after client refresh
+
+**No Breaking Changes:** Defaults align with current production state. Existing features remain visible unless explicitly toggled off.
+
+---
+
+## Estimated Effort
+
+- **Lucius (Implementation):** 6 hours (entity, migration, repository, service, controller, client service, DI wiring)
+- **Barbara (Tests):** 6 hours (unit + integration tests for all layers)
+- **Alfred (Review):** 1 hour (verify flag inventory matches Feature 129 audit)
+- **Total:** ~13 hours
+
+---
+
+## Future Extensions (NOT IN SCOPE)
+
+- **Per-user flags:** Add `UserFeatureFlagOverrides` table. Deferred until user-specific rollout is required (adds complexity).
+- **`Microsoft.FeatureManagement` migration:** If targeting, time windows, or external providers (Azure App Config, LaunchDarkly) are needed. Migration effort: ~4 hours.
+
+---
+
+## Implementation Checklist
+
+See `docs/129b-feature-flag-implementation.md` § 11 for full 21-item checklist.
+
+---
+
+## Decision Record
+
+**Rationale for DB-backed approach:**
+- Docker env vars don't hot-reload (requires container restart)
+- Modifying `appsettings.json` in containers is ephemeral/unsafe
+- Database is the only reliable runtime toggle mechanism across all deployment contexts (local dev, Docker, Raspberry Pi)
+- `IMemoryCache` (5-min TTL) delivers zero per-request overhead (cache hit = no DB access)
+- Client-side 60-second cache acceptable (1-hour eventual consistency is fine per Alfred's decision)
+
+**Hierarchical naming convention:**
+- Colon-separated (e.g., `Calendar:SpendingHeatmap`) matches Feature 129 audit inventory
+- Groups related flags, extensible to nested categories
+
+**Authentication:**
+- GET endpoint: `[AllowAnonymous]` (client needs flags before authentication)
+- PUT endpoint: `[Authorize]` (admin users only)
+
+**Graceful degradation:**
+- Client service returns empty dictionary on API failure (all flags off)
+- Completed features should not rely solely on flags (check authentication state, user settings, etc.)
+
+---
+
+**Next Steps:**
+1. Lucius implements per checklist (`docs/129b-feature-flag-implementation.md` § 11)
+2. Barbara writes tests (unit + integration)
+3. Alfred reviews flag inventory alignment with Feature 129 audit, approves for merge
+
+
+---
+
+
+
