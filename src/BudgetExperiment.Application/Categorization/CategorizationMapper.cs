@@ -42,11 +42,13 @@ public static class CategorizationMapper
     /// <param name="suggestion">The rule suggestion entity.</param>
     /// <param name="categoryName">The suggested category name (optional).</param>
     /// <param name="targetRuleName">The target rule name (optional).</param>
+    /// <param name="kakeiboCategory">The Kakeibo category string of the suggested budget category (optional).</param>
     /// <returns>The mapped DTO.</returns>
     public static RuleSuggestionDto ToDto(
         RuleSuggestion suggestion,
         string? categoryName = null,
-        string? targetRuleName = null)
+        string? targetRuleName = null,
+        string? kakeiboCategory = null)
     {
         return new RuleSuggestionDto
         {
@@ -61,6 +63,7 @@ public static class CategorizationMapper
             SuggestedMatchType = suggestion.SuggestedMatchType?.ToString(),
             SuggestedCategoryId = suggestion.SuggestedCategoryId,
             SuggestedCategoryName = categoryName,
+            SuggestedKakeiboCategory = kakeiboCategory,
             TargetRuleId = suggestion.TargetRuleId,
             TargetRuleName = targetRuleName,
             OptimizedPattern = suggestion.OptimizedPattern,

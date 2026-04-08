@@ -289,16 +289,23 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         CancellationToken ct = default)
     {
         var categories = await _categoryRepository.ListAsync(0, int.MaxValue, ct);
-        var categoryLookup = categories.ToDictionary(c => c.Id, c => c.Name);
+        var categoryLookup = categories.ToDictionary(c => c.Id, c => c);
 
         var rules = await _ruleRepository.ListAsync(0, int.MaxValue, ct);
         var ruleLookup = rules.ToDictionary(r => r.Id, r => r.Name);
 
-        return suggestions.Select(s => CategorizationMapper.ToDto(
-            s,
-            s.SuggestedCategoryId.HasValue ? categoryLookup.GetValueOrDefault(s.SuggestedCategoryId.Value) : null,
-            s.TargetRuleId.HasValue ? ruleLookup.GetValueOrDefault(s.TargetRuleId.Value) : null))
-            .ToList();
+        return suggestions.Select(s =>
+        {
+            BudgetCategory? category = s.SuggestedCategoryId.HasValue
+                ? categoryLookup.GetValueOrDefault(s.SuggestedCategoryId.Value)
+                : null;
+
+            return CategorizationMapper.ToDto(
+                s,
+                category?.Name,
+                s.TargetRuleId.HasValue ? ruleLookup.GetValueOrDefault(s.TargetRuleId.Value) : null,
+                category?.KakeiboCategory?.ToString());
+        }).ToList();
     }
 
     /// <inheritdoc/>
@@ -306,13 +313,12 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         RuleSuggestion suggestion,
         CancellationToken ct = default)
     {
-        string? categoryName = null;
+        BudgetCategory? category = null;
         string? ruleName = null;
 
         if (suggestion.SuggestedCategoryId.HasValue)
         {
-            var category = await _categoryRepository.GetByIdAsync(suggestion.SuggestedCategoryId.Value, ct);
-            categoryName = category?.Name;
+            category = await _categoryRepository.GetByIdAsync(suggestion.SuggestedCategoryId.Value, ct);
         }
 
         if (suggestion.TargetRuleId.HasValue)
@@ -321,7 +327,7 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
             ruleName = rule?.Name;
         }
 
-        return CategorizationMapper.ToDto(suggestion, categoryName, ruleName);
+        return CategorizationMapper.ToDto(suggestion, category?.Name, ruleName, category?.KakeiboCategory?.ToString());
     }
 
     private async Task<List<RuleSuggestion>> FilterDuplicateSuggestionsAsync(

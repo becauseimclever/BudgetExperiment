@@ -83,6 +83,14 @@ public sealed class RuleSuggestionDto
     }
 
     /// <summary>
+    /// Gets or sets the Kakeibo category of the suggested budget category. Null for Income/Transfer.
+    /// </summary>
+    public string? SuggestedKakeiboCategory
+    {
+        get; set;
+    }
+
+    /// <summary>
     /// Gets or sets the target rule ID for optimization suggestions.
     /// </summary>
     public Guid? TargetRuleId

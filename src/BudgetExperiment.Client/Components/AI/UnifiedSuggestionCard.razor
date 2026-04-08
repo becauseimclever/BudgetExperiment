@@ -45,6 +45,13 @@
                     <div class="detail-row">
                         <span class="detail-label">Category:</span>
                         <span>@_ruleItem.SuggestedCategoryName</span>
+                        @if (!string.IsNullOrEmpty(_ruleItem.SuggestedKakeiboCategory))
+                        {
+                            <span class="kakeibo-badge kakeibo-@_ruleItem.SuggestedKakeiboCategory.ToLowerInvariant()"
+                                  title="@_ruleItem.SuggestedKakeiboCategory (from @_ruleItem.SuggestedCategoryName category)">
+                                @_ruleItem.SuggestedKakeiboCategory
+                            </span>
+                        }
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(_ruleItem.Reasoning))
@@ -443,4 +450,20 @@ else if (_categoryItem != null)
         border-color: var(--danger, #ef4444);
         color: var(--danger, #ef4444);
     }
+
+    .kakeibo-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.1rem 0.45rem;
+        border-radius: 0.25rem;
+        color: #fff;
+        letter-spacing: 0.02em;
+        text-transform: capitalize;
+    }
+
+    .kakeibo-essentials { background: #3b82f6; }
+    .kakeibo-wants      { background: #10b981; }
+    .kakeibo-culture    { background: #a855f7; }
+    .kakeibo-unexpected { background: #f97316; }
 </style>
