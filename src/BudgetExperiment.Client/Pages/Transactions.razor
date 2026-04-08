@@ -1,4 +1,4 @@
-@page "/transactions"
+﻿@page "/transactions"
 
 @implements IDisposable
 
@@ -7,6 +7,7 @@
 @inject TransactionsViewModel ViewModel
 @inject IBudgetApiService ApiService
 @inject IToastService ToastService
+@inject IFeatureFlagClientService FeatureFlags
 
 <PageTitle>Transactions - Budget Experiment</PageTitle>
 
@@ -19,6 +20,23 @@
                           ActiveFilterCount="@ViewModel.ActiveFilterCount"
                           OnFiltersApplied="ViewModel.ApplyFiltersAsync"
                           OnFiltersCleared="ViewModel.ClearFiltersAsync" />
+
+    @if (FeatureFlags.IsEnabled("Kakeibo:TransactionFilter"))
+    {
+        <div class="kakeibo-filter">
+            <label for="kakeiboFilter" class="kakeibo-filter-label">Kakeibo Category</label>
+            <select id="kakeiboFilter"
+                    class="form-control kakeibo-filter-select"
+                    value="@(ViewModel.Filter.KakeiboCategory ?? string.Empty)"
+                    @onchange="OnKakeiboFilterChanged">
+                <option value="">All</option>
+                <option value="Essentials">Essentials</option>
+                <option value="Wants">Wants</option>
+                <option value="Culture">Culture</option>
+                <option value="Unexpected">Unexpected</option>
+            </select>
+        </div>
+    }
 
     <ErrorAlert Message="@ViewModel.ErrorMessage"
                 TraceId="@ViewModel.ErrorTraceId"
@@ -181,7 +199,15 @@
                                         @suggestion.CategoryName
                                     </button>
                                 }
-                            </td>
+                            
+                                @if (FeatureFlags.IsEnabled("Kakeibo:TransactionFilter") && !string.IsNullOrEmpty(txn.EffectiveKakeiboCategory))
+                                {
+                                    <span class="@($"kakeibo-badge kakeibo-badge-{txn.EffectiveKakeiboCategory.ToLowerInvariant()}")"
+                                          title="@(txn.IsKakeiboOverride ? $"{txn.EffectiveKakeiboCategory} (override)" : $"{txn.EffectiveKakeiboCategory} (from {txn.CategoryName ?? "category"})")"
+                                          aria-label="@($"Kakeibo: {txn.EffectiveKakeiboCategory}")">
+                                        @txn.EffectiveKakeiboCategory
+                                    </span>
+                                }</td>
                             <td class="text-right">
                                 <MoneyDisplay Amount="@txn.Amount.Amount" />
                             </td>
@@ -362,6 +388,9 @@
     [SupplyParameterFromQuery(Name = "pageSize")]
     public int? QueryPageSize { get; set; }
 
+    [SupplyParameterFromQuery(Name = "kakeiboCategory")]
+    public string? QueryKakeiboCategory { get; set; }
+
     private bool showEditModal;
     private bool isSubmitting;
     private string? saveErrorMessage;
@@ -389,7 +418,8 @@
             QuerySortBy,
             QuerySortDesc,
             QueryPage,
-            QueryPageSize);
+            QueryPageSize,
+            QueryKakeiboCategory);
         await ViewModel.InitializeAsync();
     }
 
@@ -543,5 +573,12 @@
     private void CancelBulkDelete()
     {
         showBulkDeleteConfirm = false;
+    }
+
+    private async Task OnKakeiboFilterChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        ViewModel.Filter.KakeiboCategory = string.IsNullOrEmpty(value) ? null : value;
+        await ViewModel.ApplyFiltersAsync();
     }
 }

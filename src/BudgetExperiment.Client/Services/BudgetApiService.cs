@@ -1,4 +1,4 @@
-// <copyright file="BudgetApiService.cs" company="BecauseImClever">
+﻿// <copyright file="BudgetApiService.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -110,7 +110,11 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
+    public async Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        string? kakeiboCategory = null)
     {
         try
         {
@@ -118,6 +122,11 @@ public sealed class BudgetApiService : IBudgetApiService
             if (accountId.HasValue)
             {
                 url += $"&accountId={accountId.Value}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(kakeiboCategory))
+            {
+                url += $"&kakeiboCategory={Uri.EscapeDataString(kakeiboCategory)}";
             }
 
             var result = await _httpClient.GetFromJsonAsync<List<TransactionDto>>(url, JsonOptions);
@@ -1171,6 +1180,11 @@ public sealed class BudgetApiService : IBudgetApiService
             queryParams.Add($"page={filter.Page}");
             queryParams.Add($"pageSize={filter.PageSize}");
 
+            if (!string.IsNullOrWhiteSpace(filter.KakeiboCategory))
+            {
+                queryParams.Add($"kakeiboCategory={Uri.EscapeDataString(filter.KakeiboCategory)}");
+            }
+
             var queryString = string.Join("&", queryParams);
             var result = await _httpClient.GetFromJsonAsync<UnifiedTransactionPageDto>(
                 $"api/v1/transactions/paged?{queryString}",
@@ -1345,12 +1359,21 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month)
+    public async Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(
+        int year,
+        int month,
+        bool groupByKakeibo = false)
     {
         try
         {
+            var url = $"api/v1/reports/categories/monthly?year={year}&month={month}";
+            if (groupByKakeibo)
+            {
+                url += "&groupByKakeibo=true";
+            }
+
             return await _httpClient.GetFromJsonAsync<MonthlyCategoryReportDto>(
-                $"api/v1/reports/categories/monthly?year={year}&month={month}",
+                url,
                 JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
@@ -1365,7 +1388,11 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null)
+    public async Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        bool groupByKakeibo = false)
     {
         try
         {
@@ -1373,6 +1400,11 @@ public sealed class BudgetApiService : IBudgetApiService
             if (accountId.HasValue)
             {
                 url += $"&accountId={accountId.Value}";
+            }
+
+            if (groupByKakeibo)
+            {
+                url += "&groupByKakeibo=true";
             }
 
             return await _httpClient.GetFromJsonAsync<DateRangeCategoryReportDto>(url, JsonOptions);
@@ -1389,7 +1421,12 @@ public sealed class BudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc />
-    public async Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null)
+    public async Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(
+        int months = 6,
+        int? endYear = null,
+        int? endMonth = null,
+        Guid? categoryId = null,
+        bool groupByKakeibo = false)
     {
         try
         {
@@ -1409,7 +1446,36 @@ public sealed class BudgetApiService : IBudgetApiService
                 url += $"&categoryId={categoryId.Value}";
             }
 
+            if (groupByKakeibo)
+            {
+                url += "&groupByKakeibo=true";
+            }
+
             return await _httpClient.GetFromJsonAsync<SpendingTrendsReportDto>(url, JsonOptions);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<BudgetSummaryDto?> GetBudgetComparisonReportAsync(int year, int month, bool groupByKakeibo = false)
+    {
+        try
+        {
+            var url = $"api/v1/reports/budget-comparison?year={year}&month={month}";
+            if (groupByKakeibo)
+            {
+                url += "&groupByKakeibo=true";
+            }
+
+            return await _httpClient.GetFromJsonAsync<BudgetSummaryDto>(url, JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
         {
@@ -2133,6 +2199,27 @@ public sealed class BudgetApiService : IBudgetApiService
         catch (AccessTokenNotAvailableException ex)
         {
             ex.Redirect();
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<KaizenDashboardDto?> GetKaizenDashboardAsync(int weeks = 12, CancellationToken ct = default)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<KaizenDashboardDto>(
+                $"api/v1/reports/kaizen-dashboard?weeks={weeks}",
+                JsonOptions,
+                ct);
+        }
+        catch (AccessTokenNotAvailableException ex)
+        {
+            ex.Redirect();
+            return null;
+        }
+        catch (HttpRequestException)
+        {
             return null;
         }
     }

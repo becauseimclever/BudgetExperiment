@@ -16,7 +16,18 @@
                 @if (Message.Action.Type == ChatActionType.ClarificationNeeded)
                 {
                     <div class="clarification-options">
-                        @if (Message.Action.Options is not null)
+                        @if (Message.Action.ClarificationType == ClarificationNeededActionType.AskKakeiboCategory)
+                        {
+                            @foreach (var option in KakeiboOptions)
+                            {
+                                <button class="btn btn-sm kakeibo-option @option.CssClass"
+                                        @onclick="() => HandleOptionClick(option.Label)"
+                                        disabled="@IsProcessing">
+                                    @option.Label
+                                </button>
+                            }
+                        }
+                        else if (Message.Action.Options is not null)
                         {
                             @foreach (var option in Message.Action.Options)
                             {
@@ -90,7 +101,15 @@
                             {
                                 <div class="detail-row">
                                     <span class="detail-label">Category:</span>
-                                    <span class="detail-value">@Message.Action.CategoryName</span>
+                                    <span class="detail-value">
+                                        @Message.Action.CategoryName
+                                        @if (!string.IsNullOrEmpty(Message.Action.KakeiboCategory))
+                                        {
+                                            <span class="kakeibo-badge @GetKakeiboBadgeClass(Message.Action.KakeiboCategory)">
+                                                @Message.Action.KakeiboCategory
+                                            </span>
+                                        }
+                                    </span>
                                 </div>
                             }
                         </div>
@@ -182,6 +201,14 @@
     [Parameter]
     public bool IsProcessing { get; set; }
 
+    private static readonly IReadOnlyList<KakeiboOption> KakeiboOptions =
+    [
+        new KakeiboOption("Essentials", "kakeibo-essentials"),
+        new KakeiboOption("Wants", "kakeibo-wants"),
+        new KakeiboOption("Culture", "kakeibo-culture"),
+        new KakeiboOption("Unexpected", "kakeibo-unexpected"),
+    ];
+
     private string GetMessageClass()
     {
         return Message.Role switch
@@ -230,4 +257,11 @@
     {
         await OnOptionSelected.InvokeAsync(value);
     }
+
+    private static string GetKakeiboBadgeClass(string category)
+    {
+        return $"kakeibo-{category.ToLowerInvariant()}";
+    }
+
+    private sealed record KakeiboOption(string Label, string CssClass);
 }

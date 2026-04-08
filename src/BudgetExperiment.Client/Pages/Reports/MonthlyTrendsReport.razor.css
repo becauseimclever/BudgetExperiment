@@ -74,6 +74,21 @@
     box-shadow: 0 0 0 2px var(--color-primary-bg, rgba(99, 102, 241, 0.1));
 }
 
+.kakeibo-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.kakeibo-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text);
+}
+
 .btn-back-calendar {
     display: inline-flex;
     align-items: center;

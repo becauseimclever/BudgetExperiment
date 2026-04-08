@@ -44,14 +44,20 @@ public sealed class ReportService : IReportService
     public async Task<MonthlyCategoryReportDto> GetMonthlyCategoryReportAsync(
         int year,
         int month,
+        bool groupByKakeibo = false,
         CancellationToken cancellationToken = default)
     {
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
         var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
-        var (totalSpending, totalIncome, categorySpending) = await this.BuildCategoryReportAsync(
-            startDate, endDate, accountId: null, currency, cancellationToken);
+        var (totalSpending, totalIncome, categorySpending, kakeiboGroupedSummary) = await this.BuildCategoryReportAsync(
+            startDate,
+            endDate,
+            accountId: null,
+            currency,
+            groupByKakeibo,
+            cancellationToken);
 
         return new MonthlyCategoryReportDto
         {
@@ -60,6 +66,7 @@ public sealed class ReportService : IReportService
             TotalSpending = new MoneyDto { Currency = currency, Amount = totalSpending },
             TotalIncome = new MoneyDto { Currency = currency, Amount = totalIncome },
             Categories = categorySpending,
+            KakeiboGroupedSummary = kakeiboGroupedSummary,
         };
     }
 
@@ -68,11 +75,17 @@ public sealed class ReportService : IReportService
         DateOnly startDate,
         DateOnly endDate,
         Guid? accountId = null,
+        bool groupByKakeibo = false,
         CancellationToken cancellationToken = default)
     {
         var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
-        var (totalSpending, totalIncome, categorySpending) = await this.BuildCategoryReportAsync(
-            startDate, endDate, accountId, currency, cancellationToken);
+        var (totalSpending, totalIncome, categorySpending, kakeiboGroupedSummary) = await this.BuildCategoryReportAsync(
+            startDate,
+            endDate,
+            accountId,
+            currency,
+            groupByKakeibo,
+            cancellationToken);
 
         return new DateRangeCategoryReportDto
         {
@@ -81,6 +94,7 @@ public sealed class ReportService : IReportService
             TotalSpending = new MoneyDto { Currency = currency, Amount = totalSpending },
             TotalIncome = new MoneyDto { Currency = currency, Amount = totalIncome },
             Categories = categorySpending,
+            KakeiboGroupedSummary = kakeiboGroupedSummary,
         };
     }
 
@@ -90,10 +104,11 @@ public sealed class ReportService : IReportService
         int? endYear = null,
         int? endMonth = null,
         Guid? categoryId = null,
+        bool groupByKakeibo = false,
         CancellationToken cancellationToken = default)
     {
         return _trendReportBuilder.GetSpendingTrendsAsync(
-            months, endYear, endMonth, categoryId, cancellationToken);
+            months, endYear, endMonth, categoryId, groupByKakeibo, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -148,6 +163,40 @@ public sealed class ReportService : IReportService
         return (totalSpending, totalIncome);
     }
 
+    private static KakeiboGroupedSummaryDto BuildKakeiboGroupedSummary(IEnumerable<Transaction> expenseTransactions)
+    {
+        var summary = new KakeiboGroupedSummaryDto();
+
+        foreach (var transaction in expenseTransactions)
+        {
+            var effectiveCategory = transaction.KakeiboOverride ?? transaction.Category?.KakeiboCategory;
+            if (effectiveCategory is null)
+            {
+                continue;
+            }
+
+            var amount = Math.Abs(transaction.Amount.Amount);
+            switch (effectiveCategory)
+            {
+                case KakeiboCategory.Essentials:
+                    summary.Essentials += amount;
+                    break;
+                case KakeiboCategory.Wants:
+                    summary.Wants += amount;
+                    break;
+                case KakeiboCategory.Culture:
+                    summary.Culture += amount;
+                    break;
+                case KakeiboCategory.Unexpected:
+                    summary.Unexpected += amount;
+                    break;
+            }
+        }
+
+        summary.Total = summary.Essentials + summary.Wants + summary.Culture + summary.Unexpected;
+        return summary;
+    }
+
     private async Task<List<DayTopCategoryDto>> BuildTopCategoriesAsync(
         List<Transaction> expenseTransactions,
         string currency,
@@ -187,11 +236,12 @@ public sealed class ReportService : IReportService
         return category?.Name ?? "Unknown";
     }
 
-    private async Task<(decimal TotalSpending, decimal TotalIncome, List<CategorySpendingDto> Categories)> BuildCategoryReportAsync(
+    private async Task<(decimal TotalSpending, decimal TotalIncome, List<CategorySpendingDto> Categories, KakeiboGroupedSummaryDto? KakeiboGroupedSummary)> BuildCategoryReportAsync(
         DateOnly startDate,
         DateOnly endDate,
         Guid? accountId,
         string currency,
+        bool groupByKakeibo,
         CancellationToken cancellationToken)
     {
         var transactions = await _transactionRepository.GetByDateRangeAsync(
@@ -207,7 +257,11 @@ public sealed class ReportService : IReportService
         var categorySpending = await this.BuildCategorySpendingListAsync(
             expenseTransactions, totalSpending, currency, cancellationToken);
 
-        return (totalSpending, totalIncome, categorySpending);
+        var kakeiboGroupedSummary = groupByKakeibo
+            ? BuildKakeiboGroupedSummary(expenseTransactions)
+            : null;
+
+        return (totalSpending, totalIncome, categorySpending, kakeiboGroupedSummary);
     }
 
     private async Task<List<CategorySpendingDto>> BuildCategorySpendingListAsync(

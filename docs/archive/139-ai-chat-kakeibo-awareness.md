@@ -1,6 +1,6 @@
 # Feature 139: AI Chat — Kakeibo Awareness
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -126,16 +126,16 @@ or (successful case with Kakeibo confirmation):
 
 ## Acceptance Criteria
 
-- [ ] AI confirmation messages include Kakeibo category when deterministic (e.g., "Dining (Wants)")
-- [ ] New `ClarificationNeededAction.AskKakeiboCategory` type is defined and handled in chat logic
-- [ ] When AI cannot determine Kakeibo category (or user input is ambiguous), the chat requests clarification with four-button/segmented control UI
-- [ ] User can select Kakeibo category directly in clarification UI and proceed
-- [ ] Chat response DTO supports the new clarification action type (serializes/deserializes correctly)
-- [ ] AI suggests Kakeibo intent in its reasoning text (e.g., "Dinner at Olive Garden — I'll categorize as Dining (Wants)")
-- [ ] Chat recognizes natural language Kakeibo queries ("How much on Wants?", "Culture spending this month?")
-- [ ] Kakeibo queries are answered via aggregation using the Kakeibo filter API (Feature 138)
-- [ ] Kakeibo badges in confirmation messages use correct colors (blue/green/purple/orange)
-- [ ] All unit and integration tests pass; API spec is updated
+- [x] AI confirmation messages include Kakeibo category when deterministic (e.g., "Dining (Wants)")
+- [x] New `ClarificationNeededAction.AskKakeiboCategory` type is defined and handled in chat logic
+- [x] When AI cannot determine Kakeibo category (or user input is ambiguous), the chat requests clarification with four-button/segmented control UI
+- [x] User can select Kakeibo category directly in clarification UI and proceed
+- [x] Chat response DTO supports the new clarification action type (serializes/deserializes correctly)
+- [x] AI suggests Kakeibo intent in its reasoning text (e.g., "Dinner at Olive Garden — I'll categorize as Dining (Wants)")
+- [x] Chat recognizes natural language Kakeibo queries ("How much on Wants?", "Culture spending this month?")
+- [x] Kakeibo queries are answered via aggregation using the Kakeibo filter API (Feature 138)
+- [x] Kakeibo badges in confirmation messages use correct colors (blue/green/purple/orange)
+- [x] All unit and integration tests pass; API spec is updated
 
 ---
 

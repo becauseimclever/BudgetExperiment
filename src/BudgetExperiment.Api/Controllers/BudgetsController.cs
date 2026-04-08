@@ -165,7 +165,11 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var summary = await _progressService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await _progressService.GetMonthlySummaryAsync(
+            year,
+            month,
+            groupByKakeibo: false,
+            cancellationToken);
         return this.Ok(summary);
     }
 
@@ -221,7 +225,11 @@ public sealed class BudgetsController : ControllerBase
             return this.BadRequest("Month must be between 1 and 12.");
         }
 
-        var summary = await _progressService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await _progressService.GetMonthlySummaryAsync(
+            year,
+            month,
+            groupByKakeibo: false,
+            cancellationToken);
         return this.Ok(summary);
     }
 

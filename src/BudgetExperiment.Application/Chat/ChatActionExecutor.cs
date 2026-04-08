@@ -80,11 +80,14 @@ public sealed class ChatActionExecutor : IChatActionExecutor
         };
 
         var created = await _transactionService.CreateAsync(dto, cancellationToken);
+        var kakeiboNote = string.IsNullOrWhiteSpace(created.EffectiveKakeiboCategory)
+            ? string.Empty
+            : $" Recorded as **{created.EffectiveKakeiboCategory}** (Kakeibo).";
         return new ActionExecutionResult(
             Success: true,
             ActionType: ChatActionType.CreateTransaction,
             CreatedEntityId: created.Id,
-            Message: $"Created transaction: {action.Description} for {action.Amount:C}");
+            Message: $"Created transaction: {action.Description} for {action.Amount:C}.{kakeiboNote}");
     }
 
     private async Task<ActionExecutionResult> ExecuteTransferActionAsync(

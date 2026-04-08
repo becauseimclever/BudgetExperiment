@@ -84,4 +84,9 @@ public sealed class BudgetSummaryDto
     /// Gets or sets the progress for each category.
     /// </summary>
     public IReadOnlyList<BudgetProgressDto> CategoryProgress { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the optional Kakeibo grouped summary.
+    /// </summary>
+    public KakeiboGroupedSummaryDto? KakeiboGroupedSummary { get; set; }
 }

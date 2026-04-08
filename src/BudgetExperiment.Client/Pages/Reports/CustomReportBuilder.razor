@@ -2,76 +2,109 @@
 
 @using System.Text.Json
 @using BudgetExperiment.Client.Models
+@using BudgetExperiment.Client.Services
 
 @inject IBudgetApiService ApiService
+@inject IFeatureFlagClientService FeatureFlags
 @inject IJSRuntime JsRuntime
 @inject IToastService ToastService
 
 <PageTitle>Custom Report Builder - Budget Experiment</PageTitle>
 
-<div class="page-container">
-    <PageHeader Title="Custom Report Builder">
-        <Actions>
-            <button class="btn-secondary" type="button" @onclick="CreateNewLayout" disabled="@isSaving">
-                <Icon Name="plus" Size="16" />
-                New Layout
-            </button>
-            <button class="btn-primary" type="button" @onclick="SaveLayoutAsync" disabled="@isSaving || currentLayout == null">
-                <Icon Name="save" Size="16" />
-                @(isSaving ? "Saving..." : "Save")
-            </button>
-        </Actions>
-    </PageHeader>
+@if (!FeatureFlags.IsEnabled(FeatureFlagName))
+{
+    <div class="page-container">
+        <PageHeader Title="Custom Report Builder" />
+        <div class="empty-state">
+            <Icon Name="lock" Size="48" />
+            <p>Custom Reports Builder is currently disabled.</p>
+            <p class="empty-state-hint">
+                Enable it in <a href="settings">Settings &gt; Feature Flags</a>.
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="page-container">
+        <PageHeader Title="Custom Report Builder">
+            <Actions>
+                <button class="btn-secondary" type="button" @onclick="CreateNewLayout" disabled="@isSaving">
+                    <Icon Name="plus" Size="16" />
+                    New Layout
+                </button>
+                <button class="btn-primary" type="button" @onclick="SaveLayoutAsync" disabled="@isSaving || currentLayout == null">
+                    <Icon Name="save" Size="16" />
+                    @(isSaving ? "Saving..." : "Save")
+                </button>
+            </Actions>
+        </PageHeader>
 
-    <div class="builder-toolbar">
-        <div class="layout-selector">
-            <label for="layout-select">Layout</label>
-            <select id="layout-select" @onchange="HandleLayoutChange" disabled="@isSaving">
-                <option value="">Select layout</option>
-                @foreach (var savedLayout in layouts)
-                {
-                    <option value="@savedLayout.Id" selected="@(currentLayout?.Id == savedLayout.Id)">@savedLayout.Name</option>
-                }
-            </select>
-        </div>
-        <div class="layout-name">
-            <label for="layout-name">Name</label>
-            <input id="layout-name" type="text" @bind="layoutName" disabled="@isSaving || currentLayout == null" />
-        </div>
-        <div class="layout-preset">
-            <label for="layout-preset">Starter Template</label>
-            <div class="layout-preset-controls">
-                <select id="layout-preset" @bind="selectedPresetId" disabled="@isSaving">
-                    <option value="">Select template</option>
-                    @foreach (var preset in layoutPresets)
+        @if (showEducationalNote)
+        {
+            <div class="alert alert-info alert-dismissible" role="alert">
+                <span>
+                    The calendar is your primary reflection surface. Custom reports are for deep-dive analysis only.
+                    If you find yourself spending more time here than on the calendar, consider whether the report is serving
+                    your budgeting goals.
+                </span>
+                <button type="button" class="btn-close" aria-label="Dismiss" @onclick="DismissEducationalNoteAsync">×</button>
+            </div>
+        }
+
+        <div class="builder-toolbar">
+            <div class="layout-selector">
+                <label for="layout-select">Layout</label>
+                <select id="layout-select" @onchange="HandleLayoutChange" disabled="@isSaving">
+                    <option value="">Select layout</option>
+                    @foreach (var savedLayout in layouts)
                     {
-                        <option value="@preset.Id">@preset.Name</option>
+                        <option value="@savedLayout.Id" selected="@(currentLayout?.Id == savedLayout.Id)">@savedLayout.Name</option>
                     }
                 </select>
-                <button class="btn-secondary" type="button" @onclick="ApplyPresetAsync" disabled="@isSaving || string.IsNullOrWhiteSpace(selectedPresetId)">
-                    Apply
-                </button>
+            </div>
+            <div class="layout-name">
+                <label for="layout-name">Name</label>
+                <input id="layout-name" type="text" @bind="layoutName" disabled="@isSaving || currentLayout == null" />
+            </div>
+            <div class="layout-preset">
+                <label for="layout-preset">Starter Template</label>
+                <div class="layout-preset-controls">
+                    <select id="layout-preset" @bind="selectedPresetId" disabled="@isSaving">
+                        <option value="">Select template</option>
+                        @foreach (var preset in layoutPresets)
+                        {
+                            <option value="@preset.Id">@preset.Name</option>
+                        }
+                    </select>
+                    <button class="btn-secondary" type="button" @onclick="ApplyPresetAsync" disabled="@isSaving || string.IsNullOrWhiteSpace(selectedPresetId)">
+                        Apply
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="builder-grid">
-        <WidgetPalette Items="paletteItems" OnDragStart="HandleDragStart" />
-        <ReportCanvas ReportLayout="layoutDefinition"
-                      SelectedWidgetId="selectedWidgetId"
-                      OnSelectWidget="HandleSelectWidget"
-                      OnDropWidget="HandleDrop"
-                      OnDuplicate="HandleDuplicateWidget"
-                      OnRemove="HandleRemoveWidget" />
-        <WidgetConfigPanel Widget="SelectedWidget" />
+        <div class="builder-grid">
+            <WidgetPalette Items="paletteItems" OnDragStart="HandleDragStart" />
+            <ReportCanvas ReportLayout="layoutDefinition"
+                          SelectedWidgetId="selectedWidgetId"
+                          OnSelectWidget="HandleSelectWidget"
+                          OnDropWidget="HandleDrop"
+                          OnDuplicate="HandleDuplicateWidget"
+                          OnRemove="HandleRemoveWidget" />
+            <WidgetConfigPanel Widget="SelectedWidget" />
+        </div>
     </div>
-</div>
+}
 
 @code {
     private readonly JsonSerializerOptions jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
+
+    private const string FeatureFlagName = "Reports:CustomReportBuilder";
+    private const string EducationalNoteStorageKey = "customReportBuilderEducationalNoteDismissed";
 
     private IReadOnlyList<CustomReportLayoutDto> layouts = [];
     private CustomReportLayoutDto? currentLayout;
@@ -81,6 +114,7 @@
     private Guid? selectedWidgetId;
     private string? selectedPresetId;
     private bool isSaving;
+    private bool showEducationalNote = true;
 
     private readonly IReadOnlyList<ReportWidgetPaletteItem> paletteItems =
     [
@@ -113,7 +147,51 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!FeatureFlags.IsEnabled(FeatureFlagName))
+        {
+            return;
+        }
+
         await LoadLayoutsAsync();
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !FeatureFlags.IsEnabled(FeatureFlagName))
+        {
+            return;
+        }
+
+        await LoadEducationalNoteStateAsync();
+    }
+
+    private async Task LoadEducationalNoteStateAsync()
+    {
+        try
+        {
+            var dismissed = await JsRuntime.InvokeAsync<string?>("localStorage.getItem", EducationalNoteStorageKey);
+            showEducationalNote = !string.Equals(dismissed, "true", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            showEducationalNote = true;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task DismissEducationalNoteAsync()
+    {
+        showEducationalNote = false;
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("localStorage.setItem", EducationalNoteStorageKey, "true");
+        }
+        catch
+        {
+            // Ignore storage errors
+        }
     }
 
     private async Task LoadLayoutsAsync()

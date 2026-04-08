@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Suggestion Chip
    Inline category suggestion for uncategorized transactions
    ========================================================================== */
@@ -29,3 +29,15 @@
 .suggestion-chip .icon {
     opacity: 0.7;
 }
+
+/* Kakeibo Filter Bar */
+.kakeibo-filter { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.kakeibo-filter-label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); white-space: nowrap; }
+.kakeibo-filter-select { max-width: 180px; }
+
+/* Kakeibo Badges */
+.kakeibo-badge { display: inline-flex; align-items: center; padding: 1px 6px; margin-left: var(--space-1); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); line-height: 1.5; border-radius: var(--radius-full); white-space: nowrap; cursor: default; }
+.kakeibo-badge-essentials { color: #1d4ed8; background-color: #dbeafe; }
+.kakeibo-badge-wants { color: #065f46; background-color: #d1fae5; }
+.kakeibo-badge-culture { color: #6b21a8; background-color: #f3e8ff; }
+.kakeibo-badge-unexpected { color: #9a3412; background-color: #ffedd5; }

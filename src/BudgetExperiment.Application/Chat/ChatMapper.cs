@@ -70,6 +70,7 @@ public static class ChatMapper
                 dto.Description = txn.Description;
                 dto.CategoryId = txn.CategoryId;
                 dto.CategoryName = txn.Category;
+                dto.KakeiboCategory = txn.KakeiboCategory?.ToString();
                 break;
 
             case CreateTransferAction transfer:
@@ -103,6 +104,7 @@ public static class ChatMapper
 
             case ClarificationNeededAction clarification:
                 dto.ClarificationQuestion = clarification.Question;
+                dto.ClarificationType = clarification.ClarificationType;
                 dto.ClarificationFieldName = clarification.FieldName;
                 dto.Options = clarification.Options.Select(o => new ClarificationOptionDto
                 {

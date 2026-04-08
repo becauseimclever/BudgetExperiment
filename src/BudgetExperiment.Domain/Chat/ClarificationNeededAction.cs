@@ -18,6 +18,11 @@ public sealed record ClarificationNeededAction : ChatAction
     public string Question { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the clarification request type.
+    /// </summary>
+    public ClarificationNeededActionType ClarificationType { get; init; } = ClarificationNeededActionType.General;
+
+    /// <summary>
     /// Gets the name of the field that needs clarification.
     /// </summary>
     public string FieldName { get; init; } = string.Empty;

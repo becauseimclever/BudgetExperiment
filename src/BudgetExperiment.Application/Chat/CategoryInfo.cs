@@ -9,4 +9,5 @@ namespace BudgetExperiment.Application.Chat;
 /// </summary>
 /// <param name="Id">The category identifier.</param>
 /// <param name="Name">The category name.</param>
-public sealed record CategoryInfo(Guid Id, string Name);
+/// <param name="KakeiboCategory">The Kakeibo category for the budget category.</param>
+public sealed record CategoryInfo(Guid Id, string Name, KakeiboCategory? KakeiboCategory = null);

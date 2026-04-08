@@ -1,6 +1,6 @@
 # Feature 138: Transactions List — Kakeibo Filter and Badge
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@
 
 ## Feature Flag
 
-**Flag Name:** `Features:Kakeibo:TransactionFilter`  
+**Flag Name:** `Kakeibo:TransactionFilter`  
 **Default Value:** `true` (visible by default; controls whether filter dropdown and badges appear)  
 **When Enabled:** Kakeibo filter dropdown and category badges are displayed on the transactions list page
 
@@ -49,16 +49,9 @@ GET /api/v1/transactions?kakeiboCategory=Wants
 
 **Modified Response DTO:**
 ```csharp
-public class TransactionSummaryDto
+public class TransactionDto
 {
-    public Guid Id { get; set; }
-    public DateOnly Date { get; set; }
-    public string AccountName { get; set; }
-    public decimal Amount { get; set; }
-    public string CategoryName { get; set; }
-    public string? Note { get; set; }
-    // NEW FIELD:
-    public string? EffectiveKakeiboCategory { get; set; } // null for Income/Transfer, e.g., "Wants"
+    public string? EffectiveKakeiboCategory { get; set; } // null for Income/Transfer
 }
 ```
 
@@ -96,24 +89,24 @@ public class TransactionSummaryDto
 **Filter State Management:**
 - Store selected `kakeiboCategory` in component state
 - Pass as query parameter to API on filter change
-- Persist filter selection to `localStorage` (so filter state survives page reload)
+- Persist filter selection to the query string (so filter state survives page reload)
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Feature flag `Features:Kakeibo:TransactionFilter` is defined and controls badge/filter visibility
-- [ ] API endpoint `GET /api/v1/transactions?kakeiboCategory=Wants` correctly filters transactions by effective Kakeibo category
-- [ ] `TransactionSummaryDto` includes `EffectiveKakeiboCategory` field (resolved server-side)
-- [ ] Effective Kakeibo category is resolved correctly: override takes precedence over category default
-- [ ] Income and Transfer transactions have `null` EffectiveKakeiboCategory and are excluded from Kakeibo filters
-- [ ] Kakeibo filter dropdown appears above transaction table with options: All / Essentials / Wants / Culture / Unexpected
-- [ ] Kakeibo badge (colored icon) displays on each Expense transaction row
-- [ ] Badge tooltip shows category source (e.g., "Wants (from Dining)" or "Culture (override)")
-- [ ] Filter state persists to `localStorage` across page reloads
-- [ ] When filter is changed, page fetches new results via API and updates display
-- [ ] Feature flag hides dropdown and badges when disabled
-- [ ] All unit and integration tests pass; OpenAPI spec is updated
+- [x] Feature flag `Kakeibo:TransactionFilter` is defined and controls badge/filter visibility
+- [x] API endpoint `GET /api/v1/transactions?kakeiboCategory=Wants` correctly filters transactions by effective Kakeibo category
+- [x] `TransactionDto` includes `EffectiveKakeiboCategory` field (resolved server-side)
+- [x] Effective Kakeibo category is resolved correctly: override takes precedence over category default
+- [x] Income and Transfer transactions have `null` EffectiveKakeiboCategory and are excluded from Kakeibo filters
+- [x] Kakeibo filter dropdown appears above transaction table with options: All / Essentials / Wants / Culture / Unexpected
+- [x] Kakeibo badge (colored icon) displays on each Expense transaction row
+- [x] Badge tooltip shows category source (e.g., "Wants (from Dining)" or "Culture (override)")
+- [x] Filter state persists to the query string across page reloads
+- [x] When filter is changed, page fetches new results via API and updates display
+- [x] Feature flag hides dropdown and badges when disabled
+- [x] All unit and integration tests pass; OpenAPI spec is updated
 
 ---
 

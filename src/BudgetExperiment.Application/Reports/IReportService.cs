@@ -16,9 +16,14 @@ public interface IReportService
     /// </summary>
     /// <param name="year">The year.</param>
     /// <param name="month">The month (1-12).</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The monthly category report DTO.</returns>
-    Task<MonthlyCategoryReportDto> GetMonthlyCategoryReportAsync(int year, int month, CancellationToken cancellationToken = default);
+    Task<MonthlyCategoryReportDto> GetMonthlyCategoryReportAsync(
+        int year,
+        int month,
+        bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the category spending report for an arbitrary date range.
@@ -26,9 +31,15 @@ public interface IReportService
     /// <param name="startDate">The start date (inclusive).</param>
     /// <param name="endDate">The end date (inclusive).</param>
     /// <param name="accountId">Optional account filter.</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The date range category report DTO.</returns>
-    Task<DateRangeCategoryReportDto> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default);
+    Task<DateRangeCategoryReportDto> GetCategoryReportByRangeAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets spending trends over multiple months.
@@ -37,9 +48,16 @@ public interface IReportService
     /// <param name="endYear">Optional end year (defaults to current).</param>
     /// <param name="endMonth">Optional end month (defaults to current).</param>
     /// <param name="categoryId">Optional category filter.</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The spending trends report DTO.</returns>
-    Task<SpendingTrendsReportDto> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null, CancellationToken cancellationToken = default);
+    Task<SpendingTrendsReportDto> GetSpendingTrendsAsync(
+        int months = 6,
+        int? endYear = null,
+        int? endMonth = null,
+        Guid? categoryId = null,
+        bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a spending summary for a single day.

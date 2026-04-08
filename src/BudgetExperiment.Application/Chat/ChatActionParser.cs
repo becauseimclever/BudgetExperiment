@@ -111,6 +111,7 @@ public static class ChatActionParser
         var fieldName = clarProp.TryGetProperty("field", out var fProp)
             ? fProp.GetString() ?? "unknown"
             : "unknown";
+        var clarificationType = ParseClarificationType(clarProp, fieldName);
 
         var options = new List<ClarificationOption>();
         if (clarProp.TryGetProperty("options", out var optsProp) && optsProp.ValueKind == JsonValueKind.Array)
@@ -124,6 +125,7 @@ public static class ChatActionParser
         return new ClarificationNeededAction
         {
             Question = question,
+            ClarificationType = clarificationType,
             FieldName = fieldName,
             Options = options,
         };
@@ -149,6 +151,7 @@ public static class ChatActionParser
             ? catProp.GetString()
             : null;
         var categoryId = ParseGuid(data, "categoryId");
+        var kakeiboCategory = ResolveKakeiboCategory(categoryId, categories);
 
         if (!accountId.HasValue)
         {
@@ -179,6 +182,7 @@ public static class ChatActionParser
             Description = description,
             Category = category,
             CategoryId = categoryId,
+            KakeiboCategory = kakeiboCategory,
         };
     }
 
@@ -436,6 +440,34 @@ public static class ChatActionParser
         var label = opt.TryGetProperty("label", out var lProp) ? lProp.GetString() ?? string.Empty : string.Empty;
         var value = opt.TryGetProperty("value", out var vProp) ? vProp.GetString() ?? string.Empty : string.Empty;
         return new ClarificationOption { Label = label, Value = value, EntityId = ParseEntityId(opt) };
+    }
+
+    private static ClarificationNeededActionType ParseClarificationType(JsonElement clarProp, string fieldName)
+    {
+        if (clarProp.TryGetProperty("clarificationType", out var typeProp) && typeProp.ValueKind == JsonValueKind.String)
+        {
+            var typeText = typeProp.GetString();
+            if (!string.IsNullOrWhiteSpace(typeText) &&
+                Enum.TryParse<ClarificationNeededActionType>(typeText, true, out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return string.Equals(fieldName, "kakeiboCategory", StringComparison.OrdinalIgnoreCase)
+            ? ClarificationNeededActionType.AskKakeiboCategory
+            : ClarificationNeededActionType.General;
+    }
+
+    private static KakeiboCategory? ResolveKakeiboCategory(Guid? categoryId, IReadOnlyList<CategoryInfo> categories)
+    {
+        if (!categoryId.HasValue)
+        {
+            return null;
+        }
+
+        var category = categories.FirstOrDefault(c => c.Id == categoryId.Value);
+        return category?.KakeiboCategory;
     }
 
     private static Guid? ParseEntityId(JsonElement opt)

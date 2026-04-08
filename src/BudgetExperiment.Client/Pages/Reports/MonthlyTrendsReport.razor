@@ -7,6 +7,8 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
+@inject IFeatureFlagClientService FeatureFlags
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Monthly Trends - Budget Experiment</PageTitle>
 
@@ -47,6 +49,18 @@
                 }
             </select>
         </div>
+
+        @if (FeatureFlags.IsEnabled(KakeiboFeatureFlag))
+        {
+            <div class="kakeibo-toggle">
+                <label class="kakeibo-toggle-label">
+                    <input type="checkbox"
+                           @bind="groupByKakeibo"
+                           @bind:after="HandleGroupByKakeiboChanged" />
+                    Group by Kakeibo
+                </label>
+            </div>
+        }
     </div>
 
     <ErrorAlert Message="@errorMessage"
@@ -75,6 +89,13 @@
                           ShowLegend="true"
                           AriaLabel="@($"Monthly spending trends over {selectedMonths} months")" />
             </div>
+
+            @if (FeatureFlags.IsEnabled(KakeiboFeatureFlag) && groupByKakeibo && kakeiboSummary != null)
+            {
+                <KakeiboSummaryRow Summary="kakeiboSummary"
+                                   CurrencyCode="@report!.AverageMonthlySpending.Currency"
+                                   Title="Kakeibo Summary" />
+            }
 
             <div class="summary-section">
                 <div class="summary-card">
@@ -153,9 +174,14 @@
     private IReadOnlyList<StackedAreaSeries> stackedAreaSeries = [];
     private int selectedMonths = 6;
     private Guid? selectedCategoryId;
+    private KakeiboGroupedSummaryDto? kakeiboSummary;
     private string? errorMessage;
     private bool isLoading = true;
     private bool isRetrying;
+    private bool groupByKakeibo;
+
+    private const string KakeiboFeatureFlag = "Kakeibo:TransactionFilter";
+    private const string KakeiboStorageKey = "report:monthly-trends:groupByKakeibo";
 
     private static readonly int[] monthOptions = [6, 12, 24];
 
@@ -173,6 +199,7 @@
     protected override async Task OnInitializedAsync()
     {
         ScopeService.ScopeChanged += HandleScopeChanged;
+        await LoadGroupByPreferenceAsync();
 
         // Load categories and report in parallel
         var categoriesTask = ApiService.GetCategoriesAsync(activeOnly: true);
@@ -213,10 +240,18 @@
     {
         try
         {
-            report = await ApiService.GetSpendingTrendsAsync(selectedMonths, categoryId: selectedCategoryId);
+            report = await ApiService.GetSpendingTrendsAsync(
+                selectedMonths,
+                categoryId: selectedCategoryId,
+                groupByKakeibo: groupByKakeibo);
             if (report != null)
             {
+                kakeiboSummary = groupByKakeibo ? report.KakeiboGroupedSummary : null;
                 BuildChartData();
+            }
+            else
+            {
+                kakeiboSummary = null;
             }
         }
         catch (Exception ex)
@@ -226,6 +261,49 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task HandleGroupByKakeiboChanged()
+    {
+        await SaveGroupByPreferenceAsync();
+        await LoadReportAsync();
+    }
+
+    private async Task LoadGroupByPreferenceAsync()
+    {
+        if (!FeatureFlags.IsEnabled(KakeiboFeatureFlag))
+        {
+            groupByKakeibo = false;
+            return;
+        }
+
+        try
+        {
+            var saved = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", KakeiboStorageKey);
+            if (bool.TryParse(saved, out var parsed))
+            {
+                groupByKakeibo = parsed;
+            }
+        }
+        catch
+        {
+            groupByKakeibo = false;
+        }
+    }
+
+    private async Task SaveGroupByPreferenceAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync(
+                "localStorage.setItem",
+                KakeiboStorageKey,
+                groupByKakeibo.ToString().ToLowerInvariant());
+        }
+        catch
+        {
+            // Ignore localStorage errors
         }
     }
 

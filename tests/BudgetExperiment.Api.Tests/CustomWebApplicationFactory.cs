@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Infrastructure;
 using BudgetExperiment.Infrastructure.Persistence;
+using BudgetExperiment.Infrastructure.Seeding;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -69,6 +70,9 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
         await db.Database.MigrateAsync();
         TruncateAllTables(db);
+        await FeatureFlagSeeder.SeedAsync(db);
+        await db.Database.ExecuteSqlRawAsync(
+            """UPDATE "FeatureFlags" SET "IsEnabled" = true WHERE "Name" = 'Reports:CustomReportBuilder'""");
     }
 
     /// <inheritdoc />

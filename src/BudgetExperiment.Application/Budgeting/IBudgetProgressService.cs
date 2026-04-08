@@ -26,7 +26,12 @@ public interface IBudgetProgressService
     /// </summary>
     /// <param name="year">The year.</param>
     /// <param name="month">The month (1-12).</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The monthly budget summary DTO.</returns>
-    Task<BudgetSummaryDto> GetMonthlySummaryAsync(int year, int month, CancellationToken cancellationToken = default);
+    Task<BudgetSummaryDto> GetMonthlySummaryAsync(
+        int year,
+        int month,
+        bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default);
 }

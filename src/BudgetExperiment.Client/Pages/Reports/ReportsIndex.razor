@@ -1,5 +1,9 @@
 @page "/reports"
 
+@using BudgetExperiment.Client.Services
+
+@inject IFeatureFlagClientService FeatureFlags
+
 <PageTitle>Reports - Budget Experiment</PageTitle>
 
 <div class="page-container">
@@ -47,19 +51,6 @@
             </div>
         </a>
 
-        <a href="reports/custom-builder" class="report-card">
-            <div class="report-icon">
-                <Icon Name="layout" Size="48" />
-            </div>
-            <div class="report-content">
-                <h3>Custom Report Builder</h3>
-                <p>Compose your own report dashboard with drag-and-drop widgets.</p>
-            </div>
-            <div class="report-arrow">
-                <Icon Name="chevron-right" Size="20" />
-            </div>
-        </a>
-
         <a href="reports/dashboard" class="report-card">
             <div class="report-icon">
                 <Icon Name="layers" Size="48" />
@@ -72,5 +63,45 @@
                 <Icon Name="chevron-right" Size="20" />
             </div>
         </a>
+
+        @if (FeatureFlags.IsEnabled("Kaizen:Dashboard"))
+        {
+            <a href="reports/kaizen-dashboard" class="report-card">
+                <div class="report-icon">
+                    <Icon Name="trending-up" Size="48" />
+                </div>
+                <div class="report-content">
+                    <h3>Kaizen Dashboard</h3>
+                    <p>12-week spending trend by Kakeibo category.</p>
+                </div>
+                <div class="report-arrow">
+                    <Icon Name="chevron-right" Size="20" />
+                </div>
+            </a>
+        }
+        @if (FeatureFlags.IsEnabled("Reports:CustomReportBuilder"))
+        {
+            <a href="reports/custom-builder" class="report-card">
+                <div class="report-icon">
+                    <Icon Name="layout" Size="48" />
+                </div>
+                <div class="report-content">
+                    <h3>Custom Report Builder</h3>
+                    <p>Compose your own report dashboard with drag-and-drop widgets.</p>
+                </div>
+                <div class="report-arrow">
+                    <Icon Name="chevron-right" Size="20" />
+                </div>
+            </a>
+        }
     </div>
+
+    @if (!FeatureFlags.IsEnabled("Reports:CustomReportBuilder"))
+    {
+        <div class="alert alert-info mt-3" role="alert">
+            Custom Reports Builder is currently disabled. Enable it in
+            <a href="settings">Settings &gt; Feature Flags</a>.
+        </div>
+    }
 </div>
+

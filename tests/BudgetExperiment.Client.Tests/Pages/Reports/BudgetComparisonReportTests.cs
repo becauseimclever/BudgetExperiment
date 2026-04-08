@@ -7,6 +7,7 @@ using System.Globalization;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Pages.Reports;
 using BudgetExperiment.Client.Services;
+using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
 
 using Bunit;
@@ -37,6 +38,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IToastService, ToastService>();
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
+        this.Services.AddSingleton<IFeatureFlagClientService>(new StubFeatureFlagClientService());
     }
 
     /// <inheritdoc/>
@@ -51,10 +53,10 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     public new Task DisposeAsync() => base.DisposeAsync().AsTask();
 
     /// <summary>
-    /// Verifies that the page calls GetBudgetSummaryAsync (existing method, no new API method).
+    /// Verifies that the page calls GetBudgetComparisonReportAsync.
     /// </summary>
     [Fact]
-    public void Page_CallsExistingGetBudgetSummaryAsync()
+    public void Page_CallsBudgetComparisonReportAsync()
     {
         // Arrange
         stubApiService.BudgetSummaryResult = CreateTestSummary();
@@ -63,7 +65,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         var cut = Render<BudgetComparisonReport>();
 
         // Assert
-        Assert.True(stubApiService.GetBudgetSummaryCalled);
+        Assert.True(stubApiService.GetBudgetComparisonCalled);
     }
 
     /// <summary>
@@ -214,39 +216,41 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
     /// <summary>
     /// Verifies that clicking Previous month navigates to the previous month.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test.</returns>
     [Fact]
-    public void Page_PreviousMonthButton_LoadsPreviousMonth()
+    public async Task Page_PreviousMonthButton_LoadsPreviousMonth()
     {
         // Arrange
         stubApiService.BudgetSummaryResult = CreateTestSummary();
         var cut = Render<BudgetComparisonReport>();
-        stubApiService.GetBudgetSummaryCallCount = 0; // reset counter
+        stubApiService.GetBudgetComparisonCallCount = 0; // reset counter
 
         // Act
         var prevButton = cut.Find("[aria-label='Previous month']");
-        prevButton.Click();
+        await cut.InvokeAsync(() => prevButton.Click());
 
         // Assert - Should have called the API again
-        Assert.True(stubApiService.GetBudgetSummaryCallCount > 0);
+        cut.WaitForAssertion(() => Assert.True(stubApiService.GetBudgetComparisonCallCount > 0));
     }
 
     /// <summary>
     /// Verifies that clicking Next month navigates to the next month.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test.</returns>
     [Fact]
-    public void Page_NextMonthButton_LoadsNextMonth()
+    public async Task Page_NextMonthButton_LoadsNextMonth()
     {
         // Arrange
         stubApiService.BudgetSummaryResult = CreateTestSummary();
         var cut = Render<BudgetComparisonReport>();
-        stubApiService.GetBudgetSummaryCallCount = 0; // reset counter
+        stubApiService.GetBudgetComparisonCallCount = 0; // reset counter
 
         // Act
         var nextButton = cut.Find("[aria-label='Next month']");
-        nextButton.Click();
+        await cut.InvokeAsync(() => nextButton.Click());
 
         // Assert - Should have called the API again
-        Assert.True(stubApiService.GetBudgetSummaryCallCount > 0);
+        cut.WaitForAssertion(() => Assert.True(stubApiService.GetBudgetComparisonCallCount > 0));
     }
 
     /// <summary>
@@ -463,14 +467,14 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
             get; set;
         }
 
-        /// <summary>Gets a value indicating whether GetBudgetSummaryAsync was called.</summary>
-        public bool GetBudgetSummaryCalled
+        /// <summary>Gets a value indicating whether GetBudgetComparisonReportAsync was called.</summary>
+        public bool GetBudgetComparisonCalled
         {
             get; private set;
         }
 
-        /// <summary>Gets or sets the number of times GetBudgetSummaryAsync was called.</summary>
-        public int GetBudgetSummaryCallCount
+        /// <summary>Gets or sets the number of times GetBudgetComparisonReportAsync was called.</summary>
+        public int GetBudgetComparisonCallCount
         {
             get; set;
         }
@@ -483,9 +487,13 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<BudgetSummaryDto?> GetBudgetSummaryAsync(int year, int month)
+            => Task.FromResult(this.BudgetSummaryResult);
+
+        /// <inheritdoc/>
+        public Task<BudgetSummaryDto?> GetBudgetComparisonReportAsync(int year, int month, bool groupByKakeibo = false)
         {
-            this.GetBudgetSummaryCalled = true;
-            this.GetBudgetSummaryCallCount++;
+            this.GetBudgetComparisonCalled = true;
+            this.GetBudgetComparisonCallCount++;
 
             if (this.ShouldThrow)
             {
@@ -518,7 +526,7 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         public Task<bool> DeleteAccountAsync(Guid id) => Task.FromResult(false);
 
         /// <inheritdoc/>
-        public Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<IReadOnlyList<TransactionDto>>([]);
+        public Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, string? kakeiboCategory = null) => Task.FromResult<IReadOnlyList<TransactionDto>>([]);
 
         /// <inheritdoc/>
         public Task<TransactionDto?> GetTransactionAsync(Guid id) => Task.FromResult<TransactionDto?>(null);
@@ -746,13 +754,13 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
         public Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request) => Task.FromResult(new BulkCategorizeResponse());
 
         /// <inheritdoc/>
-        public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month) => Task.FromResult<MonthlyCategoryReportDto?>(null);
+        public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month, bool groupByKakeibo = false) => Task.FromResult<MonthlyCategoryReportDto?>(null);
 
         /// <inheritdoc/>
-        public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<DateRangeCategoryReportDto?>(null);
+        public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, bool groupByKakeibo = false) => Task.FromResult<DateRangeCategoryReportDto?>(null);
 
         /// <inheritdoc/>
-        public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null) => Task.FromResult<SpendingTrendsReportDto?>(null);
+        public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null, bool groupByKakeibo = false) => Task.FromResult<SpendingTrendsReportDto?>(null);
 
         /// <inheritdoc/>
         public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null) => Task.FromResult<DaySummaryDto?>(null);
@@ -879,6 +887,10 @@ public class BudgetComparisonReportTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<KaizenGoalDto>?>(null);
+
+        /// <inheritdoc />
+        public Task<KaizenDashboardDto?> GetKaizenDashboardAsync(int weeks = 12, CancellationToken ct = default)
+            => Task.FromResult<KaizenDashboardDto?>(null);
 
         /// <inheritdoc />
         public Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)

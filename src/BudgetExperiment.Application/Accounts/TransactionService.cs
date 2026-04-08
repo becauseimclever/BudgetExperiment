@@ -60,12 +60,35 @@ public sealed class TransactionService : ITransactionService
     /// <param name="startDate">The start date (inclusive).</param>
     /// <param name="endDate">The end date (inclusive).</param>
     /// <param name="accountId">Optional account filter.</param>
+    /// <param name="kakeiboCategory">Optional Kakeibo category filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of transaction DTOs.</returns>
-    public async Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        KakeiboCategory? kakeiboCategory = null,
+        CancellationToken cancellationToken = default)
     {
         var transactions = await _repository.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
-        return transactions.Select(AccountMapper.ToDto).ToList();
+        IEnumerable<Transaction> filtered = transactions;
+        if (kakeiboCategory.HasValue)
+        {
+            var filter = kakeiboCategory.Value;
+            filtered = filtered.Where(transaction =>
+            {
+                var effective = transaction.KakeiboOverride ?? transaction.Category?.KakeiboCategory;
+                return effective.HasValue && effective.Value == filter;
+            });
+        }
+
+        return filtered.Select(transaction =>
+        {
+            var dto = AccountMapper.ToDto(transaction);
+            var effective = transaction.KakeiboOverride ?? transaction.Category?.KakeiboCategory;
+            dto.EffectiveKakeiboCategory = effective?.ToString() ?? string.Empty;
+            return dto;
+        }).ToList();
     }
 
     /// <summary>

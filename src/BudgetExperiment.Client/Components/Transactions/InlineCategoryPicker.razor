@@ -1,23 +1,36 @@
 @* InlineCategoryPicker - Clickable inline category assignment for transaction table rows *@
 
-@if (_isEditing)
-{
-    <select class="form-control inline-category-select" style="width: auto; min-width: 150px;"
-            @onchange="OnCategorySelected"
-            @onblur="CancelEdit">
-        <option value="">Uncategorized</option>
-        @foreach (var category in Categories.Where(c => c.IsActive))
-        {
-            <option value="@category.Id" selected="@(CategoryId == category.Id)">@category.Name</option>
-        }
-    </select>
-}
-else
-{
-    <span class="@CssClass" @onclick="StartEdit" title="Click to change category">
-        @DisplayText
-    </span>
-}
+@inject IFeatureFlagClientService FeatureFlags
+
+<div class="inline-picker-wrapper">
+    @if (_isEditing)
+    {
+        <select class="form-control inline-category-select" style="width: auto; min-width: 150px;"
+                @onchange="OnCategorySelected"
+                @onblur="CancelEdit">
+            <option value="">Uncategorized</option>
+            @foreach (var category in Categories.Where(c => c.IsActive))
+            {
+                <option value="@category.Id" selected="@(CategoryId == category.Id)">@category.Name</option>
+            }
+        </select>
+    }
+    else
+    {
+        <span class="@CssClass" @onclick="StartEdit" title="Click to change category">
+            @DisplayText
+        </span>
+    }
+
+    @if (ShowKakeiboPreview)
+    {
+        <span class="@($"kakeibo-preview {KakeiboCssClass}")"
+              title="@KakeiboTooltip"
+              aria-label="@KakeiboTooltip">
+            @KakeiboCategory
+        </span>
+    }
+</div>
 
 @code {
     /// <summary>
@@ -51,6 +64,19 @@ else
     private string CssClass => CategoryId.HasValue
         ? "category-label category-clickable"
         : "text-muted category-clickable";
+
+    private BudgetCategoryDto? SelectedCategory => CategoryId.HasValue
+        ? Categories.FirstOrDefault(c => c.Id == CategoryId.Value)
+        : null;
+
+    private string? KakeiboCategory => SelectedCategory?.KakeiboCategory;
+
+    private bool ShowKakeiboPreview => FeatureFlags.IsEnabled("Kakeibo:TransactionFilter")
+        && !string.IsNullOrWhiteSpace(KakeiboCategory);
+
+    private string KakeiboCssClass => $"kakeibo-{KakeiboCategory!.ToLowerInvariant()}";
+
+    private string KakeiboTooltip => $"This category maps to {KakeiboCategory} in Kakeibo";
 
     private void StartEdit()
     {

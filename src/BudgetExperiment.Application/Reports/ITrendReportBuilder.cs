@@ -18,6 +18,7 @@ public interface ITrendReportBuilder
     /// <param name="endYear">End year (defaults to current year).</param>
     /// <param name="endMonth">End month (defaults to current month).</param>
     /// <param name="categoryId">Optional category filter.</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The spending trends report.</returns>
     Task<SpendingTrendsReportDto> GetSpendingTrendsAsync(
@@ -25,5 +26,6 @@ public interface ITrendReportBuilder
         int? endYear = null,
         int? endMonth = null,
         Guid? categoryId = null,
+        bool groupByKakeibo = false,
         CancellationToken cancellationToken = default);
 }

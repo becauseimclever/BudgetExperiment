@@ -88,7 +88,10 @@ public sealed class NaturalLanguageParser : INaturalLanguageParser
             return "No categories configured.";
         }
 
-        var lines = categories.Select(c => $"- {c.Name} (ID: {c.Id})");
+        var lines = categories.Select(c =>
+            c.KakeiboCategory.HasValue
+                ? $"- {c.Name} (ID: {c.Id}, Kakeibo: {c.KakeiboCategory})"
+                : $"- {c.Name} (ID: {c.Id})");
         return string.Join("\n", lines);
     }
 

@@ -1,4 +1,4 @@
-// <copyright file="FeatureFlagSeeder.cs" company="BecauseImClever">
+﻿// <copyright file="FeatureFlagSeeder.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -18,6 +18,7 @@ public static class FeatureFlagSeeder
         ("Calendar:SpendingHeatmap",               true),
         ("Calendar:KakeiboOverlay",                false),
         ("Kakeibo:TransactionOverride",            true),
+        ("Kakeibo:TransactionFilter",              true),
         ("Kakeibo:MonthlyReflectionPrompts",       true),
         ("Kakeibo:CalendarOverlay",                false),
         ("Kaizen:MicroGoals",                      true),

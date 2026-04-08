@@ -26,4 +26,7 @@ public sealed class SpendingTrendsReportDto
     {
         get; set;
     }
+
+    /// <summary>Gets or sets the optional Kakeibo grouped summary.</summary>
+    public KakeiboGroupedSummaryDto? KakeiboGroupedSummary { get; set; }
 }

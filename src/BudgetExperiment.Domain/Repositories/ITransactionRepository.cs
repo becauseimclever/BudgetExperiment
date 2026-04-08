@@ -222,6 +222,7 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     /// <param name="sortDescending">Sort direction (true = descending).</param>
     /// <param name="skip">Number of records to skip.</param>
     /// <param name="take">Number of records to take.</param>
+    /// <param name="kakeiboCategory">Optional Kakeibo category filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the paged items and total count.</returns>
     Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetUnifiedPagedAsync(
@@ -237,6 +238,7 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
         bool sortDescending = true,
         int skip = 0,
         int take = 50,
+        KakeiboCategory? kakeiboCategory = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

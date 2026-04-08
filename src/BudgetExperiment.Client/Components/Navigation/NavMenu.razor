@@ -5,6 +5,7 @@
 
 @inject IBudgetApiService ApiService
 @inject IAiAvailabilityService AiAvailability
+@inject IFeatureFlagClientService FeatureFlags
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JSRuntime
@@ -166,6 +167,15 @@
                             <span class="nav-text">Categories</span>
                         </NavLink>
                     </li>
+                    @if (FeatureFlags.IsEnabled("Reports:CustomReportBuilder"))
+                    {
+                        <li>
+                            <NavLink class="nav-item nav-subitem" href="reports/custom-builder" title="Custom Reports" aria-label="Custom Reports Builder">
+                                <span class="nav-icon" aria-hidden="true"><Icon Name="layout" Size="16" /></span>
+                                <span class="nav-text">Custom Reports</span>
+                            </NavLink>
+                        </li>
+                    }
                     @if (locationEnabled)
                     {
                         <li>

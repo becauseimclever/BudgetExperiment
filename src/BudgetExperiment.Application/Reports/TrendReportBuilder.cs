@@ -35,6 +35,7 @@ public sealed class TrendReportBuilder : ITrendReportBuilder
         int? endYear = null,
         int? endMonth = null,
         Guid? categoryId = null,
+        bool groupByKakeibo = false,
         CancellationToken cancellationToken = default)
     {
         months = Math.Clamp(months, 1, 24);
@@ -75,6 +76,10 @@ public sealed class TrendReportBuilder : ITrendReportBuilder
         // Calculate trend by comparing second half to first half
         var (trendDirection, trendPercentage) = CalculateTrend(monthlyData);
 
+        var kakeiboGroupedSummary = groupByKakeibo
+            ? BuildKakeiboGroupedSummary(nonTransferTransactions)
+            : null;
+
         return new SpendingTrendsReportDto
         {
             MonthlyData = monthlyData,
@@ -82,7 +87,42 @@ public sealed class TrendReportBuilder : ITrendReportBuilder
             AverageMonthlyIncome = new MoneyDto { Currency = currency, Amount = avgIncome },
             TrendDirection = trendDirection,
             TrendPercentage = trendPercentage,
+            KakeiboGroupedSummary = kakeiboGroupedSummary,
         };
+    }
+
+    private static KakeiboGroupedSummaryDto BuildKakeiboGroupedSummary(IEnumerable<Transaction> nonTransferTransactions)
+    {
+        var summary = new KakeiboGroupedSummaryDto();
+
+        foreach (var transaction in nonTransferTransactions.Where(t => t.Amount.Amount < 0))
+        {
+            var effectiveCategory = transaction.KakeiboOverride ?? transaction.Category?.KakeiboCategory;
+            if (effectiveCategory is null)
+            {
+                continue;
+            }
+
+            var amount = Math.Abs(transaction.Amount.Amount);
+            switch (effectiveCategory)
+            {
+                case KakeiboCategory.Essentials:
+                    summary.Essentials += amount;
+                    break;
+                case KakeiboCategory.Wants:
+                    summary.Wants += amount;
+                    break;
+                case KakeiboCategory.Culture:
+                    summary.Culture += amount;
+                    break;
+                case KakeiboCategory.Unexpected:
+                    summary.Unexpected += amount;
+                    break;
+            }
+        }
+
+        summary.Total = summary.Essentials + summary.Wants + summary.Culture + summary.Unexpected;
+        return summary;
     }
 
     private static List<MonthlyTrendPointDto> BuildMonthlyData(

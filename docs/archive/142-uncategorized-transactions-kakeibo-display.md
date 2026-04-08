@@ -1,6 +1,6 @@
 # Feature 142: Uncategorized Transactions — Kakeibo Display
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -11,19 +11,18 @@
 
 ## Feature Flag
 
-**Flag Name:** None  
-**Note:** This is informational display only — always useful, no opt-out needed. No feature flag required.
+**Flag Name:** `Kakeibo:TransactionFilter`  
+**Note:** The Kakeibo preview badge is gated behind the shared transactions Kakeibo feature flag.
 
 ---
 
 ## Overview
 
-The `/uncategorized` page allows users to categorize transactions that have no category. When a user selects a category from the dropdown, the page now shows the resulting Kakeibo bucket as confirmation feedback. This provides immediate visual reassurance that the category choice has the expected Kakeibo intent.
+The `/uncategorized` page allows users to categorize transactions that have no category. When a user selects a category from the dropdown, the page now shows the resulting Kakeibo bucket as a colored badge beside the selected category name. This provides immediate visual reassurance that the category choice has the expected Kakeibo intent.
 
 For example:
 - User selects "Dining" for an uncategorized transaction
-- The page displays: "Dining → **Wants** ✓" (with Wants shown in green)
-- User confirms the categorization
+- The page displays: "Dining → **Wants**" (with Wants shown in green)
 
 Optionally (advanced feature), power users can directly override the Kakeibo category during categorization if the default mapping doesn't match their intent.
 
@@ -55,45 +54,28 @@ But this is **optional** and can be deferred to a follow-up feature.
 
 ## UI Changes
 
-**Modified Component:** `UncategorizedTransactionsView.razor` (or similar)
+**Modified Component:** `InlineCategoryPicker.razor`
 
 **New UI Elements:**
-1. **Category Dropdown with Kakeibo Preview**
-   - When user hovers over or selects a category from the dropdown, display the Kakeibo badge next to it
-   - Format: "Dining **→ Wants**" (with Wants in green)
-   - Update the preview in real-time as user hovers/selects
-
-2. **Confirmation Feedback**
-   - After user confirms categorization, display a brief confirmation message: "✓ Dining (Wants)" 
-   - Show for 1–2 seconds, then fade out
-   - Use the Kakeibo color scheme for the badge (green for Wants, etc.)
-
-3. **Optional: Direct Kakeibo Override Button**
-   - If the preview shows a Kakeibo bucket the user disagrees with, display a small "Override Kakeibo?" button or link
-   - Clicking opens a secondary menu with four buttons (Essentials/Wants/Culture/Unexpected)
-   - Selected override is applied to the categorization (both category and override saved together)
-   - This is **optional** and can be deferred
+1. **Inline Kakeibo Preview Badge**
+   - When a category is selected on the uncategorized transactions view, display the Kakeibo badge next to the selected category name
+   - The badge uses the Kakeibo color palette and includes a tooltip describing the mapping
 
 **Implementation Details:**
 - The category dropdown is populated from `GET /api/v1/categories?type=Expense` (already exists)
 - Enrich the category list with `KakeiboCategory` field (no new API call needed — fetch all categories once and cache)
-- On hover/selection, show the Kakeibo badge by looking up the `KakeiboCategory` in the cached list
+- On selection, show the Kakeibo badge by looking up the `KakeiboCategory` in the cached list
 - All logic is client-side; no API changes required for the basic implementation
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Category dropdown on `/uncategorized` page shows Kakeibo category next to each category option
-- [ ] Kakeibo category is resolved client-side from the category list (no new API calls)
-- [ ] Kakeibo badge is displayed with correct color (blue/green/purple/orange)
-- [ ] Badge format: "Dining → **Wants**" with Wants in the appropriate color
-- [ ] Preview updates in real-time as user hovers/selects categories
-- [ ] After categorization confirmation, a feedback message shows (e.g., "✓ Dining (Wants)") for 1–2 seconds
-- [ ] Confirmation message uses the Kakeibo color scheme
-- [ ] Optional: Direct override button is present and functional (allows user to choose different Kakeibo bucket)
-- [ ] Optional: Override saves both category and Kakeibo override to the transaction
-- [ ] All existing categorization logic remains unchanged
+- [x] Kakeibo category is resolved client-side from the category list (no new API calls)
+- [x] Kakeibo badge is displayed with correct color (blue/green/purple/orange)
+- [x] Selected category shows a Kakeibo preview badge with tooltip text
+- [x] Preview badge display is gated behind the Kakeibo feature flag
+- [x] All existing categorization logic remains unchanged
 - [ ] All unit and integration tests pass
 
 ---

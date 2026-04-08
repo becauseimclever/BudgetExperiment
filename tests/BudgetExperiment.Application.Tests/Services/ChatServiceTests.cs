@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Application.FeatureFlags;
+using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 
 using Shouldly;
@@ -20,6 +22,8 @@ public class ChatServiceTests
     private readonly MockChatMessageRepository _messageRepo;
     private readonly MockAccountRepository _accountRepo;
     private readonly MockBudgetCategoryRepository _categoryRepo;
+    private readonly MockTransactionService _transactionService;
+    private readonly MockFeatureFlagService _featureFlagService;
     private readonly MockNaturalLanguageParser _parser;
     private readonly MockChatActionExecutor _actionExecutor;
     private readonly MockUnitOfWork _unitOfWork;
@@ -31,6 +35,8 @@ public class ChatServiceTests
         _messageRepo = new MockChatMessageRepository();
         _accountRepo = new MockAccountRepository();
         _categoryRepo = new MockBudgetCategoryRepository();
+        _transactionService = new MockTransactionService();
+        _featureFlagService = new MockFeatureFlagService();
         _parser = new MockNaturalLanguageParser();
         _actionExecutor = new MockChatActionExecutor();
         _unitOfWork = new MockUnitOfWork();
@@ -40,6 +46,8 @@ public class ChatServiceTests
             _messageRepo,
             _accountRepo,
             _categoryRepo,
+            _transactionService,
+            _featureFlagService,
             _parser,
             _actionExecutor,
             _unitOfWork);
@@ -188,6 +196,36 @@ public class ChatServiceTests
         _parser.LastContext!.CurrentAccountName.ShouldBe("Checking");
         _parser.LastContext.CurrentDate.ShouldBe(new DateOnly(2026, 2, 10));
         _parser.LastContext.CurrentPage.ShouldBe("calendar");
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_KakeiboQuery_ReturnsAggregateResponse()
+    {
+        // Arrange
+        var session = ChatSession.Create();
+        _sessionRepo.AddSession(session);
+        _featureFlagService.SetFlag("Kakeibo:TransactionFilter", true);
+
+        _transactionService.Transactions.Add(new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            AccountId = Guid.NewGuid(),
+            Amount = new MoneyDto { Currency = "USD", Amount = -40m },
+            Date = new DateOnly(2026, 3, 1),
+            Description = "Groceries",
+            EffectiveKakeiboCategory = "Wants",
+        });
+
+        // Act
+        var result = await _service.SendMessageAsync(session.Id, "show my wants spending this month");
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        result.AssistantMessage.ShouldNotBeNull();
+        result.AssistantMessage!.Action.ShouldBeNull();
+        result.AssistantMessage.Content.ShouldContain("Wants");
+        result.AssistantMessage.Content.ShouldContain("spent");
+        _parser.LastContext.ShouldBeNull();
     }
 
     [Fact]
@@ -506,6 +544,88 @@ public class ChatServiceTests
         public Task RemoveAsync(BudgetCategory entity, CancellationToken cancellationToken = default)
         {
             _categories.Remove(entity);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class MockTransactionService : ITransactionService
+    {
+        public List<TransactionDto> Transactions { get; } = new();
+
+        public Task<TransactionDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<TransactionDto?>(null);
+
+        public Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(
+            DateOnly startDate,
+            DateOnly endDate,
+            Guid? accountId = null,
+            KakeiboCategory? kakeiboCategory = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<TransactionDto>>(Transactions);
+
+        public Task<TransactionDto> CreateAsync(TransactionCreateDto dto, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new TransactionDto
+            {
+                Id = Guid.NewGuid(),
+                AccountId = dto.AccountId,
+                Amount = dto.Amount,
+                Date = dto.Date,
+                Description = dto.Description,
+                CategoryId = dto.CategoryId,
+                EffectiveKakeiboCategory = string.Empty,
+            });
+        }
+
+        public Task<TransactionDto?> UpdateAsync(
+            Guid id,
+            TransactionUpdateDto dto,
+            string? expectedVersion = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<TransactionDto?>(null);
+
+        public Task<TransactionDto?> UpdateLocationAsync(
+            Guid id,
+            TransactionLocationUpdateDto dto,
+            string? expectedVersion = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<TransactionDto?>(null);
+
+        public Task<TransactionDto?> UpdateCategoryAsync(
+            Guid id,
+            TransactionCategoryUpdateDto dto,
+            string? expectedVersion = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<TransactionDto?>(null);
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
+
+        public Task<bool> ClearLocationAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
+
+        public Task<int> ClearAllLocationDataAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(0);
+    }
+
+    private sealed class MockFeatureFlagService : IFeatureFlagService
+    {
+        private readonly Dictionary<string, bool> _flags = new(StringComparer.OrdinalIgnoreCase);
+
+        public void SetFlag(string flagName, bool isEnabled)
+        {
+            _flags[flagName] = isEnabled;
+        }
+
+        public Task<bool> IsEnabledAsync(string flagName, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_flags.TryGetValue(flagName, out var enabled) && enabled);
+
+        public Task<Dictionary<string, bool>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new Dictionary<string, bool>(_flags, StringComparer.OrdinalIgnoreCase));
+
+        public Task SetFlagAsync(string flagName, bool isEnabled, CancellationToken cancellationToken = default)
+        {
+            _flags[flagName] = isEnabled;
             return Task.CompletedTask;
         }
     }

@@ -79,6 +79,14 @@ public sealed class ChatActionDto
     }
 
     /// <summary>
+    /// Gets or sets the Kakeibo category for the action.
+    /// </summary>
+    public string? KakeiboCategory
+    {
+        get; set;
+    }
+
+    /// <summary>
     /// Gets or sets the source account ID for transfer actions.
     /// </summary>
     public Guid? FromAccountId
@@ -114,6 +122,14 @@ public sealed class ChatActionDto
     /// Gets or sets the clarification question for clarification needed actions.
     /// </summary>
     public string? ClarificationQuestion
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets the clarification type for clarification needed actions.
+    /// </summary>
+    public ClarificationNeededActionType ClarificationType
     {
         get; set;
     }

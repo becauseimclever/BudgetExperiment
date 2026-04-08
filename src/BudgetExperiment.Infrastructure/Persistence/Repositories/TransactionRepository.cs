@@ -1,4 +1,4 @@
-// <copyright file="TransactionRepository.cs" company="BecauseImClever">
+﻿// <copyright file="TransactionRepository.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -427,6 +427,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         bool sortDescending = true,
         int skip = 0,
         int take = 50,
+        KakeiboCategory? kakeiboCategory = null,
         CancellationToken cancellationToken = default)
     {
         IQueryable<Transaction> query = this.ApplyScopeFilter(_context.Transactions)
@@ -474,6 +475,14 @@ internal sealed class TransactionRepository : ITransactionRepository
         {
             var max = maxAmount.Value;
             query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) <= max);
+        }
+
+        if (kakeiboCategory.HasValue)
+        {
+            var kc = kakeiboCategory.Value;
+            query = query.Where(t =>
+                (t.KakeiboOverride != null && t.KakeiboOverride == kc) ||
+                (t.KakeiboOverride == null && t.Category != null && t.Category.KakeiboCategory == kc));
         }
 
         // Get total count before paging

@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Client.Components.Transactions;
 using BudgetExperiment.Client.Services;
+using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
 
 using Bunit;
@@ -29,6 +30,7 @@ public sealed class InlineCategoryPickerTests : BunitContext
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
+        this.Services.AddSingleton<IFeatureFlagClientService>(new StubFeatureFlagClientService());
         _categories = new List<BudgetCategoryDto>
         {
             new() { Id = Guid.NewGuid(), Name = "Groceries", IsActive = true },

@@ -65,7 +65,11 @@ public sealed class BudgetProgressService : IBudgetProgressService
     }
 
     /// <inheritdoc/>
-    public async Task<BudgetSummaryDto> GetMonthlySummaryAsync(int year, int month, CancellationToken cancellationToken = default)
+    public async Task<BudgetSummaryDto> GetMonthlySummaryAsync(
+        int year,
+        int month,
+        bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default)
     {
         var goals = await _goalRepository.GetByMonthAsync(year, month, cancellationToken);
         var allExpenseCategories = await _categoryRepository.GetByTypeAsync(CategoryType.Expense, cancellationToken);
@@ -73,6 +77,9 @@ public sealed class BudgetProgressService : IBudgetProgressService
         var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var totalBudgeted = MoneyValue.Create(currency, 0m);
         var totalSpent = MoneyValue.Create(currency, 0m);
+        var kakeiboGroupedSummary = groupByKakeibo
+            ? await BuildKakeiboGroupedSummaryAsync(year, month, cancellationToken)
+            : null;
 
         // Create a lookup of goals by category ID
         var goalByCategoryId = goals.ToDictionary(g => g.CategoryId);
@@ -130,6 +137,56 @@ public sealed class BudgetProgressService : IBudgetProgressService
             CategoriesWarning = categoriesWarning,
             CategoriesOverBudget = categoriesOverBudget,
             CategoriesNoBudgetSet = categoriesNoBudgetSet,
+            KakeiboGroupedSummary = kakeiboGroupedSummary,
         };
+    }
+
+    private static KakeiboGroupedSummaryDto BuildKakeiboGroupedSummary(IEnumerable<Transaction> expenseTransactions)
+    {
+        var summary = new KakeiboGroupedSummaryDto();
+
+        foreach (var transaction in expenseTransactions)
+        {
+            var effectiveCategory = transaction.KakeiboOverride ?? transaction.Category?.KakeiboCategory;
+            if (effectiveCategory is null)
+            {
+                continue;
+            }
+
+            var amount = Math.Abs(transaction.Amount.Amount);
+            switch (effectiveCategory)
+            {
+                case KakeiboCategory.Essentials:
+                    summary.Essentials += amount;
+                    break;
+                case KakeiboCategory.Wants:
+                    summary.Wants += amount;
+                    break;
+                case KakeiboCategory.Culture:
+                    summary.Culture += amount;
+                    break;
+                case KakeiboCategory.Unexpected:
+                    summary.Unexpected += amount;
+                    break;
+            }
+        }
+
+        summary.Total = summary.Essentials + summary.Wants + summary.Culture + summary.Unexpected;
+        return summary;
+    }
+
+    private async Task<KakeiboGroupedSummaryDto> BuildKakeiboGroupedSummaryAsync(
+        int year,
+        int month,
+        CancellationToken cancellationToken)
+    {
+        var startDate = new DateOnly(year, month, 1);
+        var endDate = startDate.AddMonths(1).AddDays(-1);
+        var transactions = await _transactionRepository.GetByDateRangeAsync(startDate, endDate, null, cancellationToken);
+        var expenseTransactions = transactions
+            .Where(t => !t.IsTransfer && t.Amount.Amount < 0)
+            .ToList();
+
+        return BuildKakeiboGroupedSummary(expenseTransactions);
     }
 }

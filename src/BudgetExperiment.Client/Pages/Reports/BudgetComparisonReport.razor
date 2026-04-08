@@ -7,6 +7,8 @@
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
 @inject ScopeService ScopeService
+@inject IFeatureFlagClientService FeatureFlags
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Budget vs. Actual - Budget Experiment</PageTitle>
 
@@ -30,6 +32,18 @@
             <Icon Name="chevron-right" Size="20" />
         </button>
     </div>
+
+    @if (FeatureFlags.IsEnabled(KakeiboFeatureFlag))
+    {
+        <div class="kakeibo-toggle">
+            <label class="kakeibo-toggle-label">
+                <input type="checkbox"
+                       @bind="groupByKakeibo"
+                       @bind:after="HandleGroupByKakeiboChanged" />
+                Group by Kakeibo
+            </label>
+        </div>
+    }
 
     <ErrorAlert Message="@errorMessage"
                 OnRetry="RetryLoad"
@@ -65,6 +79,12 @@
         else
         {
             <div class="comparison-content">
+                @if (FeatureFlags.IsEnabled(KakeiboFeatureFlag) && groupByKakeibo && kakeiboSummary != null)
+                {
+                    <KakeiboSummaryRow Summary="kakeiboSummary"
+                                       CurrencyCode="@summary!.TotalSpent.Currency"
+                                       Title="Kakeibo Summary" />
+                }
                 @* Overall Summary *@
                 <div class="overall-summary">
                     <div class="summary-card">
@@ -252,9 +272,14 @@
     private IReadOnlyList<string> radarCategories = [];
     private int selectedYear;
     private int selectedMonth;
+    private KakeiboGroupedSummaryDto? kakeiboSummary;
     private string? errorMessage;
     private bool isLoading = true;
     private bool isRetrying;
+    private bool groupByKakeibo;
+
+    private const string KakeiboFeatureFlag = "Kakeibo:TransactionFilter";
+    private const string KakeiboStorageKey = "report:budget-comparison:groupByKakeibo";
 
     private IReadOnlyList<ExportOption> ExportOptions =>
     [
@@ -281,6 +306,7 @@
 
         ScopeService.ScopeChanged += HandleScopeChanged;
 
+        await LoadGroupByPreferenceAsync();
         await LoadReportAsync();
     }
 
@@ -298,10 +324,18 @@
 
         try
         {
-            summary = await ApiService.GetBudgetSummaryAsync(selectedYear, selectedMonth);
+            summary = await ApiService.GetBudgetComparisonReportAsync(
+                selectedYear,
+                selectedMonth,
+                groupByKakeibo);
             if (summary != null)
             {
+                kakeiboSummary = groupByKakeibo ? summary.KakeiboGroupedSummary : null;
                 BuildChartData();
+            }
+            else
+            {
+                kakeiboSummary = null;
             }
         }
         catch (Exception ex)
@@ -312,6 +346,49 @@
         {
             isLoading = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task HandleGroupByKakeiboChanged()
+    {
+        await SaveGroupByPreferenceAsync();
+        await LoadReportAsync();
+    }
+
+    private async Task LoadGroupByPreferenceAsync()
+    {
+        if (!FeatureFlags.IsEnabled(KakeiboFeatureFlag))
+        {
+            groupByKakeibo = false;
+            return;
+        }
+
+        try
+        {
+            var saved = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", KakeiboStorageKey);
+            if (bool.TryParse(saved, out var parsed))
+            {
+                groupByKakeibo = parsed;
+            }
+        }
+        catch
+        {
+            groupByKakeibo = false;
+        }
+    }
+
+    private async Task SaveGroupByPreferenceAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync(
+                "localStorage.setItem",
+                KakeiboStorageKey,
+                groupByKakeibo.ToString().ToLowerInvariant());
+        }
+        catch
+        {
+            // Ignore localStorage errors
         }
     }
 

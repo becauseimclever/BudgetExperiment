@@ -34,6 +34,7 @@ public class MonthlyCategoriesReportPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
+        this.Services.AddSingleton<IFeatureFlagClientService>(new StubFeatureFlagClientService());
     }
 
     /// <inheritdoc/>

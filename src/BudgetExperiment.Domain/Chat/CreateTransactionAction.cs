@@ -64,6 +64,14 @@ public sealed record CreateTransactionAction : ChatAction
         get; init;
     }
 
+    /// <summary>
+    /// Gets the optional Kakeibo category for the selected budget category.
+    /// </summary>
+    public KakeiboCategory? KakeiboCategory
+    {
+        get; init;
+    }
+
     /// <inheritdoc/>
     public override string GetPreviewSummary() =>
         $"Transaction: {this.Amount.ToString("C", CultureInfo.CurrentCulture)} - {this.Description} on {this.Date:d} ({this.AccountName})";

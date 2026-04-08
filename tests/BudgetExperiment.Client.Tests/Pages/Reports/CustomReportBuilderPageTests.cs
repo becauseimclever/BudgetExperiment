@@ -33,6 +33,9 @@ public class CustomReportBuilderPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
+        var featureFlagStub = new StubFeatureFlagClientService();
+        featureFlagStub.Flags["Reports:CustomReportBuilder"] = true;
+        this.Services.AddSingleton<IFeatureFlagClientService>(featureFlagStub);
     }
 
     /// <inheritdoc/>

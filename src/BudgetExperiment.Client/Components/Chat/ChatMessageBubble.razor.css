@@ -142,6 +142,42 @@
     flex: 0 0 auto;
 }
 
+.kakeibo-option {
+    color: #fff;
+    border: none;
+}
+
+.kakeibo-option:hover {
+    filter: brightness(0.95);
+}
+
+.kakeibo-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    margin-left: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 999px;
+    color: #fff;
+}
+
+.kakeibo-essentials {
+    background: #3b82f6;
+}
+
+.kakeibo-wants {
+    background: #10b981;
+}
+
+.kakeibo-culture {
+    background: #a855f7;
+}
+
+.kakeibo-unexpected {
+    background: #f97316;
+}
+
 /* Action Status Badges */
 .action-status {
     display: inline-flex;

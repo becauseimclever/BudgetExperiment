@@ -1,6 +1,6 @@
 # Feature 143: Reports — Kakeibo Grouping
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -166,18 +166,18 @@ public class CategorySpending
 
 ## Acceptance Criteria
 
-- [ ] Query parameter `groupByKakeibo: bool?` is added to existing report endpoints (monthly-categories, budget-comparison, monthly-trends)
-- [ ] When `groupByKakeibo=true`, transactions are aggregated by effective Kakeibo category (override checked first)
-- [ ] Response DTOs correctly group data by Kakeibo bucket when the parameter is true
-- [ ] Response DTOs remain backward-compatible when the parameter is false or omitted (default: category-level grouping)
-- [ ] Monthly Categories Report displays toggle: "Group by: [Categories] [Kakeibo Buckets]"
-- [ ] Budget Comparison Report displays dropdown/checkbox for variance grouping
-- [ ] Monthly Trends Report displays toggle for trend type
-- [ ] Charts redraw correctly when toggle is changed
-- [ ] Kakeibo grouping uses consistent colors (blue/green/purple/orange)
-- [ ] User selections are persisted to `localStorage` and remembered on page reload
-- [ ] All existing report functionality remains unchanged when toggle is not used
-- [ ] All unit and integration tests pass; OpenAPI spec is updated
+- [x] Query parameter `groupByKakeibo: bool?` is added to existing report endpoints (monthly-categories, budget-comparison, monthly-trends)
+- [x] When `groupByKakeibo=true`, transactions are aggregated by effective Kakeibo category (override checked first)
+- [x] Response DTOs correctly group data by Kakeibo bucket when the parameter is true
+- [x] Response DTOs remain backward-compatible when the parameter is false or omitted (default: category-level grouping)
+- [x] Monthly Categories Report displays toggle: "Group by: [Categories] [Kakeibo Buckets]"
+- [x] Budget Comparison Report displays dropdown/checkbox for variance grouping
+- [x] Monthly Trends Report displays toggle for trend type
+- [x] Charts redraw correctly when toggle is changed
+- [x] Kakeibo grouping uses consistent colors (blue/green/purple/orange)
+- [x] User selections are persisted to `localStorage` and remembered on page reload
+- [x] All existing report functionality remains unchanged when toggle is not used
+- [x] All unit and integration tests pass; OpenAPI spec is updated
 
 ---
 

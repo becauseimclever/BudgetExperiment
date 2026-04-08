@@ -54,8 +54,13 @@ public interface IBudgetApiService
     /// <param name="startDate">Start date (inclusive).</param>
     /// <param name="endDate">End date (inclusive).</param>
     /// <param name="accountId">Optional account filter.</param>
+    /// <param name="kakeiboCategory">Optional Kakeibo category filter.</param>
     /// <returns>List of transactions.</returns>
-    Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null);
+    Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        string? kakeiboCategory = null);
 
     /// <summary>
     /// Gets a transaction by ID.
@@ -731,8 +736,9 @@ public interface IBudgetApiService
     /// </summary>
     /// <param name="year">The year.</param>
     /// <param name="month">The month (1-12).</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <returns>The monthly category report.</returns>
-    Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month);
+    Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month, bool groupByKakeibo = false);
 
     /// <summary>
     /// Gets the category spending report for an arbitrary date range.
@@ -740,8 +746,13 @@ public interface IBudgetApiService
     /// <param name="startDate">The start date.</param>
     /// <param name="endDate">The end date.</param>
     /// <param name="accountId">Optional account filter.</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <returns>The date range category report.</returns>
-    Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null);
+    Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        bool groupByKakeibo = false);
 
     /// <summary>
     /// Gets the spending trends report over multiple months.
@@ -750,8 +761,23 @@ public interface IBudgetApiService
     /// <param name="endYear">Optional end year (defaults to current).</param>
     /// <param name="endMonth">Optional end month (defaults to current).</param>
     /// <param name="categoryId">Optional category filter.</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <returns>The spending trends report.</returns>
-    Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null);
+    Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(
+        int months = 6,
+        int? endYear = null,
+        int? endMonth = null,
+        Guid? categoryId = null,
+        bool groupByKakeibo = false);
+
+    /// <summary>
+    /// Gets the budget comparison report for a specific month.
+    /// </summary>
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
+    /// <returns>The budget summary for the report.</returns>
+    Task<BudgetSummaryDto?> GetBudgetComparisonReportAsync(int year, int month, bool groupByKakeibo = false);
 
     /// <summary>
     /// Gets the day summary analytics for a specific date.
@@ -966,4 +992,12 @@ public interface IBudgetApiService
     /// <param name="to">The latest week start date (inclusive).</param>
     /// <returns>List of goals ordered by week descending, or null on failure.</returns>
     Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to);
+
+    /// <summary>
+    /// Gets the Kaizen Dashboard report for the current user.
+    /// </summary>
+    /// <param name="weeks">Number of rolling ISO weeks to include (default 12, min 1, max 52).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The dashboard DTO, or <c>null</c> if unavailable.</returns>
+    Task<KaizenDashboardDto?> GetKaizenDashboardAsync(int weeks = 12, CancellationToken ct = default);
 }

@@ -32,19 +32,11 @@ public sealed class SuggestionMetricsService : ISuggestionMetricsService
     /// <inheritdoc />
     public async Task<SuggestionMetricsDto> GetMetricsAsync(CancellationToken ct = default)
     {
-        var ruleReviewedTask = _ruleSuggestionRepo.GetReviewedCountsByTypeAsync(ct);
-        var rulePendingTask = _ruleSuggestionRepo.GetPendingCountsByTypeAsync(ct);
-        var ruleConfidenceTask = _ruleSuggestionRepo.GetAverageConfidenceByStatusAsync(ct);
-        var categoryCountsTask = _categorySuggestionRepo.GetCountsByStatusAsync(ct);
-        var categoryConfidenceTask = _categorySuggestionRepo.GetAverageConfidenceByStatusAsync(ct);
-
-        await Task.WhenAll(ruleReviewedTask, rulePendingTask, ruleConfidenceTask, categoryCountsTask, categoryConfidenceTask);
-
-        var ruleReviewed = await ruleReviewedTask;
-        var rulePending = await rulePendingTask;
-        var ruleConfidence = await ruleConfidenceTask;
-        var categoryCounts = await categoryCountsTask;
-        var categoryConfidence = await categoryConfidenceTask;
+        var ruleReviewed = await _ruleSuggestionRepo.GetReviewedCountsByTypeAsync(ct);
+        var rulePending = await _ruleSuggestionRepo.GetPendingCountsByTypeAsync(ct);
+        var ruleConfidence = await _ruleSuggestionRepo.GetAverageConfidenceByStatusAsync(ct);
+        var categoryCounts = await _categorySuggestionRepo.GetCountsByStatusAsync(ct);
+        var categoryConfidence = await _categorySuggestionRepo.GetAverageConfidenceByStatusAsync(ct);
 
         // Build per-type metrics for rule suggestion types
         var byType = new List<SuggestionTypeMetricsDto>();

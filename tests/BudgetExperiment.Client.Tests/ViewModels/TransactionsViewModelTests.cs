@@ -519,7 +519,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     public void ApplyQueryParameters_SetsAccountId()
     {
         var id = Guid.NewGuid();
-        _sut.ApplyQueryParameters(id.ToString(), null, null, null, null, null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(id.ToString(), null, null, null, null, null, null, null, null, null, null, null, null);
 
         _sut.Filter.AccountId.ShouldBe(id);
     }
@@ -530,7 +530,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsUncategorizedFilter()
     {
-        _sut.ApplyQueryParameters(null, null, true, null, null, null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, true, null, null, null, null, null, null, null, null, null, null);
 
         _sut.Filter.Uncategorized.ShouldBe(true);
     }
@@ -541,7 +541,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsDateRange()
     {
-        _sut.ApplyQueryParameters(null, null, null, "2026-01-01", "2026-01-31", null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, null, "2026-01-01", "2026-01-31", null, null, null, null, null, null, null, null);
 
         _sut.Filter.StartDate.ShouldBe(new DateOnly(2026, 1, 1));
         _sut.Filter.EndDate.ShouldBe(new DateOnly(2026, 1, 31));
@@ -553,7 +553,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsDescription()
     {
-        _sut.ApplyQueryParameters(null, null, null, null, null, "coffee", null, null, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, null, null, null, "coffee", null, null, null, null, null, null, null);
 
         _sut.Filter.Description.ShouldBe("coffee");
     }
@@ -564,7 +564,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsAmountRange()
     {
-        _sut.ApplyQueryParameters(null, null, null, null, null, null, 10m, 100m, null, null, null, null);
+        _sut.ApplyQueryParameters(null, null, null, null, null, null, 10m, 100m, null, null, null, null, null);
 
         _sut.Filter.MinAmount.ShouldBe(10m);
         _sut.Filter.MaxAmount.ShouldBe(100m);
@@ -576,7 +576,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsSortParameters()
     {
-        _sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, "amount", false, null, null);
+        _sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, "amount", false, null, null, null);
 
         _sut.Filter.SortBy.ShouldBe("amount");
         _sut.Filter.SortDescending.ShouldBeFalse();
@@ -588,7 +588,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_SetsPagination()
     {
-        _sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, null, null, 3, 25);
+        _sut.ApplyQueryParameters(null, null, null, null, null, null, null, null, null, null, 3, 25, null);
 
         _sut.Filter.Page.ShouldBe(3);
         _sut.Filter.PageSize.ShouldBe(25);
@@ -600,7 +600,7 @@ public sealed class TransactionsViewModelTests : IDisposable
     [Fact]
     public void ApplyQueryParameters_IgnoresInvalidAccountId()
     {
-        _sut.ApplyQueryParameters("not-a-guid", null, null, null, null, null, null, null, null, null, null, null);
+        _sut.ApplyQueryParameters("not-a-guid", null, null, null, null, null, null, null, null, null, null, null, null);
 
         _sut.Filter.AccountId.ShouldBeNull();
     }

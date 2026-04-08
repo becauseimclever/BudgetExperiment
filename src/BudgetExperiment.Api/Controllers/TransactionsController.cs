@@ -1,4 +1,4 @@
-// <copyright file="TransactionsController.cs" company="BecauseImClever">
+﻿// <copyright file="TransactionsController.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -51,6 +51,7 @@ public sealed class TransactionsController : ControllerBase
     /// <param name="startDate">The start date (inclusive).</param>
     /// <param name="endDate">The end date (inclusive).</param>
     /// <param name="accountId">Optional account filter.</param>
+    /// <param name="kakeiboCategory">Optional Kakeibo category filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of transactions.</returns>
     [HttpGet]
@@ -60,6 +61,7 @@ public sealed class TransactionsController : ControllerBase
         [FromQuery] DateOnly startDate,
         [FromQuery] DateOnly endDate,
         [FromQuery] Guid? accountId,
+        [FromQuery] string? kakeiboCategory,
         CancellationToken cancellationToken)
     {
         if (startDate > endDate)
@@ -67,7 +69,18 @@ public sealed class TransactionsController : ControllerBase
             return this.BadRequest("startDate must be less than or equal to endDate.");
         }
 
-        var transactions = await _service.GetByDateRangeAsync(startDate, endDate, accountId, cancellationToken);
+        KakeiboCategory? filter = null;
+        if (!string.IsNullOrWhiteSpace(kakeiboCategory))
+        {
+            if (!Enum.TryParse<KakeiboCategory>(kakeiboCategory, ignoreCase: true, out var parsed))
+            {
+                return this.BadRequest("kakeiboCategory must be a valid Kakeibo category.");
+            }
+
+            filter = parsed;
+        }
+
+        var transactions = await _service.GetByDateRangeAsync(startDate, endDate, accountId, filter, cancellationToken);
         return this.Ok(transactions);
     }
 
@@ -229,6 +242,7 @@ public sealed class TransactionsController : ControllerBase
     /// <param name="description">Optional description search (contains, case-insensitive).</param>
     /// <param name="minAmount">Optional minimum amount filter (absolute value).</param>
     /// <param name="maxAmount">Optional maximum amount filter (absolute value).</param>
+    /// <param name="kakeiboCategory">Optional Kakeibo category filter.</param>
     /// <param name="sortBy">Sort field: date (default), description, amount, category, account.</param>
     /// <param name="sortDescending">Sort direction (default: true for descending).</param>
     /// <param name="page">Page number (1-based, default: 1).</param>
@@ -246,6 +260,7 @@ public sealed class TransactionsController : ControllerBase
         [FromQuery] string? description,
         [FromQuery] decimal? minAmount,
         [FromQuery] decimal? maxAmount,
+        [FromQuery] string? kakeiboCategory,
         [FromQuery] string sortBy = "date",
         [FromQuery] bool sortDescending = true,
         [FromQuery] int page = 1,
@@ -262,6 +277,7 @@ public sealed class TransactionsController : ControllerBase
             Description = description,
             MinAmount = minAmount,
             MaxAmount = maxAmount,
+            KakeiboCategory = kakeiboCategory,
             SortBy = sortBy,
             SortDescending = sortDescending,
             Page = page,

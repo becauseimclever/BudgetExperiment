@@ -25,9 +25,15 @@ public interface ITransactionService
     /// <param name="startDate">The start date (inclusive).</param>
     /// <param name="endDate">The end date (inclusive).</param>
     /// <param name="accountId">Optional account filter.</param>
+    /// <param name="kakeiboCategory">Optional Kakeibo category filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of transaction DTOs.</returns>
-    Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TransactionDto>> GetByDateRangeAsync(
+        DateOnly startDate,
+        DateOnly endDate,
+        Guid? accountId = null,
+        KakeiboCategory? kakeiboCategory = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new transaction.

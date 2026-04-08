@@ -843,7 +843,7 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<bool> DeleteAccountAsync(Guid id) => Task.FromResult(this.DeleteAccountResult);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<IReadOnlyList<TransactionDto>>([]);
+    public Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, string? kakeiboCategory = null) => Task.FromResult<IReadOnlyList<TransactionDto>>([]);
 
     /// <inheritdoc/>
     public Task<TransactionDto?> GetTransactionAsync(Guid id) => Task.FromResult(this.GetTransactionResult);
@@ -1217,13 +1217,16 @@ internal class StubBudgetApiService : IBudgetApiService
     }
 
     /// <inheritdoc/>
-    public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month) => Task.FromResult<MonthlyCategoryReportDto?>(null);
+    public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month, bool groupByKakeibo = false) => Task.FromResult<MonthlyCategoryReportDto?>(null);
 
     /// <inheritdoc/>
-    public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult(this.DateRangeCategoryReport);
+    public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, bool groupByKakeibo = false) => Task.FromResult(this.DateRangeCategoryReport);
 
     /// <inheritdoc/>
-    public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null) => Task.FromResult(this.SpendingTrends);
+    public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null, bool groupByKakeibo = false) => Task.FromResult(this.SpendingTrends);
+
+    /// <inheritdoc/>
+    public Task<BudgetSummaryDto?> GetBudgetComparisonReportAsync(int year, int month, bool groupByKakeibo = false) => Task.FromResult<BudgetSummaryDto?>(null);
 
     /// <inheritdoc/>
     public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null) => Task.FromResult<DaySummaryDto?>(null);
@@ -1357,6 +1360,10 @@ internal class StubBudgetApiService : IBudgetApiService
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<KaizenGoalDto>?>(null);
+
+    /// <inheritdoc />
+    public virtual Task<KaizenDashboardDto?> GetKaizenDashboardAsync(int weeks = 12, CancellationToken ct = default)
+        => Task.FromResult<KaizenDashboardDto?>(null);
 
     /// <inheritdoc />
     public virtual Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)

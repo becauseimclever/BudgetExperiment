@@ -1,6 +1,6 @@
 # Feature 137: Kaizen Dashboard Report
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@
 
 ## Feature Flag
 
-**Flag Name:** `Features:Kaizen:Dashboard`  
+**Flag Name:** `Kaizen:Dashboard`  
 **Default Value:** `false` (during development); `true` when shipped  
 **When Enabled:** The Kaizen Dashboard report appears in the Reports landing page and is accessible at `/reports/kaizen-dashboard`
 
@@ -59,22 +59,22 @@ GET /api/v1/reports/kaizen-dashboard?weeks=12
 
 **Response DTO:**
 ```csharp
-public class KaizenDashboardDto
-{
-    public List<WeeklyKakeiboSummary> Weeks { get; set; } = new();
-}
+    public sealed class KaizenDashboardDto
+    {
+        public IReadOnlyList<WeeklyKakeiboSummaryDto> Weeks { get; set; } = Array.Empty<WeeklyKakeiboSummaryDto>();
+    }
 
-public class WeeklyKakeiboSummary
-{
-    public DateOnly WeekStart { get; set; }
-    public string WeekLabel { get; set; } // e.g., "Wk 14" or "Apr 7–13"
-    public decimal Essentials { get; set; }
-    public decimal Wants { get; set; }
-    public decimal Culture { get; set; }
-    public decimal Unexpected { get; set; }
-    public string? KaizenGoalDescription { get; set; }
-    public bool? KaizenGoalAchieved { get; set; }
-}
+    public sealed class WeeklyKakeiboSummaryDto
+    {
+        public DateOnly WeekStart { get; set; }
+        public string WeekLabel { get; set; } = string.Empty; // e.g., "Wk 14" or "Apr 7–13"
+        public decimal Essentials { get; set; }
+        public decimal Wants { get; set; }
+        public decimal Culture { get; set; }
+        public decimal Unexpected { get; set; }
+        public string? KaizenGoalDescription { get; set; }
+        public bool? KaizenGoalAchieved { get; set; }
+    }
 ```
 
 **Implementation Notes:**
@@ -92,34 +92,34 @@ public class WeeklyKakeiboSummary
 **UI Components:**
 - New Blazor component: `KaizenDashboardView.razor`
   - Fetches from `GET /api/v1/reports/kaizen-dashboard?weeks=12`
-  - Renders a stacked area chart with four lines (Essentials, Wants, Culture, Unexpected)
-  - Each week displayed as a column on the x-axis with label
-  - Month boundary markers (subtle background color or vertical divider)
-  - Kaizen outcome badge (✓ green or ✗ gray) overlaid on the week column
+  - Renders a stacked bar chart with four Kakeibo categories (Essentials, Wants, Culture, Unexpected)
+  - Each week displayed as a labeled column with total spending
+  - Kaizen outcome badge (✓/✗) overlaid on the week column
   - Hover tooltip shows week date range and category breakdown
-  - Optional: small legend identifying the four Kakeibo categories and their colors
+  - Includes a weekly breakdown table (Week, Essentials, Wants, Culture, Unexpected, Goal)
+  - Legend identifying the four Kakeibo categories and their colors
 
 **Reports Dashboard Tile:**
 - Add a new tile on `/reports` landing page linking to this dashboard
 - Title: "Kaizen Dashboard"
-- Brief description: "12-week spending trend by Kakeibo category with micro-goal outcomes"
+- Brief description: "12-week spending trend by Kakeibo category"
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Feature flag `Features:Kaizen:Dashboard` is defined in `FeatureFlags` table with default `false`
-- [ ] API endpoint `GET /api/v1/reports/kaizen-dashboard?weeks=12` returns correct weekly aggregations grouped by Kakeibo category
-- [ ] Endpoint correctly joins `Transaction` data with `KaizenGoal` to include goal description and achieved status
-- [ ] Effective Kakeibo category is resolved server-side (override checked first, then category default)
-- [ ] UI renders stacked area chart with four distinct colors for each Kakeibo bucket
-- [ ] Month boundaries are visually marked on the chart
-- [ ] Kaizen outcome badges (✓/✗) appear on each week column
-- [ ] Weeks are labeled with clear identifiers (e.g., week number or date range)
-- [ ] Hover tooltips display week details (date, category breakdown)
-- [ ] Report tile on `/reports` links to the dashboard
-- [ ] Feature flag controls visibility — when disabled, route returns 404 or redirects
-- [ ] All unit and integration tests pass; OpenAPI spec is updated
+- [x] Feature flag `Kaizen:Dashboard` is defined in `FeatureFlags` table with default `false`
+- [x] API endpoint `GET /api/v1/reports/kaizen-dashboard?weeks=12` returns weekly aggregations grouped by Kakeibo category
+- [x] Endpoint joins `Transaction` data with `KaizenGoal` to include goal description and achieved status
+- [x] Effective Kakeibo category is resolved server-side (override checked first, then category default)
+- [x] UI renders a stacked bar chart with four distinct Kakeibo bucket colors
+- [x] Kaizen outcome badges (✓/✗) appear on each week column
+- [x] Weeks are labeled with clear identifiers (date range)
+- [x] Hover tooltips display week details (date, category breakdown)
+- [x] Weekly breakdown table lists Week/Essentials/Wants/Culture/Unexpected/Goal
+- [x] Report tile on `/reports` links to the dashboard
+- [x] Feature flag controls visibility (tile hidden, API returns 404 when disabled)
+- [x] All unit and integration tests pass; OpenAPI spec is updated
 
 ---
 

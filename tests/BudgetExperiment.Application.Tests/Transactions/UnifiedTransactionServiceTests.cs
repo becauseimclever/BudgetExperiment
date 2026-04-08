@@ -40,6 +40,7 @@ public class UnifiedTransactionServiceTests
                 true,
                 0,
                 50,
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([transaction], 1));
 
@@ -85,6 +86,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<Transaction>().AsReadOnly(), 0));
 
@@ -128,6 +130,7 @@ public class UnifiedTransactionServiceTests
                 false,
                 50,
                 25,
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -151,6 +154,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<Transaction>().AsReadOnly(), 0));
 
@@ -180,6 +184,7 @@ public class UnifiedTransactionServiceTests
                 true,
                 0,
                 100,
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -203,6 +208,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<Transaction>().AsReadOnly(), 0));
 
@@ -253,6 +259,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([t1, t2, t3], 3));
 
@@ -305,6 +312,7 @@ public class UnifiedTransactionServiceTests
                 true,
                 0,
                 50,
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([t1], 1));
 
@@ -362,6 +370,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([t1], 1));
 
@@ -407,6 +416,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([transaction], 1));
 
@@ -465,6 +475,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([categorized, uncategorized], 2));
 
@@ -502,6 +513,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<Transaction>().AsReadOnly(), 0));
 
@@ -560,6 +572,7 @@ public class UnifiedTransactionServiceTests
                 true,
                 0,
                 50,
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([t1, t2, t3], 3));
 
@@ -629,6 +642,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([t1], 1));
 
@@ -686,6 +700,7 @@ public class UnifiedTransactionServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<KakeiboCategory?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([t3], 3));
 

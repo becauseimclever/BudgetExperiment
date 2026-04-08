@@ -1,4 +1,4 @@
-// <copyright file="TransactionsViewModel.cs" company="BecauseImClever">
+﻿// <copyright file="TransactionsViewModel.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -237,6 +237,11 @@ public sealed class TransactionsViewModel : IDisposable
                 count++;
             }
 
+            if (!string.IsNullOrWhiteSpace(this.Filter.KakeiboCategory))
+            {
+                count++;
+            }
+
             return count;
         }
     }
@@ -262,6 +267,7 @@ public sealed class TransactionsViewModel : IDisposable
     /// <param name="sortDesc">Sort descending flag.</param>
     /// <param name="page">Page number.</param>
     /// <param name="pageSize">Page size.</param>
+    /// <param name="kakeiboCategory">Kakeibo category filter.</param>
     public void ApplyQueryParameters(
         string? accountId,
         string? categoryId,
@@ -274,7 +280,8 @@ public sealed class TransactionsViewModel : IDisposable
         string? sortBy,
         bool? sortDesc,
         int? page,
-        int? pageSize)
+        int? pageSize,
+        string? kakeiboCategory = null)
     {
         if (Guid.TryParse(accountId, out var aid))
         {
@@ -335,6 +342,11 @@ public sealed class TransactionsViewModel : IDisposable
         {
             this.Filter.PageSize = pageSize.Value;
         }
+
+        if (!string.IsNullOrWhiteSpace(kakeiboCategory))
+        {
+            this.Filter.KakeiboCategory = kakeiboCategory;
+        }
     }
 
     /// <summary>
@@ -384,6 +396,11 @@ public sealed class TransactionsViewModel : IDisposable
         if (this.Filter.MaxAmount.HasValue)
         {
             parts.Add($"maxAmount={this.Filter.MaxAmount.Value}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(this.Filter.KakeiboCategory))
+        {
+            parts.Add($"kakeiboCategory={Uri.EscapeDataString(this.Filter.KakeiboCategory)}");
         }
 
         if (this.Filter.SortBy != "date")
@@ -485,6 +502,7 @@ public sealed class TransactionsViewModel : IDisposable
         this.Filter.Description = null;
         this.Filter.MinAmount = null;
         this.Filter.MaxAmount = null;
+        this.Filter.KakeiboCategory = null;
         this.Filter.Page = 1;
         this.ClearSelection();
         await this.LoadTransactionsAsync();

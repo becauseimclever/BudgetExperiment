@@ -20,15 +20,22 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class CustomReportsController : ControllerBase
 {
+    private const string FeatureFlagName = "Reports:CustomReportBuilder";
+
     private readonly ICustomReportLayoutService _layoutService;
+    private readonly IFeatureFlagService _featureFlagService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CustomReportsController"/> class.
     /// </summary>
     /// <param name="layoutService">Layout service.</param>
-    public CustomReportsController(ICustomReportLayoutService layoutService)
+    /// <param name="featureFlagService">Feature flag service.</param>
+    public CustomReportsController(
+        ICustomReportLayoutService layoutService,
+        IFeatureFlagService featureFlagService)
     {
         _layoutService = layoutService;
+        _featureFlagService = featureFlagService;
     }
 
     /// <summary>
@@ -38,8 +45,14 @@ public sealed class CustomReportsController : ControllerBase
     /// <returns>Layouts.</returns>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<CustomReportLayoutDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
+        if (!await _featureFlagService.IsEnabledAsync(FeatureFlagName, cancellationToken))
+        {
+            return this.NotFound();
+        }
+
         var layouts = await _layoutService.GetAllAsync(cancellationToken);
         return this.Ok(layouts);
     }
@@ -55,6 +68,11 @@ public sealed class CustomReportsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
+        if (!await _featureFlagService.IsEnabledAsync(FeatureFlagName, cancellationToken))
+        {
+            return this.NotFound();
+        }
+
         var layout = await _layoutService.GetByIdAsync(id, cancellationToken);
         if (layout is null)
         {
@@ -78,10 +96,16 @@ public sealed class CustomReportsController : ControllerBase
     [HttpPost]
     [ProducesResponseType<CustomReportLayoutDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateAsync(
         [FromBody] CustomReportLayoutCreateDto dto,
         CancellationToken cancellationToken)
     {
+        if (!await _featureFlagService.IsEnabledAsync(FeatureFlagName, cancellationToken))
+        {
+            return this.NotFound();
+        }
+
         var layout = await _layoutService.CreateAsync(dto, cancellationToken);
         return this.CreatedAtAction("GetById", new { id = layout.Id }, layout);
     }
@@ -102,6 +126,11 @@ public sealed class CustomReportsController : ControllerBase
         [FromBody] CustomReportLayoutUpdateDto dto,
         CancellationToken cancellationToken)
     {
+        if (!await _featureFlagService.IsEnabledAsync(FeatureFlagName, cancellationToken))
+        {
+            return this.NotFound();
+        }
+
         string? expectedVersion = null;
         if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
         {
@@ -133,6 +162,11 @@ public sealed class CustomReportsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
+        if (!await _featureFlagService.IsEnabledAsync(FeatureFlagName, cancellationToken))
+        {
+            return this.NotFound();
+        }
+
         var deleted = await _layoutService.DeleteAsync(id, cancellationToken);
         return deleted ? this.NoContent() : this.NotFound();
     }

@@ -38,6 +38,7 @@ public sealed class ReportsController : ControllerBase
     /// </summary>
     /// <param name="year">The year (e.g., 2026).</param>
     /// <param name="month">The month (1-12).</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The monthly category report with per-category spending totals and percentages.</returns>
     /// <remarks>
@@ -50,7 +51,8 @@ public sealed class ReportsController : ControllerBase
     public async Task<IActionResult> GetMonthlyCategoryReportAsync(
         [FromQuery] int year,
         [FromQuery] int month,
-        CancellationToken cancellationToken)
+        [FromQuery] bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default)
     {
         if (month < 1 || month > 12)
         {
@@ -62,7 +64,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("Year must be between 2000 and 2100.");
         }
 
-        var report = await _reportService.GetMonthlyCategoryReportAsync(year, month, cancellationToken);
+        var report = await _reportService.GetMonthlyCategoryReportAsync(year, month, groupByKakeibo, cancellationToken);
         return this.Ok(report);
     }
 
@@ -72,6 +74,7 @@ public sealed class ReportsController : ControllerBase
     /// <param name="startDate">The start date, inclusive (format: yyyy-MM-dd, e.g., 2026-01-15).</param>
     /// <param name="endDate">The end date, inclusive (format: yyyy-MM-dd, e.g., 2026-02-15).</param>
     /// <param name="accountId">Optional account filter.</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The date range category report with per-category spending totals and percentages.</returns>
     /// <remarks>
@@ -86,7 +89,8 @@ public sealed class ReportsController : ControllerBase
         [FromQuery] DateOnly startDate,
         [FromQuery] DateOnly endDate,
         [FromQuery] Guid? accountId,
-        CancellationToken cancellationToken)
+        [FromQuery] bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default)
     {
         if (endDate < startDate)
         {
@@ -98,7 +102,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("Date range cannot exceed one year.");
         }
 
-        var report = await _reportService.GetCategoryReportByRangeAsync(startDate, endDate, accountId, cancellationToken);
+        var report = await _reportService.GetCategoryReportByRangeAsync(startDate, endDate, accountId, groupByKakeibo, cancellationToken);
         return this.Ok(report);
     }
 
@@ -109,6 +113,7 @@ public sealed class ReportsController : ControllerBase
     /// <param name="endYear">Optional end year (defaults to current year).</param>
     /// <param name="endMonth">Optional end month (defaults to current month).</param>
     /// <param name="categoryId">Optional category filter to view a single category over time.</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Monthly totals with income, spending, net, and trend direction.</returns>
     /// <remarks>
@@ -124,6 +129,7 @@ public sealed class ReportsController : ControllerBase
         [FromQuery] int? endYear = null,
         [FromQuery] int? endMonth = null,
         [FromQuery] Guid? categoryId = null,
+        [FromQuery] bool groupByKakeibo = false,
         CancellationToken cancellationToken = default)
     {
         if (months < 1 || months > 24)
@@ -141,7 +147,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("End year must be between 2000 and 2100.");
         }
 
-        var report = await _reportService.GetSpendingTrendsAsync(months, endYear, endMonth, categoryId, cancellationToken);
+        var report = await _reportService.GetSpendingTrendsAsync(months, endYear, endMonth, categoryId, groupByKakeibo, cancellationToken);
         return this.Ok(report);
     }
 
@@ -173,6 +179,7 @@ public sealed class ReportsController : ControllerBase
     /// </summary>
     /// <param name="year">The year (e.g., 2026).</param>
     /// <param name="month">The month (1-12).</param>
+    /// <param name="groupByKakeibo">Whether to include Kakeibo grouped summary.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The budget summary with per-category target vs. spent vs. remaining and status.</returns>
     /// <remarks>
@@ -186,7 +193,8 @@ public sealed class ReportsController : ControllerBase
     public async Task<IActionResult> GetBudgetComparisonAsync(
         [FromQuery] int year,
         [FromQuery] int month,
-        CancellationToken cancellationToken)
+        [FromQuery] bool groupByKakeibo = false,
+        CancellationToken cancellationToken = default)
     {
         if (month < 1 || month > 12)
         {
@@ -198,7 +206,7 @@ public sealed class ReportsController : ControllerBase
             return this.BadRequest("Year must be between 2000 and 2100.");
         }
 
-        var summary = await _budgetProgressService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await _budgetProgressService.GetMonthlySummaryAsync(year, month, groupByKakeibo, cancellationToken);
         return this.Ok(summary);
     }
 

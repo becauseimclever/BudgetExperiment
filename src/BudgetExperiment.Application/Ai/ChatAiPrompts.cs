@@ -31,6 +31,12 @@ public static class ChatAiPrompts
 
         TODAY'S DATE: {today}
 
+        KAKEIBO NOTES:
+        - Some categories include "Kakeibo: <bucket>" in the category list.
+        - When a category includes a Kakeibo bucket, mention it in your response (e.g., "Dining (Wants)").
+        - If you need the user to choose a Kakeibo bucket, ask a clarification with field "kakeiboCategory"
+          and set "clarificationType" to "AskKakeiboCategory" with options for Essentials, Wants, Culture, Unexpected.
+
         When parsing commands, extract:
         - For transactions: amount, description, date, account, category
         - For transfers: amount, from_account, to_account, date, description
@@ -57,6 +63,7 @@ public static class ChatAiPrompts
           },
           "clarification": {
             "needed": true|false,
+            "clarificationType": "General|AskKakeiboCategory",
             "field": "field_name_needing_clarification",
             "question": "question to ask the user",
             "options": [{"label": "Display Text", "value": "value", "entityId": "guid-or-null"}]

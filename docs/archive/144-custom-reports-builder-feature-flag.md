@@ -1,6 +1,6 @@
 # Feature 144: Custom Reports Builder — Feature Flag
 
-> **Status:** Planned
+> **Status:** Done
 
 ## Prerequisites
 
@@ -10,16 +10,16 @@
 
 ## Feature Flag
 
-**Flag Name:** `Features:Reports:CustomReportBuilder`  
+**Flag Name:** `Reports:CustomReportBuilder`  
 **Default Value:** `false` (disabled by default)  
 **When Enabled:** The Custom Reports Builder route is accessible and the nav menu item is visible  
-**When Disabled:** The route `/reports/custom-report-builder` returns 404 or redirects to `/reports/dashboard`, and the nav menu item is hidden
+**When Disabled:** The route `/reports/custom-builder` returns 404 or redirects to `/reports/dashboard`, and the nav menu item is hidden
 
 ---
 
 ## Overview
 
-The Custom Reports Builder (`/reports/custom-report-builder`) allows power users to create arbitrary, complex data queries and visualizations. While powerful, this feature philosophically **conflicts with the Kakeibo calendar-first approach** established in Feature 128 — it encourages endless data exploration and report customization, moving focus away from the calendar as the primary reflection surface.
+The Custom Reports Builder (`/reports/custom-builder`) allows power users to create arbitrary, complex data queries and visualizations. While powerful, this feature philosophically **conflicts with the Kakeibo calendar-first approach** established in Feature 128 — it encourages endless data exploration and report customization, moving focus away from the calendar as the primary reflection surface.
 
 **Decision:** Feature-flag the Custom Reports Builder off by default. Users who explicitly opt in can enable it via the feature flag system. When enabled, the page displays an educational note reminding users that the calendar is the primary reflection surface.
 
@@ -50,7 +50,7 @@ app.MapGet("/api/v1/reports/custom/{...}", CustomReportBuilder)
 Or in the endpoint handler:
 
 ```csharp
-var isEnabled = await featureFlagService.IsEnabledAsync("Features:Reports:CustomReportBuilder");
+    var isEnabled = await featureFlagService.IsEnabledAsync("Reports:CustomReportBuilder");
 if (!isEnabled)
 {
     return Results.NotFound();
@@ -75,7 +75,7 @@ if (!isEnabled)
    - Controlled by the `IFeatureFlagClientService` available to the layout/nav component
    - Example:
      ```csharp
-     @if (featureFlags?.IsEnabled("Features:Reports:CustomReportBuilder") ?? false)
+     @if (featureFlags?.IsEnabled("Reports:CustomReportBuilder") ?? false)
      {
          <NavLink href="/reports/custom-report-builder">
              Custom Report Builder
@@ -95,7 +95,7 @@ if (!isEnabled)
    - Allow dismissal (store in `localStorage`) but display on page load
 
 4. **Unavailable State** — When Flag is Disabled
-   - If user attempts to navigate to `/reports/custom-report-builder` and the flag is disabled:
+   - If user attempts to navigate to `/reports/custom-builder` and the flag is disabled:
      - Option A: Return a 404 page with a message: "This feature is not available."
      - Option B: Redirect to `/reports/dashboard`
    - Either approach is acceptable
@@ -104,24 +104,24 @@ if (!isEnabled)
 
 ## Acceptance Criteria
 
-- [ ] Feature flag `Features:Reports:CustomReportBuilder` is defined in the `FeatureFlags` table with default `false`
-- [ ] API endpoints serving the custom report builder are guarded by the feature flag check
-- [ ] Requests to custom report endpoints return 404 or error when the flag is disabled
-- [ ] Navigation menu item "Custom Report Builder" is conditionally hidden/shown based on flag state
-- [ ] Reports dashboard tile "Custom Report Builder" only appears when flag is enabled
-- [ ] Attempting to navigate to `/reports/custom-report-builder` while disabled returns 404 or redirects to `/reports/dashboard`
-- [ ] When flag is enabled, the Custom Report Builder page displays the educational note about the calendar
-- [ ] Educational note can be dismissed and the dismissal is persisted to `localStorage`
-- [ ] The note re-appears on subsequent page loads (or only once per session, depending on UX preference)
-- [ ] All unit and integration tests pass; OpenAPI spec is updated
-- [ ] Feature flag toggle works at runtime (admin can enable/disable without app restart)
+- [x] Feature flag `Reports:CustomReportBuilder` is defined in the `FeatureFlags` table with default `false`
+- [x] API endpoints serving the custom report builder are guarded by the feature flag check
+- [x] Requests to custom report endpoints return 404 or error when the flag is disabled
+- [x] Navigation menu item "Custom Report Builder" is conditionally hidden/shown based on flag state
+- [x] Reports dashboard tile "Custom Report Builder" only appears when flag is enabled
+- [x] Attempting to navigate to `/reports/custom-builder` while disabled returns 404 or redirects to `/reports/dashboard`
+- [x] When flag is enabled, the Custom Report Builder page displays the educational note about the calendar
+- [x] Educational note can be dismissed and the dismissal is persisted to `localStorage`
+- [x] The note re-appears on subsequent page loads (or only once per session, depending on UX preference)
+- [x] All unit and integration tests pass; OpenAPI spec is updated
+- [x] Feature flag toggle works at runtime (admin can enable/disable without app restart)
 
 ---
 
 ## Implementation Notes
 
 - **Philosophy Alignment:** This feature is intentionally gated to preserve the Kakeibo calendar-first philosophy. The default-off approach encourages users to develop a habit of calendar reflection before reaching for powerful but potentially distracting custom reporting tools.
-- **Runtime Toggle:** The feature flag can be toggled at runtime via the `PUT /api/v1/features/Features:Reports:CustomReportBuilder` admin endpoint (Feature 129b). No app restart needed.
+- **Runtime Toggle:** The feature flag can be toggled at runtime via the `PUT /api/v1/features/Reports:CustomReportBuilder` admin endpoint (Feature 129b). No app restart needed.
 - **Client-Side Gate:** The Blazor client checks the feature flag before rendering the nav item or allowing route access. This improves UX (no 404 pages if the client knows the feature is disabled) and reduces API load.
 - **Educational Message:** The note on the page should be friendly and non-judgmental — it's a reminder, not a restriction. Many users will benefit from custom reports; the goal is to ensure the calendar remains the primary surface.
 - **Dismissal Persistence:** Store dismissal in `localStorage` keyed by `customReportBuilderEducationalNoteDismissed`. Optionally, reset the dismissal when the flag is toggled on (so users see the note again if it's re-enabled).

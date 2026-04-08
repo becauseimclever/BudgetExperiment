@@ -7,6 +7,7 @@ using System.Security.Claims;
 using BudgetExperiment.Client.Components.Navigation;
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
+using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
 
 using Bunit;
@@ -31,6 +32,7 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton<ThemeService>();
         Services.AddSingleton<CultureService>();
+        Services.AddSingleton<IFeatureFlagClientService>(new StubFeatureFlagClientService());
     }
 
     /// <inheritdoc/>
@@ -400,7 +402,7 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
         public Task<bool> DeleteAccountAsync(Guid id) => Task.FromResult(false);
 
         /// <inheritdoc/>
-        public Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<IReadOnlyList<TransactionDto>>([]);
+        public Task<IReadOnlyList<TransactionDto>> GetTransactionsAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, string? kakeiboCategory = null) => Task.FromResult<IReadOnlyList<TransactionDto>>([]);
 
         /// <inheritdoc/>
         public Task<TransactionDto?> GetTransactionAsync(Guid id) => Task.FromResult<TransactionDto?>(null);
@@ -631,13 +633,16 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
         public Task<BulkCategorizeResponse> BulkCategorizeTransactionsAsync(BulkCategorizeRequest request) => Task.FromResult(new BulkCategorizeResponse());
 
         /// <inheritdoc/>
-        public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month) => Task.FromResult<MonthlyCategoryReportDto?>(null);
+        public Task<MonthlyCategoryReportDto?> GetMonthlyCategoryReportAsync(int year, int month, bool groupByKakeibo = false) => Task.FromResult<MonthlyCategoryReportDto?>(null);
 
         /// <inheritdoc/>
-        public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null) => Task.FromResult<DateRangeCategoryReportDto?>(null);
+        public Task<DateRangeCategoryReportDto?> GetCategoryReportByRangeAsync(DateOnly startDate, DateOnly endDate, Guid? accountId = null, bool groupByKakeibo = false) => Task.FromResult<DateRangeCategoryReportDto?>(null);
 
         /// <inheritdoc/>
-        public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null) => Task.FromResult<SpendingTrendsReportDto?>(null);
+        public Task<SpendingTrendsReportDto?> GetSpendingTrendsAsync(int months = 6, int? endYear = null, int? endMonth = null, Guid? categoryId = null, bool groupByKakeibo = false) => Task.FromResult<SpendingTrendsReportDto?>(null);
+
+        /// <inheritdoc/>
+        public Task<BudgetSummaryDto?> GetBudgetComparisonReportAsync(int year, int month, bool groupByKakeibo = false) => Task.FromResult<BudgetSummaryDto?>(null);
 
         /// <inheritdoc/>
         public Task<DaySummaryDto?> GetDaySummaryAsync(DateOnly date, Guid? accountId = null) => Task.FromResult<DaySummaryDto?>(null);
@@ -764,6 +769,10 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
 
         /// <inheritdoc/>
         public Task<IReadOnlyList<KaizenGoalDto>?> GetKaizenGoalsRangeAsync(DateOnly from, DateOnly to) => Task.FromResult<IReadOnlyList<KaizenGoalDto>?>(null);
+
+        /// <inheritdoc />
+        public Task<KaizenDashboardDto?> GetKaizenDashboardAsync(int weeks = 12, CancellationToken ct = default)
+            => Task.FromResult<KaizenDashboardDto?>(null);
 
         /// <inheritdoc />
         public Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)

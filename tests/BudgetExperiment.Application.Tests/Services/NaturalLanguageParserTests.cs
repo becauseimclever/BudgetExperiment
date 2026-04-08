@@ -35,9 +35,9 @@ public class NaturalLanguageParserTests
 
         _categories = new List<CategoryInfo>
         {
-            new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "Groceries"),
-            new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "Utilities"),
-            new(Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"), "Entertainment"),
+            new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "Groceries", KakeiboCategory.Wants),
+            new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "Utilities", KakeiboCategory.Essentials),
+            new(Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"), "Entertainment", KakeiboCategory.Culture),
         };
     }
 

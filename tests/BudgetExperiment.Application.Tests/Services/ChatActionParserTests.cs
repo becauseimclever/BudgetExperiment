@@ -30,8 +30,8 @@ public class ChatActionParserTests
 
         _categories = new List<CategoryInfo>
         {
-            new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "Groceries"),
-            new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "Utilities"),
+            new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "Groceries", KakeiboCategory.Wants),
+            new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "Utilities", KakeiboCategory.Essentials),
         };
     }
 
@@ -49,7 +49,8 @@ public class ChatActionParserTests
                 "amount": -50.00,
                 "date": "2026-03-01",
                 "description": "Grocery Store",
-                "category": "Groceries"
+                "category": "Groceries",
+                "categoryId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
               }
             }
             """;
@@ -64,6 +65,7 @@ public class ChatActionParserTests
         action.AccountId.ShouldBe(Guid.Parse("11111111-1111-1111-1111-111111111111"));
         action.Amount.ShouldBe(-50.00m);
         action.Description.ShouldBe("Grocery Store");
+        action.KakeiboCategory.ShouldBe(KakeiboCategory.Wants);
     }
 
     [Fact]
@@ -205,6 +207,40 @@ public class ChatActionParserTests
         result.Action.ShouldBeOfType<ClarificationNeededAction>();
         var action = (ClarificationNeededAction)result.Action!;
         action.Question.ShouldBe("Which account should I use?");
+        action.ClarificationType.ShouldBe(ClarificationNeededActionType.General);
+        action.Options.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ParseResponse_ClarificationKakeiboCategory_ReturnsKakeiboType()
+    {
+        // Arrange
+        var json = """
+            {
+              "intent": "clarification",
+              "confidence": 0.45,
+              "response": "Which Kakeibo category?",
+              "clarification": {
+                "needed": true,
+                "clarificationType": "AskKakeiboCategory",
+                "question": "Is this Essentials, Wants, Culture, or Unexpected?",
+                "field": "kakeiboCategory",
+                "options": [
+                  { "label": "Essentials", "value": "Essentials" },
+                  { "label": "Wants", "value": "Wants" }
+                ]
+              }
+            }
+            """;
+
+        // Act
+        var result = ChatActionParser.ParseResponse(json, _accounts, _categories, null);
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        result.Action.ShouldBeOfType<ClarificationNeededAction>();
+        var action = (ClarificationNeededAction)result.Action!;
+        action.ClarificationType.ShouldBe(ClarificationNeededActionType.AskKakeiboCategory);
         action.Options.Count.ShouldBe(2);
     }
 

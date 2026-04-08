@@ -1,4 +1,4 @@
-// <copyright file="UnifiedTransactionService.cs" company="BecauseImClever">
+﻿// <copyright file="UnifiedTransactionService.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -40,6 +40,13 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
         var pageSize = Math.Clamp(filter.PageSize, 1, MaxPageSize);
         var skip = (page - 1) * pageSize;
 
+        KakeiboCategory? kakeiboFilter = null;
+        if (!string.IsNullOrWhiteSpace(filter.KakeiboCategory) &&
+            Enum.TryParse<KakeiboCategory>(filter.KakeiboCategory, ignoreCase: true, out var parsedKakeibo))
+        {
+            kakeiboFilter = parsedKakeibo;
+        }
+
         var (items, totalCount) = await _transactionRepository.GetUnifiedPagedAsync(
             filter.AccountId,
             filter.CategoryId,
@@ -53,6 +60,7 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
             filter.SortDescending,
             skip,
             pageSize,
+            kakeiboFilter,
             cancellationToken);
 
         // Build account name lookup
@@ -72,6 +80,8 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
             CategoryName = t.Category?.Name,
             IsRecurring = t.RecurringTransactionId.HasValue,
             IsTransfer = t.IsTransfer,
+            EffectiveKakeiboCategory = (t.KakeiboOverride ?? t.Category?.KakeiboCategory)?.ToString(),
+            IsKakeiboOverride = t.KakeiboOverride.HasValue,
         }).ToList();
 
         // Compute summary from the current page items
