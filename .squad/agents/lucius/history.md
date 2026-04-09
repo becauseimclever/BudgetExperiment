@@ -739,3 +739,11 @@ Same concrete implementation serves all four interfaces.
 - ISP is a living principle — if you find a service using only 2-3 methods from a repository, propose splitting that further
 - This pattern (composition root + focused sub-interfaces) is reusable across all god interfaces in the codebase
 
+
+---
+
+### Captive Dependency in Blazor WASM (2026-04-09)
+
+- **Captive dependency violation**: Singleton service consuming Scoped dependency. In server-hosted scenarios this may silently extend the scoped dependency's lifetime; in WASM it raises `InvalidOperationException` at bootstrap.
+- **Blazor WASM scoping semantics**: One container scope per page/component lifecycle. Registering a service as `AddScoped` is semantically identical to server-hosted DI but reflects the WASM scope boundary correctly. Prefer `AddScoped` for services with scoped dependencies (HttpClient, navigation, etc.).
+- **Detection**: Errors appear at startup, not at runtime: "Cannot consume scoped service ... from singleton ...". Check the service's constructor dependencies; if any are Scoped (HttpClient, ILogger, IStringLocalizer), the service itself must be Scoped.

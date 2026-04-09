@@ -146,7 +146,7 @@ builder.Services.AddApexCharts();
 builder.Services.AddScoped<GeolocationService>();
 builder.Services.AddScoped<CultureService>();
 builder.Services.AddScoped<VersionService>();
-builder.Services.AddSingleton<IFeatureFlagClientService, FeatureFlagClientService>();
+builder.Services.AddScoped<IFeatureFlagClientService, FeatureFlagClientService>();
 builder.Services.AddTransient<CategoriesViewModel>();
 builder.Services.AddTransient<RulesViewModel>();
 builder.Services.AddTransient<AccountsViewModel>();
