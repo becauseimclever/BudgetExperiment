@@ -1,6 +1,8 @@
 # Feature 141: Settings — Kakeibo/Kaizen Preferences
 
 > **Status:** Done
+> **Completed:** 2026-01-09  
+> **Implementation:** UserSettings entity extended with four boolean fields (ShowSpendingHeatmap, ShowMonthlyReflectionPrompts, EnableKaizenMicroGoals, ShowKakeiboCalendarBadges). Settings UI panel added to Pages/Settings.razor with migration support.
 
 ## Prerequisites
 

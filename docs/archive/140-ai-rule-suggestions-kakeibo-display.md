@@ -1,6 +1,8 @@
 # Feature 140: AI Rule Suggestions — Kakeibo Display
 
 > **Status:** Done
+> **Completed:** 2026-01-09  
+> **Implementation:** Kakeibo category badges added to suggestion cards in UnifiedSuggestionCard.razor component.
 
 ## Prerequisites
 

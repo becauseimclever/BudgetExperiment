@@ -1,5 +1,15 @@
 # Feature 128: Kakeibo + Kaizen — Calendar-First Mindful Budgeting
-> **Status:** Planning
+> **Status:** Superseded — concepts implemented via Features 131-136
+> **Date:** 2026-01-09
+> **Note:** This planning document outlined the Kakeibo and Kaizen philosophy. Individual features implementing these concepts were extracted and executed:
+>   - Feature 131: Budget Categories & Kakeibo Routing
+>   - Feature 132: Transaction Entry with Kakeibo Selector
+>   - Feature 134: Calendar Enhancements — Spending Heatmap
+>   - Feature 135: Monthly Reflection Panel
+>   - Feature 136: Kaizen Micro-Goals
+>   - Feature 139: AI Chat Kakeibo Awareness
+>   - Feature 140: AI Rule Suggestions — Kakeibo Display
+>   - Feature 141: Settings — Kakeibo/Kaizen Preferences
 
 ## Overview
 
@@ -735,3 +745,4 @@ Most users will need only minor corrections. A **Kakeibo Setup** prompt (one-tim
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-04-07 | Initial draft — post-pivot from plugin system | Fortinbra + Copilot |
+
