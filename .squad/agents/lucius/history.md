@@ -497,3 +497,15 @@ Implemented atomic transfer deletion with orphan detection. Key decisions:
 Files: ITransactionRepository, TransactionRepository, ITransferService, TransferService, TransfersController, FeatureFlagSeeder, test fixtures.
 
 Commits: 4052302 (feat: atomic transfer deletion)
+
+
+## Learnings
+
+### Feature 147: Recurring Projection / Realization Accuracy (2026-04-09)
+
+- **Interface location**: IRecurringInstanceProjector lives in **Domain** (src/BudgetExperiment.Domain/Services/), not Application. Always check Domain/Services before assuming interfaces are in Application.
+- **Call site updates**: 6 src call sites + 7 test files used GetInstancesByDateRangeAsync with the old 4-param signature. Batch regex replacement via PowerShell works well for mock setups that use It.IsAny<DateOnly>(), but tests using concrete dates need individual edits.
+- **Moq Callback type params**: When adding a parameter to an interface, any Callback<T1,T2,T3,T4>(...) in tests must become Callback<T1,T2,T3,T4,T5>(...) — the compiler does not catch this as a build error; it only fails at runtime.
+- **Barbara had pre-written tests**: RecurringInstanceProjectorExcludeDatesTests and RecurringQueryServiceTests were already committed by Barbara. Her constructor-null tests required adding ArgumentNullException guards to RecurringQueryService.
+- **Feature flag location**: FeatureFlagSeeder.cs in Infrastructure/Seeding. Simple tuple array; append the new flag with alse as default.
+- **StyleCop SA1512**: A comment followed by a blank line is an error. Pattern // ===== Section =====\n\n must become // ===== Section =====\n.
