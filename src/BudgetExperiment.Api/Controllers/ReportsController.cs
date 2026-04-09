@@ -280,8 +280,8 @@ public sealed class ReportsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetKakeiboReportAsync(
-        [FromQuery] DateOnly from,
-        [FromQuery] DateOnly to,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
         [FromQuery] Guid? accountId,
         CancellationToken cancellationToken)
     {
@@ -290,12 +290,17 @@ public sealed class ReportsController : ControllerBase
             return this.NotFound();
         }
 
+        if (from is null || to is null)
+        {
+            return this.BadRequest("'from' and 'to' query parameters are required.");
+        }
+
         if (from > to)
         {
             return this.BadRequest("'from' must be on or before 'to'.");
         }
 
-        var summary = await _kakeiboReportService.GetKakeiboSummaryAsync(from, to, accountId, cancellationToken);
+        var summary = await _kakeiboReportService.GetKakeiboSummaryAsync(from.Value, to.Value, accountId, cancellationToken);
         return this.Ok(summary);
     }
 }

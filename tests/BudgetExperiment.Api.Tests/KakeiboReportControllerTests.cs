@@ -5,6 +5,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using BudgetExperiment.Application.FeatureFlags;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Infrastructure.Persistence;
 
@@ -142,8 +143,7 @@ public sealed class KakeiboReportControllerTests : IClassFixture<CustomWebApplic
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BudgetDbContext>();
 
-        // Upsert — ON CONFLICT updates to desired state
-#pragma warning disable EF1002 // name is a fixed string, not user input
+#pragma warning disable EF1002 // name is a fixed string constant, not user input
         db.Database.ExecuteSqlRaw(
             """
             INSERT INTO "FeatureFlags" ("Name", "IsEnabled", "UpdatedAtUtc")
@@ -154,6 +154,10 @@ public sealed class KakeiboReportControllerTests : IClassFixture<CustomWebApplic
             isEnabled,
             DateTime.UtcNow);
 #pragma warning restore EF1002
+
+        // Invalidate the in-memory cache so the next request reads fresh values from DB
+        var featureFlagService = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
+        featureFlagService.SetFlagAsync(name, isEnabled).GetAwaiter().GetResult();
     }
 
     private async Task<AccountDto> CreateAccountAsync(string name)
