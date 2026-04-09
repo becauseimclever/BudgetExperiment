@@ -420,3 +420,25 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 2. Create BudgetExperiment.Application/Reports/ReportBuilderService.cs implementation
 3. Register service in DI container (Program.cs or AddApplication() extension)
 4. Tests should pass with minimal GetAvailableReports + BuildReportAsync logic
+
+### 2026-04-09 — Response Compression Middleware Tests
+
+**Task:** Write integration tests verifying that `AddResponseCompression()` / `UseResponseCompression()` middleware correctly compresses HTTP responses.
+
+**File created:** `tests/BudgetExperiment.Api.Tests/CompressionTests.cs`
+
+**Tests Written (3 total, RED until Lucius wires up middleware):**
+1. `GetCategories_WithBrotliAcceptEncoding_ReturnsBrotliContentEncoding` — `Accept-Encoding: br` → `Content-Encoding: br`
+2. `GetCategories_WithGzipAcceptEncoding_ReturnsGzipContentEncoding` — `Accept-Encoding: gzip` → `Content-Encoding: gzip`
+3. `GetCategories_WithNoAcceptEncoding_ReturnsNoContentEncodingHeader` — no Accept-Encoding → no Content-Encoding header
+
+**Key Technical Decision:**
+Use `_factory.Server.CreateHandler()` to obtain the raw in-process handler and wrap it in `new HttpClient(handler)`. The `TestServer` handler does NOT perform automatic decompression, so `Content-Encoding` headers survive intact for assertion. This is cleaner than `HttpClientHandler { AutomaticDecompression = DecompressionMethods.None }` which would require a delegating-handler chain to connect to the test server.
+
+**Pattern Used:**
+- `[Collection("ApiDb")]` + `IClassFixture<CustomWebApplicationFactory>` (standard API test pattern)
+- Auth header manually added (`TestAuto authenticated`) since we bypass `CreateApiClient()`
+- Client created and disposed per-test via `using var client = CreateRawClient()`
+- Endpoint: `GET /api/v1/categories` (stable, always 200 OK, returns JSON)
+
+**Build Status:** ✅ Compiles clean (0 errors, 0 warnings). Tests are RED pending Lucius wiring middleware.

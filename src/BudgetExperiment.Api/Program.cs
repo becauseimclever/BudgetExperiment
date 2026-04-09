@@ -72,14 +72,25 @@ public partial class Program
         builder.Services.AddScoped<IUserContext, UserContext>();
         ConfigureAuthentication(builder.Services, builder.Configuration);
 
-        // Response compression (Brotli > Gzip) for API JSON payloads
+        // Response compression (Brotli primary, Gzip fallback).
+        // EnableForHttps is safe — we control both ends (Pi deployment, no CRIME attack risk).
+        // MimeTypes extends the ASP.NET Core defaults to include problem+json and Blazor WASM types.
         builder.Services.AddResponseCompression(options =>
         {
             options.EnableForHttps = true;
             options.Providers.Add<BrotliCompressionProvider>();
             options.Providers.Add<GzipCompressionProvider>();
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+            {
+                "application/problem+json",
+                "application/wasm",
+            });
         });
         builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+        {
+            options.Level = System.IO.Compression.CompressionLevel.Fastest;
+        });
+        builder.Services.Configure<GzipCompressionProviderOptions>(options =>
         {
             options.Level = System.IO.Compression.CompressionLevel.Fastest;
         });

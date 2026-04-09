@@ -370,3 +370,21 @@ Tests under `tests/` mirror the src structure.
 6. **UI State Management:** Filter selections and report toggles persist to `localStorage`. Feature flag visibility checked before rendering nav items. Educational note dismissal stored in `localStorage`.
 
 7. **Philosophical Gate (144):** Custom Reports Builder off by default to reinforce Kakeibo philosophy: calendar is primary reflection surface. Power users can opt in.
+
+### 2026-05-XX — Feature 130: HTTP Response Compression Middleware
+
+**Requested by:** Fortinbra — Status: Complete
+
+**What was done:**
+The compression middleware skeleton (Brotli + Gzip providers, EnableForHttps = true, pp.UseResponseCompression()) was already present in Program.cs from a prior session. This session completed the implementation by:
+
+1. Adding explicit options.MimeTypes that extends ResponseCompressionDefaults.MimeTypes with pplication/problem+json (Problem Details responses) and pplication/wasm (Blazor WASM module). The defaults already include pplication/json, 	ext/plain, 	ext/html, 	ext/css, pplication/javascript.
+2. Adding GzipCompressionProviderOptions configuration (CompressionLevel.Fastest) — previously only Brotli was configured.
+3. Verified pp.UseResponseCompression() is correctly positioned before UseBlazorFrameworkFiles() and UseStaticFiles().
+
+**Key Decisions / Lessons:**
+- ResponseCompressionDefaults.MimeTypes does NOT include pplication/problem+json or pplication/wasm — these must be added explicitly via .Concat().
+- CompressionLevel.Fastest chosen over Optimal for lower latency tradeoff on Raspberry Pi ARM64 (CPU-constrained device; bandwidth savings still significant at Fastest).
+- No new NuGet package required — Microsoft.AspNetCore.ResponseCompression is built into the ASP.NET Core shared framework.
+- System.IO.Compression.CompressionLevel is used inline (fully qualified) — no extra using directive needed.
+- Build: 0 warnings, 0 errors after change.
