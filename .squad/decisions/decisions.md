@@ -893,3 +893,137 @@ Route `/reports/dashboard`. Layout: 2-col CSS grid. Data loading: fault-tolerant
 `@using BudgetExperiment.Client.Components.Charts.Models` added globally to `_Imports.razor`. Eliminates per-file boilerplate.
 
 **Suite total after Feature 127:** 2808 passed.
+
+---
+
+## 2026-04-09: Financial Accuracy Audit Framework (Alfred, Scribe)
+
+**Author:** Alfred (Lead)  
+**Date:** 2026-04-09  
+**Status:** Accepted & Recorded
+
+### Decision: Financial Accuracy Audit Framework
+
+The system commits to absolute certainty in financial handling by testing and maintaining 10 invariants across domain, application, and integration layers.
+
+#### Precision Standard
+
+All monetary arithmetic uses `decimal` exclusively. The `MoneyValue` value object enforces 2-decimal rounding with `MidpointRounding.AwayFromZero` on construction. No `float` or `double` is permitted in any money computation path.
+
+#### Committed Invariants (INV-1 through INV-10)
+
+| ID | Invariant | Summary |
+|---|---|---|
+| INV-1 | Account Balance Identity | `Balance = InitialBalance + Σ(Transactions)` |
+| INV-2 | Transfer Net-Zero | Source + Destination amounts sum to zero |
+| INV-3 | MoneyValue Arithmetic Closure | Addition/subtraction is exact; mixed currency rejected |
+| INV-4 | Budget Progress Consistency | Remaining = Target - Spent; thresholds are correct |
+| INV-5 | Paycheck Allocation Conservation | `Remaining + Shortfall + TotalPerPaycheck = PaycheckAmount` |
+| INV-6 | Per-Bill Calculation Identity | Annual = Amount × Multiplier; PerPaycheck = Annual ÷ Periods |
+| INV-7 | Recurring Projection No-Double-Count | Projected + Realized = Expected occurrences |
+| INV-8 | Kakeibo Category Assignment | Expense → one bucket; Income/Transfer → null |
+| INV-9 | Report Aggregate Consistency | Report totals = sum of category totals = sum of transactions |
+| INV-10 | Reconciliation Integrity | Confidence bounds enforced; no many-to-many linking |
+
+#### Test Project Ownership
+
+| Test Project | Invariants Owned |
+|---|---|
+| `BudgetExperiment.Domain.Tests` | INV-1, INV-3, INV-4, INV-5, INV-6, INV-8 (domain), INV-10 |
+| `BudgetExperiment.Application.Tests` | INV-2, INV-7, INV-8 (report grouping), INV-9 |
+| `BudgetExperiment.Api.Tests` / `Infrastructure.Tests` | Integration-level verification of INV-1, INV-2 end-to-end |
+
+#### Accuracy Test Location Convention
+
+All accuracy-focused tests live in an `Accuracy/` folder within their test project, or use the `AccuracyTests` filename suffix.
+
+#### Identified Gaps (for Implementation)
+
+Five gaps documented in `docs/ACCURACY-FRAMEWORK.md` Section 6, prioritized P1–P3. Most critical: paycheck conservation law assertion and recurring projection no-double-count cross-cutting test.
+
+#### Reference
+
+Full specification: `docs/ACCURACY-FRAMEWORK.md`
+
+---
+
+## 2026-04-09: Raw TestServer Handler for Compression Header Inspection (Barbara, Scribe)
+
+**Date:** 2026-04-09  
+**Author:** Barbara (Tester)  
+**Context:** Response compression middleware integration tests
+
+### Decision: Raw TestServer Handler for Compression
+
+When writing integration tests that need to inspect `Content-Encoding` headers (e.g., to verify Brotli/gzip compression), use `_factory.Server.CreateHandler()` to create the `HttpClient`, not `_factory.CreateClient()` or `_factory.CreateApiClient()`.
+
+```csharp
+private HttpClient CreateRawClient()
+{
+    var client = new HttpClient(_factory.Server.CreateHandler());
+    client.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue("TestAuto", "authenticated");
+    return client;
+}
+```
+
+#### Rationale
+
+- `WebApplicationFactory.CreateClient()` creates an `HttpClient` backed by the test server but the default `HttpClientHandler` may perform automatic decompression, stripping `Content-Encoding` headers before tests can assert on them.
+- `TestServer.CreateHandler()` returns the raw in-process `HttpMessageHandler` (a `ClientHandler`) which does NOT perform automatic decompression. The full response — including `Content-Encoding` — is preserved.
+- This is the correct pattern for any test that needs to observe transport-level response headers without interference from HttpClient internals.
+
+#### Scope
+
+Applies to `BudgetExperiment.Api.Tests` whenever testing compression, chunked transfer encoding, or other transport headers.
+
+---
+
+## 2026-04-09: HTTP Response Compression Middleware (Lucius, Scribe)
+
+**Author:** Lucius  
+**Date:** 2026-04-09  
+**Feature:** 130 — Serialization/Compression for Raspberry Pi deployment  
+**Status:** Recorded & Implemented
+
+### Decision: HTTP Response Compression
+
+HTTP response compression is enabled in the ASP.NET Core API using the built-in `Microsoft.AspNetCore.ResponseCompression` middleware. No new NuGet packages were added.
+
+#### Configuration
+
+```csharp
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();   // primary
+    options.Providers.Add<GzipCompressionProvider>();     // fallback
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/problem+json",   // RFC 7807 Problem Details
+        "application/wasm",           // Blazor WebAssembly modules
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(o =>
+    o.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(o =>
+    o.Level = CompressionLevel.Fastest);
+```
+
+`app.UseResponseCompression()` is positioned before `UseBlazorFrameworkFiles()` and `UseStaticFiles()`.
+
+#### Rationale
+
+| Choice | Reasoning |
+|--------|-----------|
+| `CompressionLevel.Fastest` | Raspberry Pi is CPU-constrained. Fastest still yields 35-60% bandwidth reduction for JSON payloads; Optimal would burn more CPU for marginal compression gain. |
+| `EnableForHttps = true` | We control both ends of the connection (Pi behind NGINX reverse proxy + Cloudflare). CRIME attack is not a concern for non-cookie, non-session API responses. |
+| Extend defaults with `application/problem+json` | ASP.NET Core defaults do not include this MIME type; Problem Details error responses are frequent and benefit from compression. |
+| Extend defaults with `application/wasm` | Blazor WASM `.wasm` modules are large; compressing at the HTTP layer benefits initial load on bandwidth-constrained Pi. |
+| No separate extension method | The configuration is 10 lines inline in `Program.cs`. The pattern (e.g., `ObservabilityExtensions`) is justified for complex, multi-file concerns. Compression registration doesn't meet that threshold. |
+
+#### Impact
+
+- All API JSON responses automatically compressed when the client sends `Accept-Encoding: br` or `Accept-Encoding: gzip`.
+- No breaking changes — clients that don't send `Accept-Encoding` receive uncompressed responses as before.
+- Build: 0 warnings, 0 errors.

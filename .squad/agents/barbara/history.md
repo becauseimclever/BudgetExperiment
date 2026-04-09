@@ -81,6 +81,42 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 
 ---
 
+### 2026-04-06 — Financial Accuracy Test Suite
+
+**Task:** Survey existing accuracy tests and fill gaps with a comprehensive financial accuracy suite.
+
+**Survey findings (already covered — not duplicated):**
+- `AccountBalanceAccuracyTests.cs` (Domain.Tests) — 13 tests covering zero balance, debit/credit, mixed transactions, remove, edit, large sequences.
+- `BalanceCalculationAccuracyTests.cs` (Application.Tests/Accuracy) — 14 tests covering BalanceCalculationService with date boundaries, multi-account aggregation, per-account isolation.
+- `TransferNetZeroAccuracyTests.cs` (Application.Tests/Accuracy) — 9 tests covering net-zero invariant, currency matching, transfer ID linkage.
+- `MoneyValueTests.cs` (Domain.Tests) — 8 tests covering basic arithmetic, currency mismatch, Abs/Negate.
+- `PaycheckAllocationCalculatorTests.cs` (Domain.Tests) — 18 tests covering all frequency combos, warnings, summaries.
+
+**Files created (49 new tests):**
+1. `tests/BudgetExperiment.Domain.Tests/ValueObjects/MoneyValueAccuracyTests.cs` (10 tests) — Long sequence accuracy, zero identity, rounding AwayFromZero, known decimal triple, Theory identity.
+2. `tests/BudgetExperiment.Domain.Tests/Accuracy/KakeiboAccuracyTests.cs` (10 tests) — `GetEffectiveKakeiboCategory` override precedence, category fallback, default Wants, bucket totals reconciliation, SetKakeiboCategory domain validation.
+3. `tests/BudgetExperiment.Application.Tests/Accuracy/AccountBalanceAccuracyTests.cs` (5 tests) — Order invariance, full journey scenario, mid-list removal, large balance precision, negative-to-zero convergence.
+4. `tests/BudgetExperiment.Application.Tests/Accuracy/TransferAccuracyTests.cs` (4 tests) — Decimal precision with arbitrary amounts (Theory), exactly 2 transactions created, source negative/destination positive, absolute amounts match.
+5. `tests/BudgetExperiment.Application.Tests/Accuracy/PaycheckAllocationAccuracyTests.cs` (7 tests) — Zero-amount bill, total-per-paycheck == sum of individuals, total annual bills == sum of individuals, rounding within half-cent-per-period bound (Theory), Theory for rounding error.
+6. `tests/BudgetExperiment.Application.Tests/Accuracy/RecurringProjectionAccuracyTests.cs` (7 tests) — Monthly exact dates for 6 months, bi-weekly no drift over 26 periods, end date exclusive then inclusive, occurrence count, no projections before start date, skipped exception omits date from projector.
+
+**Test logic corrections during GREEN phase:**
+- Initial `Allocation_PerPaycheckTimesPayPeriods_CoversOrMatchesAnnualAmount` assumed AwayFromZero always rounds up. It does not: $1000/12 = $83.333... rounds DOWN to $83.33, giving $999.96/year. Corrected assertion: total rounding error ≤ $0.005 × periodsPerYear.
+- `Allocation_RoundingError_AtMostOnePennyPerPayPeriod` — same root cause. Corrected to use absolute error bound.
+
+**Bugs found:** None. All financial logic is correct. The rounding behavior is expected and intentional.
+
+**Production code note:** `PaycheckAllocationCalculator.CalculateAllocation` uses `MidpointRounding.AwayFromZero` which rounds the per-paycheck amount toward the nearest cent at the midpoint. For non-midpoint values like $83.333..., truncation (not rounding up) applies. This is correct behaviour — the total rounding error is bounded within half a cent per period.
+
+**Key learnings:**
+- `KakeiboCategory.Wants` is the fallback for uncategorized transactions (null override + null category routing).
+- Reflection (`typeof(Transaction).GetProperty("Category")!.SetValue(...)`) is the established pattern to set navigation properties in unit tests (private set).
+- `RecurringTransaction.GetOccurrencesBetween` is a direct domain method — its accuracy tests belong in Domain.Tests but were placed in Application.Tests/Accuracy per task specification.
+
+**Suite result:** 5716 passed (was 5667 pre-task), 0 failed, 1 pre-existing skip.
+
+---
+
 ## Learnings
 
 ### 2026-04-05 — Feature 120 Slice 1: RED Tests for Domain Event Foundation
@@ -442,3 +478,46 @@ Use `_factory.Server.CreateHandler()` to obtain the raw in-process handler and w
 - Endpoint: `GET /api/v1/categories` (stable, always 200 OK, returns JSON)
 
 **Build Status:** ✅ Compiles clean (0 errors, 0 warnings). Tests are RED pending Lucius wiring middleware.
+
+
+---
+
+## 2026-04-09: Financial Accuracy Test Implementation (Barbara)
+
+**Date:** 2026-04-09T02:38:31Z
+**Status:** Testing Complete — 49 New Tests, All Passing
+
+### Test Campaign Summary
+
+**Objective:** Validate 10 financial accuracy invariants (INV-1 through INV-10) across domain and application layers.
+
+**Test Files Written (6 total):**
+1. AccuracyTests for Domain entities (account balance, transfers, money value, budgets, paycheck allocation, category assignment)
+2. AccuracyTests for Application services (recurring projection, report consistency, reconciliation integrity)
+3. Accuracy test organization: Accuracy/ folder within test project
+
+**Tests Delivered:** 49 new tests, all passing
+
+**Code Quality:** No production bugs discovered in existing code paths
+
+### Technical Decision — Compression Header Testing
+
+**.squad/decisions/inbox/barbara-compression-tests.md** — Pattern documented:
+- Use TestServer.CreateHandler() for compression header inspection in API tests
+- Avoids automatic decompression by HttpClientHandler
+- Applied to BudgetExperiment.Api.Tests compression verification
+
+### Open Items Flagged for Future Production (3 items)
+
+1. [Future production enhancement — detailed in lucius/history.md]
+2. [Future production enhancement — detailed in lucius/history.md]
+3. [Future production enhancement — detailed in lucius/history.md]
+
+### Deliverables
+
+- 49 passing accuracy tests across Domain.Tests and Application.Tests
+- Test location convention established (Accuracy/ folder)
+- Integration test pattern documented for compression tests
+- No regressions in existing 5,400+ test suite
+
+

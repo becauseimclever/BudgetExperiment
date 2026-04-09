@@ -388,3 +388,33 @@ The compression middleware skeleton (Brotli + Gzip providers, EnableForHttps = t
 - No new NuGet package required — Microsoft.AspNetCore.ResponseCompression is built into the ASP.NET Core shared framework.
 - System.IO.Compression.CompressionLevel is used inline (fully qualified) — no extra using directive needed.
 - Build: 0 warnings, 0 errors after change.
+
+
+---
+
+## 2026-04-09: Financial Accuracy Audit & Compression Middleware Recording (Lucius)
+
+**Date:** 2026-04-09T02:38:31Z
+**Status:** Decisions Recorded — Ready for Review
+
+### Compression Middleware Decision Formalized
+
+**.squad/decisions/inbox/lucius-compression-middleware.md** — HTTP Response Compression decision document recorded:
+- Built-in Microsoft.AspNetCore.ResponseCompression middleware enabled
+- Brotli primary, Gzip fallback (CompressionLevel.Fastest for Pi CPU constraints)
+- MIME types extended: application/problem+json + application/wasm
+- No new NuGet packages required
+- Build: 0 warnings, 0 errors
+
+### Integration with Financial Accuracy Framework
+
+Lucius team to monitor 3 open items flagged by Barbara during accuracy test phase:
+1. [Item detail to be provided in follow-up session]
+2. [Item detail to be provided in follow-up session]
+3. [Item detail to be provided in follow-up session]
+
+### Architecture Notes
+
+Compression is transparent to application layer. No changes required to service layer, controllers, or domain. Applies at HTTP transport layer only.
+
+

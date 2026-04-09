@@ -281,3 +281,34 @@ Created 6 comprehensive feature specification documents:
 **Implementation Order:** 131 → 132 → 133 → 134–136 (3–4 weeks estimated).
 
 **Decision Document:** .squad/decisions/inbox/alfred-feature-docs-131-136.md (12 decisions, testing strategy, open questions).
+
+
+---
+
+## 2026-04-09: Financial Accuracy Audit Framework (Alfred)
+
+**Date:** 2026-04-09T02:38:31Z
+**Status:** Framework Designed & Documented
+
+### Deliverables
+
+1. **docs/ACCURACY-FRAMEWORK.md** — Comprehensive specification of 10 financial invariants:
+   - INV-1 through INV-10 covering accounts, transfers, budgets, paycheck allocation, recurring transactions, category assignment, reporting, and reconciliation
+   - Precision standard: decimal-only arithmetic with MidpointRounding.AwayFromZero
+   - Test project ownership matrix (Domain.Tests, Application.Tests, Api.Tests, Infrastructure.Tests)
+   - Five identified test gaps (P1–P3) for implementation by Barbara
+   - Accurate Test Location convention (Accuracy/ folder or AccuracyTests suffix)
+
+2. **.squad/decisions/inbox/alfred-accuracy-framework.md** — Formal decision document
+   - Ready for team review and acceptance
+   - Merged to decisions.md by Scribe
+
+### Key Architecture Decision
+
+All monetary calculations must use decimal type exclusively. MoneyValue value object enforces MidpointRounding.AwayFromZero on construction. No float or double permitted in any financial computation path.
+
+### Next Steps
+
+Barbara (in parallel session) implemented 49 new accuracy tests across Domain.Tests and Application.Tests, targeting identified gaps. All 49 tests pass; no production bugs found.
+
+
