@@ -117,6 +117,54 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 
 ---
 
+
+### 2026-04-09 — Feature 145: Kakeibo Date-Range Report Service Tests
+
+**Task:** Write all tests for F145 KakeiboReportService (Phases 1–3) — unit, API integration, and accuracy.
+
+**Implementation already existed:** Lucius had already implemented KakeiboReportService, IKakeiboReportService, and all contract DTOs (KakeiboSummary, KakeiboDateRange, KakeiboDaily, KakeiboWeekly) before this task ran. The controller (ReportsController.GetKakeiboReportAsync) was also already in place.
+
+**Files created (24 tests):**
+1. 	ests/BudgetExperiment.Application.Tests/KakeiboReportServiceTests.cs (14 unit tests)
+   - Validation: from > to throws ArgumentException
+   - Bucket mapping: Essentials, Wants, Culture, Unexpected each tested individually
+   - KakeiboOverride takes precedence over category default
+   - Income transaction excluded from all buckets
+   - Transfer transaction excluded from all buckets
+   - Empty range: all four buckets present at zero
+   - Zero-spend buckets not omitted
+   - Weekly totals sum to monthly total
+   - Daily totals sum to monthly total
+   - Same-day aggregation
+   - Boundary date inclusion (both from and to inclusive)
+
+2. 	ests/BudgetExperiment.Api.Tests/KakeiboReportControllerTests.cs (6 API integration tests)
+   - Feature flag disabled → 404
+   - Valid date range → 200 with KakeiboSummary
+   - from > to → 400
+   - Missing from → 400
+   - Missing to → 400
+   - Valid accountId filter → 200
+
+3. 	ests/BudgetExperiment.Infrastructure.Tests/Accuracy/KakeiboReportServiceAccuracyTests.cs (4 accuracy tests, Testcontainers)
+   - Every expense maps to exactly one bucket (INV-8 proof)
+   - KakeiboOverride precedes category routing
+   - Weekly totals sum exactly to monthly totals (no decimal drift)
+   - Income and transfer excluded from all buckets
+
+**Key technique:** Transaction.Category is a private-set EF Core navigation property. Unit tests set it via reflection: 	ypeof(Transaction).GetProperty("Category", BindingFlags.Public | BindingFlags.Instance).SetValue(tx, category). This is the established project pattern (confirmed from 2026-04-06 accuracy work).
+
+**Infrastructure.Tests csproj change:** Added Application project reference to enable accuracy tests to instantiate KakeiboReportService directly with real TransactionRepository.
+
+**StyleCop lessons reinforced:**
+- SA1512: Section comments (// === X ===) must NOT be followed by a blank line before [Fact]
+- SA1202: Public [Fact] test methods must come BEFORE private helper methods in the class
+- SA1204: Static helpers must come before non-static helpers
+- gitignore **/reports/ blocks test files in Reports/ subdirectory — place at project root instead
+
+**Test run result (unit tests):** 14/14 PASSED (run with -p:TreatWarningsAsErrors=false to bypass pre-existing SA errors in Accuracy/*.cs files not authored in this task).
+
+---
 ## Learnings
 
 ### 2026-04-05 — Feature 120 Slice 1: RED Tests for Domain Event Foundation
