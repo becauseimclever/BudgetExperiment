@@ -195,6 +195,7 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests â
 
 ---
 ## Learnings
+- Added API tests for CalendarController and AccountsController using WebApplicationFactory and Moq, following the TransferDeletionControllerTests pattern. Verified all tests pass. (Feature 149)
 
 ### 2026-04-05 â€” Feature 120 Slice 1: RED Tests for Domain Event Foundation
 
