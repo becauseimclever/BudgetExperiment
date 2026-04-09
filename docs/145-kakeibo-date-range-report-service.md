@@ -1,6 +1,6 @@
 # Feature 145: Kakeibo Date-Range Report Service
 
-> **Status:** Planning
+> **Status:** In Progress
 
 ## Overview
 

@@ -418,3 +418,35 @@ Lucius team to monitor 3 open items flagged by Barbara during accuracy test phas
 Compression is transparent to application layer. No changes required to service layer, controllers, or domain. Applies at HTTP transport layer only.
 
 
+### 2026-04-09 — Feature 145 Phases 1 & 2: KakeiboReportService + API Endpoint (GREEN)
+
+**Requested by:** Fortinbra — Status: Phases 1 & 2 Complete
+
+**Files created:**
+- `src/BudgetExperiment.Contracts/Dtos/KakeiboDateRange.cs` — `record { DateOnly From; DateOnly To }`
+- `src/BudgetExperiment.Contracts/Dtos/KakeiboDaily.cs` — `record { DateOnly Date; Dictionary<KakeiboCategory, decimal> BucketTotals }`
+- `src/BudgetExperiment.Contracts/Dtos/KakeiboWeekly.cs` — `record { DateOnly WeekStartDate; int WeekNumber; Dictionary<KakeiboCategory, decimal> BucketTotals }`
+- `src/BudgetExperiment.Contracts/Dtos/KakeiboSummary.cs` — Top-level DTO: DateRange + DailyTotals + WeeklyTotals + MonthlyTotals
+- `src/BudgetExperiment.Application/Reports/IKakeiboReportService.cs` — Interface with `GetKakeiboSummaryAsync(from, to, accountId, ct)`
+- `src/BudgetExperiment.Application/Reports/KakeiboReportService.cs` — Implementation; groups by date + ISO week Monday; uses `GetEffectiveKakeiboCategory()` + `Math.Abs(t.Amount.Amount)`
+
+**Files modified:**
+- `src/BudgetExperiment.Application/DependencyInjection.cs` — Added `AddScoped<IKakeiboReportService, KakeiboReportService>()`
+- `src/BudgetExperiment.Api/Controllers/ReportsController.cs` — Added `IKakeiboReportService` + `IFeatureFlagService` deps; new `GetKakeiboReportAsync` at `GET /api/v1/reports/kakeibo`
+- `src/BudgetExperiment.Infrastructure/Seeding/FeatureFlagSeeder.cs` — Added `("Kakeibo:DateRangeReports", false)` to defaults
+
+**Key Decisions / Deviations from Spec:**
+
+1. **`GetEffectiveKakeiboCategory()` not `ResolveKakeiboCategory()`** — The spec referenced `ResolveKakeiboCategory()` but the actual domain method is `GetEffectiveKakeiboCategory()`. Always read the domain model directly.
+
+2. **`transaction.Amount.Amount`** — `Transaction.Amount` is `MoneyValue`. Decimal at `.Amount.Amount`. Use `Math.Abs()` for positive spending totals.
+
+3. **No `[FeatureGate]` attribute** — Project uses `IFeatureFlagService.IsEnabledAsync()` + return 404 when disabled. Matches `KaizenDashboardController` pattern.
+
+4. **Feature flag name `"Kakeibo:DateRangeReports"`** — Spec used `"feature-kakeibo-date-range-reports"` but project uses colon-separated hierarchical names. Convention wins over spec.
+
+5. **DTOs in `Contracts/Dtos/`** — No `Reports/` subdirectory in Contracts; all DTOs flat in `Dtos/`.
+
+6. **ISO week Monday calculation** — `ISOWeek.GetWeekOfYear(DateTime)` requires DateTime; convert via `date.ToDateTime(TimeOnly.MinValue)`.
+
+**Build:** 0 errors, 0 warnings on all `src/` projects.
