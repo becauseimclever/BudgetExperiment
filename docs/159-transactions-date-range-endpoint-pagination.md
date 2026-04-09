@@ -1,8 +1,18 @@
-# Feature 159: GET /transactions Date-Range Endpoint — Add Pagination
+# Feature 159: GET /transactions Date-Range Endpoint — Deprecate v1, Add Paginated v2
 
 > **Status:** Proposed  
 > **Severity:** 🟠 High — P-007  
 > **Audit Source:** `docs/audit/2026-04-09-performance-review.md`
+
+---
+
+## Decision (Fortinbra, 2026-04-09)
+
+**Chosen approach: Deprecate v1 + create new paginated v2 endpoint.**
+
+- The existing `GET /api/v1/transactions?startDate=&endDate=` endpoint will be **deprecated** (not removed) — existing clients continue to work with `Deprecation` and `Sunset` headers added to responses.
+- A new `GET /api/v2/transactions/by-date-range` endpoint will be introduced with proper `page` / `pageSize` parameters and `X-Pagination-TotalCount` header.
+- This ensures we never break existing clients while providing a correct, efficient path for new clients.
 
 ---
 
@@ -155,7 +165,7 @@ public async Task<IActionResult> GetByDateRangeAsync(
 
 ### Phase 0: Decision
 
-- [ ] **Fortinbra to choose Option A (deprecate) or Option B (add pagination) before Lucius begins.** Alfred recommends Option A.
+- [x] **Fortinbra chose: deprecate v1 + create paginated v2 endpoint** (2026-04-09). Do not modify the existing v1 endpoint's behaviour — add deprecation headers only. New v2 endpoint carries proper pagination.
 
 The phases below cover **Option A** as the primary path; Option B tasks are noted in brackets.
 
