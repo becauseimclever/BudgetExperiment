@@ -554,3 +554,35 @@ ull parameter
 
 ✅ Implementation complete. All tests pass. Ready for production integration.
 
+---
+
+## F148 Session — Statement Reconciliation Locale Fix (2026-04-09)
+
+**Role:** Backend Dev (Client layer)
+**Feature:** 148 — Fix Bare `.ToString("C")` in Statement Reconciliation UI
+**Status:** ✅ Complete
+
+### Scope
+
+Replaced 7 bare `.ToString("C")` calls across 4 Razor components with `FormatCurrency(Culture.CurrentCulture)`. Injected `CultureService` as `Culture` into each affected component.
+
+### Files Modified
+
+| File | Instances Fixed |
+|------|----------------|
+| `src/BudgetExperiment.Client/Shared/StatementReconciliation/ReconciliationBalanceBar.razor` | 3 |
+| `src/BudgetExperiment.Client/Shared/StatementReconciliation/ClearableTransactionRow.razor` | 1 |
+| `src/BudgetExperiment.Client/Pages/StatementReconciliation/ReconciliationHistory.razor` | 2 |
+| `src/BudgetExperiment.Client/Pages/StatementReconciliation/ReconciliationDetail.razor` | 1 |
+
+### Key Decisions / Lessons
+
+- **Inject name is `Culture`** — Existing components inject `CultureService` as `@inject CultureService Culture`. The spec said `CultureService CultureService` but the project convention uses `Culture`. Always grep existing usages before choosing inject variable names.
+- **Nullable overload exists** — `FormatCurrency()` has both `decimal` and `decimal?` overloads in `CurrencyFormattingExtensions.cs`. For the `StatementBalance.HasValue` branch the nullable overload could have been used, but the explicit `.Value.FormatCurrency(...)` is equally correct and preserves the null check intent.
+- **No using directive needed** — `BudgetExperiment.Client.Services` is globally imported via `_Imports.razor`, so no per-file `@using` change was required.
+- **Build: 0 errors, 0 warnings** — Client project and full solution both clean.
+
+### Commit
+
+`e7a94d5` — fix(client): replace bare ToString("C") in reconciliation components
+

@@ -165,6 +165,35 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 **Test run result (unit tests):** 14/14 PASSED (run with -p:TreatWarningsAsErrors=false to bypass pre-existing SA errors in Accuracy/*.cs files not authored in this task).
 
 ---
+
+### 2026-04-09 — Feature 148: bUnit Locale Tests for Statement Reconciliation Currency Formatting
+
+**Task:** Write bUnit tests validating that all 4 reconciliation components use `CultureService.CurrentCulture` (via `FormatCurrency()`) rather than the thread culture for currency formatting.
+
+**Key discovery:** Lucius had already applied all four component fixes before the test task ran. All tests were GREEN from the start. The test design — registering a de-DE CultureService while keeping thread culture at en-US — still correctly guards against regression.
+
+**Files created:**
+1. `tests/BudgetExperiment.Client.Tests/Shared/StatementReconciliation/ReconciliationBalanceBarLocaleTests.cs` — 2 tests (de-DE + en-US)
+2. `tests/BudgetExperiment.Client.Tests/Shared/StatementReconciliation/ClearableTransactionRowLocaleTests.cs` — 2 tests (de-DE + en-US)
+3. `tests/BudgetExperiment.Client.Tests/Pages/StatementReconciliation/ReconciliationHistoryLocaleTests.cs` — 1 test (de-DE; triggers dropdown to load records table)
+4. `tests/BudgetExperiment.Client.Tests/Pages/StatementReconciliation/ReconciliationDetailLocaleTests.cs` — 1 test (de-DE)
+5. `tests/BudgetExperiment.Client.Tests/TestHelpers/TestCultureServiceFactory.cs` — shared factory for pre-initialized CultureService instances
+
+**StubBudgetApiService extended:** Added `ReconciliationHistory` and `ReconciliationTransactions` list properties (with corresponding method implementations) in the properties section.
+
+**Test pattern for locale isolation:**
+- Set `CultureInfo.CurrentCulture = en-US` (thread) in test body
+- Create `CultureService` via `TestCultureServiceFactory.CreateAsync("de-DE")` (inner JSRuntime stub returns de-DE from `detectCulture`)
+- Register the pre-initialized service via `Services.AddSingleton(cultureService)`
+- Assert markup contains `1.234,56`, `€`, does NOT contain `$`
+
+**Page-level test gotcha:** `ErrorAlert` component requires both `IToastService` and `IExportDownloadService`. Always register both when rendering pages that include ErrorAlert (use `ToastService()` and `StubExportDownloadService()` from TestHelpers).
+
+**ReconciliationHistory page requires account selection trigger:** The history table only renders when `SelectedAccountId.HasValue`. Test triggers the `<select>` change event via `await select.ChangeAsync(...)` after adding an account to the stub and reconciliation records to `_apiService.ReconciliationHistory`.
+
+**Suite result:** 2825 total, 2824 passed, 1 pre-existing skip (`EmptyState_RendersIcon`). 6 new tests all GREEN.
+
+---
 ## Learnings
 
 ### 2026-04-05 — Feature 120 Slice 1: RED Tests for Domain Event Foundation

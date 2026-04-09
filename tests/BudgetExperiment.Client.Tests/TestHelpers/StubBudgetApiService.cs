@@ -819,6 +819,16 @@ internal class StubBudgetApiService : IBudgetApiService
         get; set;
     }
 
+    /// <summary>
+    /// Gets the list of reconciliation records returned by <see cref="GetReconciliationHistoryAsync"/>.
+    /// </summary>
+    public List<ReconciliationRecordDto> ReconciliationHistory { get; } = new();
+
+    /// <summary>
+    /// Gets the list of transactions returned by <see cref="GetReconciliationTransactionsAsync"/>.
+    /// </summary>
+    public List<TransactionDto> ReconciliationTransactions { get; } = new();
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<AccountDto>> GetAccountsAsync()
     {
@@ -1305,10 +1315,12 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<ApiResult<ReconciliationRecordDto>> CompleteReconciliationAsync(CompleteReconciliationRequest request) => Task.FromResult(ApiResult<ReconciliationRecordDto>.Failure());
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<ReconciliationRecordDto>?> GetReconciliationHistoryAsync(Guid accountId, int page = 1, int pageSize = 20) => Task.FromResult<IReadOnlyList<ReconciliationRecordDto>?>(null);
+    public Task<IReadOnlyList<ReconciliationRecordDto>?> GetReconciliationHistoryAsync(Guid accountId, int page = 1, int pageSize = 20) =>
+        Task.FromResult<IReadOnlyList<ReconciliationRecordDto>?>(ReconciliationHistory.Count > 0 ? ReconciliationHistory : null);
 
     /// <inheritdoc/>
-    public Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId) => Task.FromResult<IReadOnlyList<TransactionDto>?>(null);
+    public Task<IReadOnlyList<TransactionDto>?> GetReconciliationTransactionsAsync(Guid reconciliationRecordId) =>
+        Task.FromResult<IReadOnlyList<TransactionDto>?>(ReconciliationTransactions.Count > 0 ? ReconciliationTransactions : null);
 
     /// <inheritdoc/>
     public Task<DataHealthReportDto?> GetDataHealthReportAsync(Guid? accountId = null) => Task.FromResult<DataHealthReportDto?>(null);
