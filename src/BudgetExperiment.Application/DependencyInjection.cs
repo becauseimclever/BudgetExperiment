@@ -24,9 +24,9 @@ public static class DependencyInjection
     {
         services.AddMemoryCache();
         services.AddScoped<ICurrencyProvider, UserSettingsCurrencyProvider>();
-        services.AddScoped<AccountService>();
+        services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ITransactionService, TransactionService>();
-        services.AddScoped<CalendarService>();
+        services.AddScoped<ICalendarService, CalendarService>();
         services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
         services.AddScoped<IRecurringTransferService, RecurringTransferService>();
         services.AddScoped<ITransferService, TransferService>();

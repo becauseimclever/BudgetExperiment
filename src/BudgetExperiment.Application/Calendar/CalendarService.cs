@@ -10,7 +10,7 @@ namespace BudgetExperiment.Application.Calendar;
 /// <summary>
 /// Application service for calendar-related use cases.
 /// </summary>
-public sealed class CalendarService
+public sealed class CalendarService : ICalendarService
 {
     private readonly ITransactionRepository _repository;
 

@@ -19,7 +19,7 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class CalendarController : ControllerBase
 {
-    private readonly CalendarService _calendarService;
+    private readonly ICalendarService _calendarService;
     private readonly ICalendarGridService _gridService;
     private readonly IDayDetailService _dayDetailService;
     private readonly ITransactionListService _transactionListService;
@@ -40,7 +40,7 @@ public sealed class CalendarController : ControllerBase
     /// <param name="featureFlagService">The feature flag service.</param>
     /// <param name="userContext">The current user context.</param>
     public CalendarController(
-        CalendarService calendarService,
+        ICalendarService calendarService,
         ICalendarGridService gridService,
         IDayDetailService dayDetailService,
         ITransactionListService transactionListService,
