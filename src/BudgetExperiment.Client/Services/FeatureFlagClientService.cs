@@ -8,19 +8,20 @@ namespace BudgetExperiment.Client.Services;
 
 /// <summary>
 /// Client-side service that fetches feature flags from the API and provides fast local lookup.
+/// Registered as singleton; uses <see cref="IHttpClientFactory"/> to avoid capturing a scoped <see cref="HttpClient"/>.
 /// </summary>
 public sealed class FeatureFlagClientService : IFeatureFlagClientService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private Dictionary<string, bool> _flags = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FeatureFlagClientService"/> class.
     /// </summary>
-    /// <param name="httpClient">The HTTP client used to call the API.</param>
-    public FeatureFlagClientService(HttpClient httpClient)
+    /// <param name="httpClientFactory">The HTTP client factory used to create clients for API calls.</param>
+    public FeatureFlagClientService(IHttpClientFactory httpClientFactory)
     {
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
     }
 
     /// <inheritdoc />
@@ -35,7 +36,8 @@ public sealed class FeatureFlagClientService : IFeatureFlagClientService
     {
         try
         {
-            var flags = await _httpClient.GetFromJsonAsync<Dictionary<string, bool>>("api/v1/features");
+            var client = _httpClientFactory.CreateClient("BudgetApi");
+            var flags = await client.GetFromJsonAsync<Dictionary<string, bool>>("api/v1/features");
             _flags = flags ?? new Dictionary<string, bool>();
         }
         catch
