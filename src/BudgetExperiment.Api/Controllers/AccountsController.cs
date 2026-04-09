@@ -19,13 +19,13 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class AccountsController : ControllerBase
 {
-    private readonly AccountService _service;
+    private readonly IAccountService _service;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountsController"/> class.
     /// </summary>
     /// <param name="service">The account service.</param>
-    public AccountsController(AccountService service)
+    public AccountsController(IAccountService service)
     {
         _service = service;
     }

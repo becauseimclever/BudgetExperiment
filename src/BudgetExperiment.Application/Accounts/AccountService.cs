@@ -10,7 +10,7 @@ namespace BudgetExperiment.Application.Accounts;
 /// <summary>
 /// Application service for account use cases.
 /// </summary>
-public sealed class AccountService
+public sealed class AccountService : IAccountService
 {
     private const int DefaultTransactionLookbackDays = 90;
     private readonly IAccountRepository _repository;
