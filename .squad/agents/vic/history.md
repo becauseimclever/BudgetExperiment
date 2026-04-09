@@ -66,3 +66,27 @@ Read `.squad/decisions.md` at spawn time for the full current decision ledger.
 - Medium: Zero `<Virtualize>` usage in Blazor client; missing `@key` on list loops
 - Medium: Correlated subquery for account-name sorting in GetUnifiedPagedAsync
 - Strengths: Consistent AsNoTracking, Task.WhenAll parallel loading, server-side pagination on primary endpoints, no lazy loading, projection queries in several key spots
+
+### 2026-04-09 — Full Principle Audit & Performance Review Complete
+
+**Two complete audits delivered:**
+
+1. **Full Principle Audit** (report: `docs/audit/2026-04-09-full-principle-audit.md`)
+   - Assessed against engineering guide, SOLID principles, Clean Code, REST API standards
+   - 18 findings: 1 Critical (F-001 financial display), 6 High (DIP, ISP, god classes), 9 Medium, 2 Low
+   - Merged to decisions.md on 2026-04-09
+
+2. **Performance Code Review** (report: `docs/audit/2026-04-09-performance-review.md`)
+   - Assessed application services, repositories, and Blazor UI for scalability and efficiency
+   - 17 findings: 1 Critical (P-001 memory efficiency), 6 High (N+1 queries, unbounded results), 7 Medium, 3 Low
+   - Merged to decisions.md on 2026-04-09
+
+**Critical Path Identified:**
+- **F-001** (statement reconciliation locale fix) — 7 bare `.ToString("C")` calls bypass FormatCurrency() requirement (§38). Financial accuracy risk. Low effort, high impact.
+- **P-001** (DataHealthService memory leak) — Loads all transactions 3× per call on Pi with 5K+ transactions. OOM risk.
+- **P-002** (BudgetProgressService N+1) — 20 sequential DB round-trips per call (one per category).
+
+**Team Decision Needed:**
+Performance findings P-001 and P-002 — should team prioritize immediate fixes or batch all High findings (6 total) into a performance sprint?
+
+**Feature specs 148–153 created by Alfred** to address all Critical+High principle findings (F-001 through F-007). Merged to decisions.md on 2026-04-09.

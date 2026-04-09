@@ -78,6 +78,32 @@ Tests mirror structure under `tests/`.
 
 ### Feature 128: Kakeibo + Kaizen Calendar-First Philosophy — Documentation Update
 
+### 2026-04-09 — Feature Specs 148–153 Created
+
+**Agent Task:** Create feature specification documents for all Critical and High findings from Vic's 2026-04-09 full principle audit.
+
+**Deliverables:**
+- 6 feature docs (148–153) addressing findings F-001 through F-007
+- Commit: `bde4d03` — `docs: add feature specs 148-153 for Vic audit findings`
+
+**Docs Created:**
+| # | Slug | Finding | Severity |
+|---|------|---------|----------|
+| 148 | `statement-reconciliation-locale-fix` | F-001 | 🔴 Critical |
+| 149 | `extract-icalendarservice-iaccountservice` | F-002 + F-003 | 🟠 High |
+| 150 | `split-itransactionrepository-isp` | F-004 | 🟠 High |
+| 151 | `extract-transactionfactory` | F-005 | 🟠 High |
+| 152 | `god-application-services-split-plan` | F-006 | 🟠 High |
+| 153 | `god-controllers-split-strategy` | F-007 | 🟠 High |
+
+**Key Notes:**
+- Doc 148 is critical and low-effort (7 lines across 4 Razor files) — recommend Lucius prioritize this first
+- Doc 149 formally closes Decision #2 (2026-03-22) for the remaining two controllers (CalendarController, AccountsController)
+- Docs 152–153 establish opportunistic split policy: long tail during feature work, top offenders in standalone PRs
+- All docs in Proposed status, ready for Lucius to implement
+
+**Merged to decisions.md** on 2026-04-09 by Scribe.
+
 **What Changed:**
 - **README.md opening**: Replaced feature-list tagline with Kakeibo + Kaizen philosophy statement. Calendar described as "the household ledger" and the centerpiece of interaction.
 - **Purpose section**: Reframed entirely — leads with WHY (Kakeibo + Kaizen), then lists capabilities as tools serving the mindful philosophy. Calendar described as primary surface, not just a view.
@@ -92,6 +118,21 @@ The application's identity has fundamentally pivoted. It is no longer described 
 All technical content (architecture diagram, setup commands, test commands, Docker info, API list, release process, localization section) remains unchanged. Surgical edits only — no file rewrites.
 
 ## Learnings
+
+### Feature Docs 148–153: Vic Principle Audit Response — Complete (2026-04-09)
+
+**Scope:** Created six feature specification documents addressing all Critical and High findings from Vic's first full principle audit.
+
+- **F-001 (Critical, Doc 148):** 7 bare `.ToString("C")` calls in 4 Statement Reconciliation Razor components. Replace with `FormatCurrency(CultureService.CurrentCulture)`. Low effort, high user-trust impact. Only Critical finding in the audit.
+- **F-002 + F-003 (High, Doc 149):** `CalendarController` and `AccountsController` still inject concrete service types. Extract `ICalendarService` and `IAccountService`. **This closes Decision #2 from 2026-03-22** — the last two concrete-injecting controllers not addressed in the original DIP fix.
+- **F-004 (High, Doc 150):** `ITransactionRepository` has 23 methods (ISP violation). Split into `ITransactionQueryRepository`, `ITransactionImportRepository`, `ITransactionAnalyticsRepository`. Retain `ITransactionRepository` as composition root for backward compat.
+- **F-005 (High, Doc 151):** `Transaction` entity is 545 lines. Extract all 5+ static factory methods to `TransactionFactory` domain service. Entity retains state and behavior.
+- **F-006 (High, Doc 152):** 18 Application services exceed 300 lines. Top 5 get standalone split PRs; remaining 13 split opportunistically during feature work. Feature-work-coupled policy established.
+- **F-007 (High, Doc 153):** 4 API controllers exceed 300 lines. Split strategy: `TransactionsController` → Query + Batch, `RecurringTransactionsController` → CRUD + Instance, `RecurringTransfersController` → CRUD + Instance, `CategorySuggestionsController` → Minimal API pilot.
+
+**All docs committed as:** `bde4d03`
+
+---
 
 ### Features 131–136: Kakeibo Foundation Implementation Specs — Complete (2026-04-10)
 

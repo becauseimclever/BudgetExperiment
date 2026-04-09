@@ -2264,3 +2264,116 @@ See `docs/129b-feature-flag-implementation.md` § 11 for full 21-item checklist.
 
 
 
+
+---
+
+# Vic — Principle & Performance Audits (2026-04-09)
+
+# Vic — Audit Findings for Team (2026-04-09)
+
+## Critical: Financial Display Accuracy
+
+**F-001:** 7 instances of bare `.ToString("C")` in Statement Reconciliation UI (4 Razor files). These bypass the `FormatCurrency()` extension method required by §38. Users with non-US browser locales will see incorrect currency formatting. This is a direct financial accuracy risk at the display boundary.
+
+**Action:** Lucius — replace with `.FormatCurrency(CultureService.CurrentCulture)`. Low effort, high impact.
+
+---
+
+## High: DIP Violations Still Open (Decision #2 Incomplete)
+
+**F-002, F-003:** `CalendarController` injects concrete `CalendarService` (no interface exists). `AccountsController` injects concrete `AccountService` (no interface exists). Decision #2 from 2026-03-22 identified this class of violation and prescribed interface extraction. These two remain unfixed.
+
+**Action:** Lucius — extract `ICalendarService` and `IAccountService` interfaces. Low effort.
+
+---
+
+## High: ITransactionRepository at 23 Methods (ISP)
+
+**F-004:** `ITransactionRepository` has 23 methods spanning date queries, import operations, analytics, and reconciliation. This violates ISP and makes test fakes burdensome.
+
+**Action:** Alfred — decide on split strategy (by concern vs. by read/write/analytics). Lucius implements.
+
+---
+
+## Structural Debt: God Classes
+
+**F-005, F-006, F-013:** 23 classes across Domain (5) and Application (18) exceed the 300-line limit. The `Transaction` entity at 545 lines and `RuleSuggestionResponseParser` at 515 lines are the worst offenders.
+
+**Action:** Alfred — prioritize which to split first. Recommend splitting during feature work that touches these files, not as standalone refactoring.
+
+---
+
+## Observation: Assertion Framework Drift
+
+**F-012:** Tests mix Shouldly and xUnit Assert freely, even within the same files. The Engineering Guide says "Shouldly OR built-in Assert" (implying a project-level choice). Neither is wrong individually, but the inconsistency creates style ambiguity for new tests.
+
+**Action:** Team — decide per-project standard. No immediate urgency.
+
+
+---
+
+# Alfred — Feature Docs 148–153 (2026-04-09)
+
+# Alfred — Feature Docs 148–153 Confirmation
+
+**Date:** 2026-04-09  
+**From:** Alfred (Lead)  
+**To:** Fortinbra  
+
+## Summary
+
+Six feature specification documents have been created and committed to address all Critical and High findings from Vic's 2026-04-09 full principle audit.
+
+## Documents Created
+
+| Doc | Slug | Finding | Severity |
+|-----|------|---------|----------|
+| 148 | `148-statement-reconciliation-locale-fix.md` | F-001 | 🔴 Critical |
+| 149 | `149-extract-icalendarservice-iaccountservice.md` | F-002 + F-003 | 🟠 High |
+| 150 | `150-split-itransactionrepository-isp.md` | F-004 | 🟠 High |
+| 151 | `151-extract-transactionfactory.md` | F-005 | 🟠 High |
+| 152 | `152-god-application-services-split-plan.md` | F-006 | 🟠 High |
+| 153 | `153-god-controllers-split-strategy.md` | F-007 | 🟠 High |
+
+## Key Notes
+
+- **Doc 148 (F-001)** is the only Critical finding. It's a low-effort, high-trust bug fix — 7 lines changed across 4 Razor files. Recommend prioritizing this first.
+- **Doc 149 (F-002 + F-003)** formally closes **Decision #2** from 2026-03-22. The original DIP verdict covered 3 controllers; 2 were missed (`CalendarController`, `AccountsController`). These are the remaining two.
+- **Docs 152 and 153** establish policy for god service/controller splits — opportunistic during feature work for the long tail, standalone PRs for the top offenders.
+- All 6 docs are in `Proposed` status and ready for Lucius to implement.
+
+## Commit
+
+`bde4d03` — `docs: add feature specs 148-153 for Vic audit findings (F-001 through F-007)`
+
+
+---
+
+# Vic — Performance Review Findings (2026-04-09)
+
+# Vic — Performance Audit Findings (2026-04-09)
+
+**Report:** `docs/audit/2026-04-09-performance-review.md`
+**Priority:** Team should review before next sprint planning.
+
+## Critical
+
+- **P-001:** `DataHealthService.AnalyzeAsync()` loads ALL transactions into memory 3 separate times via `GetAllForHealthAnalysisAsync()`. On Pi with 5K+ transactions, this risks OOM. Also contains O(n²) near-duplicate loop.
+
+## High
+
+- **P-002:** `BudgetProgressService.GetMonthlySummaryAsync()` issues N+1 queries — one `GetSpendingByCategoryAsync` per expense category in a `foreach` loop. 20 categories = 20 sequential DB round-trips.
+- **P-003:** `ReportService.BuildCategorySpendingListAsync()` and `BuildTopCategoriesAsync()` issue N+1 queries to resolve category names via `GetByIdAsync` per category — despite categories already being loaded via `.Include()`.
+- **P-004:** `GetUncategorizedAsync()` returns ALL uncategorized transactions with no limit. Called by `CategorySuggestionService`.
+- **P-005:** `GetAllForHealthAnalysisAsync()` loads full entity graphs for all transactions with no projection.
+- **P-006:** `GetAllDescriptionsAsync()` returns all distinct descriptions unbounded.
+- **P-007:** `GET /api/v1/transactions` (by date range) has no pagination parameters.
+
+## Medium
+
+- **P-008 through P-014:** Various double iterations, unbounded results, correlated subqueries, missing `<Virtualize>` and `@key` in Blazor client.
+
+## Decision Needed
+
+Should the team prioritize P-001 and P-002 as immediate fixes, or batch all High findings into a performance sprint?
+
