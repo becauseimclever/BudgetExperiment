@@ -1,12 +1,14 @@
+@inject CultureService Culture
+
 <div class="reconciliation-balance-bar card mb-3 p-3 @(IsBalanced ? "border-success" : "border-warning")">
     <div class="d-flex gap-4 flex-wrap">
         <div>
             <small class="text-muted">Cleared Balance</small>
-            <div class="fw-bold">@ClearedBalance.ToString("C")</div>
+            <div class="fw-bold">@ClearedBalance.FormatCurrency(Culture.CurrentCulture)</div>
         </div>
         <div>
             <small class="text-muted">Statement Balance</small>
-            <div class="fw-bold">@(StatementBalance.HasValue ? StatementBalance.Value.ToString("C") : "—")</div>
+            <div class="fw-bold">@(StatementBalance.HasValue ? StatementBalance.Value.FormatCurrency(Culture.CurrentCulture) : "—")</div>
         </div>
         <div>
             <small class="text-muted">Difference</small>
@@ -18,7 +20,7 @@
                 }
                 else
                 {
-                    <span>@Difference.ToString("C")</span>
+                    <span>@Difference.FormatCurrency(Culture.CurrentCulture)</span>
                 }
             </div>
         </div>

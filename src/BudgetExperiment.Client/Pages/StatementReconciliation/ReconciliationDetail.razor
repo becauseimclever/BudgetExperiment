@@ -5,6 +5,7 @@
 
 @inject IBudgetApiService Api
 @inject NavigationManager Navigation
+@inject CultureService Culture
 
 <PageTitle>Reconciliation Detail - Budget Experiment</PageTitle>
 
@@ -51,7 +52,7 @@
                                 <td>@tx.Date.ToString("MM/dd/yyyy")</td>
                                 <td>@tx.Description</td>
                                 <td class="text-end @(tx.Amount.Amount < 0 ? "text-danger" : "text-success")">
-                                    @tx.Amount.Amount.ToString("C")
+                                    @tx.Amount.Amount.FormatCurrency(Culture.CurrentCulture)
                                 </td>
                                 <td>@(tx.CategoryName ?? "—")</td>
                             </tr>

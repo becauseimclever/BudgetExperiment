@@ -1,4 +1,5 @@
 @using BudgetExperiment.Contracts.Dtos
+@inject CultureService Culture
 
 <tr class="@(Transaction.IsCleared ? "table-success" : string.Empty)">
     <td>
@@ -18,7 +19,7 @@
     <td>@Transaction.Date.ToString("MM/dd/yyyy")</td>
     <td>@Transaction.Description</td>
     <td class="text-end @(Transaction.Amount.Amount < 0 ? "text-danger" : "text-success")">
-        @Transaction.Amount.Amount.ToString("C")
+        @Transaction.Amount.Amount.FormatCurrency(Culture.CurrentCulture)
     </td>
     <td>
         @if (Transaction.ReconciliationRecordId is not null)

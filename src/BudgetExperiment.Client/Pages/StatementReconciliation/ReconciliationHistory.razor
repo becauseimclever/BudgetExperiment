@@ -5,6 +5,7 @@
 
 @inject IBudgetApiService Api
 @inject NavigationManager Navigation
+@inject CultureService Culture
 
 <PageTitle>Reconciliation History - Budget Experiment</PageTitle>
 
@@ -64,8 +65,8 @@
                         {
                             <tr>
                                 <td>@record.StatementDate.ToString("MMM d, yyyy")</td>
-                                <td class="text-end">@record.StatementBalance.ToString("C")</td>
-                                <td class="text-end">@record.ClearedBalance.ToString("C")</td>
+                                <td class="text-end">@record.StatementBalance.FormatCurrency(Culture.CurrentCulture)</td>
+                                <td class="text-end">@record.ClearedBalance.FormatCurrency(Culture.CurrentCulture)</td>
                                 <td class="text-center">@record.TransactionCount</td>
                                 <td>@record.CompletedAtUtc.ToString("g")</td>
                                 <td>
