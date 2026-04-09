@@ -8,15 +8,21 @@
 
 # Budget Experiment
 
-A mindful budgeting application built on Kakeibo philosophy — the Japanese art of conscious money management. The calendar is the household ledger. Every week is a chapter. Every month is an invitation to reflect.
+I built this to track my own household finances. It started as an experiment — hence the name — but it's become something I actually use every day.
 
-## 🎯 Purpose
+It's not just a budget tracker. It's a tool for thinking about money differently: where it comes from, where it goes, and — more importantly — *why*.
 
-Budget Experiment helps you understand your relationship with money through **Kakeibo** (家計簿, "household ledger") — the Japanese practice of mindful, intentional recording. Not just tracking numbers, but understanding *why* money moves. The application asks the four Kakeibo questions at the right moments: *How much did I receive? How much do I want to save? How much did I spend? How can I improve?*
+## 🎯 The Philosophy
 
-The **calendar is the centerpiece** — the primary surface for every financial decision. Every day is a journal entry. Every week offers a Kakeibo spending breakdown (Essentials, Wants, Culture, Unexpected). Every month closes with reflection and opens with intention-setting.
+Budget Experiment is built around **Kakeibo** (家計簿) — the Japanese art of mindful household accounting. The word itself means "household ledger," and that's exactly what this is. Not a dashboard full of charts optimized for dopamine hits, but a quiet, honest ledger you return to daily.
 
-**Kaizen** (改善, "continuous improvement") philosophy runs through the design: small weekly micro-goals, not grand resolutions. Compare yourself to yourself, not arbitrary benchmarks. Progress is quiet and honest — a checkmark, not confetti.
+Kakeibo asks four questions that I find genuinely useful:
+
+> *How much did I receive? How much do I want to save? How much did I spend? How can I improve?*
+
+The **calendar is the centerpiece** — the primary surface for every financial decision. Every day is a journal entry. Every week offers a Kakeibo spending breakdown across four intentional categories (Essentials, Wants, Culture, Unexpected). Every month closes with reflection and opens with intention-setting.
+
+Woven through the design is **Kaizen** (改善, "continuous improvement"): small weekly micro-goals, not grand resolutions. Compare yourself to yourself, not to arbitrary benchmarks. Progress is quiet and honest — a checkmark, not confetti.
 
 The application supports this mindful rhythm with:
 - **Calendar-first design**: Daily transaction summaries, weekly Kakeibo breakdowns, monthly reflections — all anchored to the calendar
@@ -27,15 +33,25 @@ The application supports this mindful rhythm with:
 - **Transaction management**: Track income and expenses across multiple accounts
 - **Paycheck allocation planning**: Distribute bill amounts across pay periods to ensure timely payments
 - **Recurring transactions**: Automate regular income and expenses with flexible scheduling
-- **AI Chat Assistant**: Create transactions via natural language - "Add $50 for groceries at Walmart"
+- **AI Chat Assistant**: Create transactions via natural language — "Add $50 for groceries at Walmart"
 - **AI-powered categorization**: Get intelligent rule suggestions using local AI (via Ollama)
 - **CSV import**: Import transactions from Bank of America, Capital One, and UHCU with duplicate detection
 - **Reports & analytics**: Category spending, monthly trends, budget vs. actual comparison, date range filtering, week summaries, CSV exports, and a custom report builder
 - **Component showcase**: Dedicated UI page for chart and component previews
 
+## 🙋 Who Is This For?
+
+This is a personal project built for a specific use case — household budgeting with intention. It might be for you if:
+
+- You want to **understand your relationship with money**, not just track numbers in a spreadsheet
+- You're a **self-hoster** who wants full control over your financial data — no third-party cloud, no subscriptions, runs on a Raspberry Pi
+- You want **local AI** that analyses your spending without your data ever leaving your machine
+- You're a **developer** looking for a real-world .NET 10 / Clean Architecture / Blazor WASM codebase to learn from, contribute to, or adapt
+- You're tired of paying monthly fees to apps that sell you back your own data
+
 ## ⚡ Quick Start (Demo Mode)
 
-Try BudgetExperiment with a single command — no database setup or authentication required:
+You can have it running in under 2 minutes. Try Budget Experiment with a single command — no database setup or authentication required:
 
 ```bash
 docker compose -f docker-compose.demo.yml up -d
@@ -183,9 +199,9 @@ Note: Local Docker builds are not supported. Pull pre-built images from `ghcr.io
 
 ## 🛠️ Development Guidelines
 
-This project follows strict engineering practices:
+This is an actively developed personal project. Here's how it's built and what to expect if you dig into the code:
 
-- **Philosophy First**: The calendar is the centerpiece. Every feature should deepen the Kakeibo + Kaizen rhythm — mindful recording, intentional categorization, and continuous small improvement. See `docs/128-kakeibo-kaizen-calendar-first.md` for the design philosophy.
+- **Philosophy First**: The calendar is the centerpiece. Every feature should deepen the Kakeibo + Kaizen rhythm — mindful recording, intentional categorization, and continuous small improvement. The design philosophy lives in [`docs/archive/`](docs/archive/).
 - **TDD First**: Write failing tests before implementation
 - **SOLID Principles**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
 - **Clean Code**: Short methods, guard clauses, no commented code
@@ -364,20 +380,24 @@ See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for full configuration refere
 
 ## 🤝 Contributing
 
-1. Create a feature branch: `feature/your-feature-name`
-2. Follow TDD: Write tests first
-3. Ensure all tests pass: `dotnet test`
-4. Format code: `dotnet format`
-5. Submit PR with tests included
+This started as one person's experiment with his household finances. If it resonates with you — whether that's fixing a bug, adding support for your bank's CSV format, improving a UI flow, or just tidying something up — PRs are genuinely welcome.
+
+Here's how we work:
+
+- **Start with tests**: We follow TDD — a failing test before the implementation. It sounds like overhead, but it makes the codebase genuinely easy to change.
+- **Feature branches**: Branch off `main` with `feature/your-feature-name`
+- **Before submitting**: Run `dotnet test` (all tests green) and `dotnet format` (keep StyleCop happy)
+- **PRs include tests**: If you add or change behavior, include the tests that prove it
+
+Not ready to write code? That's fine too. Opening an issue with feedback, a bug report, or an idea is a real contribution. The issues page is where the roadmap lives.
 
 ## 📝 License
 
 See [LICENSE](LICENSE) file for details.
 
-## 🐛 Known Issues
+## 📌 Current State
 
-- Project is in active development
-- See GitHub Issues for current status
+This is an actively developed personal project. It works well for its intended purpose — household budgeting — and is improving continuously. Check the [Issues](https://github.com/becauseimclever/BudgetExperiment/issues) page for current status and roadmap ideas.
 
 ## 📧 Contact
 
