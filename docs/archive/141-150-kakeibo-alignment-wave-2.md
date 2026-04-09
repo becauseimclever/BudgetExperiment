@@ -76,6 +76,22 @@
 
 ---
 
-## Features 147–150
+## Feature 147: Recurring Projection / Realization Accuracy
+
+> **Status:** Done
+
+**What it did:** Enhanced `RecurringInstanceProjector.GetInstancesByDateRangeAsync()` with optional `ISet<DateOnly>? excludeDates` parameter to filter already-realized dates before returning projected instances. Created `IRecurringQueryService` / `RecurringQueryService` in the Application layer to fetch realized transaction dates and pass them as exclusions. Implemented end-to-end integration tests with Testcontainers proving INV-7 (Recurring Projection No-Double-Count): `projected + realized = expected_occurrences` across a date range.
+
+**Key decisions:**
+- `excludeDates` parameter lives on `IRecurringInstanceProjector` (Domain), preserving domain purity
+- All 6 existing call sites updated with explicit `excludeDates: null` for backward compatibility
+- `RecurringQueryService` fetches realized dates using `Transaction.Date` (not `RecurringInstanceDate`)
+- Feature flag `feature-recurring-projection-accuracy` seeded as `false`
+- 11 tests: 4 projector unit tests (exclusion logic), 5 query service unit tests (integration), 3 Testcontainers accuracy tests (end-to-end proof of INV-7)
+- Fixes F146 dependency (Transfer Deletion now works with accurate projection)
+
+---
+
+## Features 148–150
 
 > **Status:** Not yet planned — reserved for future work.

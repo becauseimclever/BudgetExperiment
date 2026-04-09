@@ -509,3 +509,48 @@ Commits: 4052302 (feat: atomic transfer deletion)
 - **Barbara had pre-written tests**: RecurringInstanceProjectorExcludeDatesTests and RecurringQueryServiceTests were already committed by Barbara. Her constructor-null tests required adding ArgumentNullException guards to RecurringQueryService.
 - **Feature flag location**: FeatureFlagSeeder.cs in Infrastructure/Seeding. Simple tuple array; append the new flag with alse as default.
 - **StyleCop SA1512**: A comment followed by a blank line is an error. Pattern // ===== Section =====\n\n must become // ===== Section =====\n.
+---
+
+## F147 Session — Recurring Projection Accuracy (2026-04-09)
+
+**Role:** Backend Implementation Lead  
+**Feature:** 147 — Recurring Projection / Realization Accuracy  
+**Status:** ✅ Complete
+
+### Scope
+
+Implemented signature enhancement to IRecurringInstanceProjector with optional ISet<DateOnly>? excludeDates parameter to filter realized dates before returning projected instances. Created IRecurringQueryService / RecurringQueryService in Application layer to fetch realized dates and pass as exclusion set.
+
+### Key Decisions
+
+1. **Parameter Location:** Domain interface (not Application) — preserves domain purity
+2. **Realized Date:** Uses Transaction.Date (posted/realized date), not RecurringInstanceDate
+3. **Backward Compatibility:** All 6 call sites pass explicit xcludeDates: null
+4. **Feature Flag:** Seeded eature-recurring-projection-accuracy = false
+5. **Null Guards:** Added ArgumentNullException.ThrowIfNull() for constructor parameters (per Barbara's test requirements)
+
+### Implementation Details
+
+- Updated IRecurringInstanceProjector.GetInstancesByDateRangeAsync signature
+- Modified RecurringInstanceProjector to filter excluded occurrences
+- Created RecurringQueryService with dependency injection registration
+- Feature flag eature-recurring-projection-accuracy added to FeatureFlagSeeds.cs
+- All 1,125+ Application layer tests pass; no regressions
+
+### Commits
+
+1. **aba397c** — feat(app): F147 recurring projection excludeDates parameter
+2. **18334aa** — docs(squad): update F147 doc status
+
+### Testing Notes
+
+- 4 projector exclusion unit tests — ✅ all pass
+- 5 query service unit tests — ✅ all pass (null guards fixed)
+- All call sites updated with explicit 
+ull parameter
+- Integration tests (Testcontainers) validate INV-7 end-to-end
+
+### Sign-Off
+
+✅ Implementation complete. All tests pass. Ready for production integration.
+

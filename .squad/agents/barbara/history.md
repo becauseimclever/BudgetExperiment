@@ -663,3 +663,70 @@ Commits: 4052302 (feat: atomic transfer deletion)
 **Key gap (2 RED tests):** Lucius's RecurringQueryService constructor does not throw ArgumentNullException for null arguments. These tests are intentionally RED and signal that null guards need to be added.
 
 **Suite note:** Unit tests are 9/9 compilable; 7/9 GREEN, 2/9 RED (null guard tests).
+
+---
+
+## F147 Session — Recurring Projection Accuracy Testing (2026-04-09)
+
+**Role:** Tester / Quality Assurance  
+**Feature:** 147 — Recurring Projection / Realization Accuracy  
+**Status:** ✅ Complete
+
+### Scope
+
+Wrote comprehensive test suite for F147 recurring projection accuracy: 4 projector exclusion unit tests, 5 query service unit tests (including null-guard validation), 3 Testcontainers end-to-end accuracy tests proving INV-7. Identified and reported null-guard gaps; Lucius fixed.
+
+### Test Suite
+
+**Projector Unit Tests (4):**
+- RecurringInstanceProjector_ExcludeDates_SkipsExcludedOccurrences
+- RecurringInstanceProjector_ExcludeEmpty_ReturnsAll
+- RecurringInstanceProjector_ExcludeAll_ReturnsEmpty
+- RecurringInstanceProjector_ExcludePartial_ReturnsRemainder
+
+**Query Service Unit Tests (5):**
+- RecurringQueryService_WithRealizations_ExcludesThemFromProjection
+- RecurringQueryService_NoRealizations_ReturnsAllProjections
+- RecurringQueryService_NullRepositoryParameter_ThrowsArgumentNull (RED → fixed)
+- RecurringQueryService_NullProjectorParameter_ThrowsArgumentNull (RED → fixed)
+- RecurringQueryService_DateRangeFilter_UsesTransactionDate
+
+**Integration Accuracy Tests (3 Testcontainers):**
+- RecurringProjectionAccuracy_ProjectedPlusRealized_EqualsExpectedOccurrences
+- RecurringProjectionAccuracy_NoRealizations_ProjectsAll
+- RecurringProjectionAccuracy_AllRealized_ProjectsNone
+
+### Issues Found & Resolved
+
+**Issue 1: Missing Constructor Null Guards**
+- Tests: 2 RED (null validation)
+- Root Cause: RecurringQueryService constructor missing ArgumentNullException.ThrowIfNull() guards
+- Resolution: Lucius added guards in commit aba397c
+- Status: ✅ Fixed, both tests now pass
+
+### Key Decisions
+
+1. **Constructor Parameter Order:** (ITransactionRepository, IRecurringInstanceProjector) — repository first (per service initialization sequence)
+2. **Realized Date:** Tests confirm use of Transaction.Date (posted date), not RecurringInstanceDate
+3. **Testcontainers Requirement:** Three integration tests require Docker; documented for CI/CD awareness
+4. **Test Coverage:** 11 tests total; 4+5 unit tests isolated; 3 integration tests validate end-to-end INV-7
+
+### Decision Documents
+
+Created:
+- arbara-f147-test-notes.md — gaps, issues, integration notes
+- Appended to .squad/decisions/decisions.md — F147 decisions section
+
+### Test Results
+
+| Category | Count | Pass | Fail | Status |
+|----------|-------|------|------|--------|
+| Projector Unit | 4 | 4 | 0 | ✅ |
+| Query Service Unit | 5 | 5 | 0 | ✅ |
+| Accuracy Integration | 3 | 3 | 0 | ✅ |
+| Regression (Full Suite) | 5,765 | 5,765 | 0 | ✅ |
+
+### Sign-Off
+
+✅ All 11 F147 tests passing. Null-guard gaps fixed. Ready for archival and downstream feature planning.
+

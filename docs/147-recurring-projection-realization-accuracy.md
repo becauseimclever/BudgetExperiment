@@ -1,6 +1,6 @@
 # Feature 147: Recurring Projection / Realization Accuracy
 
-> **Status:** In Progress
+> **Status:** Done
 
 ## Overview
 
