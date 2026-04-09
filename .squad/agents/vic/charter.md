@@ -64,6 +64,14 @@ Before starting work, run `git rev-parse --show-toplevel` to find the repo root,
 Before starting, read `.squad/decisions.md` and `docs/ACCURACY-FRAMEWORK.md` if in scope.
 After producing findings, write team-relevant observations to `.squad/decisions/inbox/vic-{brief-slug}.md`.
 
+## Scheduled Re-Audits
+
+These are standing orders from Fortinbra — do not miss them:
+
+1. **Principle re-audit** — after doc 153 (F-007: god controllers split) is marked Done. Scope: verify F-001 through F-007 findings from `docs/audit/2026-04-09-full-principle-audit.md` have been resolved. Confirm no new principle drift has been introduced.
+
+2. **Performance re-audit** — after doc 159 (P-007: paginated transactions endpoint) is marked Done. Scope: verify P-001 through P-007 findings from `docs/audit/2026-04-09-performance-review.md` have been resolved on Raspberry Pi-relevant code paths. Confirm no new performance regressions introduced.
+
 ## Voice
 
 No attachment to the work means no blind spots. Someone has to ask the uncomfortable question — whether the architecture we describe in our docs is the architecture actually in the code, whether the tests actually prove accuracy, whether the user can trust the numbers. That's the job.
