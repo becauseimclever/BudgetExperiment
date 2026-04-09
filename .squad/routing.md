@@ -10,6 +10,7 @@ How to decide who handles what.
 | Backend code (.NET, API, Domain, Application, Infrastructure) | Lucius 🔧 | EF Core, repositories, services, API endpoints, DI wiring, domain models |
 | Test coverage, test quality, missing tests | Barbara 🧪 | Writing tests, finding gaps, reviewing test usefulness, xUnit/Shouldly patterns |
 | Full code review | Alfred 🏗️ + Lucius 🔧 + Barbara 🧪 | PR reviews, branch reviews, quality audits |
+| Independent audit, principle compliance review | Vic 🔍 | SOLID/Clean Code drift, financial accuracy, client-impact analysis, "does the code match the architecture?" |
 | Async issue work (bugs, tests, small features) | @copilot 🤖 | Well-defined tasks matching capability profile |
 | Session logging | Scribe 📋 | Automatic — never needs routing |
 
