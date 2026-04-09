@@ -6,6 +6,7 @@ using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Common;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
 
@@ -16,16 +17,19 @@ internal sealed class TransactionRepository : ITransactionRepository
 {
     private readonly BudgetDbContext _context;
     private readonly IUserContext _userContext;
+    private readonly ILogger<TransactionRepository> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
     /// <param name="userContext">The user context for scope filtering.</param>
-    public TransactionRepository(BudgetDbContext context, IUserContext userContext)
+    /// <param name="logger">Logger for diagnostic messages.</param>
+    public TransactionRepository(BudgetDbContext context, IUserContext userContext, ILogger<TransactionRepository> logger)
     {
         _context = context;
         _userContext = userContext;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -542,6 +546,48 @@ internal sealed class TransactionRepository : ITransactionRepository
             .OrderBy(t => t.AccountId)
             .ThenBy(t => t.Date)
             .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteTransferAsync(Guid transferId, CancellationToken cancellationToken = default)
+    {
+        var legs = await this.ApplyScopeFilter(_context.Transactions)
+            .Where(t => t.TransferId == transferId)
+            .ToListAsync(cancellationToken);
+
+        if (legs.Count == 0)
+        {
+            return;
+        }
+
+        if (legs.Count == 1)
+        {
+            _logger.LogWarning(
+                "Orphaned transfer leg detected for TransferId {TransferId}. Deleting single leg (Id={TransactionId}).",
+                transferId,
+                legs[0].Id);
+
+            _context.Transactions.Remove(legs[0]);
+            await _context.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        using var dbTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            foreach (var leg in legs)
+            {
+                _context.Transactions.Remove(leg);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await dbTransaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await dbTransaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     /// <summary>

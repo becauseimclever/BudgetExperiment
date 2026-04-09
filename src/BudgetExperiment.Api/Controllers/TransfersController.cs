@@ -19,15 +19,20 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class TransfersController : ControllerBase
 {
+    private const string AtomicDeletionFlag = "feature-transfer-atomic-deletion";
+
     private readonly ITransferService _service;
+    private readonly IFeatureFlagService _featureFlagService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransfersController"/> class.
     /// </summary>
     /// <param name="service">The transfer service.</param>
-    public TransfersController(ITransferService service)
+    /// <param name="featureFlagService">The feature flag service.</param>
+    public TransfersController(ITransferService service, IFeatureFlagService featureFlagService)
     {
         _service = service;
+        _featureFlagService = featureFlagService;
     }
 
     /// <summary>
@@ -141,19 +146,27 @@ public sealed class TransfersController : ControllerBase
     }
 
     /// <summary>
-    /// Deletes a transfer and both associated transactions.
+    /// Deletes a transfer and both associated transactions atomically.
+    /// Requires feature flag <c>feature-transfer-atomic-deletion</c> to be enabled.
     /// </summary>
     /// <param name="transferId">The transfer identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content if successful.</returns>
     /// <response code="204">Transfer deleted successfully.</response>
+    /// <response code="403">Feature is not enabled.</response>
     /// <response code="404">Transfer not found.</response>
     [HttpDelete("{transferId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(Guid transferId, CancellationToken cancellationToken)
     {
-        var deleted = await _service.DeleteAsync(transferId, cancellationToken);
+        if (!await _featureFlagService.IsEnabledAsync(AtomicDeletionFlag, cancellationToken))
+        {
+            return this.Forbid();
+        }
+
+        var deleted = await _service.DeleteTransferAsync(transferId, cancellationToken);
         if (!deleted)
         {
             return this.NotFound();

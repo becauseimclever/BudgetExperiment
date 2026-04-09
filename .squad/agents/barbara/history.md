@@ -569,3 +569,41 @@ Use `_factory.Server.CreateHandler()` to obtain the raw in-process handler and w
 - No regressions in existing 5,400+ test suite
 
 
+
+
+### 2026-04-08 — Feature 146: Transfer Deletion with Orphan Detection Tests
+
+**Task:** Write RED-phase tests for F146 atomic transfer deletion: service unit tests, API integration tests, and Testcontainers accuracy tests.
+
+**Files created (13 new tests):**
+1. `tests/BudgetExperiment.Application.Tests/Transfers/TransferDeletionServiceTests.cs` (6 unit tests)
+   - Constructor null-guard: null transactionRepository throws ArgumentNullException
+   - TransferExists_ReturnsTrue: both legs found, DeleteTransferAsync called, returns true
+   - TransferNotFound_ReturnsFalse: empty legs, DeleteTransferAsync NOT called, returns false
+   - RepositoryThrows_PropagatesException: exception from DeleteTransferAsync bubbles up unchanged
+   - OrphanedLeg_DeletedWithoutError: single leg found, still returns true (orphan cleanup)
+   - CallsRepositoryDeleteExactlyOnce: Moq.Verify confirms exactly one delegate call
+
+2. `tests/BudgetExperiment.Api.Tests/Transfers/TransferDeletionControllerTests.cs` (4 API integration tests, WebApplicationFactory + Postgres)
+   - FeatureFlagDisabled_Returns403: flag off -> 403 Forbidden
+   - ValidTransferId_Returns204: flag on, known transfer -> 204 No Content
+   - UnknownTransferId_Returns404: flag on, unknown GUID -> 404
+   - InvalidGuid_Returns400: non-GUID path segment -> 400 Bad Request
+
+3. `tests/BudgetExperiment.Infrastructure.Tests/Accuracy/TransferDeletionAccuracyTests.cs` (3 Testcontainers accuracy tests)
+   - BothLegsDeleted_AccountBalancesExact: after delete, GetByTransferIdAsync empty; A and B balances exact to pre-transfer values
+   - OrphanedLeg_DeletedWithoutError: single orphan leg deleted, no exception, leg gone from DB
+   - AfterDeletion_NetZeroRestored: combined sum(A+B) identical before and after transfer cycle (INV-2 proof)
+
+**Pre-existing test fixed:** `MockTransferService` in `ChatActionExecutorTests.cs` did not implement new `ITransferService.DeleteTransferAsync` — added stub returning `false`.
+
+**Key learnings:**
+- `TransactionRepository` constructor now takes `ILogger<TransactionRepository>`; all infra tests must pass `NullLogger<TransactionRepository>.Instance`.
+- `ITransferService.DeleteTransferAsync` was already added to the interface by Lucius in parallel — only the service implementation and repo method remain for him to add.
+- SA1204: static helpers BEFORE non-static in helper section.
+- SA1512: section comment (// === X ===) must NOT be followed by blank line.
+- SA1615: all public `async Task` methods with doc comments must include `<returns>A <see cref="Task"/> representing...`.
+- CS1734: do not use `<paramref name="X"/>` in a doc comment when X is not a parameter of the method.
+
+**Build status:** `Build succeeded. 0 Error(s)` with default TreatWarningsAsErrors.
+**Test discovery:** All 13 new tests discovered. Currently in RED phase pending Lucius adding `TransferService.DeleteTransferAsync` and `ITransactionRepository.DeleteTransferAsync` / `TransactionRepository.DeleteTransferAsync`.

@@ -27,6 +27,7 @@ public sealed class TransferService : ITransferService
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork)
     {
+        ArgumentNullException.ThrowIfNull(transactionRepository);
         _transactionRepository = transactionRepository;
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
@@ -265,13 +266,26 @@ public sealed class TransferService : ITransferService
             return false;
         }
 
-        // Delete all transactions with this transfer ID
         foreach (var transaction in transactions)
         {
             await _transactionRepository.RemoveAsync(transaction, cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteTransferAsync(Guid transferId, CancellationToken cancellationToken = default)
+    {
+        var legs = await _transactionRepository.GetByTransferIdAsync(transferId, cancellationToken);
+
+        if (legs.Count == 0)
+        {
+            return false;
+        }
+
+        await _transactionRepository.DeleteTransferAsync(transferId, cancellationToken);
         return true;
     }
 

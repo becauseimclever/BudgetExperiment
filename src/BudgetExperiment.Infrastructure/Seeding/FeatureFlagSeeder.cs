@@ -35,6 +35,7 @@ public static class FeatureFlagSeeder
         ("DataHealth:Dashboard",                   true),
         ("Location:Geocoding",                     false),
         ("Kakeibo:DateRangeReports",               false),
+        ("feature-transfer-atomic-deletion",       false),
     ];
 
     /// <summary>

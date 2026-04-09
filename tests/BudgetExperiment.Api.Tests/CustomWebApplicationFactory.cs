@@ -73,6 +73,8 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         await FeatureFlagSeeder.SeedAsync(db);
         await db.Database.ExecuteSqlRawAsync(
             """UPDATE "FeatureFlags" SET "IsEnabled" = true WHERE "Name" = 'Reports:CustomReportBuilder'""");
+        await db.Database.ExecuteSqlRawAsync(
+            """UPDATE "FeatureFlags" SET "IsEnabled" = true WHERE "Name" = 'feature-transfer-atomic-deletion'""");
     }
 
     /// <inheritdoc />

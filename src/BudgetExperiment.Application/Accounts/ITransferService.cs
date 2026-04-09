@@ -61,4 +61,14 @@ public interface ITransferService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the transfer was deleted, false if not found.</returns>
     Task<bool> DeleteAsync(Guid transferId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atomically deletes both legs of a transfer identified by <paramref name="transferId"/>.
+    /// Delegates all-or-nothing semantics to the repository. Orphaned legs are cleaned up
+    /// with a warning. Returns <c>false</c> immediately if no legs are found (not found case).
+    /// </summary>
+    /// <param name="transferId">The shared transfer identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><c>true</c> if at least one leg was found and deleted; <c>false</c> if not found.</returns>
+    Task<bool> DeleteTransferAsync(Guid transferId, CancellationToken cancellationToken = default);
 }

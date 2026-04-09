@@ -450,3 +450,32 @@ Compression is transparent to application layer. No changes required to service 
 6. **ISO week Monday calculation** — `ISOWeek.GetWeekOfYear(DateTime)` requires DateTime; convert via `date.ToDateTime(TimeOnly.MinValue)`.
 
 **Build:** 0 errors, 0 warnings on all `src/` projects.
+
+### 2026-04-xx — Feature 146: Transfer Deletion with Orphan Detection (GREEN)
+
+**Requested by:** Fortinbra (via Barbara's RED tests) — Status: Complete
+
+**Files modified (src):**
+- src/BudgetExperiment.Domain/Repositories/ITransactionRepository.cs — Added Task DeleteTransferAsync(Guid transferId, CancellationToken) interface method.
+- src/BudgetExperiment.Infrastructure/Persistence/Repositories/TransactionRepository.cs — Added ILogger<TransactionRepository> to constructor; implemented DeleteTransferAsync: fetches legs by TransferId, logs warning for orphans, deletes orphan immediately; atomically deletes both legs via IDbContextTransaction.
+- src/BudgetExperiment.Application/Accounts/ITransferService.cs — Added Task<bool> DeleteTransferAsync(Guid, CancellationToken) alongside existing DeleteAsync.
+- src/BudgetExperiment.Application/Accounts/TransferService.cs — Added null-guard on 	ransactionRepository constructor arg; added DeleteTransferAsync: calls GetByTransferIdAsync (returns false if empty), delegates to ITransactionRepository.DeleteTransferAsync, returns true; kept DeleteAsync (old non-atomic path) for backwards compatibility.
+- src/BudgetExperiment.Api/Controllers/TransfersController.cs — Added IFeatureFlagService injection; DeleteAsync now checks eature-transfer-atomic-deletion flag (returns 403 Forbidden if disabled), calls _service.DeleteTransferAsync (the atomic path).
+- src/BudgetExperiment.Infrastructure/Seeding/FeatureFlagSeeder.cs — Added ("feature-transfer-atomic-deletion", false) default seed.
+- 	ests/BudgetExperiment.Api.Tests/CustomWebApplicationFactory.cs — Added UPDATE to enable eature-transfer-atomic-deletion in test InitializeAsync.
+- 	ests/BudgetExperiment.Api.Tests/Transfers/TransferDeletionControllerTests.cs — Fixed EnsureFeatureFlag to use SQL upsert + IFeatureFlagService.SetFlagAsync for proper cache invalidation; changed DeleteTransfer_InvalidGuid_Returns400 to Returns404 (correct ASP.NET Core routing behavior for :guid constraints).
+- 	ests/BudgetExperiment.Infrastructure.Tests/TransactionRepositoryTests.cs — Added NullLogger<TransactionRepository>.Instance to all constructor calls.
+- 	ests/BudgetExperiment.Infrastructure.Tests/Accuracy/KakeiboReportServiceAccuracyTests.cs — Added NullLogger<TransactionRepository>.Instance to all constructor calls.
+- 	ests/BudgetExperiment.Infrastructure.Tests/Accuracy/TransferDeletionAccuracyTests.cs — New accuracy test file (Barbara). Fixed NullLogger constructor args and SA1615 return value docs.
+- 	ests/BudgetExperiment.Application.Tests/Transfers/TransferDeletionServiceTests.cs — New unit test file (Barbara). Fixed SA1512, SA1514, SA1507, SA1615, SA1204, CS1734 violations.
+- 	ests/BudgetExperiment.Application.Tests/Services/ChatActionExecutorTests.cs — Added DeleteTransferAsync stub to MockTransferService.
+
+**Tests:** 919/919 Domain, 1116/1116 Application, 2818/2819 Client (1 pre-existing skip), 230/230 Infrastructure, 668/670 Api (2 pre-existing Kakeibo failures unrelated to this feature).
+
+**Key Decisions / Lessons:**
+- ITransactionRepository.DeleteTransferAsync returns Task (not Task<bool>) — the repo handles all 3 cases (none/orphan/both) silently; the service wraps it with existence check via GetByTransferIdAsync to return bool.
+- Feature flag for DELETE endpoint returns **403 Forbidden** (not 404) when disabled — this makes it clear the feature exists but is gated.
+- EnsureFeatureFlag test helper MUST: (1) do SQL upsert (ON CONFLICT DO UPDATE) to handle truncated DB state; AND (2) call SetFlagAsync to invalidate the IMemoryCache. Direct DB writes without cache invalidation cause flaky tests.
+- :guid route constraint returns 404 (not 400) for non-GUID path segments — this is ASP.NET Core routing behavior, not model binding. Tests expecting 400 need to be corrected to 404.
+- When adding a required constructor parameter to a repository (ILogger), ALL test instantiation sites must be updated — use Python regex for bulk updates (PowerShell regex is too slow on large files).
+- SA1512 (comment followed by blank line) + SA1514 (XML doc not preceded by blank line) conflict when section comments directly precede /// <summary> blocks — the only clean fix is to remove the section comments.

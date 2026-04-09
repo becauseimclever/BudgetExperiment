@@ -5,6 +5,8 @@
 using BudgetExperiment.Application.Reports;
 using BudgetExperiment.Infrastructure.Persistence.Repositories;
 
+using Microsoft.Extensions.Logging.Abstractions;
+
 namespace BudgetExperiment.Infrastructure.Tests.Accuracy;
 
 /// <summary>
@@ -53,7 +55,7 @@ public sealed class KakeiboReportServiceAccuracyTests
         var to = new DateOnly(2040, 1, 31);
 
         await using var readContext = _fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
         var service = new KakeiboReportService(transactionRepo);
 
         // Act
@@ -95,7 +97,7 @@ public sealed class KakeiboReportServiceAccuracyTests
         await context.SaveChangesAsync();
 
         await using var readContext = _fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
         var service = new KakeiboReportService(transactionRepo);
 
         // Act
@@ -149,7 +151,7 @@ public sealed class KakeiboReportServiceAccuracyTests
         await context.SaveChangesAsync();
 
         await using var readContext = _fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
         var service = new KakeiboReportService(transactionRepo);
 
         // Act
@@ -205,7 +207,7 @@ public sealed class KakeiboReportServiceAccuracyTests
         await context.SaveChangesAsync();
 
         await using var readContext = _fixture.CreateSharedContext(context);
-        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault());
+        var transactionRepo = new TransactionRepository(readContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
         var service = new KakeiboReportService(transactionRepo);
 
         // Act

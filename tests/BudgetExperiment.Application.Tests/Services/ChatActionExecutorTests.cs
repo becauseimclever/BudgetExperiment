@@ -321,6 +321,9 @@ public class ChatActionExecutorTests
 
         public Task<bool> DeleteAsync(Guid transferId, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);
+
+        public Task<bool> DeleteTransferAsync(Guid transferId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
     }
 
     private sealed class MockRecurringTransactionService : IRecurringTransactionService

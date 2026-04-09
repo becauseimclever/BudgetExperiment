@@ -1,6 +1,6 @@
 # Feature 146: Transfer Deletion with Orphan Detection
 
-> **Status:** Planning
+> **Status:** Done
 
 ## Overview
 

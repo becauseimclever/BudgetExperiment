@@ -251,4 +251,14 @@ public interface ITransactionRepository : IReadRepository<Transaction>, IWriteRe
     Task<IReadOnlyList<Transaction>> GetAllForHealthAnalysisAsync(
         Guid? accountId,
         CancellationToken ct);
+
+    /// <summary>
+    /// Deletes both legs of a transfer atomically using a database transaction.
+    /// If only one leg exists (orphaned state), it is deleted with a warning logged.
+    /// If neither leg exists, the method returns without error.
+    /// </summary>
+    /// <param name="transferId">The shared transfer identifier linking both transaction legs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task DeleteTransferAsync(Guid transferId, CancellationToken cancellationToken = default);
 }
