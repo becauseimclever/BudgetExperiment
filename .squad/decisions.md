@@ -1618,6 +1618,35 @@ Slice 10 (Sample + Docs) ← depends on all above
 
 ---
 
+### 22. Feature 148: Fix Bare `.ToString("C")` in Statement Reconciliation UI (2026-04-09)
+
+**By:** Lucius (fix) + Barbara (tests)  
+**Status:** Complete  
+**Severity:** 🔴 Critical — F-001 (2026-04-09 audit)
+
+**What it did:** Replaced 7 bare `.ToString("C")` calls across 4 Statement Reconciliation Razor components with `FormatCurrency(Culture.CurrentCulture)`. Injected `CultureService` into each component. Added 6 bUnit locale tests asserting correct currency formatting for `de-DE` and `en-US`.
+
+**Commits:**
+- `e7a94d5` — `fix(client): replace bare ToString("C") in reconciliation components`
+- `e1bcfa5` — `test(client): bUnit locale tests for reconciliation currency formatting`
+
+**Key Technical Decisions:**
+- **Inject naming:** `@inject CultureService Culture` matches project convention
+- **Extension method:** `FormatCurrency()` from `CurrencyFormattingExtensions` — already globally imported in `_Imports.razor`
+- **Test helper:** `TestCultureServiceFactory` created for reusable bUnit locale setup (can be documented as standard pattern in Engineering Guide §37)
+- **StubBudgetApiService extension:** Added configurable `ReconciliationHistory` and `ReconciliationTransactions` list properties for test scenarios
+
+**Acceptance Criteria Met:**
+- ✅ All 7 bare `.ToString("C")` calls replaced
+- ✅ `CultureService` injected into all 4 components
+- ✅ `de-DE` locale renders "1.234,56 €"
+- ✅ `en-US` locale renders "$1,234.56" (no regression)
+- ✅ bUnit tests cover culture-correct rendering (6 tests, all GREEN)
+
+**Test Results:** 5,771 passed, 0 failed, 1 skipped
+
+---
+
 # Feature Flags Architecture
 
 **Date:** 2026-04-07  

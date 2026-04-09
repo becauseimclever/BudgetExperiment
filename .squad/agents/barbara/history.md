@@ -759,3 +759,44 @@ Created:
 
 ✅ All 11 F147 tests passing. Null-guard gaps fixed. Ready for archival and downstream feature planning.
 
+
+## 2026-04-09: Feature 148 — Fix Bare \.ToString("C")\ in Statement Reconciliation UI (Phase 2)
+
+**Date:** 2026-04-09T00:31:19Z
+**Status:** COMPLETE — 6 tests written, all GREEN
+
+### Session Summary
+
+Wrote 6 bUnit locale tests asserting correct currency formatting across 4 Statement Reconciliation components under de-DE and n-US cultures. Extended StubBudgetApiService with configurable ReconciliationHistory and ReconciliationTransactions lists. Full test suite passing.
+
+### Test Files Created
+
+| File | Tests | Status |
+|------|-------|--------|
+| ReconciliationBalanceBarLocaleTests.cs | 2 (de-DE, en-US) | ✅ GREEN |
+| ClearableTransactionRowLocaleTests.cs | 2 (de-DE, en-US) | ✅ GREEN |
+| ReconciliationHistoryLocaleTests.cs | 1 (de-DE) | ✅ GREEN |
+| ReconciliationDetailLocaleTests.cs | 1 (de-DE) | ✅ GREEN |
+| TestCultureServiceFactory.cs | (helper) | ✅ |
+
+**Total:** 6 test methods, 1 shared helper.
+
+### Key Technical Decisions
+
+1. **TestCultureServiceFactory:** New shared pattern for bUnit locale setup. Sets both CultureInfo.CurrentCulture and CultureService.CurrentCulture together.
+2. **StubBudgetApiService property constraints:** SA1201 enforces properties before methods. New list properties added in property section.
+3. **ErrorAlert dependencies:** Component requires both IToastService AND IExportDownloadService — page tests must register both.
+
+### Build & Test Verification
+
+- dotnet test tests/BudgetExperiment.Client.Tests --filter "Category!=Performance" → ✅ All passing
+- **Full suite:** 5,771 passed, 0 failed, 1 skipped
+
+### Commit
+
+**Hash:** 1bcfa5  
+**Message:** 	est(client): bUnit locale tests for reconciliation currency formatting
+
+### Feature Complete
+
+Phase 1 + Phase 2 acceptance criteria fully met. Feature 148 is production-ready.

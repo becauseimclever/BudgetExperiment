@@ -586,3 +586,39 @@ Replaced 7 bare `.ToString("C")` calls across 4 Razor components with `FormatCur
 
 `e7a94d5` — fix(client): replace bare ToString("C") in reconciliation components
 
+
+## 2026-04-09: Feature 148 — Fix Bare \.ToString("C")\ in Statement Reconciliation UI (Phase 1)
+
+**Date:** 2026-04-09T00:31:19Z
+**Status:** COMPLETE — 7 fixes, 0 errors
+
+### Session Summary
+
+Replaced all 7 bare .ToString("C") calls across 4 Statement Reconciliation Razor components with FormatCurrency(Culture.CurrentCulture). Injected CultureService as Culture into each component. Full build clean.
+
+### Files Modified
+
+- ReconciliationBalanceBar.razor — 3 instances
+- ClearableTransactionRow.razor — 1 instance
+- ReconciliationHistory.razor — 2 instances
+- ReconciliationDetail.razor — 1 instance
+
+**Total:** 7 instances fixed across 4 files.
+
+### Key Technical Decision
+
+Used @inject CultureService Culture (project convention) instead of CultureService CultureService. Extension method FormatCurrency() already globally imported via _Imports.razor — no additional using required.
+
+### Build Verification
+
+- dotnet build BudgetExperiment.Client.csproj → ✅ 0 errors, 0 warnings
+- dotnet build BudgetExperiment.sln → ✅ 0 errors, 0 warnings
+
+### Commit
+
+**Hash:** 7a94d5  
+**Message:** ix(client): replace bare ToString("C") in reconciliation components
+
+### Handoff to Barbara
+
+Feature 148 Phase 2 (bUnit locale tests) ready for execution.

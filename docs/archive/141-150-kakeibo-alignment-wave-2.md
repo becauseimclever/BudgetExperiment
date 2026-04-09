@@ -94,4 +94,23 @@
 
 ## Features 148–150
 
+### Feature 148: Fix Bare `.ToString("C")` in Statement Reconciliation UI
+
+> **Status:** Done
+
+**What it did:** Replaced 7 bare `.ToString("C")` calls across 4 Statement Reconciliation Razor components (`ReconciliationBalanceBar.razor`, `ClearableTransactionRow.razor`, `ReconciliationHistory.razor`, `ReconciliationDetail.razor`) with `.FormatCurrency(Culture.CurrentCulture)`. Injected `CultureService` as `Culture` into each component. Added 6 bUnit locale tests asserting correct currency formatting for `de-DE` and `en-US` cultures.
+
+**Key decisions:**
+- Inject variable naming: `@inject CultureService Culture` matches codebase convention
+- Extension method `FormatCurrency()` from `CurrencyFormattingExtensions` already globally imported via `_Imports.razor`
+- Tests use `TestCultureServiceFactory` helper (new shared pattern for bUnit locale setup)
+
+**Commits:**
+- `e7a94d5` — `fix(client): replace bare ToString("C") in reconciliation components` (Lucius)
+- `e1bcfa5` — `test(client): bUnit locale tests for reconciliation currency formatting` (Barbara)
+
+---
+
+## Features 149–150
+
 > **Status:** Not yet planned — reserved for future work.

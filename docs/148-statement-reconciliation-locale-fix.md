@@ -1,6 +1,6 @@
 # Feature 148: Fix Bare `.ToString("C")` in Statement Reconciliation UI
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🔴 Critical — F-001  
 > **Audit Source:** `docs/audit/2026-04-09-full-principle-audit.md`
 
@@ -192,3 +192,4 @@ None — this change affects display formatting only.
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-04-09 | Initial spec from Vic audit F-001 | Alfred (Lead) |
+| 2026-04-09 | Feature implemented and tested: Phase 1 (7 fixes) + Phase 2 (6 tests) complete. Commit e7a94d5 + e1bcfa5. | Lucius, Barbara |
