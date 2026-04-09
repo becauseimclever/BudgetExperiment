@@ -2377,3 +2377,96 @@ Six feature specification documents have been created and committed to address a
 
 Should the team prioritize P-001 and P-002 as immediate fixes, or batch all High findings into a performance sprint?
 
+
+---
+
+## Merged from Inbox (2026-04-08)
+
+### 19. Feature 145 & 146 — Kakeibo Report & Transfer Deletion (2026-04-08)
+
+**Status:** Completed and tested
+
+#### Feature 145: Kakeibo Date-Range Report Service (Lucius + Barbara)
+
+**Implementation Decisions (Lucius):**
+- Method name: GetEffectiveKakeiboCategory() (domain entity method name, not spec)
+- Feature flag: Kakeibo:DateRangeReports (colon-separated; existing convention)
+- DTO location: Contracts/Dtos/ (no Reports subdirectory)
+- Null category handling: Excluded (uncategorized = no Kakeibo bucket)
+- Amount sign: Expenses negative in DB; service uses Math.Abs() for positive totals
+
+**Test Coverage (Barbara): 24 tests**
+- 14 unit tests (KakeiboReportServiceTests)
+- 6 API integration tests (KakeiboReportControllerTests)
+- 4 Testcontainers accuracy tests (KakeiboReportServiceAccuracyTests)
+
+#### Feature 146: Transfer Deletion with Orphan Detection (Lucius + Barbara)
+
+**Implementation Decisions (Lucius):**
+- ITransactionRepository.DeleteTransferAsync returns Task (void) — repo handles all 3 cases (none/orphan/both) silently; service wraps
+- Two delete methods: old DeleteAsync (non-atomic, backward-compatible) + new DeleteTransferAsync (atomic)
+- Feature flag returns **403 Forbidden** (not 404) when disabled — feature exists, gated
+- Orphan handling: log warning + delete immediately
+- :guid constraint returns 404 (not 400) for invalid GUIDs — routing layer, not model binding
+- EnsureFeatureFlag test helper: (1) SQL upsert + (2) SetFlagAsync for cache invalidation
+
+**Test Coverage (Barbara): 13 tests**
+- 6 unit tests (TransferDeletionServiceTests)
+- 4 API integration tests (TransferDeletionControllerTests)
+- 3 Testcontainers accuracy tests (TransferDeletionAccuracyTests)
+
+**Regression Fixes:**
+- MockTransferService in ChatActionExecutorTests: added DeleteTransferAsync stub
+- KakeiboReportControllerTests: nullable DateOnly handling + cache invalidation + routing assertions
+
+---
+
+### 20. Transfer Deletion — Implementation Lessons (2026-04-08)
+
+**Logger Constructor Injection:**
+- All test instantiation sites must be updated when adding constructor params to repositories
+- Use Python regex for bulk updates (PowerShell too slow on large files)
+
+**Feature Flag 403 vs 404:**
+- 403 Forbidden: feature exists but gated
+- 404 Not Found: feature does not exist
+
+**EnsureFeatureFlag Pattern:**
+- SQL upsert alone insufficient (handles zero-record state but doesn't invalidate cache)
+- Must also call SetFlagAsync to clear IMemoryCache
+
+**Routing vs Model Binding:**
+- :guid constraint → routing layer → 404 (no match)
+- Type validation → model binding → 400 Bad Request
+
+**StyleCop During Test Writing:**
+- SA1512: section comments // === X === no blank line after
+- SA1615: all public async Task methods need <returns>A <see cref="Task"/>...
+- CS1734: <paramref> only for actual parameters
+- SA1204: static helpers before non-static
+- Document early to avoid batch rework
+
+---
+
+### 21. Feature Specs 154–159: Performance Audit Response (2026-04-09)
+
+**By:** Alfred  
+**Status:** Complete; specs ready for implementation
+
+**6 Documents Created (Performance Audit):**
+
+| # | Slug | Finding | Severity |
+|---|------|---------|----------|
+| 154 | datahealth-triple-load-on2-dedup-fix | P-001 | 🔴 Critical |
+| 155 | udget-progress-n-plus-one-fix | P-002 | 🟠 High |
+| 156 | eport-service-n-plus-one-category-lookup-fix | P-003 | 🟠 High |
+| 157 | datahealth-repository-unbounded-queries-projections | P-004 + P-005 | 🟠 High |
+| 158 | get-all-descriptions-bounded-search | P-006 | 🟠 High |
+| 159 | 	ransactions-date-range-endpoint-pagination | P-007 | 🟠 High |
+
+**Key Decisions:**
+- Doc 154 (P-001): Critical, depends on 157
+- Doc 157: Foundation (unbounded queries)
+- Doc 159: Option A (deprecate) or B (pagination) — **Fortinbra decision needed**
+
+---

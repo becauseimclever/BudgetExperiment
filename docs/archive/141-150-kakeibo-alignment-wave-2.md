@@ -61,6 +61,21 @@
 
 ---
 
-## Features 146–150
+## Feature 146: Transfer Deletion with Orphan Detection
+
+> **Status:** Done
+
+**What it did:** Implemented atomic transfer deletion via `DELETE /api/v1/transfers/{transferId}`. Added `DeleteTransferAsync(Guid, CancellationToken)` to `ITransactionRepository` using `IDbContextTransaction` for all-or-nothing semantics. Introduced `ITransferService` / `TransferService` in the Application layer. Orphaned single-leg transfers are cleaned up gracefully with a logged warning. Feature-flagged via `feature-transfer-atomic-deletion` (seeded `false`). Closes accuracy gap INV-2.
+
+**Key decisions:**
+- Extended `ITransactionRepository` (not a new `ITransferRepository`) — both legs are transactions
+- Returns `204 NoContent` on success; `404 NotFound` if no legs exist; `403 Forbidden` if feature flag disabled
+- Feature flag via `IFeatureFlagService.IsEnabledAsync()` (project pattern, not `[FeatureGate]`)
+- Also fixed pre-existing `KakeiboReportControllerTests` failures: `DateOnly? from/to` nullable params + `EnsureFeatureFlag` cache invalidation
+- 13 tests: 6 unit (TransferServiceTests), 4 API integration (TransferDeletionControllerTests), 3 Testcontainers accuracy tests (TransferDeletionAccuracyTests)
+
+---
+
+## Features 147–150
 
 > **Status:** Not yet planned — reserved for future work.

@@ -607,3 +607,23 @@ Use `_factory.Server.CreateHandler()` to obtain the raw in-process handler and w
 
 **Build status:** `Build succeeded. 0 Error(s)` with default TreatWarningsAsErrors.
 **Test discovery:** All 13 new tests discovered. Currently in RED phase pending Lucius adding `TransferService.DeleteTransferAsync` and `ITransactionRepository.DeleteTransferAsync` / `TransactionRepository.DeleteTransferAsync`.
+
+
+---
+
+## 2026-04-08 — Feature 146: Transfer Deletion Tests (GREEN)
+
+Wrote 13 comprehensive tests for F146 atomic deletion:
+
+- 6 unit tests (TransferDeletionServiceTests): null guard, happy path, not-found, orphan, exception propagation, Moq verification
+- 4 API integration tests (TransferDeletionControllerTests): flag disabled (403), valid transfer (204), unknown transfer (404), invalid GUID (400)
+- 3 Testcontainers accuracy tests (TransferDeletionAccuracyTests): both legs deleted + balances exact, orphan cleanup, INV-2 net-zero proof
+
+Also fixed MockTransferService in ChatActionExecutorTests with DeleteTransferAsync stub.
+
+Key learnings:
+- NullLogger<TransactionRepository>.Instance required for all infra test constructor calls
+- SA1512, SA1615, CS1734, SA1204 violations (see Decision #20)
+- EnsureFeatureFlag cache invalidation pattern critical for flaky test prevention
+
+Commits: 4052302 (feat: atomic transfer deletion)

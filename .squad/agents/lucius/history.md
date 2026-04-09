@@ -479,3 +479,21 @@ Compression is transparent to application layer. No changes required to service 
 - :guid route constraint returns 404 (not 400) for non-GUID path segments — this is ASP.NET Core routing behavior, not model binding. Tests expecting 400 need to be corrected to 404.
 - When adding a required constructor parameter to a repository (ILogger), ALL test instantiation sites must be updated — use Python regex for bulk updates (PowerShell regex is too slow on large files).
 - SA1512 (comment followed by blank line) + SA1514 (XML doc not preceded by blank line) conflict when section comments directly precede /// <summary> blocks — the only clean fix is to remove the section comments.
+
+
+---
+
+## 2026-04-08 — Feature 146: Transfer Deletion with Orphan Detection (GREEN)
+
+Implemented atomic transfer deletion with orphan detection. Key decisions:
+
+- ITransactionRepository.DeleteTransferAsync returns Task (void semantics); service wraps with existence check to return bool
+- Two delete methods: old DeleteAsync (non-atomic) for backward compatibility + new DeleteTransferAsync (atomic path)
+- Feature flag returns 403 Forbidden (not 404) when disabled
+- Orphan handling: log + delete immediately (no error)
+- :guid route constraint returns 404 for invalid GUIDs (routing layer, not model binding)
+- EnsureFeatureFlag test pattern: SQL upsert + SetFlagAsync cache invalidation (either alone insufficient)
+
+Files: ITransactionRepository, TransactionRepository, ITransferService, TransferService, TransfersController, FeatureFlagSeeder, test fixtures.
+
+Commits: 4052302 (feat: atomic transfer deletion)
