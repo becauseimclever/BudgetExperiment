@@ -45,6 +45,22 @@
 
 ---
 
-## Features 145–150
+## Feature 145: Kakeibo Date-Range Report Service
+
+> **Status:** Done
+
+**What it did:** Introduced `IKakeiboReportService` and `KakeiboReportService` in the Application layer to aggregate expense transactions into daily, weekly (ISO), and monthly bucket totals (Essentials, Wants, Culture, Unexpected) for arbitrary date ranges. Exposed via `GET /api/v1/reports/kakeibo?from={date}&to={date}` gated behind the `Kakeibo:DateRangeReports` feature flag. Closes accuracy gap CAT-8.
+
+**Key decisions:**
+- Uses `GetEffectiveKakeiboCategory()` on `Transaction` (existing domain method), respecting `KakeiboOverride` over category default
+- Income and Transfer category types excluded from all bucket totals
+- Zero-amount buckets are always returned (no silent omission)
+- Feature flag checked via `IFeatureFlagService.IsEnabledAsync()` (project's existing pattern, not `[FeatureGate]` attribute)
+- DTOs use `decimal` for amounts (not `MoneyValue`) for cleaner JSON serialization
+- 24 tests written: 14 unit, 6 API integration, 4 Testcontainers accuracy tests proving INV-8
+
+---
+
+## Features 146–150
 
 > **Status:** Not yet planned — reserved for future work.
