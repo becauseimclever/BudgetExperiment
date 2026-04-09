@@ -2284,3 +2284,34 @@ This is marginal but essentially free to implement.
 - [Blazor WASM Performance Best Practices (Microsoft Docs)](https://learn.microsoft.com/en-us/aspnet/core/blazor/performance)
 - [ASP.NET Core Response Compression](https://learn.microsoft.com/en-us/aspnet/core/performance/response-compression)
 - [Blazor PWA / Service Worker](https://learn.microsoft.com/en-us/aspnet/core/blazor/progressive-web-app)
+
+---
+
+## Feature 111: Pragmatic Performance Optimizations
+
+> **Status:** Done
+
+**What it did:** Identified and resolved concrete performance overhead in the clean architecture: added `AsNoTracking()` on all read-only repository queries, parallelized 9–10 sequential DB round trips in hot-path endpoints (`CalendarGridService`, `TransactionListService`) via `Task.WhenAll`, consolidated 73 scoped DI registrations (removed duplicate backward-compat entries), and fixed unbounded eager loading in `AccountRepository.GetByIdWithTransactionsAsync`.
+
+**Key decisions:**
+- Retained full clean layering for multi-repo orchestration and domain logic; only removed abstraction overhead in commodity read-only CRUD paths
+- Repository interfaces with a single EF Core implementation and no realistic polymorphism use case were consolidated (but not removed wholesale)
+
+---
+
+## Feature 113: External Integration Feature
+
+> **Status:** On Hold — external dependencies, no timeline
+
+**What it does:** Requires external service integration. Paused indefinitely pending third-party availability.
+
+---
+
+## Feature 120: Plugin System
+
+> **Status:** Cancelled — on hold indefinitely; no value under Kakeibo/Kaizen pivot
+
+**What it did:** Planned a plugin architecture (`BudgetExperiment.Plugin.Abstractions` SDK + `BudgetExperiment.Plugin.Hosting`) allowing third-party DLL drop-in or NuGet-distributed extensions to add API endpoints, Blazor pages, sidebar navigation items, and domain event subscribers. Cancelled in favour of Kakeibo/Kaizen philosophy pivot.
+
+**Key decisions:**
+- Domain event scaffolding on `Transaction` (`_domainEvents`) would have been the extension point; never dispatched prior to cancellation

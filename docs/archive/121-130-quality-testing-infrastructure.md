@@ -1081,3 +1081,74 @@ Upgraded the charting system from 11 hand-rolled SVG components to a hybrid mode
 | `HeatmapChart`/`ScatterChart` showcase-only in reports | Reports don't fetch raw `TransactionDto[]`; extra API calls out of scope |
 | `_Imports.razor` global using | Eliminates per-file `@using` boilerplate for all chart model types |
 | SA1201 in code-behind pages | Private fields must precede `[Inject]` properties per StyleCop rule |
+
+---
+
+## Feature 125: Data Health & Statement Reconciliation
+
+> **Status:** Done
+
+**What it did:** Two sub-features: **125a Data Health Dashboard** surfaces duplicate transactions, amount outliers, date gaps per account, and orphaned/uncategorized transaction summaries with inline fix actions (merge, edit, delete). **125b Statement Reconciliation Workflow** adds standard bank reconciliation — mark transactions as cleared, input statement balance, view running cleared balance, see the difference, and complete reconciliation with a locked `ReconciliationRecord` (full history per account).
+
+**Key decisions:**
+- Extended `Transaction` with `IsCleared`/`ClearedDate`; introduced `ReconciliationRecord` aggregate for audit trail
+- Reconciliation covers all transactions (not just recurring — the previous system only covered ~30%)
+
+---
+
+## Feature 126: Bank Connectivity & Automatic Transaction Sync
+
+> **Status:** Cancelled — external dependency; no value under Kakeibo/Kaizen pivot; deferred indefinitely
+
+**What it did:** Designed direct bank connectivity via an OAuth-based financial data aggregation service (e.g., Plaid) to replace manual CSV import. Planned `IBankConnector` abstraction in Domain for vendor-agnosticism with Infrastructure adapters per vendor. Cancelled due to external API costs and Kakeibo/Kaizen pivot.
+
+---
+
+## Feature 127: Enhanced Charts & Visualizations (condensed)
+
+> **Status:** Done
+
+**What it did:** Upgraded charting from 11 hand-rolled SVG components to a hybrid model. Added 7 new self-implemented SVG chart types (Heatmap, Scatter, Stacked Area, Radial Bar, Candlestick, Waterfall, Box Plot) and 2 ApexCharts-backed types (Treemap, Radar). Added a testable `IChartDataService` data layer and delivered the `ReportsDashboard` aggregate page.
+
+**Key decisions:**
+- Hybrid approach: self-implement all feasible types to preserve zero-JS-dependency advantage for 7 of 9 new types; use Blazor-ApexCharts only for squarified rectangle packing (Treemap) and trigonometric polygon rendering (Radar)
+
+---
+
+## Feature 129b: Feature Flag Implementation
+
+> **Status:** Done
+
+**What it did:** Database-backed feature flags with in-memory cache (`IMemoryCache`). Flags stored in `FeatureFlags` DB table, loaded into cache at startup, toggled at runtime via `PUT /api/v1/features/{flagName}` admin endpoint without restarts. Client fetches flags via `GET /api/v1/features` (public, cached 60 s).
+
+**Key decisions:**
+- Database over file-based config: Docker env-var hot-reload is unreliable; DB+cache delivers zero per-request overhead with true runtime toggles
+- Hand-rolled over `Microsoft.FeatureManagement`: targeting/A/B/percentage rollouts not yet needed; simpler implementation aligns with "no magic" principle
+
+---
+
+## Feature 128: Kakeibo + Kaizen — Calendar-First Mindful Budgeting (planning doc)
+
+> **Status:** Superseded — concepts implemented via Features 131–136
+
+**What it did:** Planning document establishing Kakeibo (mindful household ledger) and Kaizen (continuous improvement) philosophy for the application. Defined the calendar as the primary interaction surface for all financial decisions. Individual implementing features (131–136, 139–141) were extracted from this doc.
+
+---
+
+## Feature 129: Kakeibo Alignment Audit
+
+> **Status:** Done — audit completed; all identified features implemented via 131–144
+
+**What it did:** Audited every existing feature against Kakeibo + Kaizen calendar-first philosophy. Scored features as Aligned / Needs Work / Tension / Neutral. Generated implementation priorities, feature flag candidates, and the full 131–144 feature batch.
+
+---
+
+## Feature 130: Serialization Alternatives Investigation
+
+> **Status:** Done — Brotli/gzip compression recommended and implemented
+
+**What it did:** Evaluated 7 network serialization alternatives (JSON+source gen baseline, MessagePack, gRPC, CBOR, Avro, FlatBuffers, HTTP compression). Key finding: HTTP compression (Brotli/gzip) provides 35–60% bandwidth reduction with zero breaking changes. Binary formats add only 10–30% further reduction at significant complexity cost.
+
+**Key decisions:**
+- Primary recommendation: Brotli response compression middleware; implemented as part of Feature 117
+- Binary formats (MessagePack, FlatBuffers) deferred — revisit only if bandwidth constraints persist post-Brotli
