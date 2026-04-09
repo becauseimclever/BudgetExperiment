@@ -34,6 +34,7 @@ public static class FeatureFlagSeeder
         ("Reconciliation:StatementReconciliation", true),
         ("DataHealth:Dashboard",                   true),
         ("Location:Geocoding",                     false),
+        ("Kakeibo:DateRangeReports",               false),
     ];
 
     /// <summary>

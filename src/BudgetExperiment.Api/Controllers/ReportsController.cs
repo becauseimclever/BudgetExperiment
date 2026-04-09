@@ -19,18 +19,30 @@ namespace BudgetExperiment.Api.Controllers;
 [Produces("application/json")]
 public sealed class ReportsController : ControllerBase
 {
+    private const string KakeiboDateRangeFeatureFlag = "Kakeibo:DateRangeReports";
+
     private readonly IReportService _reportService;
     private readonly IBudgetProgressService _budgetProgressService;
+    private readonly IKakeiboReportService _kakeiboReportService;
+    private readonly IFeatureFlagService _featureFlagService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReportsController"/> class.
     /// </summary>
     /// <param name="reportService">The report service.</param>
     /// <param name="budgetProgressService">The budget progress service.</param>
-    public ReportsController(IReportService reportService, IBudgetProgressService budgetProgressService)
+    /// <param name="kakeiboReportService">The Kakeibo date-range report service.</param>
+    /// <param name="featureFlagService">The feature flag service.</param>
+    public ReportsController(
+        IReportService reportService,
+        IBudgetProgressService budgetProgressService,
+        IKakeiboReportService kakeiboReportService,
+        IFeatureFlagService featureFlagService)
     {
         _reportService = reportService;
         _budgetProgressService = budgetProgressService;
+        _kakeiboReportService = kakeiboReportService;
+        _featureFlagService = featureFlagService;
     }
 
     /// <summary>
@@ -243,5 +255,47 @@ public sealed class ReportsController : ControllerBase
 
         var report = await _reportService.GetSpendingByLocationAsync(startDate, endDate, accountId, cancellationToken);
         return this.Ok(report);
+    }
+
+    /// <summary>
+    /// Gets Kakeibo bucket totals (Essentials, Wants, Culture, Unexpected) for a date range.
+    /// Returns daily, weekly (ISO Monday–Sunday), and overall totals for all four buckets.
+    /// Income and Transfer transactions are excluded. Zero-spend buckets are always included.
+    /// Feature-flagged: returns 404 when <c>Kakeibo:DateRangeReports</c> is disabled.
+    /// </summary>
+    /// <param name="from">Start date (inclusive), ISO 8601 format (e.g., 2026-03-01).</param>
+    /// <param name="to">End date (inclusive), ISO 8601 format (e.g., 2026-03-31).</param>
+    /// <param name="accountId">Optional account filter; omit for all accounts.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>
+    /// A <see cref="KakeiboSummary"/> with daily, weekly, and total bucket aggregations,
+    /// or 400 if <paramref name="from"/> is after <paramref name="to"/>,
+    /// or 404 if the feature flag is disabled.
+    /// </returns>
+    /// <remarks>
+    /// Example: <c>GET /api/v1/reports/kakeibo?from=2026-03-01&amp;to=2026-03-31</c>.
+    /// </remarks>
+    [HttpGet("kakeibo")]
+    [ProducesResponseType<KakeiboSummary>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetKakeiboReportAsync(
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to,
+        [FromQuery] Guid? accountId,
+        CancellationToken cancellationToken)
+    {
+        if (!await _featureFlagService.IsEnabledAsync(KakeiboDateRangeFeatureFlag, cancellationToken))
+        {
+            return this.NotFound();
+        }
+
+        if (from > to)
+        {
+            return this.BadRequest("'from' must be on or before 'to'.");
+        }
+
+        var summary = await _kakeiboReportService.GetKakeiboSummaryAsync(from, to, accountId, cancellationToken);
+        return this.Ok(summary);
     }
 }
