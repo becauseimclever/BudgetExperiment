@@ -13,7 +13,7 @@ namespace BudgetExperiment.Application.Reports;
 /// </summary>
 public sealed class TrendReportBuilder : ITrendReportBuilder
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
@@ -22,7 +22,7 @@ public sealed class TrendReportBuilder : ITrendReportBuilder
     /// <param name="transactionRepository">The transaction repository.</param>
     /// <param name="currencyProvider">The currency provider.</param>
     public TrendReportBuilder(
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         ICurrencyProvider currencyProvider)
     {
         _transactionRepository = transactionRepository;

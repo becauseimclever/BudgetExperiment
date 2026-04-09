@@ -39,6 +39,9 @@ public static class DependencyInjection
         // Repositories
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<ITransactionQueryRepository, TransactionRepository>();
+        services.AddScoped<ITransactionImportRepository, TransactionRepository>();
+        services.AddScoped<ITransactionAnalyticsRepository, TransactionRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
         services.AddScoped<IRecurringTransferRepository, RecurringTransferRepository>();
         services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();

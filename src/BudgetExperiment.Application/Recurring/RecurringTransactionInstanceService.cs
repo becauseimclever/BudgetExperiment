@@ -13,7 +13,7 @@ namespace BudgetExperiment.Application.Recurring;
 public sealed class RecurringTransactionInstanceService : IRecurringTransactionInstanceService
 {
     private readonly IRecurringTransactionRepository _repository;
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
@@ -24,7 +24,7 @@ public sealed class RecurringTransactionInstanceService : IRecurringTransactionI
     /// <param name="unitOfWork">The unit of work.</param>
     public RecurringTransactionInstanceService(
         IRecurringTransactionRepository repository,
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         IUnitOfWork unitOfWork)
     {
         _repository = repository;

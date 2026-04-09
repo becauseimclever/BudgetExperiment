@@ -12,7 +12,7 @@ namespace BudgetExperiment.Application.Reports;
 /// </summary>
 public sealed class ReportService : IReportService
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly ICurrencyProvider _currencyProvider;
     private readonly ITrendReportBuilder _trendReportBuilder;
@@ -27,7 +27,7 @@ public sealed class ReportService : IReportService
     /// <param name="trendReportBuilder">The trend report builder.</param>
     /// <param name="locationReportBuilder">The location report builder.</param>
     public ReportService(
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         IBudgetCategoryRepository categoryRepository,
         ICurrencyProvider currencyProvider,
         ITrendReportBuilder trendReportBuilder,

@@ -18,7 +18,7 @@ public sealed class ImportService : IImportService
     private readonly IImportPreviewEnricher _previewEnricher;
     private readonly IImportBatchManager _batchManager;
     private readonly IImportTransactionCreator _transactionCreator;
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionImportRepository _transactionRepository;
     private readonly ICategorizationRuleRepository _ruleRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly IImportBatchRepository _batchRepository;
@@ -51,7 +51,7 @@ public sealed class ImportService : IImportService
         IImportPreviewEnricher previewEnricher,
         IImportBatchManager batchManager,
         IImportTransactionCreator transactionCreator,
-        ITransactionRepository transactionRepository,
+        ITransactionImportRepository transactionRepository,
         ICategorizationRuleRepository ruleRepository,
         IBudgetCategoryRepository categoryRepository,
         IImportBatchRepository batchRepository,

@@ -11,7 +11,7 @@ namespace BudgetExperiment.Application.Categorization;
 /// </summary>
 public sealed class CategorySuggestionService : ICategorySuggestionService
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly ICategorySuggestionRepository _suggestionRepository;
     private readonly IDismissedSuggestionPatternRepository _dismissedRepository;
@@ -34,7 +34,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     /// <param name="userContext">User context.</param>
     /// <param name="dismissalHandler">The suggestion dismissal handler.</param>
     public CategorySuggestionService(
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         IBudgetCategoryRepository categoryRepository,
         ICategorySuggestionRepository suggestionRepository,
         IDismissedSuggestionPatternRepository dismissedRepository,

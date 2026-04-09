@@ -18,7 +18,7 @@ public sealed class PastDueService : IPastDueService
 
     private readonly IRecurringTransactionRepository _recurringTransactionRepo;
     private readonly IRecurringTransferRepository _recurringTransferRepo;
-    private readonly ITransactionRepository _transactionRepo;
+    private readonly ITransactionQueryRepository _transactionRepo;
     private readonly IAccountRepository _accountRepo;
     private readonly IRecurringTransactionRealizationService _transactionRealizationService;
     private readonly IRecurringTransferRealizationService _transferRealizationService;
@@ -39,7 +39,7 @@ public sealed class PastDueService : IPastDueService
     public PastDueService(
         IRecurringTransactionRepository recurringTransactionRepo,
         IRecurringTransferRepository recurringTransferRepo,
-        ITransactionRepository transactionRepo,
+        ITransactionQueryRepository transactionRepo,
         IAccountRepository accountRepo,
         IRecurringTransactionRealizationService transactionRealizationService,
         IRecurringTransferRealizationService transferRealizationService,

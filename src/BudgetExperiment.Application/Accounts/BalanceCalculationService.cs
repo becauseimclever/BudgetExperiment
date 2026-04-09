@@ -13,7 +13,7 @@ namespace BudgetExperiment.Application.Accounts;
 public sealed class BalanceCalculationService : IBalanceCalculationService
 {
     private readonly IAccountRepository _accountRepository;
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly ICurrencyProvider _currencyProvider;
 
     /// <summary>
@@ -24,7 +24,7 @@ public sealed class BalanceCalculationService : IBalanceCalculationService
     /// <param name="currencyProvider">The currency provider.</param>
     public BalanceCalculationService(
         IAccountRepository accountRepository,
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         ICurrencyProvider currencyProvider)
     {
         _accountRepository = accountRepository;

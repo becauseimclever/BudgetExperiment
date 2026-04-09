@@ -622,3 +622,41 @@ Used @inject CultureService Culture (project convention) instead of CultureServi
 ### Handoff to Barbara
 
 Feature 148 Phase 2 (bUnit locale tests) ready for execution.
+
+---
+
+## F149 Session — Extract ICalendarService & IAccountService (DIP Fix) (2026-04-09)
+
+**Role:** Backend Dev
+**Feature:** 149 — Extract ICalendarService and IAccountService Interfaces
+**Status:** ✅ Complete
+
+### Scope
+
+Pure structural DIP refactor: CalendarController and AccountsController were injecting concrete service classes directly. Extracted two interfaces following ISP — only exposing methods actually called by each controller.
+
+### Files Created
+
+- `src/BudgetExperiment.Application/Calendar/ICalendarService.cs` — 1 method: `GetMonthlySummaryAsync`
+- `src/BudgetExperiment.Application/Accounts/IAccountService.cs` — 5 methods: `GetAllAsync`, `GetByIdAsync`, `CreateAsync`, `UpdateAsync`, `RemoveAsync`
+
+### Files Modified
+
+- `CalendarService.cs` — `: ICalendarService` added
+- `AccountService.cs` — `: IAccountService` added
+- `CalendarController.cs` — field + ctor param changed from `CalendarService` → `ICalendarService`
+- `AccountsController.cs` — field + ctor param changed from `AccountService` → `IAccountService`
+- `DependencyInjection.cs` — `AddScoped<AccountService>()` → `AddScoped<IAccountService, AccountService>()`, `AddScoped<CalendarService>()` → `AddScoped<ICalendarService, CalendarService>()`
+
+### Key Decisions / Lessons
+
+- **ISP over surface mirroring**: `CalendarService` has only 1 method, and only 1 is called from the controller — the interface matches exactly. `AccountService` has 5 public methods — all 5 are called by `AccountsController`, so the interface matches the full service surface in this case.
+- **GlobalUsings.cs already covers both namespaces**: `BudgetExperiment.Application.Accounts` and `BudgetExperiment.Application.Calendar` are both globally imported in `GlobalUsings.cs`. No changes to DI file usings needed.
+- **Concrete DI registration removal**: The previous `AddScoped<CalendarService>()` and `AddScoped<AccountService>()` were bare concrete registrations (no interface). Replaced with the interface-to-concrete mapping. No other call site in the codebase directly resolved the concrete types from DI.
+- **Build: 0 errors, 0 warnings** after both phases.
+
+### Commits
+
+1. `7f7a3a6` — refactor(app): extract ICalendarService, update CalendarController to inject abstraction
+2. `03a52c3` — refactor(app): extract IAccountService, update AccountsController to inject abstraction
+

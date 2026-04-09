@@ -12,7 +12,7 @@ namespace BudgetExperiment.Application.Reflection;
 public sealed class ReflectionService : IReflectionService
 {
     private readonly IMonthlyReflectionRepository _repository;
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReflectionService"/> class.
@@ -21,7 +21,7 @@ public sealed class ReflectionService : IReflectionService
     /// <param name="transactionRepository">The transaction repository for computing financial summaries.</param>
     public ReflectionService(
         IMonthlyReflectionRepository repository,
-        ITransactionRepository transactionRepository)
+        ITransactionQueryRepository transactionRepository)
     {
         _repository = repository;
         _transactionRepository = transactionRepository;

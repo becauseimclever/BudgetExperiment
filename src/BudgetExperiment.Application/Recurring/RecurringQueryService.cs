@@ -12,7 +12,7 @@ namespace BudgetExperiment.Application.Recurring;
 /// </summary>
 public sealed class RecurringQueryService : IRecurringQueryService
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IRecurringInstanceProjector _projector;
 
     /// <summary>
@@ -21,7 +21,7 @@ public sealed class RecurringQueryService : IRecurringQueryService
     /// <param name="transactionRepository">The transaction repository.</param>
     /// <param name="projector">The recurring instance projector.</param>
     public RecurringQueryService(
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         IRecurringInstanceProjector projector)
     {
         _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));

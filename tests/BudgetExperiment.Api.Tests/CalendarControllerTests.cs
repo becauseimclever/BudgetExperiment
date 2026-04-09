@@ -3,9 +3,15 @@
 // </copyright>
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
+
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+
+using Moq;
 
 namespace BudgetExperiment.Api.Tests;
 
@@ -218,6 +224,100 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// ICalendarService mock returns a one-item list → GET /api/v1/calendar/summary returns 200 with that DTO.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task CalendarController_GetMonth_ValidYearMonth_Returns200WithDto()
+    {
+        // Arrange
+        var stubList = new List<DailyTotalDto>
+        {
+            new()
+            {
+                Date = new DateOnly(2026, 3, 15),
+                Total = new MoneyDto { Amount = 75m, Currency = "USD" },
+                TransactionCount = 3,
+            },
+        };
+
+        var mockCalendarService = new Mock<ICalendarService>();
+        mockCalendarService
+            .Setup(s => s.GetMonthlySummaryAsync(
+                2026,
+                3,
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(stubList);
+
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICalendarService));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddScoped<ICalendarService>(_ => mockCalendarService.Object);
+            }));
+
+        using var client = CreateAuthenticatedClient(factory);
+
+        // Act
+        var response = await client.GetAsync("/api/v1/calendar/summary?year=2026&month=3");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<List<DailyTotalDto>>();
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal(new DateOnly(2026, 3, 15), result[0].Date);
+        Assert.Equal(75m, result[0].Total.Amount);
+    }
+
+    /// <summary>
+    /// Month 13 is invalid → controller guard returns 400 before reaching ICalendarService.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task CalendarController_GetMonth_InvalidMonth_Returns400()
+    {
+        // Arrange
+        var mockCalendarService = new Mock<ICalendarService>();
+
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICalendarService));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddScoped<ICalendarService>(_ => mockCalendarService.Object);
+            }));
+
+        using var client = CreateAuthenticatedClient(factory);
+
+        // Act
+        var response = await client.GetAsync("/api/v1/calendar/summary?year=2026&month=13");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        mockCalendarService.Verify(
+            s => s.GetMonthlySummaryAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    private static HttpClient CreateAuthenticatedClient(WebApplicationFactory<Program> factory)
+    {
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("TestAuto", "authenticated");
+        return client;
     }
 
     private async Task<AccountDto> CreateTestAccountAsync(decimal initialBalance, DateOnly initialBalanceDate)

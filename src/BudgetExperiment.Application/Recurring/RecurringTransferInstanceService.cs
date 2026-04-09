@@ -14,7 +14,7 @@ public sealed class RecurringTransferInstanceService : IRecurringTransferInstanc
 {
     private readonly IRecurringTransferRepository _repository;
     private readonly IAccountRepository _accountRepository;
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
@@ -27,7 +27,7 @@ public sealed class RecurringTransferInstanceService : IRecurringTransferInstanc
     public RecurringTransferInstanceService(
         IRecurringTransferRepository repository,
         IAccountRepository accountRepository,
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         IUnitOfWork unitOfWork)
     {
         _repository = repository;

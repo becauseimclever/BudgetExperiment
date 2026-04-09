@@ -12,13 +12,13 @@ namespace BudgetExperiment.Application.Reports;
 /// </summary>
 public sealed class LocationReportBuilder : ILocationReportBuilder
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LocationReportBuilder"/> class.
     /// </summary>
     /// <param name="transactionRepository">The transaction repository.</param>
-    public LocationReportBuilder(ITransactionRepository transactionRepository)
+    public LocationReportBuilder(ITransactionQueryRepository transactionRepository)
     {
         _transactionRepository = transactionRepository;
     }

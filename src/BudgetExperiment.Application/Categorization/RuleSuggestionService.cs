@@ -28,7 +28,7 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
     internal const decimal AcceptanceRateThreshold = 0.2m;
 
     private readonly IAiService _aiService;
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly ICategorizationRuleRepository _ruleRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly IRuleSuggestionRepository _suggestionRepository;
@@ -49,7 +49,7 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
     /// <param name="acceptanceHandler">The suggestion acceptance handler.</param>
     public RuleSuggestionService(
         IAiService aiService,
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         ICategorizationRuleRepository ruleRepository,
         IBudgetCategoryRepository categoryRepository,
         IRuleSuggestionRepository suggestionRepository,

@@ -10,13 +10,13 @@ namespace BudgetExperiment.Application.Calendar;
 /// </summary>
 public sealed class KakeiboCalendarService : IKakeiboCalendarService
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="KakeiboCalendarService"/> class.
     /// </summary>
     /// <param name="transactionRepository">The transaction repository.</param>
-    public KakeiboCalendarService(ITransactionRepository transactionRepository)
+    public KakeiboCalendarService(ITransactionQueryRepository transactionRepository)
     {
         _transactionRepository = transactionRepository;
     }

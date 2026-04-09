@@ -8,6 +8,11 @@ using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
 
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+
+using Moq;
+
 namespace BudgetExperiment.Api.Tests;
 
 /// <summary>
@@ -17,6 +22,7 @@ namespace BudgetExperiment.Api.Tests;
 public sealed class AccountsControllerTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly CustomWebApplicationFactory _factory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountsControllerTests"/> class.
@@ -24,6 +30,7 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
     /// <param name="factory">The test factory.</param>
     public AccountsControllerTests(CustomWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateApiClient();
     }
 
@@ -306,5 +313,184 @@ public sealed class AccountsControllerTests : IClassFixture<CustomWebApplication
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var updated = await response.Content.ReadFromJsonAsync<AccountDto>();
         Assert.Equal("Updated Without ETag", updated!.Name);
+    }
+
+    /// <summary>
+    /// IAccountService mock returns two accounts → GET /api/v1/accounts returns 200 with two items.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task AccountsController_GetAll_Returns200WithList()
+    {
+        // Arrange
+        var stubAccounts = new List<AccountDto>
+        {
+            new() { Id = Guid.NewGuid(), Name = "Checking", Type = "Checking" },
+            new() { Id = Guid.NewGuid(), Name = "Savings", Type = "Savings" },
+        };
+
+        var mockAccountService = new Mock<IAccountService>();
+        mockAccountService
+            .Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(stubAccounts);
+
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IAccountService));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddScoped<IAccountService>(_ => mockAccountService.Object);
+            }));
+
+        using var client = CreateAuthenticatedClient(factory);
+
+        // Act
+        var response = await client.GetAsync("/api/v1/accounts");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<List<AccountDto>>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, a => a.Name == "Checking");
+        Assert.Contains(result, a => a.Name == "Savings");
+    }
+
+    /// <summary>
+    /// IAccountService mock returns a known account → GET /api/v1/accounts/{id} returns 200 with that DTO.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task AccountsController_GetById_ValidId_Returns200WithDto()
+    {
+        // Arrange
+        var accountId = Guid.NewGuid();
+        var stubAccount = new AccountDto
+        {
+            Id = accountId,
+            Name = "Test Account",
+            Type = "Checking",
+            Version = "1",
+        };
+
+        var mockAccountService = new Mock<IAccountService>();
+        mockAccountService
+            .Setup(s => s.GetByIdAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(stubAccount);
+
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IAccountService));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddScoped<IAccountService>(_ => mockAccountService.Object);
+            }));
+
+        using var client = CreateAuthenticatedClient(factory);
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/accounts/{accountId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(result);
+        Assert.Equal(accountId, result.Id);
+        Assert.Equal("Test Account", result.Name);
+        Assert.NotNull(response.Headers.ETag);
+    }
+
+    /// <summary>
+    /// IAccountService mock returns null → GET /api/v1/accounts/{unknownId} returns 404.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task AccountsController_GetById_NotFoundId_Returns404()
+    {
+        // Arrange
+        var unknownId = Guid.NewGuid();
+
+        var mockAccountService = new Mock<IAccountService>();
+        mockAccountService
+            .Setup(s => s.GetByIdAsync(unknownId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AccountDto?)null);
+
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IAccountService));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddScoped<IAccountService>(_ => mockAccountService.Object);
+            }));
+
+        using var client = CreateAuthenticatedClient(factory);
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/accounts/{unknownId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    /// <summary>
+    /// IAccountService mock returns created DTO → POST /api/v1/accounts returns 201 with Location header.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task AccountsController_Create_ValidRequest_Returns201WithLocation()
+    {
+        // Arrange
+        var newId = Guid.NewGuid();
+        var createDto = new AccountCreateDto { Name = "New Savings", Type = "Savings" };
+        var createdAccount = new AccountDto { Id = newId, Name = "New Savings", Type = "Savings" };
+
+        var mockAccountService = new Mock<IAccountService>();
+        mockAccountService
+            .Setup(s => s.CreateAsync(It.IsAny<AccountCreateDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(createdAccount);
+
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IAccountService));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddScoped<IAccountService>(_ => mockAccountService.Object);
+            }));
+
+        using var client = CreateAuthenticatedClient(factory);
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/accounts", createDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(response.Headers.Location);
+        var result = await response.Content.ReadFromJsonAsync<AccountDto>();
+        Assert.NotNull(result);
+        Assert.Equal(newId, result.Id);
+        Assert.Equal("New Savings", result.Name);
+    }
+
+    private static HttpClient CreateAuthenticatedClient(WebApplicationFactory<Program> factory)
+    {
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("TestAuto", "authenticated");
+        return client;
     }
 }

@@ -15,7 +15,7 @@ namespace BudgetExperiment.Application.Recurring;
 /// </summary>
 public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionService
 {
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IRecurringChargeSuggestionRepository _suggestionRepository;
     private readonly IRecurringTransactionRepository _recurringTransactionRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -30,7 +30,7 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="userContext">The current user context.</param>
     public RecurringChargeDetectionService(
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         IRecurringChargeSuggestionRepository suggestionRepository,
         IRecurringTransactionRepository recurringTransactionRepository,
         IUnitOfWork unitOfWork,

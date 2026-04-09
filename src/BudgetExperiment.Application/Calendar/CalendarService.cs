@@ -12,13 +12,13 @@ namespace BudgetExperiment.Application.Calendar;
 /// </summary>
 public sealed class CalendarService : ICalendarService
 {
-    private readonly ITransactionRepository _repository;
+    private readonly ITransactionQueryRepository _repository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CalendarService"/> class.
     /// </summary>
     /// <param name="repository">The transaction repository.</param>
-    public CalendarService(ITransactionRepository repository)
+    public CalendarService(ITransactionQueryRepository repository)
     {
         _repository = repository;
     }

@@ -15,7 +15,7 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
 {
     private const int MaxPageSize = 100;
 
-    private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
 
     /// <summary>
@@ -24,7 +24,7 @@ public sealed class UnifiedTransactionService : IUnifiedTransactionService
     /// <param name="transactionRepository">The transaction repository.</param>
     /// <param name="accountRepository">The account repository.</param>
     public UnifiedTransactionService(
-        ITransactionRepository transactionRepository,
+        ITransactionQueryRepository transactionRepository,
         IAccountRepository accountRepository)
     {
         _transactionRepository = transactionRepository;
