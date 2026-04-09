@@ -34,4 +34,35 @@ Read `.squad/decisions.md` at spawn time for the full current decision ledger.
 
 ## Learnings
 
-<!-- Vic appends audit findings and project observations here over time -->
+### 2026-04-09 — Full Principle Audit
+
+**Report:** `docs/audit/2026-04-09-full-principle-audit.md`
+**Findings:** 18 (1 Critical, 6 High, 9 Medium, 2 Low)
+**Team inbox:** `.squad/decisions/inbox/vic-audit-findings.md`
+
+**Key observations:**
+- Financial arithmetic (MoneyValue, decimal, rounding) is solid — no calculation accuracy issues
+- Critical gap: 7 bare `.ToString("C")` calls in Statement Reconciliation bypass FormatCurrency() — financial display risk
+- Decision #2 (DIP: extract interfaces for controllers) remains incomplete for CalendarController and AccountsController
+- ITransactionRepository has grown to 23 methods — ISP violation, needs splitting
+- 23 god classes (>300 lines) across Domain (5) and Application (18)
+- 4 controllers exceed 300 lines
+- UTC discipline is excellent (zero DateTime.Now in codebase)
+- No banned libraries found (FluentAssertions, AutoFixture)
+- Layer separation is clean — no EF Core leakage into Domain or Application
+- Test assertion framework (Shouldly vs Assert) is inconsistently mixed across projects
+
+### 2026-04-09 — Performance Code Review
+
+**Report:** `docs/audit/2026-04-09-performance-review.md`
+**Findings:** 17 (1 Critical, 6 High, 7 Medium, 3 Low)
+**Team inbox:** `.squad/decisions/inbox/vic-performance-findings.md`
+
+**Key observations:**
+- Critical: DataHealthService loads all transactions into memory 3 times per AnalyzeAsync call — OOM risk on Pi
+- High: BudgetProgressService and ReportService both exhibit N+1 query patterns in loops
+- High: 4 repository methods return unbounded result sets (GetUncategorizedAsync, GetAllForHealthAnalysisAsync, GetAllDescriptionsAsync, GetAllWithLocationAsync)
+- High: GET /transactions endpoint has no pagination
+- Medium: Zero `<Virtualize>` usage in Blazor client; missing `@key` on list loops
+- Medium: Correlated subquery for account-name sorting in GetUnifiedPagedAsync
+- Strengths: Consistent AsNoTracking, Task.WhenAll parallel loading, server-side pagination on primary endpoints, no lazy loading, projection queries in several key spots
