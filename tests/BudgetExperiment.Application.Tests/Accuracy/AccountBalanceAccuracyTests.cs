@@ -14,9 +14,6 @@ public class AccountBalanceAccuracyTests
 {
     private static readonly DateOnly Jan1 = new(2026, 1, 1);
 
-    private static decimal ComputeBalance(Account account) =>
-        account.InitialBalance.Amount + account.Transactions.Sum(t => t.Amount.Amount);
-
     [Fact]
     public void Balance_TransactionInsertionOrder_DoesNotAffectFinalBalance()
     {
@@ -113,4 +110,7 @@ public class AccountBalanceAccuracyTests
         // Assert
         Assert.Equal(0m, ComputeBalance(card));
     }
+
+    private static decimal ComputeBalance(Account account) =>
+        account.InitialBalance.Amount + account.Transactions.Sum(t => t.Amount.Amount);
 }

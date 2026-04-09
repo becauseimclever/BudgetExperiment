@@ -37,11 +37,8 @@ public class PaycheckAllocationAccuracyTests
         var error = Math.Abs(actualAnnualCoverage - allocation.AnnualAmount.Amount);
         var maxAllowedError = 0.005m * periodsPerYear;
 
-        Assert.True(
-            error <= maxAllowedError,
-            $"Rounding error {error} exceeds maximum allowed {maxAllowedError} " +
-            $"(AmountPerPaycheck {allocation.AmountPerPaycheck.Amount} × {periodsPerYear} = {actualAnnualCoverage}, " +
-            $"AnnualAmount = {allocation.AnnualAmount.Amount})");
+        var message = $"Rounding error {error} exceeds maximum allowed {maxAllowedError} (AmountPerPaycheck {allocation.AmountPerPaycheck.Amount} × {periodsPerYear} = {actualAnnualCoverage}, AnnualAmount = {allocation.AnnualAmount.Amount})";
+        Assert.True(error <= maxAllowedError, message);
     }
 
     [Fact]
