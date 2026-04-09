@@ -1,6 +1,6 @@
 # Feature 150: Split ITransactionRepository (ISP Violation — 23 Methods)
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — F-004  
 > **Audit Source:** `docs/audit/2026-04-09-full-principle-audit.md`
 

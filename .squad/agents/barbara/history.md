@@ -801,3 +801,77 @@ Wrote 6 bUnit locale tests asserting correct currency formatting across 4 Statem
 ### Feature Complete
 
 Phase 1 + Phase 2 acceptance criteria fully met. Feature 148 is production-ready.
+
+---
+
+## F149 Session — API Tests for ICalendarService & IAccountService (2026-04-09)
+
+**Role:** Tester / Quality Assurance
+**Feature:** 149 — Extract ICalendarService and IAccountService Interfaces
+**Status:** ✅ Complete
+
+### Scope
+
+Wrote API integration tests for F149 DIP fix using `WebApplicationFactory` with mocked interfaces. Lucius extracted the interfaces; Barbara validates controller isolation via test doubles.
+
+### Test Files Created
+
+**CalendarControllerTests.cs** (2 tests)
+- `CalendarController_GetMonth_ValidYearMonth_Returns200WithDto`
+  - Mock ICalendarService.GetMonthAsync() → known CalendarMonthDto
+  - GET `/api/v1/calendar/month?year=2026&month=4`
+  - Assert: Status 200, response matches mocked DTO
+  
+- `CalendarController_GetMonth_InvalidMonth_Returns400`
+  - GET `/api/v1/calendar/month?year=2026&month=13`
+  - Assert: Status 400, problem details in response
+
+**AccountsControllerTests.cs** (4 tests)
+- `AccountsController_GetAll_Returns200WithList`
+  - Mock IAccountService.GetAllAsync() → list of AccountDto
+  - GET `/api/v1/accounts`
+  - Assert: Status 200, list with expected count
+  
+- `AccountsController_GetById_ValidId_Returns200WithDto`
+  - Mock IAccountService.GetByIdAsync(id) → valid account
+  - GET `/api/v1/accounts/{validId}`
+  - Assert: Status 200, response matches mocked account
+  
+- `AccountsController_GetById_NotFoundId_Returns404`
+  - Mock IAccountService.GetByIdAsync(id) → null
+  - GET `/api/v1/accounts/{unknownId}`
+  - Assert: Status 404
+  
+- `AccountsController_Create_ValidRequest_Returns201WithLocation`
+  - Mock IAccountService.CreateAsync(request) → new account with ID
+  - POST `/api/v1/accounts`, body with CreateAccountRequest
+  - Assert: Status 201, Location header set
+
+### Test Infrastructure
+
+- `WebApplicationFactory<Program>` with service override via ConfigureServices callback
+- Moq for interface mocking (existing project pattern)
+- Arrange/Act/Assert structure
+- No FluentAssertions; built-in Assert statements only
+
+### Build & Test Results
+
+- `dotnet build tests/BudgetExperiment.Api.Tests/ --configuration Release` → ✅ 0 errors, 0 warnings
+- `dotnet test tests/BudgetExperiment.Api.Tests/ --filter "Category!=Performance"` → ✅ All API tests pass
+- **All 6 F149 tests:** ✅ GREEN
+
+### Commit
+
+**Hash:** 375bcda  
+**Message:** test(api): add controller tests using mocked ICalendarService and IAccountService
+
+### Key Learnings
+
+- **WebApplicationFactory pattern:** Already in use across test suite. No learning curve.
+- **Service override scope:** ConfigureServices callback runs per test instance; mocks are isolated.
+- **Moq setup consistency:** All mocks follow `.Setup(x => x.Method(...)).ReturnsAsync(value)` pattern.
+
+### Feature Complete
+
+✅ Phase 3 of F-149 acceptance criteria met: "At least two API tests mock ICalendarService and IAccountService" (actually 6 tests written across both interfaces)
+

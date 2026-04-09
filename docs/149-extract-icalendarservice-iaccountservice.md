@@ -1,6 +1,6 @@
 # Feature 149: Extract ICalendarService and IAccountService Interfaces (DIP Fix)
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — F-002 + F-003 (combined)  
 > **Audit Source:** `docs/audit/2026-04-09-full-principle-audit.md`  
 > **Closes:** Decision #2 (2026-03-22) — remaining concrete-injecting controllers

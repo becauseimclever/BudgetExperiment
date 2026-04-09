@@ -660,3 +660,82 @@ Pure structural DIP refactor: CalendarController and AccountsController were inj
 1. `7f7a3a6` — refactor(app): extract ICalendarService, update CalendarController to inject abstraction
 2. `03a52c3` — refactor(app): extract IAccountService, update AccountsController to inject abstraction
 
+### Follow-Up (Barbara's Tests)
+
+Barbara immediately wrote 6 API integration tests using WebApplicationFactory + Moq:
+- CalendarControllerTests: valid month (200), invalid month (400)
+- AccountsControllerTests: GetAll (200), GetById valid (200), GetById missing (404), Create (201)
+
+All 6 tests pass. Commit: `375bcda` — test(api): add controller tests using mocked ICalendarService and IAccountService
+
+---
+
+## F150 Session — Split ITransactionRepository into Focused Sub-Interfaces (ISP) (2026-04-09)
+
+**Role:** Backend Dev (Specialist)
+**Feature:** 150 — Split ITransactionRepository (ISP violation — 23 methods)
+**Status:** ✅ Complete
+
+### Scope
+
+Pure structural ISP refactor: `ITransactionRepository` had 23 methods spanning distinct concerns (query, import, analytics, write). Violated ISP — consumers must implement all 23 even if using a subset. Solution: split into 3 focused sub-interfaces; maintain backward compatibility via composition root `ITransactionRepository`.
+
+### New Interfaces Created (Domain/Repositories/)
+
+1. **ITransactionQueryRepository** (9 methods)
+   - `GetByDateRangeAsync`, `GetDailyTotalsAsync`, `GetByTransferIdAsync`, `GetByRecurringInstanceAsync`, `GetByRecurringTransferInstanceAsync`, `GetUncategorizedAsync`, `GetUncategorizedPagedAsync`, `GetUnifiedPagedAsync`, `GetAllDescriptionsAsync`
+
+2. **ITransactionImportRepository** (3 methods)
+   - `GetForDuplicateDetectionAsync`, `GetByImportBatchAsync`, `GetByIdsAsync`
+
+3. **ITransactionAnalyticsRepository** (6 methods)
+   - `GetSpendingByCategoryAsync`, `GetAllForHealthAnalysisAsync`, `GetClearedByAccountAsync`, `GetClearedBalanceSumAsync`, `GetByReconciliationRecordAsync`, `GetAllWithLocationAsync`
+
+### ITransactionRepository Refactored
+
+- Added inheritance: `: IReadRepository<Transaction>, IWriteRepository<Transaction>, ITransactionQueryRepository, ITransactionImportRepository, ITransactionAnalyticsRepository`
+- Removed 18 method declarations (now inherited)
+- Kept `DeleteTransferAsync` as sole own declaration (custom write operation, not in sub-interfaces)
+
+### Application Layer Updates
+
+- **17 services narrowed to ITransactionQueryRepository**: Test fakes reduced from 23 to 9 methods
+- **1 service narrowed to ITransactionImportRepository**: Test fake reduced from 23 to 3 methods
+- **20 services kept on ITransactionRepository**: Mixed operations or write access (backward compatible)
+
+Service list maintained in `.squad/decisions/inbox/impl-f150-isp-split.md` for future reference.
+
+### DI Registration
+
+```csharp
+services.AddScoped<ITransactionRepository, TransactionRepository>();
+services.AddScoped<ITransactionQueryRepository, TransactionRepository>();
+services.AddScoped<ITransactionImportRepository, TransactionRepository>();
+services.AddScoped<ITransactionAnalyticsRepository, TransactionRepository>();
+```
+
+Same concrete implementation serves all four interfaces.
+
+### Key Decisions / Lessons
+
+- **No logic changes required in TransactionRepository**: Already implements all methods; now happens to satisfy 4 interfaces instead of 1.
+- **Backward compatibility rock-solid**: Composition root means existing code never breaks. Optional narrowing for new code.
+- **Test fakes greatly simplified**: Going from 23-method interface to 3-9-method focused interface massively reduces test setup boilerplate.
+- **ISP benefit realized immediately**: Future test fakes can implement only what they need. Previous god interface forced 100% compliance even for narrow use cases.
+
+### Commits
+
+1. `1445d32` — refactor(domain): split ITransactionRepository into focused sub-interfaces
+
+### Test Results
+
+- **All 5,777 tests pass** ✅ (0 failures, 1 skipped)
+- **API tests**: 676/676 green
+- No regressions; backward compatibility maintained
+
+### Notes for Future Developers
+
+- If a new service needs ITransactionRepository in the future, audit which sub-interfaces it actually uses before choosing injection type
+- ISP is a living principle — if you find a service using only 2-3 methods from a repository, propose splitting that further
+- This pattern (composition root + focused sub-interfaces) is reusable across all god interfaces in the codebase
+

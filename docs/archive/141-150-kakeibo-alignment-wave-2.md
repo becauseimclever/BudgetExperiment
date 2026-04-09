@@ -113,4 +113,34 @@
 
 ## Features 149–150
 
-> **Status:** Not yet planned — reserved for future work.
+### Feature 149: Extract ICalendarService and IAccountService (DIP Fix)
+
+> **Status:** Done
+
+**What it did:** Extracted two interfaces in the Application layer (`ICalendarService` and `IAccountService`) from concrete application services that were being injected directly into controllers, violating the Dependency Inversion Principle. `CalendarController` now injects `ICalendarService` (1 method: `GetMonthAsync`). `AccountsController` now injects `IAccountService` (5 methods: `GetAllAsync`, `GetByIdAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`). DI registrations updated to interface-to-concrete binding. API tests added using `WebApplicationFactory` with mocked interfaces.
+
+**Key decisions:**
+- ISP: interfaces shaped by controller usage (only methods called).
+- No behavior changes — pure structural refactor.
+- Controllers can now be tested with test doubles.
+
+**Commits:**
+- `7f7a3a6` — refactor(app): extract ICalendarService, update CalendarController to inject abstraction
+- `03a52c3` — refactor(app): extract IAccountService, update AccountsController to inject abstraction
+- `375bcda` — test(api): add controller tests using mocked ICalendarService and IAccountService
+
+---
+
+### Feature 150: Split ITransactionRepository into Focused Sub-Interfaces (ISP)
+
+> **Status:** Done
+
+**What it did:** Refactored `ITransactionRepository` (23 methods) into three focused sub-interfaces: `ITransactionQueryRepository` (9 methods for date-range/search/paged queries), `ITransactionImportRepository` (3 methods for duplicate detection), and `ITransactionAnalyticsRepository` (6 methods for spending/health analysis). `ITransactionRepository` remains as a composition root inheriting all three, plus `IReadRepository<T>` and `IWriteRepository<T>`, for backward compatibility. 17 Application services narrowed to `ITransactionQueryRepository`; 1 import service narrowed to `ITransactionImportRepository`; 20 services remain on `ITransactionRepository` (mixed or write operations). All 5,777 tests pass.
+
+**Key decisions:**
+- ISP: split interface to reduce coupling and simplify test fakes (from 23 methods to 3–9 per focused interface).
+- Backward compatibility: composition root retains all methods so existing code never breaks.
+- DI registers same concrete `TransactionRepository` for all four interfaces.
+
+**Commits:**
+- `1445d32` — refactor(domain): split ITransactionRepository into focused sub-interfaces
