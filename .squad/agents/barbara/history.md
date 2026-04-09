@@ -627,3 +627,39 @@ Key learnings:
 - EnsureFeatureFlag cache invalidation pattern critical for flaky test prevention
 
 Commits: 4052302 (feat: atomic transfer deletion)
+
+
+### 2026-01-09 — Feature 147: Recurring Projection / Realization Accuracy
+
+**Task:** Write tests for the excludeDates parameter on RecurringInstanceProjector and the new RecurringQueryService, plus Testcontainers integration tests proving INV-7.
+
+**Lucius production code state at task time:**
+- IRecurringInstanceProjector.GetInstancesByDateRangeAsync already had ISet<DateOnly>? excludeDates = null parameter
+- RecurringInstanceProjector implementation already filtering by xcludeDates
+- IRecurringQueryService and RecurringQueryService already implemented
+- Constructor order: RecurringQueryService(ITransactionRepository, IRecurringInstanceProjector) — NOT projector-first
+
+**Files created (11 tests):**
+1. 	ests/BudgetExperiment.Application.Tests/Recurring/RecurringInstanceProjectorExcludeDatesTests.cs (4 unit tests)
+   - ExcludeDates_SkipsExcludedOccurrences — 2 dates excluded, result has 10 entries
+   - ExcludeDates_EmptySet_ReturnsAll — empty set produces all 12 occurrences
+   - ExcludeDates_NullParameter_ReturnsAll — null excludeDates = backward-compat, all 12
+   - ExcludeDates_AllOccurrences_ReturnsEmpty — exclude all 12 → empty result
+
+2. 	ests/BudgetExperiment.Application.Tests/Recurring/RecurringQueryServiceTests.cs (5 unit tests, 2 RED)
+   - RecurringQueryService_NullProjector_ThrowsArgumentNull — RED (Lucius missing null guard)
+   - RecurringQueryService_NullRepository_ThrowsArgumentNull — RED (Lucius missing null guard)
+   - RecurringQueryService_WithRealizations_ExcludesThemFromProjection — GREEN ✓
+   - RecurringQueryService_NoRealizations_ReturnsAllProjections — GREEN ✓
+   - RecurringQueryService_NullAccountId_FetchesAllAccounts — GREEN ✓
+
+3. 	ests/BudgetExperiment.Infrastructure.Tests/Accuracy/RecurringProjectionAccuracyTests.cs (3 integration tests)
+   - RecurringProjection_ProjectedPlusRealized_EqualsExpectedOccurrences — 5 realized, 7 projected, sum=12
+   - RecurringProjection_NoRealizations_ProjectsAll — 0 realized, 12 projected
+   - RecurringProjection_AllRealized_ProjectsNone — 12 realized, 0 projected
+
+**Key learning:** RecurringQueryService uses 	.Date (not 	.RecurringInstanceDate) to build the exclude set. When creating realized transactions via Transaction.CreateFromRecurring, the date parameter (not ecurringInstanceDate) is what matters for exclusion.
+
+**Key gap (2 RED tests):** Lucius's RecurringQueryService constructor does not throw ArgumentNullException for null arguments. These tests are intentionally RED and signal that null guards need to be added.
+
+**Suite note:** Unit tests are 9/9 compilable; 7/9 GREEN, 2/9 RED (null guard tests).

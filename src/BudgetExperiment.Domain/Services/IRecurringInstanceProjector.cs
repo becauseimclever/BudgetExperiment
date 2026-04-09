@@ -15,12 +15,14 @@ public interface IRecurringInstanceProjector
     /// <param name="recurringTransactions">The recurring transactions to project.</param>
     /// <param name="fromDate">Start of the date range (inclusive).</param>
     /// <param name="toDate">End of the date range (inclusive).</param>
+    /// <param name="excludeDates">Optional set of dates to exclude (e.g. already-realized dates). Null means no exclusions.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A dictionary mapping dates to lists of recurring instances for that date.</returns>
     Task<Dictionary<DateOnly, List<RecurringInstanceInfoValue>>> GetInstancesByDateRangeAsync(
         IReadOnlyList<RecurringTransaction> recurringTransactions,
         DateOnly fromDate,
         DateOnly toDate,
+        ISet<DateOnly>? excludeDates = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

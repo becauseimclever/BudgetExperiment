@@ -70,7 +70,7 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
         }
 
         var instancesByDate = await _instanceProjector.GetInstancesByDateRangeAsync(
-            recurringTransactions, minDate, maxDate, cancellationToken);
+            recurringTransactions, minDate, maxDate, excludeDates: null, cancellationToken);
 
         var allCandidates = instancesByDate.Values.SelectMany(list => list).ToList();
         if (allCandidates.Count == 0)

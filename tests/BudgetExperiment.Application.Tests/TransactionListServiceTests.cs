@@ -82,6 +82,7 @@ public class TransactionListServiceTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>());
 
@@ -441,6 +442,7 @@ public class TransactionListServiceTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 startDate,
                 endDate,
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
@@ -911,6 +913,7 @@ public class TransactionListServiceTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 new DateOnly(2026, 1, 10),
                 new DateOnly(2026, 1, 20),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {

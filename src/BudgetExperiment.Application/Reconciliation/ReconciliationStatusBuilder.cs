@@ -52,6 +52,7 @@ public sealed class ReconciliationStatusBuilder : IReconciliationStatusBuilder
             recurringTransactions,
             startDate,
             endDate,
+            excludeDates: null,
             cancellationToken);
 
         // Get all matches for this period

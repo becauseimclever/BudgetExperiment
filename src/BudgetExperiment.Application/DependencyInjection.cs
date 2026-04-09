@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IBalanceCalculationService, BalanceCalculationService>();
         services.AddScoped<IPaycheckAllocationService, PaycheckAllocationService>();
         services.AddScoped<IRecurringInstanceProjector, RecurringInstanceProjector>();
+        services.AddScoped<IRecurringQueryService, RecurringQueryService>();
         services.AddScoped<IRecurringTransferInstanceProjector, RecurringTransferInstanceProjector>();
         services.AddScoped<IAutoRealizeService, AutoRealizeService>();
         services.AddScoped<IRecurringTransactionInstanceService, RecurringTransactionInstanceService>();

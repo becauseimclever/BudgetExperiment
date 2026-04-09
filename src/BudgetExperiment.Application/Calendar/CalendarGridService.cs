@@ -130,6 +130,7 @@ public sealed class CalendarGridService : ICalendarGridService
             recurringTransactions,
             gridStartDate,
             gridEndDate,
+            excludeDates: null,
             cancellationToken);
 
         // Project recurring transfer instances for the grid date range using the projector

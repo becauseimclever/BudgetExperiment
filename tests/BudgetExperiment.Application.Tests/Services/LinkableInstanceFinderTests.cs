@@ -244,6 +244,7 @@ public sealed class LinkableInstanceFinderTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
@@ -300,9 +301,10 @@ public sealed class LinkableInstanceFinderTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<RecurringTransaction>, DateOnly, DateOnly, CancellationToken>(
-                (_, start, end, _) =>
+            .Callback<IReadOnlyList<RecurringTransaction>, DateOnly, DateOnly, ISet<DateOnly>?, CancellationToken>(
+                (_, start, end, _, _) =>
                 {
                     capturedStart = start;
                     capturedEnd = end;
@@ -354,6 +356,7 @@ public sealed class LinkableInstanceFinderTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {

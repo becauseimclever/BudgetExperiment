@@ -304,6 +304,7 @@ public sealed class TransactionListService : ITransactionListService
             recurringTransactions,
             startDate,
             endDate,
+            excludeDates: null,
             cancellationToken);
 
         foreach (var (date, instances) in recurringInstances)

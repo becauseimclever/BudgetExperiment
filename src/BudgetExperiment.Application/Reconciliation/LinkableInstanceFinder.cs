@@ -81,7 +81,7 @@ public sealed class LinkableInstanceFinder : ILinkableInstanceFinder
 
         var recurringTransactions = await _recurringRepository.GetActiveAsync(cancellationToken);
         var instancesByDate = await _instanceProjector.GetInstancesByDateRangeAsync(
-            recurringTransactions, startDate, endDate, cancellationToken);
+            recurringTransactions, startDate, endDate, excludeDates: null, cancellationToken);
 
         return instancesByDate.Values.SelectMany(list => list).ToList();
     }

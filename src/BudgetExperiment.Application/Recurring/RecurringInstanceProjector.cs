@@ -32,6 +32,7 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
         IReadOnlyList<RecurringTransaction> recurringTransactions,
         DateOnly fromDate,
         DateOnly toDate,
+        ISet<DateOnly>? excludeDates = null,
         CancellationToken cancellationToken = default)
     {
         var result = new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>();
@@ -50,6 +51,11 @@ public sealed class RecurringInstanceProjector : IRecurringInstanceProjector
 
             foreach (var date in occurrences)
             {
+                if (excludeDates?.Contains(date) == true)
+                {
+                    continue;
+                }
+
                 exceptionMap.TryGetValue(date, out var exception);
 
                 if (exception?.ExceptionType == ExceptionType.Skipped)

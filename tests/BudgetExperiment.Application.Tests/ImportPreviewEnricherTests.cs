@@ -96,6 +96,7 @@ public class ImportPreviewEnricherTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>());
 
@@ -134,9 +135,10 @@ public class ImportPreviewEnricherTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<RecurringTransaction>, DateOnly, DateOnly, CancellationToken>(
-                (_, from, to, _) =>
+            .Callback<IReadOnlyList<RecurringTransaction>, DateOnly, DateOnly, ISet<DateOnly>?, CancellationToken>(
+                (_, from, to, _, _) =>
                 {
                     capturedFrom = from;
                     capturedTo = to;
@@ -189,6 +191,7 @@ public class ImportPreviewEnricherTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
@@ -241,6 +244,7 @@ public class ImportPreviewEnricherTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {

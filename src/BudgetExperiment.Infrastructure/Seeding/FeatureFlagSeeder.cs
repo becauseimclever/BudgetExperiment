@@ -36,6 +36,7 @@ public static class FeatureFlagSeeder
         ("Location:Geocoding",                     false),
         ("Kakeibo:DateRangeReports",               false),
         ("feature-transfer-atomic-deletion",       false),
+        ("feature-recurring-projection-accuracy",   false),
     ];
 
     /// <summary>

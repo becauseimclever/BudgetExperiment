@@ -186,7 +186,7 @@ public sealed class ReconciliationService : IReconciliationService
     {
         var recurringTransactions = await _recurringRepository.GetActiveAsync(cancellationToken);
         var instancesByDate = await _instanceProjector.GetInstancesByDateRangeAsync(
-            recurringTransactions, startDate, endDate, cancellationToken);
+            recurringTransactions, startDate, endDate, excludeDates: null, cancellationToken);
 
         return instancesByDate.Values.SelectMany(list => list).ToList();
     }

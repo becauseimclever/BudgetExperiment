@@ -92,6 +92,7 @@ public class CalendarGridServiceTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 It.IsAny<DateOnly>(),
                 It.IsAny<DateOnly>(),
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>());
 
@@ -671,6 +672,7 @@ public class CalendarGridServiceTests
                 It.IsAny<IReadOnlyList<RecurringTransaction>>(),
                 gridStartDate,
                 gridEndDate,
+                It.IsAny<ISet<DateOnly>?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<DateOnly, List<RecurringInstanceInfoValue>>
             {
