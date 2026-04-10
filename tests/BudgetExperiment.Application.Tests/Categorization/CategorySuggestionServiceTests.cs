@@ -52,7 +52,8 @@ public class CategorySuggestionServiceTests
             _aiServiceMock.Object,
             _unitOfWorkMock.Object,
             _userContextMock.Object,
-            new Mock<ICategorySuggestionDismissalHandler>().Object);
+            new Mock<ICategorySuggestionDismissalHandler>().Object,
+            new CategorySuggestionScorer());
     }
 
     [Fact]

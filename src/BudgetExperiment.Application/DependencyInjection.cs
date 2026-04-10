@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<ISuggestionAcceptanceHandler, SuggestionAcceptanceHandler>();
         services.AddScoped<IRuleSuggestionService, RuleSuggestionService>();
         services.AddScoped<IMerchantMappingService, MerchantMappingService>();
+        services.AddScoped<ICategorySuggestionScorer, CategorySuggestionScorer>();
         services.AddScoped<ICategorySuggestionDismissalHandler, CategorySuggestionDismissalHandler>();
         services.AddScoped<ICategorySuggestionService, CategorySuggestionService>();
         services.AddScoped<ISuggestionMetricsService, SuggestionMetricsService>();

@@ -20,6 +20,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserContext _userContext;
     private readonly ICategorySuggestionDismissalHandler _dismissalHandler;
+    private readonly ICategorySuggestionScorer _scorer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CategorySuggestionService"/> class.
@@ -33,6 +34,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     /// <param name="unitOfWork">Unit of work.</param>
     /// <param name="userContext">User context.</param>
     /// <param name="dismissalHandler">The suggestion dismissal handler.</param>
+    /// <param name="scorer">The suggestion scorer and ranker.</param>
     public CategorySuggestionService(
         ITransactionQueryRepository transactionRepository,
         IBudgetCategoryRepository categoryRepository,
@@ -42,7 +44,8 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         IAiService aiService,
         IUnitOfWork unitOfWork,
         IUserContext userContext,
-        ICategorySuggestionDismissalHandler dismissalHandler)
+        ICategorySuggestionDismissalHandler dismissalHandler,
+        ICategorySuggestionScorer scorer)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
@@ -53,6 +56,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         _unitOfWork = unitOfWork;
         _userContext = userContext;
         _dismissalHandler = dismissalHandler;
+        _scorer = scorer;
     }
 
     /// <inheritdoc />
@@ -90,7 +94,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
-        return suggestions.OrderByDescending(s => s.Confidence).ThenByDescending(s => s.MatchingTransactionCount).ToList();
+        return _scorer.Rank(suggestions);
     }
 
     /// <inheritdoc />
@@ -242,32 +246,6 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         return suggestedRules.OrderByDescending(r => r.MatchingTransactionCount).ToList();
     }
 
-    /// <summary>
-    /// Calculates confidence score based on transaction count and pattern diversity.
-    /// </summary>
-    private static decimal CalculateConfidence(int transactionCount, int patternCount)
-    {
-        // Base confidence from transaction count
-        var countConfidence = transactionCount switch
-        {
-            >= 10 => 0.9m,
-            >= 5 => 0.8m,
-            >= 3 => 0.7m,
-            >= 2 => 0.6m,
-            _ => 0.5m,
-        };
-
-        // Boost for multiple patterns confirming the same category
-        var patternBoost = patternCount switch
-        {
-            >= 3 => 0.1m,
-            >= 2 => 0.05m,
-            _ => 0m,
-        };
-
-        return Math.Min(0.99m, countConfidence + patternBoost);
-    }
-
     private static bool IsNearDuplicate(string candidateName, HashSet<string> existingNames)
     {
         var normalizedCandidate = candidateName.Trim().ToUpperInvariant();
@@ -318,7 +296,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
             var totalCount = patterns.Sum(p => p.TransactionCount);
             var allPatterns = patterns.Select(p => p.Pattern).Distinct().ToList();
             var icon = patterns.FirstOrDefault()?.Icon ?? "category";
-            var confidence = CalculateConfidence(totalCount, allPatterns.Count);
+            var confidence = _scorer.CalculateConfidence(totalCount, allPatterns.Count);
 
             var suggestion = CategorySuggestion.Create(
                 categoryName,
