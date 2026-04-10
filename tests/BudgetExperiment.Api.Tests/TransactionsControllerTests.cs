@@ -46,6 +46,58 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     }
 
     /// <summary>
+    /// GET /api/v1/transactions returns a Deprecation header.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetByDateRange_Returns_DeprecationHeader_True()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/transactions?startDate=2026-01-01&endDate=2026-01-31");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.Contains("Deprecation"));
+        var headerValue = response.Headers.GetValues("Deprecation").FirstOrDefault();
+        Assert.Equal("true", headerValue);
+    }
+
+    /// <summary>
+    /// GET /api/v1/transactions returns a Sunset header.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetByDateRange_Returns_SunsetHeader()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/transactions?startDate=2026-01-01&endDate=2026-01-31");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.Contains("Sunset"));
+        var headerValue = response.Headers.GetValues("Sunset").FirstOrDefault();
+        Assert.Equal("2026-07-09", headerValue);
+    }
+
+    /// <summary>
+    /// GET /api/v1/transactions returns a Link header to the successor endpoint.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetByDateRange_Returns_LinkHeader()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/transactions?startDate=2026-01-01&endDate=2026-01-31");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.Contains("Link"));
+        var headerValue = response.Headers.GetValues("Link").FirstOrDefault();
+        Assert.NotNull(headerValue);
+        Assert.Contains("/api/v2/transactions/by-date-range", headerValue);
+    }
+
+    /// <summary>
     /// GET /api/v1/transactions returns 400 when startDate is after endDate.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
@@ -54,6 +106,44 @@ public sealed class TransactionsControllerTests : IClassFixture<CustomWebApplica
     {
         // Act
         var response = await _client.GetAsync("/api/v1/transactions?startDate=2026-01-31&endDate=2026-01-01");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
+    /// GET /api/v2/transactions/by-date-range returns pagination header with defaults.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetByDateRangePaged_WithDefaultParams_ReturnsPaginationHeader()
+    {
+        // Act
+        var response = await _client.GetAsync(
+            "/api/v2/transactions/by-date-range?startDate=2026-01-01&endDate=2026-01-31");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.Contains("X-Pagination-TotalCount"));
+        var headerValue = response.Headers.GetValues("X-Pagination-TotalCount").FirstOrDefault();
+        Assert.NotNull(headerValue);
+        Assert.True(int.TryParse(headerValue, out _));
+        var result = await response.Content.ReadFromJsonAsync<UnifiedTransactionPageDto>();
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Page);
+        Assert.Equal(50, result.PageSize);
+    }
+
+    /// <summary>
+    /// GET /api/v2/transactions/by-date-range returns 400 when pageSize exceeds 100.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetByDateRangePaged_WithPageSizeOver100_Returns400()
+    {
+        // Act
+        var response = await _client.GetAsync(
+            "/api/v2/transactions/by-date-range?startDate=2026-01-01&endDate=2026-01-31&pageSize=101");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

@@ -49,9 +49,13 @@ public sealed class TransactionQueryController : ControllerBase
     /// <param name="kakeiboCategory">Optional Kakeibo category filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of transactions.</returns>
+    /// <remarks>
+    /// Deprecated. Use GET /api/v2/transactions/by-date-range with page/pageSize parameters instead.
+    /// </remarks>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<TransactionDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Obsolete("Use GET /api/v2/transactions/by-date-range with pagination.")]
     public async Task<IActionResult> GetByDateRangeAsync(
         [FromQuery] DateOnly startDate,
         [FromQuery] DateOnly endDate,
@@ -59,6 +63,10 @@ public sealed class TransactionQueryController : ControllerBase
         [FromQuery] string? kakeiboCategory,
         CancellationToken cancellationToken)
     {
+        this.Response.Headers.Append("Deprecation", "true");
+        this.Response.Headers.Append("Sunset", "2026-07-09");
+        this.Response.Headers.Append("Link", "</api/v2/transactions/by-date-range>; rel=\"successor-version\"");
+
         if (startDate > endDate)
         {
             return this.BadRequest("startDate must be less than or equal to endDate.");
