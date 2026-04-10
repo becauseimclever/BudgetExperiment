@@ -1,6 +1,6 @@
 # Feature 156: ReportService — Fix N+1 Category Name Lookups
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — P-003  
 > **Audit Source:** `docs/audit/2026-04-09-performance-review.md`
 
@@ -69,12 +69,12 @@ Result: **0 additional category DB queries** after the initial transaction load.
 **So that** report pages load in well under a second on my Raspberry Pi
 
 **Acceptance Criteria:**
-- [ ] `BuildCategorySpendingListAsync` issues **0** calls to `GetByIdAsync` when building its category list
-- [ ] `BuildTopCategoriesAsync` issues **0** calls to `GetByIdAsync` when building its top category list
-- [ ] Report output (names, colours, amounts) is identical to the previous implementation for the same input data
-- [ ] No feature flag required — pure refactor
-- [ ] Existing `ReportService` tests continue to pass
-- [ ] New tests assert that `ICategoryRepository.GetByIdAsync` is never called during report construction
+- [x] `BuildCategorySpendingListAsync` issues **0** calls to `GetByIdAsync` when building its category list
+- [x] `BuildTopCategoriesAsync` issues **0** calls to `GetByIdAsync` when building its top category list
+- [x] Report output (names, colours, amounts) is identical to the previous implementation for the same input data
+- [x] No feature flag required — pure refactor
+- [x] Existing `ReportService` tests continue to pass
+- [x] New tests assert that `ICategoryRepository.GetByIdAsync` is never called during report construction
 
 ---
 

@@ -1,6 +1,6 @@
 # Feature 159: GET /transactions Date-Range Endpoint — Deprecate v1, Add Paginated v2
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — P-007  
 > **Audit Source:** `docs/audit/2026-04-09-performance-review.md`
 
@@ -63,10 +63,10 @@ The paginated endpoint `GetUnifiedPagedAsync` (`GET /api/v1/transactions?page=1&
 **So that** there is a single, well-maintained way to query transactions with date filtering
 
 **Acceptance Criteria:**
-- [ ] `GetByDateRangeAsync` returns `Deprecation: true` and `Sunset: <date>` HTTP response headers
-- [ ] OpenAPI spec marks the endpoint as deprecated
-- [ ] XML doc comment on the action method describes the migration path to `GetUnifiedPagedAsync`
-- [ ] API Tests assert `Deprecation` header is present on responses from this endpoint
+- [x] `GetByDateRangeAsync` returns `Deprecation: true` and `Sunset: <date>` HTTP response headers
+- [x] OpenAPI spec marks the endpoint as deprecated
+- [x] XML doc comment on the action method describes the migration path to `GetUnifiedPagedAsync`
+- [x] API Tests assert `Deprecation` header is present on responses from this endpoint
 
 ### US-159-002 (Option B): Paginated Date-Range Endpoint
 
@@ -75,12 +75,12 @@ The paginated endpoint `GetUnifiedPagedAsync` (`GET /api/v1/transactions?page=1&
 **So that** large date ranges do not cause slow page loads or memory issues
 
 **Acceptance Criteria:**
-- [ ] `page` and `pageSize` query parameters added (defaults: `page=1`, `pageSize=50`)
-- [ ] `pageSize` capped at 100 — requests for larger sizes return HTTP 400
-- [ ] `X-Pagination-TotalCount` header returned with every paginated response
-- [ ] Existing callers without pagination parameters automatically receive page 1 of 50 results (backward compatible)
-- [ ] OpenAPI spec updated with new parameters and `X-Pagination-TotalCount` response header documentation
-- [ ] API integration tests cover: default pagination, explicit page/size, max size enforcement, count header accuracy
+- [x] `page` and `pageSize` query parameters added (defaults: `page=1`, `pageSize=50`)
+- [x] `pageSize` capped at 100 — requests for larger sizes return HTTP 400
+- [x] `X-Pagination-TotalCount` header returned with every paginated response
+- [x] Existing callers without pagination parameters automatically receive page 1 of 50 results (backward compatible)
+- [x] OpenAPI spec updated with new parameters and `X-Pagination-TotalCount` response header documentation
+- [x] API integration tests cover: default pagination, explicit page/size, max size enforcement, count header accuracy
 
 ---
 

@@ -802,3 +802,8 @@ The CategorySuggestionEndpoints.cs Minimal API pilot (introduced in F-153 by spl
 **Technical note:** When reverting, also remove the `using BudgetExperiment.Api.Endpoints;` import from Program.cs — the compiler does not warn about the unused import until the namespace no longer exists, at which point it becomes a hard error.
 
 ### Commit: 35a378a
+
+### 2026-04-11 — Perf Batch 156/159 Follow-ups
+
+- ReportService report aggregation must rely on Category navigation properties to avoid per-category repository lookups; tests now set Category via reflection when asserting names.
+- Date-range transaction queries are now deprecated in v1 via Deprecation/Sunset/Link headers, with a paginated v2 endpoint returning X-Pagination-TotalCount from the unified transaction service.
