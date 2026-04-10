@@ -1,0 +1,323 @@
+// <copyright file="RecurringTransactionInstanceController.cs" company="BecauseImClever">
+// Copyright (c) BecauseImClever. All rights reserved.
+// </copyright>
+
+using BudgetExperiment.Contracts.Dtos;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BudgetExperiment.Api.Controllers;
+
+/// <summary>
+/// REST API controller for recurring transaction instance management operations.
+/// </summary>
+[ApiVersion("1.0")]
+[ApiController]
+[Authorize]
+[Route("api/v{version:apiVersion}/recurring-transactions")]
+[Produces("application/json")]
+public sealed class RecurringTransactionInstanceController : ControllerBase
+{
+    private readonly IRecurringTransactionService _service;
+    private readonly IRecurringTransactionInstanceService _instanceService;
+    private readonly IRecurringTransactionRealizationService _realizationService;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RecurringTransactionInstanceController"/> class.
+    /// </summary>
+    /// <param name="service">The recurring transaction service.</param>
+    /// <param name="instanceService">The recurring transaction instance service.</param>
+    /// <param name="realizationService">The recurring transaction realization service.</param>
+    public RecurringTransactionInstanceController(
+        IRecurringTransactionService service,
+        IRecurringTransactionInstanceService instanceService,
+        IRecurringTransactionRealizationService realizationService)
+    {
+        _service = service;
+        _instanceService = instanceService;
+        _realizationService = realizationService;
+    }
+
+    /// <summary>
+    /// Gets projected recurring transactions for a date range.
+    /// </summary>
+    /// <param name="from">Start date (inclusive).</param>
+    /// <param name="to">End date (inclusive).</param>
+    /// <param name="accountId">Optional account filter.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of projected instances.</returns>
+    [HttpGet("projected")]
+    [ProducesResponseType<IReadOnlyList<RecurringInstanceDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetProjectedAsync(
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to,
+        [FromQuery] Guid? accountId,
+        CancellationToken cancellationToken)
+    {
+        if (from > to)
+        {
+            return this.BadRequest("from must be less than or equal to to.");
+        }
+
+        var instances = await _instanceService.GetProjectedInstancesAsync(from, to, accountId, cancellationToken);
+        return this.Ok(instances);
+    }
+
+    /// <summary>
+    /// Gets instances of a recurring transaction within a date range.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="from">Start date (inclusive).</param>
+    /// <param name="to">End date (inclusive).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of instances.</returns>
+    [HttpGet("{id:guid}/instances")]
+    [ProducesResponseType<IReadOnlyList<RecurringInstanceDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetInstancesAsync(
+        Guid id,
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to,
+        CancellationToken cancellationToken)
+    {
+        if (from > to)
+        {
+            return this.BadRequest("from must be less than or equal to to.");
+        }
+
+        var instances = await _instanceService.GetInstancesAsync(id, from, to, cancellationToken);
+        if (instances is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(instances);
+    }
+
+    /// <summary>
+    /// Skips the next occurrence of a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transaction.</returns>
+    [HttpPost("{id:guid}/skip")]
+    [ProducesResponseType<RecurringTransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SkipNextAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var recurring = await _service.SkipNextAsync(id, cancellationToken);
+        if (recurring is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(recurring);
+    }
+
+    /// <summary>
+    /// Pauses a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transaction.</returns>
+    [HttpPost("{id:guid}/pause")]
+    [ProducesResponseType<RecurringTransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PauseAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var recurring = await _service.PauseAsync(id, cancellationToken);
+        if (recurring is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(recurring);
+    }
+
+    /// <summary>
+    /// Resumes a paused recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transaction.</returns>
+    [HttpPost("{id:guid}/resume")]
+    [ProducesResponseType<RecurringTransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResumeAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var recurring = await _service.ResumeAsync(id, cancellationToken);
+        if (recurring is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(recurring);
+    }
+
+    /// <summary>
+    /// Modifies a single instance of a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="date">The scheduled date of the instance.</param>
+    /// <param name="dto">The modification data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The modified instance.</returns>
+    [HttpPut("{id:guid}/instances/{date}")]
+    [ProducesResponseType<RecurringInstanceDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ModifyInstanceAsync(
+        Guid id,
+        DateOnly date,
+        [FromBody] RecurringInstanceModifyDto dto,
+        CancellationToken cancellationToken)
+    {
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var instance = await _instanceService.ModifyInstanceAsync(id, date, dto, expectedVersion, cancellationToken);
+        if (instance is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(instance);
+    }
+
+    /// <summary>
+    /// Skips/deletes a single instance of a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="date">The scheduled date of the instance.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>No content if successful.</returns>
+    [HttpDelete("{id:guid}/instances/{date}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SkipInstanceAsync(Guid id, DateOnly date, CancellationToken cancellationToken)
+    {
+        var skipped = await _instanceService.SkipInstanceAsync(id, date, cancellationToken);
+        if (!skipped)
+        {
+            return this.NotFound();
+        }
+
+        return this.NoContent();
+    }
+
+    /// <summary>
+    /// Updates this instance and all future instances (modifies the series).
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="date">The date from which to apply changes.</param>
+    /// <param name="dto">The update data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated recurring transaction.</returns>
+    [HttpPut("{id:guid}/instances/{date}/future")]
+    [ProducesResponseType<RecurringTransactionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateFutureAsync(
+        Guid id,
+        DateOnly date,
+        [FromBody] RecurringTransactionUpdateDto dto,
+        CancellationToken cancellationToken)
+    {
+        string? expectedVersion = null;
+        if (this.Request.Headers.TryGetValue("If-Match", out var ifMatch))
+        {
+            expectedVersion = ifMatch.ToString().Trim('"');
+        }
+
+        var recurring = await _service.UpdateFromDateAsync(id, date, dto, expectedVersion, cancellationToken);
+        if (recurring is null)
+        {
+            return this.NotFound();
+        }
+
+        if (recurring.Version is not null)
+        {
+            this.Response.Headers.ETag = $"\"{recurring.Version}\"";
+        }
+
+        return this.Ok(recurring);
+    }
+
+    /// <summary>
+    /// Realizes a recurring transaction instance, creating an actual transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="request">The realization request with the instance date and optional overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created transaction.</returns>
+    [HttpPost("{id:guid}/realize")]
+    [ProducesResponseType<TransactionDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RealizeAsync(
+        Guid id,
+        [FromBody] RealizeRecurringTransactionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var transaction = await _realizationService.RealizeInstanceAsync(id, request, cancellationToken);
+        return this.CreatedAtAction(
+            "GetById",
+            "Transactions",
+            new { id = transaction.Id },
+            transaction);
+    }
+
+    /// <summary>
+    /// Gets import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The import patterns.</returns>
+    [HttpGet("{id:guid}/import-patterns")]
+    [ProducesResponseType<ImportPatternsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetImportPatternsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var patterns = await _service.GetImportPatternsAsync(id, cancellationToken);
+        if (patterns is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(patterns);
+    }
+
+    /// <summary>
+    /// Updates import patterns for a recurring transaction.
+    /// </summary>
+    /// <param name="id">The recurring transaction identifier.</param>
+    /// <param name="dto">The import patterns to set.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated import patterns.</returns>
+    [HttpPut("{id:guid}/import-patterns")]
+    [ProducesResponseType<ImportPatternsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateImportPatternsAsync(
+        Guid id,
+        [FromBody] ImportPatternsDto dto,
+        CancellationToken cancellationToken)
+    {
+        var patterns = await _service.UpdateImportPatternsAsync(id, dto, cancellationToken);
+        if (patterns is null)
+        {
+            return this.NotFound();
+        }
+
+        return this.Ok(patterns);
+    }
+}
