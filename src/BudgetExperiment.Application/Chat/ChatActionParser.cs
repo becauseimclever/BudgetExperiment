@@ -2,7 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using System.Globalization;
 using System.Text.Json;
 
 using BudgetExperiment.Domain;
@@ -11,7 +10,8 @@ namespace BudgetExperiment.Application.Chat;
 
 /// <summary>
 /// Parses AI response JSON into <see cref="ChatAction"/> objects.
-/// Handles JSON extraction, intent routing, and action DTO construction.
+/// Chain-of-responsibility coordinator: extracts JSON, routes by intent, and
+/// delegates to the appropriate per-action-type parser.
 /// </summary>
 public static class ChatActionParser
 {
@@ -58,7 +58,7 @@ public static class ChatActionParser
                 clarProp.TryGetProperty("needed", out var neededProp) &&
                 neededProp.GetBoolean())
             {
-                var clarificationAction = ParseClarification(clarProp);
+                var clarificationAction = ClarificationActionParser.Parse(clarProp);
                 return new ParseResult(
                     Success: true,
                     Action: clarificationAction,
@@ -69,10 +69,10 @@ public static class ChatActionParser
             var data = root.TryGetProperty("data", out var dataProp) ? dataProp : default;
             ChatAction? action = intent switch
             {
-                "transaction" => ParseTransactionAction(data, accounts, categories, context),
-                "transfer" => ParseTransferAction(data, accounts, context),
-                "recurring_transaction" => ParseRecurringTransactionAction(data, accounts, categories),
-                "recurring_transfer" => ParseRecurringTransferAction(data, accounts),
+                "transaction" => TransactionActionParser.Parse(data, accounts, categories, context),
+                "transfer" => TransferActionParser.Parse(data, accounts, context),
+                "recurring_transaction" => RecurringTransactionActionParser.Parse(data, accounts, categories),
+                "recurring_transfer" => RecurringTransferActionParser.Parse(data, accounts),
                 "unknown" => null,
                 _ => null,
             };
@@ -102,381 +102,73 @@ public static class ChatActionParser
         }
     }
 
-    internal static ClarificationNeededAction ParseClarification(JsonElement clarProp)
-    {
-        var question = clarProp.TryGetProperty("question", out var qProp)
-            ? qProp.GetString() ?? "Could you provide more details?"
-            : "Could you provide more details?";
+    /// <summary>
+    /// Parses a clarification element. Preserved for call-sites; delegates to
+    /// <see cref="ClarificationActionParser.Parse"/>.
+    /// </summary>
+    /// <param name="clarProp">The clarification JSON element.</param>
+    /// <returns>The clarification action.</returns>
+    internal static ClarificationNeededAction ParseClarification(JsonElement clarProp) =>
+        ClarificationActionParser.Parse(clarProp);
 
-        var fieldName = clarProp.TryGetProperty("field", out var fProp)
-            ? fProp.GetString() ?? "unknown"
-            : "unknown";
-        var clarificationType = ParseClarificationType(clarProp, fieldName);
-
-        var options = new List<ClarificationOption>();
-        if (clarProp.TryGetProperty("options", out var optsProp) && optsProp.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var opt in optsProp.EnumerateArray())
-            {
-                options.Add(ParseClarificationOption(opt));
-            }
-        }
-
-        return new ClarificationNeededAction
-        {
-            Question = question,
-            ClarificationType = clarificationType,
-            FieldName = fieldName,
-            Options = options,
-        };
-    }
-
+    /// <summary>
+    /// Parses a transaction action. Preserved for call-sites; delegates to
+    /// <see cref="TransactionActionParser.Parse"/>.
+    /// </summary>
     internal static CreateTransactionAction? ParseTransactionAction(
         JsonElement data,
         IReadOnlyList<AccountInfo> accounts,
         IReadOnlyList<CategoryInfo> categories,
-        ChatContext? context)
-    {
-        if (data.ValueKind == JsonValueKind.Undefined)
-        {
-            return null;
-        }
+        ChatContext? context) =>
+        TransactionActionParser.Parse(data, accounts, categories, context);
 
-        var accountId = ParseGuid(data, "accountId");
-        var accountName = data.TryGetProperty("accountName", out var anProp) ? anProp.GetString() ?? string.Empty : string.Empty;
-        var amount = data.TryGetProperty("amount", out var amtProp) ? amtProp.GetDecimal() : 0m;
-        var date = ParseDate(data, "date") ?? context?.CurrentDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var description = data.TryGetProperty("description", out var descProp) ? descProp.GetString() ?? string.Empty : string.Empty;
-        var category = data.TryGetProperty("category", out var catProp) && catProp.ValueKind == JsonValueKind.String
-            ? catProp.GetString()
-            : null;
-        var categoryId = ParseGuid(data, "categoryId");
-        var kakeiboCategory = ResolveKakeiboCategory(categoryId, categories);
-
-        if (!accountId.HasValue)
-        {
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Equals(accountName, StringComparison.OrdinalIgnoreCase));
-            if (matchedAccount != null)
-            {
-                accountId = matchedAccount.Id;
-                accountName = matchedAccount.Name;
-            }
-            else if (accounts.Count == 1)
-            {
-                accountId = accounts[0].Id;
-                accountName = accounts[0].Name;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        return new CreateTransactionAction
-        {
-            AccountId = accountId.Value,
-            AccountName = accountName,
-            Amount = amount,
-            Date = date,
-            Description = description,
-            Category = category,
-            CategoryId = categoryId,
-            KakeiboCategory = kakeiboCategory,
-        };
-    }
-
+    /// <summary>
+    /// Parses a transfer action. Preserved for call-sites; delegates to
+    /// <see cref="TransferActionParser.Parse"/>.
+    /// </summary>
     internal static CreateTransferAction? ParseTransferAction(
         JsonElement data,
         IReadOnlyList<AccountInfo> accounts,
-        ChatContext? context)
-    {
-        if (data.ValueKind == JsonValueKind.Undefined)
-        {
-            return null;
-        }
+        ChatContext? context) =>
+        TransferActionParser.Parse(data, accounts, context);
 
-        var fromAccountId = ParseGuid(data, "fromAccountId");
-        var fromAccountName = data.TryGetProperty("fromAccountName", out var fanProp) ? fanProp.GetString() ?? string.Empty : string.Empty;
-        var toAccountId = ParseGuid(data, "toAccountId");
-        var toAccountName = data.TryGetProperty("toAccountName", out var tanProp) ? tanProp.GetString() ?? string.Empty : string.Empty;
-        var amount = data.TryGetProperty("amount", out var amtProp) ? amtProp.GetDecimal() : 0m;
-        var date = ParseDate(data, "date") ?? context?.CurrentDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var description = data.TryGetProperty("description", out var descProp) && descProp.ValueKind == JsonValueKind.String
-            ? descProp.GetString()
-            : null;
-
-        if (!fromAccountId.HasValue)
-        {
-            var matchedFrom = accounts.FirstOrDefault(a =>
-                a.Name.Equals(fromAccountName, StringComparison.OrdinalIgnoreCase));
-            if (matchedFrom != null)
-            {
-                fromAccountId = matchedFrom.Id;
-                fromAccountName = matchedFrom.Name;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        if (!toAccountId.HasValue)
-        {
-            var matchedTo = accounts.FirstOrDefault(a =>
-                a.Name.Equals(toAccountName, StringComparison.OrdinalIgnoreCase));
-            if (matchedTo != null)
-            {
-                toAccountId = matchedTo.Id;
-                toAccountName = matchedTo.Name;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        return new CreateTransferAction
-        {
-            FromAccountId = fromAccountId.Value,
-            FromAccountName = fromAccountName,
-            ToAccountId = toAccountId.Value,
-            ToAccountName = toAccountName,
-            Amount = Math.Abs(amount),
-            Date = date,
-            Description = description,
-        };
-    }
-
+    /// <summary>
+    /// Parses a recurring transaction action. Preserved for call-sites; delegates to
+    /// <see cref="RecurringTransactionActionParser.Parse"/>.
+    /// </summary>
     internal static CreateRecurringTransactionAction? ParseRecurringTransactionAction(
         JsonElement data,
         IReadOnlyList<AccountInfo> accounts,
-        IReadOnlyList<CategoryInfo> categories)
-    {
-        if (data.ValueKind == JsonValueKind.Undefined)
-        {
-            return null;
-        }
+        IReadOnlyList<CategoryInfo> categories) =>
+        RecurringTransactionActionParser.Parse(data, accounts, categories);
 
-        var accountId = ParseGuid(data, "accountId");
-        var accountName = data.TryGetProperty("accountName", out var anProp) ? anProp.GetString() ?? string.Empty : string.Empty;
-        var amount = data.TryGetProperty("amount", out var amtProp) ? amtProp.GetDecimal() : 0m;
-        var description = data.TryGetProperty("description", out var descProp) ? descProp.GetString() ?? string.Empty : string.Empty;
-        var category = data.TryGetProperty("category", out var catProp) && catProp.ValueKind == JsonValueKind.String
-            ? catProp.GetString()
-            : null;
-        var startDate = ParseDate(data, "startDate") ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var endDate = ParseDate(data, "endDate");
-
-        var recurrence = ParseRecurrencePattern(data);
-        if (recurrence == null)
-        {
-            return null;
-        }
-
-        if (!accountId.HasValue)
-        {
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Equals(accountName, StringComparison.OrdinalIgnoreCase));
-            if (matchedAccount != null)
-            {
-                accountId = matchedAccount.Id;
-                accountName = matchedAccount.Name;
-            }
-            else if (accounts.Count == 1)
-            {
-                accountId = accounts[0].Id;
-                accountName = accounts[0].Name;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        return new CreateRecurringTransactionAction
-        {
-            AccountId = accountId.Value,
-            AccountName = accountName,
-            Amount = amount,
-            Description = description,
-            Category = category,
-            Recurrence = recurrence,
-            StartDate = startDate,
-            EndDate = endDate,
-        };
-    }
-
+    /// <summary>
+    /// Parses a recurring transfer action. Preserved for call-sites; delegates to
+    /// <see cref="RecurringTransferActionParser.Parse"/>.
+    /// </summary>
     internal static CreateRecurringTransferAction? ParseRecurringTransferAction(
         JsonElement data,
-        IReadOnlyList<AccountInfo> accounts)
-    {
-        if (data.ValueKind == JsonValueKind.Undefined)
-        {
-            return null;
-        }
+        IReadOnlyList<AccountInfo> accounts) =>
+        RecurringTransferActionParser.Parse(data, accounts);
 
-        var fromAccountId = ParseGuid(data, "fromAccountId");
-        var fromAccountName = data.TryGetProperty("fromAccountName", out var fanProp) ? fanProp.GetString() ?? string.Empty : string.Empty;
-        var toAccountId = ParseGuid(data, "toAccountId");
-        var toAccountName = data.TryGetProperty("toAccountName", out var tanProp) ? tanProp.GetString() ?? string.Empty : string.Empty;
-        var amount = data.TryGetProperty("amount", out var amtProp) ? amtProp.GetDecimal() : 0m;
-        var description = data.TryGetProperty("description", out var descProp) && descProp.ValueKind == JsonValueKind.String
-            ? descProp.GetString()
-            : null;
-        var startDate = ParseDate(data, "startDate") ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var endDate = ParseDate(data, "endDate");
+    /// <summary>
+    /// Parses a recurrence pattern. Preserved for call-sites; delegates to
+    /// <see cref="ChatParserHelpers.ParseRecurrencePattern"/>.
+    /// </summary>
+    internal static RecurrencePatternValue? ParseRecurrencePattern(JsonElement data) =>
+        ChatParserHelpers.ParseRecurrencePattern(data);
 
-        var recurrence = ParseRecurrencePattern(data);
-        if (recurrence == null)
-        {
-            return null;
-        }
+    /// <summary>
+    /// Parses a GUID property. Preserved for call-sites; delegates to
+    /// <see cref="ChatParserHelpers.ParseGuid"/>.
+    /// </summary>
+    internal static Guid? ParseGuid(JsonElement element, string propertyName) =>
+        ChatParserHelpers.ParseGuid(element, propertyName);
 
-        if (!fromAccountId.HasValue)
-        {
-            var matchedFrom = accounts.FirstOrDefault(a =>
-                a.Name.Equals(fromAccountName, StringComparison.OrdinalIgnoreCase));
-            if (matchedFrom != null)
-            {
-                fromAccountId = matchedFrom.Id;
-                fromAccountName = matchedFrom.Name;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        if (!toAccountId.HasValue)
-        {
-            var matchedTo = accounts.FirstOrDefault(a =>
-                a.Name.Equals(toAccountName, StringComparison.OrdinalIgnoreCase));
-            if (matchedTo != null)
-            {
-                toAccountId = matchedTo.Id;
-                toAccountName = matchedTo.Name;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        return new CreateRecurringTransferAction
-        {
-            FromAccountId = fromAccountId.Value,
-            FromAccountName = fromAccountName,
-            ToAccountId = toAccountId.Value,
-            ToAccountName = toAccountName,
-            Amount = Math.Abs(amount),
-            Description = description,
-            Recurrence = recurrence,
-            StartDate = startDate,
-            EndDate = endDate,
-        };
-    }
-
-    internal static RecurrencePatternValue? ParseRecurrencePattern(JsonElement data)
-    {
-        var frequencyStr = data.TryGetProperty("frequency", out var freqProp)
-            ? freqProp.GetString()?.ToLowerInvariant() ?? "monthly"
-            : "monthly";
-
-        var interval = data.TryGetProperty("interval", out var intProp) ? intProp.GetInt32() : 1;
-        var dayOfMonth = data.TryGetProperty("dayOfMonth", out var domProp) && domProp.ValueKind == JsonValueKind.Number
-            ? domProp.GetInt32()
-            : (int?)null;
-        var dayOfWeekStr = data.TryGetProperty("dayOfWeek", out var dowProp) && dowProp.ValueKind == JsonValueKind.String
-            ? dowProp.GetString()
-            : null;
-        var dayOfWeek = !string.IsNullOrEmpty(dayOfWeekStr) && Enum.TryParse<DayOfWeek>(dayOfWeekStr, true, out var dow)
-            ? dow
-            : (DayOfWeek?)null;
-
-        return frequencyStr switch
-        {
-            "daily" => RecurrencePatternValue.CreateDaily(interval),
-            "weekly" when dayOfWeek.HasValue => RecurrencePatternValue.CreateWeekly(interval, dayOfWeek.Value),
-            "weekly" => RecurrencePatternValue.CreateWeekly(interval, DayOfWeek.Monday),
-            "biweekly" when dayOfWeek.HasValue => RecurrencePatternValue.CreateBiWeekly(dayOfWeek.Value),
-            "biweekly" => RecurrencePatternValue.CreateBiWeekly(DayOfWeek.Friday),
-            "monthly" when dayOfMonth.HasValue => RecurrencePatternValue.CreateMonthly(interval, dayOfMonth.Value),
-            "monthly" => RecurrencePatternValue.CreateMonthly(interval, 1),
-            "quarterly" when dayOfMonth.HasValue => RecurrencePatternValue.CreateQuarterly(dayOfMonth.Value),
-            "quarterly" => RecurrencePatternValue.CreateQuarterly(1),
-            "yearly" when dayOfMonth.HasValue => RecurrencePatternValue.CreateYearly(1, dayOfMonth.Value),
-            "yearly" => RecurrencePatternValue.CreateYearly(1, 1),
-            _ => RecurrencePatternValue.CreateMonthly(1, 1),
-        };
-    }
-
-    internal static Guid? ParseGuid(JsonElement element, string propertyName)
-    {
-        if (element.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String)
-        {
-            return Guid.TryParse(prop.GetString(), out var id) ? id : null;
-        }
-
-        return null;
-    }
-
-    internal static DateOnly? ParseDate(JsonElement element, string propertyName)
-    {
-        if (element.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String)
-        {
-            var dateStr = prop.GetString();
-            if (DateOnly.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-            {
-                return date;
-            }
-        }
-
-        return null;
-    }
-
-    private static ClarificationOption ParseClarificationOption(JsonElement opt)
-    {
-        var label = opt.TryGetProperty("label", out var lProp) ? lProp.GetString() ?? string.Empty : string.Empty;
-        var value = opt.TryGetProperty("value", out var vProp) ? vProp.GetString() ?? string.Empty : string.Empty;
-        return new ClarificationOption { Label = label, Value = value, EntityId = ParseEntityId(opt) };
-    }
-
-    private static ClarificationNeededActionType ParseClarificationType(JsonElement clarProp, string fieldName)
-    {
-        if (clarProp.TryGetProperty("clarificationType", out var typeProp) && typeProp.ValueKind == JsonValueKind.String)
-        {
-            var typeText = typeProp.GetString();
-            if (!string.IsNullOrWhiteSpace(typeText) &&
-                Enum.TryParse<ClarificationNeededActionType>(typeText, true, out var parsed))
-            {
-                return parsed;
-            }
-        }
-
-        return string.Equals(fieldName, "kakeiboCategory", StringComparison.OrdinalIgnoreCase)
-            ? ClarificationNeededActionType.AskKakeiboCategory
-            : ClarificationNeededActionType.General;
-    }
-
-    private static KakeiboCategory? ResolveKakeiboCategory(Guid? categoryId, IReadOnlyList<CategoryInfo> categories)
-    {
-        if (!categoryId.HasValue)
-        {
-            return null;
-        }
-
-        var category = categories.FirstOrDefault(c => c.Id == categoryId.Value);
-        return category?.KakeiboCategory;
-    }
-
-    private static Guid? ParseEntityId(JsonElement opt)
-    {
-        if (!opt.TryGetProperty("entityId", out var eProp) || eProp.ValueKind != JsonValueKind.String)
-        {
-            return null;
-        }
-
-        return Guid.TryParse(eProp.GetString(), out var eid) ? eid : null;
-    }
+    /// <summary>
+    /// Parses a date property. Preserved for call-sites; delegates to
+    /// <see cref="ChatParserHelpers.ParseDate"/>.
+    /// </summary>
+    internal static DateOnly? ParseDate(JsonElement element, string propertyName) =>
+        ChatParserHelpers.ParseDate(element, propertyName);
 }
