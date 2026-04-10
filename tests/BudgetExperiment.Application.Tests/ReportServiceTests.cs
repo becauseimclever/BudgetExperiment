@@ -2,6 +2,8 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Reflection;
+
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain.Settings;
 
@@ -24,7 +26,7 @@ public class ReportServiceTests
         var groceriesCategory = BudgetCategory.Create("Groceries", CategoryType.Expense);
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 5), -50m, groceriesCategory.Id),
+            CreateTransaction(new DateOnly(2026, 1, 5), -50m, groceriesCategory.Id, groceriesCategory),
             CreateTransaction(new DateOnly(2026, 1, 10), 2000m, categoryId: null),
         };
 
@@ -83,9 +85,9 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 5), -50m, groceriesCategory.Id),
-            CreateTransaction(new DateOnly(2026, 1, 10), -30m, groceriesCategory.Id),
-            CreateTransaction(new DateOnly(2026, 1, 15), -100m, entertainmentCategory.Id),
+            CreateTransaction(new DateOnly(2026, 1, 5), -50m, groceriesCategory.Id, groceriesCategory),
+            CreateTransaction(new DateOnly(2026, 1, 10), -30m, groceriesCategory.Id, groceriesCategory),
+            CreateTransaction(new DateOnly(2026, 1, 15), -100m, entertainmentCategory.Id, entertainmentCategory),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -127,6 +129,69 @@ public class ReportServiceTests
     }
 
     [Fact]
+    public async Task BuildCategorySpendingListAsync_NeverCallsGetByIdAsync()
+    {
+        // Arrange
+        var groceriesCategory = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var utilitiesCategory = BudgetCategory.Create("Utilities", CategoryType.Expense);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(new DateOnly(2026, 1, 5), -50m, groceriesCategory.Id, groceriesCategory),
+            CreateTransaction(new DateOnly(2026, 1, 10), -30m, utilitiesCategory.Id, utilitiesCategory),
+        };
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        transactionRepo.Setup(r => r.GetByDateRangeAsync(
+                new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 1, 31),
+                null,
+                default))
+            .ReturnsAsync(transactions);
+
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
+
+        // Act
+        await service.GetMonthlyCategoryReportAsync(2026, 1);
+
+        // Assert
+        categoryRepo.Verify(
+            r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task BuildCategorySpendingListAsync_WithMissingCategory_UsesUnknownFallback()
+    {
+        // Arrange
+        var missingCategoryId = Guid.NewGuid();
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(new DateOnly(2026, 1, 5), -42m, missingCategoryId),
+        };
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        transactionRepo.Setup(r => r.GetByDateRangeAsync(
+                new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 1, 31),
+                null,
+                default))
+            .ReturnsAsync(transactions);
+
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
+
+        // Act
+        var result = await service.GetMonthlyCategoryReportAsync(2026, 1);
+
+        // Assert
+        var category = result.Categories.Single();
+        Assert.Equal(missingCategoryId, category.CategoryId);
+        Assert.Equal("Unknown", category.CategoryName);
+    }
+
+    [Fact]
     public async Task GetMonthlyCategoryReportAsync_Calculates_Percentages_Correctly()
     {
         // Arrange
@@ -135,8 +200,8 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 5), -25m, category1.Id),
-            CreateTransaction(new DateOnly(2026, 1, 10), -75m, category2.Id),
+            CreateTransaction(new DateOnly(2026, 1, 5), -25m, category1.Id, category1),
+            CreateTransaction(new DateOnly(2026, 1, 10), -75m, category2.Id, category2),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -211,8 +276,8 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 1), 3000m, incomeCategory.Id),
-            CreateTransaction(new DateOnly(2026, 1, 5), -100m, expenseCategory.Id),
+            CreateTransaction(new DateOnly(2026, 1, 1), 3000m, incomeCategory.Id, incomeCategory),
+            CreateTransaction(new DateOnly(2026, 1, 5), -100m, expenseCategory.Id, expenseCategory),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -250,7 +315,7 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 5), -100m, category.Id),
+            CreateTransaction(new DateOnly(2026, 1, 5), -100m, category.Id, category),
             CreateTransfer(new DateOnly(2026, 1, 10), -500m, transferId),
         };
 
@@ -285,9 +350,9 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 5), -10m, smallCategory.Id),
-            CreateTransaction(new DateOnly(2026, 1, 10), -100m, largeCategory.Id),
-            CreateTransaction(new DateOnly(2026, 1, 15), -50m, mediumCategory.Id),
+            CreateTransaction(new DateOnly(2026, 1, 5), -10m, smallCategory.Id, smallCategory),
+            CreateTransaction(new DateOnly(2026, 1, 10), -100m, largeCategory.Id, largeCategory),
+            CreateTransaction(new DateOnly(2026, 1, 15), -50m, mediumCategory.Id, mediumCategory),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -383,9 +448,9 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 20), -60m, groceries.Id),
-            CreateTransaction(new DateOnly(2026, 2, 1), -40m, groceries.Id),
-            CreateTransaction(new DateOnly(2026, 2, 10), -100m, dining.Id),
+            CreateTransaction(new DateOnly(2026, 1, 20), -60m, groceries.Id, groceries),
+            CreateTransaction(new DateOnly(2026, 2, 1), -40m, groceries.Id, groceries),
+            CreateTransaction(new DateOnly(2026, 2, 10), -100m, dining.Id, dining),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -443,7 +508,7 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 5), -50m, category.Id),
+            CreateTransaction(new DateOnly(2026, 1, 5), -50m, category.Id, category),
             CreateTransfer(new DateOnly(2026, 1, 10), -200m, Guid.NewGuid()),
         };
 
@@ -533,8 +598,8 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(new DateOnly(2026, 1, 5), -100m, groceries.Id),
-            CreateTransaction(new DateOnly(2026, 1, 10), -50m, dining.Id),
+            CreateTransaction(new DateOnly(2026, 1, 5), -100m, groceries.Id, groceries),
+            CreateTransaction(new DateOnly(2026, 1, 10), -50m, dining.Id, dining),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -743,9 +808,9 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(date, 3000m, incomeCategory.Id),
-            CreateTransaction(date, -85m, expenseCategory.Id),
-            CreateTransaction(date, -15m, expenseCategory.Id),
+            CreateTransaction(date, 3000m, incomeCategory.Id, incomeCategory),
+            CreateTransaction(date, -85m, expenseCategory.Id, expenseCategory),
+            CreateTransaction(date, -15m, expenseCategory.Id, expenseCategory),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -766,6 +831,36 @@ public class ReportServiceTests
     }
 
     [Fact]
+    public async Task BuildTopCategoriesAsync_NeverCallsGetByIdAsync()
+    {
+        // Arrange
+        var date = new DateOnly(2026, 2, 5);
+        var groceries = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var dining = BudgetCategory.Create("Dining", CategoryType.Expense);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(date, -50m, groceries.Id, groceries),
+            CreateTransaction(date, -100m, dining.Id, dining),
+        };
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        transactionRepo.Setup(r => r.GetByDateRangeAsync(date, date, null, default))
+            .ReturnsAsync(transactions);
+
+        var service = CreateReportService(transactionRepo, categoryRepo, DefaultCurrencyProvider);
+
+        // Act
+        await service.GetDaySummaryAsync(date);
+
+        // Assert
+        categoryRepo.Verify(
+            r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task GetDaySummaryAsync_Returns_Top_3_Categories()
     {
         // Arrange
@@ -777,10 +872,10 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(date, -50m, cat1.Id),
-            CreateTransaction(date, -100m, cat2.Id),
-            CreateTransaction(date, -25m, cat3.Id),
-            CreateTransaction(date, -10m, cat4.Id),
+            CreateTransaction(date, -50m, cat1.Id, cat1),
+            CreateTransaction(date, -100m, cat2.Id, cat2),
+            CreateTransaction(date, -25m, cat3.Id, cat3),
+            CreateTransaction(date, -10m, cat4.Id, cat4),
         };
 
         var transactionRepo = new Mock<ITransactionRepository>();
@@ -812,7 +907,7 @@ public class ReportServiceTests
 
         var transactions = new List<Transaction>
         {
-            CreateTransaction(date, -50m, category.Id),
+            CreateTransaction(date, -50m, category.Id, category),
             CreateTransfer(date, -500m, Guid.NewGuid()),
         };
 
@@ -878,15 +973,26 @@ public class ReportServiceTests
         Assert.Equal(75m, result.TopCategories[0].Amount.Amount);
     }
 
-    private static Transaction CreateTransaction(DateOnly date, decimal amount, Guid? categoryId)
+    private static Transaction CreateTransaction(
+        DateOnly date,
+        decimal amount,
+        Guid? categoryId,
+        BudgetCategory? category = null)
     {
         var accountId = Guid.NewGuid();
-        return TransactionFactory.Create(
+        var transaction = TransactionFactory.Create(
             accountId,
             MoneyValue.Create("USD", amount),
             date,
             "Test transaction",
             categoryId);
+
+        if (category is not null)
+        {
+            SetCategoryNavigation(transaction, category);
+        }
+
+        return transaction;
     }
 
     private static Transaction CreateTransfer(DateOnly date, decimal amount, Guid transferId)
@@ -899,6 +1005,12 @@ public class ReportServiceTests
             "Transfer",
             transferId,
             TransferDirection.Source);
+    }
+
+    private static void SetCategoryNavigation(Transaction transaction, BudgetCategory category)
+    {
+        var prop = typeof(Transaction).GetProperty("Category", BindingFlags.Public | BindingFlags.Instance);
+        prop?.SetValue(transaction, category);
     }
 
     private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency)

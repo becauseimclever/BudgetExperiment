@@ -12,6 +12,8 @@ namespace BudgetExperiment.Application.Reports;
 /// </summary>
 public sealed class ReportService : IReportService
 {
+    private const string UncategorizedName = "Uncategorized";
+    private const string UnknownCategoryName = "Unknown";
     private readonly ITransactionQueryRepository _transactionRepository;
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly ICurrencyProvider _currencyProvider;
@@ -125,7 +127,8 @@ public sealed class ReportService : IReportService
         var (totalSpending, totalIncome) = CalculateSpendingAndIncome(nonTransferTransactions);
 
         var expenseTransactions = nonTransferTransactions.Where(t => t.Amount.Amount < 0).ToList();
-        var topCategories = await this.BuildTopCategoriesAsync(expenseTransactions, currency, cancellationToken);
+        var categoryLookup = this.BuildCategoryLookup(nonTransferTransactions);
+        var topCategories = BuildTopCategories(expenseTransactions, categoryLookup, currency);
 
         return new DaySummaryDto
         {
@@ -197,10 +200,10 @@ public sealed class ReportService : IReportService
         return summary;
     }
 
-    private async Task<List<DayTopCategoryDto>> BuildTopCategoriesAsync(
+    private static List<DayTopCategoryDto> BuildTopCategories(
         List<Transaction> expenseTransactions,
-        string currency,
-        CancellationToken cancellationToken)
+        IReadOnlyDictionary<Guid, BudgetCategory> categoryLookup,
+        string currency)
     {
         var topCategories = new List<DayTopCategoryDto>();
         var categoryGroups = expenseTransactions
@@ -210,7 +213,7 @@ public sealed class ReportService : IReportService
 
         foreach (var group in categoryGroups)
         {
-            var categoryName = await this.ResolveCategoryNameAsync(group.Key, cancellationToken);
+            var categoryName = ResolveCategoryName(group.Key, categoryLookup);
             var amount = group.Sum(t => Math.Abs(t.Amount.Amount));
 
             topCategories.Add(new DayTopCategoryDto
@@ -223,17 +226,81 @@ public sealed class ReportService : IReportService
         return topCategories;
     }
 
-    private async Task<string> ResolveCategoryNameAsync(
+    private static List<CategorySpendingDto> BuildCategorySpendingList(
+        List<Transaction> expenseTransactions,
+        decimal totalSpending,
+        string currency,
+        IReadOnlyDictionary<Guid, BudgetCategory> categoryLookup)
+    {
+        var categoryGroups = expenseTransactions
+            .GroupBy(t => t.CategoryId)
+            .ToList();
+
+        var categorySpending = new List<CategorySpendingDto>();
+
+        foreach (var group in categoryGroups)
+        {
+            var dto = BuildCategorySpendingDto(
+                group.Key, group.ToList(), totalSpending, currency, categoryLookup);
+            categorySpending.Add(dto);
+        }
+
+        return categorySpending
+            .OrderByDescending(c => c.Amount.Amount)
+            .ToList();
+    }
+
+    private static CategorySpendingDto BuildCategorySpendingDto(
         Guid? categoryId,
-        CancellationToken cancellationToken)
+        List<Transaction> transactions,
+        decimal totalSpending,
+        string currency,
+        IReadOnlyDictionary<Guid, BudgetCategory> categoryLookup)
+    {
+        var amount = transactions.Sum(t => Math.Abs(t.Amount.Amount));
+        var percentage = totalSpending > 0
+            ? Math.Round(amount / totalSpending * 100, 2)
+            : 0m;
+
+        var (categoryName, categoryColor) = ResolveCategoryDetails(categoryId, categoryLookup);
+
+        return new CategorySpendingDto
+        {
+            CategoryId = categoryId,
+            CategoryName = categoryName,
+            CategoryColor = categoryColor,
+            Amount = new MoneyDto { Currency = currency, Amount = amount },
+            Percentage = percentage,
+            TransactionCount = transactions.Count,
+        };
+    }
+
+    private static (string Name, string? Color) ResolveCategoryDetails(
+        Guid? categoryId,
+        IReadOnlyDictionary<Guid, BudgetCategory> categoryLookup)
     {
         if (!categoryId.HasValue)
         {
-            return "Uncategorized";
+            return (UncategorizedName, null);
         }
 
-        var category = await _categoryRepository.GetByIdAsync(categoryId.Value, cancellationToken);
-        return category?.Name ?? "Unknown";
+        return categoryLookup.TryGetValue(categoryId.Value, out var category)
+            ? (category.Name, category.Color)
+            : (UnknownCategoryName, null);
+    }
+
+    private static string ResolveCategoryName(
+        Guid? categoryId,
+        IReadOnlyDictionary<Guid, BudgetCategory> categoryLookup)
+    {
+        if (!categoryId.HasValue)
+        {
+            return UncategorizedName;
+        }
+
+        return categoryLookup.TryGetValue(categoryId.Value, out var category)
+            ? category.Name
+            : UnknownCategoryName;
     }
 
     private async Task<(decimal TotalSpending, decimal TotalIncome, List<CategorySpendingDto> Categories, KakeiboGroupedSummaryDto? KakeiboGroupedSummary)> BuildCategoryReportAsync(
@@ -254,8 +321,9 @@ public sealed class ReportService : IReportService
             .Where(t => t.Amount.Amount < 0)
             .ToList();
 
-        var categorySpending = await this.BuildCategorySpendingListAsync(
-            expenseTransactions, totalSpending, currency, cancellationToken);
+        var categoryLookup = this.BuildCategoryLookup(nonTransferTransactions);
+        var categorySpending = BuildCategorySpendingList(
+            expenseTransactions, totalSpending, currency, categoryLookup);
 
         var kakeiboGroupedSummary = groupByKakeibo
             ? BuildKakeiboGroupedSummary(expenseTransactions)
@@ -264,68 +332,17 @@ public sealed class ReportService : IReportService
         return (totalSpending, totalIncome, categorySpending, kakeiboGroupedSummary);
     }
 
-    private async Task<List<CategorySpendingDto>> BuildCategorySpendingListAsync(
-        List<Transaction> expenseTransactions,
-        decimal totalSpending,
-        string currency,
-        CancellationToken cancellationToken)
+    private Dictionary<Guid, BudgetCategory> BuildCategoryLookup(IEnumerable<Transaction> transactions)
     {
-        var categoryGroups = expenseTransactions
-            .GroupBy(t => t.CategoryId)
-            .ToList();
-
-        var categorySpending = new List<CategorySpendingDto>();
-
-        foreach (var group in categoryGroups)
+        if (_categoryRepository is null)
         {
-            var dto = await this.BuildCategorySpendingDtoAsync(
-                group.Key, group.ToList(), totalSpending, currency, cancellationToken);
-            categorySpending.Add(dto);
+            throw new InvalidOperationException("Category repository is required.");
         }
 
-        return categorySpending
-            .OrderByDescending(c => c.Amount.Amount)
-            .ToList();
-    }
-
-    private async Task<CategorySpendingDto> BuildCategorySpendingDtoAsync(
-        Guid? categoryId,
-        List<Transaction> transactions,
-        decimal totalSpending,
-        string currency,
-        CancellationToken cancellationToken)
-    {
-        var amount = transactions.Sum(t => Math.Abs(t.Amount.Amount));
-        var percentage = totalSpending > 0
-            ? Math.Round(amount / totalSpending * 100, 2)
-            : 0m;
-
-        var (categoryName, categoryColor) = await this.ResolveCategoryDetailsAsync(
-            categoryId, cancellationToken);
-
-        return new CategorySpendingDto
-        {
-            CategoryId = categoryId,
-            CategoryName = categoryName,
-            CategoryColor = categoryColor,
-            Amount = new MoneyDto { Currency = currency, Amount = amount },
-            Percentage = percentage,
-            TransactionCount = transactions.Count,
-        };
-    }
-
-    private async Task<(string Name, string? Color)> ResolveCategoryDetailsAsync(
-        Guid? categoryId,
-        CancellationToken cancellationToken)
-    {
-        if (!categoryId.HasValue)
-        {
-            return ("Uncategorized", null);
-        }
-
-        var category = await _categoryRepository.GetByIdAsync(categoryId.Value, cancellationToken);
-        return category != null
-            ? (category.Name, category.Color)
-            : ("Unknown", null);
+        return transactions
+            .Where(t => t.Category is not null)
+            .Select(t => t.Category!)
+            .DistinctBy(c => c.Id)
+            .ToDictionary(c => c.Id);
     }
 }
