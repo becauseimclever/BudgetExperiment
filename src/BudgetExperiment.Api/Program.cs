@@ -8,7 +8,6 @@ using Asp.Versioning;
 
 using BudgetExperiment.Api;
 using BudgetExperiment.Api.Authentication;
-using BudgetExperiment.Api.Endpoints;
 using BudgetExperiment.Api.HealthChecks;
 using BudgetExperiment.Api.Observability;
 using BudgetExperiment.Application;
@@ -228,7 +227,6 @@ public partial class Program
         app.UseMiddleware<BudgetExperiment.Api.Middleware.ExceptionHandlingMiddleware>();
 
         app.MapControllers();
-        app.MapCategorySuggestionEndpoints();
         app.MapHealthChecks("/health");
 
         // Serve index.html with embedded client config to eliminate startup fetch round-trip.

@@ -90,3 +90,30 @@ Read `.squad/decisions.md` at spawn time for the full current decision ledger.
 Performance findings P-001 and P-002 — should team prioritize immediate fixes or batch all High findings (6 total) into a performance sprint?
 
 **Feature specs 148–153 created by Alfred** to address all Critical+High principle findings (F-001 through F-007). Merged to decisions.md on 2026-04-09.
+
+### 2026-04-10 — Principle Re-Audit (Post F-151 through F-153)
+
+**Report:** `docs/audit/2026-04-10-principle-reaudit-post-151-153.md`
+**Findings:** 3 new (0 Critical, 0 High, 1 Medium, 2 Low)
+**Prior findings status:** 4 Resolved (F-001, F-002, F-003, F-004, F-007), 2 Partially Resolved (F-005, F-006)
+
+**Key observations:**
+- **F-001 fully resolved:** All 7 bare `.ToString("C")` calls in Statement Reconciliation replaced with `.FormatCurrency(Culture.CurrentCulture)`
+- **DIP violations resolved:** CalendarController and AccountsController now use interfaces (`ICalendarService`, `IAccountService`)
+- **ISP violation resolved:** ITransactionRepository split into `ITransactionQueryRepository`, `ITransactionImportRepository`, `ITransactionAnalyticsRepository`
+- **Controller splits successful:** TransactionsController (401 lines) → TransactionQueryController (198) + TransactionBatchController (235)
+- **Minimal API pilot introduced:** CategorySuggestionsController replaced with CategorySuggestionEndpoints (Minimal API pattern)
+- **ChatActionParser refactored:** 482 → 174 lines via extraction of per-action parsers
+- **ImportRowProcessor reduced:** 508 → 323 lines via field extractor/parser extraction
+
+**Remaining god class debt:**
+- 17 Application services still exceed 300 lines (ChatService 487, RuleSuggestionResponseParser 472 at top)
+- 9 Domain entities exceed 300 lines (Transaction 532, RuleSuggestion 486 at top)
+- 4 controllers at 300-line boundary (302-323 lines)
+
+**New patterns introduced:**
+- `TransactionFactory` pattern for entity factory extraction
+- Minimal API endpoint groups as controller alternative
+- Per-action-type parser extraction pattern (ChatActionParser → TransactionActionParser, etc.)
+
+**Architectural question for team:** Should Minimal API endpoints use inline mappers or Application-layer mappers?
