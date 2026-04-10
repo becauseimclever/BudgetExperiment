@@ -59,14 +59,14 @@ public sealed class TransferDeletionAccuracyTests
 
         // Create transfer: -$100 from A, +$100 to B
         var transferId = Guid.NewGuid();
-        var sourceTx = Transaction.CreateTransfer(
+        var sourceTx = TransactionFactory.CreateTransfer(
             accountA.Id,
             MoneyValue.Create("USD", -100m),
             new DateOnly(2061, 6, 1),
             "Transfer to Del-AccB: Accuracy test",
             transferId,
             TransferDirection.Source);
-        var destTx = Transaction.CreateTransfer(
+        var destTx = TransactionFactory.CreateTransfer(
             accountB.Id,
             MoneyValue.Create("USD", 100m),
             new DateOnly(2061, 6, 1),
@@ -121,7 +121,7 @@ public sealed class TransferDeletionAccuracyTests
         await context.SaveChangesAsync();
 
         var transferId = Guid.NewGuid();
-        var orphanedLeg = Transaction.CreateTransfer(
+        var orphanedLeg = TransactionFactory.CreateTransfer(
             accountA.Id,
             MoneyValue.Create("USD", -50m),
             new DateOnly(2061, 7, 1),
@@ -182,14 +182,14 @@ public sealed class TransferDeletionAccuracyTests
 
         // Create a transfer of $300 from A to B
         var transferId = Guid.NewGuid();
-        var sourceTx = Transaction.CreateTransfer(
+        var sourceTx = TransactionFactory.CreateTransfer(
             accountA.Id,
             MoneyValue.Create("USD", -300m),
             new DateOnly(2062, 3, 1),
             "Transfer to NetZero-AccB: Net-zero test",
             transferId,
             TransferDirection.Source);
-        var destTx = Transaction.CreateTransfer(
+        var destTx = TransactionFactory.CreateTransfer(
             accountB.Id,
             MoneyValue.Create("USD", 300m),
             new DateOnly(2062, 3, 1),

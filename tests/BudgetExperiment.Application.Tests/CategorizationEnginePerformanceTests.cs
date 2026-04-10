@@ -110,7 +110,7 @@ public class CategorizationEnginePerformanceTests
     private static List<Transaction> CreateTransactions(int count, Guid accountId)
     {
         return Enumerable.Range(0, count)
-            .Select(i => Transaction.Create(
+            .Select(i => TransactionFactory.Create(
                 accountId,
                 MoneyValue.Create("USD", -(i + 1)),
                 new DateOnly(2026, 1, 1).AddDays(i % 365),

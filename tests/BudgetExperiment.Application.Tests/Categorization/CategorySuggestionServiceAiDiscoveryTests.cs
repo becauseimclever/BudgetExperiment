@@ -391,7 +391,7 @@ public class CategorySuggestionServiceAiDiscoveryTests
 
     private static Transaction CreateTransaction(Account account, string description, decimal amount)
     {
-        return Transaction.Create(
+        return TransactionFactory.Create(
             account.Id,
             MoneyValue.Create("USD", amount),
             DateOnly.FromDateTime(DateTime.UtcNow),

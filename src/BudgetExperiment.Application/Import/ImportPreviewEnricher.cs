@@ -147,7 +147,7 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
 
     private static Transaction CreatePreviewTransaction(string description, decimal amount, DateOnly date, string currency)
     {
-        return Transaction.Create(
+        return TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create(currency, amount),
             date,

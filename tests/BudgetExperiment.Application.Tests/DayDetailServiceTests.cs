@@ -649,7 +649,7 @@ public class DayDetailServiceTests
         TransferDirection direction)
     {
         var money = MoneyValue.Create("USD", amount);
-        return Transaction.CreateTransfer(accountId, money, date, description, transferId, direction);
+        return TransactionFactory.CreateTransfer(accountId, money, date, description, transferId, direction);
     }
 
     private static Transaction CreateTestRealizedRecurringTransaction(
@@ -660,7 +660,7 @@ public class DayDetailServiceTests
         Guid recurringTransactionId)
     {
         var money = MoneyValue.Create("USD", amount);
-        return Transaction.CreateFromRecurring(accountId, money, date, description, recurringTransactionId, date);
+        return TransactionFactory.CreateFromRecurring(accountId, money, date, description, recurringTransactionId, date);
     }
 
     private static Transaction CreateTestRealizedRecurringTransfer(
@@ -673,7 +673,7 @@ public class DayDetailServiceTests
         Guid recurringTransferId)
     {
         var money = MoneyValue.Create("USD", amount);
-        return Transaction.CreateFromRecurringTransfer(
+        return TransactionFactory.CreateFromRecurringTransfer(
             accountId,
             money,
             date,

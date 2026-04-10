@@ -69,7 +69,7 @@ public sealed class RecurringTransferRealizationService : IRecurringTransferReal
         var transferId = Guid.NewGuid();
 
         // Create source transaction (negative - money leaving)
-        var sourceTransaction = Transaction.CreateFromRecurringTransfer(
+        var sourceTransaction = TransactionFactory.CreateFromRecurringTransfer(
             recurring.SourceAccountId,
             MoneyValue.Create(actualAmount.Currency, -actualAmount.Amount),
             actualDate,
@@ -81,7 +81,7 @@ public sealed class RecurringTransferRealizationService : IRecurringTransferReal
             categoryId: null);
 
         // Create destination transaction (positive - money entering)
-        var destTransaction = Transaction.CreateFromRecurringTransfer(
+        var destTransaction = TransactionFactory.CreateFromRecurringTransfer(
             recurring.DestinationAccountId,
             actualAmount,
             actualDate,

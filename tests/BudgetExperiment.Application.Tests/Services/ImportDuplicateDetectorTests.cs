@@ -287,7 +287,7 @@ public class ImportDuplicateDetectorTests
 
     private static Transaction CreateTransaction(DateOnly date, decimal amount, string description)
     {
-        return Transaction.Create(
+        return TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", amount),
             date,

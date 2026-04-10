@@ -288,7 +288,7 @@ public sealed class Account
             throw new DomainException("Description is required.");
         }
 
-        var transaction = Transaction.Create(this.Id, amount, date, description, categoryId);
+        var transaction = TransactionFactory.Create(this.Id, amount, date, description, categoryId);
         transaction.SetScope(this.Scope, this.OwnerUserId, this.CreatedByUserId);
         _transactions.Add(transaction);
         this.UpdatedAtUtc = DateTime.UtcNow;

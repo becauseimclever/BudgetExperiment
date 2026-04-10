@@ -193,7 +193,7 @@ public sealed class KakeiboReportServiceAccuracyTests
         account.AddTransaction(MoneyValue.Create("USD", 3000m), new DateOnly(2043, 4, 1), "Salary", incomeCategory.Id);
 
         // One transfer transaction (no category → Category?.Type != Expense → excluded)
-        var transferTx = Transaction.CreateTransfer(
+        var transferTx = TransactionFactory.CreateTransfer(
             account.Id,
             MoneyValue.Create("USD", -500m),
             new DateOnly(2043, 4, 15),

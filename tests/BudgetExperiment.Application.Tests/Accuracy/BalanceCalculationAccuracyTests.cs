@@ -70,7 +70,7 @@ public class BalanceCalculationAccuracyTests
             "Checking", AccountType.Checking, MoneyValue.Create("USD", 1000m), Jan1);
         SetupAccounts(account);
 
-        var txOnDate = Transaction.Create(
+        var txOnDate = TransactionFactory.Create(
             account.Id, MoneyValue.Create("USD", -200m), Jan31, "Rent");
         SetupTransactions(txOnDate);
 
@@ -102,7 +102,7 @@ public class BalanceCalculationAccuracyTests
         SetupAccounts(account);
 
         SetupTransactions(
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -50m), Jan15, "Groceries"));
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -50m), Jan15, "Groceries"));
 
         var result = await CreateService().GetBalanceBeforeDateAsync(Jan31);
 
@@ -174,8 +174,8 @@ public class BalanceCalculationAccuracyTests
             "Savings", AccountType.Savings, MoneyValue.Create("USD", 3000m), Jan1);
         SetupAccounts(checking, savings);
 
-        var checkingTx = Transaction.Create(checking.Id, MoneyValue.Create("USD", -200m), Jan15, "Bills");
-        var savingsTx = Transaction.Create(savings.Id, MoneyValue.Create("USD", 500m), Jan15, "Transfer in");
+        var checkingTx = TransactionFactory.Create(checking.Id, MoneyValue.Create("USD", -200m), Jan15, "Bills");
+        var savingsTx = TransactionFactory.Create(savings.Id, MoneyValue.Create("USD", 500m), Jan15, "Transfer in");
 
         // Set up per-account responses so the mock mirrors real repository isolation.
         _transactionRepo
@@ -223,9 +223,9 @@ public class BalanceCalculationAccuracyTests
             .ReturnsAsync(account);
 
         SetupTransactions(
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -450m), Jan15, "Rent"),
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -89.99m), Jan15, "Utilities"),
-            Transaction.Create(account.Id, MoneyValue.Create("USD", 3000m), Jan15, "Paycheck"));
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -450m), Jan15, "Rent"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -89.99m), Jan15, "Utilities"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", 3000m), Jan15, "Paycheck"));
 
         var result = await CreateService().GetBalanceAsOfDateAsync(Jan31, account.Id);
 
@@ -241,7 +241,7 @@ public class BalanceCalculationAccuracyTests
         SetupAccounts(account);
 
         SetupTransactions(
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -100m), Jan15, "Prior"));
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -100m), Jan15, "Prior"));
 
         var result = await CreateService().GetOpeningBalanceForDateAsync(Jan31);
 
@@ -257,7 +257,7 @@ public class BalanceCalculationAccuracyTests
         SetupAccounts(account);
 
         SetupTransactions(Enumerable.Range(0, 100)
-            .Select(i => Transaction.Create(
+            .Select(i => TransactionFactory.Create(
                 account.Id, MoneyValue.Create("USD", 0.01m), Jan1.AddDays(i), $"Tx {i}"))
             .ToArray());
 

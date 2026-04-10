@@ -126,7 +126,7 @@ public sealed class AutoRealizeService : IAutoRealizeService
                 var description = exception?.ModifiedDescription ?? recurring.Description;
                 var actualDate = exception?.ModifiedDate ?? date;
 
-                var transaction = Transaction.CreateFromRecurring(
+                var transaction = TransactionFactory.CreateFromRecurring(
                     recurring.AccountId,
                     amount,
                     actualDate,
@@ -188,7 +188,7 @@ public sealed class AutoRealizeService : IAutoRealizeService
                 var transferId = Guid.NewGuid();
 
                 // Source transaction (negative)
-                var sourceTransaction = Transaction.CreateFromRecurringTransfer(
+                var sourceTransaction = TransactionFactory.CreateFromRecurringTransfer(
                     transfer.SourceAccountId,
                     MoneyValue.Create(amount.Currency, -amount.Amount),
                     actualDate,
@@ -201,7 +201,7 @@ public sealed class AutoRealizeService : IAutoRealizeService
                 realizedCount++;
 
                 // Destination transaction (positive)
-                var destTransaction = Transaction.CreateFromRecurringTransfer(
+                var destTransaction = TransactionFactory.CreateFromRecurringTransfer(
                     transfer.DestinationAccountId,
                     amount,
                     actualDate,

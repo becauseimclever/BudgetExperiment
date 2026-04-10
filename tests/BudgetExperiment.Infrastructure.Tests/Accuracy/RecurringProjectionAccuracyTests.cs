@@ -84,7 +84,7 @@ public sealed class RecurringProjectionAccuracyTests
         for (var i = 0; i < realizedCount; i++)
         {
             var instanceDate = AllMondays[i];
-            var tx = Transaction.CreateFromRecurring(
+            var tx = TransactionFactory.CreateFromRecurring(
                 account.Id,
                 MoneyValue.Create("USD", -75m),
                 instanceDate,
@@ -200,7 +200,7 @@ public sealed class RecurringProjectionAccuracyTests
         // Realize all 12 occurrences
         foreach (var instanceDate in AllMondays)
         {
-            var tx = Transaction.CreateFromRecurring(
+            var tx = TransactionFactory.CreateFromRecurring(
                 account.Id,
                 MoneyValue.Create("USD", -75m),
                 instanceDate,

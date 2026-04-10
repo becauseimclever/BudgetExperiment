@@ -153,7 +153,7 @@ public sealed class TransferDeletionServiceTests
     }
 
     private static Transaction CreateSource(Guid transferId) =>
-        Transaction.CreateTransfer(
+        TransactionFactory.CreateTransfer(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -100m),
             new DateOnly(2060, 3, 1),
@@ -162,7 +162,7 @@ public sealed class TransferDeletionServiceTests
             TransferDirection.Source);
 
     private static Transaction CreateDest(Guid transferId) =>
-        Transaction.CreateTransfer(
+        TransactionFactory.CreateTransfer(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2060, 3, 1),

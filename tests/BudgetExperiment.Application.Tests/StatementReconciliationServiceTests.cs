@@ -189,7 +189,7 @@ public class StatementReconciliationServiceTests
 
     private static Transaction CreateTransaction(Guid id, Guid accountId)
     {
-        var tx = Transaction.Create(
+        var tx = TransactionFactory.Create(
             accountId,
             MoneyValue.Create("USD", -50m),
             new DateOnly(2026, 1, 10),

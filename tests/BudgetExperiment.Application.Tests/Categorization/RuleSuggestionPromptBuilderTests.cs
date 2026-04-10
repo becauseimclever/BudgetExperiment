@@ -338,7 +338,7 @@ public class RuleSuggestionPromptBuilderTests
 
     private static Transaction CreateTransaction(string description, decimal amount)
     {
-        return Transaction.Create(
+        return TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", amount),
             DateOnly.FromDateTime(DateTime.UtcNow),

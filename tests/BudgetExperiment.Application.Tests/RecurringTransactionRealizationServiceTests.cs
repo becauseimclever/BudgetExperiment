@@ -100,7 +100,7 @@ public class RecurringTransactionRealizationServiceTests
             new DateOnly(2026, 1, 15));
 
         var instanceDate = new DateOnly(2026, 1, 15);
-        var existingTransaction = Transaction.CreateFromRecurring(
+        var existingTransaction = TransactionFactory.CreateFromRecurring(
             _account.Id,
             MoneyValue.Create("USD", -15.99m),
             instanceDate,

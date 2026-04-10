@@ -239,154 +239,6 @@ public sealed class Transaction
     public KakeiboCategory? KakeiboOverride { get; private set; }
 
     /// <summary>
-    /// Creates a new transaction.
-    /// </summary>
-    /// <param name="accountId">The account identifier.</param>
-    /// <param name="amount">The monetary amount.</param>
-    /// <param name="date">The transaction date.</param>
-    /// <param name="description">The transaction description.</param>
-    /// <param name="categoryId">Optional category identifier.</param>
-    /// <returns>A new <see cref="Transaction"/> instance.</returns>
-    /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static Transaction Create(
-        Guid accountId,
-        MoneyValue amount,
-        DateOnly date,
-        string description,
-        Guid? categoryId = null)
-    {
-        if (accountId == Guid.Empty)
-        {
-            throw new DomainException("Account ID is required.");
-        }
-
-        if (amount is null)
-        {
-            throw new DomainException("Amount is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new DomainException("Description is required.");
-        }
-
-        var now = DateTime.UtcNow;
-        return new Transaction
-        {
-            Id = Guid.NewGuid(),
-            AccountId = accountId,
-            Amount = amount,
-            Date = date,
-            Description = description.Trim(),
-            CategoryId = categoryId,
-            CreatedAtUtc = now,
-            UpdatedAtUtc = now,
-            RecurringTransactionId = null,
-            RecurringInstanceDate = null,
-        };
-    }
-
-    /// <summary>
-    /// Creates a new transaction generated from a recurring transaction.
-    /// </summary>
-    /// <param name="accountId">The account identifier.</param>
-    /// <param name="amount">The monetary amount.</param>
-    /// <param name="date">The transaction date.</param>
-    /// <param name="description">The transaction description.</param>
-    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
-    /// <param name="recurringInstanceDate">The scheduled date this was generated for.</param>
-    /// <param name="categoryId">Optional category identifier.</param>
-    /// <returns>A new <see cref="Transaction"/> instance.</returns>
-    /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static Transaction CreateFromRecurring(
-        Guid accountId,
-        MoneyValue amount,
-        DateOnly date,
-        string description,
-        Guid recurringTransactionId,
-        DateOnly recurringInstanceDate,
-        Guid? categoryId = null)
-    {
-        if (recurringTransactionId == Guid.Empty)
-        {
-            throw new DomainException("Recurring transaction ID is required.");
-        }
-
-        var transaction = Create(accountId, amount, date, description, categoryId);
-        transaction.RecurringTransactionId = recurringTransactionId;
-        transaction.RecurringInstanceDate = recurringInstanceDate;
-        return transaction;
-    }
-
-    /// <summary>
-    /// Creates a new transaction as part of an account transfer.
-    /// </summary>
-    /// <param name="accountId">The account identifier.</param>
-    /// <param name="amount">The monetary amount (negative for source, positive for destination).</param>
-    /// <param name="date">The transaction date.</param>
-    /// <param name="description">The transaction description.</param>
-    /// <param name="transferId">The identifier linking paired transfer transactions.</param>
-    /// <param name="direction">The direction of this transaction in the transfer.</param>
-    /// <param name="categoryId">Optional category identifier.</param>
-    /// <returns>A new <see cref="Transaction"/> instance linked to a transfer.</returns>
-    /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static Transaction CreateTransfer(
-        Guid accountId,
-        MoneyValue amount,
-        DateOnly date,
-        string description,
-        Guid transferId,
-        TransferDirection direction,
-        Guid? categoryId = null)
-    {
-        if (transferId == Guid.Empty)
-        {
-            throw new DomainException("Transfer ID is required.");
-        }
-
-        var transaction = Create(accountId, amount, date, description, categoryId);
-        transaction.TransferId = transferId;
-        transaction.TransferDirection = direction;
-        return transaction;
-    }
-
-    /// <summary>
-    /// Creates a new transaction as part of a recurring transfer.
-    /// </summary>
-    /// <param name="accountId">The account identifier.</param>
-    /// <param name="amount">The monetary amount (negative for source, positive for destination).</param>
-    /// <param name="date">The transaction date.</param>
-    /// <param name="description">The transaction description.</param>
-    /// <param name="transferId">The identifier linking paired transfer transactions.</param>
-    /// <param name="direction">The direction of this transaction in the transfer.</param>
-    /// <param name="recurringTransferId">The recurring transfer identifier.</param>
-    /// <param name="recurringTransferInstanceDate">The scheduled date this was generated for.</param>
-    /// <param name="categoryId">Optional category identifier.</param>
-    /// <returns>A new <see cref="Transaction"/> instance linked to a recurring transfer.</returns>
-    /// <exception cref="DomainException">Thrown when validation fails.</exception>
-    public static Transaction CreateFromRecurringTransfer(
-        Guid accountId,
-        MoneyValue amount,
-        DateOnly date,
-        string description,
-        Guid transferId,
-        TransferDirection direction,
-        Guid recurringTransferId,
-        DateOnly recurringTransferInstanceDate,
-        Guid? categoryId = null)
-    {
-        if (recurringTransferId == Guid.Empty)
-        {
-            throw new DomainException("Recurring transfer ID is required.");
-        }
-
-        var transaction = CreateTransfer(accountId, amount, date, description, transferId, direction, categoryId);
-        transaction.RecurringTransferId = recurringTransferId;
-        transaction.RecurringTransferInstanceDate = recurringTransferInstanceDate;
-        return transaction;
-    }
-
-    /// <summary>
     /// Updates the description.
     /// </summary>
     /// <param name="description">New description.</param>
@@ -600,6 +452,39 @@ public sealed class Transaction
     }
 
     /// <summary>
+    /// Creates a raw transaction with core fields. For use by <see cref="TransactionFactory"/> only.
+    /// </summary>
+    /// <param name="id">The transaction identifier.</param>
+    /// <param name="accountId">The account identifier.</param>
+    /// <param name="amount">The monetary amount.</param>
+    /// <param name="date">The transaction date.</param>
+    /// <param name="description">The trimmed description.</param>
+    /// <param name="categoryId">Optional category identifier.</param>
+    /// <param name="now">The UTC timestamp for both created/updated fields.</param>
+    /// <returns>A new <see cref="Transaction"/> instance with core fields set.</returns>
+    internal static Transaction CreateRaw(
+        Guid id,
+        Guid accountId,
+        MoneyValue amount,
+        DateOnly date,
+        string description,
+        Guid? categoryId,
+        DateTime now)
+    {
+        return new Transaction
+        {
+            Id = id,
+            AccountId = accountId,
+            Amount = amount,
+            Date = date,
+            Description = description,
+            CategoryId = categoryId,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
+        };
+    }
+
+    /// <summary>
     /// Sets the scope from the parent account.
     /// </summary>
     /// <param name="scope">The budget scope.</param>
@@ -610,5 +495,38 @@ public sealed class Transaction
         this.Scope = scope;
         this.OwnerUserId = ownerUserId;
         this.CreatedByUserId = createdByUserId;
+    }
+
+    /// <summary>
+    /// Links this transaction to a recurring transaction at creation time. For use by <see cref="TransactionFactory"/> only.
+    /// </summary>
+    /// <param name="recurringTransactionId">The recurring transaction identifier.</param>
+    /// <param name="instanceDate">The scheduled instance date.</param>
+    internal void SetRecurringLink(Guid recurringTransactionId, DateOnly instanceDate)
+    {
+        this.RecurringTransactionId = recurringTransactionId;
+        this.RecurringInstanceDate = instanceDate;
+    }
+
+    /// <summary>
+    /// Links this transaction to a transfer at creation time. For use by <see cref="TransactionFactory"/> only.
+    /// </summary>
+    /// <param name="transferId">The transfer identifier.</param>
+    /// <param name="direction">The transfer direction.</param>
+    internal void SetTransferLink(Guid transferId, TransferDirection direction)
+    {
+        this.TransferId = transferId;
+        this.TransferDirection = direction;
+    }
+
+    /// <summary>
+    /// Links this transaction to a recurring transfer at creation time. For use by <see cref="TransactionFactory"/> only.
+    /// </summary>
+    /// <param name="recurringTransferId">The recurring transfer identifier.</param>
+    /// <param name="instanceDate">The scheduled instance date.</param>
+    internal void SetRecurringTransferLink(Guid recurringTransferId, DateOnly instanceDate)
+    {
+        this.RecurringTransferId = recurringTransferId;
+        this.RecurringTransferInstanceDate = instanceDate;
     }
 }

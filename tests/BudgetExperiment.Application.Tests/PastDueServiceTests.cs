@@ -170,7 +170,7 @@ public sealed class PastDueServiceTests
             new DateOnly(2026, 1, 5),
             null);
 
-        var realizedTransaction = Transaction.CreateFromRecurring(
+        var realizedTransaction = TransactionFactory.CreateFromRecurring(
             accountId,
             MoneyValue.Create("USD", -15.99m),
             new DateOnly(2026, 1, 5),

@@ -235,7 +235,7 @@ public class LocationReportBuilderTests
         DateOnly date, decimal amount, string city, string state, string country)
     {
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             accountId,
             MoneyValue.Create("USD", amount),
             date,
@@ -249,7 +249,7 @@ public class LocationReportBuilderTests
         DateOnly date, decimal amount, Guid transferId, string city, string state, string country)
     {
         var accountId = Guid.NewGuid();
-        var transfer = Transaction.CreateTransfer(
+        var transfer = TransactionFactory.CreateTransfer(
             accountId,
             MoneyValue.Create("USD", amount),
             date,

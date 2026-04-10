@@ -501,6 +501,13 @@ Commits: 4052302 (feat: atomic transfer deletion)
 
 ## Learnings
 
+### 2026-07-xx — KakeiboSetupBanner Modal Fix
+
+- KakeiboSetupBanner had no CSS (class kakeibo-setup-banner was never defined). Fix: replace inline <div> with the reusable <Modal> component.
+- Modal receives IsVisible, Title, Size, CloseOnOverlayClick, ShowCloseButton, OnClose + <ChildContent> / <FooterContent> render fragments.
+- When the API .exe is locked by a running process, build the Client project in isolation (dotnet build src/BudgetExperiment.Client/...) to verify Razor compilation cleanly.
+
+
 ### Feature 147: Recurring Projection / Realization Accuracy (2026-04-09)
 
 - **Interface location**: IRecurringInstanceProjector lives in **Domain** (src/BudgetExperiment.Domain/Services/), not Application. Always check Domain/Services before assuming interfaces are in Application.
@@ -754,3 +761,4 @@ Same concrete implementation serves all four interfaces.
 - **Fix pattern**: When a singleton service must make HTTP calls, inject `IHttpClientFactory` (registered as singleton by `AddHttpClient`) instead of `HttpClient` (scoped). Call `_httpClientFactory.CreateClient("BudgetApi")` per-request inside the async method, not once in the constructor.
 - **Why not change to Scoped**: `IFeatureFlagClientService` is intentionally Singleton because its `_flags` dictionary is pre-loaded at startup (`host.Services.GetRequiredService<IFeatureFlagClientService>()`) and must persist for the application lifetime. Changing to Scoped would result in a new, empty instance per component scope, losing the pre-loaded flags.
 - **Duplicate test files**: Two broken test files (`Accounts\AccountsControllerTests.cs`, `Calendar\CalendarControllerTests.cs`) were added using a non-existent `OverrideServices` pattern. The correct approach (already present in root-level test files) uses `_factory.WithWebHostBuilder(...)`. The broken files were deleted. When Barbara writes new API controller tests, the `WithWebHostBuilder(builder => builder.ConfigureServices(...))` pattern is the established approach for injecting mocks.
+

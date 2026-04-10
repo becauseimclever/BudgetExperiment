@@ -881,7 +881,7 @@ public class ReportServiceTests
     private static Transaction CreateTransaction(DateOnly date, decimal amount, Guid? categoryId)
     {
         var accountId = Guid.NewGuid();
-        return Transaction.Create(
+        return TransactionFactory.Create(
             accountId,
             MoneyValue.Create("USD", amount),
             date,
@@ -892,7 +892,7 @@ public class ReportServiceTests
     private static Transaction CreateTransfer(DateOnly date, decimal amount, Guid transferId)
     {
         var accountId = Guid.NewGuid();
-        return Transaction.CreateTransfer(
+        return TransactionFactory.CreateTransfer(
             accountId,
             MoneyValue.Create("USD", amount),
             date,

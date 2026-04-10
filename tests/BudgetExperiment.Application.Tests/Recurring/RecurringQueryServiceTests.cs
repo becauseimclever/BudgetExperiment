@@ -77,7 +77,7 @@ public class RecurringQueryServiceTests
         };
 
         var realizedTransactions = realizedDates
-            .Select(d => Transaction.CreateFromRecurring(
+            .Select(d => TransactionFactory.CreateFromRecurring(
                 accountId,
                 MoneyValue.Create("USD", -50m),
                 d,

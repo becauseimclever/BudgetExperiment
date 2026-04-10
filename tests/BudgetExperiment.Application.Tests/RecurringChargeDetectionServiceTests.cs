@@ -352,7 +352,7 @@ public class RecurringChargeDetectionServiceTests
         decimal amount,
         DateOnly date)
     {
-        return Transaction.Create(
+        return TransactionFactory.Create(
             AccountId,
             MoneyValue.Create("USD", amount),
             date,

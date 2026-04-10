@@ -21,8 +21,8 @@ public class DataHealthServiceTests
         // Arrange
         var date = new DateOnly(2026, 3, 1);
         var amount = MoneyValue.Create("USD", -50m);
-        var t1 = Transaction.Create(AccountId, amount, date, "Amazon Prime");
-        var t2 = Transaction.Create(AccountId, amount, date, "Amazon Prime");
+        var t1 = TransactionFactory.Create(AccountId, amount, date, "Amazon Prime");
+        var t2 = TransactionFactory.Create(AccountId, amount, date, "Amazon Prime");
 
         var txRepo = CreateTransactionRepo([t1, t2]);
         var service = CreateService(txRepo);
@@ -42,8 +42,8 @@ public class DataHealthServiceTests
         var date = new DateOnly(2026, 3, 1);
         var amount = MoneyValue.Create("USD", -100m);
         var transferId = Guid.NewGuid();
-        var t1 = Transaction.CreateTransfer(AccountId, amount, date, "Transfer", transferId, TransferDirection.Source);
-        var t2 = Transaction.CreateTransfer(AccountId, amount, date, "Transfer", transferId, TransferDirection.Destination);
+        var t1 = TransactionFactory.CreateTransfer(AccountId, amount, date, "Transfer", transferId, TransferDirection.Source);
+        var t2 = TransactionFactory.CreateTransfer(AccountId, amount, date, "Transfer", transferId, TransferDirection.Destination);
 
         var txRepo = CreateTransactionRepo([t1, t2]);
         var service = CreateService(txRepo);
@@ -61,8 +61,8 @@ public class DataHealthServiceTests
         // Arrange – descriptions differ by one char; Levenshtein similarity = 1 - 1/19 ≈ 0.947
         var date = new DateOnly(2026, 3, 1);
         var amount = MoneyValue.Create("USD", -25m);
-        var t1 = Transaction.Create(AccountId, amount, date, "Starbucks Seattle A");
-        var t2 = Transaction.Create(AccountId, amount, date, "Starbucks Seattle B");
+        var t1 = TransactionFactory.Create(AccountId, amount, date, "Starbucks Seattle A");
+        var t2 = TransactionFactory.Create(AccountId, amount, date, "Starbucks Seattle B");
 
         var txRepo = CreateTransactionRepo([t1, t2]);
         var service = CreateService(txRepo);
@@ -84,14 +84,14 @@ public class DataHealthServiceTests
 
         for (var i = 0; i < 10; i++)
         {
-            transactions.Add(Transaction.Create(
+            transactions.Add(TransactionFactory.Create(
                 AccountId,
                 MoneyValue.Create("USD", -10m),
                 date.AddDays(i),
                 "Amazon Prime"));
         }
 
-        transactions.Add(Transaction.Create(
+        transactions.Add(TransactionFactory.Create(
             AccountId,
             MoneyValue.Create("USD", -1000m),
             date.AddDays(10),
@@ -115,10 +115,10 @@ public class DataHealthServiceTests
         var date = new DateOnly(2026, 2, 1);
         var transactions = new List<Transaction>
         {
-            Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), date, "Netflix"),
-            Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), date.AddDays(1), "Netflix"),
-            Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), date.AddDays(2), "Netflix"),
-            Transaction.Create(AccountId, MoneyValue.Create("USD", -1000m), date.AddDays(3), "Netflix"),
+            TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), date, "Netflix"),
+            TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), date.AddDays(1), "Netflix"),
+            TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), date.AddDays(2), "Netflix"),
+            TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -1000m), date.AddDays(3), "Netflix"),
         };
 
         var txRepo = CreateTransactionRepo(transactions);
@@ -139,9 +139,9 @@ public class DataHealthServiceTests
     public async Task FindDateGaps_Returns_Gaps_Exceeding_Threshold()
     {
         // Arrange — two transactions 59 days apart in an account with > 30 days of history
-        var t1 = Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 1), "Coffee");
-        var t2 = Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 3, 1), "Coffee");
-        var t3 = Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 3, 15), "Coffee");
+        var t1 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 1), "Coffee");
+        var t2 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 3, 1), "Coffee");
+        var t3 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 3, 15), "Coffee");
 
         var txRepo = CreateTransactionRepo([t1, t2, t3]);
         var service = CreateService(txRepo);
@@ -163,8 +163,8 @@ public class DataHealthServiceTests
     public async Task FindDateGaps_Skips_Accounts_With_Less_Than_30_Day_History()
     {
         // Arrange — 14 days of history (< 30 threshold)
-        var t1 = Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 1), "Coffee");
-        var t2 = Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 15), "Coffee");
+        var t1 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 1), "Coffee");
+        var t2 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 15), "Coffee");
 
         var txRepo = CreateTransactionRepo([t1, t2]);
         var service = CreateService(txRepo);
@@ -184,8 +184,8 @@ public class DataHealthServiceTests
     public async Task GetUncategorizedSummary_Returns_Correct_Counts_And_Totals()
     {
         // Arrange — 2 uncategorized transactions totalling $50
-        var t1 = Transaction.Create(AccountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 1), "Unknown A");
-        var t2 = Transaction.Create(AccountId, MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 2), "Unknown B");
+        var t1 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 1), "Unknown A");
+        var t2 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 2), "Unknown B");
 
         var txRepo = new Mock<ITransactionRepository>();
         txRepo.Setup(r => r.GetAllForHealthAnalysisAsync(It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
@@ -214,8 +214,8 @@ public class DataHealthServiceTests
     {
         // Arrange
         var category = Guid.NewGuid();
-        var primary = Transaction.Create(AccountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 1), "Amazon");
-        var duplicate = Transaction.Create(AccountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 1), "Amazon");
+        var primary = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 1), "Amazon");
+        var duplicate = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 1), "Amazon");
         duplicate.UpdateCategory(category);
 
         var txRepo = new Mock<ITransactionRepository>();

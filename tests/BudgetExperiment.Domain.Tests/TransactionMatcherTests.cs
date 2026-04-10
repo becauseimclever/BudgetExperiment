@@ -449,7 +449,7 @@ public class TransactionMatcherTests
 
     private Transaction CreateTransaction(string description, decimal amount, DateOnly date)
     {
-        return Transaction.Create(
+        return TransactionFactory.Create(
             _accountId,
             MoneyValue.Create("USD", amount),
             date,

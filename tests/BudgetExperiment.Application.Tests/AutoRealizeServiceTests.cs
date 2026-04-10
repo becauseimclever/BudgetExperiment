@@ -129,7 +129,7 @@ public class AutoRealizeServiceTests
             .ReturnsAsync((RecurringTransactionException?)null);
 
         // Already realized
-        var existingTransaction = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), pastDueDate, "Already realized");
+        var existingTransaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), pastDueDate, "Already realized");
         _transactionRepo.Setup(r => r.GetByRecurringInstanceAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingTransaction);
 

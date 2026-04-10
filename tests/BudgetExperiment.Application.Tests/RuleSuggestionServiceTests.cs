@@ -1464,7 +1464,7 @@ public class RuleSuggestionServiceTests
     {
         var accountId = Guid.NewGuid();
         var transactions = descriptions.Select(d =>
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50.00m), DateOnly.FromDateTime(DateTime.UtcNow), d))
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50.00m), DateOnly.FromDateTime(DateTime.UtcNow), d))
             .ToList();
 
         repo.Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
@@ -1590,7 +1590,7 @@ public class RuleSuggestionServiceTests
     {
         var accountId = Guid.NewGuid();
         var transactions = descriptions.Select(d =>
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50.00m), DateOnly.FromDateTime(DateTime.UtcNow), d))
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50.00m), DateOnly.FromDateTime(DateTime.UtcNow), d))
             .ToList();
 
         repo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<CancellationToken>()))

@@ -191,14 +191,14 @@ public class TransferServiceTests
     {
         // Arrange
         var transferId = Guid.NewGuid();
-        var sourceTransaction = Transaction.CreateTransfer(
+        var sourceTransaction = TransactionFactory.CreateTransfer(
             _sourceAccount.Id,
             MoneyValue.Create("USD", -500m),
             new DateOnly(2026, 1, 10),
             $"Transfer to {_destinationAccount.Name}: Monthly savings",
             transferId,
             TransferDirection.Source);
-        var destinationTransaction = Transaction.CreateTransfer(
+        var destinationTransaction = TransactionFactory.CreateTransfer(
             _destinationAccount.Id,
             MoneyValue.Create("USD", 500m),
             new DateOnly(2026, 1, 10),
@@ -244,14 +244,14 @@ public class TransferServiceTests
     {
         // Arrange
         var transferId = Guid.NewGuid();
-        var sourceTransaction = Transaction.CreateTransfer(
+        var sourceTransaction = TransactionFactory.CreateTransfer(
             _sourceAccount.Id,
             MoneyValue.Create("USD", -500m),
             new DateOnly(2026, 1, 10),
             "Transfer to Savings: Test",
             transferId,
             TransferDirection.Source);
-        var destinationTransaction = Transaction.CreateTransfer(
+        var destinationTransaction = TransactionFactory.CreateTransfer(
             _destinationAccount.Id,
             MoneyValue.Create("USD", 500m),
             new DateOnly(2026, 1, 10),
@@ -294,14 +294,14 @@ public class TransferServiceTests
     {
         // Arrange
         var transferId = Guid.NewGuid();
-        var sourceTransaction = Transaction.CreateTransfer(
+        var sourceTransaction = TransactionFactory.CreateTransfer(
             _sourceAccount.Id,
             MoneyValue.Create("USD", -500m),
             new DateOnly(2026, 1, 10),
             "Transfer to Savings: Original",
             transferId,
             TransferDirection.Source);
-        var destinationTransaction = Transaction.CreateTransfer(
+        var destinationTransaction = TransactionFactory.CreateTransfer(
             _destinationAccount.Id,
             MoneyValue.Create("USD", 500m),
             new DateOnly(2026, 1, 10),
@@ -415,12 +415,12 @@ public class TransferServiceTests
         var transferId2 = Guid.NewGuid();
         var transferId3 = Guid.NewGuid();
 
-        var source1 = Transaction.CreateTransfer(_sourceAccount.Id, MoneyValue.Create("USD", -100m), new DateOnly(2026, 1, 1), "Transfer to Savings: A", transferId1, TransferDirection.Source);
-        var dest1 = Transaction.CreateTransfer(_destinationAccount.Id, MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 1), "Transfer from Checking: A", transferId1, TransferDirection.Destination);
-        var source2 = Transaction.CreateTransfer(_sourceAccount.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 2), "Transfer to Savings: B", transferId2, TransferDirection.Source);
-        var dest2 = Transaction.CreateTransfer(_destinationAccount.Id, MoneyValue.Create("USD", 200m), new DateOnly(2026, 1, 2), "Transfer from Checking: B", transferId2, TransferDirection.Destination);
-        var source3 = Transaction.CreateTransfer(_sourceAccount.Id, MoneyValue.Create("USD", -300m), new DateOnly(2026, 1, 3), "Transfer to Savings: C", transferId3, TransferDirection.Source);
-        var dest3 = Transaction.CreateTransfer(_destinationAccount.Id, MoneyValue.Create("USD", 300m), new DateOnly(2026, 1, 3), "Transfer from Checking: C", transferId3, TransferDirection.Destination);
+        var source1 = TransactionFactory.CreateTransfer(_sourceAccount.Id, MoneyValue.Create("USD", -100m), new DateOnly(2026, 1, 1), "Transfer to Savings: A", transferId1, TransferDirection.Source);
+        var dest1 = TransactionFactory.CreateTransfer(_destinationAccount.Id, MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 1), "Transfer from Checking: A", transferId1, TransferDirection.Destination);
+        var source2 = TransactionFactory.CreateTransfer(_sourceAccount.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 2), "Transfer to Savings: B", transferId2, TransferDirection.Source);
+        var dest2 = TransactionFactory.CreateTransfer(_destinationAccount.Id, MoneyValue.Create("USD", 200m), new DateOnly(2026, 1, 2), "Transfer from Checking: B", transferId2, TransferDirection.Destination);
+        var source3 = TransactionFactory.CreateTransfer(_sourceAccount.Id, MoneyValue.Create("USD", -300m), new DateOnly(2026, 1, 3), "Transfer to Savings: C", transferId3, TransferDirection.Source);
+        var dest3 = TransactionFactory.CreateTransfer(_destinationAccount.Id, MoneyValue.Create("USD", 300m), new DateOnly(2026, 1, 3), "Transfer from Checking: C", transferId3, TransferDirection.Destination);
 
         _transactionRepo.Setup(r => r.GetByDateRangeAsync(It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), null, default))
             .ReturnsAsync(new List<Transaction> { source1, dest1, source2, dest2, source3, dest3 });

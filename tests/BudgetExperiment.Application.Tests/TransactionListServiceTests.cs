@@ -1264,7 +1264,7 @@ public class TransactionListServiceTests
 
     private static Transaction CreateTestTransactionWithDate(Guid accountId, decimal amount, DateOnly date, string description)
     {
-        return Transaction.Create(accountId, MoneyValue.Create("USD", amount), date, description);
+        return TransactionFactory.Create(accountId, MoneyValue.Create("USD", amount), date, description);
     }
 
     private static Transaction CreateTestTransferTransaction(
@@ -1276,7 +1276,7 @@ public class TransactionListServiceTests
         TransferDirection direction)
     {
         var money = MoneyValue.Create("USD", amount);
-        return Transaction.CreateTransfer(accountId, money, date, description, transferId, direction);
+        return TransactionFactory.CreateTransfer(accountId, money, date, description, transferId, direction);
     }
 
     private static Transaction CreateTestRealizedRecurringTransaction(
@@ -1287,7 +1287,7 @@ public class TransactionListServiceTests
         Guid recurringTransactionId)
     {
         var money = MoneyValue.Create("USD", amount);
-        return Transaction.CreateFromRecurring(accountId, money, date, description, recurringTransactionId, date);
+        return TransactionFactory.CreateFromRecurring(accountId, money, date, description, recurringTransactionId, date);
     }
 
     private static Transaction CreateTestRealizedRecurringTransfer(
@@ -1300,7 +1300,7 @@ public class TransactionListServiceTests
         Guid recurringTransferId)
     {
         var money = MoneyValue.Create("USD", amount);
-        return Transaction.CreateFromRecurringTransfer(
+        return TransactionFactory.CreateFromRecurringTransfer(
             accountId,
             money,
             date,

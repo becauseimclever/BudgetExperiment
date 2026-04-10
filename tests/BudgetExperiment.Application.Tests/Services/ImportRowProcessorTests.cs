@@ -452,7 +452,7 @@ public class ImportRowProcessorTests
     {
         // Arrange
         var existingId = Guid.NewGuid();
-        var existing = Transaction.Create(
+        var existing = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -50.00m),
             new DateOnly(2026, 1, 15),

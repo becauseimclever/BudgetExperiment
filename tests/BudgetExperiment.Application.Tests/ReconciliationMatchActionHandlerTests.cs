@@ -328,7 +328,7 @@ public class ReconciliationMatchActionHandlerTests
 
     private static Transaction CreateTestTransaction(Guid id, Guid accountId, string description, decimal amount, DateOnly date)
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             accountId,
             MoneyValue.Create("USD", amount),
             date,

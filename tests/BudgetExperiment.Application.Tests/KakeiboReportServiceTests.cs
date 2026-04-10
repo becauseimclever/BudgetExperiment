@@ -163,7 +163,7 @@ public sealed class KakeiboReportServiceTests
         // Arrange — transfer has no expense category; Category?.Type != Expense so filtered out
         var from = new DateOnly(2026, 3, 1);
         var to = new DateOnly(2026, 3, 31);
-        var transferTx = Transaction.CreateTransfer(
+        var transferTx = TransactionFactory.CreateTransfer(
             TestAccountId,
             MoneyValue.Create("USD", -500m),
             new DateOnly(2026, 3, 10),
@@ -342,7 +342,7 @@ public sealed class KakeiboReportServiceTests
 
     private static Transaction CreateExpenseTransaction(DateOnly date, decimal amount, BudgetCategory category)
     {
-        var tx = Transaction.Create(
+        var tx = TransactionFactory.Create(
             TestAccountId,
             MoneyValue.Create("USD", -Math.Abs(amount)),
             date,
@@ -354,7 +354,7 @@ public sealed class KakeiboReportServiceTests
 
     private static Transaction CreateTransactionWithCategory(DateOnly date, decimal amount, BudgetCategory category)
     {
-        var tx = Transaction.Create(
+        var tx = TransactionFactory.Create(
             TestAccountId,
             MoneyValue.Create("USD", amount),
             date,

@@ -17,7 +17,7 @@ public class KakeiboAccuracyTests
     [Fact]
     public void GetEffectiveKakeiboCategory_NoOverrideNoCategory_ReturnsWants()
     {
-        var transaction = Transaction.Create(AccountId, MoneyValue.Create("USD", -10m), Jan1, "Unknown");
+        var transaction = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -10m), Jan1, "Unknown");
 
         var bucket = transaction.GetEffectiveKakeiboCategory();
 
@@ -30,7 +30,7 @@ public class KakeiboAccuracyTests
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
         category.SetKakeiboCategory(KakeiboCategory.Essentials);
 
-        var transaction = Transaction.Create(AccountId, MoneyValue.Create("USD", -50m), Jan1, "Groceries");
+        var transaction = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -50m), Jan1, "Groceries");
         SetCategory(transaction, category);
 
         var bucket = transaction.GetEffectiveKakeiboCategory();
@@ -44,7 +44,7 @@ public class KakeiboAccuracyTests
         var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
         category.SetKakeiboCategory(KakeiboCategory.Essentials);
 
-        var transaction = Transaction.Create(AccountId, MoneyValue.Create("USD", -50m), Jan1, "Emergency groceries");
+        var transaction = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -50m), Jan1, "Emergency groceries");
         SetCategory(transaction, category);
         transaction.SetKakeiboOverride(KakeiboCategory.Unexpected);
 
@@ -56,7 +56,7 @@ public class KakeiboAccuracyTests
     [Fact]
     public void GetEffectiveKakeiboCategory_OverrideWithNoCategory_ReturnsOverride()
     {
-        var transaction = Transaction.Create(AccountId, MoneyValue.Create("USD", -25m), Jan1, "Medical");
+        var transaction = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -25m), Jan1, "Medical");
         transaction.SetKakeiboOverride(KakeiboCategory.Unexpected);
 
         var bucket = transaction.GetEffectiveKakeiboCategory();
@@ -70,7 +70,7 @@ public class KakeiboAccuracyTests
         var category = BudgetCategory.Create("Books", CategoryType.Expense);
         category.SetKakeiboCategory(KakeiboCategory.Culture);
 
-        var transaction = Transaction.Create(AccountId, MoneyValue.Create("USD", -15m), Jan1, "Novel");
+        var transaction = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -15m), Jan1, "Novel");
         SetCategory(transaction, category);
         transaction.SetKakeiboOverride(KakeiboCategory.Wants);
 
@@ -179,14 +179,14 @@ public class KakeiboAccuracyTests
 
     private static Transaction CreateTransactionWithBucket(decimal amount, KakeiboCategory bucket)
     {
-        var tx = Transaction.Create(AccountId, MoneyValue.Create("USD", amount), Jan1, $"Tx {bucket}");
+        var tx = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", amount), Jan1, $"Tx {bucket}");
         tx.SetKakeiboOverride(bucket);
         return tx;
     }
 
     private static Transaction CreateTransactionWithOverrideAndDate(decimal amount, KakeiboCategory bucket, DateOnly date)
     {
-        var tx = Transaction.Create(AccountId, MoneyValue.Create("USD", amount), date, $"Tx {bucket}");
+        var tx = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", amount), date, $"Tx {bucket}");
         tx.SetKakeiboOverride(bucket);
         return tx;
     }

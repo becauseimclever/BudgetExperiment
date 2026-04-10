@@ -21,7 +21,7 @@ public class TransactionTests
         var description = "Test Transaction";
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, description);
+        var transaction = TransactionFactory.Create(accountId, amount, date, description);
 
         // Assert
         Assert.NotEqual(Guid.Empty, transaction.Id);
@@ -44,7 +44,7 @@ public class TransactionTests
         var categoryId = Guid.NewGuid();
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, "Groceries", categoryId: categoryId);
+        var transaction = TransactionFactory.Create(accountId, amount, date, "Groceries", categoryId: categoryId);
 
         // Assert
         Assert.Equal(categoryId, transaction.CategoryId);
@@ -59,7 +59,7 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, "  Groceries  ");
+        var transaction = TransactionFactory.Create(accountId, amount, date, "  Groceries  ");
 
         // Assert
         Assert.Equal("Groceries", transaction.Description);
@@ -74,7 +74,7 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, "Groceries", categoryId: null);
+        var transaction = TransactionFactory.Create(accountId, amount, date, "Groceries", categoryId: null);
 
         // Assert
         Assert.Null(transaction.CategoryId);
@@ -88,7 +88,7 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => Transaction.Create(Guid.Empty, amount, date, "Test"));
+        var ex = Assert.Throws<DomainException>(() => TransactionFactory.Create(Guid.Empty, amount, date, "Test"));
         Assert.Contains("account", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -100,7 +100,7 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => Transaction.Create(accountId, null!, date, "Test"));
+        var ex = Assert.Throws<DomainException>(() => TransactionFactory.Create(accountId, null!, date, "Test"));
         Assert.Contains("amount", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -116,7 +116,7 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => Transaction.Create(accountId, amount, date, description!));
+        var ex = Assert.Throws<DomainException>(() => TransactionFactory.Create(accountId, amount, date, description!));
         Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -129,7 +129,7 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, "Expense");
+        var transaction = TransactionFactory.Create(accountId, amount, date, "Expense");
 
         // Assert
         Assert.Equal(-100.00m, transaction.Amount.Amount);
@@ -144,7 +144,7 @@ public class TransactionTests
         var date = new DateOnly(2026, 1, 9);
 
         // Act
-        var transaction = Transaction.Create(accountId, amount, date, "Zero balance");
+        var transaction = TransactionFactory.Create(accountId, amount, date, "Zero balance");
 
         // Assert
         Assert.Equal(0m, transaction.Amount.Amount);
@@ -154,7 +154,7 @@ public class TransactionTests
     public void UpdateDescription_Changes_Description_And_UpdatedAt()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -176,7 +176,7 @@ public class TransactionTests
     public void UpdateDescription_With_Empty_Value_Throws(string? description)
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -191,7 +191,7 @@ public class TransactionTests
     public void UpdateAmount_Changes_Amount_And_UpdatedAt()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -211,7 +211,7 @@ public class TransactionTests
     public void UpdateAmount_With_Null_Throws()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -226,7 +226,7 @@ public class TransactionTests
     public void UpdateDate_Changes_Date_And_UpdatedAt()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -246,7 +246,7 @@ public class TransactionTests
     public void UpdateCategory_Changes_CategoryId_And_UpdatedAt()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -267,7 +267,7 @@ public class TransactionTests
     {
         // Arrange
         var categoryId = Guid.NewGuid();
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -285,7 +285,7 @@ public class TransactionTests
     public void Create_Without_RecurringTransaction_Has_Null_RecurringTransactionId()
     {
         // Arrange & Act
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -306,7 +306,7 @@ public class TransactionTests
         var amount = MoneyValue.Create("USD", -100m);
 
         // Act
-        var transaction = Transaction.CreateFromRecurring(
+        var transaction = TransactionFactory.CreateFromRecurring(
             accountId,
             amount,
             instanceDate,
@@ -328,7 +328,7 @@ public class TransactionTests
 
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.CreateFromRecurring(
+            TransactionFactory.CreateFromRecurring(
                 accountId,
                 amount,
                 new DateOnly(2026, 1, 15),
@@ -343,7 +343,7 @@ public class TransactionTests
     public void IsFromRecurringTransaction_Returns_True_When_Linked()
     {
         // Arrange
-        var transaction = Transaction.CreateFromRecurring(
+        var transaction = TransactionFactory.CreateFromRecurring(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -100m),
             new DateOnly(2026, 1, 15),
@@ -359,7 +359,7 @@ public class TransactionTests
     public void IsFromRecurringTransaction_Returns_False_When_Not_Linked()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 9),
@@ -373,7 +373,7 @@ public class TransactionTests
     public void Create_Regular_Transaction_Has_Null_TransferId()
     {
         // Arrange & Act
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -396,7 +396,7 @@ public class TransactionTests
         var description = "Transfer to Savings";
 
         // Act
-        var transaction = Transaction.CreateTransfer(
+        var transaction = TransactionFactory.CreateTransfer(
             accountId,
             amount,
             date,
@@ -426,7 +426,7 @@ public class TransactionTests
         var description = "Transfer from Checking";
 
         // Act
-        var transaction = Transaction.CreateTransfer(
+        var transaction = TransactionFactory.CreateTransfer(
             accountId,
             amount,
             date,
@@ -450,7 +450,7 @@ public class TransactionTests
     {
         // Arrange & Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.CreateTransfer(
+            TransactionFactory.CreateTransfer(
                 Guid.NewGuid(),
                 MoneyValue.Create("USD", 500m),
                 new DateOnly(2026, 1, 10),
@@ -465,7 +465,7 @@ public class TransactionTests
     public void IsTransfer_Returns_True_When_TransferId_Set()
     {
         // Arrange
-        var transaction = Transaction.CreateTransfer(
+        var transaction = TransactionFactory.CreateTransfer(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 500m),
             new DateOnly(2026, 1, 10),
@@ -481,7 +481,7 @@ public class TransactionTests
     public void IsTransfer_Returns_False_When_TransferId_Null()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -502,7 +502,7 @@ public class TransactionTests
         var amount = MoneyValue.Create("USD", -500m);
 
         // Act
-        var transaction = Transaction.CreateFromRecurringTransfer(
+        var transaction = TransactionFactory.CreateFromRecurringTransfer(
             accountId,
             amount,
             instanceDate,
@@ -531,7 +531,7 @@ public class TransactionTests
     {
         // Arrange & Act & Assert
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.CreateFromRecurringTransfer(
+            TransactionFactory.CreateFromRecurringTransfer(
                 Guid.NewGuid(),
                 MoneyValue.Create("USD", -500m),
                 new DateOnly(2026, 2, 1),
@@ -548,7 +548,7 @@ public class TransactionTests
     public void IsFromRecurringTransfer_Returns_True_When_RecurringTransferId_Set()
     {
         // Arrange
-        var transaction = Transaction.CreateFromRecurringTransfer(
+        var transaction = TransactionFactory.CreateFromRecurringTransfer(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 500m),
             new DateOnly(2026, 2, 1),
@@ -566,7 +566,7 @@ public class TransactionTests
     public void Create_Regular_Transaction_Has_Null_RecurringTransferId()
     {
         // Arrange & Act
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -582,7 +582,7 @@ public class TransactionTests
     public void Transaction_Has_Scope_Properties()
     {
         // Arrange & Act
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -598,7 +598,7 @@ public class TransactionTests
     public void SetImportBatch_Sets_ImportBatchId()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -618,7 +618,7 @@ public class TransactionTests
     public void SetImportBatch_With_ExternalReference_Sets_Both()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -638,7 +638,7 @@ public class TransactionTests
     public void SetImportBatch_Trims_ExternalReference()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -655,7 +655,7 @@ public class TransactionTests
     public void SetImportBatch_With_Empty_BatchId_Throws()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -670,7 +670,7 @@ public class TransactionTests
     public void Create_Transaction_Has_Null_ImportBatchId()
     {
         // Arrange & Act
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -686,7 +686,7 @@ public class TransactionTests
     public void SetImportBatch_ExternalReference_Exceeds_MaxLength_Throws()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 10),
@@ -702,7 +702,7 @@ public class TransactionTests
     public void LinkToRecurringInstance_Sets_RecurringTransaction_Properties()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 15),
@@ -725,7 +725,7 @@ public class TransactionTests
     public void LinkToRecurringInstance_With_Empty_RecurringTransactionId_Throws()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 15),
@@ -743,7 +743,7 @@ public class TransactionTests
     {
         // Arrange - Create a transaction that is already linked (via CreateFromRecurring)
         var existingRecurringId = Guid.NewGuid();
-        var transaction = Transaction.CreateFromRecurring(
+        var transaction = TransactionFactory.CreateFromRecurring(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 100m),
             new DateOnly(2026, 1, 15),
@@ -761,7 +761,7 @@ public class TransactionTests
     public void LinkToRecurringInstance_For_Imported_Transaction_Works()
     {
         // Arrange - Transaction from import (common reconciliation scenario)
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 14.99m),
             new DateOnly(2026, 1, 16),
@@ -785,7 +785,7 @@ public class TransactionTests
     public void UnlinkFromRecurring_Clears_RecurringTransaction_Properties()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -15.99m),
             new DateOnly(2026, 1, 15),
@@ -807,7 +807,7 @@ public class TransactionTests
     public void UnlinkFromRecurring_When_Not_Linked_Throws()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -15.99m),
             new DateOnly(2026, 1, 15),
@@ -822,7 +822,7 @@ public class TransactionTests
     public void SetLocation_SetsLocationAndUpdatesTimestamp()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -25.00m),
             new DateOnly(2026, 2, 20),
@@ -843,7 +843,7 @@ public class TransactionTests
     public void ClearLocation_NullsLocationAndUpdatesTimestamp()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -25.00m),
             new DateOnly(2026, 2, 20),
@@ -865,7 +865,7 @@ public class TransactionTests
     public void Create_HasNullLocation_ByDefault()
     {
         // Arrange & Act
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", -10.00m),
             new DateOnly(2026, 2, 20),
@@ -880,7 +880,7 @@ public class TransactionTests
     public void MarkCleared_SetsIsClearedAndClearedDate()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50.00m),
             new DateOnly(2026, 1, 15),
@@ -900,7 +900,7 @@ public class TransactionTests
     public void MarkUncleared_OnReconciledTransaction_ThrowsDomainException()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50.00m),
             new DateOnly(2026, 1, 15),
@@ -918,7 +918,7 @@ public class TransactionTests
     public void MarkUncleared_OnNonReconciledClearedTransaction_ResetsBothFields()
     {
         // Arrange
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50.00m),
             new DateOnly(2026, 1, 15),
@@ -936,7 +936,7 @@ public class TransactionTests
     [Fact]
     public void KakeiboOverride_Is_Null_By_Default()
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50m),
             new DateOnly(2026, 1, 9),
@@ -948,7 +948,7 @@ public class TransactionTests
     [Fact]
     public void SetKakeiboOverride_Sets_Override()
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50m),
             new DateOnly(2026, 1, 9),
@@ -962,7 +962,7 @@ public class TransactionTests
     [Fact]
     public void SetKakeiboOverride_Null_Clears_Override()
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50m),
             new DateOnly(2026, 1, 9),
@@ -977,7 +977,7 @@ public class TransactionTests
     [Fact]
     public void GetEffectiveKakeiboCategory_Returns_Override_When_Set()
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50m),
             new DateOnly(2026, 1, 9),
@@ -992,7 +992,7 @@ public class TransactionTests
     [Fact]
     public void GetEffectiveKakeiboCategory_Returns_Wants_Fallback_When_No_Override_And_No_Category()
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", 50m),
             new DateOnly(2026, 1, 9),

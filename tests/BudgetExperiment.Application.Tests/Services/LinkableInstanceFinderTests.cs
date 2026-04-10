@@ -328,7 +328,7 @@ public sealed class LinkableInstanceFinderTests
         decimal amount,
         DateOnly date)
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             accountId,
             MoneyValue.Create("USD", amount),
             date,

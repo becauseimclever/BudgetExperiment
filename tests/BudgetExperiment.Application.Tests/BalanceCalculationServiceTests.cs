@@ -126,8 +126,8 @@ public class BalanceCalculationServiceTests
 
         var transactions = new List<Transaction>
         {
-            Transaction.Create(account.Id, MoneyValue.Create("USD", 500m), new DateOnly(2026, 1, 5), "Deposit"),
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 10), "Expense"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", 500m), new DateOnly(2026, 1, 5), "Deposit"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 10), "Expense"),
         };
 
         _accountRepo
@@ -169,12 +169,12 @@ public class BalanceCalculationServiceTests
 
         var checkingTransactions = new List<Transaction>
         {
-            Transaction.Create(checking.Id, MoneyValue.Create("USD", 200m), new DateOnly(2026, 1, 5), "Deposit"),
+            TransactionFactory.Create(checking.Id, MoneyValue.Create("USD", 200m), new DateOnly(2026, 1, 5), "Deposit"),
         };
 
         var savingsTransactions = new List<Transaction>
         {
-            Transaction.Create(savings.Id, MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 5), "Interest"),
+            TransactionFactory.Create(savings.Id, MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 5), "Interest"),
         };
 
         _accountRepo
@@ -224,7 +224,7 @@ public class BalanceCalculationServiceTests
 
         var checkingTransactions = new List<Transaction>
         {
-            Transaction.Create(checking.Id, MoneyValue.Create("USD", 200m), new DateOnly(2026, 1, 5), "Deposit"),
+            TransactionFactory.Create(checking.Id, MoneyValue.Create("USD", 200m), new DateOnly(2026, 1, 5), "Deposit"),
         };
 
         _accountRepo
@@ -343,7 +343,7 @@ public class BalanceCalculationServiceTests
 
         var transactions = new List<Transaction>
         {
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -500m), new DateOnly(2026, 1, 5), "Big expense"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -500m), new DateOnly(2026, 1, 5), "Big expense"),
         };
 
         _accountRepo
@@ -421,9 +421,9 @@ public class BalanceCalculationServiceTests
 
         var transactions = new List<Transaction>
         {
-            Transaction.Create(account.Id, MoneyValue.Create("USD", 500m), new DateOnly(2026, 1, 5), "Deposit"),
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 10), "Expense"),
-            Transaction.Create(account.Id, MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 15), "Same day tx"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", 500m), new DateOnly(2026, 1, 5), "Deposit"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 10), "Expense"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", 100m), new DateOnly(2026, 1, 15), "Same day tx"),
         };
 
         _accountRepo
@@ -580,8 +580,8 @@ public class BalanceCalculationServiceTests
         // Transactions before the query date (should be included)
         var priorTransactions = new List<Transaction>
         {
-            Transaction.Create(account.Id, MoneyValue.Create("USD", 500m), new DateOnly(2026, 1, 5), "Deposit"),
-            Transaction.Create(account.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 10), "Expense"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", 500m), new DateOnly(2026, 1, 5), "Deposit"),
+            TransactionFactory.Create(account.Id, MoneyValue.Create("USD", -200m), new DateOnly(2026, 1, 10), "Expense"),
         };
 
         _accountRepo
@@ -681,7 +681,7 @@ public class BalanceCalculationServiceTests
         // Transactions for old account before query date
         var oldAccountTransactions = new List<Transaction>
         {
-            Transaction.Create(oldAccount.Id, MoneyValue.Create("USD", 100m), new DateOnly(2025, 12, 15), "Deposit"),
+            TransactionFactory.Create(oldAccount.Id, MoneyValue.Create("USD", 100m), new DateOnly(2025, 12, 15), "Deposit"),
         };
 
         _accountRepo

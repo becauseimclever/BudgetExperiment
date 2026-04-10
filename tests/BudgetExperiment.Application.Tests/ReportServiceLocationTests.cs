@@ -248,7 +248,7 @@ public class ReportServiceLocationTests
     private static Transaction CreateTransaction(DateOnly date, decimal amount)
     {
         var accountId = Guid.NewGuid();
-        return Transaction.Create(
+        return TransactionFactory.Create(
             accountId,
             MoneyValue.Create("USD", amount),
             date,
@@ -262,7 +262,7 @@ public class ReportServiceLocationTests
         string state,
         string country)
     {
-        var transaction = Transaction.Create(
+        var transaction = TransactionFactory.Create(
             Guid.NewGuid(),
             MoneyValue.Create("USD", amount),
             date,
@@ -278,7 +278,7 @@ public class ReportServiceLocationTests
         string state,
         string country)
     {
-        var transfer = Transaction.CreateTransfer(
+        var transfer = TransactionFactory.CreateTransfer(
             Guid.NewGuid(),
             MoneyValue.Create("USD", amount),
             date,

@@ -63,7 +63,7 @@ public sealed class RecurringTransactionRealizationService : IRecurringTransacti
             : exception?.ModifiedAmount ?? recurring.Amount;
         var actualDescription = request.Description ?? exception?.ModifiedDescription ?? recurring.Description;
 
-        var transaction = Transaction.CreateFromRecurring(
+        var transaction = TransactionFactory.CreateFromRecurring(
             recurring.AccountId,
             actualAmount,
             actualDate,

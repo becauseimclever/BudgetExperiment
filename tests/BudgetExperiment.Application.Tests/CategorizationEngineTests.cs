@@ -108,8 +108,8 @@ public class CategorizationEngineTests
         var accountId = Guid.NewGuid();
         var transactions = new List<Transaction>
         {
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE #123"),
-            Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "UBER TRIP"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE #123"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "UBER TRIP"),
         };
         var rules = new List<CategorizationRule>
         {
@@ -135,7 +135,7 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE", EntertainmentCategoryId);
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE", EntertainmentCategoryId);
         var transactions = new List<Transaction> { transaction };
         var rules = new List<CategorizationRule>
         {
@@ -158,7 +158,7 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE", EntertainmentCategoryId);
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE", EntertainmentCategoryId);
         var transactions = new List<Transaction> { transaction };
         var rules = new List<CategorizationRule>
         {
@@ -181,7 +181,7 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "RANDOM STORE");
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "RANDOM STORE");
         var transactions = new List<Transaction> { transaction };
         var rules = new List<CategorizationRule>
         {
@@ -204,9 +204,9 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var uncategorized1 = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE");
-        var uncategorized2 = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "UBER TRIP");
-        var categorized = Transaction.Create(accountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 17), "NETFLIX", EntertainmentCategoryId);
+        var uncategorized1 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var uncategorized2 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "UBER TRIP");
+        var categorized = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 17), "NETFLIX", EntertainmentCategoryId);
         var allTransactions = new List<Transaction> { uncategorized1, uncategorized2, categorized };
         var uncategorizedTransactions = new List<Transaction> { uncategorized1, uncategorized2 };
 
@@ -236,9 +236,9 @@ public class CategorizationEngineTests
         var accountId = Guid.NewGuid();
         var transactions = new List<Transaction>
         {
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE #123"),
-            Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "WALMART GROCERY"),
-            Transaction.Create(accountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 17), "TARGET STORE"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE #123"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "WALMART GROCERY"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 17), "TARGET STORE"),
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
@@ -261,9 +261,9 @@ public class CategorizationEngineTests
         var accountId = Guid.NewGuid();
         var transactions = new List<Transaction>
         {
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART 1"),
-            Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "WALMART 2"),
-            Transaction.Create(accountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 17), "WALMART 3"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART 1"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "WALMART 2"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -30m), new DateOnly(2026, 1, 17), "WALMART 3"),
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
@@ -284,7 +284,7 @@ public class CategorizationEngineTests
         var accountId = Guid.NewGuid();
         var transactions = new List<Transaction>
         {
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "TARGET STORE"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "TARGET STORE"),
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
@@ -305,8 +305,8 @@ public class CategorizationEngineTests
         var accountId = Guid.NewGuid();
         var transactions = new List<Transaction>
         {
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE"),
-            Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "walmart store"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "walmart store"),
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
@@ -339,7 +339,7 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
         var (engine, _, _) = CreateEngine(new List<CategorizationRule>(), new List<Transaction> { transaction });
 
         // Act
@@ -354,7 +354,7 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE #123");
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE #123");
         var rules = new List<CategorizationRule>
         {
             CategorizationRule.Create("Grocery Rule", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
@@ -376,7 +376,7 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
         transaction.UpdateCategory(Guid.NewGuid()); // Already categorized
         var rules = new List<CategorizationRule>
         {
@@ -396,7 +396,7 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "TARGET STORE");
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "TARGET STORE");
         var rules = new List<CategorizationRule>
         {
             CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
@@ -415,9 +415,9 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var txn1 = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
-        var txn2 = Transaction.Create(accountId, MoneyValue.Create("USD", -15m), new DateOnly(2026, 1, 16), "UBER TRIP");
-        var txn3 = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 17), "RANDOM STORE");
+        var txn1 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var txn2 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -15m), new DateOnly(2026, 1, 16), "UBER TRIP");
+        var txn3 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 17), "RANDOM STORE");
         var rules = new List<CategorizationRule>
         {
             CategorizationRule.Create("Grocery", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
@@ -460,8 +460,8 @@ public class CategorizationEngineTests
         var accountId = Guid.NewGuid();
         var transactions = new List<Transaction>
         {
-            Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE"),
-            Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "UBER TRIP"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE"),
+            TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 16), "UBER TRIP"),
         };
         var rules = new List<CategorizationRule>
         {
@@ -482,8 +482,8 @@ public class CategorizationEngineTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var txn1 = Transaction.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
-        var txn2 = Transaction.Create(accountId, MoneyValue.Create("USD", -15m), new DateOnly(2026, 1, 16), "UBER TRIP");
+        var txn1 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -25m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var txn2 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -15m), new DateOnly(2026, 1, 16), "UBER TRIP");
         var rules = new List<CategorizationRule>
         {
             CategorizationRule.Create("Grocery", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 1),
@@ -544,7 +544,7 @@ public class CategorizationEngineTests
         // With partitioned evaluation, string rules are checked before regex, but we still respect priority within each group.
         // This test verifies that when a string rule matches, the regex rule is never evaluated.
         var accountId = Guid.NewGuid();
-        var transaction = Transaction.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE");
+        var transaction = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50m), new DateOnly(2026, 1, 15), "WALMART STORE");
         var containsRule = CategorizationRule.Create("Walmart Contains", RuleMatchType.Contains, "WALMART", GroceryCategoryId, priority: 10);
         var regexRule = CategorizationRule.Create("Walmart Regex", RuleMatchType.Regex, "WALMART.*STORE", TransportCategoryId, priority: 5);
 
@@ -569,8 +569,8 @@ public class CategorizationEngineTests
             CategorizationRule.Create("Walmart", RuleMatchType.Contains, "WALMART", categoryId, priority: 1),
         };
         var accountId = Guid.NewGuid();
-        var t1 = Transaction.Create(accountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 1), "WALMART #1");
-        var t2 = Transaction.Create(accountId, MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 2), "WALMART #2");
+        var t1 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -10m), new DateOnly(2026, 1, 1), "WALMART #1");
+        var t2 = TransactionFactory.Create(accountId, MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 2), "WALMART #2");
         var (engine, ruleRepo, _) = CreateEngine(rules, new List<Transaction> { t1, t2 });
 
         // Act — apply rules twice on the same engine instance
@@ -594,7 +594,7 @@ public class CategorizationEngineTests
 
         var accountId = Guid.NewGuid();
         var transactions = Enumerable.Range(0, 500)
-            .Select(i => Transaction.Create(
+            .Select(i => TransactionFactory.Create(
                 accountId,
                 MoneyValue.Create("USD", -(i + 1)),
                 new DateOnly(2026, 1, 15),

@@ -109,7 +109,7 @@ public class RecurringTransferRealizationServiceTests
         var instanceDate = new DateOnly(2026, 1, 15);
         var existingTransactions = new List<Transaction>
         {
-            Transaction.CreateFromRecurringTransfer(
+            TransactionFactory.CreateFromRecurringTransfer(
                 _sourceAccount.Id,
                 MoneyValue.Create("USD", -500m),
                 instanceDate,

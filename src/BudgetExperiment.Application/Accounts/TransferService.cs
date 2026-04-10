@@ -62,7 +62,7 @@ public sealed class TransferService : ITransferService
             : request.Description.Trim();
 
         // Create source transaction (money leaving - negative)
-        var sourceTransaction = Transaction.CreateTransfer(
+        var sourceTransaction = TransactionFactory.CreateTransfer(
             request.SourceAccountId,
             MoneyValue.Create(request.Currency, -request.Amount),
             request.Date,
@@ -71,7 +71,7 @@ public sealed class TransferService : ITransferService
             TransferDirection.Source);
 
         // Create destination transaction (money entering - positive)
-        var destinationTransaction = Transaction.CreateTransfer(
+        var destinationTransaction = TransactionFactory.CreateTransfer(
             request.DestinationAccountId,
             MoneyValue.Create(request.Currency, request.Amount),
             request.Date,
