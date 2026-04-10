@@ -790,3 +790,15 @@ Same concrete implementation serves all four interfaces.
 - Minimal API registered in Program.cs after app.MapControllers().
 
 ### Commits: 1fa1579, c5c42ed, eec0c6c, 00c73cf, b18ef99, da34b7d
+
+## Learnings
+
+### 2026-04-10 — F-153 Minimal API Pilot Reverted; Controllers Are the Standard
+
+The CategorySuggestionEndpoints.cs Minimal API pilot (introduced in F-153 by splitting an oversized controller) was reverted. CategorySuggestionsController.cs has been restored with all 11 routes preserved. The Endpoints/ directory has been removed entirely.
+
+**Team decision (confirmed by Fortinbra):** Controllers remain the standard pattern for this codebase. No further Minimal API migration planned. Rationale: consistency across the codebase and confirmed user preference.
+
+**Technical note:** When reverting, also remove the `using BudgetExperiment.Api.Endpoints;` import from Program.cs — the compiler does not warn about the unused import until the namespace no longer exists, at which point it becomes a hard error.
+
+### Commit: 35a378a

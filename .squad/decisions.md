@@ -1719,6 +1719,20 @@ Environment vars: Replace `:` with `__` (e.g., `FeatureFlags__Calendar__Spending
 
 @if (FeatureFlags.IsEnabled("Calendar.SpendingHeatmap"))
 {
+
+---
+
+### Controllers Are Standard; No Minimal API Migration (2026-04-10)
+
+**Author:** Fortinbra (via Copilot)
+
+**Decision:** CategorySuggestionEndpoints.cs (Minimal API pilot from F-153) has been reverted to CategorySuggestionsController. Controllers remain the standard architectural pattern for this codebase. No further Minimal API migration is planned.
+
+**Rationale:** Consistency across the codebase. Controllers provide familiar patterns, explicit dependencies, and simplified testing. The Minimal API experiment demonstrated no compelling advantage justifying codebase-wide migration.
+
+**Commit:** `35a378a` – refactor(api): revert CategorySuggestions Minimal API pilot to controller
+
+**Implication:** All new API endpoints use controller pattern. Minimal API is not recommended for future work.
     <SpendingHeatmapOverlay ... />
 }
 ```
