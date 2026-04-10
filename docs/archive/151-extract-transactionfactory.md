@@ -1,6 +1,6 @@
 # Feature 151: Extract TransactionFactory (Transaction Entity God Class)
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — F-005  
 > **Audit Source:** `docs/audit/2026-04-09-full-principle-audit.md`
 

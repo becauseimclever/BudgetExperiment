@@ -11,6 +11,7 @@ namespace BudgetExperiment.Application.Categorization;
 /// <summary>
 /// Parses AI response JSON into <see cref="RuleSuggestion"/> domain objects.
 /// Handles JSON extraction, deserialization, and duplicate filtering.
+/// JSON extraction is delegated to <see cref="RuleSuggestionJsonExtractor"/>.
 /// </summary>
 public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
 {
@@ -32,40 +33,13 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
 
     /// <summary>
     /// Extracts the first complete JSON object from raw AI response text.
-    /// AI models frequently wrap JSON in markdown code blocks or add preamble
-    /// text despite being instructed not to. This method strips that wrapping
-    /// so <see cref="JsonSerializer"/> can parse the content.
+    /// Delegates to <see cref="RuleSuggestionJsonExtractor.ExtractJson"/>.
     /// </summary>
     /// <param name="content">The raw AI response text.</param>
     /// <returns>The extracted JSON string.</returns>
     /// <exception cref="JsonException">Thrown when no JSON object is found in the content.</exception>
-    public static string ExtractJson(string content)
-    {
-        // Try direct parse first — fastest path for well-formed responses
-        var trimmed = content.Trim();
-        if (trimmed.StartsWith('{') && trimmed.EndsWith('}'))
-        {
-            return trimmed;
-        }
-
-        // Strip markdown code fences: ```json ... ``` or ``` ... ```
-        var fenceStart = content.IndexOf("```", StringComparison.Ordinal);
-        if (fenceStart >= 0)
-        {
-            content = ExtractFromCodeFence(content, fenceStart);
-        }
-
-        // Fall back to bracket matching
-        var jsonStart = content.IndexOf('{');
-        var jsonEnd = content.LastIndexOf('}');
-
-        if (jsonStart < 0 || jsonEnd < 0 || jsonEnd <= jsonStart)
-        {
-            throw new JsonException("No JSON object found in AI response.");
-        }
-
-        return content.Substring(jsonStart, jsonEnd - jsonStart + 1);
-    }
+    public static string ExtractJson(string content) =>
+        RuleSuggestionJsonExtractor.ExtractJson(content);
 
     /// <inheritdoc/>
     public ParseResult<IReadOnlyList<RuleSuggestion>> ParseNewRuleSuggestions(
@@ -178,23 +152,6 @@ public sealed class RuleSuggestionResponseParser : IRuleSuggestionResponseParser
             diagnostics.Add($"AI response was not valid JSON: {ex.Message}");
             return ParseResult<IReadOnlyList<RuleSuggestion>>.Fail(Array.Empty<RuleSuggestion>(), diagnostics);
         }
-    }
-
-    private static string ExtractFromCodeFence(string content, int fenceStart)
-    {
-        var lineEnd = content.IndexOf('\n', fenceStart);
-        if (lineEnd < 0)
-        {
-            return content;
-        }
-
-        var fenceEnd = content.IndexOf("```", lineEnd, StringComparison.Ordinal);
-        if (fenceEnd <= lineEnd)
-        {
-            return content;
-        }
-
-        return content.Substring(lineEnd + 1, fenceEnd - lineEnd - 1);
     }
 
     private static RuleSuggestion? CreateNewRuleSuggestion(
