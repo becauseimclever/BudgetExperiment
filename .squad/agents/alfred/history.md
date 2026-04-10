@@ -133,6 +133,35 @@ All technical content (architecture diagram, setup commands, test commands, Dock
 
 ---
 
+### Feature 160: Pluggable AI Backend — Architecture Design (2026-04-XX)
+
+**Requested by:** Fortinbra (via request to design pluggable AI backend feature)
+
+**Research findings:**
+- **Current stack:** 
+  - `OllamaAiService` (Infrastructure) implements `IAiService` (Application layer interface)
+  - Hard-coded Ollama-only backend; endpoint (`OllamaEndpoint`) is Ollama-specific
+  - Configuration: `AiSettingsData`, `AiSettingsDto`, `AiDefaults` all Ollama-centric
+  - DI registration (Infrastructure.DependencyInjection): `services.AddHttpClient<IAiService, OllamaAiService>();`
+  - Both Ollama and llama.cpp expose OpenAI-compatible HTTP APIs (`/v1/chat/completions`, `/v1/models`, health checks)
+  - ~150 lines of HTTP protocol logic in OllamaAiService can be shared
+
+- **Architecture approach chosen: Strategy Pattern with shared base class**
+  - Add `AiBackendType` enum to `BudgetExperiment.Shared` (Ollama, LlamaCpp)
+  - Create abstract `OpenAiCompatibleAiService` base class in Infrastructure encapsulating shared HTTP logic
+  - Refactor `OllamaAiService` to extend base class; implement `LlamaCppAiService` for llama.cpp
+  - `IAiService` (public abstraction) unchanged — stays in Application, all consumers continue to work
+  - Configuration gains `BackendType` property; `OllamaEndpoint` renamed to generic `EndpointUrl`
+  - DI registration becomes conditional: based on `AiSettings:BackendType`, register appropriate implementation
+  - Default: Ollama (zero-breaking-change for existing users)
+
+- **OpenAI-compatible shared logic:** Request/response DTOs, timeout handling, JSON options, health check pattern, token counting
+- **Backend-specific overrides:** Health check endpoint path, model list parsing (Ollama: `OllamaTagsResponse` struct; llama.cpp: `models` array)
+
+**Feature doc created:** `docs/160-pluggable-ai-backend.md` — 7 phases, Strategy Pattern + base class, user stories, testing strategy, migration notes (zero-breaking-change), configuration examples.
+
+---
+
 ### Feature Docs 148–153: Vic Principle Audit Response — Complete (2026-04-09)
 
 **Scope:** Created six feature specification documents addressing all Critical and High findings from Vic's first full principle audit.

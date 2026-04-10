@@ -762,3 +762,31 @@ Same concrete implementation serves all four interfaces.
 - **Why not change to Scoped**: `IFeatureFlagClientService` is intentionally Singleton because its `_flags` dictionary is pre-loaded at startup (`host.Services.GetRequiredService<IFeatureFlagClientService>()`) and must persist for the application lifetime. Changing to Scoped would result in a new, empty instance per component scope, losing the pre-loaded flags.
 - **Duplicate test files**: Two broken test files (`Accounts\AccountsControllerTests.cs`, `Calendar\CalendarControllerTests.cs`) were added using a non-existent `OverrideServices` pattern. The correct approach (already present in root-level test files) uses `_factory.WithWebHostBuilder(...)`. The broken files were deleted. When Barbara writes new API controller tests, the `WithWebHostBuilder(builder => builder.ConfigureServices(...))` pattern is the established approach for injecting mocks.
 
+
+## F151-153 Session learnings added
+
+## F151-153 Session — TransactionFactory + Service/Controller Splits (2026-04-xx)
+
+### Feature 151: TransactionFactory Extraction
+- Transaction.cs (~545 lines) reduced by extracting 4 static factory methods to TransactionFactory.cs (static class, same Domain.Accounts namespace).
+- Added internal Transaction.CreateRaw() + internal void Set*Link() helpers for factory use (TransactionFactory can't access private setters directly).
+- StyleCop ordering: public static > public instance > internal static > internal instance (SA1202 + SA1204).
+- TRAP: Transaction.Create( regex also matches RecurringTransaction.Create( — caused 24 wrong replacements requiring revert. Use tighter patterns.
+- 53 test files bulk-updated via PowerShell, 5 src files manually edited.
+
+### Feature 152: God Application Service Splits
+- RuleSuggestionResponseParser: extracted RuleSuggestionJsonExtractor (JSON extraction seam).
+- ImportRowProcessor (508 lines -> 323): extracted ImportFieldExtractor, ImportFieldParser, ExtractedColumnValues. Validation stayed (tightly coupled to error accumulation).
+- ChatActionParser (482 lines -> 174): IChatActionTypeParser interface + 5 per-action parsers (chain-of-responsibility). Kept static to match existing test call patterns.
+- CategorySuggestionService: extracted ICategorySuggestionScorer + CategorySuggestionScorer (43 lines).
+
+### Feature 153: God API Controller Splits
+- TransactionsController deleted -> TransactionQueryController (GETs) + TransactionBatchController (mutations).
+- RecurringTransactionsController: CRUD kept, 11 instance ops -> RecurringTransactionInstanceController.
+- RecurringTransfersController: same pattern -> RecurringTransferInstanceController.
+- CategorySuggestionsController deleted -> Minimal API pilot in Endpoints/CategorySuggestionEndpoints.cs.
+- Minimal API routes: explicit strings like 'api/v1/CategorySuggestions' (versioning templates don't work same way as controllers).
+- Minimal API DI: services as lambda params, not constructor injection.
+- Minimal API registered in Program.cs after app.MapControllers().
+
+### Commits: 1fa1579, c5c42ed, eec0c6c, 00c73cf, b18ef99, da34b7d
