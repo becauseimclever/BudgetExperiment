@@ -4,6 +4,16 @@
 - **Project:** BudgetExperiment — .NET 10 budgeting application
 - **Stack:** .NET 10, ASP.NET Core Minimal API, Blazor WebAssembly (plain, no FluentUI), EF Core + Npgsql (PostgreSQL), xUnit + Shouldly, NSubstitute/Moq (one, consistent), StyleCop.Analyzers
 
+## Release Tag v3.26.0 (2026-03-23 → 2026-04-12)
+
+- **Created:** Annotated tag at commit `04e5ea5` (squad: merge audit report publication decisions)
+- **Tag Status:** Local created, verified to point to HEAD
+- **Push Status:** Successfully pushed to origin (2026-04-12T21:24:44Z)
+  - Branch `squad` → origin
+  - Tag `v3.26.0` → origin
+  - GitHub Actions release workflow triggered
+- **Note:** Tag marks squad branch state after audit report publication merge. Release builds now generating for amd64/arm64.
+
 ## Architecture
 
 Clean/Onion hybrid. Projects: Domain, Application, Infrastructure, Api, Client, Contracts, Shared.

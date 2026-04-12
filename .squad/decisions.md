@@ -2495,3 +2495,60 @@ The batch is ready for release. The missing `GetSpendingByCategoriesAsync` integ
 - Orchestration log: `.squad/orchestration-log/2026-04-12T20-53-24Z-barbara.md`
 
 ---
+
+### 41. Release Tag v3.26.0 — Lucius Decision (2026-03-23)
+
+**Actor:** Lucius (Backend Dev)  
+**Status:** COMPLETE
+
+#### Summary
+Created local annotated git tag `v3.26.0` at current HEAD (commit `04e5ea5`). Tag verified and points to squad branch. No remote push executed per request.
+
+#### Rationale
+- Marks stable state of codebase after audit report publication merge.
+- Follows semantic versioning bump from v3.25.0.
+- Annotated tag allows metadata (tagger, timestamp, message) for release traceability.
+
+#### Verification
+```
+Tag: v3.26.0
+Points to: 04e5ea5 (squad: merge audit report publication decisions)
+Type: Annotated
+Tagger: Copilot
+Message: Release v3.26.0
+```
+
+---
+
+### 42. Push Release Refs to Origin (2026-01-09)
+
+**Actor:** Lucius (Backend Dev)  
+**Request Origin:** Copilot  
+**Status:** Completed
+
+#### Summary
+Successfully pushed the `squad` branch and `v3.26.0` tag to origin to kick off GitHub Actions.
+
+#### Context
+- Local branch `squad` was ahead of origin (not yet pushed)
+- Local annotated tag `v3.26.0` existed but had not been pushed to origin
+- Working tree was dirty with uncommitted changes, but no modifications or commits were made
+
+#### Actions Taken
+1. **Pushed local branch `squad` to origin**
+   - Commit: `04e5ea56311ec79e0b6b24a0b48277a09336b6c7`
+   - Message: "squad: merge audit report publication decisions"
+   - Result: ✅ New branch created on remote
+
+2. **Pushed local tag `v3.26.0` to origin**
+   - Points to: `69ff21e90118ce8f0863a75458f806c2504d7e01`
+   - Result: ✅ New tag created on remote
+
+#### Verification
+Both refs now exist on origin:
+- `refs/heads/squad` → `04e5ea56311ec79e0b6b24a0b48277a09336b6c7`
+- `refs/tags/v3.26.0` → `69ff21e90118ce8f0863a75458f806c2504d7e01`
+
+GitHub Actions should now trigger on the pushed tag for the release workflow.
+
+---
