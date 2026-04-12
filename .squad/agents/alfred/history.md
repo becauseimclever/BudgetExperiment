@@ -395,4 +395,44 @@ All monetary calculations must use decimal type exclusively. MoneyValue value ob
 
 Barbara (in parallel session) implemented 49 new accuracy tests across Domain.Tests and Application.Tests, targeting identified gaps. All 49 tests pass; no production bugs found.
 
+---
+
+### Feature 161: BudgetScope Removal — Specification Written (2026-04-10)
+
+**Requested by:** Fortinbra (user directive from 2026-04-06)
+
+**Scope & Context:**
+- BudgetScope (Personal vs Shared) enum contradicts Kakeibo household-ledger philosophy (家計簿 = single household ledger, not personal ↔ shared duality)
+- Enum lives in `BudgetExperiment.Shared/Budgeting/BudgetScope.cs` and referenced in ~80+ files across all layers
+- High-impact, multi-phase removal required; phased delivery chosen to minimize risk
+
+**Architecture approach: 4-phase elimination**
+1. **Phase 1 (UI hide, low risk):** Remove ScopeSwitcher component; default to Shared/household; backend logic unchanged. 2–3 days. Ship safely.
+2. **Phase 2 (API simplification, medium risk):** Remove BudgetScopeMiddleware, UserContext.BudgetScope, scope from all DTOs. 3–4 days. Breaking change; clean contracts.
+3. **Phase 3 (Domain/Application purge, high risk):** Remove scope property from all entities, IUserContext, service method signatures, repository filters. 4–5 days. Extensive refactoring + test updates.
+4. **Phase 4 (Database migration, data-critical):** Drop scope columns; validate staging; production rollout. 1–2 days. Requires backup + rollback plan.
+
+**Deliverable:** `docs/161-budget-scope-removal.md` — comprehensive feature spec (23 KB) covering:
+- Problem statement (scope duality breaks Kakeibo model)
+- 5 user stories (one per phase)
+- Technical design (architecture changes, files to delete/edit by layer)
+- Phased delivery plan with risk mitigation
+- Success metrics (test coverage, zero regressions, schema clean, UI clarity)
+- TDD implementation strategy
+- Breaking changes and non-breaking aspects
+
+**Key insights:**
+- Scope is not per-household; it's per-user preference (Personal/Shared toggle). This undermines the single-household-ledger model — all members should see and reflect on the same ledger.
+- UI-centric change (Phase 1) can ship independently; backend remains scope-aware but hidden. Low risk, high confidence.
+- Database migration (Phase 4) is the bottleneck; requires staging validation + production coordination.
+- ~80+ file impact is manageable via phased delivery + TDD; each phase independently deployable.
+
+**Alignment:**
+- User directive captured in `.squad/decisions.md` (2026-04-06-235342)
+- Aligns with Kakeibo philosophy reinforcement (Feature 128+)
+- Antithetical to multi-user household model (households are collective, not individual scopes)
+- No dependency on other features; can proceed in parallel with Feature 131–136 (Kakeibo refinement)
+
+**Spec status:** Ready for team review. Feature 161 assigned (backlog) pending Vic's architecture audit feedback on phased approach.
+
 
