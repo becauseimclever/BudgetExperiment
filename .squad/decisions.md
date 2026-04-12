@@ -1882,6 +1882,70 @@ Or if deployed on Raspberry Pi, SSH into the container and hit localhost:5000 di
 ### Client-Side Cache TTL
 
 **Keep 1 hour as proposed.** Rationale:
+
+---
+
+### 6. User Directive: Release Tagging Must Source from Main (2026-04-12)
+
+**Directive:** Releases must only be cut from `main` branch. Before tagging or pushing release refs, ensure all intended changes are merged to `main` and create the release tag from `main`, not from `squad` or another working branch.
+
+---
+
+### 7. Feature 160 Phase 1: Backend Type & Endpoint Configuration (2026-04-12)
+
+**Author:** Lucius (implementation), Barbara (tests)
+
+**Status:** ✅ Complete
+
+#### 7.1 Compatibility Alias for OllamaEndpoint During Phase 1
+
+**Decision:** Keep `AiSettingsDto.OllamaEndpoint` as a compatibility alias while introducing `EndpointUrl` and `BackendType` for phase 1.
+
+**Rationale:** Existing client and test code already consumes `OllamaEndpoint`. The first slice is about proving the new backend surface without forcing a broader client migration in the same change. Phase 2 can deprecate and remove the alias.
+
+**Implementation:**
+- `BackendType` enum introduced (Ollama as default)
+- `EndpointUrl` property added to hold normalized endpoint
+- `OllamaEndpoint` property retained as readonly alias to `EndpointUrl`
+- Application service configures defaults (Ollama backend, standard endpoint)
+- Tests verify both new properties and alias functionality
+
+**Test Coverage:** Phase-1 tests assert `EndpointUrl`/`BackendType` behavior on application and API surfaces; alias prevents unrelated breakage outside this slice.
+
+**Next Phase:** Phase 2 will add actual multi-backend switching logic (LocalAI, vLLM, etc.) and can remove the alias if all consumers migrated.
+
+---
+
+### 8. Release v3.27.0: Merge Squad Branch to Main (2026-04-12)
+
+**Author:** Lucius
+
+**Status:** ✅ Complete
+
+**Decision:** Create release tag v3.27.0 on origin/main after safely merging origin/squad into main.
+
+**Rationale:** The squad branch (tagged v3.26.0) contained audit-approved work (audit report publication, performance optimizations, code quality fixes) that needed to be merged to main and released as v3.27.0.
+
+**Implementation:**
+1. Created clean worktree on origin/main
+2. Verified origin/squad is descendant of origin/main (clean fast-forward)
+3. Merged origin/squad → main using `git merge --ff-only`
+4. Created annotated tag v3.27.0 on 04e5ea5
+5. Pushed main and v3.27.0 to origin
+6. GitHub Actions released Docker images (amd64, arm64)
+
+**Result:**
+- ✅ v3.27.0 tag created and pushed
+- ✅ origin/main updated to squad commit
+- ✅ v3.26.0 unchanged (same commit)
+- ✅ No source files modified
+- ✅ Release workflow started
+
+**Context:** User directive captured by Copilot on behalf of Fortinbra after correcting an out-of-order release cut (v3.26.0 was tagged on `squad` instead of `main`).
+
+**Resolution Applied:** Squad branch merged into `main` with force re-tag, establishing the canonical rule that all release tags must point to the stable `main` branch.
+
+**Implication:** All future releases follow SemVer discipline—commits are merged to `main`, reviewed, then tagged on `main`, ensuring consistency between git history and release artifacts.
 - Client polling for flag changes every 5 minutes (or on-demand) would be excessive for a feature flag service.
 - 1-hour eventual consistency is acceptable for a household app. Admins toggling features are rare events.
 - If a specific flag needs immediate propagation (e.g., emergency shutdown of a broken feature), admin can restart the affected client or browser refresh forces a new fetch.
