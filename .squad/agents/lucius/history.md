@@ -840,3 +840,44 @@ The CategorySuggestionEndpoints.cs Minimal API pilot (introduced in F-153 by spl
 - Left controller behavior unchanged; all edits were formatting-only around `CreatedAtAction(...)` argument lists. `CalendarGridDto` was revalidated via the normal solution build and did not reintroduce the prior blocker.
 - `dotnet build C:\ws\BudgetExperiment\BudgetExperiment.sln --no-restore -p:UseAppHost=false` now passes.
 - Audit-readiness test run status: `BudgetExperiment.Api.Tests` with `Category!=Performance` reached 189 passed / 492 failed, and `BudgetExperiment.Infrastructure.Tests` reached 12 passed / 228 failed; sampled failures were Testcontainers fixture startup failures because Docker was unavailable at `npipe://./pipe/docker_engine`, not new assertion-level regressions.
+
+## 2026-04-12 — Final audit validation rerun (Lucius)
+
+**Requested by:** Fortinbra  
+**Status:** ✅ Audit-ready
+
+### What changed
+- Replaced non-translatable EF queries in `TransactionRepository` with SQL-friendly projections (`TransferId == null`, order/distinct on scalar/anonymous projections before materialization).
+- Adjusted `AccountRepository.GetByIdWithTransactionsAsync(Guid, ...)` to include all transactions by default so the no-range overload matches its name and no longer depends on a moving 90-day window.
+- Updated `IAccountRepository` XML docs to reflect the default all-transactions behavior.
+
+### Validation
+- Solution build: PASS
+- `BudgetExperiment.Application.Tests` with `Category!=Performance`: PASS (1132/1132)
+- `BudgetExperiment.Api.Tests` with `Category!=Performance`: PASS (681/681)
+- `BudgetExperiment.Infrastructure.Tests` with `Category!=Performance`: PASS (240/240)
+
+### Notes
+- Docker/Testcontainers validation is now confirmed locally; the earlier blocker was environmental only.
+- Worktree remains otherwise dirty; no unrelated files were touched.
+
+## Session Update: Scribe Orchestration (2026-04-12T20:32:43Z)
+
+**Merged from inbox to team decisions ledger:**
+
+1. **Feature 160 (Alfred):** Architecture Decision — Pluggable AI Backend via Strategy Pattern + OpenAiCompatibleAiService base class. Approved. Implementation ready.
+2. **Feature 161 (Alfred):** Specification complete (docs/161-budget-scope-removal.md). 4-phase elimination of BudgetScope enum to enforce Kakeibo single-household model. Ready for team review & scheduling.
+3. **Controllers Standard (Fortinbra):** All API endpoints must use ASP.NET Core controllers. No Minimal API. CategorySuggestionEndpoints pilot reverted.
+4. **Features 151–153 (Lucius):** TransactionFactory, Parsers (RuleSuggestionResponseParser, ImportRowProcessor, ChatActionParser), CategorySuggestionService, Controller splits. All tests green (Domain: 919, Application: 1125, Client: 2824).
+5. **FeatureFlagClientService (Lucius):** Fixed singleton/scoped captive dependency by injecting IHttpClientFactory instead of HttpClient. Established pattern for new API controller tests.
+6. **Perf Batch 156/159 (Lucius):** F-156 N+1 fix (ReportService), F-159 v2 pagination endpoint + v1 deprecation.
+7. **KakeiboSetupBanner (Lucius):** Modal implementation (ModalSize.Small, overlay dismiss, footer buttons).
+8. **Principle Re-Audit (Vic):** Findings post-151–153. Critical/High findings resolved. Decisions needed: Minimal API mapper pattern, god class reduction priority, controller growth monitoring.
+
+**Outcome:** Lucius audit-ready. Two backend regressions fixed (TransactionRepository projections, AccountRepository default overload). Full test suite green (Application, API, Infrastructure; excluding Performance). Solution ready for merge.
+
+**Post-Agent Tasks Complete:**
+- ✅ Orchestration log: .squad/orchestration-log/2026-04-12T20-32-43Z-lucius.md
+- ✅ Session log: .squad/log/2026-04-12T20-32-43Z-audit-ready.md
+- ✅ Decisions merged to decisions.md; inbox cleared
+- ✅ This history updated

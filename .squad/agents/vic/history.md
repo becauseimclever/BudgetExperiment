@@ -117,3 +117,24 @@ Performance findings P-001 and P-002 — should team prioritize immediate fixes 
 - Per-action-type parser extraction pattern (ChatActionParser → TransactionActionParser, etc.)
 
 **Architectural question for team:** Should Minimal API endpoints use inline mappers or Application-layer mappers?
+
+## Session Update: Scribe Orchestration (2026-04-12T20:32:43Z)
+
+**Merged from inbox to team decisions ledger:**
+
+1. **Feature 160 (Alfred):** Architecture Decision — Pluggable AI Backend via Strategy Pattern + OpenAiCompatibleAiService base class. Approved. Implementation ready.
+2. **Feature 161 (Alfred):** Specification complete (docs/161-budget-scope-removal.md). 4-phase elimination of BudgetScope enum to enforce Kakeibo single-household model. Ready for team review & scheduling.
+3. **Controllers Standard (Fortinbra):** All API endpoints must use ASP.NET Core controllers. No Minimal API. CategorySuggestionEndpoints pilot reverted.
+4. **Features 151–153 (Lucius):** TransactionFactory, Parsers (RuleSuggestionResponseParser, ImportRowProcessor, ChatActionParser), CategorySuggestionService, Controller splits. All tests green (Domain: 919, Application: 1125, Client: 2824).
+5. **FeatureFlagClientService (Lucius):** Fixed singleton/scoped captive dependency by injecting IHttpClientFactory instead of HttpClient. Established pattern for new API controller tests.
+6. **Perf Batch 156/159 (Lucius):** F-156 N+1 fix (ReportService), F-159 v2 pagination endpoint + v1 deprecation.
+7. **KakeiboSetupBanner (Lucius):** Modal implementation (ModalSize.Small, overlay dismiss, footer buttons).
+8. **Principle Re-Audit (Vic):** Findings post-151–153. Critical/High findings resolved. Decisions needed: Minimal API mapper pattern, god class reduction priority, controller growth monitoring.
+
+**Outcome:** Lucius audit-ready. Two backend regressions fixed (TransactionRepository projections, AccountRepository default overload). Full test suite green (Application, API, Infrastructure; excluding Performance). Solution ready for merge.
+
+**Post-Agent Tasks Complete:**
+- ✅ Orchestration log: .squad/orchestration-log/2026-04-12T20-32-43Z-lucius.md
+- ✅ Session log: .squad/log/2026-04-12T20-32-43Z-audit-ready.md
+- ✅ Decisions merged to decisions.md; inbox cleared
+- ✅ This history updated
