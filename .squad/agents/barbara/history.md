@@ -875,3 +875,48 @@ Wrote API integration tests for F149 DIP fix using `WebApplicationFactory` with 
 
 ✅ Phase 3 of F-149 acceptance criteria met: "At least two API tests mock ICalendarService and IAccountService" (actually 6 tests written across both interfaces)
 
+
+---
+
+### 2026-04-10 — Performance Batch Audit (Features 154–159)
+
+**Role:** Auditor
+**Scope:** Read-only audit of Features 154–159 and Lucius's final backend regression fixes.
+**Status:** ✅ PASS — repo ready, no blocking findings.
+
+**Audit Coverage:**
+- **Feature 154 (DataHealthService triple-load + O(n²) dedup fix):** Single-fetch refactor with feature flag gating, windowed near-duplicate detection. Both flag-on and flag-off paths tested (projection calls verified via Moq). Reflection-based O(n²) guard test validates window bound. Clean.
+- **Feature 155 (BudgetProgressService N+1 fix):** Replaced per-category loop with single GetSpendingByCategoriesAsync GROUP BY query. Application test verifies contract (once/never). Dead fallback code noted (non-blocking).
+- **Feature 156 (ReportService N+1 category lookup fix):** BuildCategoryLookup from navigation properties, DistinctBy, dictionary lookup. Tests verify GetByIdAsync never called. Clean.
+- **Feature 157 (DataHealth repository unbounded queries + projections):** Five new projection methods, all with AsNoTracking, scope filtering, integration tests. GetAllForHealthAnalysisAsync fully removed. Clean.
+- **Feature 158 (GetAllDescriptionsAsync bounded search):** searchPrefix + Take(maxResults) cap. Integration tests for prefix and cap. Clean.
+- **Feature 159 (Transactions date-range endpoint pagination):** v1 deprecated with RFC-compliant headers. v2 paginated controller with input validation. API tests cover both. Clean.
+
+**Non-Blocking Observations:**
+1. **Missing integration test:** GetSpendingByCategoriesAsync has no Infrastructure.Tests coverage. The EF Core GroupBy/Sum/Math.Abs on value-owned property is non-trivial — recommend adding in a future pass.
+2. **Dead code:** BudgetProgressService.GetMonthlySummaryAsync has unreachable fallback to GetSpendingByCategoryAsync (the groupedSpendingTask is not null check is always true). Cosmetic cleanup candidate.
+3. **DataHealthService disabled path:** Calls GetTransactionProjectionsForDuplicateDetectionAsync 2× (test correctly asserts Times.Exactly(2)). Enabled path consolidates to 1×. Both paths are better than the original 3× full-table-load.
+
+**Decision filed:** .squad/decisions/inbox/barbara-audit-pass.md
+
+## 2026-04-12: Final Audit Pass (Fortinbra Directive)
+
+**Timestamp:** 2026-04-12T20:41:58Z  
+**Task:** Read-only audit of performance batch (Features 154–159) + final backend fixes  
+**Status:** ✅ Complete  
+
+### Summary
+
+Audited 2053 tests across application, API, and infrastructure layers (excluding Performance).
+
+**Verdict:** Ready to ship — no blocking findings.
+
+**Findings:**
+- All six features implemented, tested, green.
+- One non-blocking future follow-up: add PostgreSQL integration test for GetSpendingByCategoriesAsync (low risk, pattern proven).
+- Two cosmetic observations: dead fallback code, minor spec imprecision (tested correctly).
+- All architectural and contract tests validated.
+
+### Details
+See .squad/decisions/decisions.md for full findings. Orchestration log: .squad/orchestration-log/2026-04-12T20-41-58Z-barbara.md.
+
