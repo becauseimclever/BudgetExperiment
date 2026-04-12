@@ -2552,3 +2552,175 @@ Both refs now exist on origin:
 GitHub Actions should now trigger on the pushed tag for the release workflow.
 
 ---
+
+---
+
+## 43. Release Order Recovery Decision — v3.26.0
+
+# Release Order Recovery Decision — v3.26.0
+
+**Author:** Alfred  
+**Date:** 2026-04-12  
+**Issue:** v3.26.0 tag and release published from `squad` branch instead of `main`.
+
+---
+
+## Situation
+
+- **Current state:** v3.26.0 tag exists at commit `04e5ea5` on `origin/squad`; GitHub release published with full notes.
+- **Problem:** Canonical releases should be cut from `main`, not feature/integration branches.
+- **Risk:** If someone clones v3.26.0, they receive squad-only commits, not the integrated, stable main-branch code.
+- **Ancestry:** `main` is a strict ancestor of `squad`; no conflicts exist.
+
+---
+
+## Decision
+
+**Do NOT delete or replace the v3.26.0 release.** Instead, execute this sequence:
+
+### Phase 1: Merge Squad → Main
+
+1. Check out `main`: `git checkout main`
+2. Merge `squad` non-destructively:
+   ```
+   git merge origin/squad --no-ff
+   ```
+   (Creates merge commit, preserves squad history; `-ff-only` alternative if preferred)
+3. Verify merge is clean (no conflicts expected — main is ancestor).
+
+### Phase 2: Re-Tag on Main
+
+4. **Option A (Preserves Release Number):**
+   ```
+   git tag -f v3.26.0 HEAD
+   git push origin main
+   git push origin v3.26.0 -f
+   ```
+   - Updates the tag to point to the merge commit on main.
+   - GitHub release automatically reflects the new commit.
+   - Preserves v3.26.0 version identity.
+
+   **OR**
+
+5. **Option B (Creates Sequential Version):**
+   ```
+   git tag v3.26.1 HEAD
+   git push origin main
+   git push origin v3.26.1
+   ```
+   - Leaves v3.26.0 on squad as historical record.
+   - New release v3.26.1 points to main.
+   - Cleaner tag history; no force-push needed.
+
+---
+
+## Recommendation
+
+**Use Option A** (re-tag on main). Rationale:
+- Docker CI/CD already consumed v3.26.0; re-tagging to main is transparent.
+- Avoids version number inflation.
+- Establishes the rule: **release tags always point to main**.
+
+---
+
+## Next Steps
+
+**Do NOT execute** until coordinated with team lead. This decision documents the path; implementation is deferred pending final go-ahead.
+
+1. Ensure all squad changes are CI-tested against the merge commit.
+2. Coordinate with Docker CI/CD team if re-pushing the tag requires image rebuild.
+3. If force-push of tags is restricted, use **Option B** instead.
+
+---
+
+## Notes
+
+- All work in squad already exists; this is a **branch structure fix**, not a code change.
+- No commits are lost or discarded in either option.
+- The decision enforces: **main = production release branch** going forward.
+
+
+---
+
+## 44. Release State Inspection: v3.26.0 Alignment Issue
+
+# Release State Inspection: v3.26.0 Alignment Issue
+
+**Date:** 2026-04-12  
+**Inspector:** Lucius (Backend Dev)  
+**Status:** NEEDS REMEDIATION
+
+## Findings
+
+### 1. Branch & Tag State
+
+- **Local `main`**: `a587fc7` — "Adding Playwright skills"
+- **Local `squad`**: `1d8c505` — "squad: orchestration, release v3.26.0 push completion"
+- **origin/main**: `a587fc7` — "Adding Playwright skills"
+- **origin/squad**: `04e5ea5` — "squad: merge audit report publication decisions"
+- **Tag v3.26.0**: Points to `04e5ea5` (on origin/squad, tagged commit)
+
+### 2. Divergence Analysis
+
+**Main is 5 commits behind squad:**
+```
+1d8c505 squad: orchestration, release v3.26.0 push completion
+04e5ea5 squad: merge audit report publication decisions  ← v3.26.0 tag here
+c57014a .squad: Record Barbara audit pass — performance batch 154–159 release-ready
+b1b6136 .squad: Merge Barbara final audit, update decisions
+87e23ca Post-agent orchestration: Merge 9 inbox decisions, update team histories, log audit-ready outcome
+```
+
+**v3.26.0 is NOT in origin/main:**
+- The tag points to commit `04e5ea5` on origin/squad
+- origin/main is at `a587fc7`, which is an ancestor of neither squad branch
+- These branches have **diverged completely**
+
+### 3. Release Status
+
+✅ **GitHub Release EXISTS** for v3.26.0 (created 2026-04-12 21:22:24 UTC)
+- Author: github-actions[bot] (automated)
+- Target: **main** (release was created targeting main branch)
+- Published: 2026-04-12 21:24:21 UTC
+- Status: No assets (source-only release)
+
+### 4. Workflow Status
+
+❌ **Docker Build-Publish workflow** for v3.26.0:
+- Run #225: Status=**FAILURE**
+- Event: Pushed to tag v3.26.0 on commit `04e5ea5` (squad branch)
+- Conclusion: Failed
+
+## Problem Statement
+
+**The release was cut from the wrong branch and to the wrong destination.**
+
+The workflow that ran (docker-build-publish.yml) executed against `04e5ea5` on squad branch, **not** from origin/main where the release was published. This creates a **versioning inconsistency:**
+- The GitHub Release (v3.26.0) was created targeting `main` and published as a stable release
+- But the tagged commit `04e5ea5` exists only on `squad`
+- The actual `main` branch is 5+ commits behind and untagged
+
+**Additionally:** squad has uncommitted local changes (~80 files modified/deleted), and the Docker build failed on the v3.26.0 push.
+
+## Root Cause
+
+Workflow execution order:
+1. Squad branch advanced with orchestration commits
+2. Tag v3.26.0 was created on squad (`04e5ea5`)
+3. Release.yml created GitHub release **targeting main**, but the tag was on squad
+4. Docker build triggered from the tag, but failed
+5. Main was never merged with squad before or after the release
+
+## Recommendation
+
+Before continuing:
+1. **Understand intent:** Was v3.26.0 meant to release from squad or main? (Should be main per SemVer discipline)
+2. **Merge squad → main:** If release quality confirmed, merge squad into main so they point to the same commit
+3. **Re-tag if needed:** If main should have the v3.26.0 tag, move the tag or create a new one after merge
+4. **Re-run workflows:** Re-trigger docker-build-publish.yml from the correct commit on main
+5. **Clean squad:** Commit or reset the 80 local file changes on squad branch before next work
+
+This decision block is intentionally non-prescriptive—the fix depends on whether the release was _premature_ (squad work not ready for main) or _misaligned_ (right code, wrong branch).
+
+**Do not proceed with merging squad → main without confirming the release intent with the PO and/or Alfred (Architect).**
+
