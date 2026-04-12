@@ -920,3 +920,35 @@ Audited 2053 tests across application, API, and infrastructure layers (excluding
 ### Details
 See .squad/decisions/decisions.md for full findings. Orchestration log: .squad/orchestration-log/2026-04-12T20-41-58Z-barbara.md.
 
+## 2026-04-13: Audit Pass 2 — Deep Read of Performance Batch (Fortinbra Directive)
+
+**Task:** Full read-only audit of Features 154–159 production code, tests, and specs.  
+**Status:** ✅ Complete  
+
+### Scope
+
+Read every line of:
+- `DataHealthService.cs` (738 lines) — both feature-flag paths, all projection overloads
+- `BudgetProgressService.cs` (219 lines) — grouped spending refactor
+- `TransactionRepository.cs` — all 6 new/modified methods (projections, bounded queries, grouped spending)
+- `TransactionQueryV2Controller.cs` (82 lines) — new paginated v2 endpoint
+- `TransactionQueryController.cs` — v1 deprecation headers
+- `DataHealthServiceTests.cs` (452 lines) — contract + behavioral + linear-guard tests
+- `BudgetProgressServiceTests.cs` (435 lines) — N+1 contract + all summaries
+- `ReportServiceTests.cs` — NeverCallsGetByIdAsync + Unknown fallback
+- `TransactionRepositoryTests.cs` — all 6 new integration tests (projections, bounded, prefix)
+- `TransactionsControllerTests.cs` — deprecation headers, v2 pagination, pageSize cap
+
+### Findings
+
+1. **`GetSpendingByCategoriesAsync` has no integration test** (Medium). The GROUP BY + Math.Abs + negative-amount filter query is only tested via mocks. Every other new projection method has a Testcontainers test. The spec explicitly called for this test. Recommend adding it as a follow-up.
+
+2. **Dead fallback in `BudgetProgressService`** (Not blocking). `groupedSpendingTask is not null` is always true for `Task<T>` — the per-category fallback is unreachable dead code.
+
+3. **V2 missing `startDate > endDate` → 400 test** (Minor). The validation exists in the controller but isn't tested for the v2 endpoint (v1 has this test).
+
+### Verdict
+
+**Release-ready.** No bugs, no regressions. One follow-up integration test recommended.
+
+**Decision filed:** `.squad/decisions/inbox/barbara-audit-pass-2.md`

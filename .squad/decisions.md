@@ -2464,3 +2464,34 @@ Should the team prioritize P-001 and P-002 as immediate fixes, or batch all High
 - Doc 159: Option A (deprecate) or B (pagination) — **Fortinbra decision needed**
 
 ---
+
+### 22. Performance Batch 154–159 Audit Complete — Release-Ready (2026-04-12)
+
+**By:** Barbara (Tester)  
+**Scope:** Features 154–159 (performance batch) implementation and test coverage audit  
+**Verdict:** ✅ **Release-ready** — no blocking bugs, no regressions
+
+**Findings:**
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| Missing integration test for `TransactionRepository.GetSpendingByCategoriesAsync` (Feature 155) | Medium | Non-blocking follow-up |
+| Dead fallback code in `BudgetProgressService` (lines 100–116) | Low | Noted, not blocking |
+| V2 endpoint missing `startDate > endDate` validation test | Minor | Coverage gap |
+
+**Test Coverage Verdict:**
+- Feature 154 (DataHealth) — ✅ Green: contract + behavioral + linear guard tests
+- Feature 155 (BudgetProgress) — ⚠️ Unit tests green, **missing integration test** for grouped query
+- Feature 156 (ReportService) — ✅ Green: N+1 fix verified, nav-property dict pattern clean
+- Feature 157 (Unbounded queries) — ✅ Green: 6 integration tests validate all projection shapes
+- Feature 158 (GetAllDescriptions) — ✅ Green: bounded + EF translation tests (LIKE operator)
+- Feature 159 (v1 deprecation + v2 paginated) — ✅ Green: headers + v2 pagination logic
+
+**Decision:**
+The batch is ready for release. The missing `GetSpendingByCategoriesAsync` integration test is a test-coverage gap, not a bug (query logic is straightforward and unit-tested). **File as follow-up task:** Add PostgreSQL integration test with known transaction data, validate grouped totals match per-category queries.
+
+**Related Docs:**
+- Audit detail: `.squad/decisions/inbox/barbara-audit-pass-2.md` (merged here)
+- Orchestration log: `.squad/orchestration-log/2026-04-12T20-53-24Z-barbara.md`
+
+---
