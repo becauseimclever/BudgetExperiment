@@ -1,3 +1,45 @@
+## 2026-04-12: Audit Report Publication & User Directive
+
+**Merged by:** Scribe (2026-04-12T21:17:05Z)  
+**Source:** Inbox decisions consolidation  
+
+### DECISION: Publish Audit Report to docs/audit (Barbara)
+
+**Author:** Barbara (Tester)  
+**Date:** 2026-04-12T21:22:00Z  
+**Decision ID:** barbara-publish-audit-report  
+**Status:** ACCEPTED  
+
+**Summary:** Create human-readable audit report in docs/audit/ for Features 154–159 performance fixes. Report follows structure of existing 2026-04-10 principle re-audit.
+
+**Artifact:** docs/audit/2026-04-12-performance-batch-154-159-release-validation.md (10,611 bytes)
+
+**Key Findings:**
+- All performance fixes (P-001 through P-007) resolved ✅
+- Release-ready with one non-blocking follow-up
+- No blocking bugs or regressions
+
+**Impact:**
+- Audit reports now centralized in docs/audit/
+- Establishes convention: audit reports belong in docs/audit (not only squad logs)
+- Enhances team visibility and discoverability
+
+**Next Steps:**
+1. ✅ Report created and published to docs/audit/
+2. File non-blocking follow-up task: "Add PostgreSQL integration test for GetSpendingByCategoriesAsync"
+3. Merge decision to decisions.md (done)
+
+---
+
+### DIRECTIVE: Audit Reports Location (Copilot)
+
+**Date:** 2026-04-12T21:13:07Z  
+**Directive:** Audit reports should be written into the docs audit folder, not only squad logs.  
+**Rationale:** User request — captured for team memory  
+**Status:** ACCEPTED & IMPLEMENTED
+
+---
+
 # Squad Decisions — Code Quality Review (2026-03-22)
 
 ## Executive Summary
@@ -1815,4 +1857,5 @@ Read-only audit of Features 154–159 (performance batch) and final backend regr
 ### Recommendation
 
 **Ship immediately.** Missing integration test is a non-blocking future follow-up.
+
 

@@ -20,6 +20,17 @@
 
 Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests — all under `tests/`.
 
+## Recent Tasks & Decisions
+
+### 2026-04-12: Audit Report Publication
+- **Task:** Publish docs-facing audit report from completed audit artifacts
+- **Outcome:** Created `docs/audit/2026-04-12-performance-batch-154-159-release-validation.md`
+- **Convention:** Established that audit reports belong in docs/audit (not only squad logs)
+- **Decision:** Merged `barbara-publish-audit-report` decision to squad decisions.md
+- **Status:** COMPLETE
+
+---
+
 ## Core Context
 
 ### Testcontainers Migration & Test Infrastructure
@@ -952,3 +963,27 @@ Read every line of:
 **Release-ready.** No bugs, no regressions. One follow-up integration test recommended.
 
 **Decision filed:** `.squad/decisions/inbox/barbara-audit-pass-2.md`
+
+---
+
+## 2026-04-12: Docs Audit Report Publication (Fortinbra Directive)
+
+**Timestamp:** 2026-04-12T21:22:00Z  
+**Task:** Create docs-facing audit report from existing orchestration log findings  
+**Status:** ✅ Complete
+
+**Artifact Created:** `docs/audit/2026-04-12-performance-batch-154-159-release-validation.md`
+
+**Format & Style:** Follows existing `docs/audit/2026-04-10-principle-reaudit-post-151-153.md` structure (Executive Summary → Release Readiness → Non-Blocking Follow-Ups → Coverage Gaps → Strengths → Release Decision).
+
+**Content:**
+- Scoped to Features 154–159 and performance fixes P-001 through P-007
+- Each feature summarized with "What was fixed" + "Evidence" + "Improvement"
+- Non-blocking follow-up flagged: PostgreSQL integration test for `GetSpendingByCategoriesAsync` (Medium severity)
+- Coverage gap identified: V2 endpoint missing `startDate > endDate` test
+- Strengths section highlights N+1 elimination, projection strategy, feature flags, backward compatibility
+- Final release decision: ✅ **APPROVED FOR RELEASE** with non-blocking follow-up task noted
+
+**Human-Readable:** All technical findings translated to plain English (no SQL, no tool internals, no configuration leakage).
+
+**Team Decision:** Filed to `.squad/decisions/inbox/barbara-publish-audit-report.md`
