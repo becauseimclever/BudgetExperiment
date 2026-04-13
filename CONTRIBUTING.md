@@ -35,9 +35,11 @@ Please review the comprehensive engineering guide in [`.github/copilot-instructi
 
 ### 1. Create a Feature Branch
 
+`main` must always stay releasable. `develop` is the integration branch for day-to-day work, and feature branches branch from and merge back into `develop` until a release is ready.
+
 ```bash
-git checkout main
-git pull origin main
+git checkout develop
+git pull origin develop
 git checkout -b feature/your-feature-name
 ```
 
@@ -120,6 +122,7 @@ git commit -m "docs: update API examples in README"
 - Include tests for new functionality
 - Update documentation if needed
 - Link related issues
+- Target `develop` for feature work; only release promotion or hotfix PRs should target `main`
 
 ---
 
@@ -142,31 +145,42 @@ MAJOR.MINOR.PATCH[-PRERELEASE]
 
 ### Creating a Release
 
-1. **Ensure all changes are merged to `main`**:
+> **Releases are always cut from `main`.**
+
+1. **Ensure the release-ready work is merged to `develop`, then promote `develop` to `main`**:
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git checkout main
+   git pull origin main
+   git merge develop
+   ```
+
+2. **Confirm `main` is the releasable branch you want to ship**:
    ```bash
    git checkout main
    git pull origin main
    ```
 
-2. **Run tests to verify stability**:
+3. **Run tests to verify stability**:
    ```bash
    dotnet test
    ```
 
-3. **Create an annotated tag**:
+4. **Create an annotated tag**:
    ```bash
    git tag -a v3.1.0 -m "Release 3.1.0 - Feature description"
    ```
 
-4. **Push the tag**:
+5. **Push the tag**:
    ```bash
    git push origin v3.1.0
    ```
 
-5. **Automation takes over**:
-   - GitHub Actions builds Docker images tagged with `3.1.0`, `3.1`, `3`, and `latest`
-   - A GitHub Release is created with auto-generated changelog
-   - Images are published to `ghcr.io/becauseimclever/budgetexperiment`
+6. **Automation takes over**:
+    - GitHub Actions builds Docker images tagged with `3.1.0`, `3.1`, `3`, and `latest`
+    - A GitHub Release is created with auto-generated changelog
+    - Images are published to `ghcr.io/becauseimclever/budgetexperiment`
 
 ### Pre-release Workflow
 
@@ -212,6 +226,12 @@ git push origin hotfix/3.0.1
 git checkout main
 git merge hotfix/3.0.1
 git push origin main
+
+# Sync the hotfix back to develop
+git checkout develop
+git pull origin develop
+git merge main
+git push origin develop
 ```
 
 ### Version Information

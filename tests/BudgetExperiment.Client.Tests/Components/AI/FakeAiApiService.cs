@@ -33,8 +33,36 @@ internal sealed class FakeAiApiService : IAiApiService
         get; set;
     }
 
+    /// <summary>
+    /// Gets or sets the result returned from <see cref="UpdateSettingsAsync"/>.
+    /// </summary>
+    public AiSettingsDto? UpdateSettingsResult
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets the last settings sent to <see cref="UpdateSettingsAsync"/>.
+    /// </summary>
+    public AiSettingsDto? LastUpdatedSettings
+    {
+        get; private set;
+    }
+
+    /// <summary>
+    /// Gets the number of times <see cref="GetStatusAsync"/> has been called.
+    /// </summary>
+    public int GetStatusCallCount
+    {
+        get; private set;
+    }
+
     /// <inheritdoc/>
-    public Task<AiStatusDto?> GetStatusAsync() => Task.FromResult(StatusResult);
+    public Task<AiStatusDto?> GetStatusAsync()
+    {
+        GetStatusCallCount++;
+        return Task.FromResult(StatusResult);
+    }
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<AiModelDto>> GetModelsAsync() => Task.FromResult(ModelsResult);
@@ -43,7 +71,21 @@ internal sealed class FakeAiApiService : IAiApiService
     public Task<AiSettingsDto?> GetSettingsAsync() => Task.FromResult(SettingsResult);
 
     /// <inheritdoc/>
-    public Task<AiSettingsDto?> UpdateSettingsAsync(AiSettingsDto settings) => Task.FromResult<AiSettingsDto?>(settings);
+    public Task<AiSettingsDto?> UpdateSettingsAsync(AiSettingsDto settings)
+    {
+        LastUpdatedSettings = new AiSettingsDto
+        {
+            BackendType = settings.BackendType,
+            EndpointUrl = settings.EndpointUrl,
+            ModelName = settings.ModelName,
+            Temperature = settings.Temperature,
+            MaxTokens = settings.MaxTokens,
+            TimeoutSeconds = settings.TimeoutSeconds,
+            IsEnabled = settings.IsEnabled,
+        };
+
+        return Task.FromResult<AiSettingsDto?>(UpdateSettingsResult ?? settings);
+    }
 
     /// <inheritdoc/>
     public Task<AnalysisResponseDto?> AnalyzeAsync() => Task.FromResult<AnalysisResponseDto?>(null);

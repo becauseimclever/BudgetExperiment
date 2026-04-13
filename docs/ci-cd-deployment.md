@@ -203,15 +203,17 @@ docker compose -f docker-compose.pi.yml logs -f
 3. Runs API: `dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj`
 4. Makes code changes
 5. Tests locally
-6. Commits and pushes to GitHub
+6. Opens a feature pull request into `develop`
+7. Release-ready work is promoted from `develop` to `main`
 
 ### Build and Publish Workflow
 
-1. Developer pushes to `main` or creates a tag
-2. GitHub Actions workflow triggers automatically
-3. Multi-architecture Docker image is built
-4. Image is pushed to ghcr.io with appropriate tags
-5. Deployment environments can now pull the new image
+1. Standard CI validates pushes and pull requests on `develop` and `main`
+2. When `main` is ready to ship, a release tag is created from `main`
+3. The Docker publish workflow triggers from that tag (or manual dispatch)
+4. Multi-architecture Docker image is built
+5. Image is pushed to ghcr.io with appropriate tags
+6. Deployment environments can now pull the new image
 
 ### Update Deployment Workflow
 

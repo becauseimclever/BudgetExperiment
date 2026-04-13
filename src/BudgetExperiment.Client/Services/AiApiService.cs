@@ -130,7 +130,7 @@ public sealed class AiApiService : IAiApiService
             var errorMessage = statusCode switch
             {
                 504 => "AI analysis timed out. The AI service took too long to respond. Try increasing the timeout in AI Settings.",
-                503 => "AI service is unavailable. Please check that Ollama is running and configured correctly.",
+                503 => "AI service is unavailable. Please check that the selected AI backend is running and configured correctly.",
                 _ => $"AI analysis failed with status {statusCode}. {errorContent}",
             };
 

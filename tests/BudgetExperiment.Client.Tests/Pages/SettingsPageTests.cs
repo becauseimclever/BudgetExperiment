@@ -9,9 +9,11 @@ using BudgetExperiment.Client.Pages;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Contracts.Dtos;
+using BudgetExperiment.Shared;
 
 using Bunit;
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -411,12 +413,85 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     public void AiTab_ShowsAboutLocalAi()
     {
         SetupSettingsData();
-        _aiApiService.AiStatus = new AiStatusDto { IsAvailable = true, CurrentModel = "llama3" };
+        SetupAiData();
 
         var cut = Render<Settings>();
         cut.FindAll("button.settings-tab")[1].Click();
 
         cut.Markup.ShouldContain("About Local AI");
+    }
+
+    /// <summary>
+    /// Verifies the AI settings route opens the AI tab with backend-aware copy and generic endpoint naming.
+    /// </summary>
+    [Fact]
+    public void AiRoute_ShowsBackendAwareSettingsAndCopy()
+    {
+        SetupSettingsData();
+        SetupAiData(backendType: AiBackendType.LlamaCpp, endpointUrl: AiBackendDefaults.DefaultLlamaCppEndpointUrl, modelName: "phi-4", includeModels: false);
+        Services.GetRequiredService<NavigationManager>().NavigateTo("http://localhost/ai/settings");
+
+        var cut = Render<Settings>();
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Backend:");
+            cut.Markup.ShouldContain("llama.cpp");
+            cut.Markup.ShouldContain("Endpoint:");
+            cut.Markup.ShouldNotContain("Ollama Endpoint");
+            cut.Markup.ShouldContain("Point the Endpoint setting to your llama.cpp server.");
+            cut.Markup.ShouldContain("Make sure llama.cpp is running and has models available.");
+            cut.Markup.ShouldContain("About Local AI Backends");
+        });
+    }
+
+    /// <summary>
+    /// Verifies saving AI settings from the page persists backend changes and refreshes status.
+    /// </summary>
+    [Fact]
+    public void AiTab_Save_PersistsBackendChange_AndRefreshesStatus()
+    {
+        SetupSettingsData();
+        SetupAiData();
+        _aiApiService.UpdateSettingsResult = new AiSettingsDto
+        {
+            BackendType = AiBackendType.LlamaCpp,
+            EndpointUrl = "http://localhost:8081",
+            ModelName = "phi-4",
+            Temperature = 0.3m,
+            MaxTokens = 2000,
+            TimeoutSeconds = 120,
+            IsEnabled = true,
+        };
+
+        var cut = Render<Settings>();
+        cut.FindAll("button.settings-tab")[1].Click();
+        cut.WaitForAssertion(() => cut.Find("#backendType"));
+
+        var initialStatusCalls = _aiApiService.GetStatusCallCount;
+        _aiApiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            IsEnabled = true,
+            BackendType = AiBackendType.LlamaCpp,
+            CurrentModel = "phi-4",
+            Endpoint = "http://localhost:8081",
+        };
+
+        cut.Find("#backendType").Change("LlamaCpp");
+        cut.Find("#endpointUrl").Change("http://localhost:8081");
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() =>
+        {
+            _aiApiService.LastUpdatedSettings.ShouldNotBeNull();
+            _aiApiService.LastUpdatedSettings!.BackendType.ShouldBe(AiBackendType.LlamaCpp);
+            _aiApiService.LastUpdatedSettings.EndpointUrl.ShouldBe("http://localhost:8081");
+            _aiApiService.GetStatusCallCount.ShouldBeGreaterThan(initialStatusCalls);
+            cut.Markup.ShouldContain("AI settings saved successfully!");
+            cut.Markup.ShouldContain("Backend:");
+            cut.Markup.ShouldContain("http://localhost:8081");
+        });
     }
 
     private void SetupSettingsData(bool enableLocation = false)
@@ -436,5 +511,44 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
             FirstDayOfWeek = DayOfWeek.Sunday,
             IsOnboarded = true,
         };
+    }
+
+    private void SetupAiData(
+        AiBackendType backendType = AiBackendType.Ollama,
+        string? endpointUrl = null,
+        string modelName = "llama3.2",
+        bool includeModels = true)
+    {
+        var effectiveEndpoint = endpointUrl ?? AiBackendDefaults.GetDefaultEndpointUrl(backendType);
+        _aiApiService.Settings = new AiSettingsDto
+        {
+            BackendType = backendType,
+            EndpointUrl = effectiveEndpoint,
+            ModelName = modelName,
+            Temperature = 0.3m,
+            MaxTokens = 2000,
+            TimeoutSeconds = 120,
+            IsEnabled = true,
+        };
+
+        _aiApiService.AiStatus = new AiStatusDto
+        {
+            IsAvailable = true,
+            IsEnabled = true,
+            BackendType = backendType,
+            CurrentModel = modelName,
+            Endpoint = effectiveEndpoint,
+        };
+
+        _aiApiService.Models.Clear();
+        if (includeModels)
+        {
+            _aiApiService.Models.Add(new AiModelDto
+            {
+                Name = modelName,
+                SizeBytes = 1024,
+                ModifiedAt = DateTime.UtcNow,
+            });
+        }
     }
 }

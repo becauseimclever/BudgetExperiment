@@ -1,5 +1,6 @@
 @* AiSettingsForm.razor - Form for configuring AI settings *@
 
+@using BudgetExperiment.Shared
 @inject IAiApiService AiService
 
 <div class="ai-settings-form">
@@ -11,14 +12,28 @@
     {
         <form @onsubmit="HandleSubmit">
             <div class="form-group">
-                <label for="ollamaEndpoint" class="form-label">Ollama Endpoint:</label>
-                <input id="ollamaEndpoint"
+                <label for="backendType" class="form-label">AI Backend:</label>
+                <select id="backendType"
+                        class="form-control"
+                        value="@settings.BackendType"
+                        @onchange="OnBackendTypeChanged">
+                    @foreach (var backendType in Enum.GetValues<AiBackendType>())
+                    {
+                        <option value="@backendType">@GetBackendDisplayName(backendType)</option>
+                    }
+                </select>
+                <small class="text-secondary">Choose the local AI runtime Budget Experiment should use</small>
+            </div>
+
+            <div class="form-group">
+                <label for="endpointUrl" class="form-label">Endpoint URL:</label>
+                <input id="endpointUrl"
                        type="url"
                        class="form-control"
-                       @bind="settings.OllamaEndpoint"
-                       placeholder="http://localhost:11434"
+                       @bind="settings.EndpointUrl"
+                       placeholder="@GetEndpointPlaceholder()"
                        required />
-                <small class="text-secondary">The URL of your Ollama instance</small>
+                <small class="text-secondary">@GetEndpointHelpText()</small>
             </div>
 
             <div class="form-row">
@@ -140,7 +155,7 @@
                 @if (connectionStatus.IsAvailable)
                 {
                     <span class="status-icon">✅</span>
-                    <span>Connected to Ollama - Model: @connectionStatus.CurrentModel</span>
+                    <span>@GetConnectionMessage(connectionStatus)</span>
                 }
                 else
                 {
@@ -193,6 +208,27 @@
         isLoading = false;
     }
 
+    private void OnBackendTypeChanged(ChangeEventArgs args)
+    {
+        if (settings == null || args.Value is not string value || !Enum.TryParse<AiBackendType>(value, out var backendType))
+        {
+            return;
+        }
+
+        var previousBackendType = settings.BackendType;
+        var currentEndpoint = settings.EndpointUrl;
+
+        settings.BackendType = backendType;
+
+        if (ShouldUseBackendDefaultEndpoint(previousBackendType, currentEndpoint))
+        {
+            settings.EndpointUrl = AiBackendDefaults.GetDefaultEndpointUrl(backendType);
+        }
+
+        availableModels = Array.Empty<AiModelDto>();
+        connectionStatus = null;
+    }
+
     private async Task TestConnection()
     {
         isTesting = true;
@@ -218,6 +254,8 @@
             if (updated != null)
             {
                 settings = updated;
+                availableModels = await AiService.GetModelsAsync();
+                connectionStatus = null;
                 await OnSave.InvokeAsync(updated);
             }
             else
@@ -242,5 +280,34 @@
         if (bytes >= 1_048_576)
             return $"{bytes / 1_048_576.0:F1} MB";
         return $"{bytes / 1024.0:F1} KB";
+    }
+
+    private string GetEndpointPlaceholder() =>
+        settings == null
+            ? AiBackendDefaults.DefaultOllamaEndpointUrl
+            : AiBackendDefaults.GetDefaultEndpointUrl(settings.BackendType);
+
+    private string GetEndpointHelpText() =>
+        settings == null
+            ? $"Default endpoint: {AiBackendDefaults.DefaultOllamaEndpointUrl}"
+            : $"Default {GetBackendDisplayName(settings.BackendType)} endpoint: {GetEndpointPlaceholder()}";
+
+    private static string GetBackendDisplayName(AiBackendType backendType) =>
+        backendType switch
+        {
+            AiBackendType.LlamaCpp => "llama.cpp",
+            _ => "Ollama",
+        };
+
+    private static string GetConnectionMessage(AiStatusDto status) =>
+        string.IsNullOrWhiteSpace(status.CurrentModel)
+            ? $"Connected to {GetBackendDisplayName(status.BackendType)}"
+            : $"Connected to {GetBackendDisplayName(status.BackendType)} - Model: {status.CurrentModel}";
+
+    private static bool ShouldUseBackendDefaultEndpoint(AiBackendType previousBackendType, string? endpointUrl)
+    {
+        var trimmedEndpoint = endpointUrl?.Trim();
+        return string.IsNullOrWhiteSpace(trimmedEndpoint) ||
+            string.Equals(trimmedEndpoint, AiBackendDefaults.GetDefaultEndpointUrl(previousBackendType), StringComparison.OrdinalIgnoreCase);
     }
 }

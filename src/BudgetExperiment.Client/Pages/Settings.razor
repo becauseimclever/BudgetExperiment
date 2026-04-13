@@ -1,6 +1,7 @@
 @page "/settings"
 @page "/ai/settings"
 
+@using BudgetExperiment.Shared
 @inject IBudgetApiService ApiService
 @inject IAiApiService AiService
 @inject VersionService VersionService
@@ -231,6 +232,10 @@
                                 <span class="status-value">@(aiStatus.IsEnabled ? "Yes" : "No")</span>
                             </div>
                             <div class="status-item">
+                                <span class="status-label">Backend:</span>
+                                <span class="status-value">@GetActiveBackendName()</span>
+                            </div>
+                            <div class="status-item">
                                 <span class="status-label">Endpoint:</span>
                                 <span class="status-value">@aiStatus.Endpoint</span>
                             </div>
@@ -283,22 +288,23 @@
                 else
                 {
                     <p class="text-secondary">
-                        No models found. Make sure Ollama is running and has models installed.
+                        No models found. Make sure @GetActiveBackendName() is running and has models available.
                     </p>
                 }
             </section>
 
             <section class="settings-section">
-                <h3 class="settings-section-title">About Local AI</h3>
+                <h3 class="settings-section-title">About Local AI Backends</h3>
                 <div class="info-panel">
                     <p>
-                        Budget Experiment uses <strong>Ollama</strong> for local AI processing.
+                        Budget Experiment uses <strong>@GetActiveBackendName()</strong> through an OpenAI-compatible local endpoint.
                         All your financial data stays on your machine — nothing is ever sent to external services.
                     </p>
                     <ul>
-                        <li>Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a></li>
-                        <li>Run <code>ollama pull llama3.2</code> to download a model</li>
-                        <li>Start Ollama with <code>ollama serve</code></li>
+                        @foreach (var quickStartStep in GetBackendQuickStartSteps())
+                        {
+                            <li>@quickStartStep</li>
+                        }
                     </ul>
                 </div>
             </section>
@@ -523,12 +529,14 @@
         isLoadingModels = false;
     }
 
-    private async void OnAiSettingsSaved(AiSettingsDto saved)
+    private async Task OnAiSettingsSaved(AiSettingsDto saved)
     {
         successMessage = "AI settings saved successfully!";
         errorMessage = null;
         StateHasChanged();
-        await RefreshAiStatus();
+        await Task.WhenAll(
+            RefreshAiStatus(),
+            LoadAiModels());
     }
 
     private void OnAiSettingsError(string error)
@@ -561,4 +569,28 @@
 
         return $"{bytes / 1024.0:F1} KB";
     }
+
+    private string GetActiveBackendName() =>
+        aiStatus?.BackendType switch
+        {
+            AiBackendType.LlamaCpp => "llama.cpp",
+            _ => "Ollama",
+        };
+
+    private IReadOnlyList<string> GetBackendQuickStartSteps() =>
+        aiStatus?.BackendType switch
+        {
+            AiBackendType.LlamaCpp =>
+            [
+                "Start llama.cpp with its OpenAI-compatible server mode.",
+                "Load or download a GGUF model that the server can expose.",
+                "Point the Endpoint setting to your llama.cpp server.",
+            ],
+            _ =>
+            [
+                "Install Ollama from ollama.com.",
+                "Run ollama pull llama3.2 to download a model.",
+                "Start Ollama with ollama serve.",
+            ],
+        };
 }

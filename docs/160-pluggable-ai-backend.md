@@ -39,9 +39,9 @@ This feature introduces a **pluggable AI backend architecture** using the Strate
 **So that** my existing Ollama setup continues to work seamlessly
 
 **Acceptance Criteria:**
-- [ ] Default `AiSettings:BackendType` is `Ollama`
-- [ ] Default `AiSettings:EndpointUrl` is `http://localhost:11434`
-- [ ] Existing code and configurations work without modification
+- [x] Default `AiSettings:BackendType` is `Ollama`
+- [x] Default `AiSettings:EndpointUrl` is `http://localhost:11434`
+- [x] Existing code and configurations work without modification
 - [ ] AI features (suggestions, analysis) work as before
 
 #### US-160-002: llama.cpp Support
@@ -50,11 +50,11 @@ This feature introduces a **pluggable AI backend architecture** using the Strate
 **So that** I can use my local llama.cpp instance for AI features
 
 **Acceptance Criteria:**
-- [ ] `AiSettings:BackendType = LlamaCpp` is a valid configuration option
-- [ ] `AiSettings:EndpointUrl` defaults to `http://localhost:8080` when `BackendType=LlamaCpp`
+- [x] `AiSettings:BackendType = LlamaCpp` is a valid configuration option
+- [x] `AiSettings:EndpointUrl` defaults to `http://localhost:8080` when `BackendType=LlamaCpp`
 - [ ] Setting `BackendType=LlamaCpp` and pointing to a valid llama.cpp server results in working AI features
 - [ ] Health check (`/ai/status`) and model listing work identically between backends
-- [ ] Token counting is compatible with llama.cpp's response format
+- [x] Token counting is compatible with llama.cpp's response format
 
 #### US-160-003: Backend Transparency in API
 **As a** client consuming the AI API  
@@ -62,9 +62,9 @@ This feature introduces a **pluggable AI backend architecture** using the Strate
 **So that** I can understand service behavior and troubleshoot issues
 
 **Acceptance Criteria:**
-- [ ] `GET /api/v1/ai/status` returns the active backend type (e.g., `"Ollama"` or `"LlamaCpp"`)
-- [ ] `AiSettingsDto` includes a `BackendType` field
-- [ ] No breaking changes to existing API contracts
+- [x] `GET /api/v1/ai/status` returns the active backend type (e.g., `"Ollama"` or `"LlamaCpp"`)
+- [x] `AiSettingsDto` includes a `BackendType` field
+- [x] No breaking changes to existing API contracts
 
 #### US-160-004: Extensible Architecture
 **As a** future developer  
@@ -565,9 +565,11 @@ Refs: #160"
 - [x] Update `AiController.GetStatusAsync()` to include `BackendType` in response
 - [x] Verify `AiController.GetSettingsAsync()` and `UpdateSettingsAsync()` handle `BackendType` field
 - [ ] Update OpenAPI documentation (auto-generated or XML comments)
-- [ ] Client-side (Blazor): update AI Settings panel to include `BackendType` dropdown and `EndpointUrl` field
-- [ ] Test GET/PUT settings endpoints with both Ollama and llama.cpp configurations
+- [x] Client-side (Blazor): update AI Settings panel to include `BackendType` dropdown and `EndpointUrl` field
+- [x] Test GET/PUT settings endpoints with both Ollama and llama.cpp configurations
 - [ ] Verify OpenAPI spec accurately reflects new fields
+
+**Client behavior note:** The settings form now exposes a backend selector plus a generic `EndpointUrl` field. Switching backends updates the endpoint to the new backend default only when the user is still using the previous default; custom endpoints are preserved.
 
 **Commit:**
 ```bash
@@ -593,7 +595,7 @@ Refs: #160"
 - [ ] Update `CONTRIBUTING.md` with instructions for adding new AI backends
 - [ ] Add inline XML comments to `OpenAiCompatibleAiService` explaining extension points
 - [ ] Update feature doc status to `Complete`
-- [ ] Review all code for stray Ollama-specific comments or naming
+- [x] Review all code for stray Ollama-specific comments or naming in the touched client surface
 - [ ] Final code review and cleanup
 
 **Commit:**
@@ -619,21 +621,21 @@ Refs: #160"
 
 - **`OpenAiCompatibleAiService` base class:**
   - [ ] Health check success/failure (mocked HTTP responses)
-  - [ ] Model listing parsing (mock backend response)
-  - [ ] Chat completion with various prompts and parameters
-  - [ ] Timeout handling
+  - [x] Model listing parsing (mock backend response)
+  - [x] Chat completion with various prompts and parameters
+  - [x] Timeout handling
   - [ ] JSON serialization/deserialization of requests/responses
   - [ ] Token counting
 
 - **`OllamaAiService` (refactored):**
-  - [ ] Ollama-specific model parsing (OllamaTagsResponse structure)
-  - [ ] Health check endpoint (`/api/version`)
-  - [ ] Backward compatibility: existing tests pass unchanged
+  - [x] Ollama-specific model parsing (OllamaTagsResponse structure)
+  - [x] Health check endpoint (`/api/version`)
+  - [x] Backward compatibility: existing tests pass unchanged
 
 - **`LlamaCppAiService` (new):**
-  - [ ] llama.cpp-specific model parsing (models array structure)
-  - [ ] Health check endpoint (`/health`)
-  - [ ] Chat completion with llama.cpp response format
+  - [x] llama.cpp-specific model parsing (models array structure)
+  - [x] Health check endpoint (`/health`)
+  - [x] Chat completion with llama.cpp response format
   - [ ] Error handling (same as Ollama)
 
 - **DI Registration:**
