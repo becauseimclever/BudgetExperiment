@@ -2,6 +2,34 @@
 
 ## Active Decisions
 
+### 1. Branch Strategy Operationalization — Approved (2026-04-14)
+
+**Assessed by:** Alfred  
+**Status:** ✅ APPROVED with implementation complete
+
+**Decision:** Operationalize trunk-based development with `develop` stabilization layer:
+
+- **`main`** — Always releasable. Only receives merges from `develop` or hotfixes.
+- **`develop`** — Pre-release integration branch. Receives merges from feature branches.
+- **`feature/*`** — Individual feature work. Branch from `develop`, PR back to `develop`.
+- **`hotfix/*`** — Urgent fixes to released versions. Branch from release tag, tag new version, merge back to both `main` and `develop`.
+
+**Implementation (Completed by Lucius):**
+
+1. ✅ Updated `CONTRIBUTING.md` Step 1 to branch from `develop` (not `main`).
+2. ✅ Updated PR instructions to target `develop` for feature work.
+3. ✅ Extended CI workflow (`.github/workflows/ci.yml`) to run on both `main` and `develop`.
+4. ✅ Created `develop` branch from `origin/main` and pushed to origin.
+5. ✅ Release and Docker semantics remain unchanged (tag-driven from `main`).
+
+**Rationale:** This strategy is standard trunk-based development with a stabilization layer, common in teams that release frequently. Feature branches now gate against `develop` instead of `main`, while release and deployment workflows remain tag-driven and independent of branches.
+
+**Impact:** All feature branches must now branch from and PR against `develop`. Existing PRs against `main` should be closed and reopened against `develop`. All active feature branches must rebase/merge-rebase against `develop` before PR.
+
+**CI Status:** ✅ All checks passed.
+
+---
+
 ### 2. DIP Verdict: Three Concrete-Injecting Controllers (2026-03-22)
 
 **Assessed by:** Alfred

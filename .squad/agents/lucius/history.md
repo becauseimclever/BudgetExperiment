@@ -4,7 +4,17 @@
 - **Project:** BudgetExperiment — .NET 10 budgeting application
 - **Stack:** .NET 10, ASP.NET Core Minimal API, Blazor WebAssembly (plain, no FluentUI), EF Core + Npgsql (PostgreSQL), xUnit + Shouldly, NSubstitute/Moq (one, consistent), StyleCop.Analyzers
 
-## Release Tag v3.26.0 (2026-03-23 → 2026-04-12)
+## Core Context
+
+### Release Tag v3.26.0 — Branch Strategy Operationalization (2026-04-14)
+
+- **Branch Strategy:** Approved by Alfred; implemented by Lucius.
+- **Changes:** `develop` branch created, CI extended to main+develop, CONTRIBUTING.md updated.
+- **Release semantics:** Unchanged (tag-driven from `main`). No impact on release workflow.
+- **Status:** ✅ Ready. Feature work now routes through `develop`; CI gates both branches.
+- **Related:** `.squad/decisions.md` entry 1; orchestration logs dated 2026-04-12T22:52:28Z.
+
+### Release Tag v3.26.0 (2026-03-23 → 2026-04-12)
 
 - **Created:** Annotated tag at commit `04e5ea5` (squad: merge audit report publication decisions)
 - **Tag Status:** Local created, verified to point to HEAD

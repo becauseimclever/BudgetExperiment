@@ -31,6 +31,16 @@ Tests mirror structure under `tests/`.
 
 ## Core Context
 
+### Branch Strategy Operationalization — APPROVED (2026-04-14)
+
+- **Decision:** Operationalize trunk-based development with `develop` stabilization layer.
+- **Implementation:** Lucius completed all changes; CI passes.
+  - Feature branches now branch from and PR against `develop` (not `main`).
+  - CI extended to run on both `main` and `develop`.
+  - Release and Docker semantics unchanged (tag-driven from `main`).
+- **Status:** ✅ APPROVED and operationalized. Team is ready for feature work.
+- **Related:** `.squad/decisions.md` entry 1; orchestration logs dated 2026-04-12T22:52:28Z.
+
 ### Architecture Quality Assessment (2026-03-22)
 
 - **Overall: B+.** Domain: rich entities, no infrastructure leakage, 21 repo interfaces. Application: 87 services; 54 methods exceed 20-line target. Infrastructure: excellent EF fluent config, scope filtering prevents data leaks. API: textbook REST, DTOs-only, RFC 7807, ETags, OpenAPI+Scalar.
