@@ -584,6 +584,30 @@ While functional, the system has hit its scaling limit: each new chart type requ
 
 ---
 
+### 30. Feature 160: llama.cpp Backend Implementation & Runtime Selection (2026-04-13)
+
+**Author:** Lucius
+
+**Decision:** 
+- Implement `LlamaCppAiService` as a concrete `OpenAiCompatibleAiService` subclass.
+- Create `BackendSelectingAiService` as a runtime selector that reads persisted backend choice from app settings.
+- Register both concrete backends as typed HttpClient services and bind `BackendSelectingAiService` to `IAiService`.
+
+**Rationale:**
+- OpenAI-compatible HTTP flow (message formatting, streaming, token counting) is shared between Ollama and llama.cpp; inheritance avoids duplication.
+- Backend choice lives in persisted app settings, so startup-only concrete binding would require app restart after switching backends.
+- Runtime selector pattern allows dynamic backend switching via app settings without restart.
+- Preserves Ollama as the default and provides configuration fallback if persisted settings unavailable.
+
+**Implications:**
+- Application and API layers remain dependent only on `IAiService` (no concrete backend leakage).
+- Adding another backend stays localized to Infrastructure: add the concrete service and extend the selector's mapping.
+- Non-Docker regression coverage validates token counting, backend selection, and DI registration; Docker-backed API integration tests deferred pending environment documentation.
+
+**Result:** Feature 160 llama.cpp + DI selection slice complete. Ollama preserved as default for backward compatibility.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
