@@ -2,7 +2,11 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Reflection;
+
 using BudgetExperiment.Application.DataHealth;
+using BudgetExperiment.Application.FeatureFlags;
+using BudgetExperiment.Domain.DataHealth;
 
 using Moq;
 
@@ -14,6 +18,139 @@ namespace BudgetExperiment.Application.Tests.DataHealth;
 public class DataHealthServiceTests
 {
     private static readonly Guid AccountId = Guid.NewGuid();
+
+    [Fact]
+    public async Task AnalyzeAsync_WithFeatureFlagEnabled_UsesProjectionQueriesOnceEach()
+    {
+        // Arrange
+        var txRepo = new Mock<ITransactionRepository>();
+        txRepo.Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Transaction>());
+        txRepo.Setup(r => r.GetTransactionProjectionsForDuplicateDetectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DuplicateDetectionProjection>());
+        txRepo.Setup(r => r.GetTransactionAmountsForOutlierAnalysisAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<OutlierProjection>());
+        txRepo.Setup(r => r.GetTransactionDatesForGapAnalysisAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DateGapProjection>());
+
+        var featureFlags = new Mock<IFeatureFlagService>();
+        featureFlags.Setup(f => f.IsEnabledAsync("feature-data-health-optimized-analysis", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var dismissed = new Mock<IDismissedOutlierRepository>();
+        dismissed.Setup(r => r.GetDismissedTransactionIdsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Guid>());
+
+        var accounts = new Mock<IAccountRepository>();
+        accounts.Setup(a => a.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Account>());
+
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var service = new DataHealthService(
+            txRepo.Object,
+            accounts.Object,
+            dismissed.Object,
+            uow.Object,
+            featureFlags.Object);
+
+        // Act
+        _ = await service.AnalyzeAsync(null, CancellationToken.None);
+
+        // Assert
+        txRepo.Verify(r => r.GetTransactionProjectionsForDuplicateDetectionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        txRepo.Verify(r => r.GetTransactionAmountsForOutlierAnalysisAsync(It.IsAny<CancellationToken>()), Times.Once);
+        txRepo.Verify(r => r.GetTransactionDatesForGapAnalysisAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_WithFeatureFlagDisabled_BehavesAsOriginal()
+    {
+        // Arrange
+        var txRepo = new Mock<ITransactionRepository>();
+        txRepo.Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Transaction>());
+        txRepo.Setup(r => r.GetTransactionProjectionsForDuplicateDetectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DuplicateDetectionProjection>());
+        txRepo.Setup(r => r.GetTransactionAmountsForOutlierAnalysisAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<OutlierProjection>());
+        txRepo.Setup(r => r.GetTransactionDatesForGapAnalysisAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DateGapProjection>());
+
+        var featureFlags = new Mock<IFeatureFlagService>();
+        featureFlags.Setup(f => f.IsEnabledAsync("feature-data-health-optimized-analysis", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var dismissed = new Mock<IDismissedOutlierRepository>();
+        dismissed.Setup(r => r.GetDismissedTransactionIdsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Guid>());
+
+        var accounts = new Mock<IAccountRepository>();
+        accounts.Setup(a => a.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Account>());
+
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var service = new DataHealthService(
+            txRepo.Object,
+            accounts.Object,
+            dismissed.Object,
+            uow.Object,
+            featureFlags.Object);
+
+        // Act
+        _ = await service.AnalyzeAsync(null, CancellationToken.None);
+
+        // Assert
+        txRepo.Verify(r => r.GetTransactionProjectionsForDuplicateDetectionAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        txRepo.Verify(r => r.GetTransactionAmountsForOutlierAnalysisAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
+        txRepo.Verify(r => r.GetTransactionDatesForGapAnalysisAsync(It.IsAny<CancellationToken>()), Times.Exactly(1));
+    }
+
+    [Fact]
+    public void FindNearDuplicateClusters_WithLargeInput_DoesNotExceedLinearWindowComparisons()
+    {
+        // Arrange
+        const int itemCount = 1000;
+        var accountId = Guid.NewGuid();
+        var candidates = new List<Transaction>();
+
+        for (var i = 0; i < itemCount; i++)
+        {
+            candidates.Add(TransactionFactory.Create(
+                accountId,
+                MoneyValue.Create("USD", -25m),
+                new DateOnly(2026, 1, 1).AddDays(i),
+                $"Merchant {i}"));
+        }
+
+        var comparisons = 0;
+        Func<string, string, bool> comparer = (_, _) =>
+        {
+            comparisons++;
+            return false;
+        };
+
+        var method = typeof(DataHealthService)
+            .GetMethod(
+                "FindNearDuplicateClusters",
+                BindingFlags.NonPublic | BindingFlags.Static,
+                null,
+                [typeof(List<Transaction>), typeof(Func<string, string, bool>)],
+                null);
+        Assert.NotNull(method);
+
+        // Act
+        _ = method!.Invoke(null, new object?[] { candidates, comparer });
+
+        // Assert
+        var maxExpected = itemCount * 6;
+        Assert.True(comparisons <= maxExpected, $"Expected <= {maxExpected} comparisons, got {comparisons}.");
+    }
 
     [Fact]
     public async Task FindDuplicates_Returns_ExactDuplicates()
@@ -188,9 +325,7 @@ public class DataHealthServiceTests
         var t2 = TransactionFactory.Create(AccountId, MoneyValue.Create("USD", -20m), new DateOnly(2026, 1, 2), "Unknown B");
 
         var txRepo = new Mock<ITransactionRepository>();
-        txRepo.Setup(r => r.GetAllForHealthAnalysisAsync(It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
-              .ReturnsAsync(new List<Transaction>());
-        txRepo.Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+        txRepo.Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
               .ReturnsAsync(new List<Transaction> { t1, t2 });
 
         var service = CreateService(txRepo);
@@ -231,7 +366,16 @@ public class DataHealthServiceTests
         var accounts = new Mock<IAccountRepository>();
         accounts.Setup(a => a.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Account>());
 
-        var service = new DataHealthService(txRepo.Object, accounts.Object, dismissed.Object, uow.Object);
+        var featureFlags = new Mock<IFeatureFlagService>();
+        featureFlags.Setup(f => f.IsEnabledAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var service = new DataHealthService(
+            txRepo.Object,
+            accounts.Object,
+            dismissed.Object,
+            uow.Object,
+            featureFlags.Object);
 
         // Act
         await service.MergeDuplicatesAsync(primary.Id, [duplicate.Id], CancellationToken.None);
@@ -247,16 +391,40 @@ public class DataHealthServiceTests
     /// <returns>Configured mock.</returns>
     private static Mock<ITransactionRepository> CreateTransactionRepo(IEnumerable<Transaction> transactions)
     {
+        var transactionList = transactions.ToList();
         var mock = new Mock<ITransactionRepository>();
-        mock.Setup(r => r.GetAllForHealthAnalysisAsync(It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(transactions.ToList());
+        mock.Setup(r => r.GetTransactionProjectionsForDuplicateDetectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionList
+                .Where(t => !t.IsTransfer)
+                .Select(t => new DuplicateDetectionProjection(
+                    t.Id,
+                    t.AccountId,
+                    t.Date,
+                    t.Amount.Amount,
+                    t.Description))
+                .ToList());
+        mock.Setup(r => r.GetTransactionAmountsForOutlierAnalysisAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionList
+                .Select(t => new OutlierProjection(
+                    t.Id,
+                    t.Description,
+                    t.Amount.Amount))
+                .ToList());
+        mock.Setup(r => r.GetTransactionDatesForGapAnalysisAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionList
+                .Select(t => new DateGapProjection(t.AccountId, t.Date))
+                .Distinct()
+                .ToList());
         return mock;
     }
 
     /// <summary>Creates a <see cref="DataHealthService"/> with the given transaction repository mock.</summary>
     /// <param name="txRepo">Transaction repository mock.</param>
+    /// <param name="featureFlags">Optional feature flag service override.</param>
     /// <returns>Configured service under test.</returns>
-    private static DataHealthService CreateService(Mock<ITransactionRepository> txRepo)
+    private static DataHealthService CreateService(
+        Mock<ITransactionRepository> txRepo,
+        IFeatureFlagService? featureFlags = null)
     {
         var dismissedRepo = new Mock<IDismissedOutlierRepository>();
         dismissedRepo
@@ -271,6 +439,14 @@ public class DataHealthServiceTests
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
-        return new DataHealthService(txRepo.Object, accountRepo.Object, dismissedRepo.Object, uow.Object);
+        if (featureFlags is null)
+        {
+            var flags = new Mock<IFeatureFlagService>();
+            flags.Setup(f => f.IsEnabledAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+            featureFlags = flags.Object;
+        }
+
+        return new DataHealthService(txRepo.Object, accountRepo.Object, dismissedRepo.Object, uow.Object, featureFlags);
     }
 }

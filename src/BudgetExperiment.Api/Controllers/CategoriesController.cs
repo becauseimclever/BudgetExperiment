@@ -83,7 +83,13 @@ public sealed class CategoriesController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] BudgetCategoryCreateDto dto, CancellationToken cancellationToken)
     {
         var category = await _service.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction("GetById", new { id = category.Id }, category);
+        return this.CreatedAtAction(
+            "GetById",
+            new
+            {
+                id = category.Id,
+            },
+            category);
     }
 
     /// <summary>

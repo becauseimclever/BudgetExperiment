@@ -1,6 +1,6 @@
 # Feature 158: GetAllDescriptionsAsync — Add Bounded Prefix Search
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — P-006  
 > **Audit Source:** `docs/audit/2026-04-09-performance-review.md`
 

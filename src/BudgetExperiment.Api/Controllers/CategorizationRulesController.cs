@@ -117,7 +117,13 @@ public sealed class CategorizationRulesController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] CategorizationRuleCreateDto dto, CancellationToken cancellationToken)
     {
         var rule = await _service.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction("GetById", new { id = rule.Id }, rule);
+        return this.CreatedAtAction(
+            "GetById",
+            new
+            {
+                id = rule.Id,
+            },
+            rule);
     }
 
     /// <summary>

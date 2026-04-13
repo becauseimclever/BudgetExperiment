@@ -12,12 +12,18 @@ public sealed class KaizenGoalDto
     /// <summary>
     /// Gets or sets the unique identifier.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid Id
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the Monday of the ISO week this goal applies to.
     /// </summary>
-    public DateOnly WeekStartDate { get; set; }
+    public DateOnly WeekStartDate
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the goal description.
@@ -27,25 +33,40 @@ public sealed class KaizenGoalDto
     /// <summary>
     /// Gets or sets the optional numeric target amount.
     /// </summary>
-    public decimal? TargetAmount { get; set; }
+    public decimal? TargetAmount
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the optional Kakeibo category scope as a string (for API serialization).
     /// </summary>
-    public string? KakeiboCategory { get; set; }
+    public string? KakeiboCategory
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether the goal was achieved.
     /// </summary>
-    public bool IsAchieved { get; set; }
+    public bool IsAchieved
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the UTC timestamp when the goal was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; set; }
+    public DateTime CreatedAtUtc
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the UTC timestamp when the goal was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; set;
+    }
 }

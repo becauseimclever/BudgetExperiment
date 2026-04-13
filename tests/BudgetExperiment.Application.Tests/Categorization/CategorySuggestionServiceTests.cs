@@ -61,8 +61,11 @@ public class CategorySuggestionServiceTests
     {
         // Arrange
         _transactionRepoMock
-            .Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Transaction>());
+        _transactionRepoMock
+            .Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<string>());
 
         // Act
         var result = await _service.AnalyzeTransactionsAsync(CancellationToken.None);
@@ -84,8 +87,11 @@ public class CategorySuggestionServiceTests
         };
 
         _transactionRepoMock
-            .Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions);
+        _transactionRepoMock
+            .Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         _categoryRepoMock
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -140,8 +146,11 @@ public class CategorySuggestionServiceTests
         var existingCategory = CreateTestCategory("Entertainment", CategoryType.Expense);
 
         _transactionRepoMock
-            .Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions);
+        _transactionRepoMock
+            .Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         _categoryRepoMock
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -178,8 +187,11 @@ public class CategorySuggestionServiceTests
         };
 
         _transactionRepoMock
-            .Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions);
+        _transactionRepoMock
+            .Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         _categoryRepoMock
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -211,8 +223,11 @@ public class CategorySuggestionServiceTests
         var transactions = new[] { CreateTransaction(account, "AMAZON.COM*123", -29.99m) };
 
         _transactionRepoMock
-            .Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions);
+        _transactionRepoMock
+            .Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         _categoryRepoMock
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))

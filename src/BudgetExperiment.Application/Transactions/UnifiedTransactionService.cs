@@ -1,4 +1,4 @@
-﻿// <copyright file="UnifiedTransactionService.cs" company="BecauseImClever">
+// <copyright file="UnifiedTransactionService.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 

@@ -107,7 +107,13 @@ public sealed class CustomReportsController : ControllerBase
         }
 
         var layout = await _layoutService.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction("GetById", new { id = layout.Id }, layout);
+        return this.CreatedAtAction(
+            "GetById",
+            new
+            {
+                id = layout.Id,
+            },
+            layout);
     }
 
     /// <summary>

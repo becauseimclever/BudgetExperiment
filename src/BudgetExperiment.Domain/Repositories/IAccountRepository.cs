@@ -10,7 +10,7 @@ namespace BudgetExperiment.Domain.Repositories;
 public interface IAccountRepository : IReadRepository<Account>, IWriteRepository<Account>
 {
     /// <summary>
-    /// Gets an account by ID including transactions within the default lookback window.
+    /// Gets an account by ID including all transactions.
     /// </summary>
     /// <param name="id">Account identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

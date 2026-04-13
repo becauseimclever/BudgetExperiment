@@ -28,17 +28,26 @@ public sealed class KaizenGoal
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID that owns this goal.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public Guid UserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the Monday of the ISO week this goal applies to.
     /// </summary>
-    public DateOnly WeekStartDate { get; private set; }
+    public DateOnly WeekStartDate
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the short description of the improvement goal (max 500 chars).
@@ -48,27 +57,42 @@ public sealed class KaizenGoal
     /// <summary>
     /// Gets the optional numeric target (e.g., $10 under last week's spend).
     /// </summary>
-    public decimal? TargetAmount { get; private set; }
+    public decimal? TargetAmount
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the optional Kakeibo category this goal scopes to. Null means all categories.
     /// </summary>
-    public global::BudgetExperiment.Shared.Budgeting.KakeiboCategory? KakeiboCategory { get; private set; }
+    public global::BudgetExperiment.Shared.Budgeting.KakeiboCategory? KakeiboCategory
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the user achieved this goal. Set at week-end.
     /// </summary>
-    public bool IsAchieved { get; private set; }
+    public bool IsAchieved
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the goal was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the goal was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new <see cref="KaizenGoal"/> instance.

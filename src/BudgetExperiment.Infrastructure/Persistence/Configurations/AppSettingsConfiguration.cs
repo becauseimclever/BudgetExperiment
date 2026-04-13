@@ -38,7 +38,8 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
             .IsRequired();
 
         // AI Settings
-        builder.Property(s => s.AiOllamaEndpoint)
+        builder.Property(s => s.AiEndpointUrl)
+            .HasColumnName("AiOllamaEndpoint")
             .HasMaxLength(500)
             .HasDefaultValue(AiDefaults.DefaultOllamaUrl)
             .IsRequired();
@@ -63,6 +64,11 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
 
         builder.Property(s => s.AiIsEnabled)
             .HasDefaultValue(true)
+            .IsRequired();
+
+        builder.Property(s => s.AiBackendType)
+            .HasConversion<int>()
+            .HasDefaultValue(AiDefaults.DefaultBackendType)
             .IsRequired();
 
         // Location Settings
@@ -97,7 +103,7 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
             .SetValue(settings, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
         // AI Settings defaults
-        typeof(AppSettings).GetProperty(nameof(AppSettings.AiOllamaEndpoint))!
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiEndpointUrl))!
             .SetValue(settings, AiDefaults.DefaultOllamaUrl);
         typeof(AppSettings).GetProperty(nameof(AppSettings.AiModelName))!
             .SetValue(settings, "llama3.2");
@@ -109,6 +115,8 @@ internal sealed class AppSettingsConfiguration : IEntityTypeConfiguration<AppSet
             .SetValue(settings, 120);
         typeof(AppSettings).GetProperty(nameof(AppSettings.AiIsEnabled))!
             .SetValue(settings, true);
+        typeof(AppSettings).GetProperty(nameof(AppSettings.AiBackendType))!
+            .SetValue(settings, AiDefaults.DefaultBackendType);
 
         // Location Settings defaults
         typeof(AppSettings).GetProperty(nameof(AppSettings.EnableLocationData))!

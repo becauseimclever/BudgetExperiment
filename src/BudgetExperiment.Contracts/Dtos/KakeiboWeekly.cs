@@ -11,10 +11,16 @@ namespace BudgetExperiment.Contracts.Dtos;
 public record KakeiboWeekly
 {
     /// <summary>Gets the Monday date that starts this ISO week.</summary>
-    public DateOnly WeekStartDate { get; init; }
+    public DateOnly WeekStartDate
+    {
+        get; init;
+    }
 
     /// <summary>Gets the ISO week number within the year (1–53).</summary>
-    public int WeekNumber { get; init; }
+    public int WeekNumber
+    {
+        get; init;
+    }
 
     /// <summary>Gets per-bucket absolute spending totals for this week.</summary>
     public Dictionary<KakeiboCategory, decimal> BucketTotals { get; init; } = [];

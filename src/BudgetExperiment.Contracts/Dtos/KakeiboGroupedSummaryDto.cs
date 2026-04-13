@@ -10,17 +10,32 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class KakeiboGroupedSummaryDto
 {
     /// <summary>Gets or sets the total spent on essentials.</summary>
-    public decimal Essentials { get; set; }
+    public decimal Essentials
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spent on wants.</summary>
-    public decimal Wants { get; set; }
+    public decimal Wants
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spent on culture.</summary>
-    public decimal Culture { get; set; }
+    public decimal Culture
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spent on unexpected expenses.</summary>
-    public decimal Unexpected { get; set; }
+    public decimal Unexpected
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total across all Kakeibo categories.</summary>
-    public decimal Total { get; set; }
+    public decimal Total
+    {
+        get; set;
+    }
 }

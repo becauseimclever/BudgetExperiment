@@ -23,7 +23,10 @@ public partial class BudgetTreemap
     /// Gets or sets the data points defining each treemap segment.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<TreemapDataPoint>? DataPoints { get; set; }
+    public IReadOnlyList<TreemapDataPoint>? DataPoints
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart container.

@@ -12,17 +12,26 @@ public sealed class MonthFinancialSummaryDto
     /// <summary>
     /// Gets or sets the total income for the month (sum of positive-amount transactions).
     /// </summary>
-    public decimal TotalIncome { get; set; }
+    public decimal TotalIncome
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the total expenses for the month (sum of absolute values of negative-amount transactions).
     /// </summary>
-    public decimal TotalExpenses { get; set; }
+    public decimal TotalExpenses
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the computed savings for the month (TotalIncome minus TotalExpenses).
     /// </summary>
-    public decimal ComputedSavings { get; set; }
+    public decimal ComputedSavings
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the Kakeibo category breakdown of expenses.
@@ -32,5 +41,8 @@ public sealed class MonthFinancialSummaryDto
     /// <summary>
     /// Gets or sets the user's reflection for this month, or null if not yet created.
     /// </summary>
-    public MonthlyReflectionDto? Reflection { get; set; }
+    public MonthlyReflectionDto? Reflection
+    {
+        get; set;
+    }
 }

@@ -120,7 +120,10 @@ public sealed class BudgetCategory
     /// Gets the Kakeibo spending bucket for this category.
     /// Set only for Expense categories; null for Income and Transfer.
     /// </summary>
-    public global::BudgetExperiment.Shared.Budgeting.KakeiboCategory? KakeiboCategory { get; private set; }
+    public global::BudgetExperiment.Shared.Budgeting.KakeiboCategory? KakeiboCategory
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the budget goals for this category.

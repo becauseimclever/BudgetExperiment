@@ -5,6 +5,7 @@
 using System.Globalization;
 
 using BudgetExperiment.Client.Components.Charts.Models;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -23,7 +24,10 @@ public partial class WaterfallChart
     /// Gets or sets the list of waterfall segments to render.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<WaterfallSegment>? Segments { get; set; }
+    public IReadOnlyList<WaterfallSegment>? Segments
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart.

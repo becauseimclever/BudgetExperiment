@@ -1,6 +1,6 @@
 # Feature 157: DataHealth Repository — Fix Unbounded Queries and Add Sub-Analysis Projections
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — P-004 + P-005 (combined)  
 > **Audit Source:** `docs/audit/2026-04-09-performance-review.md`
 

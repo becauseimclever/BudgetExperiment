@@ -64,8 +64,9 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     {
         var ownerId = _userContext.UserId;
 
-        var uncategorized = await _transactionRepository.GetUncategorizedAsync(cancellationToken);
-        if (uncategorized.Count == 0)
+        var descriptions = await _transactionRepository.GetUncategorizedDescriptionsAsync(
+            cancellationToken: cancellationToken);
+        if (descriptions.Count == 0)
         {
             return Array.Empty<CategorySuggestion>();
         }
@@ -73,7 +74,6 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         var existingCategoryNames = await GetExistingCategoryNamesAsync(cancellationToken);
         await _suggestionRepository.DeletePendingByOwnerAsync(ownerId, cancellationToken);
 
-        var descriptions = uncategorized.Select(t => t.Description).ToList();
         var patternMatches = await _merchantMappingService.FindMatchingPatternsAsync(ownerId, descriptions, cancellationToken);
 
         var categoryGroups = patternMatches
@@ -85,7 +85,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
 
         // AI category discovery for unmatched descriptions
         var aiSuggestions = await DiscoverAiCategoriesAsync(
-            uncategorized, patternMatches, existingCategoryNames, ownerId, cancellationToken);
+            descriptions, patternMatches, existingCategoryNames, ownerId, cancellationToken);
         suggestions.AddRange(aiSuggestions);
 
         if (suggestions.Count > 0)
@@ -217,19 +217,20 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
             return Array.Empty<SuggestedRule>();
         }
 
-        var uncategorized = await _transactionRepository.GetUncategorizedAsync(cancellationToken);
+        var descriptions = await _transactionRepository.GetUncategorizedDescriptionsAsync(
+            cancellationToken: cancellationToken);
 
         var suggestedRules = new List<SuggestedRule>();
 
         foreach (var pattern in suggestion.MerchantPatterns)
         {
-            var matchingDescriptions = uncategorized
-                .Where(t => t.Description.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-                .Select(t => t.Description)
+            var matchingDescriptions = descriptions
+                .Where(description => description.Contains(pattern, StringComparison.OrdinalIgnoreCase))
                 .Take(5)
                 .ToList();
 
-            var matchCount = uncategorized.Count(t => t.Description.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+            var matchCount = descriptions.Count(description =>
+                description.Contains(pattern, StringComparison.OrdinalIgnoreCase));
 
             if (matchCount > 0)
             {
@@ -314,7 +315,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     }
 
     private async Task<List<CategorySuggestion>> DiscoverAiCategoriesAsync(
-        IReadOnlyList<Transaction> uncategorized,
+        IReadOnlyList<string> uncategorizedDescriptions,
         IReadOnlyList<PatternMatch> patternMatches,
         HashSet<string> existingCategoryNames,
         string ownerId,
@@ -322,11 +323,19 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     {
         try
         {
+            if (uncategorizedDescriptions.Count == 0)
+            {
+                return [];
+            }
+
             var status = await _aiService.GetStatusAsync(cancellationToken);
             if (!status.IsAvailable)
             {
                 return [];
             }
+
+            var uncategorized = await _transactionRepository.GetUncategorizedAsync(
+                cancellationToken: cancellationToken);
 
             // Identify transactions not matched by any pattern
             var matchedPatterns = patternMatches.Select(p => p.Pattern).ToList();

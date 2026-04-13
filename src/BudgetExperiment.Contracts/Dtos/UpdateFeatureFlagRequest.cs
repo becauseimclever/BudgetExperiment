@@ -12,5 +12,8 @@ public sealed class UpdateFeatureFlagRequest
     /// <summary>
     /// Gets or sets a value indicating whether the feature flag should be enabled.
     /// </summary>
-    public bool Enabled { get; set; }
+    public bool Enabled
+    {
+        get; set;
+    }
 }

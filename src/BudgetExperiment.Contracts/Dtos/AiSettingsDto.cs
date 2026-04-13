@@ -2,6 +2,10 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Text.Json.Serialization;
+
+using BudgetExperiment.Shared;
+
 namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
@@ -9,10 +13,54 @@ namespace BudgetExperiment.Contracts.Dtos;
 /// </summary>
 public sealed class AiSettingsDto
 {
+    private string? _endpointUrl = AiBackendDefaults.DefaultOllamaEndpointUrl;
+    private string? _ollamaEndpoint;
+
     /// <summary>
-    /// Gets or sets the Ollama API endpoint URL.
+    /// Gets or sets the AI backend endpoint URL.
     /// </summary>
-    public string OllamaEndpoint { get; set; } = "http://localhost:11434";
+    public string EndpointUrl
+    {
+        get => _endpointUrl ?? _ollamaEndpoint ?? AiBackendDefaults.GetDefaultEndpointUrl(BackendType);
+        set
+        {
+            _endpointUrl = value;
+            HasExplicitEndpointUrl = true;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the legacy Ollama API endpoint URL alias.
+    /// </summary>
+    public string OllamaEndpoint
+    {
+        get => _ollamaEndpoint ?? _endpointUrl ?? AiBackendDefaults.GetDefaultEndpointUrl(BackendType);
+        set
+        {
+            _ollamaEndpoint = value;
+            HasExplicitOllamaEndpoint = true;
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="EndpointUrl"/> was explicitly provided.
+    /// </summary>
+    [JsonIgnore]
+    public bool HasExplicitEndpointUrl
+    {
+        get;
+        private set;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="OllamaEndpoint"/> was explicitly provided.
+    /// </summary>
+    [JsonIgnore]
+    public bool HasExplicitOllamaEndpoint
+    {
+        get;
+        private set;
+    }
 
     /// <summary>
     /// Gets or sets the model name to use.
@@ -38,4 +86,30 @@ public sealed class AiSettingsDto
     /// Gets or sets a value indicating whether AI features are enabled.
     /// </summary>
     public bool IsEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the configured AI backend type.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter<AiBackendType>))]
+    public AiBackendType BackendType { get; set; } = AiBackendType.Ollama;
+
+    /// <summary>
+    /// Resolves the effective endpoint URL, preferring explicitly provided values and otherwise
+    /// falling back to the backend-specific default.
+    /// </summary>
+    /// <returns>The effective endpoint URL.</returns>
+    public string ResolveEndpointUrl()
+    {
+        if (HasExplicitEndpointUrl && !string.IsNullOrWhiteSpace(_endpointUrl))
+        {
+            return _endpointUrl.Trim();
+        }
+
+        if (HasExplicitOllamaEndpoint && !string.IsNullOrWhiteSpace(_ollamaEndpoint))
+        {
+            return _ollamaEndpoint.Trim();
+        }
+
+        return AiBackendDefaults.GetDefaultEndpointUrl(BackendType);
+    }
 }

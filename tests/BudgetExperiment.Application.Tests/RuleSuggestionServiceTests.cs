@@ -23,7 +23,7 @@ public class RuleSuggestionServiceTests
         // Arrange
         var (service, _, transactionRepo, _, _, _) = CreateService();
         transactionRepo
-            .Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<Transaction>());
 
         // Act
@@ -1467,7 +1467,7 @@ public class RuleSuggestionServiceTests
             TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50.00m), DateOnly.FromDateTime(DateTime.UtcNow), d))
             .ToList();
 
-        repo.Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions);
     }
 
@@ -1593,7 +1593,7 @@ public class RuleSuggestionServiceTests
             TransactionFactory.Create(accountId, MoneyValue.Create("USD", -50.00m), DateOnly.FromDateTime(DateTime.UtcNow), d))
             .ToList();
 
-        repo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(descriptions.ToList());
     }
 

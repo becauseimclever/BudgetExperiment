@@ -6,6 +6,8 @@ using System.Net;
 using System.Net.Http.Json;
 
 using BudgetExperiment.Contracts.Dtos;
+using BudgetExperiment.Domain.Settings;
+using BudgetExperiment.Shared;
 
 namespace BudgetExperiment.Api.Tests;
 
@@ -23,6 +25,7 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
     /// <param name="factory">The test factory.</param>
     public AiControllerTests(CustomWebApplicationFactory factory)
     {
+        factory.ResetDatabase();
         _client = factory.CreateApiClient();
     }
 
@@ -40,7 +43,8 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var status = await response.Content.ReadFromJsonAsync<AiStatusDto>();
         Assert.NotNull(status);
-        Assert.NotNull(status.Endpoint);
+        Assert.Equal(AiDefaults.DefaultOllamaUrl, status.Endpoint);
+        Assert.Equal(AiBackendType.Ollama, status.BackendType);
     }
 
     /// <summary>
@@ -75,8 +79,9 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var settings = await response.Content.ReadFromJsonAsync<AiSettingsDto>();
         Assert.NotNull(settings);
-        Assert.NotNull(settings.OllamaEndpoint);
+        Assert.Equal(AiDefaults.DefaultOllamaUrl, settings.EndpointUrl);
         Assert.NotNull(settings.ModelName);
+        Assert.Equal(AiBackendType.Ollama, settings.BackendType);
     }
 
     /// <summary>
@@ -89,12 +94,13 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
         // Arrange
         var request = new AiSettingsDto
         {
-            OllamaEndpoint = AiDefaults.DefaultOllamaUrl,
+            EndpointUrl = AiDefaults.DefaultLlamaCppUrl,
             ModelName = "llama3.2",
             Temperature = 0.5m,
             MaxTokens = 3000,
             TimeoutSeconds = 180,
             IsEnabled = true,
+            BackendType = AiBackendType.LlamaCpp,
         };
 
         // Act
@@ -105,6 +111,13 @@ public sealed class AiControllerTests : IClassFixture<CustomWebApplicationFactor
         var settings = await response.Content.ReadFromJsonAsync<AiSettingsDto>();
         Assert.NotNull(settings);
         Assert.Equal(0.5m, settings.Temperature);
+        Assert.Equal(AiBackendType.LlamaCpp, settings.BackendType);
+        Assert.Equal(AiDefaults.DefaultLlamaCppUrl, settings.EndpointUrl);
+
+        var readBack = await _client.GetFromJsonAsync<AiSettingsDto>("/api/v1/ai/settings");
+        Assert.NotNull(readBack);
+        Assert.Equal(AiBackendType.LlamaCpp, readBack.BackendType);
+        Assert.Equal(AiDefaults.DefaultLlamaCppUrl, readBack.EndpointUrl);
     }
 
     /// <summary>

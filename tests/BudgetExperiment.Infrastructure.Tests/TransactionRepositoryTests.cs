@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.DataHealth;
 using BudgetExperiment.Infrastructure.Persistence.Repositories;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -660,6 +661,212 @@ public class TransactionRepositoryTests
         // Assert
         Assert.Equal(0, totalCount);
         Assert.Empty(items);
+    }
+
+    [Fact]
+    public async Task GetUncategorizedAsync_WithMaxCount_ReturnsAtMostMaxCountItems()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var account = Account.Create("Max Count Test", AccountType.Checking);
+        for (var i = 1; i <= 5; i++)
+        {
+            account.AddTransaction(
+                MoneyValue.Create("USD", i * 10m),
+                new DateOnly(2026, 9, i),
+                $"Uncategorized {i}");
+        }
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var results = await transactionRepo.GetUncategorizedAsync(maxCount: 2, cancellationToken: CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, results.Count);
+    }
+
+    [Fact]
+    public async Task GetUncategorizedDescriptionsAsync_ReturnsOnlyDescriptionStrings()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+        var categoryRepo = new BudgetCategoryRepository(context, FakeUserContext.CreateDefault());
+
+        var category = BudgetCategory.Create("Utilities", CategoryType.Expense);
+        await categoryRepo.AddAsync(category);
+
+        var account = Account.Create("Descriptions Test", AccountType.Checking);
+        account.AddTransaction(MoneyValue.Create("USD", 12m), new DateOnly(2026, 9, 1), "Coffee");
+        account.AddTransaction(MoneyValue.Create("USD", 24m), new DateOnly(2026, 9, 2), "Rent");
+        var categorized = account.AddTransaction(MoneyValue.Create("USD", 36m), new DateOnly(2026, 9, 3), "Electric");
+        categorized.UpdateCategory(category.Id);
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var descriptions = await transactionRepo.GetUncategorizedDescriptionsAsync(cancellationToken: CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new[] { "Coffee", "Rent" }, descriptions);
+    }
+
+    [Fact]
+    public async Task GetTransactionProjectionsForDuplicateDetectionAsync_ReturnsExpectedShape()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var account = Account.Create("Duplicate Projection Test", AccountType.Checking);
+        var transaction = account.AddTransaction(
+            MoneyValue.Create("USD", 12.34m),
+            new DateOnly(2026, 9, 10),
+            "Grocery Store");
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var projections = await transactionRepo.GetTransactionProjectionsForDuplicateDetectionAsync(CancellationToken.None);
+
+        // Assert
+        var projection = Assert.Single(projections);
+        Assert.Equal(transaction.Id, projection.Id);
+        Assert.Equal(account.Id, projection.AccountId);
+        Assert.Equal(transaction.Date, projection.Date);
+        Assert.Equal(transaction.Amount.Amount, projection.Amount);
+        Assert.Equal(transaction.Description, projection.Description);
+    }
+
+    [Fact]
+    public async Task GetTransactionDatesForGapAnalysisAsync_ReturnsDistinctAccountDates()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var accountA = Account.Create("Gap Account A", AccountType.Checking);
+        accountA.AddTransaction(MoneyValue.Create("USD", 10m), new DateOnly(2026, 9, 5), "A1");
+        accountA.AddTransaction(MoneyValue.Create("USD", 20m), new DateOnly(2026, 9, 5), "A2");
+        accountA.AddTransaction(MoneyValue.Create("USD", 30m), new DateOnly(2026, 9, 6), "A3");
+
+        var accountB = Account.Create("Gap Account B", AccountType.Savings);
+        accountB.AddTransaction(MoneyValue.Create("USD", 40m), new DateOnly(2026, 9, 5), "B1");
+
+        await accountRepo.AddAsync(accountA);
+        await accountRepo.AddAsync(accountB);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var dates = await transactionRepo.GetTransactionDatesForGapAnalysisAsync(CancellationToken.None);
+
+        // Assert
+        var expected = new List<DateGapProjection>
+        {
+            new(accountA.Id, new DateOnly(2026, 9, 5)),
+            new(accountA.Id, new DateOnly(2026, 9, 6)),
+            new(accountB.Id, new DateOnly(2026, 9, 5)),
+        };
+
+        Assert.Equal(expected.Count, dates.Count);
+        foreach (var item in expected)
+        {
+            Assert.Contains(item, dates);
+        }
+    }
+
+    [Fact]
+    public async Task GetTransactionAmountsForOutlierAnalysisAsync_ReturnsIdDescriptionAmount()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var account = Account.Create("Outlier Projection Test", AccountType.Checking);
+        var transaction = account.AddTransaction(
+            MoneyValue.Create("USD", -99.99m),
+            new DateOnly(2026, 9, 12),
+            "Hardware Store");
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var projections = await transactionRepo.GetTransactionAmountsForOutlierAnalysisAsync(CancellationToken.None);
+
+        // Assert
+        var projection = Assert.Single(projections);
+        Assert.Equal(transaction.Id, projection.Id);
+        Assert.Equal(transaction.Description, projection.Description);
+        Assert.Equal(transaction.Amount.Amount, projection.Amount);
+    }
+
+    [Fact]
+    public async Task GetAllDescriptionsAsync_WithPrefix_ReturnsOnlyMatchingDescriptions()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var account = Account.Create("Description Prefix Test", AccountType.Checking);
+        account.AddTransaction(MoneyValue.Create("USD", 10m), new DateOnly(2026, 9, 1), "Amazon Fresh");
+        account.AddTransaction(MoneyValue.Create("USD", 20m), new DateOnly(2026, 9, 2), "Amazon Prime");
+        account.AddTransaction(MoneyValue.Create("USD", 30m), new DateOnly(2026, 9, 3), "Target");
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var descriptions = await transactionRepo.GetAllDescriptionsAsync("Amazon", cancellationToken: CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new[] { "Amazon Fresh", "Amazon Prime" }, descriptions);
+    }
+
+    [Fact]
+    public async Task GetAllDescriptionsAsync_WithLargeDataSet_ReturnsAtMostMaxResults()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+
+        var account = Account.Create("Description Limit Test", AccountType.Checking);
+        for (var i = 0; i < 40; i++)
+        {
+            account.AddTransaction(
+                MoneyValue.Create("USD", i + 1),
+                new DateOnly(2026, 10, 1).AddDays(i),
+                $"Merchant {i:00}");
+        }
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var descriptions = await transactionRepo.GetAllDescriptionsAsync(maxResults: 15, cancellationToken: CancellationToken.None);
+
+        // Assert
+        Assert.Equal(15, descriptions.Count);
     }
 
     [Fact]

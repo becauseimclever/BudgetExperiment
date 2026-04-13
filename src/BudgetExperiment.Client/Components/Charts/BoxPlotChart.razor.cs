@@ -5,6 +5,7 @@
 using System.Globalization;
 
 using BudgetExperiment.Client.Components.Charts.Models;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -21,7 +22,10 @@ public partial class BoxPlotChart
     /// Gets or sets the list of spending distributions to render.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<BoxPlotSummary>? Distributions { get; set; }
+    public IReadOnlyList<BoxPlotSummary>? Distributions
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart.

@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Text;
 
 using BudgetExperiment.Client.Components.Charts.Models;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -19,7 +20,10 @@ public partial class StackedAreaChart
     /// Gets or sets the list of series to render as stacked filled areas.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<StackedAreaSeries>? Series { get; set; }
+    public IReadOnlyList<StackedAreaSeries>? Series
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart.

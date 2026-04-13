@@ -125,7 +125,13 @@ public sealed class RecurringTransfersController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] RecurringTransferCreateDto dto, CancellationToken cancellationToken)
     {
         var transfer = await _service.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction("GetById", new { id = transfer.Id }, transfer);
+        return this.CreatedAtAction(
+            "GetById",
+            new
+            {
+                id = transfer.Id,
+            },
+            transfer);
     }
 
     /// <summary>

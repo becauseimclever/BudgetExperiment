@@ -293,7 +293,10 @@ public class CalendarTests
             return;
         }
 
-        await Expect(accountSelect).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(accountSelect).ToBeVisibleAsync(new()
+        {
+            Timeout = 15000,
+        });
 
         var options = await accountSelect.Locator("option").AllAsync();
         Assert.True(options.Count >= 2, "Expected at least one selectable account option in account filter.");

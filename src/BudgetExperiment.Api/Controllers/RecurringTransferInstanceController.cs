@@ -272,7 +272,10 @@ public sealed class RecurringTransferInstanceController : ControllerBase
         return this.CreatedAtAction(
             "GetById",
             "Transfers",
-            new { id = transfer.TransferId },
+            new
+            {
+                id = transfer.TransferId,
+            },
             transfer);
     }
 }

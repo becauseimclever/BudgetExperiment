@@ -2,7 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Domain.Settings;
 using BudgetExperiment.Infrastructure.Persistence.Repositories;
+using BudgetExperiment.Shared;
 
 namespace BudgetExperiment.Infrastructure.Tests;
 
@@ -100,7 +102,7 @@ public class AppSettingsRepositoryTests : IClassFixture<PostgreSqlFixture>
     }
 
     [Fact]
-    public async Task UpdateAiSettings_Persists_Changes()
+    public async Task UpdateAiSettings_Persists_BackendType_And_LegacyEndpointColumn()
     {
         // Arrange
         await using var context = _fixture.CreateContext();
@@ -109,12 +111,13 @@ public class AppSettingsRepositoryTests : IClassFixture<PostgreSqlFixture>
 
         // Act
         settings.UpdateAiSettings(
-            ollamaEndpoint: "http://my-ollama:11434",
+            endpointUrl: AiDefaults.DefaultLlamaCppUrl,
             modelName: "llama3.2",
             temperature: 0.7m,
             maxTokens: 3000,
             timeoutSeconds: 90,
-            isEnabled: true);
+            isEnabled: true,
+            backendType: AiBackendType.LlamaCpp);
         await context.SaveChangesAsync();
 
         // Assert
@@ -122,12 +125,13 @@ public class AppSettingsRepositoryTests : IClassFixture<PostgreSqlFixture>
         var verifyRepo = new AppSettingsRepository(verifyContext);
         var retrieved = await verifyRepo.GetAsync();
 
-        Assert.Equal("http://my-ollama:11434", retrieved.AiOllamaEndpoint);
+        Assert.Equal(AiDefaults.DefaultLlamaCppUrl, retrieved.AiOllamaEndpoint);
         Assert.Equal("llama3.2", retrieved.AiModelName);
         Assert.Equal(0.7m, retrieved.AiTemperature);
         Assert.Equal(3000, retrieved.AiMaxTokens);
         Assert.Equal(90, retrieved.AiTimeoutSeconds);
         Assert.True(retrieved.AiIsEnabled);
+        Assert.Equal(AiBackendType.LlamaCpp, retrieved.AiBackendType);
     }
 
     [Fact]

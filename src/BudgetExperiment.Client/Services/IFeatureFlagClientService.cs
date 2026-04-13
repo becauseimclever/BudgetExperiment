@@ -12,7 +12,10 @@ public interface IFeatureFlagClientService
     /// <summary>
     /// Gets the current dictionary of feature flags (name → enabled).
     /// </summary>
-    Dictionary<string, bool> Flags { get; }
+    Dictionary<string, bool> Flags
+    {
+        get;
+    }
 
     /// <summary>
     /// Returns whether the named feature flag is enabled.

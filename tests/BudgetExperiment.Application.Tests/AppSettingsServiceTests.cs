@@ -4,6 +4,8 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
+using BudgetExperiment.Shared;
 
 using Moq;
 
@@ -199,5 +201,96 @@ public class AppSettingsServiceTests
 
         // Assert
         Assert.False(result.AutoRealizePastDueItems);
+    }
+
+    [Fact]
+    public async Task GetAiSettingsAsync_Returns_DefaultBackendType_And_GenericEndpoint()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+        var repo = new Mock<IAppSettingsRepository>();
+        repo.Setup(r => r.GetAsync(default)).ReturnsAsync(settings);
+        var uow = new Mock<IUnitOfWork>();
+        var service = new AppSettingsService(repo.Object, uow.Object);
+
+        // Act
+        var result = await service.GetAiSettingsAsync();
+
+        // Assert
+        Assert.Equal(AiDefaults.DefaultOllamaUrl, result.EndpointUrl);
+        Assert.Equal(AiBackendType.Ollama, result.BackendType);
+    }
+
+    [Fact]
+    public async Task GetAiSettingsAsync_Returns_Legacy_OllamaEndpoint_Alias()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+        var repo = new Mock<IAppSettingsRepository>();
+        repo.Setup(r => r.GetAsync(default)).ReturnsAsync(settings);
+        var uow = new Mock<IUnitOfWork>();
+        var service = new AppSettingsService(repo.Object, uow.Object);
+
+        // Act
+        var result = await service.GetAiSettingsAsync();
+
+        // Assert
+        Assert.Equal(result.EndpointUrl, result.OllamaEndpoint);
+    }
+
+    [Fact]
+    public async Task UpdateAiSettingsAsync_Updates_BackendType_And_Endpoint()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+        var repo = new Mock<IAppSettingsRepository>();
+        repo.Setup(r => r.GetAsync(default)).ReturnsAsync(settings);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new AppSettingsService(repo.Object, uow.Object);
+        var update = new AiSettingsData(
+            EndpointUrl: "http://localhost:8080",
+            ModelName: "llama3.2",
+            Temperature: 0.4m,
+            MaxTokens: 2500,
+            TimeoutSeconds: 90,
+            IsEnabled: true,
+            BackendType: AiBackendType.LlamaCpp);
+
+        // Act
+        var result = await service.UpdateAiSettingsAsync(update);
+
+        // Assert
+        Assert.Equal("http://localhost:8080", result.EndpointUrl);
+        Assert.Equal(AiBackendType.LlamaCpp, result.BackendType);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateAiSettingsAsync_Uses_Backend_Default_When_Endpoint_Is_Blank()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+        var repo = new Mock<IAppSettingsRepository>();
+        repo.Setup(r => r.GetAsync(default)).ReturnsAsync(settings);
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+        var service = new AppSettingsService(repo.Object, uow.Object);
+        var update = new AiSettingsData(
+            EndpointUrl: "   ",
+            ModelName: "llama3.2",
+            Temperature: 0.4m,
+            MaxTokens: 2500,
+            TimeoutSeconds: 90,
+            IsEnabled: true,
+            BackendType: AiBackendType.LlamaCpp);
+
+        // Act
+        var result = await service.UpdateAiSettingsAsync(update);
+
+        // Assert
+        Assert.Equal(AiDefaults.DefaultLlamaCppUrl, result.EndpointUrl);
+        Assert.Equal(AiDefaults.DefaultLlamaCppUrl, settings.AiEndpointUrl);
+        Assert.Equal(AiDefaults.DefaultLlamaCppUrl, settings.AiOllamaEndpoint);
     }
 }

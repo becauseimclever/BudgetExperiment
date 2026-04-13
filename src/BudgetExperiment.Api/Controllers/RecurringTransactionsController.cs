@@ -81,7 +81,13 @@ public sealed class RecurringTransactionsController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] RecurringTransactionCreateDto dto, CancellationToken cancellationToken)
     {
         var recurring = await _service.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction("GetById", new { id = recurring.Id }, recurring);
+        return this.CreatedAtAction(
+            "GetById",
+            new
+            {
+                id = recurring.Id,
+            },
+            recurring);
     }
 
     /// <summary>

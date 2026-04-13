@@ -80,7 +80,13 @@ public sealed class AccountsController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] AccountCreateDto dto, CancellationToken cancellationToken)
     {
         var account = await _service.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction("GetById", new { id = account.Id }, account);
+        return this.CreatedAtAction(
+            "GetById",
+            new
+            {
+                id = account.Id,
+            },
+            account);
     }
 
     /// <summary>

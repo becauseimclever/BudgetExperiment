@@ -5,6 +5,7 @@
 using System.Globalization;
 
 using BudgetExperiment.Client.Components.Charts.Models;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -19,7 +20,10 @@ public partial class HeatmapChart
     /// (index 0 = Monday, index 6 = Sunday) and each inner array contains the week cells for that row.
     /// </summary>
     [Parameter]
-    public HeatmapDataPoint[][]? Data { get; set; }
+    public HeatmapDataPoint[][]? Data
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart.
@@ -38,7 +42,10 @@ public partial class HeatmapChart
     /// When null, the maximum is computed from the provided data.
     /// </summary>
     [Parameter]
-    public decimal? MaxAmount { get; set; }
+    public decimal? MaxAmount
+    {
+        get; set;
+    }
 
     private static double CellSize => 16;
 

@@ -72,7 +72,7 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
         int maxSuggestions = 10,
         CancellationToken ct = default)
     {
-        var uncategorized = await _transactionRepository.GetUncategorizedAsync(ct);
+        var uncategorized = await _transactionRepository.GetUncategorizedAsync(cancellationToken: ct);
         if (uncategorized.Count == 0)
         {
             return Array.Empty<RuleSuggestion>();
@@ -130,7 +130,9 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
             return Array.Empty<RuleSuggestion>();
         }
 
-        var descriptions = await _transactionRepository.GetAllDescriptionsAsync(ct);
+        var descriptions = await _transactionRepository.GetAllDescriptionsAsync(
+            maxResults: 100,
+            cancellationToken: ct);
         var matchStats = RuleSuggestionPromptBuilder.CalculateMatchStats(rules, descriptions);
         var categories = await _categoryRepository.ListAsync(0, int.MaxValue, ct);
 
@@ -228,7 +230,7 @@ public sealed class RuleSuggestionService : IRuleSuggestionService
 
         progress?.Report(new AnalysisProgress { CurrentStep = "Complete", PercentComplete = 100 });
 
-        var uncategorized = await _transactionRepository.GetUncategorizedAsync(ct);
+        var uncategorized = await _transactionRepository.GetUncategorizedAsync(cancellationToken: ct);
         var rules = await _ruleRepository.ListAsync(0, int.MaxValue, ct);
 
         stopwatch.Stop();

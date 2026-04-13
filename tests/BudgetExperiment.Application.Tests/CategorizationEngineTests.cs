@@ -218,7 +218,7 @@ public class CategorizationEngineTests
         var (engine, _, transactionRepo) = CreateEngine(rules, allTransactions);
 
         // Setup mock to return uncategorized transactions when null is passed
-        transactionRepo.Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+        transactionRepo.Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(uncategorizedTransactions);
 
         // Act
@@ -242,7 +242,7 @@ public class CategorizationEngineTests
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
-        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<CancellationToken>()))
+        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         // Act
@@ -267,7 +267,7 @@ public class CategorizationEngineTests
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
-        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<CancellationToken>()))
+        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         // Act
@@ -288,7 +288,7 @@ public class CategorizationEngineTests
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
-        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<CancellationToken>()))
+        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         // Act
@@ -310,7 +310,7 @@ public class CategorizationEngineTests
         };
         var (engine, _, transactionRepo) = CreateEngine(new List<CategorizationRule>(), transactions);
 
-        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<CancellationToken>()))
+        transactionRepo.Setup(r => r.GetAllDescriptionsAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions.Select(t => t.Description).ToList());
 
         // Act

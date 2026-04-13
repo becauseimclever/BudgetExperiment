@@ -10,8 +10,14 @@ namespace BudgetExperiment.Contracts.Dtos;
 public record KakeiboDateRange
 {
     /// <summary>Gets the start date (inclusive).</summary>
-    public DateOnly From { get; init; }
+    public DateOnly From
+    {
+        get; init;
+    }
 
     /// <summary>Gets the end date (inclusive).</summary>
-    public DateOnly To { get; init; }
+    public DateOnly To
+    {
+        get; init;
+    }
 }

@@ -25,13 +25,19 @@ public partial class BudgetRadar
     /// Gets or sets the named data series to plot on the radar axes.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<RadarDataSeries>? Series { get; set; }
+    public IReadOnlyList<RadarDataSeries>? Series
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the category axis labels (one per radar spoke).
     /// </summary>
     [Parameter]
-    public IReadOnlyList<string>? Categories { get; set; }
+    public IReadOnlyList<string>? Categories
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart container.

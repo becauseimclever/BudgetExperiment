@@ -272,7 +272,10 @@ public sealed class RecurringTransactionInstanceController : ControllerBase
         return this.CreatedAtAction(
             "GetById",
             "Transactions",
-            new { id = transaction.Id },
+            new
+            {
+                id = transaction.Id,
+            },
             transaction);
     }
 

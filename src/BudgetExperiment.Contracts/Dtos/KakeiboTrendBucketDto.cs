@@ -10,7 +10,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class KakeiboTrendBucketDto
 {
     /// <summary>Gets or sets the Kakeibo category label (e.g. "Essentials", "Wants", "Culture", "Unexpected"), if applicable.</summary>
-    public string? KakeiboCategory { get; set; }
+    public string? KakeiboCategory
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the budget category name.</summary>
     public string CategoryName { get; set; } = string.Empty;

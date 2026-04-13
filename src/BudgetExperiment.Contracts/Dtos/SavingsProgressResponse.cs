@@ -10,14 +10,26 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class SavingsProgressResponse
 {
     /// <summary>Gets or sets the savings goal the user set at month start.</summary>
-    public decimal SavingsGoal { get; set; }
+    public decimal SavingsGoal
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the actual savings recorded (income minus expenses).</summary>
-    public decimal ActualSavings { get; set; }
+    public decimal ActualSavings
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the amount remaining to reach the savings goal.</summary>
-    public decimal Remaining { get; set; }
+    public decimal Remaining
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the progress as a percentage of the savings goal (0–100).</summary>
-    public int ProgressPercentage { get; set; }
+    public int ProgressPercentage
+    {
+        get; set;
+    }
 }

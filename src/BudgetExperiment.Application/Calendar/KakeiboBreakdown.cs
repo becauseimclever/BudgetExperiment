@@ -10,16 +10,28 @@ namespace BudgetExperiment.Application.Calendar;
 public sealed class KakeiboBreakdown
 {
     /// <summary>Gets or sets the total spent on essential needs.</summary>
-    public decimal EssentialsAmount { get; set; }
+    public decimal EssentialsAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spent on wants.</summary>
-    public decimal WantsAmount { get; set; }
+    public decimal WantsAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spent on culture.</summary>
-    public decimal CultureAmount { get; set; }
+    public decimal CultureAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the total spent on unexpected expenses.</summary>
-    public decimal UnexpectedAmount { get; set; }
+    public decimal UnexpectedAmount
+    {
+        get; set;
+    }
 
     /// <summary>Gets the total of all Kakeibo categories.</summary>
     public decimal TotalSpend => EssentialsAmount + WantsAmount + CultureAmount + UnexpectedAmount;

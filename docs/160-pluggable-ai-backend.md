@@ -1,6 +1,6 @@
 # Feature 160: Pluggable AI Backend
 
-> **Status:** Proposed
+> **Status:** In Progress
 
 ## Overview
 
@@ -427,13 +427,13 @@ public sealed class LlamaCppAiService : OpenAiCompatibleAiService
 **Objective:** Add `AiBackendType` enum to Shared, update configuration DTOs and application settings
 
 **Tasks:**
-- [ ] Create `AiBackendType` enum in `BudgetExperiment.Shared`
-- [ ] Update `AiSettingsData` record to include `BackendType` and rename `OllamaEndpoint` → `EndpointUrl`
-- [ ] Update `AiSettingsDto` (Contracts) with `BackendType` field
-- [ ] Update `AiStatusDto` with `BackendType` field
-- [ ] Update `AiDefaults` with new defaults and backend-specific URLs
-- [ ] Update `AiController` to map `BackendType` in GET/PUT settings endpoints
-- [ ] Write unit tests for DTO serialization/deserialization
+- [x] Create `AiBackendType` enum in `BudgetExperiment.Shared`
+- [x] Update `AiSettingsData` record to include `BackendType` and rename `OllamaEndpoint` → `EndpointUrl`
+- [x] Update `AiSettingsDto` (Contracts) with `BackendType` field
+- [x] Update `AiStatusDto` with `BackendType` field
+- [x] Update `AiDefaults` with new defaults and backend-specific URLs
+- [x] Update `AiController` to map `BackendType` in GET/PUT settings endpoints
+- [x] Write unit tests for DTO serialization/deserialization
 
 **Commit:**
 ```bash
@@ -455,12 +455,12 @@ Refs: #160"
 **Objective:** Extract shared HTTP protocol logic from OllamaAiService into a reusable base class
 
 **Tasks:**
-- [ ] Create abstract `OpenAiCompatibleAiService` in `Infrastructure.ExternalServices.AI`
-- [ ] Move JSON options, timeout handling, and core HTTP logic to base class
-- [ ] Define abstract methods: `HealthCheckEndpoint`, `ParseModelsResponseAsync`
-- [ ] Move shared request/response DTOs (OpenAiChatRequest, OpenAiChatResponse, etc.) into base class
-- [ ] Write unit tests for base class core logic (mocking HTTP responses)
-- [ ] Ensure interface compatibility with `IAiService`
+- [x] Create abstract `OpenAiCompatibleAiService` in `Infrastructure.ExternalServices.AI`
+- [x] Move JSON options, timeout handling, and core HTTP logic to base class
+- [x] Define abstract methods: `HealthCheckEndpoint`, `ParseModelsResponseAsync`
+- [x] Move shared request/response DTOs (OpenAiChatRequest, OpenAiChatResponse, etc.) into base class
+- [x] Write unit tests for base class core logic (mocking HTTP responses)
+- [x] Ensure interface compatibility with `IAiService`
 
 **Commit:**
 ```bash
@@ -481,13 +481,13 @@ Refs: #160"
 **Objective:** Refactor Ollama to use base class and implement llama.cpp backend
 
 **Tasks:**
-- [ ] Refactor `OllamaAiService` to extend `OpenAiCompatibleAiService`
-- [ ] Move Ollama-specific model parsing to `ParseModelsResponseAsync` override
-- [ ] Keep Ollama-specific DTOs (OllamaTagsResponse) internal to OllamaAiService
-- [ ] Implement `LlamaCppAiService` extending `OpenAiCompatibleAiService`
-- [ ] Add llama.cpp-specific health check (`/health`) and model parsing logic
-- [ ] Write unit tests for both services with mock HTTP handlers
-- [ ] Verify backward compatibility: Ollama tests still pass without changes
+- [x] Refactor `OllamaAiService` to extend `OpenAiCompatibleAiService`
+- [x] Move Ollama-specific model parsing to `ParseModelsResponseAsync` override
+- [x] Keep Ollama-specific DTOs (OllamaTagsResponse) internal to OllamaAiService
+- [x] Implement `LlamaCppAiService` extending `OpenAiCompatibleAiService`
+- [x] Add llama.cpp-specific health check (`/health`) and model parsing logic
+- [x] Write unit tests for both services with mock HTTP handlers
+- [x] Verify backward compatibility: Ollama tests still pass without changes
 
 **Commit:**
 ```bash
@@ -508,14 +508,14 @@ Refs: #160"
 **Objective:** Wire conditional registration based on `AiSettings:BackendType` configuration
 
 **Tasks:**
-- [ ] Update `Infrastructure.DependencyInjection.AddInfrastructure()` to read `AiSettings:BackendType` from config
-- [ ] Implement factory/conditional registration logic:
+- [x] Update `Infrastructure.DependencyInjection.AddInfrastructure()` to read `AiSettings:BackendType` from config
+- [x] Implement factory/conditional registration logic:
   - If `BackendType == Ollama` → register `OllamaAiService`
   - If `BackendType == LlamaCpp` → register `LlamaCppAiService`
   - Default to Ollama if not specified
-- [ ] Update HttpClient registration to use generic endpoint URL (not Ollama-specific)
-- [ ] Write integration tests for DI registration with different configurations
-- [ ] Test default behavior (Ollama) and explicit llama.cpp configuration
+- [x] Update HttpClient registration to use generic endpoint URL (not Ollama-specific)
+- [x] Write integration tests for DI registration with different configurations
+- [x] Test default behavior (Ollama) and explicit llama.cpp configuration
 
 **Commit:**
 ```bash
@@ -535,12 +535,14 @@ Refs: #160"
 
 **Objective:** Ensure AppSettingsService correctly reads/writes the new `BackendType` property
 
+**Migration note:** `20260412102000_AddAiBackendTypeToAppSettings` adds `AiBackendType` with database default `0` (`Ollama`), so existing persisted settings rows backfill safely without a separate data migration.
+
 **Tasks:**
-- [ ] Review `AppSettingsService.GetAiSettingsAsync()` and `UpdateAiSettingsAsync()` to ensure `BackendType` is properly serialized/deserialized
+- [x] Review `AppSettingsService.GetAiSettingsAsync()` and `UpdateAiSettingsAsync()` to ensure `BackendType` is properly serialized/deserialized
 - [ ] If using JSON column in database (likely), verify JSON mapping is correct
-- [ ] Add migration notes: existing `AiSettings` records without `BackendType` default to `Ollama`
+- [x] Add migration notes: existing `AiSettings` records without `BackendType` default to `Ollama`
 - [ ] Create a simple db migration or schema update if needed (likely none, since JSON columns are schema-agnostic)
-- [ ] Write a test that reads/writes settings with `BackendType` to ensure persistence
+- [x] Write a test that reads/writes settings with `BackendType` to ensure persistence
 
 **Commit:**
 ```bash
@@ -560,8 +562,8 @@ Refs: #160"
 **Objective:** Update API responses and UI to surface the active backend and allow configuration
 
 **Tasks:**
-- [ ] Update `AiController.GetStatusAsync()` to include `BackendType` in response
-- [ ] Verify `AiController.GetSettingsAsync()` and `UpdateSettingsAsync()` handle `BackendType` field
+- [x] Update `AiController.GetStatusAsync()` to include `BackendType` in response
+- [x] Verify `AiController.GetSettingsAsync()` and `UpdateSettingsAsync()` handle `BackendType` field
 - [ ] Update OpenAPI documentation (auto-generated or XML comments)
 - [ ] Client-side (Blazor): update AI Settings panel to include `BackendType` dropdown and `EndpointUrl` field
 - [ ] Test GET/PUT settings endpoints with both Ollama and llama.cpp configurations
@@ -635,23 +637,23 @@ Refs: #160"
   - [ ] Error handling (same as Ollama)
 
 - **DI Registration:**
-  - [ ] Ollama backend registered by default
-  - [ ] Ollama backend registered when explicitly configured
-  - [ ] LlamaCpp backend registered when configured
+  - [x] Ollama backend registered by default
+  - [x] Ollama backend registered when explicitly configured
+  - [x] LlamaCpp backend registered when configured
   - [ ] Correct HttpClient endpoint URL passed to each service
 
 ### Integration Tests
 
 - **AppSettingsService persistence:**
-  - [ ] Create settings with `BackendType=Ollama`
-  - [ ] Update settings to `BackendType=LlamaCpp`
-  - [ ] Read back and verify persistence
-  - [ ] Default behavior when BackendType is not specified
+  - [x] Create settings with `BackendType=Ollama`
+  - [x] Update settings to `BackendType=LlamaCpp`
+  - [x] Read back and verify persistence
+  - [x] Default behavior when BackendType is not specified
 
 - **AiController endpoints (with mocked backends):**
-  - [ ] `GET /api/v1/ai/status` returns correct `BackendType` and endpoint
-  - [ ] `GET /api/v1/ai/settings` includes `BackendType`
-  - [ ] `PUT /api/v1/ai/settings` with new `BackendType` value persists and is reflected in next GET
+  - [x] `GET /api/v1/ai/status` returns correct `BackendType` and endpoint
+  - [x] `GET /api/v1/ai/settings` includes `BackendType`
+  - [x] `PUT /api/v1/ai/settings` with new `BackendType` value persists and is reflected in next GET
   - [ ] `GET /api/v1/ai/models` works with mocked Ollama and llama.cpp responses
 
 ### Manual Testing Checklist

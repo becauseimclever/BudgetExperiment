@@ -27,7 +27,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     public OllamaAiServiceTests()
     {
         _settings = new AiSettingsData(
-            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
+            EndpointUrl: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,
@@ -51,7 +51,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
         // Check if Ollama is available
         try
         {
-            var response = await _httpClient.GetAsync($"{_settings.OllamaEndpoint}/api/version");
+            var response = await _httpClient.GetAsync($"{_settings.EndpointUrl}/api/version");
             _ollamaAvailable = response.IsSuccessStatusCode;
         }
         catch
@@ -72,7 +72,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     {
         // Arrange
         var disabledSettings = new AiSettingsData(
-            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
+            EndpointUrl: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,
@@ -132,7 +132,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     {
         // Arrange
         var disabledSettings = new AiSettingsData(
-            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
+            EndpointUrl: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,
@@ -156,7 +156,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     {
         // Arrange
         var disabledSettings = new AiSettingsData(
-            OllamaEndpoint: AiDefaults.DefaultOllamaUrl,
+            EndpointUrl: AiDefaults.DefaultOllamaUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,
@@ -215,7 +215,7 @@ public class OllamaAiServiceTests : IAsyncLifetime
     {
         // Arrange - use a valid but unreachable endpoint
         var invalidSettings = new AiSettingsData(
-            OllamaEndpoint: "http://192.0.2.1:11434", // TEST-NET-1 (RFC 5737) - guaranteed unreachable
+            EndpointUrl: "http://192.0.2.1:11434", // TEST-NET-1 (RFC 5737) - guaranteed unreachable
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 100,

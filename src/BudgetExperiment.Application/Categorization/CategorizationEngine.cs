@@ -79,7 +79,8 @@ public class CategorizationEngine : ICategorizationEngine
 
         if (transactionIds == null)
         {
-            transactions = await _transactionRepository.GetUncategorizedAsync(cancellationToken);
+            transactions = await _transactionRepository.GetUncategorizedAsync(
+                cancellationToken: cancellationToken);
         }
         else
         {
@@ -163,7 +164,11 @@ public class CategorizationEngine : ICategorizationEngine
             categoryId: Guid.NewGuid(),
             caseSensitive: caseSensitive);
 
-        var allDescriptions = await _transactionRepository.GetAllDescriptionsAsync(cancellationToken);
+        var searchPrefix = GetDescriptionSearchPrefix(matchType, pattern);
+        var allDescriptions = await _transactionRepository.GetAllDescriptionsAsync(
+            searchPrefix,
+            maxResults: 100,
+            cancellationToken);
 
         var matchingDescriptions = new List<string>();
 
@@ -253,6 +258,15 @@ public class CategorizationEngine : ICategorizationEngine
         }
 
         return null;
+    }
+
+    private static string GetDescriptionSearchPrefix(RuleMatchType matchType, string pattern)
+    {
+        return matchType switch
+        {
+            RuleMatchType.StartsWith or RuleMatchType.Exact => pattern.Trim(),
+            _ => string.Empty,
+        };
     }
 
     private static (IReadOnlyList<CategorizationRule> StringRules, IReadOnlyList<CategorizationRule> RegexRules) PartitionRules(

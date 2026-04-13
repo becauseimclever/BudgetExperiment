@@ -6,6 +6,7 @@ using BudgetExperiment.Client.Components.Charts;
 using BudgetExperiment.Client.Components.Charts.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Pages.Reports;

@@ -10,7 +10,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public sealed class HeatmapDayResponse
 {
     /// <summary>Gets or sets the total spend for this day.</summary>
-    public decimal Spend { get; set; }
+    public decimal Spend
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the relative spending intensity.

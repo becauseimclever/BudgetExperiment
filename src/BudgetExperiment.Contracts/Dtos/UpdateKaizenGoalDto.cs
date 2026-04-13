@@ -17,16 +17,25 @@ public sealed class UpdateKaizenGoalDto
     /// <summary>
     /// Gets or sets the updated optional target amount (must be non-negative if provided).
     /// </summary>
-    public decimal? TargetAmount { get; set; }
+    public decimal? TargetAmount
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the updated optional Kakeibo category scope as a string.
     /// Accepted values: Essentials, Wants, Culture, Unexpected.
     /// </summary>
-    public string? KakeiboCategory { get; set; }
+    public string? KakeiboCategory
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether the goal was achieved.
     /// </summary>
-    public bool IsAchieved { get; set; }
+    public bool IsAchieved
+    {
+        get; set;
+    }
 }

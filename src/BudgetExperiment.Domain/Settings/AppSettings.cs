@@ -2,6 +2,10 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.ComponentModel.DataAnnotations.Schema;
+
+using BudgetExperiment.Shared;
+
 namespace BudgetExperiment.Domain.Settings;
 
 /// <summary>
@@ -65,9 +69,15 @@ public sealed class AppSettings
     // ============ AI Settings ============
 
     /// <summary>
-    /// Gets the Ollama API endpoint URL.
+    /// Gets the AI backend endpoint URL.
     /// </summary>
-    public string AiOllamaEndpoint { get; private set; } = AiDefaults.DefaultOllamaUrl;
+    public string AiEndpointUrl { get; private set; } = AiDefaults.DefaultOllamaUrl;
+
+    /// <summary>
+    /// Gets the legacy Ollama-specific endpoint alias.
+    /// </summary>
+    [NotMapped]
+    public string AiOllamaEndpoint => AiEndpointUrl;
 
     /// <summary>
     /// Gets the AI model name to use.
@@ -95,6 +105,11 @@ public sealed class AppSettings
     /// </summary>
     public bool AiIsEnabled { get; private set; } = true;
 
+    /// <summary>
+    /// Gets the configured AI backend type.
+    /// </summary>
+    public AiBackendType AiBackendType { get; private set; } = AiDefaults.DefaultBackendType;
+
     // ============ Location Settings ============
 
     /// <summary>
@@ -119,6 +134,8 @@ public sealed class AppSettings
             AutoRealizePastDueItems = false,
             PastDueLookbackDays = 30,
             EnableLocationData = false,
+            AiEndpointUrl = AiDefaults.DefaultOllamaUrl,
+            AiBackendType = AiDefaults.DefaultBackendType,
             CreatedAtUtc = now,
             UpdatedAtUtc = now,
         };
@@ -153,24 +170,26 @@ public sealed class AppSettings
     /// <summary>
     /// Updates the AI settings.
     /// </summary>
-    /// <param name="ollamaEndpoint">The Ollama endpoint URL.</param>
+    /// <param name="endpointUrl">The AI backend endpoint URL.</param>
     /// <param name="modelName">The model name.</param>
     /// <param name="temperature">The temperature (0.0 to 1.0).</param>
     /// <param name="maxTokens">The maximum tokens.</param>
     /// <param name="timeoutSeconds">The timeout in seconds.</param>
     /// <param name="isEnabled">Whether AI is enabled.</param>
+    /// <param name="backendType">The configured AI backend type.</param>
     /// <exception cref="DomainException">Thrown when parameters are invalid.</exception>
     public void UpdateAiSettings(
-        string ollamaEndpoint,
+        string endpointUrl,
         string modelName,
         decimal temperature,
         int maxTokens,
         int timeoutSeconds,
-        bool isEnabled)
+        bool isEnabled,
+        AiBackendType backendType = AiDefaults.DefaultBackendType)
     {
-        if (string.IsNullOrWhiteSpace(ollamaEndpoint))
+        if (string.IsNullOrWhiteSpace(endpointUrl))
         {
-            throw new DomainException("Ollama endpoint is required.");
+            throw new DomainException("AI endpoint is required.");
         }
 
         if (string.IsNullOrWhiteSpace(modelName))
@@ -193,12 +212,18 @@ public sealed class AppSettings
             throw new DomainException("Timeout must be between 30 and 600 seconds.");
         }
 
-        AiOllamaEndpoint = ollamaEndpoint;
+        if (!Enum.IsDefined(backendType))
+        {
+            throw new DomainException("AI backend type is invalid.");
+        }
+
+        AiEndpointUrl = endpointUrl;
         AiModelName = modelName;
         AiTemperature = temperature;
         AiMaxTokens = maxTokens;
         AiTimeoutSeconds = timeoutSeconds;
         AiIsEnabled = isEnabled;
+        AiBackendType = backendType;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 

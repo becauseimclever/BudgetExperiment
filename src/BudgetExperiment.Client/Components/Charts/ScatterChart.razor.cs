@@ -5,6 +5,7 @@
 using System.Globalization;
 
 using BudgetExperiment.Client.Components.Charts.Models;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -30,7 +31,10 @@ public partial class ScatterChart
     /// Gets or sets the optional map of category names to fill colors used to color data points by category.
     /// </summary>
     [Parameter]
-    public IReadOnlyDictionary<string, string>? CategoryColors { get; set; }
+    public IReadOnlyDictionary<string, string>? CategoryColors
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether to apply a distinct visual marker to outlier points.

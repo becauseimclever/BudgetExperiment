@@ -5,6 +5,7 @@
 using BudgetExperiment.Application.Categorization;
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -58,7 +59,11 @@ public sealed class SuggestionsController : ControllerBase
         {
             return this.StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
-                new { message = "AI service is not available", error = status.ErrorMessage });
+                new
+                {
+                    message = "AI service is not available",
+                    error = status.ErrorMessage,
+                });
         }
 
         IReadOnlyList<RuleSuggestion> suggestions;
@@ -85,7 +90,10 @@ public sealed class SuggestionsController : ControllerBase
         }
         else
         {
-            return this.BadRequest(new { message = $"Invalid suggestion type: {request.SuggestionType}. Valid values are: NewRule, Optimization, Conflict" });
+            return this.BadRequest(new
+            {
+                message = $"Invalid suggestion type: {request.SuggestionType}. Valid values are: NewRule, Optimization, Conflict",
+            });
         }
 
         var dtos = await _suggestionService.MapSuggestionsToDtosAsync(suggestions, cancellationToken);
@@ -159,11 +167,17 @@ public sealed class SuggestionsController : ControllerBase
         }
         catch (DomainException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
         {
-            return this.NotFound(new { message = ex.Message });
+            return this.NotFound(new
+            {
+                message = ex.Message,
+            });
         }
         catch (DomainException ex)
         {
-            return this.BadRequest(new { message = ex.Message });
+            return this.BadRequest(new
+            {
+                message = ex.Message,
+            });
         }
     }
 
@@ -189,7 +203,10 @@ public sealed class SuggestionsController : ControllerBase
         }
         catch (DomainException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
         {
-            return this.NotFound(new { message = ex.Message });
+            return this.NotFound(new
+            {
+                message = ex.Message,
+            });
         }
     }
 
@@ -215,7 +232,10 @@ public sealed class SuggestionsController : ControllerBase
         }
         catch (DomainException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
         {
-            return this.NotFound(new { message = ex.Message });
+            return this.NotFound(new
+            {
+                message = ex.Message,
+            });
         }
     }
 

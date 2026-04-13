@@ -236,7 +236,10 @@ public sealed class Transaction
     /// Gets the per-transaction Kakeibo override.
     /// If null, the effective Kakeibo category is derived from <see cref="Category"/>.<see cref="BudgetCategory.KakeiboCategory"/>.
     /// </summary>
-    public KakeiboCategory? KakeiboOverride { get; private set; }
+    public KakeiboCategory? KakeiboOverride
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Updates the description.

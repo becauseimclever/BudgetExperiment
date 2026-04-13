@@ -17,10 +17,16 @@ public sealed class UpdateFeatureFlagResponse
     /// <summary>
     /// Gets or sets a value indicating whether the feature flag is now enabled.
     /// </summary>
-    public bool Enabled { get; set; }
+    public bool Enabled
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the UTC timestamp of the update.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; set;
+    }
 }

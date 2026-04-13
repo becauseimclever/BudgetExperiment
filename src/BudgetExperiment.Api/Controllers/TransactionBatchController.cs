@@ -53,7 +53,14 @@ public sealed class TransactionBatchController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] TransactionCreateDto dto, CancellationToken cancellationToken)
     {
         var transaction = await _service.CreateAsync(dto, cancellationToken);
-        return this.CreatedAtAction("GetById", "TransactionQuery", new { id = transaction.Id }, transaction);
+        return this.CreatedAtAction(
+            "GetById",
+            "TransactionQuery",
+            new
+            {
+                id = transaction.Id,
+            },
+            transaction);
     }
 
     /// <summary>

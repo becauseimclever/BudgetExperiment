@@ -72,11 +72,24 @@ public interface ITransactionQueryRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets all transactions that do not have a category assigned.
+    /// Gets transactions that do not have a category assigned.
     /// </summary>
+    /// <param name="maxCount">Maximum number of transactions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of uncategorized transactions.</returns>
-    Task<IReadOnlyList<Transaction>> GetUncategorizedAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Transaction>> GetUncategorizedAsync(
+        int maxCount = 500,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets uncategorized transaction descriptions only.
+    /// </summary>
+    /// <param name="maxCount">Maximum number of descriptions to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A collection of uncategorized transaction descriptions.</returns>
+    Task<IReadOnlyList<string>> GetUncategorizedDescriptionsAsync(
+        int maxCount = 500,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets uncategorized transactions with filtering, sorting, and paging.
@@ -144,7 +157,12 @@ public interface ITransactionQueryRepository
     /// <summary>
     /// Gets all unique transaction descriptions for pattern analysis.
     /// </summary>
+    /// <param name="searchPrefix">Optional search prefix for narrowing results.</param>
+    /// <param name="maxResults">Maximum number of descriptions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of unique descriptions.</returns>
-    Task<IReadOnlyList<string>> GetAllDescriptionsAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<string>> GetAllDescriptionsAsync(
+        string searchPrefix = "",
+        int maxResults = 100,
+        CancellationToken cancellationToken = default);
 }

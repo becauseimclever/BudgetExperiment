@@ -4,6 +4,7 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Shared;
 
 namespace BudgetExperiment.Application.Settings;
 
@@ -74,13 +75,7 @@ public sealed class AppSettingsService : IAppSettingsService
     public async Task<AiSettingsData> GetAiSettingsAsync(CancellationToken cancellationToken = default)
     {
         var settings = await _repository.GetAsync(cancellationToken);
-        return new AiSettingsData(
-            OllamaEndpoint: settings.AiOllamaEndpoint,
-            ModelName: settings.AiModelName,
-            Temperature: settings.AiTemperature,
-            MaxTokens: settings.AiMaxTokens,
-            TimeoutSeconds: settings.AiTimeoutSeconds,
-            IsEnabled: settings.AiIsEnabled);
+        return MapAiSettings(settings);
     }
 
     /// <inheritdoc />
@@ -89,23 +84,40 @@ public sealed class AppSettingsService : IAppSettingsService
         CancellationToken cancellationToken = default)
     {
         var settings = await _repository.GetAsync(cancellationToken);
+        var normalizedEndpointUrl = NormalizeEndpointUrl(newSettings.EndpointUrl, newSettings.BackendType);
 
         settings.UpdateAiSettings(
-            ollamaEndpoint: newSettings.OllamaEndpoint,
+            endpointUrl: normalizedEndpointUrl,
             modelName: newSettings.ModelName,
             temperature: newSettings.Temperature,
             maxTokens: newSettings.MaxTokens,
             timeoutSeconds: newSettings.TimeoutSeconds,
-            isEnabled: newSettings.IsEnabled);
+            isEnabled: newSettings.IsEnabled,
+            backendType: newSettings.BackendType);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        return MapAiSettings(settings);
+    }
+
+    private static AiSettingsData MapAiSettings(Domain.Settings.AppSettings settings)
+    {
+        var backendType = Enum.IsDefined(settings.AiBackendType)
+            ? settings.AiBackendType
+            : AiDefaults.DefaultBackendType;
+
         return new AiSettingsData(
-            OllamaEndpoint: settings.AiOllamaEndpoint,
+            EndpointUrl: NormalizeEndpointUrl(settings.AiEndpointUrl, backendType),
             ModelName: settings.AiModelName,
             Temperature: settings.AiTemperature,
             MaxTokens: settings.AiMaxTokens,
             TimeoutSeconds: settings.AiTimeoutSeconds,
-            IsEnabled: settings.AiIsEnabled);
+            IsEnabled: settings.AiIsEnabled,
+            BackendType: backendType);
     }
+
+    private static string NormalizeEndpointUrl(string? endpointUrl, AiBackendType backendType) =>
+        string.IsNullOrWhiteSpace(endpointUrl)
+            ? AiDefaults.GetDefaultEndpointUrl(backendType)
+            : endpointUrl.Trim();
 }

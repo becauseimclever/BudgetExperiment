@@ -2,6 +2,9 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using BudgetExperiment.Domain.DataHealth;
+using BudgetExperiment.Shared.Budgeting;
+
 namespace BudgetExperiment.Domain.Repositories;
 
 /// <summary>
@@ -24,15 +27,42 @@ public interface ITransactionAnalyticsRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets all transactions for health analysis, optionally filtered by account.
-    /// Applies scope filtering. Includes Category navigation.
+    /// Gets spending totals grouped by category for the given month.
     /// </summary>
-    /// <param name="accountId">Optional account filter.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>All transactions for health analysis.</returns>
-    Task<IReadOnlyList<Transaction>> GetAllForHealthAnalysisAsync(
-        Guid? accountId,
-        CancellationToken ct);
+    /// <param name="year">The year.</param>
+    /// <param name="month">The month (1-12).</param>
+    /// <param name="scope">The budget scope to apply.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A dictionary of category IDs and total spending amounts.</returns>
+    Task<Dictionary<Guid, decimal>> GetSpendingByCategoriesAsync(
+        int year,
+        int month,
+        BudgetScope scope,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets transaction projections for duplicate detection analysis.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Duplicate detection projections.</returns>
+    Task<IReadOnlyList<DuplicateDetectionProjection>> GetTransactionProjectionsForDuplicateDetectionAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets account/date projections for date gap analysis.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Date gap projections.</returns>
+    Task<IReadOnlyList<DateGapProjection>> GetTransactionDatesForGapAnalysisAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets transaction projections for outlier analysis.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Outlier projections.</returns>
+    Task<IReadOnlyList<OutlierProjection>> GetTransactionAmountsForOutlierAnalysisAsync(
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets cleared transactions for an account up to the given date.

@@ -5,6 +5,7 @@
 using System.Globalization;
 
 using BudgetExperiment.Client.Components.Charts.Models;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -18,7 +19,10 @@ public partial class RadialBarChart
     /// Gets or sets the list of segments to render as concentric arcs.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<RadialBarSegment>? Segments { get; set; }
+    public IReadOnlyList<RadialBarSegment>? Segments
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart.

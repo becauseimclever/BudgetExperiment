@@ -2,6 +2,10 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Text.Json.Serialization;
+
+using BudgetExperiment.Shared;
+
 namespace BudgetExperiment.Contracts.Dtos;
 
 /// <summary>
@@ -34,9 +38,15 @@ public sealed class AiStatusDto
     }
 
     /// <summary>
-    /// Gets or sets the Ollama endpoint URL.
+    /// Gets or sets the AI backend endpoint URL.
     /// </summary>
     public string Endpoint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the active AI backend type.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter<AiBackendType>))]
+    public AiBackendType BackendType { get; set; } = AiBackendType.Ollama;
 
     /// <summary>
     /// Gets or sets any error message if the service is unavailable.

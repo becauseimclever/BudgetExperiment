@@ -116,7 +116,10 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
                     IsAccepted = true,
                 };
 
-                enrichedRows.Add(row with { ParsedLocation = locationPreview });
+                enrichedRows.Add(row with
+                {
+                    ParsedLocation = locationPreview,
+                });
             }
             else
             {
@@ -174,7 +177,10 @@ public sealed class ImportPreviewEnricher : IImportPreviewEnricher
 
             if (bestMatch != null)
             {
-                enrichedRows.Add(row with { RecurringMatch = BuildMatchPreview(bestMatch, allCandidates, tolerances) });
+                enrichedRows.Add(row with
+                {
+                    RecurringMatch = BuildMatchPreview(bestMatch, allCandidates, tolerances),
+                });
             }
             else
             {

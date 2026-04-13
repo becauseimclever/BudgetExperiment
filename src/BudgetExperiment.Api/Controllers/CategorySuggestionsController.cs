@@ -198,7 +198,10 @@ public sealed class CategorySuggestionsController : ControllerBase
     public async Task<IActionResult> ClearDismissedPatternsAsync(CancellationToken cancellationToken)
     {
         var clearedCount = await _suggestionService.ClearDismissedPatternsAsync(cancellationToken);
-        return this.Ok(new { clearedCount });
+        return this.Ok(new
+        {
+            clearedCount,
+        });
     }
 
     /// <summary>
@@ -216,7 +219,10 @@ public sealed class CategorySuggestionsController : ControllerBase
     {
         if (request.SuggestionIds == null || request.SuggestionIds.Count == 0)
         {
-            return this.BadRequest(new { message = "At least one suggestion ID is required." });
+            return this.BadRequest(new
+            {
+                message = "At least one suggestion ID is required.",
+            });
         }
 
         var results = await _suggestionService.AcceptSuggestionsAsync(request.SuggestionIds, cancellationToken);

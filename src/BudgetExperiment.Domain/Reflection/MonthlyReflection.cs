@@ -33,58 +33,91 @@ public sealed class MonthlyReflection
     /// <summary>
     /// Gets the unique identifier.
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the user ID that owns this reflection.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public Guid UserId
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the year this reflection covers.
     /// </summary>
-    public int Year { get; private set; }
+    public int Year
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the month (1-12) this reflection covers.
     /// </summary>
-    public int Month { get; private set; }
+    public int Month
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the savings goal the user set at month start.
     /// </summary>
-    public decimal SavingsGoal { get; private set; }
+    public decimal SavingsGoal
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the actual savings recorded at month end (income minus expenses).
     /// Null until the user records a month-end review.
     /// </summary>
-    public decimal? ActualSavings { get; private set; }
+    public decimal? ActualSavings
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the month-start intention text (max 280 characters).
     /// </summary>
-    public string? IntentionText { get; private set; }
+    public string? IntentionText
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the month-end gratitude journal entry.
     /// </summary>
-    public string? GratitudeText { get; private set; }
+    public string? GratitudeText
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the month-end improvement journal entry.
     /// </summary>
-    public string? ImprovementText { get; private set; }
+    public string? ImprovementText
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the reflection was created.
     /// </summary>
-    public DateTime CreatedAtUtc { get; private set; }
+    public DateTime CreatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Gets the UTC timestamp when the reflection was last updated.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; private set; }
+    public DateTime UpdatedAtUtc
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Creates a new monthly reflection for a given user and month.

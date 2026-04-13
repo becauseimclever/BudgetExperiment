@@ -67,8 +67,10 @@ public static class DependencyInjection
         services.AddScoped<IMonthlyReflectionRepository, MonthlyReflectionRepository>();
         services.AddScoped<IKaizenGoalRepository, KaizenGoalRepository>();
 
-        // AI Service - HttpClient configured dynamically from database settings
-        services.AddHttpClient<IAiService, OllamaAiService>();
+        // AI services - backend selected at runtime from persisted settings, with config fallback.
+        services.AddHttpClient<OllamaAiService>();
+        services.AddHttpClient<LlamaCppAiService>();
+        services.AddScoped<IAiService, BackendSelectingAiService>();
 
         // Geocoding Service - Nominatim (OpenStreetMap) reverse geocoding
         services.AddHttpClient<IGeocodingService, NominatimGeocodingService>();

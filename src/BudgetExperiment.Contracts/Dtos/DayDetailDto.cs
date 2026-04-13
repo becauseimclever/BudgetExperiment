@@ -22,8 +22,14 @@ public sealed class DayDetailDto
     public DayDetailSummaryDto Summary { get; set; } = new();
 
     /// <summary>Gets or sets the daily average spend for this month (used for heatmap context).</summary>
-    public decimal? DailyAverageSpend { get; set; }
+    public decimal? DailyAverageSpend
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the dominant Kakeibo category name for this day (null when no expense transactions).</summary>
-    public string? DominantKakeiboCategory { get; set; }
+    public string? DominantKakeiboCategory
+    {
+        get; set;
+    }
 }

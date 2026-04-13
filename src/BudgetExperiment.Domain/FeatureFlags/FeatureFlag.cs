@@ -17,7 +17,10 @@ public sealed class FeatureFlag
     /// <summary>
     /// Gets or sets a value indicating whether the feature is enabled.
     /// </summary>
-    public bool IsEnabled { get; set; }
+    public bool IsEnabled
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the last update timestamp (UTC).

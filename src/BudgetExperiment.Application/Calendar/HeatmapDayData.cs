@@ -10,8 +10,14 @@ namespace BudgetExperiment.Application.Calendar;
 public sealed class HeatmapDayData
 {
     /// <summary>Gets or sets the total spend for this day.</summary>
-    public decimal Spend { get; set; }
+    public decimal Spend
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the relative spending intensity.</summary>
-    public HeatmapIntensity Intensity { get; set; }
+    public HeatmapIntensity Intensity
+    {
+        get; set;
+    }
 }

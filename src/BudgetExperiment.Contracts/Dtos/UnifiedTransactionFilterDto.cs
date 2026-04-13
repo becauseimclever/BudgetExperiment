@@ -1,4 +1,4 @@
-﻿// <copyright file="UnifiedTransactionFilterDto.cs" company="BecauseImClever">
+// <copyright file="UnifiedTransactionFilterDto.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -70,5 +70,8 @@ public sealed class UnifiedTransactionFilterDto
     public int PageSize { get; set; } = 50;
 
     /// <summary>Gets or sets the optional Kakeibo category filter (enum name, e.g. "Wants"). Null returns all transactions.</summary>
-    public string? KakeiboCategory { get; set; }
+    public string? KakeiboCategory
+    {
+        get; set;
+    }
 }

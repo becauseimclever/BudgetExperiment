@@ -1,4 +1,4 @@
-﻿// <copyright file="FeatureFlagSeeder.cs" company="BecauseImClever">
+// <copyright file="FeatureFlagSeeder.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 

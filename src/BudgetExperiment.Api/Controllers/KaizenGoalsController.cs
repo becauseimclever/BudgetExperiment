@@ -98,7 +98,13 @@ public sealed class KaizenGoalsController : ControllerBase
         try
         {
             var goal = await _service.CreateAsync(weekStart, dto, userId, cancellationToken);
-            return this.CreatedAtAction(nameof(this.GetByWeekAsync), new { weekStart = goal.WeekStartDate.ToString("yyyy-MM-dd") }, goal);
+            return this.CreatedAtAction(
+                nameof(this.GetByWeekAsync),
+                new
+                {
+                    weekStart = goal.WeekStartDate.ToString("yyyy-MM-dd"),
+                },
+                goal);
         }
         catch (DomainException ex)
         {

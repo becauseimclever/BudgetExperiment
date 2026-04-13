@@ -1410,6 +1410,11 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
+                    b.Property<int>("AiBackendType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<int>("AiMaxTokens")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -1422,9 +1427,10 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasDefaultValue("llama3.2");
 
-                    b.Property<string>("AiOllamaEndpoint")
+                    b.Property<string>("AiEndpointUrl")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("AiOllamaEndpoint")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasDefaultValue("http://localhost:11434");
@@ -1465,10 +1471,11 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000001"),
+                            AiBackendType = 0,
                             AiIsEnabled = true,
                             AiMaxTokens = 2000,
                             AiModelName = "llama3.2",
-                            AiOllamaEndpoint = "http://localhost:11434",
+                            AiEndpointUrl = "http://localhost:11434",
                             AiTemperature = 0.3m,
                             AiTimeoutSeconds = 120,
                             AutoRealizePastDueItems = false,

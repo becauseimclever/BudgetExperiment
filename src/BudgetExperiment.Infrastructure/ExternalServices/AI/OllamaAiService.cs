@@ -4,8 +4,6 @@
 
 using System.Diagnostics;
 using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Microsoft.Extensions.Logging;
 
@@ -14,19 +12,8 @@ namespace BudgetExperiment.Infrastructure.ExternalServices.AI;
 /// <summary>
 /// AI service implementation using Ollama local models.
 /// </summary>
-public sealed class OllamaAiService : IAiService
+public sealed class OllamaAiService : OpenAiCompatibleAiService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        PropertyNameCaseInsensitive = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    private readonly HttpClient _httpClient;
-    private readonly IAppSettingsService _settingsService;
-    private readonly ILogger<OllamaAiService> _logger;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="OllamaAiService"/> class.
     /// </summary>
@@ -37,194 +24,87 @@ public sealed class OllamaAiService : IAiService
         HttpClient httpClient,
         IAppSettingsService settingsService,
         ILogger<OllamaAiService> logger)
+        : base(httpClient, settingsService, logger)
     {
-        _httpClient = httpClient;
-        _settingsService = settingsService;
-        _logger = logger;
     }
 
     /// <inheritdoc/>
-    public async Task<AiServiceStatus> GetStatusAsync(CancellationToken cancellationToken = default)
+    protected override string GetBackendDisplayName() => "Ollama";
+
+    /// <inheritdoc/>
+    protected override string GetHealthCheckEndpoint() => "api/version";
+
+    /// <inheritdoc/>
+    protected override string GetModelsEndpoint() => "api/tags";
+
+    /// <inheritdoc/>
+    protected override string GetCompletionEndpoint() => "api/chat";
+
+    /// <inheritdoc/>
+    protected override object CreateCompletionRequest(AiPrompt prompt, AiSettingsData settings)
     {
-        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
-
-        if (!settings.IsEnabled)
+        return new OllamaChatRequest
         {
-            return new AiServiceStatus(false, null, "AI features are disabled.");
-        }
-
-        try
-        {
-            var baseUri = settings.OllamaEndpoint.TrimEnd('/');
-            var response = await _httpClient.GetAsync($"{baseUri}/api/version", cancellationToken);
-
-            if (response.IsSuccessStatusCode)
+            Model = settings.ModelName,
+            Messages = new List<OllamaChatMessage>
             {
-                return new AiServiceStatus(true, settings.ModelName, null);
-            }
-
-            return new AiServiceStatus(false, null, $"Ollama returned status {response.StatusCode}");
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogWarning(ex, "Failed to connect to Ollama at {Endpoint}", settings.OllamaEndpoint);
-            return new AiServiceStatus(false, null, $"Failed to connect to Ollama: {ex.Message}");
-        }
-        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
-        {
-            _logger.LogWarning("Connection to Ollama timed out");
-            return new AiServiceStatus(false, null, "Connection to Ollama timed out.");
-        }
+                new() { Role = "system", Content = prompt.SystemPrompt },
+                new() { Role = "user", Content = prompt.UserPrompt },
+            },
+            Stream = false,
+            Options = new OllamaOptions
+            {
+                Temperature = (float)prompt.Temperature,
+                NumPredict = prompt.MaxTokens,
+            },
+        };
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<AiModelInfo>> GetAvailableModelsAsync(CancellationToken cancellationToken = default)
+    protected override async Task<IReadOnlyList<AiModelInfo>> ParseModelsResponseAsync(HttpContent content, CancellationToken cancellationToken)
     {
-        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
+        var tagsResponse = await content.ReadFromJsonAsync<OllamaTagsResponse>(JsonOptions, cancellationToken);
 
-        if (!settings.IsEnabled)
+        if (tagsResponse?.Models == null)
         {
             return Array.Empty<AiModelInfo>();
         }
 
-        try
-        {
-            var baseUri = settings.OllamaEndpoint.TrimEnd('/');
-            var response = await _httpClient.GetAsync($"{baseUri}/api/tags", cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            var tagsResponse = await response.Content.ReadFromJsonAsync<OllamaTagsResponse>(JsonOptions, cancellationToken);
-
-            if (tagsResponse?.Models == null)
-            {
-                return Array.Empty<AiModelInfo>();
-            }
-
-            return tagsResponse.Models
-                .Select(m => new AiModelInfo(
-                    m.Name ?? string.Empty,
-                    m.ModifiedAt,
-                    m.Size))
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to list Ollama models");
-            return Array.Empty<AiModelInfo>();
-        }
+        return tagsResponse.Models
+            .Select(m => new AiModelInfo(
+                m.Name ?? string.Empty,
+                m.ModifiedAt,
+                m.Size))
+            .ToList();
     }
 
     /// <inheritdoc/>
-    public async Task<AiResponse> CompleteAsync(AiPrompt prompt, CancellationToken cancellationToken = default)
+    protected override async Task<AiResponse> ParseCompletionResponseAsync(
+        HttpContent content,
+        Stopwatch stopwatch,
+        CancellationToken cancellationToken)
     {
-        var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
-        var stopwatch = Stopwatch.StartNew();
+        var chatResponse = await content.ReadFromJsonAsync<OllamaChatResponse>(JsonOptions, cancellationToken);
+        stopwatch.Stop();
 
-        if (!settings.IsEnabled)
+        if (chatResponse == null)
         {
             return new AiResponse(
                 false,
                 string.Empty,
-                "AI features are disabled.",
+                "Failed to parse Ollama response.",
                 0,
                 stopwatch.Elapsed);
         }
 
-        try
-        {
-            var request = new OllamaChatRequest
-            {
-                Model = settings.ModelName,
-                Messages = new List<OllamaChatMessage>
-                {
-                    new() { Role = "system", Content = prompt.SystemPrompt },
-                    new() { Role = "user", Content = prompt.UserPrompt },
-                },
-                Stream = false,
-                Options = new OllamaOptions
-                {
-                    Temperature = (float)prompt.Temperature,
-                    NumPredict = prompt.MaxTokens,
-                },
-            };
+        var tokensUsed = (chatResponse.PromptEvalCount ?? 0) + (chatResponse.EvalCount ?? 0);
 
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(TimeSpan.FromSeconds(settings.TimeoutSeconds));
-
-            var baseUri = settings.OllamaEndpoint.TrimEnd('/');
-            var response = await _httpClient.PostAsJsonAsync($"{baseUri}/api/chat", request, JsonOptions, cts.Token);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync(cts.Token);
-                _logger.LogWarning("Ollama request failed with status {Status}: {Error}", response.StatusCode, errorContent);
-
-                return new AiResponse(
-                    false,
-                    string.Empty,
-                    $"Ollama returned status {response.StatusCode}: {errorContent}",
-                    0,
-                    stopwatch.Elapsed);
-            }
-
-            var chatResponse = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(JsonOptions, cts.Token);
-
-            stopwatch.Stop();
-
-            if (chatResponse == null)
-            {
-                return new AiResponse(
-                    false,
-                    string.Empty,
-                    "Failed to parse Ollama response.",
-                    0,
-                    stopwatch.Elapsed);
-            }
-
-            var tokensUsed = (chatResponse.PromptEvalCount ?? 0) + (chatResponse.EvalCount ?? 0);
-
-            return new AiResponse(
-                true,
-                chatResponse.Message?.Content ?? string.Empty,
-                null,
-                tokensUsed,
-                stopwatch.Elapsed);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (OperationCanceledException)
-        {
-            // This is a timeout from our linked CancellationTokenSource - return error response
-            _logger.LogWarning("Ollama request timed out after {Timeout} seconds", settings.TimeoutSeconds);
-            return new AiResponse(
-                false,
-                string.Empty,
-                $"AI request timed out after {settings.TimeoutSeconds} seconds.",
-                0,
-                stopwatch.Elapsed);
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "Failed to communicate with Ollama");
-            return new AiResponse(
-                false,
-                string.Empty,
-                $"Failed to communicate with Ollama: {ex.Message}",
-                0,
-                stopwatch.Elapsed);
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(ex, "Failed to parse Ollama response");
-            return new AiResponse(
-                false,
-                string.Empty,
-                $"Failed to parse Ollama response: {ex.Message}",
-                0,
-                stopwatch.Elapsed);
-        }
+        return new AiResponse(
+            true,
+            chatResponse.Message?.Content ?? string.Empty,
+            null,
+            tokensUsed,
+            stopwatch.Elapsed);
     }
 
     private sealed class OllamaTagsResponse

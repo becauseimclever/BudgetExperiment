@@ -4,7 +4,9 @@
 
 using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Identity;
 using BudgetExperiment.Domain.Settings;
+using BudgetExperiment.Shared.Budgeting;
 
 namespace BudgetExperiment.Application.Budgeting;
 
@@ -17,6 +19,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICurrencyProvider _currencyProvider;
+    private readonly IUserContext _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetProgressService"/> class.
@@ -25,16 +28,19 @@ public sealed class BudgetProgressService : IBudgetProgressService
     /// <param name="categoryRepository">The budget category repository.</param>
     /// <param name="transactionRepository">The transaction repository.</param>
     /// <param name="currencyProvider">The currency provider.</param>
+    /// <param name="userContext">The current user context.</param>
     public BudgetProgressService(
         IBudgetGoalRepository goalRepository,
         IBudgetCategoryRepository categoryRepository,
         ITransactionRepository transactionRepository,
-        ICurrencyProvider currencyProvider)
+        ICurrencyProvider currencyProvider,
+        IUserContext userContext)
     {
         _goalRepository = goalRepository;
         _categoryRepository = categoryRepository;
         _transactionRepository = transactionRepository;
         _currencyProvider = currencyProvider;
+        _userContext = userContext;
     }
 
     /// <inheritdoc/>
@@ -71,8 +77,10 @@ public sealed class BudgetProgressService : IBudgetProgressService
         bool groupByKakeibo = false,
         CancellationToken cancellationToken = default)
     {
-        var goals = await _goalRepository.GetByMonthAsync(year, month, cancellationToken);
-        var allExpenseCategories = await _categoryRepository.GetByTypeAsync(CategoryType.Expense, cancellationToken);
+        var goals = await _goalRepository.GetByMonthAsync(year, month, cancellationToken)
+            ?? [];
+        var allExpenseCategories = await _categoryRepository.GetByTypeAsync(CategoryType.Expense, cancellationToken)
+            ?? [];
         var categoryProgress = new List<BudgetProgressDto>();
         var currency = await _currencyProvider.GetCurrencyAsync(cancellationToken);
         var totalBudgeted = MoneyValue.Create(currency, 0m);
@@ -83,11 +91,30 @@ public sealed class BudgetProgressService : IBudgetProgressService
 
         // Create a lookup of goals by category ID
         var goalByCategoryId = goals.ToDictionary(g => g.CategoryId);
+        var scope = _userContext.CurrentScope ?? BudgetScope.Shared;
+        var groupedSpendingTask = _transactionRepository.GetSpendingByCategoriesAsync(
+            year,
+            month,
+            scope,
+            cancellationToken);
+        var usedGroupedQuery = groupedSpendingTask is not null;
+        var spendingByCategory = groupedSpendingTask is null
+            ? new Dictionary<Guid, decimal>()
+            : await groupedSpendingTask ?? new Dictionary<Guid, decimal>();
 
         // Process all active expense categories
         foreach (var category in allExpenseCategories.Where(c => c.IsActive))
         {
-            var spent = await _transactionRepository.GetSpendingByCategoryAsync(category.Id, year, month, cancellationToken);
+            var spentAmount = spendingByCategory.TryGetValue(category.Id, out var amount)
+                ? amount
+                : usedGroupedQuery
+                    ? 0m
+                    : (await _transactionRepository.GetSpendingByCategoryAsync(
+                        category.Id,
+                        year,
+                        month,
+                        cancellationToken)).Amount;
+            var spent = MoneyValue.Create(currency, spentAmount);
             BudgetProgress progress;
 
             if (goalByCategoryId.TryGetValue(category.Id, out var goal))

@@ -130,7 +130,10 @@ public sealed class TransactionDto
     }
 
     /// <summary>Gets or sets the per-transaction Kakeibo override (enum name). Null if no override is set.</summary>
-    public string? KakeiboOverride { get; set; }
+    public string? KakeiboOverride
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets the effective Kakeibo category for this transaction (override ?? category routing ?? "Wants").</summary>
     public string EffectiveKakeiboCategory { get; set; } = string.Empty;

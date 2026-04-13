@@ -39,7 +39,7 @@ public class ReportsDashboardTests : BunitContext, IAsyncLifetime
     public ReportsDashboardTests()
     {
         this.JSInterop.Mode = JSRuntimeMode.Loose;
-        this.Services.AddSingleton<IBudgetApiService>(this._fakeApiService);
+        this.Services.AddSingleton<IBudgetApiService>(_fakeApiService);
         this.Services.AddSingleton<IChartDataService>(new FakeChartDataService());
         this.Services.AddSingleton(new ScopeService(this.JSInterop.JSRuntime));
         this.Services.AddSingleton<ThemeService>();
@@ -79,7 +79,7 @@ public class ReportsDashboardTests : BunitContext, IAsyncLifetime
     public void ReportsDashboard_Shows_LoadingState_Initially()
     {
         // Arrange — block the first API call so OnInitializedAsync stays pending
-        this._fakeApiService.MonthlyCategoryTaskSource = new TaskCompletionSource<MonthlyCategoryReportDto?>();
+        _fakeApiService.MonthlyCategoryTaskSource = new TaskCompletionSource<MonthlyCategoryReportDto?>();
 
         // Act
         var cut = Render<ReportsDashboard>();

@@ -1,6 +1,6 @@
 # Feature 155: BudgetProgressService — Fix N+1 Category Spending Queries
 
-> **Status:** Proposed  
+> **Status:** Done  
 > **Severity:** 🟠 High — P-002  
 > **Audit Source:** `docs/audit/2026-04-09-performance-review.md`
 

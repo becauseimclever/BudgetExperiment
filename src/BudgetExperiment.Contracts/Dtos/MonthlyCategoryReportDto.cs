@@ -31,5 +31,8 @@ public sealed class MonthlyCategoryReportDto
     public IReadOnlyList<CategorySpendingDto> Categories { get; set; } = [];
 
     /// <summary>Gets or sets the optional Kakeibo grouped summary.</summary>
-    public KakeiboGroupedSummaryDto? KakeiboGroupedSummary { get; set; }
+    public KakeiboGroupedSummaryDto? KakeiboGroupedSummary
+    {
+        get; set;
+    }
 }

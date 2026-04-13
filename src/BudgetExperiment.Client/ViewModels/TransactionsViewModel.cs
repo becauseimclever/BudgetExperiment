@@ -1,4 +1,4 @@
-﻿// <copyright file="TransactionsViewModel.cs" company="BecauseImClever">
+// <copyright file="TransactionsViewModel.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 

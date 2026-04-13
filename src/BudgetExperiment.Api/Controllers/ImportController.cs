@@ -88,7 +88,13 @@ public sealed class ImportController : ControllerBase
     public async Task<IActionResult> CreateMappingAsync([FromBody] CreateImportMappingRequest request, CancellationToken cancellationToken)
     {
         var mapping = await _mappingService.CreateMappingAsync(request, cancellationToken);
-        return this.CreatedAtAction("GetMappingById", new { id = mapping.Id }, mapping);
+        return this.CreatedAtAction(
+            "GetMappingById",
+            new
+            {
+                id = mapping.Id,
+            },
+            mapping);
     }
 
     /// <summary>
@@ -230,7 +236,13 @@ public sealed class ImportController : ControllerBase
         }
 
         var result = await _importService.ExecuteAsync(request, cancellationToken);
-        return this.CreatedAtAction("GetBatchById", new { id = result.BatchId }, result);
+        return this.CreatedAtAction(
+            "GetBatchById",
+            new
+            {
+                id = result.BatchId,
+            },
+            result);
     }
 
     /// <summary>

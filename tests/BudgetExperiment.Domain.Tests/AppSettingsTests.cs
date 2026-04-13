@@ -3,6 +3,8 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Settings;
+using BudgetExperiment.Shared;
 
 namespace BudgetExperiment.Domain.Tests;
 
@@ -195,6 +197,16 @@ public class AppSettingsTests
     }
 
     [Fact]
+    public void CreateDefault_Sets_AiBackendType_To_DefaultBackend()
+    {
+        // Act
+        var settings = AppSettings.CreateDefault();
+
+        // Assert
+        Assert.Equal(AiDefaults.DefaultBackendType, settings.AiBackendType);
+    }
+
+    [Fact]
     public void UpdateEnableLocationData_Sets_True_When_Enabled()
     {
         // Arrange
@@ -233,5 +245,26 @@ public class AppSettingsTests
 
         // Assert
         Assert.True(settings.UpdatedAtUtc >= originalUpdatedAt);
+    }
+
+    [Fact]
+    public void UpdateAiSettings_Sets_BackendType()
+    {
+        // Arrange
+        var settings = AppSettings.CreateDefault();
+
+        // Act
+        settings.UpdateAiSettings(
+            endpointUrl: AiDefaults.DefaultLlamaCppUrl,
+            modelName: "llama3.2",
+            temperature: 0.3m,
+            maxTokens: 2000,
+            timeoutSeconds: 120,
+            isEnabled: true,
+            backendType: AiBackendType.LlamaCpp);
+
+        // Assert
+        Assert.Equal(AiBackendType.LlamaCpp, settings.AiBackendType);
+        Assert.Equal(AiDefaults.DefaultLlamaCppUrl, settings.AiOllamaEndpoint);
     }
 }

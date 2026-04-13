@@ -403,8 +403,11 @@ public class CategorySuggestionServiceAiDiscoveryTests
     private void SetupUncategorizedTransactions(Transaction[] transactions)
     {
         _transactionRepoMock
-            .Setup(r => r.GetUncategorizedAsync(It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetUncategorizedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transactions);
+        _transactionRepoMock
+            .Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions.Select(t => t.Description).ToList());
     }
 
     private void SetupNoExistingCategories()

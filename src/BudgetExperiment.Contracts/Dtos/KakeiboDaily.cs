@@ -11,7 +11,10 @@ namespace BudgetExperiment.Contracts.Dtos;
 public record KakeiboDaily
 {
     /// <summary>Gets the date for this daily summary.</summary>
-    public DateOnly Date { get; init; }
+    public DateOnly Date
+    {
+        get; init;
+    }
 
     /// <summary>Gets per-bucket absolute spending totals for this day.</summary>
     public Dictionary<KakeiboCategory, decimal> BucketTotals { get; init; } = [];

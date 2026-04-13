@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Contracts.Dtos;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
@@ -60,7 +61,8 @@ public sealed class AiController : ControllerBase
             IsAvailable = status.IsAvailable,
             IsEnabled = settings.IsEnabled,
             CurrentModel = status.CurrentModel,
-            Endpoint = settings.OllamaEndpoint,
+            Endpoint = settings.EndpointUrl,
+            BackendType = settings.BackendType,
             ErrorMessage = status.ErrorMessage,
         });
     }
@@ -97,15 +99,7 @@ public sealed class AiController : ControllerBase
     {
         var settings = await _settingsService.GetAiSettingsAsync(cancellationToken);
 
-        return this.Ok(new AiSettingsDto
-        {
-            OllamaEndpoint = settings.OllamaEndpoint,
-            ModelName = settings.ModelName,
-            Temperature = settings.Temperature,
-            MaxTokens = settings.MaxTokens,
-            TimeoutSeconds = settings.TimeoutSeconds,
-            IsEnabled = settings.IsEnabled,
-        });
+        return this.Ok(MapSettings(settings));
     }
 
     /// <summary>
@@ -122,16 +116,17 @@ public sealed class AiController : ControllerBase
         CancellationToken cancellationToken)
     {
         var settingsData = new AiSettingsData(
-            request.OllamaEndpoint,
+            request.ResolveEndpointUrl(),
             request.ModelName,
             request.Temperature,
             request.MaxTokens,
             request.TimeoutSeconds,
-            request.IsEnabled);
+            request.IsEnabled,
+            request.BackendType);
 
-        await _settingsService.UpdateAiSettingsAsync(settingsData, cancellationToken);
+        var updatedSettings = await _settingsService.UpdateAiSettingsAsync(settingsData, cancellationToken);
 
-        return this.Ok(request);
+        return this.Ok(MapSettings(updatedSettings));
     }
 
     /// <summary>
@@ -154,7 +149,11 @@ public sealed class AiController : ControllerBase
             _logger.LogWarning("AI service is not available: {ErrorMessage}", status.ErrorMessage);
             return this.StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
-                new { message = "AI service is not available", error = status.ErrorMessage });
+                new
+                {
+                    message = "AI service is not available",
+                    error = status.ErrorMessage,
+                });
         }
 
         try
@@ -183,7 +182,10 @@ public sealed class AiController : ControllerBase
         {
             // Client disconnected or cancelled - return 499 (Client Closed Request, nginx convention)
             _logger.LogInformation("AI analysis was cancelled by client");
-            return this.StatusCode(499, new { message = "Client cancelled the request" });
+            return this.StatusCode(499, new
+            {
+                message = "Client cancelled the request",
+            });
         }
         catch (OperationCanceledException ex)
         {
@@ -207,5 +209,19 @@ public sealed class AiController : ControllerBase
                     error = ex.Message,
                 });
         }
+    }
+
+    private static AiSettingsDto MapSettings(AiSettingsData settings)
+    {
+        return new AiSettingsDto
+        {
+            EndpointUrl = settings.EndpointUrl,
+            ModelName = settings.ModelName,
+            Temperature = settings.Temperature,
+            MaxTokens = settings.MaxTokens,
+            TimeoutSeconds = settings.TimeoutSeconds,
+            IsEnabled = settings.IsEnabled,
+            BackendType = settings.BackendType,
+        };
     }
 }

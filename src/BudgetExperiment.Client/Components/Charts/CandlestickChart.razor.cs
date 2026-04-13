@@ -5,6 +5,7 @@
 using System.Globalization;
 
 using BudgetExperiment.Client.Components.Charts.Models;
+
 using Microsoft.AspNetCore.Components;
 
 namespace BudgetExperiment.Client.Components.Charts;
@@ -18,7 +19,10 @@ public partial class CandlestickChart
     /// Gets or sets the list of candles to render.
     /// </summary>
     [Parameter]
-    public IReadOnlyList<CandlestickDataPoint>? Candles { get; set; }
+    public IReadOnlyList<CandlestickDataPoint>? Candles
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the accessibility label for the chart.

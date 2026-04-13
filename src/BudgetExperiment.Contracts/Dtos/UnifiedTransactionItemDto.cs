@@ -1,4 +1,4 @@
-﻿// <copyright file="UnifiedTransactionItemDto.cs" company="BecauseImClever">
+// <copyright file="UnifiedTransactionItemDto.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -76,9 +76,15 @@ public sealed class UnifiedTransactionItemDto
 
     /// <summary>Gets or sets the effective Kakeibo category. Null for Income and Transfer transactions, or for
     /// uncategorized Expense transactions with no override.</summary>
-    public string? EffectiveKakeiboCategory { get; set; }
+    public string? EffectiveKakeiboCategory
+    {
+        get; set;
+    }
 
     /// <summary>Gets or sets a value indicating whether the effective Kakeibo category comes from a
     /// per-transaction override (true) versus the category default (false).</summary>
-    public bool IsKakeiboOverride { get; set; }
+    public bool IsKakeiboOverride
+    {
+        get; set;
+    }
 }

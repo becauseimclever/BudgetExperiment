@@ -13,7 +13,6 @@ namespace BudgetExperiment.Infrastructure.Persistence.Repositories;
 /// </summary>
 internal sealed class AccountRepository : IAccountRepository, IAccountTransactionRangeRepository, IAccountNameLookupRepository
 {
-    private const int DefaultTransactionLookbackDays = 90;
     private readonly BudgetDbContext _context;
     private readonly IUserContext _userContext;
 
@@ -38,9 +37,9 @@ internal sealed class AccountRepository : IAccountRepository, IAccountTransactio
     /// <inheritdoc />
     public async Task<Account?> GetByIdWithTransactionsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
-        var startDate = endDate.AddDays(-DefaultTransactionLookbackDays);
-        return await GetByIdWithTransactionsAsync(id, startDate, endDate, cancellationToken);
+        return await this.ApplyScopeFilter(_context.Accounts)
+            .Include(a => a.Transactions)
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 
     /// <inheritdoc />

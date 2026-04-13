@@ -1,4 +1,4 @@
-﻿// <copyright file="BudgetApiService.cs" company="BecauseImClever">
+// <copyright file="BudgetApiService.cs" company="BecauseImClever">
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
@@ -1992,7 +1992,9 @@ public sealed class BudgetApiService : IBudgetApiService
         {
             await _httpClient.PostAsJsonAsync(
                 $"api/v1/datahealth/dismiss-outlier/{transactionId}",
-                new { },
+                new
+                {
+                },
                 JsonOptions);
         }
         catch (AccessTokenNotAvailableException ex)
