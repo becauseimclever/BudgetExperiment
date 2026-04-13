@@ -3057,3 +3057,27 @@ LlamaCpp implementation (inherits base class).
 - All non-Docker unit/integration tests passing
 - Docker-backed integration tests deferred (next phase)
 - Ready for full API integration testing when Docker environment available
+
+---
+
+### Feature 160: Pluggable AI Backend Implementation - Complete (2026-04-13)
+
+**Author:** Lucius
+
+**Decision:** Feature 160 implementation cycle complete. All work committed to `squad` branch (commit `959fbdc`) with message "feat: Feature 160 - Pluggable AI backend implementation".
+
+**Scope:** Full pluggable backend orchestration from domain through persistence and API layers.
+
+**Components Delivered:**
+- `BackendSelectingAiService` — orchestrates backend selection and delegation
+- `LlamaCppAiService` — native llama.cpp integration with `/api/completions` endpoint support
+- `OpenAiCompatibleAiService` — generic OpenAI protocol client for compatible services
+- `AiSettingsData` aggregate root — domain model with `BackendType` selector and generic `EndpointUrl`
+- `AiSettingsRepository` + migration — EF Core persistence with backward-compatible `AiOllamaEndpoint` column
+- `AiSettingsService` — application orchestrator handling round-trip settings load/save
+- `AiSettingsController` — REST `/api/v1/settings/ai` CRUD endpoint
+- Comprehensive unit and integration test coverage
+
+**Status:** ✅ All Feature 160 acceptance criteria met. Working tree clean. Branch tracking origin/squad.
+
+**Next:** Ready for integration testing, additional backend types, or client-side consumption of settings endpoint.
