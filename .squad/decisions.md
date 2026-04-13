@@ -2788,3 +2788,76 @@ This decision block is intentionally non-prescriptive—the fix depends on wheth
 
 **Do not proceed with merging squad → main without confirming the release intent with the PO and/or Alfred (Architect).**
 
+
+---
+
+## Merged from Inbox (2026-04-13)
+
+### Alfred's Feature-Doc Sequencing Decision
+
+**Date:** 2026-03-22  
+**Context:** Post-release-fix planning. Three feature docs remain active; recommend sequencing.
+
+**Status:** Feature 160 now in progress; 161 scheduled after 160 completion.
+
+#### Current State
+- **Active docs:** Features 113, 160, 161 (all in \docs/\, not archived)
+- **Archived batches:** 131–150 (Kakeibo Waves 1 & 2, completed and moved to \docs/archive/\)
+- **Release status:** Release tagging process stabilized; \main\ is stable
+
+#### Recommendation: Start Feature 160 (Now In Progress)
+
+**160 (Pluggable AI Backend) — Self-contained Infrastructure Refactor**
+- ✅ **Self-contained:** Infrastructure layer only, no domain changes
+- ✅ **Low risk:** Respects layer boundaries (DIP), backward-compatible default behavior
+- ✅ **Quick win:** Isolated refactor, clear acceptance criteria, solid testing surface
+- ✅ **Unblocks:** Enables llama.cpp users without code changes; sets up extensibility for future backends
+
+**161 (BudgetScope Removal) — After 160 Completes & Deploys**
+- 🔴 **Multi-layer:** Domain, Application, API, Client, Database, ~80+ files
+- 🔴 **High-coordination:** Fundamental enum removal affects repositories, entities, DTOs, UI, migrations
+- ✅ **Architectural evolution:** Aligns with Kakeibo philosophy (single household scope); right decision, **better timing after 160**
+
+**113 (Performance Test Environment) — Hold Until Pi Hardware Ready**
+- 🛑 **External blocker:** Hardware acquisition, physical setup, network/auth configuration
+- 📋 **Reference material:** Doc is well-written; ready to execute once infrastructure is available
+
+#### Decision: Feature 160 Prioritized
+Start Feature 160 (Pluggable AI Backend) as next work. Once code-complete, tested, and deployed to main, schedule Feature 161 as dedicated architectural sprint.
+
+---
+
+### Feature 160 Base-Class Slice Completion (Lucius & Barbara)
+
+**Timestamp:** 2026-04-13  
+**Status:** Base-class extraction and test coverage complete
+
+#### Lucius — Squad Sync & Implementation
+
+✅ **Squad/main sync verified** — \squad\ already contained \origin/main\ after fetch; no merge/rebase required.
+
+✅ **OpenAiCompatibleAiService extracted** — Shared HTTP execution flow encapsulates:
+- OpenAI-compatible message formatting (\/v1/chat/completions\)
+- Streaming response handling
+- Token counting via response metadata
+- Request/response lifecycle
+
+✅ **Ollama refactored onto base class** — \OllamaAiService\ now inherits from \OpenAiCompatibleAiService\:
+- Native Ollama hooks preserved (\/api/version\, \/api/tags\, \/api/chat\)
+- Backward-compatible behavior unchanged
+- Ready for llama.cpp wiring and future backends
+
+#### Barbara — Test Coverage & Validation
+
+✅ **Infrastructure regression tests added** — \OllamaAiServiceTests.cs\ and \OpenAiCompatibleAiServiceTests.cs\:
+- Fake HTTP response handling (no live Ollama required)
+- Token counting behavior locked
+- Endpoint shape validation (\/api/version\, \/api/tags\, \/api/chat\)
+- Streaming response parsing
+
+✅ **Base-class unit-test acceptance criterion** — Marked complete in \docs/160-pluggable-ai-backend.md\
+
+✅ **Non-Docker validation** — All infrastructure tests pass without Testcontainers or Docker
+
+#### Next Slice
+LlamaCpp implementation (inherits base class).
