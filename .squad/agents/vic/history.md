@@ -138,3 +138,25 @@ Performance findings P-001 and P-002 — should team prioritize immediate fixes 
 - ✅ Session log: .squad/log/2026-04-12T20-32-43Z-audit-ready.md
 - ✅ Decisions merged to decisions.md; inbox cleared
 - ✅ This history updated
+
+## Session Update: Scribe Orchestration (2026-04-13T04:14:07Z)
+
+**Task:** Independent audit of Alfred's llama.cpp model recommendation for local development hardware.
+
+**Scope:** Validate that the recommended model balances quality, reasoning ability, hardware practicality, and backend maturity honestly.
+
+**Validation Delivered:**
+- **Qwen3-14B GGUF** independently confirmed as the best default
+  - `Q6_K` for quality-first (12.12 GB)
+  - `Q5_K_M` for speed/headroom (10.51 GB)
+- **Qwen3-32B GGUF Q4_K_M** validated as quality-first step-up (19.76 GB, hybrid inference, slower throughput)
+- Warned against overstating: DeepSeek-R1, 70B-class models, extended context without caveats
+- Noted llama.cpp mode control limitations (no hard thinking switch, custom templates required)
+
+**Status:** ✅ APPROVED. Findings merged to decisions.md as decision #35.
+
+**Related Decisions:**
+- Decision #34: Alfred's model recommendation (primary guidance)
+- Decision #35: Vic's audit (validation and extended analysis)
+- Documentation: Feature doc to be created as docs/162-local-llamacpp-model-recommendation.md
+

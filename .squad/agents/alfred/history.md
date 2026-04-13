@@ -376,6 +376,24 @@ Created 6 comprehensive feature specification documents:
 
 **Decision Document:** .squad/decisions/inbox/alfred-feature-docs-131-136.md (12 decisions, testing strategy, open questions).
 
+## llama.cpp Local Model Research — COMPLETE (2026-04-13)
+
+**Scope:** Research and recommend the best Hugging Face model for local llama.cpp use on 32 GB RAM / 16 GB VRAM / NVIDIA 5070 + Ryzen CPU.
+
+**Primary Recommendation:** `Qwen/Qwen3-14B-GGUF:Q5_K_M`
+- 14B dense models provide best quality/speed balance for this tier.
+- Official GGUF support, official llama.cpp guidance, strong chat + reasoning profile.
+- `Q5_K_M` (~10.51 GB) fits comfortably on 16 GB VRAM.
+
+**Fallback Options:**
+- Conservative: `Qwen/Qwen2.5-14B-Instruct-GGUF:Q5_K_M`
+- Fast: `bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Q6_K`
+
+**Key Note:** Do not treat 32K+ context or thinking mode as default UX. Start with 8K context and use Qwen3 `/no_think` unless task requires deliberate reasoning.
+
+**Status:** ✅ COMPLETE. Approved by Vic (independent auditor). Documented in `.squad/decisions.md` entries 34 (Alfred recommendation) and 35 (Vic audit).
+
+
 
 ---
 

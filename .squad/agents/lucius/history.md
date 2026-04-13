@@ -659,6 +659,23 @@ Replaced all 7 bare .ToString("C") calls across 4 Statement Reconciliation Razor
 
 Used @inject CultureService Culture (project convention) instead of CultureService CultureService. Extension method FormatCurrency() already globally imported via _Imports.razor — no additional using required.
 
+## Session Update: Scribe Orchestration (2026-04-13T04:14:07Z)
+
+**Task:** Merge squad branch into develop (Feature 160 client completion + develop-branch updates).
+
+**Files Reviewed:**
+- CI workflow (`ci.yml`)
+- Documentation (`CONTRIBUTING.md`, deployment docs)
+- AI settings client files
+- Client tests
+
+**Status:** ✅ APPROVED. Modified file set matches requested review scope. Client test suite passed before merge.
+
+**Execution:** Preserve squad tip remotely, merge squad into develop non-interactively, checkout on develop.
+
+**Related Decision:** `.squad/decisions.md` entry #36 (Lucius merge approval).
+
+
 ### Build Verification
 
 - dotnet build BudgetExperiment.Client.csproj → ✅ 0 errors, 0 warnings

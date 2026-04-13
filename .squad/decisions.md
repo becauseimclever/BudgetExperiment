@@ -746,6 +746,70 @@ Feature 160 is **eligible for merge to main.** All acceptance criteria met, all 
 
 ---
 
+### 34. Alfred — llama.cpp Local Model Recommendation (2026-04-13)
+
+**Author:** Alfred  
+**Status:** ✅ APPROVED
+
+**Decision:** For local llama.cpp work on **32 GB RAM / 16 GB VRAM / RTX 5070-class** hardware, recommend **`Qwen/Qwen3-14B-GGUF:Q5_K_M`** as the default for general-purpose chat and reasoning.
+
+**Why:**
+- 14B dense models provide the best quality/speed balance for this hardware tier.
+- Qwen3 has official GGUF support, official llama.cpp guidance, and strong chat + reasoning profile.
+- `Q5_K_M` fits comfortably on 16 GB VRAM; `Q8_0` is too tight to recommend as default.
+
+**Fallback Options:**
+- Conservative: `Qwen/Qwen2.5-14B-Instruct-GGUF:Q5_K_M`
+- Fast: `bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Q6_K`
+
+**Key Note:** Do not treat 32K+ context or thinking mode as the default UX path. Start with 8K context and use Qwen3 `/no_think` unless the task requires deliberate reasoning.
+
+---
+
+### 35. Vic — llama.cpp Model Audit (2026-04-13)
+
+**Author:** Vic  
+**Scope:** Independent validation of local llama.cpp model recommendation  
+**Status:** ✅ APPROVED
+
+**Executive Judgment:** **`Qwen/Qwen3-14B-GGUF`** is the best default—preferably `Q6_K` for quality or `Q5_K_M` for speed/headroom.
+
+**Validation Points:**
+1. Practical local usability on 16 GB VRAM
+2. Good general chat quality plus real reasoning ability
+3. First-party llama.cpp support and documentation maturity
+4. No fragile or barely-fitting setups
+
+**Two-Tier Recommendation:**
+1. **Best local usability (default):** `Qwen/Qwen3-14B-GGUF` (`Q6_K` or `Q5_K_M`) — ~12 GB
+2. **Best pure quality (slower hybrid inference):** `Qwen/Qwen3-32B-GGUF` (`Q4_K_M`) — ~19.76 GB (requires system RAM offload)
+
+**Models NOT to Oversell:**
+- DeepSeek-R1 distills (specialized for reasoning, poor for general chat)
+- 70B-class models (32 GB system RAM + 16 GB VRAM is not a comfortable 70B setup)
+- Extended context claims without warnings (YaRN extension increases memory/speed pressure)
+
+---
+
+### 36. Lucius — Merge Squad Branch to Develop (2026-04-13)
+
+**Author:** Lucius  
+**Status:** ✅ APPROVED
+
+**Decision:** The `squad` worktree contains only expected Feature 160 client completion changes and recent develop-branch workflow/documentation updates. Merge is safe.
+
+**Modified Files Reviewed:**
+- CI workflow (`ci.yml`)
+- Documentation (`CONTRIBUTING.md`, deployment docs)
+- AI settings client files
+- Client tests
+
+**Execution:** Preserve `squad` tip remotely, merge `squad` into `develop` non-interactively, checkout on `develop`.
+
+**CI Status:** ✅ Targeted client test suite passed before merge.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
