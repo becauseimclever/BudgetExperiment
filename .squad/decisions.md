@@ -2885,3 +2885,175 @@ Start Feature 160 (Pluggable AI Backend) as next work. Once code-complete, teste
 
 #### Next Slice
 LlamaCpp implementation (inherits base class).
+
+---
+
+## 45. Feature 160 LlamaCpp Concrete Backend & DI Selection (2026-04-13)
+
+**Timestamp:** 2026-04-13T01:54:22Z  
+**Implementer:** Lucius (Backend Dev)  
+**Validator:** Barbara (Tester)  
+**Status:** Complete
+
+### Lucius — Implementation
+
+✅ **LlamaCppAiService implemented** — New concrete `OpenAiCompatibleAiService` subclass:
+- Overrides service URL construction to point to `llama.cpp` server endpoint
+- Inherits OpenAI-compatible HTTP flow (message formatting, streaming, token counting)
+- Fully compatible with existing token counting and model selection patterns
+
+✅ **BackendSelectingAiService created** — Runtime selector:
+- Reads persisted backend choice from app settings (`ISettings.AiBackend`)
+- Maps choice (Ollama/llama.cpp) to correct concrete service instance
+- Preserves Ollama as default if settings unavailable
+- Allows backend switching without app restart
+
+✅ **Infrastructure DI registration** — Both backends registered:
+- `OllamaAiService` registered as typed HttpClient service
+- `LlamaCppAiService` registered as typed HttpClient service
+- `BackendSelectingAiService` bound to `IAiService`
+- Application and API layers remain unaware of concrete implementations
+
+✅ **Feature doc acceptance criteria marked complete** — `docs/160-pluggable-ai-backend.md`:
+- [x] llama.cpp concrete backend implementation
+- [x] DI selector wiring
+
+### Barbara — Test Validation
+
+✅ **Token counting regression tests added** — `LlamaCppAiServiceTests.cs`:
+- Fake HTTP response handling for llama.cpp endpoint shape
+- Token counting behavior locked for new backend
+- Streaming response parsing validation
+- No live llama.cpp server required
+
+✅ **Backend selection and DI tests added**:
+- `BackendSelectingAiService` returns correct concrete instance based on settings
+- Default Ollama behavior preserved when settings unavailable
+- Explicit backend selection (via `ISettings.AiBackend`) respected
+- DI registration verified for both `OllamaAiService` and `LlamaCppAiService`
+
+✅ **Infrastructure DI registration coverage** — Targeted unit tests validate:
+- Both backends registered as typed HttpClient services
+- Selector correctly wired to `IAiService` interface
+- No concrete backend leakage into Application or API layers
+
+✅ **AI controller backend/endpoint mapping** — Non-Docker controller tests:
+- `/ai/status` correctly reports backend choice
+- `/ai/suggest` routing works with both backends
+- Backend switch observable through controller responses
+
+✅ **Feature doc acceptance criteria marked complete** — `docs/160-pluggable-ai-backend.md`:
+- [x] llama.cpp backend tests
+- [x] DI validation
+
+### Notes
+
+- Non-Docker regression coverage ensures llama.cpp and DI selector behaviors locked
+- Ollama default behavior preserved and tested; backward compatibility verified
+- Ready for Docker-enabled environment validation when available
+- All non-Docker build/test surface passing
+
+---
+
+## 46. Feature 160 Persistence/API Slice (2026-04-13)
+
+**Timestamp:** 2026-04-13T02:03:09Z  
+**Implementer:** Lucius (Backend Dev)  
+**Validator:** Barbara (Tester)  
+**Status:** Complete
+
+### Lucius — Implementation
+
+✅ **Settings persistence domain model** — `AiSettingsData` aggregate root:
+- Generic `EndpointUrl` field (replaces Ollama-specific naming)
+- `BackendType` enumeration for backend selection (Ollama, LlamaCpp)
+- Database column `AiOllamaEndpoint` preserved for backward compatibility
+- Domain-level defaults when endpoint URL is missing
+
+✅ **Infrastructure repository implementation** — `AiSettingsRepository`:
+- EF Core persistence layer for `AiSettingsData`
+- Read/write operations with optional caching strategy
+- Migration to include new `BackendType` column alongside existing `AiOllamaEndpoint`
+- Seamless loading/saving of serialized settings
+
+✅ **Application settings service** — `AiSettingsService`:
+- Settings round-trip (load/save) through repository
+- Automatic fallback to backend-specific default endpoint when URL missing
+- `BackendType` selection propagated to AI service selector
+- Clean application boundary (no EF Core types exposed)
+
+✅ **API controller endpoint mapping** — `AiSettingsController`:
+- POST/GET `/api/v1/settings/ai` endpoint for settings CRUD
+- `AiSettingsDto` with `EndpointUrl` and legacy `OllamaEndpoint` aliases
+- Automatic conversion of legacy request payloads into domain `AiSettingsData`
+- Backward-compatible JSON serialization
+
+✅ **DTO backward compatibility** — `AiSettingsDto`:
+- `EndpointUrl` as primary field (generic)
+- `OllamaEndpoint` as legacy alias (serialized/deserialized)
+- Both fields round-trip cleanly in JSON
+- Missing fields default to backend-specific values
+
+✅ **Feature doc acceptance criteria marked complete** — `docs/160-pluggable-ai-backend.md`:
+- [x] Settings persistence domain model
+- [x] Application settings service
+- [x] API settings endpoint
+- [x] Backward-compatible persistence
+
+### Barbara — Test Validation
+
+✅ **Domain model tests** — `AiSettingsDataTests.cs`:
+- `BackendType` string serialization (Ollama, LlamaCpp)
+- Default endpoint resolution based on selected backend
+- Round-trip validation for settings aggregate root
+
+✅ **DTO serialization tests** — `AiSettingsDtoTests.cs`:
+- JSON round-trip for `BackendType` enumeration
+- `EndpointUrl` field serialization/deserialization
+- Legacy `OllamaEndpoint` aliasing in JSON payloads
+- Missing endpoint fields correctly null or default
+
+✅ **Application service tests** — `AiSettingsServiceTests.cs`:
+- Settings loading through repository with mock data
+- Settings saving with proper domain state conversion
+- Backend-type propagation to selector
+- Automatic fallback to backend-specific defaults when endpoint URL missing
+
+✅ **API controller endpoint tests** — `AiSettingsControllerTests.cs`:
+- GET `/api/v1/settings/ai` returns current settings
+- POST `/api/v1/settings/ai` persists updates
+- Request payloads with legacy `OllamaEndpoint` field correctly mapped
+- `BackendType` properly serialized in responses
+- Backward-compatible contract validated
+
+✅ **Infrastructure DI registration tests** — Non-Docker infrastructure tests:
+- `ISettingsRepository` registered and injected
+- `IAiSettingsService` bound to application implementation
+- Controller dependency injection verified
+- Settings service wiring complete
+
+✅ **Feature doc acceptance criteria marked complete** — `docs/160-pluggable-ai-backend.md`:
+- [x] Domain model tests
+- [x] Application service tests
+- [x] API endpoint tests
+- [x] Persistence contract validation
+
+### Decision: Backward Compatibility with Pluggable Backend Support
+
+**Decision:** Keep the persisted database column name `AiOllamaEndpoint` for backward compatibility, but expose the core setting as generic `EndpointUrl`.
+
+**Why:** Pluggable backend support makes Ollama-specific naming in the core model a leaky abstraction. Preserving the existing column avoids a needless migration while still cleaning up the domain/application surface.
+
+**API compatibility:** `AiSettingsDto` round-trips both `EndpointUrl` and `OllamaEndpoint`, and missing endpoint fields now fall back to the backend-specific default selected by `BackendType`.
+
+### Docker-Backed Integration Note
+
+⚠️ **Full end-to-end persistence/API validation with PostgreSQL deferred** — Docker-backed integration tests remain blocked by environment constraints. Non-Docker regression coverage validates public contract and backward compatibility.
+
+### Notes
+
+- Pluggable backend support now fully integrated into persistence layer
+- Ollama-specific column name preserved; domain abstraction cleaned
+- All non-Docker unit/integration tests passing
+- Docker-backed integration tests deferred (next phase)
+- Ready for full API integration testing when Docker environment available
