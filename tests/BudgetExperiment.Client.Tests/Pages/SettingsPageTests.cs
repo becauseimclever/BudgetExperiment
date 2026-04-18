@@ -143,6 +143,21 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
     }
 
     /// <summary>
+    /// Verifies the settings page does not reintroduce any scope preference controls.
+    /// </summary>
+    [Fact]
+    public void DoesNotShowScopePreferences_WhenSettingsLoaded()
+    {
+        SetupSettingsData();
+
+        var cut = Render<Settings>();
+
+        cut.Markup.ShouldNotContain("Default scope");
+        cut.Markup.ShouldNotContain("Personal");
+        cut.Markup.ShouldNotContain("Shared");
+    }
+
+    /// <summary>
     /// Verifies the About section shows version info.
     /// </summary>
     [Fact]
@@ -506,7 +521,7 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
         _apiService.UserSettings = new UserSettingsDto
         {
             UserId = Guid.NewGuid(),
-            DefaultScope = "Personal",
+            DefaultScope = "Shared",
             PreferredCurrency = "USD",
             FirstDayOfWeek = DayOfWeek.Sunday,
             IsOnboarded = true,

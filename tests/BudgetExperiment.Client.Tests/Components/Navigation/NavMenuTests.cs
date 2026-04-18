@@ -123,6 +123,25 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
     }
 
     /// <summary>
+    /// Verifies the navigation no longer exposes any visible scope-switching UI.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task NavMenu_DoesNotRenderScopeSwitcher()
+    {
+        RegisterServices();
+
+        var cut = Render<NavMenu>();
+        await Task.Delay(50);
+        cut.Render();
+
+        Assert.DoesNotContain("scope-switcher-button", cut.Markup);
+        Assert.DoesNotContain("Select budget scope", cut.Markup);
+        Assert.DoesNotContain("Personal", cut.Markup);
+        Assert.DoesNotContain("Shared", cut.Markup);
+    }
+
+    /// <summary>
     /// Verifies the Accounts section toggle is present.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
@@ -308,7 +327,6 @@ public sealed class NavMenuTests : BunitContext, IAsyncLifetime
         Services.AddSingleton<IAuthorizationService, AlwaysAllowAuthorizationService>();
         Services.AddSingleton<IBudgetApiService>(new StubBudgetApiService());
         Services.AddSingleton<IAiAvailabilityService>(new StubAiAvailabilityService { IsEnabled = aiEnabled });
-        Services.AddSingleton<ScopeService>();
     }
 
 #pragma warning disable SA1201 // Elements should appear in the correct order

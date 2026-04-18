@@ -1,6 +1,6 @@
 # Feature 161: BudgetScope Removal
 
-> **Status:** Proposed
+> **Status:** In Progress
 
 ## Overview
 
@@ -69,11 +69,17 @@ Kakeibo philosophy is rooted in the household (family) ledger as a single source
 **So that** I am not confused by a Personal/Shared toggle that doesn't fit Kakeibo
 
 **Acceptance Criteria:**
-- [ ] ScopeSwitcher component is removed or hidden from Navigation.razor
-- [ ] Default scope is `Shared` (household) everywhere the user navigates
-- [ ] No "Personal" scope option is available in the UI
-- [ ] User is not presented with scope-switching choices
-- [ ] Application behavior is unchanged (all operations default to household scope)
+- [x] ScopeSwitcher component is removed or hidden from Navigation.razor
+- [x] Default scope is `Shared` (household) everywhere the user navigates
+- [x] No "Personal" scope option is available in the UI
+- [x] User is not presented with scope-switching choices
+- [x] Application behavior is unchanged (all operations default to household scope)
+
+**Slice 1 progress (Lucius):**
+- Removed the navigation scope switcher from the client UI.
+- Removed the account form's Personal/Shared choice and replaced it with household-ledger wording.
+- Normalized incoming account form models to `Shared` so legacy `Personal` values cannot leak back through the hidden client form path.
+- Kept the client compatibility plumbing in place for now, but forced the client default scope to `Shared` so existing API behavior remains stable during Phase 1.
 
 #### US-161-002: Remove Scope from API Layer
 **As a** API consumer  
@@ -380,11 +386,11 @@ Kakeibo philosophy is rooted in the household (family) ledger as a single source
 - Unit and integration tests remain unchanged (mocks still return scope-filtered data)
 
 **Acceptance Criteria Phase 1:**
-- [ ] UI no longer shows ScopeSwitcher
-- [ ] All user operations use Shared scope implicitly
-- [ ] No API changes (scope header still accepted but ignored)
-- [ ] All existing tests pass
-- [ ] Can be deployed without breaking existing clients
+- [x] UI no longer shows ScopeSwitcher
+- [x] All user operations use Shared scope implicitly
+- [x] No API changes; client compatibility plumbing remains in place for now
+- [x] All existing tests pass
+- [x] Can be deployed without breaking existing clients
 
 **Risk:** Minimal — UI-only change, backend behavior preserved
 

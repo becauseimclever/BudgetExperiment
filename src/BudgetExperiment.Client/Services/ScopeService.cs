@@ -9,14 +9,14 @@ using Microsoft.JSInterop;
 namespace BudgetExperiment.Client.Services;
 
 /// <summary>
-/// Service for managing the current budget scope selection (Shared, Personal, or All).
+/// Service for managing the current budget scope selection.
 /// </summary>
 public sealed class ScopeService : IAsyncDisposable
 {
     private const string StorageKey = "budget-experiment-scope";
 
     private readonly IJSRuntime jsRuntime;
-    private BudgetScope? currentScope;
+    private BudgetScope? currentScope = BudgetScope.Shared;
     private bool isInitialized;
 
     /// <summary>
@@ -44,17 +44,15 @@ public sealed class ScopeService : IAsyncDisposable
     = new List<ScopeOption>
     {
         new(BudgetScope.Shared, "Shared", "home", "Household budget visible to all family members"),
-        new(BudgetScope.Personal, "Personal", "user", "Your private budget"),
-        new(null, "All", "layers", "View both shared and personal items"),
     };
 
     /// <summary>
-    /// Gets the current scope. Null means "All" (both Shared and Personal).
+    /// Gets the current scope.
     /// </summary>
     public BudgetScope? CurrentScope => currentScope;
 
     /// <summary>
-    /// Initializes the scope service by loading the saved scope from localStorage.
+    /// Initializes the scope service with the household default.
     /// </summary>
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
@@ -67,43 +65,42 @@ public sealed class ScopeService : IAsyncDisposable
         try
         {
             var savedScope = await jsRuntime.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            currentScope = BudgetScope.Shared;
 
-            currentScope = savedScope switch
+            if (!string.Equals(savedScope, BudgetScope.Shared.ToString(), StringComparison.Ordinal))
             {
-                "Shared" => BudgetScope.Shared,
-                "Personal" => BudgetScope.Personal,
-                _ => null, // "All" or unset defaults to null (all scopes)
-            };
-
-            isInitialized = true;
+                await jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, BudgetScope.Shared.ToString());
+            }
         }
         catch (JSException)
         {
             // JS interop not available (e.g., prerendering)
-            currentScope = null;
+            currentScope = BudgetScope.Shared;
         }
+
+        isInitialized = true;
     }
 
     /// <summary>
     /// Sets the current scope.
     /// </summary>
-    /// <param name="scope">The scope to set. Null means "All".</param>
+    /// <param name="scope">The requested scope.</param>
     /// <returns>A task representing the async operation.</returns>
     public async Task SetScopeAsync(BudgetScope? scope)
     {
-        currentScope = scope;
+        _ = scope;
+        currentScope = BudgetScope.Shared;
 
         try
         {
-            var storageValue = scope?.ToString() ?? "All";
-            await jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, storageValue);
+            await jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, BudgetScope.Shared.ToString());
         }
         catch (JSException)
         {
             // JS interop not available
         }
 
-        this.ScopeChanged?.Invoke(scope);
+        this.ScopeChanged?.Invoke(BudgetScope.Shared);
     }
 
     /// <summary>

@@ -13,8 +13,6 @@
 @implements IDisposable
 
 <nav class="nav-menu @(IsCollapsed ? "collapsed" : "expanded")" aria-label="Main menu">
-    <ScopeSwitcher IsCollapsed="@IsCollapsed" />
-
     <ul class="nav-items" role="list">
         <li>
             <NavLink class="nav-item" href="" Match="NavLinkMatch.All" title="Calendar" aria-label="Calendar - Home">

@@ -50,32 +50,49 @@ public sealed class AccountFormTests : BunitContext, IAsyncLifetime
     }
 
     /// <summary>
-    /// Verifies that the scope defaults to Shared.
+    /// Verifies that the form explains accounts use the household ledger.
     /// </summary>
     [Fact]
-    public void Render_ScopeDefaultsToShared()
+    public void Render_ShowsHouseholdLedgerHint()
     {
         // Act
         var cut = RenderAccountForm();
 
         // Assert
-        Assert.Contains("Shared accounts are visible to all family members.", cut.Markup);
+        Assert.Contains("Accounts are created in the household ledger.", cut.Markup);
+        Assert.DoesNotContain("name=\"scope\"", cut.Markup);
     }
 
     /// <summary>
-    /// Verifies that changing scope to Personal shows personal hint text.
+    /// Verifies that a blank scope is normalized to Shared for compatibility.
     /// </summary>
     [Fact]
-    public void Render_PersonalScope_ShowsPersonalHint()
+    public void Render_BlankScope_DefaultsToShared()
+    {
+        // Arrange
+        var model = new AccountCreateDto { Scope = string.Empty };
+
+        // Act
+        _ = RenderAccountForm(model: model);
+
+        // Assert
+        Assert.Equal("Shared", model.Scope);
+    }
+
+    /// <summary>
+    /// Verifies that a legacy Personal scope is coerced back to Shared.
+    /// </summary>
+    [Fact]
+    public void Render_PersonalScope_DefaultsToShared()
     {
         // Arrange
         var model = new AccountCreateDto { Scope = "Personal" };
 
         // Act
-        var cut = RenderAccountForm(model: model);
+        _ = RenderAccountForm(model: model);
 
         // Assert
-        Assert.Contains("Personal accounts are private to you.", cut.Markup);
+        Assert.Equal("Shared", model.Scope);
     }
 
     /// <summary>
