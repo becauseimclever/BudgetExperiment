@@ -72,6 +72,7 @@ public sealed class ConsolidationSuggestionsViewModel
     {
         IsLoading = true;
         ErrorMessage = null;
+        ErrorTraceId = null;
         NotifyStateChanged();
 
         try
@@ -83,7 +84,15 @@ public sealed class ConsolidationSuggestionsViewModel
                 HasRunAnalysis = true;
             }
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = $"Failed to load suggestions: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
         {
             ErrorMessage = $"Failed to load suggestions: {ex.Message}";
         }
@@ -102,6 +111,7 @@ public sealed class ConsolidationSuggestionsViewModel
     {
         IsAnalyzing = true;
         ErrorMessage = null;
+        ErrorTraceId = null;
         NotifyStateChanged();
 
         try
@@ -110,7 +120,15 @@ public sealed class ConsolidationSuggestionsViewModel
             Suggestions = results;
             HasRunAnalysis = true;
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = $"Analysis failed: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
         {
             ErrorMessage = $"Analysis failed: {ex.Message}";
         }
@@ -129,6 +147,7 @@ public sealed class ConsolidationSuggestionsViewModel
     public async Task AcceptAsync(Guid id)
     {
         ErrorMessage = null;
+        ErrorTraceId = null;
         NotifyStateChanged();
 
         try
@@ -149,7 +168,15 @@ public sealed class ConsolidationSuggestionsViewModel
                 ErrorMessage = "Failed to accept the consolidation suggestion.";
             }
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = $"Failed to accept suggestion: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
         {
             ErrorMessage = $"Failed to accept suggestion: {ex.Message}";
         }
@@ -167,6 +194,7 @@ public sealed class ConsolidationSuggestionsViewModel
     public async Task DismissAsync(Guid id)
     {
         ErrorMessage = null;
+        ErrorTraceId = null;
         NotifyStateChanged();
 
         try
@@ -181,7 +209,15 @@ public sealed class ConsolidationSuggestionsViewModel
                 ErrorMessage = "Failed to dismiss the suggestion.";
             }
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
         {
             ErrorMessage = $"Failed to dismiss suggestion: {ex.Message}";
         }
@@ -199,6 +235,7 @@ public sealed class ConsolidationSuggestionsViewModel
     public async Task UndoAsync(Guid id)
     {
         ErrorMessage = null;
+        ErrorTraceId = null;
         NotifyStateChanged();
 
         try
@@ -219,7 +256,15 @@ public sealed class ConsolidationSuggestionsViewModel
                 ErrorMessage = "Failed to undo the consolidation.";
             }
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = $"Failed to undo consolidation: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
         {
             ErrorMessage = $"Failed to undo consolidation: {ex.Message}";
         }

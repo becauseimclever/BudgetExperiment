@@ -123,9 +123,10 @@ public sealed class RuleConsolidationAnalyzer
 
         var suggestions = new List<ConsolidationSuggestion>();
 
-        foreach (var group in containsRules.GroupBy(r => r.CategoryId))
+        foreach (var groupRules in containsRules
+                     .GroupBy(r => r.CategoryId)
+                     .Select(group => group.ToList()))
         {
-            var groupRules = group.ToList();
             if (groupRules.Count < 2)
             {
                 continue;

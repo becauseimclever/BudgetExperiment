@@ -819,6 +819,46 @@ internal class StubBudgetApiService : IBudgetApiService
         get; set;
     }
 
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="AnalyzeConsolidationAsync"/>.
+    /// </summary>
+    public Exception? AnalyzeConsolidationException
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="GetConsolidationSuggestionsAsync"/>.
+    /// </summary>
+    public Exception? GetConsolidationSuggestionsException
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="AcceptConsolidationSuggestionAsync"/>.
+    /// </summary>
+    public Exception? AcceptConsolidationSuggestionException
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="DismissConsolidationSuggestionAsync"/>.
+    /// </summary>
+    public Exception? DismissConsolidationSuggestionException
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="UndoConsolidationAsync"/>.
+    /// </summary>
+    public Exception? UndoConsolidationException
+    {
+        get; set;
+    }
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<AccountDto>> GetAccountsAsync()
     {
@@ -1254,21 +1294,33 @@ internal class StubBudgetApiService : IBudgetApiService
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<RuleSuggestionDto>> AnalyzeConsolidationAsync() =>
-        Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(new List<RuleSuggestionDto>());
+        this.AnalyzeConsolidationException is not null
+            ? Task.FromException<IReadOnlyList<RuleSuggestionDto>>(this.AnalyzeConsolidationException)
+            : Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(new List<RuleSuggestionDto>());
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<RuleSuggestionDto>> GetConsolidationSuggestionsAsync() =>
-        Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(new List<RuleSuggestionDto>());
+        this.GetConsolidationSuggestionsException is not null
+            ? Task.FromException<IReadOnlyList<RuleSuggestionDto>>(this.GetConsolidationSuggestionsException)
+            : Task.FromResult<IReadOnlyList<RuleSuggestionDto>>(new List<RuleSuggestionDto>());
 
     /// <inheritdoc/>
     public Task<CategorizationRuleDto?> AcceptConsolidationSuggestionAsync(Guid suggestionId) =>
-        Task.FromResult<CategorizationRuleDto?>(null);
+        this.AcceptConsolidationSuggestionException is not null
+            ? Task.FromException<CategorizationRuleDto?>(this.AcceptConsolidationSuggestionException)
+            : Task.FromResult<CategorizationRuleDto?>(null);
 
     /// <inheritdoc/>
-    public Task<bool> DismissConsolidationSuggestionAsync(Guid suggestionId) => Task.FromResult(true);
+    public Task<bool> DismissConsolidationSuggestionAsync(Guid suggestionId) =>
+        this.DismissConsolidationSuggestionException is not null
+            ? Task.FromException<bool>(this.DismissConsolidationSuggestionException)
+            : Task.FromResult(true);
 
     /// <inheritdoc/>
-    public Task<bool> UndoConsolidationAsync(Guid suggestionId) => Task.FromResult(true);
+    public Task<bool> UndoConsolidationAsync(Guid suggestionId) =>
+        this.UndoConsolidationException is not null
+            ? Task.FromException<bool>(this.UndoConsolidationException)
+            : Task.FromResult(true);
 
     /// <inheritdoc/>
     public Task<UserSettingsDto?> GetUserSettingsAsync() => Task.FromResult(this.UserSettings);
