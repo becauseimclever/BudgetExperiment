@@ -160,3 +160,22 @@ Performance findings P-001 and P-002 — should team prioritize immediate fixes 
 - Decision #35: Vic's audit (validation and extended analysis)
 - Documentation: Feature doc to be created as docs/162-local-llamacpp-model-recommendation.md
 
+### 2026-04-18 — Feature 161 Phase 1 Completeness Audit
+
+**Report:** `docs/audit/2026-04-18-feature-161-phase1-audit.md`
+**Findings:** 0 (all 7 items verified as resolved)
+**Team inbox:** `.squad/decisions/inbox/vic-161-audit.md`
+
+**Key observations:**
+- All US-161-001 acceptance criteria met (5/5)
+- ScopeSwitcher component deleted, NavMenu clean
+- AccountForm applies hidden model normalization pattern (coerces "Personal" to "Shared")
+- ScopeService and ScopeMessageHandler locked to Shared in all code paths
+- 5,813 tests pass (Infrastructure Testcontainer flakiness is pre-existing, not 161-related)
+- All product code committed in `8589a4a`
+- Working tree dirty only due to squad operational files (.squad/, docs/162)
+
+**Verdict:** ✅ APPROVED — Feature 161 Phase 1 is honestly complete and ready for merge.
+
+**Pattern recognized:** Team correctly applied "hidden model normalization" pattern for Blazor form fields that are removed from UI but may still receive legacy values. Skill documented in `.squad/skills/hidden-model-normalization/`.
+

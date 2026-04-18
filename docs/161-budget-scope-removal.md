@@ -1,6 +1,6 @@
 # Feature 161: BudgetScope Removal
 
-> **Status:** In Progress
+> **Status:** Phase 1 Complete (2026-04-18). Phases 2–4 Pending.
 
 ## Overview
 
@@ -377,13 +377,14 @@ Kakeibo philosophy is rooted in the household (family) ledger as a single source
 
 ### Phase 1: Hide UI (Low Risk)
 **Estimate:** 2–3 days  
+**Status:** ✅ **COMPLETE** (as of 2026-04-18)  
 **Goal:** Ship a deployable version with no user-facing scope switching  
 **Deliverables:**
-- Remove ScopeSwitcher component
-- Default all operations to Shared/household scope
-- Application behavior unchanged (queries still filter, but always by Shared)
-- Scope removal code does not yet touch Domain/Application/Infrastructure
-- Unit and integration tests remain unchanged (mocks still return scope-filtered data)
+- Remove ScopeSwitcher component ✅
+- Default all operations to Shared/household scope ✅
+- Application behavior unchanged (queries still filter, but always by Shared) ✅
+- Scope removal code does not yet touch Domain/Application/Infrastructure ✅
+- Unit and integration tests remain unchanged (mocks still return scope-filtered data) ✅
 
 **Acceptance Criteria Phase 1:**
 - [x] UI no longer shows ScopeSwitcher

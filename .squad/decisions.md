@@ -3283,3 +3283,32 @@ LlamaCpp implementation (inherits base class).
 **Status:** ✅ All Feature 160 acceptance criteria met. Working tree clean. Branch tracking origin/squad.
 
 **Next:** Ready for integration testing, additional backend types, or client-side consumption of settings endpoint.
+
+---
+
+### Feature 161: Scope Removal Phase 1 Slice 1 - Approved (2026-04-13)
+
+**Author:** Barbara (Tester), building on Lucius initial slice  
+**Decision:** Slice 1 (hidden scope normalization) approved after fixing AccountForm scope leak.
+
+**Problem Resolved:**  
+Lucius's initial slice removed visible scope UI but left a hidden path: legacy edit/create account models could still carry 'Personal' scope values and submit them through AccountForm despite the UI removing all scope-selection options.
+
+**Solution Implemented:**  
+Coerce incoming account form models to 'Shared' scope in AccountForm.OnParametersSet(). This ensures:
+- Legacy 'Personal' values cannot persist through the hidden client form path
+- All user-visible behavior defaults to household (Shared) scope
+- No API compatibility breakage yet (scope plumbing still in place for Phase 2)
+
+**Files Modified:**
+- src/BudgetExperiment.Client/Components/Forms/AccountForm.razor — added scope normalization in OnParametersSet()
+- docs/161-budget-scope-removal.md — updated slice 1 progress notes
+
+**Validation:**  
+Targeted client slice test filter: Category!=Performance&FullyQualifiedName~AccountFormTests|FullyQualifiedName~NavMenuTests|FullyQualifiedName~SettingsPageTests|FullyQualifiedName~ScopeServiceTests|FullyQualifiedName~ScopeMessageHandlerTests
+- Before fix: 62 passed, 1 failed
+- After fix: 63 passed, 0 failed ✅
+
+**Status:** ✅ Slice 1 approved for merge. Phase 1 UI simplification complete.
+
+**Next:** Slice 2 (API layer removal) can proceed with clean foundation. Scope header, middleware, and DTOs targeted for removal in upstream slices.

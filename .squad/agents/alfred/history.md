@@ -523,3 +523,44 @@ Barbara (in parallel session) implemented 49 new accuracy tests across Domain.Te
 - ✅ Session log: 2026-04-13T03-43-13Z-feature-160-closeout.md
 - ✅ Decisions merged to decisions.md; inbox cleared
 - ✅ Agent histories updated (this entry)
+
+## Learnings
+
+### Feature 161 Completion Audit (2026-04-13)
+
+**Situation:** Asked to verify if Feature 161 (BudgetScope Removal) is complete.
+
+**Finding:** Feature 161 is a **4-phase architectural refactoring**:
+- Phase 1: Hide UI (✅ Complete)
+- Phase 2: Remove from API Layer (⛔ Not started)
+- Phase 3: Remove from Domain/Application (⛔ Not started)  
+- Phase 4: Database Migration (⛔ Not started)
+
+Only Phase 1 is complete. The branch has ~25% of the total feature work done.
+
+**Evidence:**
+- `BudgetScopeMiddleware.cs` still exists and is registered in `Program.cs`
+- `IUserContext` still has `CurrentScope` and `SetScope()` methods
+- 12+ domain entities still have `BudgetScope` property
+- 10+ repositories still filter queries by scope
+- No database migration exists
+
+**Test Status:** All 5,813 tests pass (excluding Performance). Phase 1 changes are stable.
+
+**Decision:** REJECT as complete. APPROVE Phase 1 for commit with updated feature doc status to "Phase 1 Complete — Phases 2–4 Pending."
+
+**Lesson:** When auditing feature completion, always read the full feature doc to understand phased delivery. A passing test suite doesn't mean "feature complete" — it means "current work is stable."
+
+### Feature 161 Documentation Update (2026-04-18)
+
+**Situation:** Completed Vic's audit. Phase 1 fully works, tests pass. Feature doc still showed generic "In Progress" status at top level, implying the whole feature is close to done when only Phase 1 is done.
+
+**Work Done:**
+- Changed top-level status from "In Progress" to "Phase 1 Complete (2026-04-18). Phases 2–4 Pending."
+- Marked Phase 1 section with ✅ COMPLETE badge and added completion date
+- Added ✅ checkmarks to Phase 1 deliverables (matching acceptance criteria)
+- Verified Phases 2–4 still have unchecked acceptance criteria (no false claims)
+
+**Result:** Doc now truthfully represents architectural state. Phase 1 is shipped, Phases 2–4 are pending. No invented work.
+
+**Lesson:** Documentation is the contract with the team. Updating it post-delivery is critical to keeping the roadmap honest and preventing surprise scope creep ("wait, I thought we removed scope everywhere?").
