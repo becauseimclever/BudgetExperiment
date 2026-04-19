@@ -1,6 +1,6 @@
 # Feature 161: BudgetScope Removal
 
-> **Status:** Phase 2 Complete (2026-04-18). Phases 3–4 Pending.
+> **Status:** ✅ Phase 1 & 2 Complete and Merged to Main (2026-04-18). Phases 3–4 Pending.
 
 ## Overview
 
@@ -399,14 +399,15 @@ Kakeibo philosophy is rooted in the household (family) ledger as a single source
 
 ### Phase 2: Remove from API Layer (Medium Risk)
 **Estimate:** 3–4 days  
+**Status:** ✅ **COMPLETE** (2026-04-18, merged to main)  
 **Goal:** Clean up API contracts; no more scope header or scope DTO fields  
 **Deliverables:**
-- Remove BudgetScopeMiddleware
-- Stop using request-scoped BudgetScope in UserContext
-- Remove BudgetScope from all DTOs
-- Update all controllers to not expect or use scope header
-- Update OpenAPI spec (scope fields auto-removed)
-- Service and repository scope internals remain for now; API simply defaults to household/shared behavior
+- ✅ Remove BudgetScopeMiddleware
+- ✅ Stop using request-scoped BudgetScope in UserContext
+- ✅ Remove BudgetScope from all DTOs
+- ✅ Update all controllers to not expect or use scope header
+- ✅ Update OpenAPI spec (scope fields auto-removed)
+- ✅ Service and repository scope internals remain for now; API simply defaults to household/shared behavior
 
 **Acceptance Criteria Phase 2:**
 - [x] No BudgetScope in API request/response contracts
@@ -414,10 +415,19 @@ Kakeibo philosophy is rooted in the household (family) ledger as a single source
 - [x] API UserContext no longer accepts request-driven scope changes
 - [x] All API endpoints work without scope header
 - [x] OpenAPI spec is clean (no scope references)
-- [x] API integration tests pass
+- [x] API integration tests pass (5,876 tests all passing)
 - [x] Scope is still used in repositories (Phase 3 removes it)
 
-**Risk:** Medium — API contracts change; clients must adapt (but default to no scope)
+**Implementation Details:**
+- BudgetScopeMiddleware deleted; middleware registration removed from Program.cs
+- UserContext.BudgetScope hardcoded to `Shared`; UserContext.SetScope() is a no-op
+- All DTOs (AccountDto, TransactionDto, etc.) have no BudgetScope field
+- Controllers do not extract or validate scope from requests
+- ScopeMessageHandler no longer sends scope header to API
+- New integration tests (Feature161Phase2ApiContractTests) prove endpoints work without scope header
+- Commit `abd55c8`: "feat(161): Phase 2 complete - remove BudgetScope from API layer"
+
+**Risk:** Medium — API contracts change; clients must adapt (but default to no scope) — **✅ RESOLVED**
 
 ---
 
